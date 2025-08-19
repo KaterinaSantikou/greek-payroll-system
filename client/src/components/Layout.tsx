@@ -146,7 +146,7 @@ function LayoutContent({ children }: LayoutProps) {
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-4">
+        <div className="flex-1 overflow-y-auto">
           <MainNavigation 
             collapsed={!shouldShowExpanded}
             isMobile={isMobile}
@@ -177,9 +177,7 @@ function LayoutContent({ children }: LayoutProps) {
           {
             // Desktop: always account for sidebar
             "ml-70": isDesktop && shouldShowExpanded,
-            "ml-18": isDesktop && !shouldShowExpanded,
-            // Tablet: always account for collapsed sidebar
-            "ml-18": isTablet,
+            "ml-18": (isDesktop && !shouldShowExpanded) || isTablet,
             // Mobile: no margin (sidebar is overlay)
             "ml-0": isMobile,
           }
