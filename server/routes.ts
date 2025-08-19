@@ -4,6 +4,13 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { rulesAPIRouter } from "./rulesAPI";
 import { initializeRulesEngine } from "./rulesEngine";
+import authAPI from "./api/auth";
+import employeesAPI from "./api/employees";
+import timeAPI from "./api/time";
+import payrollAPI from "./api/payroll";
+import filingsAPI from "./api/filings";
+import paymentsAPI from "./api/payments";
+import webhooksAPI from "./api/webhooks";
 import { 
   insertEmployeeSchema, 
   insertPropertySchema, 
@@ -2244,6 +2251,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Rules Engine API routes
   app.use(rulesAPIRouter);
+
+  // Comprehensive API Routes
+  app.use(authAPI);
+  app.use(employeesAPI);
+  app.use(timeAPI);
+  app.use(payrollAPI);
+  app.use(filingsAPI);
+  app.use(paymentsAPI);
+  app.use(webhooksAPI);
 
   const httpServer = createServer(app);
   return httpServer;
