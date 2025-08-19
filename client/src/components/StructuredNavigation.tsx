@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLocale } from "@/hooks/useLocale";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
@@ -401,42 +402,139 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedSections.has(item.id);
     const active = item.href ? isActive(item.href) : false;
+    const disabled = false; // Can be dynamic based on user permissions or system state
 
+    // Base button classes with all states
+    const getButtonClasses = (isLeaf: boolean = false) => cn(
+      // Base styles
+      "w-full justify-start px-4 text-gray-700 dark:text-gray-200 transition-all duration-200 relative group",
+      // Size based on level
+      level === 0 ? "h-10 text-[15px] font-medium" : "h-9 text-[14px] ml-6",
+      // Connector lines for children
+      level > 0 && "before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
+      // Default state
+      "hover:bg-gray-50 dark:hover:bg-gray-800/50",
+      // Active state with accent bar
+      active && "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 before:!absolute before:!left-0 before:!top-2 before:!bottom-2 before:!w-[3px] before:!bg-blue-600 before:!rounded-r-sm before:!z-10",
+      // Focus ring for keyboard navigation
+      "focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none",
+      // Disabled state
+      disabled && "opacity-50 cursor-not-allowed hover:bg-transparent",
+      // Collapsed mode adjustments
+      collapsed && "px-2 justify-center"
+    );
+
+    // Render collapsible parent item
     if (hasChildren) {
-      return (
-        <div key={item.id} className="mb-1">
-          <Collapsible open={isExpanded} onOpenChange={() => toggleSection(item.id)}>
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start px-4 font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors relative",
-                  level === 0 ? "h-10 text-[15px]" : "h-9 text-[14px] ml-6 before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
-                  active && "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-blue-600 before:rounded-r-sm"
-                )}
-              >
-                <div className="flex items-center flex-1 min-w-0">
-                  <item.icon className="h-6 w-6 flex-shrink-0" />
-                  {!collapsed && (
-                    <>
-                      <span className="truncate ml-3">{item.label}</span>
-                      <div className="flex items-center gap-2 ml-auto">
-                        {renderBadge(item.badge, item.urgent)}
-                        {isExpanded ? (
-                          <ChevronDown className="h-4 w-4 text-gray-400 transition-transform" />
-                        ) : (
-                          <ChevronRight className="h-4 w-4 text-gray-400 transition-transform" />
-                        )}
-                      </div>
-                    </>
+      const triggerButton = (
+        <Button
+          variant="ghost"
+          disabled={disabled}
+          className={getButtonClasses(false)}
+        >
+          <div className="flex items-center flex-1 min-w-0">
+            <item.icon className="h-6 w-6 flex-shrink-0" />
+            {!collapsed && (
+              <>
+                <span className="truncate ml-3">{item.label}</span>
+                <div className="flex items-center gap-2 ml-auto">
+                  {renderBadge(item.badge, item.urgent)}
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-gray-400 transition-transform duration-200" />
                   )}
                 </div>
-              </Button>
+              </>
+            )}
+          </div>
+        </Button>
+      );
+
+      return (
+        <div key={item.id} className="mb-1">
+          <Collapsible open={isExpanded} onOpenChange={() => !disabled && toggleSection(item.id)}>
+            <CollapsibleTrigger asChild>
+              {collapsed ? (
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {triggerButton}
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="max-w-xs">
+                      <div className="font-medium">{item.label}</div>
+                      {item.badge && (
+                        <div className="text-sm text-gray-500 mt-1">
+                          {item.badge} items
+                        </div>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                triggerButton
+              )}
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-0.5 pt-1">
               {item.children?.map((child) => renderNavigationItem(child, level + 1))}
             </CollapsibleContent>
           </Collapsible>
+        </div>
+      );
+    }
+
+    // Render leaf item (with or without link)
+    const leafButton = (
+      <Button
+        variant="ghost"
+        disabled={disabled}
+        className={getButtonClasses(true)}
+      >
+        <div className="flex items-center flex-1 min-w-0">
+          <item.icon className="h-6 w-6 flex-shrink-0" />
+          {!collapsed && (
+            <>
+              <span className="truncate ml-3">{item.label}</span>
+              <div className="ml-auto">
+                {renderBadge(item.badge, item.urgent)}
+              </div>
+            </>
+          )}
+        </div>
+      </Button>
+    );
+
+    const buttonWithTooltip = collapsed ? (
+      <TooltipProvider delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            {leafButton}
+          </TooltipTrigger>
+          <TooltipContent side="right" className="max-w-xs">
+            <div className="font-medium">{item.label}</div>
+            {item.badge && (
+              <div className="text-sm text-gray-500 mt-1">
+                {item.urgent ? 'Urgent' : ''} {item.badge}
+              </div>
+            )}
+            {/* Shortcuts can be added here if available */}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    ) : (
+      leafButton
+    );
+
+    if (item.href) {
+      return (
+        <Link key={item.id} to={item.href} className="block mb-1">
+          {buttonWithTooltip}
+        </Link>
+      );
+    } else {
+      return (
+        <div key={item.id} className="block mb-1">
+          {buttonWithTooltip}
         </div>
       );
     }
