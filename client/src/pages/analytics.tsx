@@ -1,133 +1,200 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   BarChart3, 
-  Users, 
-  Clock, 
   TrendingUp, 
   AlertTriangle, 
   Activity,
-  Calendar as CalendarIcon,
-  Download,
-  RefreshCw,
-  MapPin,
   DollarSign,
-  Target
+  Target,
+  Users,
+  Clock,
+  Shield,
+  CheckCircle,
+  XCircle,
+  Calendar,
+  Building2,
+  Zap,
+  TrendingDown,
+  RefreshCw
 } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { useAuth } from "@/hooks/useAuth";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
-import { cn } from "@/lib/utils";
+import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 
-interface LiveOccupancyData {
+interface LaborCostForecast {
   propertyId: string;
   propertyName: string;
+  period: string;
   departments: Array<{
     department: string;
-    totalEmployees: number;
-    onSite: number;
-    onBreak: number;
-    onLunch: number;
-    offSite: number;
-    employees: Array<{
-      employeeId: string;
-      employeeName: string;
-      status: string;
-      lastPunchTime: string;
-      shiftStart?: string;
-      expectedShiftEnd?: string;
-      location?: string;
-    }>;
+    currentMonthCost: number;
+    projectedCost: number;
+    budgetTarget: number;
+    variance: number;
+    variancePercentage: number;
+    breakdown: {
+      baseSalary: number;
+      overtime: number;
+      allowances: number;
+      bonuses: number;
+      employerContributions: number;
+    };
+    trendAnalysis: {
+      trend: 'increasing' | 'decreasing' | 'stable';
+      monthOverMonth: number;
+      seasonalAdjustment: number;
+    };
+  }>;
+  totalForecast: {
+    currentMonth: number;
+    projected: number;
+    budget: number;
+    variance: number;
+    confidence: number;
+  };
+  recommendations: Array<{
+    priority: 'high' | 'medium' | 'low';
+    category: string;
+    description: string;
+    potentialSaving: number;
   }>;
 }
 
-interface LaborCostData {
+interface OvertimeHeatmap {
   propertyId: string;
-  propertyName: string;
-  forecastDate: string;
-  totalScheduledHours: number;
-  totalProjectedHours: number;
-  totalBaseCost: number;
-  totalOvertimeCost: number;
-  totalCost: number;
-  variancePercentage: number;
-  departments: Array<{
+  period: string;
+  heatmapData: Array<{
+    date: string;
     department: string;
-    scheduledHours: number;
-    projectedHours: number;
-    baseCost: number;
+    overtimeHours: number;
     overtimeCost: number;
-    totalCost: number;
-    variance: number;
+    intensity: 'low' | 'medium' | 'high' | 'critical';
   }>;
+  summary: {
+    totalOvertimeHours: number;
+    totalOvertimeCost: number;
+    averageDailyOvertime: number;
+    peakDays: Array<{
+      date: string;
+      hours: number;
+      reason: string;
+    }>;
+  };
+  patterns: {
+    weeklyPattern: Array<{ day: string; averageHours: number }>;
+    departmentRanking: Array<{ department: string; totalHours: number; efficiency: number }>;
+  };
+}
+
+interface ComplianceKPIs {
+  propertyId: string;
+  period: string;
+  metrics: {
+    erganiSubmission: {
+      successRate: number;
+      totalSubmissions: number;
+      failedSubmissions: number;
+      target: number;
+      status: 'excellent' | 'good' | 'warning' | 'critical';
+    };
+    digitalWorkCard: {
+      coverageRate: number;
+      totalEmployees: number;
+      coveredEmployees: number;
+      pendingSetup: number;
+      target: number;
+      status: 'excellent' | 'good' | 'warning' | 'critical';
+    };
+    exceptionRate: {
+      rate: number;
+      totalExceptions: number;
+      resolvedExceptions: number;
+      pendingExceptions: number;
+      target: number;
+      status: 'excellent' | 'good' | 'warning' | 'critical';
+    };
+    payrollAccuracy: {
+      accuracy: number;
+      totalPayrolls: number;
+      errorCount: number;
+      target: number;
+      status: 'excellent' | 'good' | 'warning' | 'critical';
+    };
+  };
+  alerts: Array<{
+    severity: 'high' | 'medium' | 'low';
+    category: string;
+    message: string;
+    impact: string;
+    recommendation: string;
+  }>;
+}
+
+interface ProductivityMetrics {
+  propertyId: string;
+  period: string;
+  hotelMetrics: {
+    laborCostPerOccupiedRoom: number;
+    laborCostPerCover: number;
+    revenuePerAvailableRoom: number;
+    occupancyRate: number;
+    averageDailyRate: number;
+    totalRevenue: number;
+    totalLaborCost: number;
+    efficiency: number;
+  };
+  departmentProductivity: Array<{
+    department: string;
+    metrics: {
+      laborCostPerHour: number;
+      productivityIndex: number;
+      efficiencyScore: number;
+      utilizationRate: number;
+    };
+    staffMetrics: {
+      totalStaff: number;
+      activeStaff: number;
+      utilizationRate: number;
+      averageHoursPerEmployee: number;
+    };
+  }>;
+  turnoverAnalysis: {
+    turnoverRate: number;
+    newHires: number;
+    terminations: number;
+    retentionRate: number;
+    costOfTurnover: number;
+  };
+  absenteeismMetrics: {
+    absenteeismRate: number;
+    plannedAbsence: number;
+    unplannedAbsence: number;
+    sickLeaveRate: number;
+    costOfAbsenteeism: number;
+  };
 }
 
 export default function AnalyticsPage() {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const { isAuthenticated, isLoading } = useAuth();
-  const [selectedProperty, setSelectedProperty] = useState<string>("PRINCESS-FO");
+  const [selectedProperty, setSelectedProperty] = useState("default");
   const [dateRange, setDateRange] = useState({
-    from: subDays(new Date(), 30),
-    to: new Date(),
-  });
-  const [forecastDate, setForecastDate] = useState<Date>(new Date());
-
-  // Live Occupancy Query
-  const { data: occupancyData, isLoading: occupancyLoading } = useQuery<LiveOccupancyData[]>({
-    queryKey: ["/api/analytics/live-occupancy", selectedProperty],
-    enabled: isAuthenticated,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    start: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
+    end: format(new Date(), 'yyyy-MM-dd')
   });
 
-  // Labor Cost Forecast Query
-  const { data: laborCostData, isLoading: laborCostLoading } = useQuery<LaborCostData>({
-    queryKey: ["/api/analytics/labor-cost-forecast", selectedProperty, forecastDate.toISOString()],
-    enabled: isAuthenticated && !!selectedProperty && !!forecastDate,
-  });
-
-  // Overtime Heatmap Query
-  const { data: overtimeData, isLoading: overtimeLoading } = useQuery({
-    queryKey: ["/api/analytics/overtime-heatmap", selectedProperty, dateRange.from?.toISOString(), dateRange.to?.toISOString()],
-    enabled: isAuthenticated && !!selectedProperty && !!dateRange.from && !!dateRange.to,
-  });
-
-  // Compliance KPIs Query
-  const { data: complianceData, isLoading: complianceLoading } = useQuery({
-    queryKey: ["/api/analytics/compliance-kpis", selectedProperty, dateRange.from?.toISOString(), dateRange.to?.toISOString()],
-    enabled: isAuthenticated && !!selectedProperty && !!dateRange.from && !!dateRange.to,
-  });
-
-  // Variance Analysis Query
-  const { data: varianceData, isLoading: varianceLoading } = useQuery({
-    queryKey: ["/api/analytics/variance-analysis", selectedProperty, dateRange.from?.toISOString(), dateRange.to?.toISOString()],
-    enabled: isAuthenticated && !!selectedProperty && !!dateRange.from && !!dateRange.to,
-  });
-
-  // Generate Demo Data Mutation
-  const generateDemoMutation = useMutation({
-    mutationFn: async () => {
-      await apiRequest("/api/analytics/generate-demo-data", {
-        method: "POST",
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Demo Data Generated",
-        description: "Analytics demo data has been generated successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics"] });
-    },
-    onError: (error) => {
+  // Fetch Labor Cost Forecast
+  const { data: laborForecast, isLoading: forecastLoading } = useQuery<LaborCostForecast>({
+    queryKey: [`/api/analytics/labor-forecast/${selectedProperty}`],
+    retry: false,
+    onError: (error: Error) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Unauthorized",
@@ -137,454 +204,674 @@ export default function AnalyticsPage() {
         setTimeout(() => {
           window.location.href = "/api/login";
         }, 500);
-        return;
       }
-      toast({
-        title: "Error",
-        description: "Failed to generate demo data. Please try again.",
-        variant: "destructive",
-      });
     },
   });
 
-  // Redirect to home if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
+  // Fetch Overtime Heatmap
+  const { data: overtimeHeatmap, isLoading: heatmapLoading } = useQuery<OvertimeHeatmap>({
+    queryKey: [`/api/analytics/overtime-heatmap/${selectedProperty}`, dateRange.start, dateRange.end],
+    retry: false,
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+      }
+    },
+  });
+
+  // Fetch Compliance KPIs
+  const { data: complianceKPIs, isLoading: kpiLoading } = useQuery<ComplianceKPIs>({
+    queryKey: [`/api/analytics/compliance-kpis/${selectedProperty}`],
+    retry: false,
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+      }
+    },
+  });
+
+  // Fetch Productivity Metrics
+  const { data: productivityMetrics, isLoading: productivityLoading } = useQuery<ProductivityMetrics>({
+    queryKey: [`/api/analytics/productivity-metrics/${selectedProperty}`],
+    retry: false,
+    onError: (error: Error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+      }
+    },
+  });
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'excellent': return 'bg-green-100 text-green-800';
+      case 'good': return 'bg-blue-100 text-blue-800';
+      case 'warning': return 'bg-yellow-100 text-yellow-800';
+      case 'critical': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
-  }, [isAuthenticated, isLoading, toast]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      on_site: "default",
-      break: "secondary",
-      lunch: "outline",
-      off_site: "destructive",
-    } as const;
-    const colors = {
-      on_site: "text-green-600",
-      break: "text-yellow-600",
-      lunch: "text-blue-600",
-      off_site: "text-red-600",
-    } as const;
-    
-    return {
-      variant: variants[status as keyof typeof variants] || "outline",
-      color: colors[status as keyof typeof colors] || "text-gray-600",
-    };
   };
 
-  const getOvertimeIntensity = (intensity: string) => {
-    const colors = {
-      low: "bg-green-100 text-green-800",
-      medium: "bg-yellow-100 text-yellow-800",
-      high: "bg-orange-100 text-orange-800",
-      critical: "bg-red-100 text-red-800",
-    } as const;
-    return colors[intensity as keyof typeof colors] || "bg-gray-100 text-gray-800";
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getIntensityColor = (intensity: string) => {
+    switch (intensity) {
+      case 'critical': return 'bg-red-500';
+      case 'high': return 'bg-orange-500';
+      case 'medium': return 'bg-yellow-500';
+      case 'low': return 'bg-green-500';
+      default: return 'bg-gray-300';
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 space-y-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <BarChart3 className="h-8 w-8 text-primary" />
-              Analytics & Reporting
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Live occupancy tracking, labor cost forecasting, and compliance analytics
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => generateDemoMutation.mutate()}
-              disabled={generateDemoMutation.isPending}
-              variant="outline"
-            >
-              {generateDemoMutation.isPending ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
-              ) : (
-                <Download className="h-4 w-4 mr-2" />
-              )}
-              Generate Demo Data
-            </Button>
-            <Button
-              onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/analytics"] })}
-              variant="outline"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-          </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Analytics & Forecasting
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            Advanced labor cost forecasting, compliance KPIs, and productivity analytics
+          </p>
         </div>
-
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
-          </CardHeader>
-          <CardContent className="flex gap-4">
-            <div>
-              <label className="text-sm font-medium">Property</label>
-              <Select value={selectedProperty} onValueChange={setSelectedProperty}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select property" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PRINCESS-FO">Princess Front Office</SelectItem>
-                  <SelectItem value="PRINCESS-HOUSE">Princess Housekeeping</SelectItem>
-                  <SelectItem value="PRINCESS-FB">Princess F&B</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Date Range</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-64 justify-start">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange.from ? (
-                      dateRange.to ? (
-                        <>
-                          {format(dateRange.from, "LLL dd, y")} -{" "}
-                          {format(dateRange.to, "LLL dd, y")}
-                        </>
-                      ) : (
-                        format(dateRange.from, "LLL dd, y")
-                      )
-                    ) : (
-                      <span>Pick a date range</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="range"
-                    defaultMonth={dateRange.from}
-                    selected={dateRange}
-                    onSelect={(range) => setDateRange(range || { from: undefined, to: undefined })}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Forecast Date</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-48 justify-start">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(forecastDate, "LLL dd, y")}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={forecastDate}
-                    onSelect={(date) => date && setForecastDate(date)}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Live Occupancy */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Live Occupancy - Who's On Site
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {occupancyLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : occupancyData && occupancyData.length > 0 ? (
-              <div className="space-y-6">
-                {occupancyData.map((property) => (
-                  <div key={property.propertyId}>
-                    <h3 className="text-lg font-semibold mb-4">{property.propertyName}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {property.departments.map((dept) => (
-                        <Card key={dept.department}>
-                          <CardHeader className="pb-3">
-                            <CardTitle className="text-base">{dept.department}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="grid grid-cols-4 gap-2 mb-4">
-                              <div className="text-center">
-                                <div className="text-sm font-medium text-green-600">{dept.onSite}</div>
-                                <div className="text-xs text-muted-foreground">On Site</div>
-                              </div>
-                              <div className="text-center">
-                                <div className="text-sm font-medium text-yellow-600">{dept.onBreak}</div>
-                                <div className="text-xs text-muted-foreground">Break</div>
-                              </div>
-                              <div className="text-center">
-                                <div className="text-sm font-medium text-blue-600">{dept.onLunch}</div>
-                                <div className="text-xs text-muted-foreground">Lunch</div>
-                              </div>
-                              <div className="text-center">
-                                <div className="text-sm font-medium text-red-600">{dept.offSite}</div>
-                                <div className="text-xs text-muted-foreground">Off Site</div>
-                              </div>
-                            </div>
-                            <div className="space-y-2 max-h-48 overflow-y-auto">
-                              {dept.employees.slice(0, 5).map((emp) => {
-                                const statusStyle = getStatusBadge(emp.status);
-                                return (
-                                  <div key={emp.employeeId} className="flex items-center justify-between text-sm">
-                                    <span className="font-medium">{emp.employeeName}</span>
-                                    <div className="flex items-center gap-2">
-                                      {emp.location && (
-                                        <MapPin className="h-3 w-3 text-muted-foreground" />
-                                      )}
-                                      <Badge variant={statusStyle.variant} className={statusStyle.color}>
-                                        {emp.status.replace('_', ' ')}
-                                      </Badge>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                              {dept.employees.length > 5 && (
-                                <div className="text-xs text-muted-foreground text-center">
-                                  +{dept.employees.length - 5} more employees
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Occupancy Data</h3>
-                <p className="text-muted-foreground mb-4">Generate demo data to see live occupancy analytics</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Labor Cost Forecast */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Labor Cost Forecast
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {laborCostLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : laborCostData ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {laborCostData.totalScheduledHours.toFixed(1)}h
-                    </div>
-                    <div className="text-sm text-muted-foreground">Scheduled Hours</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {laborCostData.totalProjectedHours.toFixed(1)}h
-                    </div>
-                    <div className="text-sm text-muted-foreground">Projected Hours</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      €{laborCostData.totalCost.toFixed(2)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Total Cost</div>
-                  </div>
-                  <div className="text-center">
-                    <div className={cn("text-2xl font-bold", 
-                      laborCostData.variancePercentage > 0 ? "text-red-600" : "text-green-600"
-                    )}>
-                      {laborCostData.variancePercentage > 0 ? "+" : ""}
-                      {laborCostData.variancePercentage.toFixed(1)}%
-                    </div>
-                    <div className="text-sm text-muted-foreground">Variance</div>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {laborCostData.departments.map((dept) => (
-                    <Card key={dept.department}>
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-base">{dept.department}</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-sm">Scheduled:</span>
-                            <span className="font-medium">{dept.scheduledHours.toFixed(1)}h</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Projected:</span>
-                            <span className="font-medium">{dept.projectedHours.toFixed(1)}h</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Base Cost:</span>
-                            <span className="font-medium">€{dept.baseCost.toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm">Overtime Cost:</span>
-                            <span className="font-medium">€{dept.overtimeCost.toFixed(2)}</span>
-                          </div>
-                          <div className="flex justify-between border-t pt-2">
-                            <span className="font-medium">Total:</span>
-                            <span className="font-bold">€{dept.totalCost.toFixed(2)}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <DollarSign className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Forecast Data</h3>
-                <p className="text-muted-foreground">Generate demo data to see labor cost forecasting</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Analytics Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Overtime Trends
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {overtimeLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                </div>
-              ) : overtimeData ? (
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">{overtimeData.summary?.totalOvertimeHours?.toFixed(1) || '0'}h</div>
-                    <div className="text-sm text-muted-foreground">Total Overtime</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold">{overtimeData.summary?.peakDepartment || 'N/A'}</div>
-                    <div className="text-sm text-muted-foreground">Peak Department</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-muted-foreground">No overtime data available</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Compliance Score
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {complianceLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                </div>
-              ) : complianceData ? (
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
-                      {complianceData.kpis?.overallScore?.toFixed(1) || '0'}%
-                    </div>
-                    <div className="text-sm text-muted-foreground">Overall Score</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold">
-                      {complianceData.kpis?.erganiSubmissionSuccess?.toFixed(1) || '0'}%
-                    </div>
-                    <div className="text-sm text-muted-foreground">ERGANI Success</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-muted-foreground">No compliance data available</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
-                Variance Analysis
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {varianceLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                </div>
-              ) : varianceData ? (
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold">
-                      {varianceData.summary?.onTrackEmployees || 0}
-                    </div>
-                    <div className="text-sm text-muted-foreground">On Track</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-lg font-semibold text-orange-600">
-                      {varianceData.summary?.criticalEmployees || 0}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Critical Variance</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <p className="text-muted-foreground">No variance data available</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="flex items-center gap-4">
+          <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Hotel Santikos Costa</SelectItem>
+              <SelectItem value="property2">Santikos Beach Resort</SelectItem>
+              <SelectItem value="property3">Santikos City Center</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
         </div>
       </div>
+
+      <Tabs defaultValue="forecast" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="forecast" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Labor Forecast
+          </TabsTrigger>
+          <TabsTrigger value="overtime" className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Overtime Heatmap
+          </TabsTrigger>
+          <TabsTrigger value="compliance" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            Compliance KPIs
+          </TabsTrigger>
+          <TabsTrigger value="productivity" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Productivity
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Labor Cost Forecast Tab */}
+        <TabsContent value="forecast" className="space-y-6">
+          {forecastLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <RefreshCw className="h-8 w-8 animate-spin" />
+            </div>
+          ) : laborForecast && (
+            <>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Current Month</p>
+                        <p className="text-2xl font-bold">€{laborForecast.totalForecast.currentMonth.toLocaleString()}</p>
+                      </div>
+                      <DollarSign className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Projected</p>
+                        <p className="text-2xl font-bold">€{laborForecast.totalForecast.projected.toLocaleString()}</p>
+                      </div>
+                      <TrendingUp className="h-8 w-8 text-green-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Variance</p>
+                        <p className={`text-2xl font-bold ${laborForecast.totalForecast.variance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          {laborForecast.totalForecast.variance > 0 ? '+' : ''}€{laborForecast.totalForecast.variance.toLocaleString()}
+                        </p>
+                      </div>
+                      <AlertTriangle className={`h-8 w-8 ${laborForecast.totalForecast.variance > 0 ? 'text-red-600' : 'text-green-600'}`} />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Confidence</p>
+                        <p className="text-2xl font-bold">{laborForecast.totalForecast.confidence.toFixed(1)}%</p>
+                      </div>
+                      <Target className="h-8 w-8 text-purple-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Department Breakdown */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    Department Forecast Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {laborForecast.departments.map((dept, index) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-semibold">{dept.department}</h3>
+                          <div className="flex items-center gap-4">
+                            <Badge className={getStatusColor(dept.trendAnalysis.trend === 'increasing' ? 'warning' : 'good')}>
+                              {dept.trendAnalysis.trend === 'increasing' && <TrendingUp className="h-3 w-3 mr-1" />}
+                              {dept.trendAnalysis.trend === 'decreasing' && <TrendingDown className="h-3 w-3 mr-1" />}
+                              {dept.trendAnalysis.trend === 'stable' && <Activity className="h-3 w-3 mr-1" />}
+                              {dept.trendAnalysis.trend}
+                            </Badge>
+                            <span className={`font-medium ${dept.variance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                              {dept.variancePercentage > 0 ? '+' : ''}{dept.variancePercentage.toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-400">Base Salary</p>
+                            <p className="font-medium">€{dept.breakdown.baseSalary.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-400">Overtime</p>
+                            <p className="font-medium">€{dept.breakdown.overtime.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-400">Allowances</p>
+                            <p className="font-medium">€{dept.breakdown.allowances.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-400">Bonuses</p>
+                            <p className="font-medium">€{dept.breakdown.bonuses.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-400">Contributions</p>
+                            <p className="font-medium">€{dept.breakdown.employerContributions.toLocaleString()}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recommendations */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="h-5 w-5" />
+                    Cost Optimization Recommendations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {laborForecast.recommendations.map((rec, index) => (
+                      <Alert key={index}>
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle className="flex items-center gap-2">
+                          <Badge className={getPriorityColor(rec.priority)}>
+                            {rec.priority} priority
+                          </Badge>
+                          {rec.category}
+                        </AlertTitle>
+                        <AlertDescription className="mt-2">
+                          <p>{rec.description}</p>
+                          <p className="font-medium text-green-600 mt-1">
+                            Potential saving: €{rec.potentialSaving.toLocaleString()}
+                          </p>
+                        </AlertDescription>
+                      </Alert>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+
+        {/* Overtime Heatmap Tab */}
+        <TabsContent value="overtime" className="space-y-6">
+          {heatmapLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <RefreshCw className="h-8 w-8 animate-spin" />
+            </div>
+          ) : overtimeHeatmap && (
+            <>
+              {/* Overtime Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total OT Hours</p>
+                        <p className="text-2xl font-bold">{overtimeHeatmap.summary.totalOvertimeHours.toFixed(1)}</p>
+                      </div>
+                      <Clock className="h-8 w-8 text-orange-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total OT Cost</p>
+                        <p className="text-2xl font-bold">€{overtimeHeatmap.summary.totalOvertimeCost.toLocaleString()}</p>
+                      </div>
+                      <DollarSign className="h-8 w-8 text-red-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Daily Average</p>
+                        <p className="text-2xl font-bold">{overtimeHeatmap.summary.averageDailyOvertime.toFixed(1)}</p>
+                      </div>
+                      <BarChart3 className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Peak Days</p>
+                        <p className="text-2xl font-bold">{overtimeHeatmap.summary.peakDays.length}</p>
+                      </div>
+                      <TrendingUp className="h-8 w-8 text-purple-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Department Ranking */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Department Overtime Ranking</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {overtimeHeatmap.patterns.departmentRanking.map((dept, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-800">
+                            {index + 1}
+                          </div>
+                          <span className="font-medium">{dept.department}</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="font-medium">{dept.totalHours.toFixed(1)} hours</p>
+                            <p className="text-sm text-gray-600">{dept.efficiency.toFixed(1)}% efficiency</p>
+                          </div>
+                          <Progress value={dept.efficiency} className="w-20" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+
+        {/* Compliance KPIs Tab */}
+        <TabsContent value="compliance" className="space-y-6">
+          {kpiLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <RefreshCw className="h-8 w-8 animate-spin" />
+            </div>
+          ) : complianceKPIs && (
+            <>
+              {/* Compliance Metrics Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">ERGANI Submissions</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-2xl font-bold">{complianceKPIs.metrics.erganiSubmission.successRate.toFixed(1)}%</p>
+                        <p className="text-xs text-gray-600">Target: {complianceKPIs.metrics.erganiSubmission.target}%</p>
+                      </div>
+                      <Badge className={getStatusColor(complianceKPIs.metrics.erganiSubmission.status)}>
+                        {complianceKPIs.metrics.erganiSubmission.status}
+                      </Badge>
+                    </div>
+                    <Progress value={complianceKPIs.metrics.erganiSubmission.successRate} className="mt-2" />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Digital Work Card</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-2xl font-bold">{complianceKPIs.metrics.digitalWorkCard.coverageRate.toFixed(1)}%</p>
+                        <p className="text-xs text-gray-600">
+                          {complianceKPIs.metrics.digitalWorkCard.coveredEmployees}/{complianceKPIs.metrics.digitalWorkCard.totalEmployees} employees
+                        </p>
+                      </div>
+                      <Badge className={getStatusColor(complianceKPIs.metrics.digitalWorkCard.status)}>
+                        {complianceKPIs.metrics.digitalWorkCard.status}
+                      </Badge>
+                    </div>
+                    <Progress value={complianceKPIs.metrics.digitalWorkCard.coverageRate} className="mt-2" />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Exception Rate</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-2xl font-bold">{complianceKPIs.metrics.exceptionRate.rate.toFixed(1)}%</p>
+                        <p className="text-xs text-gray-600">
+                          {complianceKPIs.metrics.exceptionRate.pendingExceptions} pending
+                        </p>
+                      </div>
+                      <Badge className={getStatusColor(complianceKPIs.metrics.exceptionRate.status)}>
+                        {complianceKPIs.metrics.exceptionRate.status}
+                      </Badge>
+                    </div>
+                    <Progress value={100 - complianceKPIs.metrics.exceptionRate.rate} className="mt-2" />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Payroll Accuracy</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-2xl font-bold">{complianceKPIs.metrics.payrollAccuracy.accuracy.toFixed(1)}%</p>
+                        <p className="text-xs text-gray-600">
+                          {complianceKPIs.metrics.payrollAccuracy.errorCount} errors
+                        </p>
+                      </div>
+                      <Badge className={getStatusColor(complianceKPIs.metrics.payrollAccuracy.status)}>
+                        {complianceKPIs.metrics.payrollAccuracy.status}
+                      </Badge>
+                    </div>
+                    <Progress value={complianceKPIs.metrics.payrollAccuracy.accuracy} className="mt-2" />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Compliance Alerts */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
+                    Compliance Alerts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {complianceKPIs.alerts.map((alert, index) => (
+                      <Alert key={index} className={alert.severity === 'high' ? 'border-red-200' : alert.severity === 'medium' ? 'border-yellow-200' : 'border-blue-200'}>
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle className="flex items-center gap-2">
+                          <Badge className={getPriorityColor(alert.severity)}>
+                            {alert.severity}
+                          </Badge>
+                          {alert.category}
+                        </AlertTitle>
+                        <AlertDescription className="mt-2">
+                          <p className="font-medium">{alert.message}</p>
+                          <p className="text-sm text-gray-600 mt-1">Impact: {alert.impact}</p>
+                          <p className="text-sm text-blue-600 mt-1">Recommendation: {alert.recommendation}</p>
+                        </AlertDescription>
+                      </Alert>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+
+        {/* Productivity Tab */}
+        <TabsContent value="productivity" className="space-y-6">
+          {productivityLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <RefreshCw className="h-8 w-8 animate-spin" />
+            </div>
+          ) : productivityMetrics && (
+            <>
+              {/* Hotel Metrics Overview */}
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Labor Cost/Room</p>
+                        <p className="text-2xl font-bold">€{productivityMetrics.hotelMetrics.laborCostPerOccupiedRoom.toFixed(2)}</p>
+                      </div>
+                      <Building2 className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Labor Cost/Cover</p>
+                        <p className="text-2xl font-bold">€{productivityMetrics.hotelMetrics.laborCostPerCover.toFixed(2)}</p>
+                      </div>
+                      <Users className="h-8 w-8 text-green-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Occupancy Rate</p>
+                        <p className="text-2xl font-bold">{productivityMetrics.hotelMetrics.occupancyRate.toFixed(1)}%</p>
+                      </div>
+                      <BarChart3 className="h-8 w-8 text-purple-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Efficiency</p>
+                        <p className="text-2xl font-bold">{productivityMetrics.hotelMetrics.efficiency.toFixed(1)}%</p>
+                      </div>
+                      <Target className="h-8 w-8 text-orange-600" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Turnover & Absenteeism */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Turnover Analysis
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Turnover Rate</p>
+                        <p className="text-xl font-bold text-red-600">{productivityMetrics.turnoverAnalysis.turnoverRate.toFixed(1)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Retention Rate</p>
+                        <p className="text-xl font-bold text-green-600">{productivityMetrics.turnoverAnalysis.retentionRate.toFixed(1)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">New Hires</p>
+                        <p className="text-xl font-bold">{productivityMetrics.turnoverAnalysis.newHires}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Terminations</p>
+                        <p className="text-xl font-bold">{productivityMetrics.turnoverAnalysis.terminations}</p>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Cost of Turnover</p>
+                      <p className="text-2xl font-bold text-red-600">€{productivityMetrics.turnoverAnalysis.costOfTurnover.toLocaleString()}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Absenteeism Metrics
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Absenteeism Rate</p>
+                        <p className="text-xl font-bold text-red-600">{productivityMetrics.absenteeismMetrics.absenteeismRate.toFixed(1)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Sick Leave Rate</p>
+                        <p className="text-xl font-bold text-orange-600">{productivityMetrics.absenteeismMetrics.sickLeaveRate.toFixed(1)}%</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Planned Absence</p>
+                        <p className="text-xl font-bold">{productivityMetrics.absenteeismMetrics.plannedAbsence.toFixed(1)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Unplanned</p>
+                        <p className="text-xl font-bold">{productivityMetrics.absenteeismMetrics.unplannedAbsence.toFixed(1)}</p>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Cost of Absenteeism</p>
+                      <p className="text-2xl font-bold text-red-600">€{productivityMetrics.absenteeismMetrics.costOfAbsenteeism.toLocaleString()}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Department Productivity */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Department Productivity Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {productivityMetrics.departmentProductivity.map((dept, index) => (
+                      <div key={index} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-semibold">{dept.department}</h3>
+                          <div className="flex items-center gap-4">
+                            <Badge className="bg-blue-100 text-blue-800">
+                              {dept.metrics.productivityIndex.toFixed(0)} Index
+                            </Badge>
+                            <Badge className="bg-green-100 text-green-800">
+                              {dept.metrics.efficiencyScore.toFixed(0)}% Efficiency
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-400">Labor Cost/Hour</p>
+                            <p className="font-medium">€{dept.metrics.laborCostPerHour.toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-400">Total Staff</p>
+                            <p className="font-medium">{dept.staffMetrics.totalStaff}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-400">Active Staff</p>
+                            <p className="font-medium">{dept.staffMetrics.activeStaff}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600 dark:text-gray-400">Utilization</p>
+                            <p className="font-medium">{dept.staffMetrics.utilizationRate.toFixed(1)}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

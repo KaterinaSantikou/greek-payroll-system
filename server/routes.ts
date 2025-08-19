@@ -25,6 +25,7 @@ import { SepaPaymentService } from "./sepaPaymentService";
 import { GLExportService } from "./glExportService";
 import { FilingComplianceService } from "./filingComplianceService";
 import { SelfServiceManager } from "./selfServiceManager";
+import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { 
   insertPaymentInstructionsSchema, 
   insertGlExportsSchema 
@@ -39,6 +40,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const glExportService = new GLExportService();
   const filingComplianceService = new FilingComplianceService();
   const selfServiceManager = new SelfServiceManager();
+  const advancedAnalyticsService = new AdvancedAnalyticsService();
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -1948,6 +1950,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating inspector pack:", error);
       res.status(500).json({ error: "Failed to generate inspector pack" });
+    }
+  });
+
+  // Advanced Analytics Routes (3.8)
+  
+  // Labor Cost Forecasting
+  app.get('/api/analytics/labor-forecast/:propertyId', isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const forecastMonths = parseInt(req.query.forecastMonths as string) || 3;
+      const forecast = await advancedAnalyticsService.generateLaborCostForecast(propertyId, forecastMonths);
+      res.json(forecast);
+    } catch (error) {
+      console.error("Error generating labor cost forecast:", error);
+      res.status(500).json({ error: "Failed to generate labor cost forecast" });
+    }
+  });
+
+  // Overtime Heatmap
+  app.get('/api/analytics/overtime-heatmap/:propertyId', isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const startDate = new Date(req.query.startDate as string);
+      const endDate = new Date(req.query.endDate as string);
+      
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        return res.status(400).json({ error: "Valid startDate and endDate are required" });
+      }
+      
+      const heatmap = await advancedAnalyticsService.generateOvertimeHeatmap(propertyId, startDate, endDate);
+      res.json(heatmap);
+    } catch (error) {
+      console.error("Error generating overtime heatmap:", error);
+      res.status(500).json({ error: "Failed to generate overtime heatmap" });
+    }
+  });
+
+  // Compliance KPIs
+  app.get('/api/analytics/compliance-kpis/:propertyId', isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const period = req.query.period as string || new Date().toISOString().slice(0, 7); // YYYY-MM format
+      const kpis = await advancedAnalyticsService.getComplianceKPIs(propertyId, period);
+      res.json(kpis);
+    } catch (error) {
+      console.error("Error fetching compliance KPIs:", error);
+      res.status(500).json({ error: "Failed to fetch compliance KPIs" });
+    }
+  });
+
+  // Productivity Metrics
+  app.get('/api/analytics/productivity-metrics/:propertyId', isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const period = req.query.period as string || new Date().toISOString().slice(0, 7); // YYYY-MM format
+      const metrics = await advancedAnalyticsService.getProductivityMetrics(propertyId, period);
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching productivity metrics:", error);
+      res.status(500).json({ error: "Failed to fetch productivity metrics" });
+    }
+  });
+
+  // Executive Summary Dashboard
+  app.get('/api/analytics/executive-summary/:propertyId', isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const summary = await advancedAnalyticsService.getExecutiveSummary(propertyId);
+      res.json(summary);
+    } catch (error) {
+      console.error("Error generating executive summary:", error);
+      res.status(500).json({ error: "Failed to generate executive summary" });
     }
   });
 
