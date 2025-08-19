@@ -72,6 +72,34 @@ const uxExample = {
       ]
     },
     {
+      name: "Time",
+      icon: Clock,
+      color: "bg-cyan-500",
+      description: "Time tracking and schedule management",
+      level2: [
+        {
+          name: "Punches",
+          icon: Smartphone,
+          description: "Real-time punch tracking and corrections",
+          level3: [
+            { name: "Today", path: "/digital-work-card", description: "Real-time punch tracking" },
+            { name: "Exceptions", path: "/advanced-time-capture", description: "Missing & invalid punches" },
+            { name: "Corrections", path: "/manager-workflows", description: "Time correction approvals" }
+          ]
+        },
+        {
+          name: "Schedules",
+          icon: Clock,
+          description: "Schedule management and compliance",
+          level3: [
+            { name: "Publish", path: "/schedules", description: "Schedule publication & distribution" },
+            { name: "Change Log", path: "/analytics", description: "Schedule modification history" },
+            { name: "ERGANI Actions", path: "/ergani-compliance", description: "Ministry notification queue" }
+          ]
+        }
+      ]
+    },
+    {
       name: "Live Compliance",
       icon: Shield,
       color: "bg-red-500",
@@ -369,6 +397,7 @@ export default function UXArchitecture() {
               <div className="flex flex-wrap justify-center gap-2 text-sm">
                 <Badge variant="outline">Dashboard</Badge>
                 <Badge variant="outline">People</Badge>
+                <Badge variant="outline">Time</Badge>
                 <Badge variant="outline">Live Compliance</Badge>
                 <Badge variant="outline">Cost Insights</Badge>
                 <Badge variant="outline">Payroll & Finance</Badge>

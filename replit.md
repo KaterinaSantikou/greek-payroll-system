@@ -13,7 +13,15 @@ Preferred communication style: Simple, everyday language.
 - **Contextual Organization**: Information grouped by operational context.
 - **Progressive Disclosure**: Functionality revealed in manageable layers.
 - **Visual Hierarchy**: Color-coded sections with icons.
-- **Navigation Structure**: Includes Dashboard, People, Live Compliance, Cost Insights, Payroll & Finance, Hotel Operations, and Platform.
+- **Navigation Structure**: Includes Dashboard, People, Time, Live Compliance, Cost Insights, Payroll & Finance, Hotel Operations, and Platform.
+  - **Dashboard**: Overview and management access (Main Dashboard, Manager Dashboard, Employee Self-Service)
+  - **People**: Employee management with Employees (Profiles/Contracts/Documents/Assignments) and Teams & Rotas (Builder/Templates/Approvals)
+  - **Time**: Time tracking and schedule management with Punches (Today/Exceptions/Corrections) and Schedules (Publish/Change Log/ERGANI Actions)
+  - **Live Compliance**: Real-time monitoring with Digital Card Status, ERGANI Queue, APD & ΦΜΥ deadlines
+  - **Cost Insights**: Predictive analytics with Labor Forecast, OT Heatmap, Variance vs Budget
+  - **Payroll & Finance**: Core financial processing and modern payroll platform
+  - **Hotel Operations**: Multi-property management and deployment tools
+  - **Platform**: Vision & strategy with product roadmap and UX architecture documentation
 - **Implementation Features**: Intelligent state management, accessibility, mobile-first responsive design, and performance optimizations.
 
 ## Frontend Architecture

@@ -65,6 +65,31 @@ const menuStructure: MenuLevel1Item[] = [
     ]
   },
   {
+    name: "Time",
+    icon: Clock,
+    color: "bg-cyan-500",
+    items: [
+      {
+        name: "Punches",
+        icon: Smartphone,
+        items: [
+          { name: "Today", href: "/digital-work-card", description: "Real-time punch tracking" },
+          { name: "Exceptions", href: "/advanced-time-capture", description: "Missing & invalid punches" },
+          { name: "Corrections", href: "/manager-workflows", description: "Time correction approvals" },
+        ]
+      },
+      {
+        name: "Schedules",
+        icon: Clock,
+        items: [
+          { name: "Publish", href: "/schedules", description: "Schedule publication & distribution" },
+          { name: "Change Log", href: "/analytics", description: "Schedule modification history" },
+          { name: "ERGANI Actions", href: "/ergani-compliance", description: "Ministry notification queue" },
+        ]
+      }
+    ]
+  },
+  {
     name: "Live Compliance",
     icon: Shield,
     color: "bg-red-500",
