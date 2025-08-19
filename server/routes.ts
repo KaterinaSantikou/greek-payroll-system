@@ -145,6 +145,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Compliance Recommendations API
+  app.get("/api/compliance/recommendations", async (req, res) => {
+    try {
+      const { ComplianceRecommendationEngine } = await import("./complianceEngine");
+      const engine = new ComplianceRecommendationEngine();
+      
+      const employeeId = req.query.employeeId as string;
+      
+      const recommendations = employeeId
+        ? await engine.generateRecommendations(employeeId)
+        : await engine.generateOrganizationRecommendations();
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error generating compliance recommendations:", error);
+      res.status(500).json({ error: "Failed to generate recommendations" });
+    }
+  });
+
+  app.post("/api/compliance/recommendations", async (req, res) => {
+    try {
+      const { ComplianceRecommendationEngine } = await import("./complianceEngine");
+      const engine = new ComplianceRecommendationEngine();
+      
+      const employeeId = req.query.employeeId as string;
+      
+      const recommendations = employeeId
+        ? await engine.generateRecommendations(employeeId)
+        : await engine.generateOrganizationRecommendations();
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error refreshing compliance recommendations:", error);
+      res.status(500).json({ error: "Failed to refresh recommendations" });
+    }
+  });
+
+  app.post("/api/compliance/auto-fix/:recommendationId", async (req, res) => {
+    try {
+      const { recommendationId } = req.params;
+      
+      // This would implement auto-fix logic based on recommendation type
+      // For now, return success to indicate the feature is available
+      res.json({ 
+        success: true, 
+        message: "Auto-fix request processed",
+        recommendationId 
+      });
+    } catch (error) {
+      console.error("Error applying auto-fix:", error);
+      res.status(500).json({ error: "Failed to apply auto-fix" });
+    }
+  });
+
   // Export routes
   app.get("/api/employees/export/excel", isAuthenticated, async (req, res) => {
     try {

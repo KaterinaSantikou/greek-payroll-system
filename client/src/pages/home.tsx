@@ -2,9 +2,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calculator, FileText, TrendingUp, Shield, CheckCircle, AlertTriangle } from "lucide-react";
+import { Users, Calculator, FileText, TrendingUp, Shield, CheckCircle, AlertTriangle, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import GreekComplianceInfo from "@/components/GreekComplianceInfo";
+import ComplianceRecommendations from "@/components/ComplianceRecommendations";
 
 export default function Home() {
   const { user } = useAuth();
@@ -257,6 +258,12 @@ export default function Home() {
           </div>
         </CardContent>
       </Card>
+
+      {/* AI-Powered Compliance Recommendations */}
+      <ComplianceRecommendations />
+
+      {/* Greek Compliance Information */}
+      <GreekComplianceInfo />
     </div>
   );
 }

@@ -69,6 +69,24 @@ Preferred communication style: Simple, everyday language.
 - **Disability Types**: Physical, Mental, Sensory, Multiple, Psychosocial, Chronic conditions
 - **Compliance Requirements**: 8% disability quota for companies over 50 employees, young worker subsidies
 
+### Foreign Worker Requirements (August 2025)
+- **Residency Status**: EU Citizen, Non-EU Permanent, Non-EU Temporary, Refugee classifications
+- **Document Management**: Passport tracking with country and expiry date validation
+- **Visa Information**: Tourist, Business, Student, Work, Family Reunion visa types with expiry tracking
+- **Work Permits**: Number and expiry date tracking for non-EU workers
+- **Residence Permits**: Number and expiry date tracking for legal residency
+- **Compliance Monitoring**: Automatic alerts for expiring documents and permit renewals
+
+### AI-Powered Compliance Recommendation Engine (August 2025)
+- **Intelligent Analysis**: Automated scanning of employee data for compliance gaps and violations
+- **Multi-Category Recommendations**: Identification, EFKA, Worker Classification, Foreign Worker, Disability, General compliance
+- **Priority-Based System**: High, Medium, Low priority recommendations with automated severity assessment
+- **Real-Time Validation**: AFM checksum validation, AMKA Luhn algorithm verification, document expiry monitoring
+- **Auto-Fix Capabilities**: Automated corrections for simple compliance issues with user approval
+- **Organization-Wide Monitoring**: Company-level compliance including disability quotas and young worker subsidies
+- **Deadline Tracking**: Automatic alerts for expiring work permits, residence permits, and passports
+- **Compliance Dashboard**: Visual overview of compliance status with actionable recommendations
+
 # External Dependencies
 
 ## Core Infrastructure

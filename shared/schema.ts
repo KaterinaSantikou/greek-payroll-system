@@ -104,6 +104,19 @@ export const employees = pgTable("employees", {
   disabilityType: varchar("disability_type"), // PHYSICAL, MENTAL, SENSORY, MULTIPLE
   disabilitySupport: text("disability_support"), // Required accommodations
   
+  // Foreign Worker Requirements
+  residencyStatus: varchar("residency_status"), // EU_CITIZEN, NON_EU_PERMANENT, NON_EU_TEMPORARY, REFUGEE
+  passportNumber: varchar("passport_number"),
+  passportCountry: varchar("passport_country"),
+  passportExpiryDate: date("passport_expiry_date"),
+  visaType: varchar("visa_type"), // TOURIST, BUSINESS, STUDENT, WORK, FAMILY_REUNION
+  visaNumber: varchar("visa_number"),
+  visaExpiryDate: date("visa_expiry_date"),
+  workPermitNumber: varchar("work_permit_number"),
+  workPermitExpiryDate: date("work_permit_expiry_date"),
+  residencePermitNumber: varchar("residence_permit_number"),
+  residencePermitExpiryDate: date("residence_permit_expiry_date"),
+  
   // Employment Contract (Law 4808/2021 amendments)
   contractType: varchar("contract_type").notNull(), // indefinite, fixed-term, apprenticeship, internship
   workingHours: integer("working_hours").default(40),
