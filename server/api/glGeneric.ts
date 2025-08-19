@@ -20,8 +20,10 @@ import {
   type MappingRule,
   type MappingRuleSet,
   mappingRuleSetSchema,
+  partners,
 } from "@shared/schema";
 import { GLExportCanonical } from "../services/glExportCanonical";
+import { WebhookService } from "../services/webhookService";
 import { z } from "zod";
 
 // Helper function to format journal lines for API response
@@ -52,6 +54,232 @@ function bankerRound(value: number): number {
 
 export function glGenericRoutes(app: Express) {
   
+  // =============================================================================
+  // WEBHOOK SUBSCRIPTION ENDPOINTS
+  // =============================================================================
+
+  /**
+   * Subscribe to Webhooks
+   * POST /v1/webhooks
+   */
+  app.post('/v1/webhooks', async (req, res) => {
+    try {
+      const { partner_id, webhook_url, webhook_secret } = req.body;
+
+      if (!partner_id || !webhook_url || !webhook_secret) {
+        return res.status(400).json({
+          error: 'MISSING_PARAMETERS',
+          detail: 'partner_id, webhook_url, and webhook_secret are required',
+          hint: 'Provide all required webhook configuration parameters'
+        });
+      }
+
+      // Validate URL format
+      try {
+        new URL(webhook_url);
+      } catch {
+        return res.status(400).json({
+          error: 'INVALID_URL',
+          detail: 'webhook_url must be a valid HTTPS URL',
+          hint: 'Ensure webhook_url starts with https:// and is properly formatted'
+        });
+      }
+
+      // Update partner webhook configuration
+      const [updatedPartner] = await db
+        .update(partners)
+        .set({
+          webhookUrl: webhook_url,
+          webhookSecret: webhook_secret,
+          updatedAt: new Date(),
+        })
+        .where(eq(partners.id, partner_id))
+        .returning();
+
+      if (!updatedPartner) {
+        return res.status(404).json({
+          error: 'PARTNER_NOT_FOUND',
+          detail: `Partner with ID ${partner_id} not found`,
+          hint: 'Verify the partner_id is correct and the partner exists'
+        });
+      }
+
+      res.status(201).json({
+        partner_id: updatedPartner.id,
+        webhook_url: updatedPartner.webhookUrl,
+        status: 'subscribed',
+        events_supported: [
+          'payroll.run.finalized',
+          'gl.journal.draft.created',
+          'gl.journal.posted',
+          'gl.journal.reversed',
+          'connector.token.refreshed'
+        ],
+        created_at: updatedPartner.updatedAt,
+      });
+    } catch (error) {
+      console.error('Webhook subscription error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        detail: 'Failed to subscribe to webhooks',
+        hint: 'Contact system administrator if the problem persists'
+      });
+    }
+  });
+
+  /**
+   * Get Webhook Subscription
+   * GET /v1/webhooks/:partner_id
+   */
+  app.get('/v1/webhooks/:partner_id', async (req, res) => {
+    try {
+      const { partner_id } = req.params;
+
+      const [partner] = await db
+        .select({
+          id: partners.id,
+          webhookUrl: partners.webhookUrl,
+          status: partners.status,
+          createdAt: partners.createdAt,
+          updatedAt: partners.updatedAt,
+        })
+        .from(partners)
+        .where(eq(partners.id, partner_id))
+        .limit(1);
+
+      if (!partner) {
+        return res.status(404).json({
+          error: 'PARTNER_NOT_FOUND',
+          detail: `Partner with ID ${partner_id} not found`,
+          hint: 'Verify the partner_id is correct'
+        });
+      }
+
+      res.json({
+        partner_id: partner.id,
+        webhook_url: partner.webhookUrl,
+        is_subscribed: !!partner.webhookUrl,
+        status: partner.status,
+        events_supported: [
+          'payroll.run.finalized',
+          'gl.journal.draft.created',
+          'gl.journal.posted',
+          'gl.journal.reversed',
+          'connector.token.refreshed'
+        ],
+        created_at: partner.createdAt,
+        updated_at: partner.updatedAt,
+      });
+    } catch (error) {
+      console.error('Webhook subscription fetch error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        detail: 'Failed to fetch webhook subscription',
+        hint: 'Contact system administrator if the problem persists'
+      });
+    }
+  });
+
+  /**
+   * Delete Webhook Subscription
+   * DELETE /v1/webhooks/:partner_id
+   */
+  app.delete('/v1/webhooks/:partner_id', async (req, res) => {
+    try {
+      const { partner_id } = req.params;
+
+      const [updatedPartner] = await db
+        .update(partners)
+        .set({
+          webhookUrl: null,
+          webhookSecret: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(partners.id, partner_id))
+        .returning();
+
+      if (!updatedPartner) {
+        return res.status(404).json({
+          error: 'PARTNER_NOT_FOUND',
+          detail: `Partner with ID ${partner_id} not found`,
+          hint: 'Verify the partner_id is correct'
+        });
+      }
+
+      res.json({
+        partner_id: updatedPartner.id,
+        status: 'unsubscribed',
+        unsubscribed_at: updatedPartner.updatedAt,
+      });
+    } catch (error) {
+      console.error('Webhook unsubscribe error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        detail: 'Failed to unsubscribe from webhooks',
+        hint: 'Contact system administrator if the problem persists'
+      });
+    }
+  });
+
+  /**
+   * Get Webhook Events Log
+   * GET /v1/webhooks/:partner_id/events
+   */
+  app.get('/v1/webhooks/:partner_id/events', async (req, res) => {
+    try {
+      const { partner_id } = req.params;
+      const { limit = '50', offset = '0', status, event_type } = req.query;
+
+      // Build query conditions
+      const conditions = [eq(webhookEvents.partnerId, partner_id)];
+      if (status) {
+        conditions.push(eq(webhookEvents.status, status as any));
+      }
+      if (event_type) {
+        conditions.push(eq(webhookEvents.eventType, event_type as string));
+      }
+
+      const events = await db
+        .select({
+          id: webhookEvents.id,
+          event_type: webhookEvents.eventType,
+          resource_id: webhookEvents.resourceId,
+          status: webhookEvents.status,
+          delivery_attempts: webhookEvents.deliveryAttempts,
+          last_attempt_at: webhookEvents.lastAttemptAt,
+          delivered_at: webhookEvents.deliveredAt,
+          error_message: webhookEvents.errorMessage,
+          created_at: webhookEvents.createdAt,
+        })
+        .from(webhookEvents)
+        .where(and(...conditions))
+        .orderBy(desc(webhookEvents.createdAt))
+        .limit(parseInt(limit as string))
+        .offset(parseInt(offset as string));
+
+      res.json({
+        partner_id,
+        events,
+        pagination: {
+          limit: parseInt(limit as string),
+          offset: parseInt(offset as string),
+          total: events.length,
+        },
+        filters: {
+          status,
+          event_type,
+        },
+      });
+    } catch (error) {
+      console.error('Webhook events fetch error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        detail: 'Failed to fetch webhook events',
+        hint: 'Contact system administrator if the problem persists'
+      });
+    }
+  });
+
   // =============================================================================
   // GL MAPPING RULES ENDPOINTS
   // =============================================================================
@@ -337,6 +565,31 @@ export function glGenericRoutes(app: Express) {
       const createdJournal = await GLExportCanonical.getJournal(journal.journalId);
       if (!createdJournal) {
         throw new Error('Failed to retrieve created journal');
+      }
+
+      // Send webhook event for journal draft created
+      try {
+        // Get all active partners for this entity (in production, filter by entity access)
+        const activePartners = await db
+          .select({ id: partners.id })
+          .from(partners)
+          .where(and(
+            eq(partners.status, 'active'),
+            sql`webhook_url IS NOT NULL`
+          ));
+
+        for (const partner of activePartners) {
+          await WebhookService.sendJournalDraftCreatedEvent(partner.id, {
+            journal_id: journal.journalId,
+            run_id: run_id,
+            lines_count: journal.lineCount,
+            total_debit: journal.totalDebit,
+            total_credit: journal.totalCredit,
+          });
+        }
+      } catch (webhookError) {
+        console.error('Webhook event failed:', webhookError);
+        // Continue - don't fail the request for webhook issues
       }
 
       res.status(201).json({
@@ -684,6 +937,144 @@ export function glGenericRoutes(app: Express) {
         success: false,
         error: 'internal_error',
         message: 'Failed to query journals',
+      });
+    }
+  });
+
+  // =============================================================================
+  // DEMO/TEST WEBHOOK ENDPOINTS
+  // =============================================================================
+
+  /**
+   * Simulate Payroll Run Finalized (for testing webhooks)
+   * POST /v1/demo/payroll/finalize
+   */
+  app.post('/v1/demo/payroll/finalize', async (req, res) => {
+    try {
+      const { tenant_id, entity_id, run_id, period } = req.body;
+
+      if (!tenant_id || !entity_id || !run_id || !period) {
+        return res.status(400).json({
+          error: 'MISSING_PARAMETERS',
+          detail: 'tenant_id, entity_id, run_id, and period are required',
+          hint: 'Provide all required payroll run parameters'
+        });
+      }
+
+      // Simulate payroll totals
+      const mockTotals = {
+        gross: '125750.50',
+        net: '89525.35',
+        employee_count: 147
+      };
+
+      // Send webhook to all active partners
+      try {
+        const activePartners = await db
+          .select({ id: partners.id })
+          .from(partners)
+          .where(and(
+            eq(partners.status, 'active'),
+            sql`webhook_url IS NOT NULL`
+          ));
+
+        const webhookPromises = activePartners.map(partner =>
+          WebhookService.sendPayrollRunFinalizedEvent(partner.id, {
+            tenant_id,
+            entity_id,
+            run_id,
+            period,
+            totals: mockTotals
+          })
+        );
+
+        const eventIds = await Promise.all(webhookPromises);
+
+        res.status(200).json({
+          event: 'payroll.run.finalized',
+          run_id,
+          entity_id,
+          period,
+          totals: mockTotals,
+          webhook_events_queued: eventIds.length,
+          event_ids: eventIds,
+          timestamp: new Date().toISOString()
+        });
+      } catch (webhookError) {
+        console.error('Webhook event failed:', webhookError);
+        res.status(500).json({
+          error: 'WEBHOOK_ERROR',
+          detail: 'Failed to queue webhook events',
+          hint: 'Check webhook configuration and try again'
+        });
+      }
+    } catch (error) {
+      console.error('Demo payroll finalize error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        detail: 'Failed to simulate payroll finalization',
+        hint: 'Contact system administrator if the problem persists'
+      });
+    }
+  });
+
+  /**
+   * Simulate Connector Token Refresh (for testing webhooks)
+   * POST /v1/demo/connector/token-refresh
+   */
+  app.post('/v1/demo/connector/token-refresh', async (req, res) => {
+    try {
+      const { connector, entity_id } = req.body;
+
+      if (!connector || !entity_id) {
+        return res.status(400).json({
+          error: 'MISSING_PARAMETERS',
+          detail: 'connector and entity_id are required',
+          hint: 'Specify the connector type (xero, quickbooks, sage, etc.) and entity_id'
+        });
+      }
+
+      // Send webhook to all active partners
+      try {
+        const activePartners = await db
+          .select({ id: partners.id })
+          .from(partners)
+          .where(and(
+            eq(partners.status, 'active'),
+            sql`webhook_url IS NOT NULL`
+          ));
+
+        const webhookPromises = activePartners.map(partner =>
+          WebhookService.sendConnectorTokenRefreshedEvent(partner.id, {
+            connector,
+            entity_id
+          })
+        );
+
+        const eventIds = await Promise.all(webhookPromises);
+
+        res.status(200).json({
+          event: 'connector.token.refreshed',
+          connector,
+          entity_id,
+          webhook_events_queued: eventIds.length,
+          event_ids: eventIds,
+          timestamp: new Date().toISOString()
+        });
+      } catch (webhookError) {
+        console.error('Webhook event failed:', webhookError);
+        res.status(500).json({
+          error: 'WEBHOOK_ERROR',
+          detail: 'Failed to queue webhook events',
+          hint: 'Check webhook configuration and try again'
+        });
+      }
+    } catch (error) {
+      console.error('Demo connector token refresh error:', error);
+      res.status(500).json({
+        error: 'INTERNAL_ERROR',
+        detail: 'Failed to simulate token refresh',
+        hint: 'Contact system administrator if the problem persists'
       });
     }
   });
