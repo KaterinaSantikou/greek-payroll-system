@@ -51,6 +51,7 @@ import { registerPayEquityRoutes } from "./api/payEquity";
 import { registerCsrdRoutes } from "./api/csrd";
 import { embeddedPayrollRoutes } from "./api/embedded";
 import { glGenericRoutes } from "./api/glGeneric";
+import { nativeConnectorRoutes } from "./api/nativeConnectors";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -3316,6 +3317,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Generic GL API (works with any ERP)
   glGenericRoutes(app);
+  
+  // Native Connectors (Xero, QuickBooks Online)
+  nativeConnectorRoutes(app);
 
   // Register notification routes
   try {
