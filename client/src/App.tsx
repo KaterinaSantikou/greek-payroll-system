@@ -43,61 +43,74 @@ import ManagerDashboard from "@/pages/managerDashboard";
 import Forecasting from "@/pages/forecasting";
 import DocumentAI from "@/pages/documentAI";
 import ChangeLogLegalWatch from "@/pages/changeLogLegalWatch";
+import { Navigation } from "@/components/Navigation";
 import Layout from "@/components/Layout";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  return (
-    <Switch>
-      {isLoading || !isAuthenticated ? (
+  if (isLoading || !isAuthenticated) {
+    return (
+      <Switch>
         <Route path="/" component={Landing} />
-      ) : (
-        <Layout>
-          <Route path="/" component={Home} />
-          <Route path="/employees" component={Employees} />
-          <Route path="/employee-master" component={EmployeeMaster} />
-          <Route path="/payroll" component={Payroll} />
-          <Route path="/payments" component={Payments} />
-          <Route path="/sepa-payments" component={SepaPayments} />
-          <Route path="/sepa-engine-demo" component={SepaEngineDemo} />
-          <Route path="/payment-ops-checklist" component={PaymentOpsChecklist} />
-          <Route path="/schedules" component={Schedules} />
-          <Route path="/allowances" component={Allowances} />
-          <Route path="/overtime" component={Overtime} />
-          <Route path="/leave" component={Leave} />
-          <Route path="/legal" component={Legal} />
-          <Route path="/digital-work-card" component={DigitalWorkCard} />
-          <Route path="/advanced-time-capture" component={AdvancedTimeCapture} />
-          <Route path="/enterprise-architecture" component={EnterpriseArchitecture} />
-          <Route path="/ergani-compliance" component={ErganiCompliance} />
-          <Route path="/payroll-integration" component={PayrollIntegration} />
-          <Route path="/manager-workflows" component={ManagerWorkflows} />
-          <Route path="/hotel-operations" component={HotelOperations} />
-          <Route path="/hotel-enhancements" component={HotelEnhancements} />
-          <Route path="/hotel-tip-pooling" component={HotelTipPooling} />
-          <Route path="/ux-architecture" component={UXArchitecture} />
-          <Route path="/compliance" component={Compliance} />
-          <Route path="/analytics" component={Analytics} />
-          <Route path="/deployment" component={Deployment} />
-          <Route path="/success-metrics" component={SuccessMetrics} />
-          <Route path="/kpi-dashboard" component={KPIDashboard} />
-          <Route path="/payroll-processing" component={lazy(() => import("./pages/payrollProcessing"))} />
-          <Route path="/earnings-codes" component={lazy(() => import("./pages/earningsCodesDemo"))} />
-          <Route path="/greek-payroll-demo" component={lazy(() => import("./pages/greekPayrollDemo"))} />
-          <Route path="/earnings-codes-policy" component={lazy(() => import("./pages/earningsCodesPolicy"))} />
-          <Route path="/modern-payroll" component={ModernPayrollEngine} />
-          <Route path="/product-vision" component={ProductVision} />
-          <Route path="/rules-engine" component={RulesEngine} />
-          <Route path="/employee-self-service" component={EmployeeSelfService} />
-          <Route path="/manager-dashboard" component={ManagerDashboard} />
-          <Route path="/forecasting" component={Forecasting} />
-          <Route path="/document-ai" component={DocumentAI} />
-          <Route path="/changelog-legal-watch" component={ChangeLogLegalWatch} />
-        </Layout>
-      )}
-      <Route component={NotFound} />
-    </Switch>
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+
+  return (
+    <div className="flex h-screen">
+      <Navigation />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
+          <Switch>
+            <Route path="/" component={Home} />
+            <Route path="/employees" component={Employees} />
+            <Route path="/employee-master" component={EmployeeMaster} />
+            <Route path="/payroll" component={Payroll} />
+            <Route path="/payments" component={Payments} />
+            <Route path="/sepa-payments" component={SepaPayments} />
+            <Route path="/sepa-engine-demo" component={SepaEngineDemo} />
+            <Route path="/payment-ops-checklist" component={PaymentOpsChecklist} />
+            <Route path="/schedules" component={Schedules} />
+            <Route path="/allowances" component={Allowances} />
+            <Route path="/overtime" component={Overtime} />
+            <Route path="/leave" component={Leave} />
+            <Route path="/legal" component={Legal} />
+            <Route path="/digital-work-card" component={DigitalWorkCard} />
+            <Route path="/advanced-time-capture" component={AdvancedTimeCapture} />
+            <Route path="/enterprise-architecture" component={EnterpriseArchitecture} />
+            <Route path="/ergani-compliance" component={ErganiCompliance} />
+            <Route path="/ergani-compliance/overtime" component={ErganiCompliance} />
+            <Route path="/ergani-compliance/exceptions" component={ErganiCompliance} />
+            <Route path="/payroll-integration" component={PayrollIntegration} />
+            <Route path="/manager-workflows" component={ManagerWorkflows} />
+            <Route path="/hotel-operations" component={HotelOperations} />
+            <Route path="/hotel-enhancements" component={HotelEnhancements} />
+            <Route path="/hotel-tip-pooling" component={HotelTipPooling} />
+            <Route path="/ux-architecture" component={UXArchitecture} />
+            <Route path="/compliance" component={Compliance} />
+            <Route path="/analytics" component={Analytics} />
+            <Route path="/deployment" component={Deployment} />
+            <Route path="/success-metrics" component={SuccessMetrics} />
+            <Route path="/kpi-dashboard" component={KPIDashboard} />
+            <Route path="/payroll-processing" component={lazy(() => import("./pages/payrollProcessing"))} />
+            <Route path="/earnings-codes" component={lazy(() => import("./pages/earningsCodesDemo"))} />
+            <Route path="/greek-payroll-demo" component={lazy(() => import("./pages/greekPayrollDemo"))} />
+            <Route path="/earnings-codes-policy" component={lazy(() => import("./pages/earningsCodesPolicy"))} />
+            <Route path="/modern-payroll" component={ModernPayrollEngine} />
+            <Route path="/product-vision" component={ProductVision} />
+            <Route path="/rules-engine" component={RulesEngine} />
+            <Route path="/employee-self-service" component={EmployeeSelfService} />
+            <Route path="/manager-dashboard" component={ManagerDashboard} />
+            <Route path="/forecasting" component={Forecasting} />
+            <Route path="/document-ai" component={DocumentAI} />
+            <Route path="/changelog-legal-watch" component={ChangeLogLegalWatch} />
+            <Route component={NotFound} />
+          </Switch>
+        </div>
+      </div>
+    </div>
   );
 }
 
