@@ -441,8 +441,8 @@ export class PayrollRulesEngine {
     return this.evaluateRules("time_bands", context);
   }
 
-  // ERGANI routing determination
-  async determineErganiRouting(entityData: any, submissionType: string): Promise<any[]> {
+  // ERGANI routing evaluation
+  async evaluateErganiRouting(entityData: any, submissionType: string): Promise<any[]> {
     const context = {
       entity: entityData,
       submission_type: submissionType,

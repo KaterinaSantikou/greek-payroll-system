@@ -296,8 +296,8 @@ class AnalyticsService {
       .where(eq(properties.propertyId, propertyId))
       .limit(1);
 
-    const departments = Array.from(departmentCosts.values());
-    const totals = departments.reduce((acc, dept) => ({
+    const departmentList = Array.from(departmentCosts.values());
+    const totals = departmentList.reduce((acc, dept) => ({
       scheduledHours: acc.scheduledHours + dept.scheduledHours,
       projectedHours: acc.projectedHours + dept.projectedHours,
       baseCost: acc.baseCost + dept.baseCost,
@@ -328,7 +328,7 @@ class AnalyticsService {
       totalOvertimeCost: totals.overtimeCost,
       totalCost: totals.totalCost,
       variancePercentage: totals.scheduledHours > 0 ? ((totals.projectedHours - totals.scheduledHours) / totals.scheduledHours) * 100 : 0,
-      departments,
+      departments: departmentList,
     };
   }
 
