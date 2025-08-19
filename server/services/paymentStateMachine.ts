@@ -33,7 +33,7 @@ export type LineStatus =
 // =============================================================================
 
 const BATCH_TRANSITIONS: Record<BatchStatus, BatchStatus[]> = {
-  "prepared": ["submitted", "cancelled", "failed"],
+  "prepared": ["submitted", "failed"],
   "submitted": ["accepted", "failed"],
   "accepted": ["partially_settled", "settled", "failed"],
   "partially_settled": ["settled", "reconciled", "failed"],

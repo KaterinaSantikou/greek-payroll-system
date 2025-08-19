@@ -60,6 +60,8 @@ import { paymentsOpsRoutes } from "./api/paymentsOps";
 import { paymentBatchRoutes } from "./api/paymentBatch";
 import { canonicalPaymentsRoutes } from "./api/canonicalPayments";
 import { paymentStateMachineRoutes } from "./api/paymentStateMachine";
+import { reconciliationEngineRoutes } from "./api/reconciliationEngine";
+import { cutOffLogicRoutes } from "./api/cutOffLogic";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -3352,6 +3354,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Payment State Machine
   paymentStateMachineRoutes(app);
+  
+  // Reconciliation Engine
+  reconciliationEngineRoutes(app);
+  
+  // Cut-Off Logic & Recommendations
+  cutOffLogicRoutes(app);
 
   // Register notification routes
   try {
