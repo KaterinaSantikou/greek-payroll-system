@@ -532,6 +532,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/payroll/demo-batch", isAuthenticated, async (req, res) => {
+    try {
+      const payrollData = req.body;
+      console.log(`[PAYROLL DEMO] Processing batch for period ${payrollData.pay_period}, property ${payrollData.property_id}`);
+      
+      // Create demo timesheet entries from the payroll data
+      const demoEntries = [];
+      for (const record of payrollData.records) {
+        for (const line of record.lines) {
+          const entry = {
+            entryId: `demo_${record.employee_number}_${line.code}_${Date.now()}`,
+            employeeNumber: record.employee_number,
+            employeeGuid: `guid_${record.employee_number}`,
+            payPeriodStart: `${payrollData.pay_period}-01`,
+            payPeriodEnd: `${payrollData.pay_period}-31`,
+            earningsCode: line.code,
+            hours: line.hours,
+            units: line.hours,
+            rateBasis: 'HOURLY',
+            costCenterAllocations: [{
+              costCenterId: line.cost_center,
+              propertyId: payrollData.property_id,
+              hours: line.hours,
+              percentage: 100
+            }],
+            propertyId: payrollData.property_id,
+            calculatedAt: new Date(),
+            lockedAt: new Date(),
+            approvedBy: record.notes?.includes('MGR_') ? record.notes.split(' ')[2] : 'system',
+            notes: record.notes
+          };
+          demoEntries.push(entry);
+          
+          // Add to payroll connector storage
+          payrollConnector['timesheetEntries'] = payrollConnector['timesheetEntries'] || new Map();
+          payrollConnector['timesheetEntries'].set(entry.entryId, entry);
+        }
+      }
+
+      // Create an export batch automatically
+      const batch = await payrollConnector.createExportBatch(
+        `${payrollData.pay_period}-01`,
+        `${payrollData.pay_period}-31`,
+        'API'
+      );
+
+      res.json({
+        success: true,
+        message: `Processed ${demoEntries.length} timesheet entries for ${payrollData.records.length} employees`,
+        entriesCreated: demoEntries.length,
+        batchId: batch.batchId,
+        totalHours: demoEntries.reduce((sum, entry) => sum + entry.hours, 0),
+        breakdownByCode: demoEntries.reduce((acc, entry) => {
+          acc[entry.earningsCode] = (acc[entry.earningsCode] || 0) + entry.hours;
+          return acc;
+        }, {} as Record<string, number>)
+      });
+      
+    } catch (error) {
+      console.error("Error processing demo payroll batch:", error);
+      res.status(500).json({ error: "Failed to process demo batch" });
+    }
+  });
+
   // Export routes
   app.get("/api/employees/export/excel", isAuthenticated, async (req, res) => {
     try {

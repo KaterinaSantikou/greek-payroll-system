@@ -60,8 +60,8 @@ interface ExportBatch {
 
 export default function PayrollIntegration() {
   const [selectedPayPeriod, setSelectedPayPeriod] = useState({
-    start: new Date().toISOString().split('T')[0],
-    end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    start: '2025-08-01',
+    end: '2025-08-31'
   });
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [exportFormat, setExportFormat] = useState<'CSV' | 'XML' | 'API'>('CSV');
@@ -151,6 +151,23 @@ export default function PayrollIntegration() {
     },
   });
 
+  // Demo batch mutation
+  const demoBatchMutation = useMutation({
+    mutationFn: async (payrollData: any) => {
+      const response = await fetch("/api/payroll/demo-batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payrollData),
+      });
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/payroll/timesheets"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/payroll/batches"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/payroll/health"] });
+    },
+  });
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       PENDING: "secondary",
@@ -191,6 +208,26 @@ export default function PayrollIntegration() {
       payPeriodEnd: selectedPayPeriod.end,
       format: exportFormat
     });
+  };
+
+  const handleProcessDemoPayroll = () => {
+    const demoPayrollData = {
+      "pay_period": "2025-08",
+      "property_id": "PRINCESS",
+      "records": [
+        {
+          "employee_number": "A12345",
+          "lines": [
+            {"code":"REG","hours":136.0,"cost_center":"PRINCESS-FO"},
+            {"code":"NIGHT","hours":12.0,"cost_center":"PRINCESS-FO"},
+            {"code":"OT1","hours":8.0,"cost_center":"PRINCESS-FO"}
+          ],
+          "notes": "Approved by MGR_102 on 2025-08-18"
+        }
+      ]
+    };
+
+    demoBatchMutation.mutate(demoPayrollData);
   };
 
   if (healthLoading) {
@@ -276,6 +313,47 @@ export default function PayrollIntegration() {
 
         {/* Timesheet Processing Tab */}
         <TabsContent value="timesheet-processing" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Demo Payroll Processing</CardTitle>
+              <CardDescription>
+                Process a sample payroll batch with Greek earnings codes for Princess Hotel property
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert>
+                <FileText className="h-4 w-4" />
+                <AlertDescription>
+                  Sample payroll data: Employee A12345 at Princess Hotel with 136 regular hours, 12 night hours, and 8 overtime hours (Tier 1).
+                </AlertDescription>
+              </Alert>
+              
+              <Button 
+                onClick={handleProcessDemoPayroll}
+                disabled={demoBatchMutation.isPending}
+                className="w-full"
+                size="lg"
+              >
+                {demoBatchMutation.isPending ? (
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Calculator className="mr-2 h-4 w-4" />
+                )}
+                Process Demo Payroll Batch
+              </Button>
+              
+              {demoBatchMutation.data && (
+                <Alert className="border-green-200 bg-green-50">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    Successfully processed {demoBatchMutation.data.entriesCreated} timesheet entries. 
+                    Total hours: {demoBatchMutation.data.totalHours}. 
+                    Batch ID: {demoBatchMutation.data.batchId?.slice(-8)}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
           <Card>
             <CardHeader>
               <CardTitle>Process Timesheets</CardTitle>
