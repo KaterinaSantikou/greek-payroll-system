@@ -52,6 +52,17 @@ export interface GLJournalRequest {
   payrollRun: PayrollRunSummary;
   currency?: string;
   description?: string;
+  mappingRules?: MappingRule[];
+}
+
+export interface MappingRule {
+  type: 'earning' | 'premium' | 'employer_contrib' | 'liability' | 'bank';
+  code?: string;
+  name?: string;
+  account: string;
+  dimension?: string;
+  description?: string;
+  priority?: number;
 }
 
 export interface GLJournalResponse {
@@ -70,6 +81,20 @@ export class GLExportCanonical {
    * Generate GL journal from payroll run using canonical model
    */
   static async generateJournal(request: GLJournalRequest): Promise<GLJournalResponse> {
+    return this.generateJournalInternal(request, false);
+  }
+
+  /**
+   * Generate GL journal using custom mapping rules
+   */
+  static async generateJournalWithMappings(request: GLJournalRequest): Promise<GLJournalResponse> {
+    return this.generateJournalInternal(request, true);
+  }
+
+  /**
+   * Internal journal generation method
+   */
+  private static async generateJournalInternal(request: GLJournalRequest, useCustomMappings: boolean): Promise<GLJournalResponse> {
     const { tenantId, entityId, period, payrollRun, currency = 'EUR', description } = request;
     
     // Create journal header
@@ -95,10 +120,16 @@ export class GLExportCanonical {
       .returning();
 
     // Generate journal lines from payroll data
-    const journalLines = await this.buildJournalLines(
-      journalHeader.journalId,
-      payrollRun
-    );
+    const journalLines = useCustomMappings && request.mappingRules
+      ? await this.buildJournalLinesWithMappings(
+          journalHeader.journalId,
+          payrollRun,
+          request.mappingRules
+        )
+      : await this.buildJournalLines(
+          journalHeader.journalId,
+          payrollRun
+        );
 
     // Insert journal lines
     await db.insert(glJournalLinesCanonical).values(journalLines);
@@ -497,5 +528,144 @@ export class GLExportCanonical {
       .orderBy(glJournalLinesCanonical.lineNumber);
 
     return { header, lines };
+  }
+
+  /**
+   * Build journal lines using custom mapping rules
+   */
+  private static async buildJournalLinesWithMappings(
+    journalId: string,
+    payrollRun: PayrollRunSummary,
+    mappingRules: MappingRule[]
+  ): Promise<InsertGLJournalLineCanonical[]> {
+    const lines: InsertGLJournalLineCanonical[] = [];
+    let lineNumber = 1;
+
+    // Create mapping lookups
+    const earningsMap = new Map<string, string>();
+    const premiumMap = new Map<string, string>();
+    const employerContribMap = new Map<string, string>();
+    const liabilityMap = new Map<string, string>();
+    const bankMap = new Map<string, string>();
+
+    mappingRules.forEach(rule => {
+      const key = rule.code || rule.name || '';
+      switch (rule.type) {
+        case 'earning':
+          earningsMap.set(key, rule.account);
+          break;
+        case 'premium':
+          premiumMap.set(key, rule.account);
+          break;
+        case 'employer_contrib':
+          employerContribMap.set(key, rule.account);
+          break;
+        case 'liability':
+          liabilityMap.set(key, rule.account);
+          break;
+        case 'bank':
+          bankMap.set(key, rule.account);
+          break;
+      }
+    });
+
+    // Group payroll items by type and account
+    const groupedItems = this.groupPayrollItems(payrollRun.lineItems);
+
+    // Process earnings (gross pay components)
+    for (const [earningsCode, items] of Object.entries(groupedItems.earnings)) {
+      let accountCode = earningsMap.get(earningsCode);
+      
+      // Try premium mappings for special pay types
+      if (!accountCode && (earningsCode.includes('NIGHT') || earningsCode.includes('SUNDAY') || earningsCode.includes('HOLIDAY'))) {
+        accountCode = premiumMap.get(earningsCode);
+      }
+      
+      // Default fallback
+      if (!accountCode) {
+        console.warn(`No mapping found for earnings code: ${earningsCode}, using default`);
+        accountCode = '60.00.100'; // Default payroll expense account
+      }
+
+      const totalAmount = items.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+      
+      // Debit expense account
+      lines.push({
+        journalId,
+        lineNumber: lineNumber++,
+        accountCode,
+        debit: totalAmount.toFixed(2),
+        credit: '0.00',
+        description: `${earningsCode} - ${payrollRun.runNumber}`,
+        earningsCode,
+        costCenter: this.determineCostCenter(items),
+        department: this.determineDepartment(items),
+        propertyId: this.determineProperty(items),
+      });
+    }
+
+    // Process deductions and liabilities
+    for (const [deductionCode, items] of Object.entries(groupedItems.deductions)) {
+      const accountCode = liabilityMap.get(deductionCode) || liabilityMap.get(deductionCode.replace('_EE', '')) || '33.00.100';
+      const totalAmount = items.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+      
+      // Credit payable/liability account
+      lines.push({
+        journalId,
+        lineNumber: lineNumber++,
+        accountCode,
+        debit: '0.00',
+        credit: Math.abs(totalAmount).toFixed(2), // Make positive for liability
+        description: `${deductionCode} - ${payrollRun.runNumber}`,
+        earningsCode: deductionCode,
+        costCenter: this.determineCostCenter(items),
+        department: this.determineDepartment(items),
+        propertyId: this.determineProperty(items),
+      });
+    }
+
+    // Add employer costs
+    const employerCosts = this.calculateEmployerCosts(payrollRun);
+    for (const [costCode, amount] of Object.entries(employerCosts)) {
+      const accountCode = employerContribMap.get(costCode) || '60.10.200'; // Default employer expense
+      
+      // Debit employer expense
+      lines.push({
+        journalId,
+        lineNumber: lineNumber++,
+        accountCode,
+        debit: amount.toFixed(2),
+        credit: '0.00',
+        description: `${costCode} - ${payrollRun.runNumber}`,
+        earningsCode: costCode,
+      });
+
+      // Credit corresponding liability
+      const liabilityAccount = liabilityMap.get(costCode) || liabilityMap.get(costCode.replace('_EMPLOYER', '_PAYABLE')) || '33.10.200';
+      lines.push({
+        journalId,
+        lineNumber: lineNumber++,
+        accountCode: liabilityAccount,
+        debit: '0.00',
+        credit: amount.toFixed(2),
+        description: `${costCode} Payable - ${payrollRun.runNumber}`,
+        earningsCode: costCode + '_PAYABLE',
+      });
+    }
+
+    // Add clearing/bank entries
+    const clearingAccount = bankMap.get('PAYROLL_CLEARING') || '38.00.100';
+    
+    // Credit payroll clearing account (net pay due)
+    lines.push({
+      journalId,
+      lineNumber: lineNumber++,
+      accountCode: clearingAccount,
+      debit: '0.00',
+      credit: parseFloat(payrollRun.totalNet).toFixed(2),
+      description: `Net Pay Clearing - ${payrollRun.runNumber}`,
+    });
+
+    return lines;
   }
 }

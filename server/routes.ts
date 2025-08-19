@@ -50,6 +50,7 @@ import { registerInstantPaymentRoutes } from "./api/instantPayments";
 import { registerPayEquityRoutes } from "./api/payEquity";
 import { registerCsrdRoutes } from "./api/csrd";
 import { embeddedPayrollRoutes } from "./api/embedded";
+import { glGenericRoutes } from "./api/glGeneric";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -3312,6 +3313,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerPayEquityRoutes(app);
   registerCsrdRoutes(app);
   embeddedPayrollRoutes(app);
+  
+  // Generic GL API (works with any ERP)
+  glGenericRoutes(app);
 
   // Register notification routes
   try {

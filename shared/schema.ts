@@ -3151,3 +3151,92 @@ export const insertGLDimensionMappingSchema = createInsertSchema(glDimensionMapp
 });
 export type InsertGLDimensionMapping = z.infer<typeof insertGLDimensionMappingSchema>;
 export type GLDimensionMapping = typeof glDimensionMappings.$inferSelect;
+
+// =============================================================================
+// GENERIC GL MAPPING RULES
+// =============================================================================
+
+// Generic GL Mapping Rules for any ERP system
+export const glMappingRules = pgTable("gl_mapping_rules", {
+  ruleId: varchar("rule_id").primaryKey().default(sql`gen_random_uuid()`),
+  entityId: varchar("entity_id", { length: 100 }).notNull(),
+  
+  // Rule Configuration
+  type: varchar("type", { length: 50 }).notNull(), // earning, premium, employer_contrib, liability, bank
+  code: varchar("code", { length: 50 }), // REG, OT_TIER1_40, NIGHT_25, etc.
+  name: varchar("name", { length: 100 }), // EFKA, EFKA_PAYABLE, etc.
+  account: varchar("account", { length: 50 }).notNull(), // GL account code
+  
+  // Dimensional Mapping
+  dimension: varchar("dimension", { length: 255 }), // cost_center=property, department=fixed, etc.
+  
+  // Metadata
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  priority: integer("priority").default(100), // For rule precedence
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// GL Mapping Rule sets for entities
+export const glMappingRuleSets = pgTable("gl_mapping_rule_sets", {
+  ruleSetId: varchar("rule_set_id").primaryKey().default(sql`gen_random_uuid()`),
+  entityId: varchar("entity_id", { length: 100 }).notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  version: varchar("version", { length: 20 }).default("1.0"),
+  isActive: boolean("is_active").default(true),
+  rules: jsonb("rules").notNull(), // Array of mapping rules
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// =============================================================================
+// GENERIC GL RELATIONS
+// =============================================================================
+
+export const glMappingRulesRelations = relations(glMappingRules, ({ one }) => ({
+  // Could add relations to entities/properties if needed
+}));
+
+// =============================================================================
+// GENERIC GL SCHEMA EXPORTS
+// =============================================================================
+
+// Mapping Rules schemas
+export const insertGLMappingRuleSchema = createInsertSchema(glMappingRules).omit({
+  ruleId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertGLMappingRule = z.infer<typeof insertGLMappingRuleSchema>;
+export type GLMappingRule = typeof glMappingRules.$inferSelect;
+
+export const insertGLMappingRuleSetSchema = createInsertSchema(glMappingRuleSets).omit({
+  ruleSetId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertGLMappingRuleSet = z.infer<typeof insertGLMappingRuleSetSchema>;
+export type GLMappingRuleSet = typeof glMappingRuleSets.$inferSelect;
+
+// Generic mapping rule validation schema
+export const mappingRuleSchema = z.object({
+  type: z.enum(["earning", "premium", "employer_contrib", "liability", "bank"]),
+  code: z.string().optional(),
+  name: z.string().optional(),
+  account: z.string(),
+  dimension: z.string().optional(),
+  description: z.string().optional(),
+  priority: z.number().default(100),
+});
+
+export const mappingRuleSetSchema = z.object({
+  entity_id: z.string(),
+  name: z.string().optional(),
+  version: z.string().optional(),
+  rules: z.array(mappingRuleSchema),
+});
+
+export type MappingRule = z.infer<typeof mappingRuleSchema>;
+export type MappingRuleSet = z.infer<typeof mappingRuleSetSchema>;
