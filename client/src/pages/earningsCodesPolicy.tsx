@@ -34,13 +34,13 @@ const POLICY_SECTIONS: PolicySection[] = [
   {
     id: "premium-rates",
     title: "Premium Rate Classifications",
-    content: "Greek law mandates specific premium rates for non-standard working conditions. These rates are legally required and cannot be reduced below statutory minimums. All premiums are stackable with regular hours and may combine with other applicable premiums.",
-    compliance: ["Sunday work permits required", "Holiday work authorization", "Overtime tracking within annual limits"],
+    content: "Greek law mandates specific premium rates for non-standard working conditions. These rates are legally required and cannot be reduced below statutory minimums. All premiums may stack with each other but are recorded separately from REG (Regular Hours). Work permits required for Sunday and holiday premiums where applicable.",
+    compliance: ["Sunday work permits required where applicable", "Holiday work authorization", "Night work band compliance (22:00-06:00)", "Sixth-day eligibility verification"],
     examples: [
-      "NIGHT_25: 25% premium for hours between 22:00-06:00",
-      "SUNDAY_75: 75% premium with proper work permit",
-      "HOLIDAY_75: 75% premium for public holiday work",
-      "OT_TIER1_40: 40% overtime within 150-hour annual cap"
+      "NIGHT_25: 25% premium for hours between 22:00-06:00, stackable",
+      "SUNDAY_75: 75% premium with legal work permit, stackable",
+      "HOLIDAY_75: 75% premium for public holiday work, stackable",
+      "SIXTH_DAY_40: 40% premium, disabled by default for hospitality"
     ]
   },
   {

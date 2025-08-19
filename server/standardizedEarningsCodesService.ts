@@ -52,19 +52,19 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   // Night Work Premium (Primary focus from user requirement)
   NIGHT_25: {
     code: 'NIGHT_25',
-    name: 'Night Work Premium (25%)',
-    description: 'Premium for hours worked during night band (22:00-06:00)',
+    name: 'Night Work Premium',
+    description: 'Applies to hours worked between 22:00 and 06:00, paid at a 25% premium over the base hourly rate. Taxable, contributory, included in APD, and may stack with Sunday, Holiday, or Overtime premiums.',
     calculation: 'premium_percentage',
     premiumRate: 0.25, // 25% premium over hourly rate
     taxable: true,
     contributoryEFKA: true,
     includedAPD: true,
-    stackable: true, // Can stack with Sunday, holiday, or overtime
+    stackable: true, // May stack with Sunday, Holiday, or Overtime premiums
     baseWage: false,
     applicableHours: {
       nightBand: { start: "22:00", end: "06:00" }
     },
-    dependsOn: ['REG'], // Must have regular hours to calculate premium
+    dependsOn: ['REG'], // References base hourly rate for calculation
     constraints: {
       maxHoursPerWeek: 40, // Same as regular hours limit
     }
@@ -119,14 +119,14 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   // Sunday and Holiday Premiums (Stackable with night work)
   SUNDAY_75: {
     code: 'SUNDAY_75',
-    name: 'Sunday Premium (75%)',
-    description: 'Hours worked on Sundays are paid with a 75% premium. Requires relevant work permit.',
+    name: 'Sunday Premium',
+    description: 'Hours worked on Sundays are paid at a 75% premium. Requires a legal work permit where applicable. Fully taxable, contributory, included in APD, and stackable.',
     calculation: 'premium_percentage',
     premiumRate: 0.75,
     taxable: true,
     contributoryEFKA: true,
     includedAPD: true,
-    stackable: true, // Can stack with Night or OT premiums
+    stackable: true, // Stackable with other premiums
     baseWage: false,
     applicableHours: {
       weekends: true
@@ -136,14 +136,14 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
 
   HOLIDAY_75: {
     code: 'HOLIDAY_75',
-    name: 'Public Holiday Premium (75%)',
-    description: 'Public holiday hours attract a 75% premium. Taxable, contributory, stackable, and included in APD.',
+    name: 'Public Holiday Premium',
+    description: 'Hours worked on public holidays are paid at a 75% premium. Fully taxable, contributory, included in APD, and stackable.',
     calculation: 'premium_percentage',
     premiumRate: 0.75,
     taxable: true,
     contributoryEFKA: true,
     includedAPD: true,
-    stackable: true, // Can stack with night premium
+    stackable: true, // Stackable with other premiums
     baseWage: false,
     applicableHours: {
       holidays: true
@@ -154,8 +154,8 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   // Sixth Working Day Premium
   SIXTH_DAY_40: {
     code: 'SIXTH_DAY_40',
-    name: 'Sixth Working Day Premium (40%)',
-    description: 'Eligible sixth-day hours are paid with a 40% premium. By default, disabled for hospitality and tourism, but entities may enable if eligible.',
+    name: 'Sixth Working Day Premium',
+    description: 'Sixth-day hours, where legally permitted, are paid at a 40% premium. Taxable, contributory, and included in APD. This code is disabled by default for hospitality and tourism, but may be enabled by specific entities if eligible.',
     calculation: 'premium_percentage',
     premiumRate: 0.40,
     taxable: true,
