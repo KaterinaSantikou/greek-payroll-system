@@ -37,6 +37,7 @@ import RulesEngine from "@/pages/rulesEngine";
 import ManagerDashboard from "@/pages/managerDashboard";
 import Forecasting from "@/pages/forecasting";
 import DocumentAI from "@/pages/documentAI";
+import ChangeLogLegalWatch from "@/pages/changeLogLegalWatch";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -79,6 +80,7 @@ function Router() {
           <Route path="/manager-dashboard" component={ManagerDashboard} />
           <Route path="/forecasting" component={Forecasting} />
           <Route path="/document-ai" component={DocumentAI} />
+          <Route path="/changelog-legal-watch" component={ChangeLogLegalWatch} />
         </Layout>
       )}
       <Route component={NotFound} />

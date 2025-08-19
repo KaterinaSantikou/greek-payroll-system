@@ -16,6 +16,7 @@ import securityAPI from "./api/security";
 import reportsAPI from "./api/reports";
 import { registerForecastingRoutes } from "./api/forecasting";
 import { registerDocumentAIRoutes } from "./api/documentAI";
+import { registerChangeLogLegalWatchRoutes } from "./api/changeLogLegalWatch";
 import { 
   insertEmployeeSchema, 
   insertPropertySchema, 
@@ -2274,6 +2275,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Document AI API routes
   registerDocumentAIRoutes(app);
+  
+  // Register Change Log & Legal Watch API routes
+  registerChangeLogLegalWatchRoutes(app);
 
   // Register Hotel Tip Pooling API routes
   const { registerHotelTipPoolingRoutes } = await import("./api/hotelTipPooling");

@@ -26,7 +26,8 @@ import {
   Scale,
   Smartphone,
   Rocket,
-  Play
+  Play,
+  ScrollText
 } from "lucide-react";
 
 interface MenuLevel3Item {
@@ -383,6 +384,15 @@ const menuStructure: MenuLevel1Item[] = [
         items: [
           { name: "Product Vision", href: "/product-vision", description: "Platform roadmap" },
           { name: "UX Architecture", href: "/ux-architecture", description: "Navigation design" },
+        ]
+      },
+      {
+        name: "Change Management",
+        icon: ScrollText,
+        items: [
+          { name: "Change Log & Legal Watch", href: "/changelog-legal-watch", description: "Versioned rule packs & legal monitoring" },
+          { name: "Document AI", href: "/document-ai", description: "AI-powered document processing" },
+          { name: "Forecasting", href: "/forecasting", description: "AI-driven workforce planning" },
         ]
       }
     ]
