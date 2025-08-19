@@ -127,31 +127,42 @@ const menuStructure: MenuLevel1Item[] = [
     ]
   },
   {
-    name: "Workforce",
+    name: "People",
     icon: Users,
     color: "bg-purple-500",
     items: [
       {
-        name: "Employee Management",
-        icon: Users,
+        name: "Employees",
+        icon: User,
         items: [
-          { name: "Employee Master", href: "/employee-master", description: "Complete profiles" },
-          { name: "Active Employees", href: "/employees", description: "Current workforce" },
+          { name: "Profiles", href: "/employee-master", description: "Complete employee profiles" },
+          { name: "Contracts", href: "/employees", description: "Employment contracts & terms" },
+          { name: "Documents", href: "/legal", description: "Employee documentation" },
+          { name: "Assignments", href: "/allowances", description: "Role & department assignments" },
         ]
       },
       {
-        name: "Scheduling",
+        name: "Teams & Rotas",
         icon: Clock,
         items: [
-          { name: "Work Schedules", href: "/schedules", description: "Shift management" },
-          { name: "Leave Management", href: "/leave", description: "Time-off tracking" },
+          { name: "Builder", href: "/schedules", description: "Schedule creation tools" },
+          { name: "Templates", href: "/leave", description: "Reusable schedule patterns" },
+          { name: "Approvals", href: "/manager-workflows", description: "Schedule approval workflows" },
         ]
-      },
+      }
+    ]
+  },
+  {
+    name: "Payroll & Finance",
+    icon: Calculator,
+    color: "bg-emerald-500",
+    items: [
       {
-        name: "Compensation",
-        icon: Gift,
+        name: "Payroll Processing",
+        icon: Calculator,
         items: [
-          { name: "Allowances", href: "/allowances", description: "Additional payments" },
+          { name: "Payroll Engine", href: "/payroll", description: "Core calculations" },
+          { name: "Modern Payroll", href: "/modern-payroll", description: "Next-gen platform" },
           { name: "Payments & Accounting", href: "/payments", description: "Financial processing" },
         ]
       }
@@ -296,8 +307,8 @@ export default function ThreeLevelNavigation() {
                             
                             return (
                               <Link key={level3.href} href={level3.href}>
-                                <a className={cn(
-                                  "flex flex-col px-3 py-2 rounded-md text-sm transition-colors group hover:bg-primary-50",
+                                <div className={cn(
+                                  "flex flex-col px-3 py-2 rounded-md text-sm transition-colors group hover:bg-primary-50 cursor-pointer",
                                   isActive ? 
                                     "bg-primary-100 text-primary-700 border-l-2 border-primary-500" : 
                                     "text-neutral-700 hover:text-primary-600"
@@ -316,7 +327,7 @@ export default function ThreeLevelNavigation() {
                                       {level3.description}
                                     </span>
                                   )}
-                                </a>
+                                </div>
                               </Link>
                             );
                           })}

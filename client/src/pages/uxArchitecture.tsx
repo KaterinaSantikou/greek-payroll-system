@@ -43,6 +43,35 @@ const uxExample = {
       ]
     },
     {
+      name: "People",
+      icon: Users,
+      color: "bg-purple-500",
+      description: "Employee management and workforce organization",
+      level2: [
+        {
+          name: "Employees",
+          icon: User,
+          description: "Individual employee management",
+          level3: [
+            { name: "Profiles", path: "/employee-master", description: "Complete employee profiles" },
+            { name: "Contracts", path: "/employees", description: "Employment contracts & terms" },
+            { name: "Documents", path: "/legal", description: "Employee documentation" },
+            { name: "Assignments", path: "/allowances", description: "Role & department assignments" }
+          ]
+        },
+        {
+          name: "Teams & Rotas",
+          icon: Clock,
+          description: "Schedule and team management",
+          level3: [
+            { name: "Builder", path: "/schedules", description: "Schedule creation tools" },
+            { name: "Templates", path: "/leave", description: "Reusable schedule patterns" },
+            { name: "Approvals", path: "/manager-workflows", description: "Schedule approval workflows" }
+          ]
+        }
+      ]
+    },
+    {
       name: "Live Compliance",
       icon: Shield,
       color: "bg-red-500",
@@ -339,9 +368,10 @@ export default function UXArchitecture() {
               </p>
               <div className="flex flex-wrap justify-center gap-2 text-sm">
                 <Badge variant="outline">Dashboard</Badge>
+                <Badge variant="outline">People</Badge>
                 <Badge variant="outline">Live Compliance</Badge>
                 <Badge variant="outline">Cost Insights</Badge>
-                <Badge variant="outline">Workforce</Badge>
+                <Badge variant="outline">Payroll & Finance</Badge>
                 <Badge variant="outline">Hotel Operations</Badge>
                 <Badge variant="outline">Platform</Badge>
               </div>
