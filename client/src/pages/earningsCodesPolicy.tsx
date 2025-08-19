@@ -57,12 +57,12 @@ const POLICY_SECTIONS: PolicySection[] = [
   {
     id: "greek-bonuses",
     title: "Mandatory Greek Bonuses",
-    content: "Greek employment law mandates specific bonuses based on tenure and earnings. Easter Bonus (Δώρο Πάσχα) and Christmas Bonus (Δώρο Χριστουγέννων) are calculated using tenure-based formulas and must be prorated for partial service. Leave Allowance (Επίδομα Άδειας) follows similar rules but is not stackable with other components.",
-    compliance: ["Tenure-based calculation formulas", "Proration for partial service periods", "Full tax and EFKA treatment"],
+    content: "Greek employment law mandates specific seasonal bonuses and allowances. Easter Bonus (Δώρο Πάσχα) and Christmas Bonus (Δώρο Χριστουγέννων) are seasonal bonuses based on tenure and earnings, prorated for partial service. Leave Allowance (Επίδομα Άδειας) is an annual leave allowance prorated according to service and leave taken, and is not stackable.",
+    compliance: ["Tenure-based calculation formulas", "Proration for partial service periods", "Full tax and EFKA treatment", "Leave allowance non-stackable rule"],
     examples: [
-      "BONUS_EASTER: 15 days for <1 year, 25 days for >5 years",
-      "BONUS_CHRISTMAS: Similar to Easter with December calculation",
-      "ALLOWANCE_LEAVE: 50% of monthly wage plus allowances"
+      "BONUS_EASTER: Seasonal bonus, tenure-based, prorated",
+      "BONUS_CHRISTMAS: Seasonal bonus, tenure-based, prorated", 
+      "ALLOWANCE_LEAVE: Annual allowance, service-based, non-stackable"
     ]
   },
   {

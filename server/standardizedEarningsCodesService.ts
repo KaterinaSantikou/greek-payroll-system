@@ -213,7 +213,7 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   BONUS_EASTER: {
     code: 'BONUS_EASTER',
     name: 'Easter Bonus (Δώρο Πάσχα)',
-    description: 'Calculated based on tenure and earnings, prorated for partial service. Taxable, contributory, and reported in APD.',
+    description: 'Seasonal bonus based on tenure and earnings, prorated for partial service. Taxable, contributory, and included in APD.',
     calculation: 'fixed_amount',
     taxable: true,
     contributoryEFKA: true,
@@ -225,7 +225,7 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   BONUS_CHRISTMAS: {
     code: 'BONUS_CHRISTMAS',
     name: 'Christmas Bonus (Δώρο Χριστουγέννων)',
-    description: 'Similar to Easter bonus, based on tenure and prorated. Fully taxable, contributory, and included in APD.',
+    description: 'Seasonal bonus based on tenure and earnings, prorated for partial service. Fully taxable, contributory, and included in APD.',
     calculation: 'fixed_amount',
     taxable: true,
     contributoryEFKA: true,
@@ -237,7 +237,7 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   ALLOWANCE_LEAVE: {
     code: 'ALLOWANCE_LEAVE',
     name: 'Leave Allowance (Επίδομα Άδειας)',
-    description: 'Calculated per tenure and earnings, prorated if leave is partial. Taxable, contributory, included in APD, and not stackable.',
+    description: 'Annual leave allowance, prorated according to service and leave taken. Taxable, contributory, included in APD, and not stackable.',
     calculation: 'fixed_amount',
     taxable: true,
     contributoryEFKA: true,
