@@ -132,6 +132,7 @@ function Router() {
             <Route path="/pay-explanation-demo" component={PayExplanationDemo} />
             <Route path="/ai-engines-demo" component={AIEnginesDemo} />
             <Route path="/command-palette-demo" component={CommandPaletteDemo} />
+            <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
         <Route path="/ai-copilot" component={AICopilot} />
         <Route component={NotFound} />
       </Switch>

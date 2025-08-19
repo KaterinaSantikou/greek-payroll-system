@@ -3573,6 +3573,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Data Contract API Routes
+
+  // Timesheets API - normalized hours by earnings code
+  app.get('/api/timesheets/:period', isAuthenticated, async (req, res) => {
+    const { timesheetRoutes } = await import('./api/timesheets');
+    return timesheetRoutes.getTimesheetsByPeriod(req, res);
+  });
+
+  app.get('/api/timesheets/:period/summary', isAuthenticated, async (req, res) => {
+    const { timesheetRoutes } = await import('./api/timesheets');
+    return timesheetRoutes.getTimesheetSummary(req, res);
+  });
+
+  // Rulesets API - OT/night/Sunday/min-wage with effective dates
+  app.get('/api/rulesets/current', isAuthenticated, async (req, res) => {
+    const { rulesetRoutes } = await import('./api/rulesets');
+    return rulesetRoutes.getCurrentRuleset(req, res);
+  });
+
+  app.get('/api/rulesets/effective/:date', isAuthenticated, async (req, res) => {
+    const { rulesetRoutes } = await import('./api/rulesets');
+    return rulesetRoutes.getRulesetByDate(req, res);
+  });
+
+  app.get('/api/rulesets/history', isAuthenticated, async (req, res) => {
+    const { rulesetRoutes } = await import('./api/rulesets');
+    return rulesetRoutes.getRulesetHistory(req, res);
+  });
+
+  // Payslips API - line items, deltas vs prior period
+  app.get('/api/payslips/:employee/:period', isAuthenticated, async (req, res) => {
+    const { payslipRoutes } = await import('./api/payslips');
+    return payslipRoutes.getPayslip(req, res);
+  });
+
+  app.get('/api/payslips/:employee/history', isAuthenticated, async (req, res) => {
+    const { payslipRoutes } = await import('./api/payslips');
+    return payslipRoutes.getPayslipHistory(req, res);
+  });
+
+  app.get('/api/payslips/bulk/:period', isAuthenticated, async (req, res) => {
+    const { payslipRoutes } = await import('./api/payslips');
+    return payslipRoutes.getBulkPayslips(req, res);
+  });
+
+  // Policies API - JSON policies and role matrix
+  app.get('/api/policies/current', isAuthenticated, async (req, res) => {
+    const { policyRoutes } = await import('./api/policies');
+    return policyRoutes.getCurrentPolicies(req, res);
+  });
+
+  app.get('/api/policies/role-matrix', isAuthenticated, async (req, res) => {
+    const { policyRoutes } = await import('./api/policies');
+    return policyRoutes.getRoleMatrix(req, res);
+  });
+
+  app.post('/api/policies/validate', isAuthenticated, async (req, res) => {
+    const { policyRoutes } = await import('./api/policies');
+    return policyRoutes.validatePolicy(req, res);
+  });
+
+  // Evaluation API - accuracy benchmarks and UX metrics
+  app.get('/api/evaluation/current', isAuthenticated, async (req, res) => {
+    const { evaluationRoutes } = await import('./api/evaluation');
+    return evaluationRoutes.getCurrentEvaluationMetrics(req, res);
+  });
+
+  app.get('/api/evaluation/benchmarks', isAuthenticated, async (req, res) => {
+    const { evaluationRoutes } = await import('./api/evaluation');
+    return evaluationRoutes.getSystemBenchmarks(req, res);
+  });
+
+  app.post('/api/evaluation/test-case', isAuthenticated, async (req, res) => {
+    const { evaluationRoutes } = await import('./api/evaluation');
+    return evaluationRoutes.submitTestCase(req, res);
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
