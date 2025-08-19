@@ -1817,3 +1817,57 @@ export type InsertApprovalAction = typeof approvalActions.$inferInsert;
 export const insertApprovalContextSchema = createInsertSchema(approvalContexts);
 export const insertApprovalActionSchema = createInsertSchema(approvalActions);
 
+// Labor Newsfeed tables for Greek labor news widget
+export const laborNewsfeedItems = pgTable("labor_newsfeed_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  externalId: varchar("external_id", { length: 100 }).unique().notNull(), // for deduplication
+  category: varchar("category", { length: 50 }).notNull(), // Minimum Wage, Digital Work Card, etc.
+  headline: text("headline").notNull(), // Greek headline
+  summary: text("summary").notNull(), // AI-generated Greek summary
+  source: varchar("source", { length: 255 }).notNull(), // Source name like "Ministry of Labour"
+  sourceUrl: text("source_url").notNull(), // Original article URL
+  publishedDate: date("published_date").notNull(),
+  lastChecked: timestamp("last_checked").defaultNow(),
+  isActive: boolean("is_active").default(true),
+  needsReview: boolean("needs_review").default(false), // flag for 404s or other issues
+  reviewReason: text("review_reason"), // reason why it needs review
+  aiSummaryHash: varchar("ai_summary_hash", { length: 64 }), // to detect changes
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const laborNewsfeedCitations = pgTable("labor_newsfeed_citations", {
+  id: serial("id").primaryKey(),
+  newsItemId: varchar("news_item_id").references(() => laborNewsfeedItems.id, { onDelete: "cascade" }).notNull(),
+  citationId: varchar("citation_id", { length: 50 }).notNull(), // e.g., "turn0search13"
+  sourceType: varchar("source_type", { length: 50 }).notNull(), // "search", "news", "official"
+  sourceDescription: text("source_description"), // human-readable description of the source
+  sourceUrl: text("source_url"), // URL if applicable
+  isVerified: boolean("is_verified").default(false), // whether the citation has been verified
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Widget configuration for newsfeed refresh settings
+export const laborNewsfeedConfig = pgTable("labor_newsfeed_config", {
+  id: serial("id").primaryKey(),
+  refreshIntervalMinutes: integer("refresh_interval_minutes").default(240), // 4 hours
+  lastRefresh: timestamp("last_refresh"),
+  nextRefresh: timestamp("next_refresh"),
+  maxItems: integer("max_items").default(6),
+  isEnabled: boolean("is_enabled").default(true),
+  aiModel: varchar("ai_model", { length: 50 }).default("gpt-4o"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type LaborNewsfeedItem = typeof laborNewsfeedItems.$inferSelect;
+export type InsertLaborNewsfeedItem = z.infer<typeof insertLaborNewsfeedItemSchema>;
+export type LaborNewsfeedCitation = typeof laborNewsfeedCitations.$inferSelect;
+export type InsertLaborNewsfeedCitation = z.infer<typeof insertLaborNewsfeedCitationSchema>;
+export type LaborNewsfeedConfig = typeof laborNewsfeedConfig.$inferSelect;
+export type InsertLaborNewsfeedConfig = z.infer<typeof insertLaborNewsfeedConfigSchema>;
+
+export const insertLaborNewsfeedItemSchema = createInsertSchema(laborNewsfeedItems);
+export const insertLaborNewsfeedCitationSchema = createInsertSchema(laborNewsfeedCitations);
+export const insertLaborNewsfeedConfigSchema = createInsertSchema(laborNewsfeedConfig);
+

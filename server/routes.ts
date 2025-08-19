@@ -44,6 +44,8 @@ import { registerSelfServiceRoutes } from "./api/selfService";
 import { registerPropertiesRoutes } from "./api/properties";
 import { registerUserProfileRoutes } from "./api/userProfile";
 import { registerAICopilotRoutes } from "./api/aiCopilot";
+import { registerLaborNewsfeedRoutes } from "./api/laborNewsfeed";
+import { registerInstantPaymentRoutes } from "./api/instantPayments";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -3301,6 +3303,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerPropertiesRoutes(app);
   registerUserProfileRoutes(app);
   registerAICopilotRoutes(app);
+  registerLaborNewsfeedRoutes(app);
+  registerInstantPaymentRoutes(app);
 
   // Register notification routes
   try {

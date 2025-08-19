@@ -1,0 +1,60 @@
+developer-ready spec for Disaster Mode: Offline Payroll Kit so payroll can complete even when bank/API systems are down—without risking double payments. It’s designed to be one click from the Payments Cockpit and to auto-reconcile later.
+
+1) Objective & Ship Test
+
+Objective: Allow payroll admins to freeze/lock net amounts and generate an exportable emergency bank file (or manual payment pack) when bank/H2H/APIs are unavailable; once systems recover, reconcile and close the run safely.
+
+Ship test: Click “Enter Disaster Mode” → produce a locked Net Ledger (+ per-bank CSV/TXT templates) within 60s; later, import confirmations or camt.054 and see green reconciliation with zero double-pays.
+
+2) Triggers & Pre-conditions
+
+Automatic triggers (recommended, can be manual):
+
+Bank channel health = red (H2H/SFTP/API down or >X retries).
+
+eGov filings done but payments pending with cut-off passed.
+
+Time remaining to payday < configured threshold (e.g., 2h).
+
+Pre-checks before freeze:
+
+Run status = finalized (gross, taxes, contribs computed).
+
+No open blocking exceptions (e.g., missing IBANs). Non-blocking ones are listed in the kit.
+
+3) Core Concepts
+3.1 Net Freeze Snapshot
+
+Immutable snapshot of payee → amount/net, identifiers, and bank details.
+
+Computes Disbursement Key per line:
+key = SHA256(tenantId|employeeId|period|netAmount|currency|runId|freezeId)
+
+Produces Freeze Hash for the whole ledger to prove integrity.
+
+3.2 Offline Kit (what’s inside)
+
+Net Ledger (CSV) — canonical file:
+
+employee_id, full_name, iban, bic?, amount_eur, payment_ref, property_id, department, disbursement_key
+
+
+Bank Templates — profile-specific CSV/TXT suited for manual portal import (e.g., Alpha, Piraeus, Eurobank, NBG).
+
+SEPA XML (optional) — prebuilt pain.001 that can be uploaded later (NOT for manual portals usually).
+
+Operator Playbook (PDF) — exact steps, cut-off notes, and verification checklist.
+
+Receipt stubs — optional per-employee PDF note (what will be paid; “pending settlement”).
+
+Reconciliation import template — CSV for operators to paste bank Tx IDs if they paid manually.
+
+All artifacts are zipped as offline_kit_<tenant>_<period>_<freezeId>.zip, encrypted (AES-256) with an admin-provided passphrase.
+
+4) State Machine
+
+Run-level:
+finalized → disaster_freeze (read-only) → emergency_paid (optional) → reconciled → closed
+
+Line-level (payment instruction):
+pending → frozen_offline → settled_offline (operator-confirmed) | settled_bank (camt) → reconciled
