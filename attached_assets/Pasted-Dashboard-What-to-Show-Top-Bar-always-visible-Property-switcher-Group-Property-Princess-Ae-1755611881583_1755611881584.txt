@@ -1,0 +1,100 @@
+Dashboard — What to Show
+Top Bar (always visible)
+
+Property switcher: Group → Property (Princess, Aegean Suites, Marpunta, The Alex, Atlantis).
+
+Period selector: This month / Payroll period / Custom.
+
+Global search / ⌘K palette: people, runs, filings, actions.
+
+Data freshness stamp: “Updated 2m ago • ERGANI in sync.”
+
+1) Action Inbox (first row, left)
+
+Approvals pending: Overtime, schedule changes, corrections (counts + “Review”).
+
+Exceptions to resolve: Missed/duplicate punches, wrong site, break issues.
+
+Filings due: ERGANI events, APD, ΦΜΥ with D-days and status.
+
+Bank tasks: SEPA file to upload / pain.002 rejects to review.
+
+Goal: 1-click to clear blockers. Sort by urgency & impact.
+
+2) Compliance Strip (first row, right)
+
+Digital Work Card coverage today: % scheduled who clocked in.
+
+ERGANI queue: success rate, fails, retried items.
+
+Min-wage guardrail: employees below floor (count + link).
+
+Rest/48h cap alerts: breaches/at-risk (count + link).
+
+3) Payroll Run Status (period)
+
+Run progress bar: Draft → Validated → Finalized → Posted.
+
+Totals: Gross, Employer contribs, Net, Headcount (Δ vs prior period).
+
+Variance cards: “OT cost +€X vs last month”; “Nights +Y hrs”.
+
+Readiness meter: % exceptions cleared; filings prepared.
+
+4) Hours & Cost KPIs
+
+Regular / OT (Tier1/2) / Night / Sunday / Holiday hours (sparklines).
+
+Labor cost vs budget (Δ € and %).
+
+Cost per occupied room / per cover (for hotels & F&B).
+
+Tip pool (this period): pool total, distribution pending.
+
+5) Time & Attendance Today
+
+Who’s on now: by department.
+
+Late/missing punches: list with CTA to fix.
+
+Devices/geofence health: kiosks online, clock drift flags.
+
+6) Forecast & Risk (next 2 weeks)
+
+Projected payroll vs budget (confidence band).
+
+Employees near OT cap (remaining hours).
+
+Schedule gaps (roles uncovered; suggested swaps).
+
+7) Filings & Payments
+
+ERGANI: submitted / failed / awaiting.
+
+APD (e-EFKA): built / submitted / receipt link.
+
+ΦΜΥ (AADE): built / submitted / payment date.
+
+SEPA: file id, amount, bank status, rejects (if any).
+
+KPI Definitions (quick)
+
+Digital Card Coverage = (# scheduled who clocked in ÷ # scheduled)×100.
+
+ERGANI Success Rate = successful events ÷ total events.
+
+OT Cap Remaining (per employee) = legal cap – YTD legal OT hours.
+
+Night Hours = 22:00–06:00; Sunday/Holiday = calendar flags.
+
+Labor vs Budget = (actual labor € – budget €) / budget €.
+
+LC per Occ. Room = total labor € ÷ occupied rooms (same period).
+
+Tip Pool = configured % of eligible revenue ± manual top-ups.
+
+Filters & Personalization
+
+Filter by property / department / role.
+
+Pin tiles, save views, schedule email/Slack digests.

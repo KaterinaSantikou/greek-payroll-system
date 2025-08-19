@@ -125,7 +125,32 @@ ergani.error        - When ERGANI submission fails
 }
 ```
 
-### 8. System Health APIs
+### 8. Security & Compliance APIs
+```
+GET  /api/gdpr/access/{id}             - Data subject access request
+POST /api/gdpr/rectification/{id}      - Right to rectification
+POST /api/gdpr/erasure/{id}            - Right to be forgotten
+GET  /api/gdpr/portability/{id}        - Data portability export
+
+POST /api/approvals/initiate           - Start approval workflow
+POST /api/approvals/{id}/process       - Process approval decision
+GET  /api/approvals/pending            - Get pending approvals
+GET  /api/permissions/check            - Check user permissions
+
+GET  /api/audit/search                 - Search audit logs
+POST /api/audit/validate-chain         - Validate audit integrity
+POST /api/audit/export                 - Export audit logs
+GET  /api/audit/statistics             - Audit analytics
+
+POST /api/backup/create                - Create full backup
+POST /api/restore/create-point         - Create restore point
+POST /api/restore/{id}/execute         - Execute restore
+GET  /api/compliance/data-residency    - Check EU compliance
+
+GET  /api/security/health              - Security systems status
+```
+
+### 9. System Health APIs
 ```
 GET  /api/health                       - System health check
 GET  /api/metrics                      - Performance metrics
@@ -197,6 +222,45 @@ Real-time synchronization with Greek labor inspection system:
 - pain.001.001.03 XML format
 - IBAN validation for Greek banks
 - Urgent payment support (SEPA Instant)
+
+## Security & Privacy Framework
+
+### GDPR Compliance
+PayrollSync is GDPR-native with comprehensive data protection:
+- **Purpose Limitation**: Data processing limited to defined purposes
+- **Data Minimization**: Only necessary data is collected and processed
+- **Data Subject Rights**: Full support for access, rectification, erasure, and portability
+- **Encryption**: AES-256 at rest, TLS 1.3 in transit
+- **Audit Trail**: Immutable logging of all data processing activities
+
+### Role-Based Access Control (RBAC)
+Enterprise-grade access control with separation of duties:
+- **Dual Approval**: Sensitive operations require two-person authorization
+- **Maker-Checker**: Financial transactions and corrections require separate approval
+- **Role Hierarchy**: 5-level permission system (Supervisor → Property Manager → HR Admin → Payroll Manager → Finance Controller)
+- **Conditional Permissions**: Property and department-scoped access controls
+
+### Immutable Audit Logging
+Compliance-ready audit trail with cryptographic integrity:
+- **Append-Only**: Audit logs cannot be modified or deleted
+- **Hash-Chained**: Each entry cryptographically linked to prevent tampering
+- **Signed Payloads**: HMAC signatures ensure authenticity
+- **Export Capabilities**: JSON, CSV, XML formats for regulatory inspections
+
+### EU Data Residency
+Full compliance with European data residency requirements:
+- **EU-Only Storage**: Data never leaves European Union boundaries
+- **Regional Backups**: Frankfurt (primary), Ireland, Milan backup locations
+- **Point-in-Time Recovery**: 30/60/90-day restoration capabilities
+- **Encrypted Backups**: AES-256 encryption for all backup data
+
+### Approval Workflows
+Critical operations require dual authorization:
+- **Payroll Finalization**: Payroll Manager + Finance Controller approval
+- **SEPA Payments**: Dual approval with maker-checker separation
+- **Government Filings**: Compliance Officer + Finance Controller approval
+- **Payroll Corrections**: Manager-level approval required
+- **Employee Termination**: HR Admin + Finance Controller approval
 
 ## SDK Examples
 
