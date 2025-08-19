@@ -79,12 +79,11 @@ const POLICY_SECTIONS: PolicySection[] = [
   {
     id: "sick-leave",
     title: "Sick Pay & Benefits Coverage",
-    content: "Employer covers first three days at 50% (SICK_EMP_50), fully taxable and contributory. EFKA benefits begin from day four and are recorded separately as informational only (SICK_EFKA) - not considered wages, hence non-taxable and non-contributory. Proper medical documentation required for all sick leave.",
-    compliance: ["3-day employer coverage period", "Medical certificate requirements", "EFKA coordination procedures"],
+    content: "Greece operates a dual sick pay system with clear employer and EFKA responsibilities. The employer covers the first three days of sick leave at 50% of pay (fully taxable, contributory, and included in APD). EFKA provides sickness benefits after the initial employer obligation, which are non-taxable, non-contributory, not included in APD, and recorded only for information.",
+    compliance: ["3-day employer obligation at 50% pay", "Full tax and EFKA treatment for employer portion", "EFKA benefits information-only recording", "Clear separation of employer vs social insurance costs"],
     examples: [
-      "SICK_EMP_50: Days 1-3 at 50% regular pay",
-      "SICK_EFKA: Day 4+ EFKA benefits (informational)",
-      "Medical documentation required for all periods"
+      "SICK_EMP_50: First 3 days at 50%, fully taxable and contributory",
+      "SICK_EFKA: EFKA benefits after employer obligation, information only"
     ]
   },
   {

@@ -290,8 +290,8 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   // Sick Pay and Benefits
   SICK_EMP_50: {
     code: 'SICK_EMP_50',
-    name: 'Employer Sick Pay (50%)',
-    description: 'Employer sick pay covers the first three days at 50%. Taxable, contributory, and included in APD. EFKA offsets beyond day three are recorded separately.',
+    name: 'Employer Sick Pay (First 3 Days)',
+    description: 'The employer covers the first three days of sick leave at 50% of pay. Fully taxable, contributory, and included in APD.',
     calculation: 'premium_percentage',
     premiumRate: 0.50, // 50% of regular pay
     taxable: true,
@@ -307,8 +307,8 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
 
   SICK_EFKA: {
     code: 'SICK_EFKA',
-    name: 'EFKA Sick Benefits',
-    description: 'Benefits paid directly by EFKA. Not considered wages, hence non-taxable, non-contributory, and not included in APD (informational only).',
+    name: 'EFKA Sickness Benefit',
+    description: 'Benefits paid directly by EFKA after the initial employer obligation. These amounts are non-taxable, non-contributory, not included in APD, and recorded only for information.',
     calculation: 'fixed_amount',
     taxable: false,
     contributoryEFKA: false,
