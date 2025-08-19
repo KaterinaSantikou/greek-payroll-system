@@ -439,3 +439,26 @@ class AuditService {
 }
 
 export const auditService = new AuditService();
+
+// Export convenient audit log function
+export async function auditLog(eventData: {
+  userId: string;
+  action: string;
+  resourceType: string;
+  resourceId: string;
+  details: any;
+  ipAddress: string;
+  userAgent?: string;
+}) {
+  return auditService.createAuditEntry({
+    eventType: `${eventData.resourceType}.${eventData.action}`,
+    userId: eventData.userId,
+    resourceType: eventData.resourceType,
+    resourceId: eventData.resourceId,
+    action: eventData.action,
+    details: typeof eventData.details === 'string' ? eventData.details : JSON.stringify(eventData.details),
+    timestamp: new Date(),
+    ipAddress: eventData.ipAddress,
+    userAgent: eventData.userAgent || 'PayrollSync-Web',
+  });
+}
