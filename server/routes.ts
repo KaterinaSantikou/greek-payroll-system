@@ -14,6 +14,7 @@ import webhooksAPI from "./api/webhooks";
 import healthAPI from "./api/health";
 import securityAPI from "./api/security";
 import reportsAPI from "./api/reports";
+import { registerForecastingRoutes } from "./api/forecasting";
 import { 
   insertEmployeeSchema, 
   insertPropertySchema, 
@@ -2266,6 +2267,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(healthAPI);
   app.use(securityAPI);
   app.use(reportsAPI);
+  
+  // Register forecasting API routes
+  registerForecastingRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

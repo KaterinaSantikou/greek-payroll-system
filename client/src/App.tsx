@@ -34,6 +34,7 @@ import Payments from "@/pages/payments";
 import EmployeeSelfService from "@/pages/employeeSelfService";
 import RulesEngine from "@/pages/rulesEngine";
 import ManagerDashboard from "@/pages/managerDashboard";
+import Forecasting from "@/pages/forecasting";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -73,6 +74,7 @@ function Router() {
           <Route path="/rules-engine" component={RulesEngine} />
           <Route path="/employee-self-service" component={EmployeeSelfService} />
           <Route path="/manager-dashboard" component={ManagerDashboard} />
+          <Route path="/forecasting" component={Forecasting} />
         </Layout>
       )}
       <Route component={NotFound} />
