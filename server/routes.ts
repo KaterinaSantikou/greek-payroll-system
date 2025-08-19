@@ -2,7 +2,14 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertEmployeeSchema, insertPayrollRecordSchema } from "@shared/schema";
+import { 
+  insertEmployeeSchema, 
+  insertPropertySchema, 
+  insertShiftSchema, 
+  insertPunchEventSchema, 
+  insertExceptionSchema, 
+  insertTimesheetSchema 
+} from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 
@@ -25,11 +32,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Employee routes
   app.get("/api/employees", isAuthenticated, async (req, res) => {
     try {
-      const { search, department, position } = req.query;
+      const { search, propertyId } = req.query;
       const employees = await storage.getEmployees(
         search as string,
-        department as string,
-        position as string
+        propertyId as string
       );
       res.json(employees);
     } catch (error) {
@@ -55,16 +61,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertEmployeeSchema.parse(req.body);
       
-      // Check for duplicate AFM
-      const existingByAfm = await storage.getEmployeeByAfm(validatedData.afm);
-      if (existingByAfm) {
-        return res.status(400).json({ message: "Υπάρχει ήδη εργαζόμενος με αυτό το ΑΦΜ" });
-      }
-
-      // Check for duplicate AMKA
-      const existingByAmka = await storage.getEmployeeByAmka(validatedData.amka);
-      if (existingByAmka) {
-        return res.status(400).json({ message: "Υπάρχει ήδη εργαζόμενος με αυτό το ΑΜΚΑ" });
+      // Check for duplicate AFM if provided
+      if (validatedData.afm) {
+        const existingByAfm = await storage.getEmployeeByAfm(validatedData.afm);
+        if (existingByAfm) {
+          return res.status(400).json({ message: "Υπάρχει ήδη εργαζόμενος με αυτό το ΑΦΜ" });
+        }
       }
 
       const employee = await storage.createEmployee(validatedData);
@@ -104,44 +106,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Payroll routes
-  app.get("/api/payroll", isAuthenticated, async (req, res) => {
+  // Property routes
+  app.get("/api/properties", isAuthenticated, async (req, res) => {
     try {
-      const { employeeId, month } = req.query;
-      const records = await storage.getPayrollRecords(
-        employeeId as string,
-        month as string
-      );
-      res.json(records);
+      const properties = await storage.getProperties();
+      res.json(properties);
     } catch (error) {
-      console.error("Error fetching payroll records:", error);
-      res.status(500).json({ message: "Failed to fetch payroll records" });
+      console.error("Error fetching properties:", error);
+      res.status(500).json({ message: "Failed to fetch properties" });
     }
   });
 
-  app.post("/api/payroll", isAuthenticated, async (req, res) => {
+  app.post("/api/properties", isAuthenticated, async (req, res) => {
     try {
-      const validatedData = insertPayrollRecordSchema.parse(req.body);
-      const record = await storage.createPayrollRecord(validatedData);
-      res.status(201).json(record);
+      const validatedData = insertPropertySchema.parse(req.body);
+      const property = await storage.createProperty(validatedData);
+      res.status(201).json(property);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const validationError = fromZodError(error);
         return res.status(400).json({ message: validationError.toString() });
       }
-      console.error("Error creating payroll record:", error);
-      res.status(500).json({ message: "Failed to create payroll record" });
+      console.error("Error creating property:", error);
+      res.status(500).json({ message: "Failed to create property" });
     }
   });
 
-  // Collective agreements routes
-  app.get("/api/collective-agreements", isAuthenticated, async (req, res) => {
+  // Shift routes
+  app.get("/api/shifts", isAuthenticated, async (req, res) => {
     try {
-      const agreements = await storage.getCollectiveAgreements();
-      res.json(agreements);
+      const { employeeId, propertyId, startDate, endDate } = req.query;
+      const shifts = await storage.getShifts(
+        employeeId as string,
+        propertyId as string,
+        startDate ? new Date(startDate as string) : undefined,
+        endDate ? new Date(endDate as string) : undefined
+      );
+      res.json(shifts);
     } catch (error) {
-      console.error("Error fetching collective agreements:", error);
-      res.status(500).json({ message: "Failed to fetch collective agreements" });
+      console.error("Error fetching shifts:", error);
+      res.status(500).json({ message: "Failed to fetch shifts" });
+    }
+  });
+
+  app.post("/api/shifts", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertShiftSchema.parse(req.body);
+      const shift = await storage.createShift(validatedData);
+      res.status(201).json(shift);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.toString() });
+      }
+      console.error("Error creating shift:", error);
+      res.status(500).json({ message: "Failed to create shift" });
+    }
+  });
+
+  // Punch Event routes
+  app.get("/api/punch-events", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, propertyId, startDate, endDate } = req.query;
+      const events = await storage.getPunchEvents(
+        employeeId as string,
+        propertyId as string,
+        startDate ? new Date(startDate as string) : undefined,
+        endDate ? new Date(endDate as string) : undefined
+      );
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching punch events:", error);
+      res.status(500).json({ message: "Failed to fetch punch events" });
+    }
+  });
+
+  app.post("/api/punch-events", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertPunchEventSchema.parse(req.body);
+      const event = await storage.createPunchEvent(validatedData);
+      res.status(201).json(event);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.toString() });
+      }
+      console.error("Error creating punch event:", error);
+      res.status(500).json({ message: "Failed to create punch event" });
+    }
+  });
+
+  // Exception routes
+  app.get("/api/exceptions", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, propertyId, status } = req.query;
+      const exceptions = await storage.getExceptions(
+        employeeId as string,
+        propertyId as string,
+        status as string
+      );
+      res.json(exceptions);
+    } catch (error) {
+      console.error("Error fetching exceptions:", error);
+      res.status(500).json({ message: "Failed to fetch exceptions" });
+    }
+  });
+
+  app.post("/api/exceptions", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertExceptionSchema.parse(req.body);
+      const exception = await storage.createException(validatedData);
+      res.status(201).json(exception);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.toString() });
+      }
+      console.error("Error creating exception:", error);
+      res.status(500).json({ message: "Failed to create exception" });
+    }
+  });
+
+  // Timesheet routes
+  app.get("/api/timesheets", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, periodStart, periodEnd, payrollStatus } = req.query;
+      const timesheets = await storage.getTimesheets(
+        employeeId as string,
+        periodStart ? new Date(periodStart as string) : undefined,
+        periodEnd ? new Date(periodEnd as string) : undefined,
+        payrollStatus as string
+      );
+      res.json(timesheets);
+    } catch (error) {
+      console.error("Error fetching timesheets:", error);
+      res.status(500).json({ message: "Failed to fetch timesheets" });
+    }
+  });
+
+  app.post("/api/timesheets", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertTimesheetSchema.parse(req.body);
+      const timesheet = await storage.createTimesheet(validatedData);
+      res.status(201).json(timesheet);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.toString() });
+      }
+      console.error("Error creating timesheet:", error);
+      res.status(500).json({ message: "Failed to create timesheet" });
     }
   });
 
