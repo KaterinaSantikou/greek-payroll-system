@@ -73,8 +73,8 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   // Overtime Tiers (Updated rates per Greek law)
   OT_TIER1_40: {
     code: 'OT_TIER1_40',
-    name: 'Legal Overtime Within Cap (40%)',
-    description: 'Overtime hours up to the legal cap are paid at a 40% premium. Taxable, contributory, included in APD, and stackable.',
+    name: 'Legal Overtime (Within Cap)',
+    description: 'Overtime hours up to the legal annual cap are paid at a 40% premium. Fully taxable, contributory, included in APD, and stackable.',
     calculation: 'premium_percentage',
     premiumRate: 0.40,
     taxable: true,
@@ -90,8 +90,8 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
 
   OT_TIER2_60: {
     code: 'OT_TIER2_60',
-    name: 'Overtime Above Cap (60%)',
-    description: 'Overtime beyond the cap, with the appropriate permit, is paid at a 60% premium. Taxable, contributory, reported in APD, and stackable.',
+    name: 'Overtime Above Cap (With Permit)',
+    description: 'Overtime beyond the annual cap, provided the required permit has been obtained, is paid at a 60% premium. Fully taxable, contributory, included in APD, and stackable.',
     calculation: 'premium_percentage',
     premiumRate: 0.60,
     taxable: true,
@@ -104,8 +104,8 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
 
   OT_EXCEPTIONAL_80: {
     code: 'OT_EXCEPTIONAL_80',
-    name: 'Non-Authorised Overtime (80%)',
-    description: 'Paid at an 80% premium, but only used in exceptional cases through compliance workflows. Triggers a compliance alert.',
+    name: 'Non-Authorised Overtime',
+    description: 'Exceptional cases of overtime worked without authorisation are paid at an 80% premium. Fully taxable, contributory, included in APD, and stackable. This code triggers a compliance alert and should be used only under strict workflows.',
     calculation: 'premium_percentage',
     premiumRate: 0.80,
     taxable: true,

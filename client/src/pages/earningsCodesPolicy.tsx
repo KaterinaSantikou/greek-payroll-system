@@ -46,12 +46,12 @@ const POLICY_SECTIONS: PolicySection[] = [
   {
     id: "overtime-policy",
     title: "Three-Tier Overtime System",
-    content: "Greece operates a sophisticated overtime system with annual caps and escalating rates. Tier 1 (40%) applies within the 150-hour annual limit. Tier 2 (60%) requires permits for hours above the cap. Exceptional overtime (80%) triggers compliance alerts and should only be used through proper authorization workflows.",
-    compliance: ["150-hour annual overtime cap", "Ministry permits for excess hours", "Compliance alerts for exceptional overtime"],
+    content: "Greece operates a sophisticated overtime system with annual caps and escalating rates. Legal Overtime (40%) applies within the 150-hour annual limit. Overtime Above Cap (60%) requires permits for hours beyond the cap. Non-Authorised Overtime (80%) applies to exceptional cases worked without authorization and triggers compliance alerts.",
+    compliance: ["150-hour annual overtime cap", "Ministry permits for excess hours", "Compliance alerts for non-authorised overtime", "Strict workflows for exceptional cases"],
     examples: [
-      "OT_TIER1_40: First 150 hours annually at 40% premium",
-      "OT_TIER2_60: Above cap with permit at 60% premium",
-      "OT_EXCEPTIONAL_80: Emergency situations with 80% premium"
+      "OT_TIER1_40: Within 150-hour annual cap at 40% premium",
+      "OT_TIER2_60: Beyond cap with required permit at 60% premium", 
+      "OT_EXCEPTIONAL_80: Non-authorised cases at 80% premium with alerts"
     ]
   },
   {
