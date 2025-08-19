@@ -61,6 +61,14 @@ Preferred communication style: Simple, everyday language.
 - **Additional Registrations**: ERGANI (Labor Inspection System), TEKA (Engineers/Technicians Fund)
 - **Automated Contribution Calculations**: Based on employee category and special profession requirements
 
+### Employment Compliance & Worker Classifications (August 2025)
+- **Worker Categories**: Employee, Independent Contractor, Seasonal, Apprentice, Intern, Temporary
+- **Young Worker Protection**: Under 25 years old with special subsidies and reduced employer contributions
+- **Independent Contractor Classes**: Professional, Artist, Technical, Consultant, Services classifications
+- **Disability Support**: 0-100% disability percentage with certificate management and accommodations
+- **Disability Types**: Physical, Mental, Sensory, Multiple, Psychosocial, Chronic conditions
+- **Compliance Requirements**: 8% disability quota for companies over 50 employees, young worker subsidies
+
 # External Dependencies
 
 ## Core Infrastructure

@@ -276,6 +276,67 @@ export const EFKA_FUND_AFFILIATIONS = [
 ];
 
 /**
+ * Worker Classifications
+ * Employment types and worker categories
+ */
+export const WORKER_CLASSIFICATIONS = [
+  "EMPLOYEE", // Μισθωτός
+  "INDEPENDENT_CONTRACTOR", // Ανεξάρτητος Συνεργάτης
+  "SEASONAL", // Εποχιακός Εργαζόμενος
+  "APPRENTICE", // Μαθητευόμενος
+  "INTERN", // Ασκούμενος
+  "TEMPORARY", // Προσωρινός
+];
+
+/**
+ * Independent Contractor Classifications
+ * Specific classifications for freelance work
+ */
+export const INDEPENDENT_CONTRACTOR_CLASSES = [
+  "PROFESSIONAL", // Επαγγελματίας
+  "ARTIST", // Καλλιτέχνης
+  "TECHNICAL", // Τεχνικός
+  "CONSULTANT", // Σύμβουλος
+  "SERVICES", // Παροχή Υπηρεσιών
+  "OTHER", // Άλλο
+];
+
+/**
+ * Disability Types
+ * Categories of disabilities for support classification
+ */
+export const DISABILITY_TYPES = [
+  "PHYSICAL", // Σωματική
+  "MENTAL", // Διανοητική
+  "SENSORY", // Αισθητηριακή
+  "MULTIPLE", // Πολλαπλή
+  "PSYCHOSOCIAL", // Ψυχοκοινωνική
+  "CHRONIC", // Χρόνια Πάθηση
+];
+
+/**
+ * Validate disability percentage (0-100%)
+ */
+export function validateDisabilityPercentage(percentage: number): boolean {
+  return percentage >= 0 && percentage <= 100 && Number.isInteger(percentage);
+}
+
+/**
+ * Calculate young worker status based on birth date
+ */
+export function calculateYoungWorkerStatus(dateOfBirth: Date): boolean {
+  const today = new Date();
+  const age = today.getFullYear() - dateOfBirth.getFullYear();
+  const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dateOfBirth.getDate())) {
+    return (age - 1) < 25;
+  }
+  
+  return age < 25;
+}
+
+/**
  * Greek tax office (ΔΟΥ) list
  * Common Greek tax offices for dropdown selection
  */

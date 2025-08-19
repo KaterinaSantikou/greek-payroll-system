@@ -279,6 +279,119 @@ export default function GreekComplianceInfo() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Employment Compliance & Worker Classifications */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Εργασιακή Συμμόρφωση & Κατηγοριοποίηση
+          </CardTitle>
+          <CardDescription>
+            Διαχείριση κατηγοριών εργαζομένων, νέων εργαζομένων και υποστήριξη αναπηρίας
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <h4 className="font-medium text-blue-700">Κατηγορίες Εργαζομένων</h4>
+              <div className="space-y-1 text-sm">
+                <p>• <span className="font-semibold">Μισθωτός</span> - Πλήρης απασχόληση</p>
+                <p>• <span className="font-semibold">Ανεξάρτητος Συνεργάτης</span> - Freelance</p>
+                <p>• <span className="font-semibold">Εποχιακός</span> - Περιοδική απασχόληση</p>
+                <p>• <span className="font-semibold">Μαθητευόμενος</span> - Εκπαιδευτική σύμβαση</p>
+                <p>• <span className="font-semibold">Ασκούμενος</span> - Πρακτική άσκηση</p>
+                <p>• <span className="font-semibold">Προσωρινός</span> - Βραχυπρόθεσμη σύμβαση</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="font-medium text-green-700">Προστασία Νέων Εργαζομένων</h4>
+              <div className="space-y-1 text-sm">
+                <p>• Κάτω από 25 ετών</p>
+                <p>• Ειδικές προστασίες εργασίας</p>
+                <p>• Κρατικές επιδοτήσεις</p>
+                <p>• Μειωμένες εισφορές εργοδότη</p>
+                <p>• Προγράμματα κατάρτισης</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="font-medium text-purple-700">Υποστήριξη Αναπηρίας</h4>
+              <div className="space-y-1 text-sm">
+                <p>• Ποσοστό αναπηρίας (0-100%)</p>
+                <p>• Πιστοποιητικό ΚΕΠΑ</p>
+                <p>• Εργασιακές διευκολύνσεις</p>
+                <p>• Φοροαπαλλαγές</p>
+                <p>• Ειδικές παροχές</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium mb-3">Τύποι Αναπηρίας</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Σωματική</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Διανοητική</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Αισθητηριακή</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Πολλαπλή</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Ψυχοκοινωνική</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Χρόνια Πάθηση</div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-medium mb-3">Ανεξάρτητοι Συνεργάτες</h4>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <div>
+                    <p className="font-medium text-sm">Επαγγελματίας</p>
+                    <p className="text-xs text-muted-foreground">Ελεύθερα επαγγέλματα</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <div>
+                    <p className="font-medium text-sm">Καλλιτέχνης</p>
+                    <p className="text-xs text-muted-foreground">Καλλιτεχνικές υπηρεσίες</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <div>
+                    <p className="font-medium text-sm">Τεχνικός</p>
+                    <p className="text-xs text-muted-foreground">Τεχνικές υπηρεσίες</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-orange-50 dark:bg-orange-950 p-4 rounded-lg">
+            <h4 className="font-medium text-orange-800 dark:text-orange-200 mb-2">
+              Νομοθετικές Απαιτήσεις 2025
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="font-semibold">Νέοι Εργαζόμενοι</p>
+                <p>• Μείωση εισφορών 50%</p>
+                <p>• Επιδότηση μισθού</p>
+                <p>• Προγράμματα κατάρτισης</p>
+              </div>
+              <div>
+                <p className="font-semibold">Άτομα με Αναπηρία</p>
+                <p>• Ποσόστωση 8% (άνω 50 ατόμων)</p>
+                <p>• Φοροαπαλλαγές εργοδότη</p>
+                <p>• Υποχρεωτικές διευκολύνσεις</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

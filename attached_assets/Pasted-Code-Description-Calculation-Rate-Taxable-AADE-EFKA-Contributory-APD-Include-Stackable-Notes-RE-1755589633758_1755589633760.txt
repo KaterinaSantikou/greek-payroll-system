@@ -1,0 +1,20 @@
+Code	Description	Calculation / Rate	Taxable (AADE)	EFKA Contributory	APD Include	Stackable?	Notes
+REG	Regular hours	Hours × hourly rate	Yes	Yes	Yes	No	Base wage.
+NIGHT_25	Night work premium	Hours in NIGHT_BAND × hourly × +25%	Yes	Yes	Yes	Yes	Stacks with Sunday/Holiday and OT where applicable.
+SUNDAY_75	Sunday premium	Sunday hours × hourly × +75%	Yes	Yes	Yes	Yes	Requires permit where needed; stacks with Night/OT.
+HOLIDAY_75	Public holiday premium	Holiday hours × hourly × +75%	Yes	Yes	Yes	Yes	Stacks with Night/OT.
+SIXTH_DAY_40	Sixth working day premium	Eligible sixth‑day hours × hourly × +40%	Yes	Yes	Yes	Yes	Disabled for hospitality/tourism by default. Enable per entity if eligible.
+OT_TIER1_40	Legal overtime (within cap)	OT hours ≤ cap × hourly × +40%	Yes	Yes	Yes	Yes	Cap defined by ANNUAL_OT_CAP_HOURS.
+OT_TIER2_60	Overtime above cap (with permit)	OT hours beyond cap × hourly × +60%	Yes	Yes	Yes	Yes	Requires ministry/inspectorate authorisation.
+OT_EXCEPTIONAL_80	Non‑authorised overtime	Hours × hourly × +80%	Yes	Yes	Yes	Yes	Use only via exception workflow; triggers compliance alert.
+BONUS_EASTER	Δώρο Πάσχα	Calculated per tenure/earnings	Yes	Yes	Yes	No	Prorated for partial periods.
+BONUS_CHRISTMAS	Δώρο Χριστουγέννων	Calculated per tenure/earnings	Yes	Yes	Yes	No	Prorated for partial periods.
+ALLOWANCE_LEAVE	Επίδομα Άδειας	Calculated per tenure/earnings	Yes	Yes	Yes	No	Prorated; paid with leave.
+TIPS_DISTRIBUTED	Tips via employer pool	Amount per distribution rules	Yes	Configurable	Yes	No	Contributory flag per policy (true/false by role/arrangement).
+MEAL_VOUCHER	Meal vouchers/allowance	≤ €6/day non‑tax & non‑contrib; excess taxed	Partially	Partially	Partially	No	Engine splits into exempt vs taxable/contributory overage.
+TRAVEL_PER_DIEM	Domestic/foreign per diems	Non‑tax/non‑contrib within statutory limits	Partially	No (within limits)	No	No	Excess over limits auto‑reclassed to taxable wage.
+SICK_EMP_50	Employer sick pay (first 3 days @50%)	Days × rule	Yes	Yes	Yes	No	EFKA benefit offsets beyond day 3 are recorded under SICK_EFKA (non‑tax).
+SICK_EFKA	EFKA sickness benefit (info)	Paid by EFKA	No	No	No	No	Informational offset; not wages.
+HOLIDAY_NOT_WORKED	Paid public holiday (salaried)	Daily wage as per contract	Yes	Yes	Yes	No	Where applicable for salaried employees.
+
+Stacking logic (engine): If a worked hour qualifies for multiple premiums (e.g., Night + Sunday + OT), the engine splits lines so each premium is explicit on the payslip and in the APD.

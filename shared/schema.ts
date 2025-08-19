@@ -90,6 +90,20 @@ export const employees = pgTable("employees", {
   erganiRegistration: varchar("ergani_registration"), // Labor inspection system
   tekaEnrollment: varchar("teka_enrollment"), // Engineers/technicians fund
   
+  // Employment Compliance & Worker Classifications
+  workerClassification: varchar("worker_classification").notNull(), // EMPLOYEE, INDEPENDENT_CONTRACTOR, SEASONAL
+  youngWorkerStatus: boolean("young_worker_status").default(false), // Under 25 protection
+  seasonalWorkerDesignation: boolean("seasonal_worker_designation").default(false),
+  independentContractorClass: varchar("independent_contractor_class"), // For freelance classifications
+  
+  // Disability Support & Compliance
+  disabilityPercentage: integer("disability_percentage").default(0), // 0-100%
+  disabilityCertificateNumber: varchar("disability_certificate_number"),
+  disabilityCertificateIssuer: varchar("disability_certificate_issuer"),
+  disabilityCertificateExpiryDate: date("disability_certificate_expiry_date"),
+  disabilityType: varchar("disability_type"), // PHYSICAL, MENTAL, SENSORY, MULTIPLE
+  disabilitySupport: text("disability_support"), // Required accommodations
+  
   // Employment Contract (Law 4808/2021 amendments)
   contractType: varchar("contract_type").notNull(), // indefinite, fixed-term, apprenticeship, internship
   workingHours: integer("working_hours").default(40),

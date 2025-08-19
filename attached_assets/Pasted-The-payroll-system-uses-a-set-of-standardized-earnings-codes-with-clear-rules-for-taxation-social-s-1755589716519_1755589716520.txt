@@ -1,0 +1,35 @@
+The payroll system uses a set of standardized earnings codes with clear rules for taxation, social security contributions (EFKA), and reporting obligations (APD).
+
+REG (Regular hours): Calculated as hours multiplied by the hourly rate. It is fully taxable, contributory, and included in APD. It does not stack with other codes and represents the base wage.
+
+NIGHT_25 (Night work premium): Applies to hours worked during the night band, paid at a 25% premium over the hourly rate. It is taxable, contributory, included in APD, and stackable with Sunday, holiday, or overtime premiums.
+
+SUNDAY_75 (Sunday premium): Hours worked on Sundays are paid with a 75% premium. This earning is taxable, contributory, reported in APD, and can stack with Night or OT premiums. Requires the relevant work permit.
+
+HOLIDAY_75 (Public holiday premium): Public holiday hours attract a 75% premium. Like Sunday work, this is taxable, contributory, stackable, and included in APD.
+
+SIXTH_DAY_40 (Sixth working day premium): Eligible sixth-day hours are paid with a 40% premium. This is taxable, contributory, reported in APD, and stackable. By default, it is disabled for hospitality and tourism, but entities may enable it if eligible.
+
+OT_TIER1_40 (Legal overtime within cap): Overtime hours up to the legal cap are paid at a 40% premium. This is taxable, contributory, included in APD, and stackable. The cap is defined by the legal annual overtime limit.
+
+OT_TIER2_60 (Overtime above cap): Overtime beyond the cap, with the appropriate permit, is paid at a 60% premium. It is taxable, contributory, reported in APD, and stackable.
+
+OT_EXCEPTIONAL_80 (Non-authorised overtime): Paid at an 80% premium, but only used in exceptional cases through compliance workflows. Taxable, contributory, reported in APD, and stackable. Triggers a compliance alert.
+
+BONUS_EASTER (Δώρο Πάσχα): Calculated based on tenure and earnings, prorated for partial service. It is taxable, contributory, and reported in APD.
+
+BONUS_CHRISTMAS (Δώρο Χριστουγέννων): Similar to Easter bonus, based on tenure and prorated. Fully taxable, contributory, and included in APD.
+
+ALLOWANCE_LEAVE (Επίδομα Άδειας): Calculated per tenure and earnings, prorated if leave is partial. It is taxable, contributory, included in APD, and not stackable.
+
+TIPS_DISTRIBUTED: Tips allocated through employer pooling rules. Always taxable, but EFKA contribution may be set as true/false depending on role or arrangement. Reported in APD and not stackable.
+
+MEAL_VOUCHER: Non-taxable and non-contributory up to €6 per workday; any excess is taxable and contributory. The system automatically splits exempt and taxable amounts. Partially included in APD.
+
+TRAVEL_PER_DIEM: Domestic and foreign per diems are non-taxable and non-contributory within statutory limits. Excess amounts are reclassified as taxable wages.
+
+SICK_EMP_50: Employer sick pay covers the first three days at 50%. Taxable, contributory, and included in APD. EFKA offsets beyond day three are recorded separately.
+
+SICK_EFKA: Benefits paid directly by EFKA. Not considered wages, hence non-taxable, non-contributory, and not included in APD (informational only).
+
+HOLIDAY_NOT_WORKED: Salaried employees are entitled to paid public holidays at their daily wage. This is taxable, contributory, and reported in APD.

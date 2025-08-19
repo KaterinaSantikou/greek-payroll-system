@@ -18,7 +18,12 @@ import {
   EFKA_INSURANCE_CATEGORIES,
   EFKA_INSURANCE_PACKAGES,
   SPECIAL_INSURANCE_CATEGORIES,
-  EFKA_FUND_AFFILIATIONS
+  EFKA_FUND_AFFILIATIONS,
+  WORKER_CLASSIFICATIONS,
+  INDEPENDENT_CONTRACTOR_CLASSES,
+  DISABILITY_TYPES,
+  validateDisabilityPercentage,
+  calculateYoungWorkerStatus
 } from "@/lib/greekValidations";
 import { insertEmployeeSchema, type Employee, type InsertEmployee } from "@shared/schema";
 import { ChevronLeft, ChevronRight, Save } from "lucide-react";
@@ -34,6 +39,7 @@ const steps = [
   { id: "employment", title: "Στοιχεία Εργασίας", description: "Πληροφορίες απασχόλησης" },
   { id: "contract", title: "Σύμβαση Εργασίας", description: "Λεπτομέρειες σύμβασης" },
   { id: "legal", title: "Νομικά Στοιχεία", description: "Φορολογικά και ασφαλιστικά στοιχεία" },
+  { id: "compliance", title: "Εργασιακή Συμμόρφωση", description: "Κατηγοριοποίηση εργαζομένων και αναπηρία" },
   { id: "experience", title: "Εμπειρία & Εκπαίδευση", description: "Προϋπηρεσία και προσόντα" },
   { id: "compensation", title: "Μισθός & Παροχές", description: "Αποδοχές και επιδόματα" },
   { id: "emergency", title: "Έκτακτη Επαφή", description: "Στοιχεία επείγουσας επικοινωνίας" },
@@ -704,8 +710,181 @@ export default function EmployeeForm({ employee, onSuccess, onCancel }: Employee
               </div>
             )}
 
-            {/* Step 4: Experience & Education */}
+            {/* Step 4: Employment Compliance & Worker Classifications */}
             {currentStep === 4 && (
+              <div className="space-y-8">
+                {/* Worker Classification Section */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Κατηγοριοποίηση Εργαζομένου</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="workerClassification">Κατηγορία Εργαζομένου *</Label>
+                      <Select onValueChange={(value) => setValue("workerClassification", value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Επιλέξτε κατηγορία" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="EMPLOYEE">Μισθωτός</SelectItem>
+                          <SelectItem value="INDEPENDENT_CONTRACTOR">Ανεξάρτητος Συνεργάτης</SelectItem>
+                          <SelectItem value="SEASONAL">Εποχιακός Εργαζόμενος</SelectItem>
+                          <SelectItem value="APPRENTICE">Μαθητευόμενος</SelectItem>
+                          <SelectItem value="INTERN">Ασκούμενος</SelectItem>
+                          <SelectItem value="TEMPORARY">Προσωρινός</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.workerClassification && (
+                        <p className="text-red-500 text-sm mt-1">{errors.workerClassification.message}</p>
+                      )}
+                    </div>
+                    
+                    {watch("workerClassification") === "INDEPENDENT_CONTRACTOR" && (
+                      <div>
+                        <Label htmlFor="independentContractorClass">Κλάση Ανεξάρτητου Συνεργάτη</Label>
+                        <Select onValueChange={(value) => setValue("independentContractorClass", value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Επιλέξτε κλάση" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="PROFESSIONAL">Επαγγελματίας</SelectItem>
+                            <SelectItem value="ARTIST">Καλλιτέχνης</SelectItem>
+                            <SelectItem value="TECHNICAL">Τεχνικός</SelectItem>
+                            <SelectItem value="CONSULTANT">Σύμβουλος</SelectItem>
+                            <SelectItem value="SERVICES">Παροχή Υπηρεσιών</SelectItem>
+                            <SelectItem value="OTHER">Άλλο</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="youngWorkerStatus"
+                        {...register("youngWorkerStatus")}
+                        className="rounded border border-gray-300"
+                      />
+                      <Label htmlFor="youngWorkerStatus" className="text-sm">
+                        Νέος Εργαζόμενος (κάτω από 25 ετών)
+                      </Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="seasonalWorkerDesignation"
+                        {...register("seasonalWorkerDesignation")}
+                        className="rounded border border-gray-300"
+                      />
+                      <Label htmlFor="seasonalWorkerDesignation" className="text-sm">
+                        Εποχιακή Απασχόληση
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Disability Support Section */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Υποστήριξη Αναπηρίας</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="disabilityPercentage">Ποσοστό Αναπηρίας (%)</Label>
+                      <Input
+                        id="disabilityPercentage"
+                        type="number"
+                        min="0"
+                        max="100"
+                        {...register("disabilityPercentage", { 
+                          valueAsNumber: true,
+                          validate: (value) => validateDisabilityPercentage(value) || "Εισάγετε έγκυρο ποσοστό (0-100%)"
+                        })}
+                        placeholder="0-100"
+                      />
+                      {errors.disabilityPercentage && (
+                        <p className="text-red-500 text-sm mt-1">{errors.disabilityPercentage.message}</p>
+                      )}
+                    </div>
+                    
+                    {watch("disabilityPercentage") > 0 && (
+                      <div>
+                        <Label htmlFor="disabilityType">Τύπος Αναπηρίας</Label>
+                        <Select onValueChange={(value) => setValue("disabilityType", value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Επιλέξτε τύπο" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="PHYSICAL">Σωματική</SelectItem>
+                            <SelectItem value="MENTAL">Διανοητική</SelectItem>
+                            <SelectItem value="SENSORY">Αισθητηριακή</SelectItem>
+                            <SelectItem value="MULTIPLE">Πολλαπλή</SelectItem>
+                            <SelectItem value="PSYCHOSOCIAL">Ψυχοκοινωνική</SelectItem>
+                            <SelectItem value="CHRONIC">Χρόνια Πάθηση</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {watch("disabilityPercentage") > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div>
+                        <Label htmlFor="disabilityCertificateNumber">Αριθμός Πιστοποιητικού</Label>
+                        <Input
+                          id="disabilityCertificateNumber"
+                          {...register("disabilityCertificateNumber")}
+                          placeholder="Αριθμός πιστοποιητικού αναπηρίας"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="disabilityCertificateIssuer">Εκδούσα Αρχή</Label>
+                        <Input
+                          id="disabilityCertificateIssuer"
+                          {...register("disabilityCertificateIssuer")}
+                          placeholder="π.χ. ΚΕΠΑ, Νοσοκομείο"
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="disabilityCertificateExpiryDate">Ημερομηνία Λήξης</Label>
+                        <Input
+                          id="disabilityCertificateExpiryDate"
+                          type="date"
+                          {...register("disabilityCertificateExpiryDate")}
+                        />
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="disabilitySupport">Απαιτούμενες Διευκολύνσεις</Label>
+                        <textarea
+                          id="disabilitySupport"
+                          {...register("disabilitySupport")}
+                          className="w-full min-h-[80px] p-3 border border-gray-300 rounded-md"
+                          placeholder="Περιγράψτε τις απαιτούμενες διευκολύνσεις..."
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Compliance Information */}
+                <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
+                    Πληροφορίες Συμμόρφωσης
+                  </h4>
+                  <div className="text-sm space-y-2">
+                    <p>• Νέοι εργαζόμενοι (κάτω από 25) έχουν ειδικές προστασίες και επιδοτήσεις</p>
+                    <p>• Εποχιακοί εργαζόμενοι έχουν ειδικούς όρους απασχόλησης</p>
+                    <p>• Άτομα με αναπηρία δικαιούνται ειδικών διευκολύνσεων και φοροαπαλλαγών</p>
+                    <p>• Ανεξάρτητοι συνεργάτες έχουν διαφορετικό φορολογικό καθεστώς</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 5: Experience & Education */}
+            {currentStep === 5 && (
               <div className="space-y-6">
                 <div>
                   <Label htmlFor="previousExperience">Προϋπηρεσία</Label>
@@ -751,8 +930,28 @@ export default function EmployeeForm({ employee, onSuccess, onCancel }: Employee
               </div>
             )}
 
-            {/* Step 6: Emergency Contact */}
+            {/* Step 6: Salary & Benefits */}
             {currentStep === 6 && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="basicSalary">Βασικός Μισθός (€) *</Label>
+                    <Input
+                      id="basicSalary"
+                      {...register("basicSalary")}
+                      placeholder="2500.00"
+                      step="0.01"
+                    />
+                    {errors.basicSalary && (
+                      <p className="text-red-500 text-sm mt-1">{errors.basicSalary.message}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 7: Emergency Contact */}
+            {currentStep === 7 && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
