@@ -5,6 +5,8 @@ import { nanoid } from "nanoid";
 import { db } from "../db";
 import { employees, contracts } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
+import { idempotencyMiddleware } from "../middleware/idempotency";
+import { auditLogMiddleware } from "../middleware/auditLog";
 
 const router = Router();
 
@@ -121,7 +123,7 @@ router.get('/api/employees/:id', isAuthenticated, async (req, res) => {
 });
 
 // POST /api/employees - Create employee with idempotency
-router.post('/api/employees', isAuthenticated, idempotencyMiddleware, async (req, res) => {
+router.post('/api/employees', isAuthenticated, auditLogMiddleware, idempotencyMiddleware, async (req, res) => {
   try {
     const employeeData = CreateEmployeeSchema.parse(req.body);
     

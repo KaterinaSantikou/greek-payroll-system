@@ -11,6 +11,7 @@ import payrollAPI from "./api/payroll";
 import filingsAPI from "./api/filings";
 import paymentsAPI from "./api/payments";
 import webhooksAPI from "./api/webhooks";
+import healthAPI from "./api/health";
 import { 
   insertEmployeeSchema, 
   insertPropertySchema, 
@@ -2260,6 +2261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(filingsAPI);
   app.use(paymentsAPI);
   app.use(webhooksAPI);
+  app.use(healthAPI);
 
   const httpServer = createServer(app);
   return httpServer;
