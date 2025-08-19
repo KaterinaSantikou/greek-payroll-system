@@ -19,6 +19,7 @@ const navigationItems = [
   { name: "Μισθοδοσία", href: "/payroll", icon: Calculator },
   { name: "Ωράρια", href: "/schedules", icon: Clock },
   { name: "Επιδόματα", href: "/allowances", icon: Gift },
+  { name: "Υπερωρίες", href: "/overtime", icon: Clock },
   { name: "Αναφορές", href: "/reports", icon: BarChart },
   { name: "Συμμόρφωση", href: "/compliance", icon: Shield },
 ];

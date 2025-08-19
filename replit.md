@@ -74,6 +74,17 @@ Preferred communication style: Simple, everyday language.
 - **Holiday Bonus Tracking**: Complete tracking of mandatory Greek holiday bonuses with eligibility verification
 - **Allowances Calculator**: Interactive calculator for total allowances with real-time breakdown
 
+### Overtime & Special Hours System (August 2025)
+- **Greek Labor Law Overtime Rates**: Standard overtime (25% increase), urgent overtime (50% increase) with legal limits
+- **Sunday Work Premiums**: Regular Sunday (75% increase), essential services (100% increase) with sector-specific rules
+- **Night Shift Premiums**: Standard night shift (25% increase), full night shift (40% increase) with health requirements
+- **Holiday Work Premiums**: National holidays (100% increase), religious holidays (75% increase) with 2025 Greek calendar
+- **Special Conditions Premiums**: Hazardous work (20% increase), extreme weather (15% increase), remote locations (10% increase)
+- **Compliance Monitoring**: Daily, weekly, and annual overtime limits with automatic violation detection
+- **Interactive Calculator**: Real-time premium calculations with comprehensive breakdown and approval requirements
+- **Greek Holidays 2025**: Complete calendar with Orthodox Easter dates and premium rates
+- **EU Working Time Directive**: 48-hour weekly limits, rest period requirements, and consecutive work day monitoring
+
 ### Recent Legal Updates (August 2025)
 - Updated minimum wage to €760/month
 - Enhanced EFKA rates: 16% employee, 24.78% employer
