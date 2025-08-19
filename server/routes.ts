@@ -38,6 +38,7 @@ import { workflowManager } from "./workflowManager";
 import { hotelOperationsManager } from "./hotelOperations";
 import { SepaPaymentService } from "./sepaPaymentService";
 import { GLExportService } from "./glExportService";
+import { GLExportCanonical } from "./services/glExportCanonical";
 import { FilingComplianceService } from "./filingComplianceService";
 import { SelfServiceManager } from "./selfServiceManager";
 import { registerSelfServiceRoutes } from "./api/selfService";

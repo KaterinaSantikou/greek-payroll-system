@@ -2925,3 +2925,229 @@ export type EmbeddedSession = typeof embeddedSessions.$inferSelect;
 export type InsertEmbeddedSession = z.infer<typeof insertEmbeddedSessionSchema>;
 export type WebhookEvent = typeof webhookEvents.$inferSelect;
 export type InsertWebhookEvent = z.infer<typeof insertWebhookEventSchema>;
+
+// =============================================================================
+// GL DATA MODEL (CANONICAL)
+// =============================================================================
+
+// Journal Header - Main journal entries with payroll context
+export const glJournalHeaders = pgTable("gl_journal_headers", {
+  journalId: uuid("journal_id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id", { length: 100 }).notNull(),
+  entityId: varchar("entity_id", { length: 100 }).notNull(), // Legal entity or company code
+  period: varchar("period", { length: 7 }).notNull(), // YYYY-MM format
+  currency: varchar("currency", { length: 3 }).notNull().default("EUR"),
+  
+  // Journal Status and Control
+  status: varchar("status", { length: 20 }).notNull().default("draft"), // draft|posted|reversed
+  source: varchar("source", { length: 50 }).notNull().default("payroll"), // Source system identifier
+  runId: varchar("run_id").references(() => payrollRuns.runId), // Link to payroll run
+  
+  // Metadata and References
+  description: text("description"), // Journal description
+  externalRefs: jsonb("external_refs").default('[]'), // Array of external system references
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow(),
+  postedAt: timestamp("posted_at"), // When journal was posted to GL
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Journal Lines - Individual debit/credit entries with dimensions
+export const glJournalLinesCanonical = pgTable("gl_journal_lines_canonical", {
+  lineId: uuid("line_id").primaryKey().default(sql`gen_random_uuid()`),
+  journalId: uuid("journal_id").references(() => glJournalHeaders.journalId).notNull(),
+  
+  // GL Account and Amounts
+  accountCode: varchar("account_code", { length: 50 }).notNull(), // Chart of accounts code
+  debit: decimal("debit", { precision: 12, scale: 2 }).default("0.00"), // Debit amount
+  credit: decimal("credit", { precision: 12, scale: 2 }).default("0.00"), // Credit amount
+  description: text("description").notNull(), // Line description
+  
+  // Dimensional Accounting - Core Dimensions
+  costCenter: varchar("cost_center", { length: 20 }), // Cost center code
+  department: varchar("department", { length: 20 }), // Department code
+  propertyId: varchar("property_id").references(() => properties.propertyId), // Property/location
+  project: varchar("project", { length: 20 }), // Project code
+  
+  // Employee/Payroll Specific Dimensions (optional)
+  employeeId: varchar("employee_id").references(() => employees.employeeId), // Employee reference
+  earningsCode: varchar("earnings_code", { length: 20 }), // Payroll earnings/deduction code
+  
+  // Tax Fields (rarely used in payroll journals but available)
+  taxCode: varchar("tax_code", { length: 20 }), // Tax code if applicable
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }), // Tax amount if applicable
+  
+  // System fields
+  lineNumber: integer("line_number").notNull(), // Sequence within journal
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// GL Account Master - Chart of Accounts
+export const glAccounts = pgTable("gl_accounts", {
+  accountId: varchar("account_id").primaryKey().default(sql`gen_random_uuid()`),
+  accountCode: varchar("account_code", { length: 50 }).notNull().unique(),
+  accountName: varchar("account_name", { length: 255 }).notNull(),
+  accountType: varchar("account_type", { length: 50 }).notNull(), // Asset, Liability, Equity, Revenue, Expense
+  parentAccountId: varchar("parent_account_id").references(() => glAccounts.accountId),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Earnings Code to GL Account Mappings
+export const glEarningsCodeMappings = pgTable("gl_earnings_code_mappings", {
+  mappingId: varchar("mapping_id").primaryKey().default(sql`gen_random_uuid()`),
+  earningsCode: varchar("earnings_code", { length: 20 }).notNull(), // REG, OT1, OT2, NIGHT, SUNDAY, HOLIDAY, BONUS, TIPS
+  earningsType: varchar("earnings_type", { length: 50 }).notNull(), // regular, overtime, allowance, bonus, deduction
+  accountCode: varchar("account_code", { length: 50 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Deduction/Liability Code to GL Account Mappings
+export const glDeductionMappings = pgTable("gl_deduction_mappings", {
+  mappingId: varchar("mapping_id").primaryKey().default(sql`gen_random_uuid()`),
+  deductionCode: varchar("deduction_code", { length: 20 }).notNull(), // EFKA_EE, EFKA_ER, TAX_WHT, IKA, etc.
+  deductionType: varchar("deduction_type", { length: 50 }).notNull(), // social_security, tax_withholding, insurance, other
+  accountCode: varchar("account_code", { length: 50 }).notNull(), // Payable account
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Employer Cost to GL Account Mappings
+export const glEmployerCostMappings = pgTable("gl_employer_cost_mappings", {
+  mappingId: varchar("mapping_id").primaryKey().default(sql`gen_random_uuid()`),
+  costCode: varchar("cost_code", { length: 20 }).notNull(), // EFKA_EMPLOYER, INSURANCE, BENEFITS, PROVISIONS
+  costType: varchar("cost_type", { length: 50 }).notNull(), // social_security, insurance, benefits, provisions
+  accountCode: varchar("account_code", { length: 50 }).notNull(), // Expense account
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Bank/Clearing Account Mappings
+export const glBankMappings = pgTable("gl_bank_mappings", {
+  mappingId: varchar("mapping_id").primaryKey().default(sql`gen_random_uuid()`),
+  bankCode: varchar("bank_code", { length: 20 }).notNull(), // PAYROLL_CLEARING, ALPHA_BANK, PIRAEUS, etc.
+  bankType: varchar("bank_type", { length: 50 }).notNull(), // clearing, bank_account
+  accountCode: varchar("account_code", { length: 50 }).notNull(),
+  bankName: varchar("bank_name", { length: 100 }),
+  iban: varchar("iban", { length: 34 }), // For bank accounts
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Dimensional Mappings - Cost Center and Department Mappings
+export const glDimensionMappings = pgTable("gl_dimension_mappings", {
+  mappingId: varchar("mapping_id").primaryKey().default(sql`gen_random_uuid()`),
+  dimensionType: varchar("dimension_type", { length: 20 }).notNull(), // cost_center, department, property
+  dimensionCode: varchar("dimension_code", { length: 50 }).notNull(), // The actual code value
+  dimensionName: varchar("dimension_name", { length: 255 }).notNull(), // Display name
+  propertyId: varchar("property_id").references(() => properties.propertyId), // For property-based cost centers
+  parentDimension: varchar("parent_dimension", { length: 50 }), // Hierarchical structure
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// =============================================================================
+// GL CANONICAL RELATIONS
+// =============================================================================
+
+export const glJournalHeadersRelations = relations(glJournalHeaders, ({ one, many }) => ({
+  payrollRun: one(payrollRuns, {
+    fields: [glJournalHeaders.runId],
+    references: [payrollRuns.runId],
+  }),
+  journalLines: many(glJournalLinesCanonical),
+}));
+
+export const glJournalLinesCanonicalRelations = relations(glJournalLinesCanonical, ({ one }) => ({
+  journal: one(glJournalHeaders, {
+    fields: [glJournalLinesCanonical.journalId],
+    references: [glJournalHeaders.journalId],
+  }),
+  property: one(properties, {
+    fields: [glJournalLinesCanonical.propertyId],
+    references: [properties.propertyId],
+  }),
+  employee: one(employees, {
+    fields: [glJournalLinesCanonical.employeeId],
+    references: [employees.employeeId],
+  }),
+}));
+
+export const glAccountsRelations = relations(glAccounts, ({ one, many }) => ({
+  parentAccount: one(glAccounts, {
+    fields: [glAccounts.parentAccountId],
+    references: [glAccounts.accountId],
+  }),
+  childAccounts: many(glAccounts),
+}));
+
+// =============================================================================
+// GL CANONICAL SCHEMA EXPORTS
+// =============================================================================
+
+// Journal Header schemas
+export const insertGLJournalHeaderSchema = createInsertSchema(glJournalHeaders).omit({
+  journalId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertGLJournalHeader = z.infer<typeof insertGLJournalHeaderSchema>;
+export type GLJournalHeader = typeof glJournalHeaders.$inferSelect;
+
+// Journal Line schemas
+export const insertGLJournalLineCanonicalSchema = createInsertSchema(glJournalLinesCanonical).omit({
+  lineId: true,
+  createdAt: true,
+});
+export type InsertGLJournalLineCanonical = z.infer<typeof insertGLJournalLineCanonicalSchema>;
+export type GLJournalLineCanonical = typeof glJournalLinesCanonical.$inferSelect;
+
+// GL Account schemas
+export const insertGLAccountSchema = createInsertSchema(glAccounts).omit({
+  accountId: true,
+  createdAt: true,
+});
+export type InsertGLAccount = z.infer<typeof insertGLAccountSchema>;
+export type GLAccount = typeof glAccounts.$inferSelect;
+
+// Mapping schemas
+export const insertGLEarningsCodeMappingSchema = createInsertSchema(glEarningsCodeMappings).omit({
+  mappingId: true,
+  createdAt: true,
+});
+export type InsertGLEarningsCodeMapping = z.infer<typeof insertGLEarningsCodeMappingSchema>;
+export type GLEarningsCodeMapping = typeof glEarningsCodeMappings.$inferSelect;
+
+export const insertGLDeductionMappingSchema = createInsertSchema(glDeductionMappings).omit({
+  mappingId: true,
+  createdAt: true,
+});
+export type InsertGLDeductionMapping = z.infer<typeof insertGLDeductionMappingSchema>;
+export type GLDeductionMapping = typeof glDeductionMappings.$inferSelect;
+
+export const insertGLEmployerCostMappingSchema = createInsertSchema(glEmployerCostMappings).omit({
+  mappingId: true,
+  createdAt: true,
+});
+export type InsertGLEmployerCostMapping = z.infer<typeof insertGLEmployerCostMappingSchema>;
+export type GLEmployerCostMapping = typeof glEmployerCostMappings.$inferSelect;
+
+export const insertGLBankMappingSchema = createInsertSchema(glBankMappings).omit({
+  mappingId: true,
+  createdAt: true,
+});
+export type InsertGLBankMapping = z.infer<typeof insertGLBankMappingSchema>;
+export type GLBankMapping = typeof glBankMappings.$inferSelect;
+
+export const insertGLDimensionMappingSchema = createInsertSchema(glDimensionMappings).omit({
+  mappingId: true,
+  createdAt: true,
+});
+export type InsertGLDimensionMapping = z.infer<typeof insertGLDimensionMappingSchema>;
+export type GLDimensionMapping = typeof glDimensionMappings.$inferSelect;
