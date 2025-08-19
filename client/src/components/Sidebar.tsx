@@ -37,6 +37,7 @@ const navigationItems = [
   { name: "Payroll Integration", href: "/payroll-integration", icon: Calculator },
   { name: "Manager Workflows", href: "/manager-workflows", icon: Users },
   { name: "Hotel Operations", href: "/hotel-operations", icon: Building2 },
+  { name: "Hotel Enhancements", href: "/hotel-enhancements", icon: Sparkles },
   { name: "Επιδόματα", href: "/allowances", icon: Gift },
   { name: "Υπερωρίες", href: "/overtime", icon: Clock },
   { name: "Άδειες", href: "/leave", icon: Plane },
@@ -47,7 +48,6 @@ const navigationItems = [
   { name: "Success Metrics", href: "/success-metrics", icon: BarChart },
   { name: "Modern Payroll", href: "/modern-payroll", icon: Sparkles },
   { name: "Product Vision", href: "/product-vision", icon: Target },
-  { name: "ERGANI Compliance", href: "/ergani-compliance", icon: Shield },
   { name: "Employee Self-Service", href: "/employee-self-service", icon: User },
   { name: "Manager Dashboard", href: "/manager-dashboard", icon: UserCheck },
 ];

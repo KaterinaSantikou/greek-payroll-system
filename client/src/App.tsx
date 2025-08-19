@@ -22,13 +22,13 @@ import ErganiCompliance from "@/pages/erganiCompliance";
 import PayrollIntegration from "@/pages/payrollIntegration";
 import ManagerWorkflows from "@/pages/managerWorkflows";
 import HotelOperations from "@/pages/hotelOperations";
+import HotelEnhancements from "@/pages/hotelEnhancements";
 import Compliance from "@/pages/compliance";
 import Analytics from "@/pages/analytics";
 import Deployment from "@/pages/deployment";
 import SuccessMetrics from "@/pages/successMetrics";
 import ModernPayrollEngine from "@/pages/modernPayrollEngine";
 import ProductVision from "@/pages/productVision";
-import ERGANICompliance from "@/pages/erganiCompliance";
 import Payments from "@/pages/payments";
 import EmployeeSelfService from "@/pages/employeeSelfService";
 import ManagerDashboard from "@/pages/managerDashboard";
@@ -60,13 +60,13 @@ function Router() {
           <Route path="/payroll-integration" component={PayrollIntegration} />
           <Route path="/manager-workflows" component={ManagerWorkflows} />
           <Route path="/hotel-operations" component={HotelOperations} />
+          <Route path="/hotel-enhancements" component={HotelEnhancements} />
           <Route path="/compliance" component={Compliance} />
           <Route path="/analytics" component={Analytics} />
           <Route path="/deployment" component={Deployment} />
           <Route path="/success-metrics" component={SuccessMetrics} />
           <Route path="/modern-payroll" component={ModernPayrollEngine} />
           <Route path="/product-vision" component={ProductVision} />
-          <Route path="/ergani-compliance" component={ERGANICompliance} />
           <Route path="/employee-self-service" component={EmployeeSelfService} />
           <Route path="/manager-dashboard" component={ManagerDashboard} />
         </Layout>

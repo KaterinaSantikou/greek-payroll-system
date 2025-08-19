@@ -26,6 +26,7 @@ import { GLExportService } from "./glExportService";
 import { FilingComplianceService } from "./filingComplianceService";
 import { SelfServiceManager } from "./selfServiceManager";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
+import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { 
   insertPaymentInstructionsSchema, 
   insertGlExportsSchema 
@@ -41,6 +42,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const filingComplianceService = new FilingComplianceService();
   const selfServiceManager = new SelfServiceManager();
   const advancedAnalyticsService = new AdvancedAnalyticsService();
+  const hotelEnhancementsService = new HotelEnhancementsService();
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -2022,6 +2024,216 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating executive summary:", error);
       res.status(500).json({ error: "Failed to generate executive summary" });
+    }
+  });
+
+  // Hotel-Specific Enhancements Routes
+
+  // Seasonality Toolkit
+  app.get('/api/hotel-enhancements/seasonal-analytics/:propertyId', isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const seasonId = req.query.seasonId as string;
+      const analytics = await hotelEnhancementsService.getSeasonalAnalytics(propertyId, seasonId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching seasonal analytics:", error);
+      res.status(500).json({ message: "Failed to fetch seasonal analytics" });
+    }
+  });
+
+  app.post('/api/hotel-enhancements/seasonality-plan', isAuthenticated, async (req, res) => {
+    try {
+      const seasonData = req.body;
+      const plan = await hotelEnhancementsService.createSeasonalityPlan(seasonData);
+      res.json(plan);
+    } catch (error) {
+      console.error("Error creating seasonality plan:", error);
+      res.status(500).json({ message: "Failed to create seasonality plan" });
+    }
+  });
+
+  app.post('/api/hotel-enhancements/batch-hiring', isAuthenticated, async (req, res) => {
+    try {
+      const { seasonId, hiringPlan } = req.body;
+      const result = await hotelEnhancementsService.executeBatchHiring(seasonId, hiringPlan);
+      res.json(result);
+    } catch (error) {
+      console.error("Error executing batch hiring:", error);
+      res.status(500).json({ message: "Failed to execute batch hiring" });
+    }
+  });
+
+  // Accommodation & Meal Allowances
+  app.post('/api/hotel-enhancements/allowances/configure', isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId, config } = req.body;
+      const allowances = await hotelEnhancementsService.configureAccommodationAllowances(propertyId, config);
+      res.json(allowances);
+    } catch (error) {
+      console.error("Error configuring allowances:", error);
+      res.status(500).json({ message: "Failed to configure allowances" });
+    }
+  });
+
+  // Tip Pooling Engine
+  app.get('/api/hotel-enhancements/tip-pool-analytics/:propertyId', isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      // Return demo tip pool analytics
+      const demoTipPool = {
+        poolId: `pool_${propertyId}`,
+        poolName: 'Main Property Tip Pool',
+        totalTipsCollected: 15420.50,
+        averagePerEmployee: 285.75,
+        topPerformers: [
+          {
+            employeeId: 'emp_001',
+            employeeName: 'Maria Papadopoulos',
+            tipAmount: 425.80,
+            performanceScore: 4.7
+          },
+          {
+            employeeId: 'emp_002',
+            employeeName: 'Dimitris Kostas',
+            tipAmount: 398.25,
+            performanceScore: 4.6
+          }
+        ],
+        departmentBreakdown: [
+          {
+            department: 'F&B Service',
+            totalTips: 8950.30,
+            employeeCount: 28,
+            averagePerEmployee: 319.65
+          },
+          {
+            department: 'Bar',
+            totalTips: 4120.15,
+            employeeCount: 12,
+            averagePerEmployee: 343.35
+          },
+          {
+            department: 'Room Service',
+            totalTips: 2350.05,
+            employeeCount: 8,
+            averagePerEmployee: 293.76
+          }
+        ]
+      };
+      res.json(demoTipPool);
+    } catch (error) {
+      console.error("Error fetching tip pool analytics:", error);
+      res.status(500).json({ message: "Failed to fetch tip pool analytics" });
+    }
+  });
+
+  app.post('/api/hotel-enhancements/tip-pool/configure', isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId, poolName, distributionMethod } = req.body;
+      const tipPool = await hotelEnhancementsService.createTipPoolingEngine(propertyId, {
+        poolName,
+        configuration: { distributionMethod }
+      });
+      res.json(tipPool);
+    } catch (error) {
+      console.error("Error configuring tip pool:", error);
+      res.status(500).json({ message: "Failed to configure tip pool" });
+    }
+  });
+
+  app.post('/api/hotel-enhancements/tip-pool/:poolId/distribute', isAuthenticated, async (req, res) => {
+    try {
+      const { poolId } = req.params;
+      const { startDate, endDate } = req.body;
+      const distribution = await hotelEnhancementsService.calculateTipDistribution(
+        poolId,
+        { startDate: new Date(startDate), endDate: new Date(endDate) }
+      );
+      res.json(distribution);
+    } catch (error) {
+      console.error("Error calculating tip distribution:", error);
+      res.status(500).json({ message: "Failed to calculate tip distribution" });
+    }
+  });
+
+  // Split Shifts & Costing
+  app.post('/api/hotel-enhancements/split-shift/create', isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, date, segments } = req.body;
+      const splitShift = await hotelEnhancementsService.createSplitShift(
+        employeeId,
+        new Date(date),
+        segments
+      );
+      res.json(splitShift);
+    } catch (error) {
+      console.error("Error creating split shift:", error);
+      res.status(500).json({ message: "Failed to create split shift" });
+    }
+  });
+
+  app.get('/api/hotel-enhancements/split-shifts/:employeeId', isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId } = req.params;
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
+      
+      // Return demo split shift data
+      const demoSplitShifts = [
+        {
+          splitId: 'split_001',
+          employeeId,
+          date: new Date(),
+          segments: [
+            {
+              segmentId: 'seg_001',
+              startTime: '06:00',
+              endTime: '10:00',
+              outlet: 'Restaurant',
+              department: 'F&B Service',
+              costCenter: 'REST001',
+              hoursWorked: 4.0,
+              laborCost: 52.00,
+              activities: ['Breakfast Service', 'Table Setup']
+            },
+            {
+              segmentId: 'seg_002',
+              startTime: '19:00',
+              endTime: '23:00',
+              outlet: 'Pool Bar',
+              department: 'Bar Service',
+              costCenter: 'BAR001',
+              hoursWorked: 4.0,
+              laborCost: 58.00,
+              activities: ['Dinner Service', 'Bar Operations']
+            }
+          ],
+          costingBreakdown: {
+            totalHours: 8.0,
+            totalLaborCost: 110.00,
+            outletDistribution: [
+              { outlet: 'Restaurant', hours: 4.0, cost: 52.00, percentage: 47.3 },
+              { outlet: 'Pool Bar', hours: 4.0, cost: 58.00, percentage: 52.7 }
+            ],
+            departmentDistribution: [
+              { department: 'F&B Service', hours: 4.0, cost: 52.00, percentage: 47.3 },
+              { department: 'Bar Service', hours: 4.0, cost: 58.00, percentage: 52.7 }
+            ]
+          },
+          complianceChecks: {
+            maxDailyHours: true,
+            minimumRestPeriod: true,
+            overtimeRules: true,
+            breakRequirements: true
+          }
+        }
+      ];
+      
+      res.json(demoSplitShifts);
+    } catch (error) {
+      console.error("Error fetching split shifts:", error);
+      res.status(500).json({ message: "Failed to fetch split shifts" });
     }
   });
 
