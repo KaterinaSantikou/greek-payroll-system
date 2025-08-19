@@ -23,6 +23,7 @@ import { workflowManager } from "./workflowManager";
 import { hotelOperationsManager } from "./hotelOperations";
 import { SepaPaymentService } from "./sepaPaymentService";
 import { GLExportService } from "./glExportService";
+import { FilingComplianceService } from "./filingComplianceService";
 import { 
   insertPaymentInstructionsSchema, 
   insertGlExportsSchema 
@@ -31,6 +32,11 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Initialize services
+  const sepaPaymentService = new SepaPaymentService();
+  const glExportService = new GLExportService();
+  const filingComplianceService = new FilingComplianceService();
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -1607,8 +1613,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payment Services Routes
-  const sepaPaymentService = new SepaPaymentService();
-  const glExportService = new GLExportService();
 
   // Generate SEPA payment file
   app.post('/api/payments/sepa/generate', isAuthenticated, async (req, res) => {
@@ -1715,6 +1719,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching GL export history:", error);
       res.status(500).json({ error: "Failed to fetch GL export history" });
+    }
+  });
+
+  // Filing & Compliance routes
+  app.post("/api/filings/apd/generate", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId, period } = req.body;
+      const filing = await filingComplianceService.generateAPDFiling(propertyId, period);
+      res.json(filing);
+    } catch (error) {
+      console.error("Error generating APD filing:", error);
+      res.status(500).json({ error: "Failed to generate APD filing" });
+    }
+  });
+
+  app.post("/api/filings/fmy/generate", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId, period } = req.body;
+      const filing = await filingComplianceService.generateFMYFiling(propertyId, period);
+      res.json(filing);
+    } catch (error) {
+      console.error("Error generating ΦΜΥ filing:", error);
+      res.status(500).json({ error: "Failed to generate ΦΜΥ filing" });
+    }
+  });
+
+  app.post("/api/filings/apd/:filingId/submit", isAuthenticated, async (req, res) => {
+    try {
+      const { filingId } = req.params;
+      const result = await filingComplianceService.submitAPDFiling(filingId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error submitting APD filing:", error);
+      res.status(500).json({ error: "Failed to submit APD filing" });
+    }
+  });
+
+  app.post("/api/filings/fmy/:filingId/submit", isAuthenticated, async (req, res) => {
+    try {
+      const { filingId } = req.params;
+      const result = await filingComplianceService.submitFMYFiling(filingId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error submitting ΦΜΥ filing:", error);
+      res.status(500).json({ error: "Failed to submit ΦΜΥ filing" });
+    }
+  });
+
+  app.post("/api/ergani/form-pack", isAuthenticated, async (req, res) => {
+    try {
+      const { formType, employeeId, propertyId, formData } = req.body;
+      const formPack = await filingComplianceService.createERGANIFormPack(formType, employeeId, propertyId, formData);
+      res.json(formPack);
+    } catch (error) {
+      console.error("Error creating ERGANI form pack:", error);
+      res.status(500).json({ error: "Failed to create ERGANI form pack" });
+    }
+  });
+
+  app.post("/api/ergani/form-pack/:packId/submit", isAuthenticated, async (req, res) => {
+    try {
+      const { packId } = req.params;
+      const result = await filingComplianceService.submitERGANIFormPack(packId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error submitting ERGANI form pack:", error);
+      res.status(500).json({ error: "Failed to submit ERGANI form pack" });
+    }
+  });
+
+  app.get("/api/digital-work-card/dashboard", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId, period } = req.query;
+      const dashboard = await filingComplianceService.generateDigitalWorkCardDashboard(propertyId as string, period as string);
+      res.json(dashboard);
+    } catch (error) {
+      console.error("Error generating Digital Work Card dashboard:", error);
+      res.status(500).json({ error: "Failed to generate Digital Work Card dashboard" });
+    }
+  });
+
+  app.get("/api/filings/history", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId, filingType } = req.query;
+      const history = await filingComplianceService.getFilingHistory(propertyId as string, filingType as string);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching filing history:", error);
+      res.status(500).json({ error: "Failed to fetch filing history" });
+    }
+  });
+
+  app.get("/api/inspector-pack", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId, startDate, endDate } = req.query;
+      const pack = await filingComplianceService.generateInspectorPack(
+        propertyId as string,
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+      res.json(pack);
+    } catch (error) {
+      console.error("Error generating inspector pack:", error);
+      res.status(500).json({ error: "Failed to generate inspector pack" });
     }
   });
 

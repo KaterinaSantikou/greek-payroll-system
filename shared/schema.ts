@@ -1295,3 +1295,63 @@ export type JournalEntry = typeof journalEntries.$inferSelect;
 export type InsertJournalEntry = z.infer<typeof insertJournalEntriesSchema>;
 export type BankRegistry = typeof bankRegistry.$inferSelect;
 export type InsertBankRegistry = z.infer<typeof insertBankRegistrySchema>;
+
+// Additional Compliance Filings Tables
+
+export const complianceFilings = pgTable("compliance_filings", {
+  filingId: varchar("filing_id").primaryKey(),
+  propertyId: varchar("property_id").references(() => properties.propertyId),
+  filingType: varchar("filing_type"), // APD, FMY, VAT, etc.
+  period: varchar("period"), // YYYY-MM
+  status: varchar("status"), // draft, generated, submitted, accepted, rejected
+  filingData: jsonb("filing_data"),
+  totalAmount: varchar("total_amount"),
+  submissionReference: varchar("submission_reference"),
+  receiptNumber: varchar("receipt_number"),
+  dueDate: timestamp("due_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  submittedAt: timestamp("submitted_at"),
+});
+
+export const erganiSubmissions = pgTable("ergani_submissions", {
+  submissionId: varchar("submission_id").primaryKey(),
+  employeeId: varchar("employee_id").references(() => employees.employeeId),
+  propertyId: varchar("property_id").references(() => properties.propertyId),
+  eventType: varchar("event_type"), // hire, schedule, overtime, change, termination
+  formData: jsonb("form_data"),
+  status: varchar("status"), // draft, submitted, accepted, rejected
+  erganiEventId: varchar("ergani_event_id"),
+  submissionReference: varchar("submission_reference"),
+  createdAt: timestamp("created_at").defaultNow(),
+  submittedAt: timestamp("submitted_at"),
+});
+
+export const digitalWorkCardEvents = pgTable("digital_work_card_events", {
+  eventId: varchar("event_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId),
+  propertyId: varchar("property_id").references(() => properties.propertyId),
+  eventType: varchar("event_type"), // clock_in, clock_out, break_start, break_end
+  timestamp: timestamp("timestamp").defaultNow(),
+  location: jsonb("location"), // GPS coordinates, geofence data
+  deviceInfo: jsonb("device_info"),
+  cardStatus: varchar("card_status"), // active, inactive, expired, pending
+  submissionStatus: varchar("submission_status"), // pending, submitted, accepted, failed
+  erganiSyncStatus: varchar("ergani_sync_status"), // synced, pending, failed
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Insert schemas for additional compliance tables
+export const insertComplianceFilingsSchema = createInsertSchema(complianceFilings);
+export const insertErganiSubmissionsSchema = createInsertSchema(erganiSubmissions);
+export const insertDigitalWorkCardEventsSchema = createInsertSchema(digitalWorkCardEvents).omit({
+  eventId: true,
+  createdAt: true,
+});
+
+// Additional compliance type exports
+export type ComplianceFiling = typeof complianceFilings.$inferSelect;
+export type InsertComplianceFiling = z.infer<typeof insertComplianceFilingsSchema>;
+export type ErganiSubmission = typeof erganiSubmissions.$inferSelect;
+export type InsertErganiSubmission = z.infer<typeof insertErganiSubmissionsSchema>;
+export type DigitalWorkCardEvent = typeof digitalWorkCardEvents.$inferSelect;
+export type InsertDigitalWorkCardEvent = z.infer<typeof insertDigitalWorkCardEventsSchema>;

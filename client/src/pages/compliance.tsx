@@ -1,485 +1,585 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, CheckCircle, Clock, Shield, Database, FileText, Eye, RefreshCw } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { 
+  FileText, 
+  Send, 
+  Download, 
+  Eye, 
+  Clock, 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle,
+  TrendingUp,
+  Users,
+  Activity,
+  Shield
+} from "lucide-react";
+import { format } from "date-fns";
+import { apiRequest } from "@/lib/queryClient";
 
-interface ComplianceAlert {
-  alertId: string;
-  type: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  employeeId: string;
-  propertyId?: string;
-  message: string;
-  details: any;
+interface APDFiling {
+  filingId: string;
+  period: string;
+  propertyId: string;
+  totalEmployees: number;
+  totalGrossWages: string;
+  totalEmployeeContributions: string;
+  totalEmployerContributions: string;
+  status: string;
+  submissionReference?: string;
+  receiptNumber?: string;
   createdAt: string;
-  resolvedAt?: string;
-  resolvedBy?: string;
+  submittedAt?: string;
 }
 
-interface ComplianceDashboard {
-  realTimeStatus: {
-    enabled: boolean;
-    lastSubmission: string;
+interface FMYFiling {
+  filingId: string;
+  period: string;
+  propertyId: string;
+  totalEmployees: number;
+  totalGrossWages: string;
+  totalTaxWithheld: string;
+  paymentDueDate: string;
+  status: string;
+  submissionReference?: string;
+  createdAt: string;
+  submittedAt?: string;
+}
+
+interface DigitalWorkCardDashboard {
+  propertyId: string;
+  period: string;
+  totalEmployees: number;
+  coverageMetrics: {
+    employeesWithCards: number;
+    coveragePercentage: number;
+    pendingActivations: number;
+    expiredCards: number;
+  };
+  submissionMetrics: {
+    totalSubmissions: number;
+    successfulSubmissions: number;
+    failedSubmissions: number;
     successRate: number;
-    pendingEvents: number;
   };
-  alerts: ComplianceAlert[];
-  erganiHealth: {
-    totalEvents: number;
-    successfulEvents: number;
-    pendingEvents: number;
-    quarantinedEvents: number;
-    failedEvents: number;
-    successRate: number;
-    queueBacklog: number;
-    isProcessing: boolean;
-    lastActivity: string;
-  };
-  policyEnforcement: {
-    digitalCardPolicy: {
-      noPayrollDeductions: boolean;
-      salaryProtection: boolean;
-      reasonablePunchRequirements: boolean;
-      alternativeMethodsAllowed: boolean;
-    };
-    maxHoursConfig: {
-      daily: number;
-      weekly: number;
-    };
-    restPeriods: {
-      minBetweenShifts: number;
-      maxContinuous: number;
-    };
-  };
-  dataRetention: {
-    config: {
-      punchEvents: number;
-      timesheets: number;
-      auditLogs: number;
-    };
-    auditChainLength: number;
-    lastAuditEntry: string;
+  complianceStatus: {
+    compliantEmployees: number;
+    nonCompliantEmployees: number;
+    violationCount: number;
+    inspectorReadiness: 'ready' | 'needs_attention' | 'critical';
   };
 }
 
-export default function CompliancePage() {
+export default function Compliance() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { isAuthenticated, isLoading } = useAuth();
-
-  const { data: dashboard, isLoading: dashboardLoading, error } = useQuery<ComplianceDashboard>({
-    queryKey: ["/api/compliance/dashboard"],
-    enabled: isAuthenticated,
-    refetchInterval: 30000, // Refresh every 30 seconds
+  const [selectedProperty, setSelectedProperty] = useState("PROP_001");
+  const [selectedPeriod, setSelectedPeriod] = useState(format(new Date(), 'yyyy-MM'));
+  const [erganiFormData, setErganiFormData] = useState({
+    formType: 'hire' as 'hire' | 'schedule' | 'overtime' | 'change' | 'termination',
+    employeeId: '',
+    afm: '',
+    startDate: '',
+    position: '',
+    contractType: 'FULL_TIME'
   });
 
-  const resolveAlertMutation = useMutation({
-    mutationFn: async ({ alertId, resolution }: { alertId: string; resolution: string }) => {
-      await apiRequest(`/api/compliance/alerts/${alertId}/resolve`, {
-        method: "PUT",
-        body: JSON.stringify({ resolution }),
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Alert Resolved",
-        description: "The compliance alert has been resolved successfully.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/compliance/dashboard"] });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to resolve alert. Please try again.",
-        variant: "destructive",
-      });
-    },
+  // Fetch filing history
+  const { data: filingHistory, isLoading: historyLoading } = useQuery({
+    queryKey: ["/api/filings/history", selectedProperty],
+    queryParams: { propertyId: selectedProperty }
   });
 
-  const retryErganiMutation = useMutation({
-    mutationFn: async (eventId: string) => {
-      await apiRequest(`/api/compliance/ergani/retry/${eventId}`, {
+  // Fetch Digital Work Card dashboard
+  const { data: dwcDashboard, isLoading: dashboardLoading } = useQuery({
+    queryKey: ["/api/digital-work-card/dashboard", selectedProperty, selectedPeriod],
+    queryParams: { propertyId: selectedProperty, period: selectedPeriod }
+  });
+
+  // Generate APD filing mutation
+  const generateAPDMutation = useMutation({
+    mutationFn: async ({ propertyId, period }: { propertyId: string; period: string }) => {
+      return apiRequest("/api/filings/apd/generate", {
         method: "POST",
+        body: { propertyId, period }
       });
     },
-    onSuccess: () => {
+    onSuccess: (data: APDFiling) => {
       toast({
-        title: "Event Retried",
-        description: "ERGANI event has been queued for retry.",
+        title: "APD Filing Generated",
+        description: `APD filing for ${data.period} generated successfully. Total: €${data.totalEmployerContributions}`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/compliance/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/filings/history"] });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to retry ERGANI event. Please try again.",
+        description: "Failed to generate APD filing",
         variant: "destructive",
       });
-    },
+    }
   });
 
-  // Redirect to home if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+  // Generate ΦΜΥ filing mutation
+  const generateFMYMutation = useMutation({
+    mutationFn: async ({ propertyId, period }: { propertyId: string; period: string }) => {
+      return apiRequest("/api/filings/fmy/generate", {
+        method: "POST",
+        body: { propertyId, period }
+      });
+    },
+    onSuccess: (data: FMYFiling) => {
       toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
+        title: "ΦΜΥ Filing Generated",
+        description: `ΦΜΥ filing for ${data.period} generated successfully. Tax: €${data.totalTaxWithheld}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/filings/history"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to generate ΦΜΥ filing",
         variant: "destructive",
       });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  });
 
-  if (isLoading || dashboardLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  // Submit filing mutations
+  const submitAPDMutation = useMutation({
+    mutationFn: async (filingId: string) => {
+      return apiRequest(`/api/filings/apd/${filingId}/submit`, {
+        method: "POST"
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "APD Filing Submitted",
+        description: `Filing submitted successfully. Reference: ${data.submissionReference}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/filings/history"] });
+    }
+  });
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <AlertTriangle className="h-16 w-16 text-destructive mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Error Loading Compliance Dashboard</h2>
-          <p className="text-muted-foreground mb-4">
-            {isUnauthorizedError(error) ? "Authentication required" : "Failed to load compliance data"}
-          </p>
-          <Button onClick={() => window.location.reload()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const submitFMYMutation = useMutation({
+    mutationFn: async (filingId: string) => {
+      return apiRequest(`/api/filings/fmy/${filingId}/submit`, {
+        method: "POST"
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "ΦΜΥ Filing Submitted",
+        description: `Filing submitted successfully. Reference: ${data.submissionReference}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/filings/history"] });
+    }
+  });
 
-  if (!dashboard) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>No compliance data available</p>
-      </div>
-    );
-  }
+  // Create ERGANI form pack mutation
+  const createERGANIFormMutation = useMutation({
+    mutationFn: async (formData: any) => {
+      return apiRequest("/api/ergani/form-pack", {
+        method: "POST",
+        body: {
+          formType: formData.formType,
+          employeeId: formData.employeeId,
+          propertyId: selectedProperty,
+          formData
+        }
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "ERGANI Form Created",
+        description: `${data.formType.toUpperCase()} form pack created successfully`,
+      });
+    }
+  });
 
-  const getSeverityBadge = (severity: string) => {
-    const variants = {
-      LOW: "outline",
-      MEDIUM: "secondary",
-      HIGH: "destructive",
-      CRITICAL: "destructive",
-    } as const;
-    return variants[severity as keyof typeof variants] || "outline";
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'submitted':
+        return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Submitted</Badge>;
+      case 'generated':
+        return <Badge variant="secondary">Generated</Badge>;
+      case 'draft':
+        return <Badge variant="outline">Draft</Badge>;
+      case 'accepted':
+        return <Badge variant="default" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100">Accepted</Badge>;
+      case 'rejected':
+        return <Badge variant="destructive">Rejected</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
-  const getSeverityIcon = (severity: string) => {
-    switch (severity) {
-      case 'CRITICAL':
-      case 'HIGH':
-        return <AlertTriangle className="h-4 w-4" />;
-      case 'MEDIUM':
-        return <Clock className="h-4 w-4" />;
+  const getInspectorReadinessBadge = (readiness: string) => {
+    switch (readiness) {
+      case 'ready':
+        return <Badge variant="default" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Ready
+        </Badge>;
+      case 'needs_attention':
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100">
+          <AlertTriangle className="w-3 h-3 mr-1" />
+          Needs Attention
+        </Badge>;
+      case 'critical':
+        return <Badge variant="destructive">
+          <XCircle className="w-3 h-3 mr-1" />
+          Critical
+        </Badge>;
       default:
-        return <CheckCircle className="h-4 w-4" />;
+        return <Badge variant="outline">{readiness}</Badge>;
     }
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 space-y-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Shield className="h-8 w-8 text-primary" />
-              Compliance Guardrails
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Real-time Greek compliance monitoring and ERGANI II integration
-            </p>
-          </div>
-          <Button
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/compliance/dashboard"] })}
-            variant="outline"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Filings & Compliance</h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            APD (e-EFKA) generator, ΦΜΥ (AADE) filing, ERGANI II forms, Digital Work Card dashboards
+          </p>
         </div>
-
-        {/* Real-time Status Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">ERGANI Status</CardTitle>
-              <Shield className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {dashboard.erganiHealth.successRate.toFixed(1)}%
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {dashboard.realTimeStatus.enabled ? 'Real-time enabled' : 'Batch mode'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Events Processed</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dashboard.erganiHealth.totalEvents}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {dashboard.erganiHealth.successfulEvents} successful
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Queue Backlog</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {dashboard.erganiHealth.pendingEvents}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {dashboard.erganiHealth.isProcessing ? 'Processing...' : 'Idle'}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Alerts</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {dashboard.alerts.length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Compliance violations
-              </p>
-            </CardContent>
-          </Card>
+        <div className="flex items-center space-x-4">
+          <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Select property" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PROP_001">Santikos Hotel Athens</SelectItem>
+              <SelectItem value="PROP_002">Aegean Resort Mykonos</SelectItem>
+              <SelectItem value="PROP_003">Olympus Hotel Thessaloniki</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input
+            type="month"
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(e.target.value)}
+            className="w-[150px]"
+          />
         </div>
+      </div>
 
-        {/* Compliance Alerts */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" />
-              Active Compliance Alerts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {dashboard.alerts.length === 0 ? (
-              <div className="text-center py-8">
-                <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">All Clear!</h3>
-                <p className="text-muted-foreground">No active compliance alerts</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {dashboard.alerts.map((alert) => (
-                  <div
-                    key={alert.alertId}
-                    className="flex items-start justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex items-start gap-3">
-                      {getSeverityIcon(alert.severity)}
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold">{alert.type.replace(/_/g, ' ')}</h4>
-                          <Badge variant={getSeverityBadge(alert.severity)}>
-                            {alert.severity}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {alert.message}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Employee: {alert.employeeId} • 
-                          {alert.propertyId && ` Property: ${alert.propertyId} • `}
-                          Created: {new Date(alert.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          const resolution = prompt("Enter resolution notes:");
-                          if (resolution) {
-                            resolveAlertMutation.mutate({ alertId: alert.alertId, resolution });
-                          }
-                        }}
-                        disabled={resolveAlertMutation.isPending}
-                      >
-                        Resolve
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="dashboard" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="dashboard">Digital Work Card</TabsTrigger>
+          <TabsTrigger value="apd-efka">APD (e-EFKA)</TabsTrigger>
+          <TabsTrigger value="fmy-aade">ΦΜΥ (AADE)</TabsTrigger>
+          <TabsTrigger value="ergani">ERGANI II Forms</TabsTrigger>
+          <TabsTrigger value="history">Filing History</TabsTrigger>
+        </TabsList>
 
-        {/* Policy Enforcement */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <TabsContent value="dashboard" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Digital Work Card Policy
+              <CardTitle className="flex items-center space-x-2">
+                <Shield className="w-5 h-5" />
+                <span>Digital Work Card Dashboard</span>
               </CardTitle>
+              <CardDescription>
+                Coverage, submission success, and inspector readiness for period {selectedPeriod}
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">No Payroll Deductions</span>
-                <Badge variant={dashboard.policyEnforcement.digitalCardPolicy.noPayrollDeductions ? "default" : "destructive"}>
-                  {dashboard.policyEnforcement.digitalCardPolicy.noPayrollDeductions ? "Enforced" : "Disabled"}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Salary Protection</span>
-                <Badge variant={dashboard.policyEnforcement.digitalCardPolicy.salaryProtection ? "default" : "destructive"}>
-                  {dashboard.policyEnforcement.digitalCardPolicy.salaryProtection ? "Active" : "Inactive"}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Alternative Methods Allowed</span>
-                <Badge variant={dashboard.policyEnforcement.digitalCardPolicy.alternativeMethodsAllowed ? "default" : "destructive"}>
-                  {dashboard.policyEnforcement.digitalCardPolicy.alternativeMethodsAllowed ? "Yes" : "No"}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Working Time Limits
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Max Daily Hours</span>
-                <Badge variant="outline">
-                  {dashboard.policyEnforcement.maxHoursConfig.daily}h
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Max Weekly Hours</span>
-                <Badge variant="outline">
-                  {dashboard.policyEnforcement.maxHoursConfig.weekly}h
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Min Rest Between Shifts</span>
-                <Badge variant="outline">
-                  {Math.round(dashboard.policyEnforcement.restPeriods.minBetweenShifts / 60)}h
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm">Max Continuous Work</span>
-                <Badge variant="outline">
-                  {Math.round(dashboard.policyEnforcement.restPeriods.maxContinuous / 60)}h
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Data Retention & Audit Trail */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              Data Retention & Audit Trail
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <h4 className="font-semibold">Retention Periods</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Punch Events:</span>
-                    <span>{dashboard.dataRetention.config.punchEvents} years</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Timesheets:</span>
-                    <span>{dashboard.dataRetention.config.timesheets} years</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Audit Logs:</span>
-                    <span>{dashboard.dataRetention.config.auditLogs} years</span>
-                  </div>
+            <CardContent>
+              {dashboardLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
+              ) : dwcDashboard ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Coverage</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {dwcDashboard.coverageMetrics.coveragePercentage.toFixed(1)}%
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {dwcDashboard.coverageMetrics.employeesWithCards} of {dwcDashboard.totalEmployees} employees
+                      </p>
+                      <div className="mt-2 space-y-1">
+                        <div className="text-xs">
+                          <span className="text-yellow-600">Pending: {dwcDashboard.coverageMetrics.pendingActivations}</span>
+                        </div>
+                        <div className="text-xs">
+                          <span className="text-red-600">Expired: {dwcDashboard.coverageMetrics.expiredCards}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Submission Success</CardTitle>
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        {dwcDashboard.submissionMetrics.successRate.toFixed(1)}%
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {dwcDashboard.submissionMetrics.successfulSubmissions} successful submissions
+                      </p>
+                      <div className="mt-2">
+                        <div className="text-xs text-red-600">
+                          Failed: {dwcDashboard.submissionMetrics.failedSubmissions}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Inspector Readiness</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold mb-2">
+                        {getInspectorReadinessBadge(dwcDashboard.complianceStatus.inspectorReadiness)}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {dwcDashboard.complianceStatus.compliantEmployees} compliant employees
+                      </p>
+                      <div className="mt-2">
+                        <div className="text-xs text-red-600">
+                          Violations: {dwcDashboard.complianceStatus.violationCount}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : (
+                <p className="text-gray-500">No dashboard data available</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="apd-efka" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>APD (e-EFKA) Social Security Filing</CardTitle>
+              <CardDescription>
+                Generate and submit monthly APD filings for employee and employer social security contributions
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <Button
+                  onClick={() => generateAPDMutation.mutate({ propertyId: selectedProperty, period: selectedPeriod })}
+                  disabled={generateAPDMutation.isPending}
+                  className="flex items-center space-x-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>{generateAPDMutation.isPending ? 'Generating...' : 'Generate APD Filing'}</span>
+                </Button>
               </div>
               
-              <div className="space-y-2">
-                <h4 className="font-semibold">Audit Chain</h4>
-                <div className="space-y-1 text-sm">
-                  <div className="flex justify-between">
-                    <span>Chain Length:</span>
-                    <span>{dashboard.dataRetention.auditChainLength}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Status:</span>
-                    <Badge variant="default">Immutable</Badge>
-                  </div>
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                <h4 className="font-semibold mb-2">APD Filing includes:</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Employee contributions (16%)</li>
+                  <li>Employer contributions (24.78%)</li>
+                  <li>Unemployment fund (0.6%)</li>
+                  <li>Submission tracker and receipt store</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="fmy-aade" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>ΦΜΥ (AADE) Tax Withholding Filing</CardTitle>
+              <CardDescription>
+                Generate monthly ΦΜΥ filings for employee tax withholding and submission to AADE
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <Button
+                  onClick={() => generateFMYMutation.mutate({ propertyId: selectedProperty, period: selectedPeriod })}
+                  disabled={generateFMYMutation.isPending}
+                  className="flex items-center space-x-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>{generateFMYMutation.isPending ? 'Generating...' : 'Generate ΦΜΥ Filing'}</span>
+                </Button>
+              </div>
+              
+              <div className="text-sm text-gray-600 dark:text-gray-300">
+                <h4 className="font-semibold mb-2">ΦΜΥ Filing includes:</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Employee tax withholding calculations</li>
+                  <li>Solidarity tax for high earners</li>
+                  <li>Merge utility for multiple properties</li>
+                  <li>Payment reminders and due dates</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="ergani" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>ERGANI II Form Pack</CardTitle>
+              <CardDescription>
+                Create and submit ERGANI II forms for hire, schedule, overtime, changes, and termination
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="formType">Form Type</Label>
+                  <Select 
+                    value={erganiFormData.formType} 
+                    onValueChange={(value) => setErganiFormData(prev => ({ ...prev, formType: value as any }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hire">Hire</SelectItem>
+                      <SelectItem value="schedule">Schedule Pre-announcement</SelectItem>
+                      <SelectItem value="overtime">Overtime</SelectItem>
+                      <SelectItem value="change">Changes</SelectItem>
+                      <SelectItem value="termination">Termination</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="employeeId">Employee ID</Label>
+                  <Input
+                    value={erganiFormData.employeeId}
+                    onChange={(e) => setErganiFormData(prev => ({ ...prev, employeeId: e.target.value }))}
+                    placeholder="EMP_001"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="afm">AFM</Label>
+                  <Input
+                    value={erganiFormData.afm}
+                    onChange={(e) => setErganiFormData(prev => ({ ...prev, afm: e.target.value }))}
+                    placeholder="123456789"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="position">Position</Label>
+                  <Input
+                    value={erganiFormData.position}
+                    onChange={(e) => setErganiFormData(prev => ({ ...prev, position: e.target.value }))}
+                    placeholder="Hotel Receptionist"
+                  />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h4 className="font-semibold">Actions</h4>
-                <div className="space-y-2">
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Audit Log
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Export Report
-                  </Button>
+              <Button
+                onClick={() => createERGANIFormMutation.mutate(erganiFormData)}
+                disabled={createERGANIFormMutation.isPending || !erganiFormData.employeeId || !erganiFormData.afm}
+                className="flex items-center space-x-2"
+              >
+                <FileText className="w-4 h-4" />
+                <span>{createERGANIFormMutation.isPending ? 'Creating...' : 'Create ERGANI Form Pack'}</span>
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Filing History</CardTitle>
+              <CardDescription>
+                View all previous filings and their submission status
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {historyLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              ) : filingHistory && filingHistory.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Filing ID</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Period</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filingHistory.map((filing: any) => (
+                      <TableRow key={filing.filingId}>
+                        <TableCell className="font-mono text-sm">{filing.filingId}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{filing.filingType}</Badge>
+                        </TableCell>
+                        <TableCell>{filing.period}</TableCell>
+                        <TableCell>€{filing.totalAmount}</TableCell>
+                        <TableCell>{getStatusBadge(filing.status)}</TableCell>
+                        <TableCell>{format(new Date(filing.createdAt), 'PPp')}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            {filing.status === 'generated' && (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  if (filing.filingType === 'APD') {
+                                    submitAPDMutation.mutate(filing.filingId);
+                                  } else if (filing.filingType === 'FMY') {
+                                    submitFMYMutation.mutate(filing.filingId);
+                                  }
+                                }}
+                                className="flex items-center space-x-1"
+                              >
+                                <Send className="w-3 h-3" />
+                                <span>Submit</span>
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline">
+                              <Eye className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8">
+                  <FileText className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <p className="text-gray-500">No filing history available</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
