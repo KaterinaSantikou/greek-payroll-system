@@ -12,6 +12,8 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
+import { erganiConnector } from "./erganiConnector";
+import { payrollConnector } from "./payrollConnector";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -385,6 +387,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error applying auto-fix:", error);
       res.status(500).json({ error: "Failed to apply auto-fix" });
+    }
+  });
+
+  // Payroll Integration routes
+  app.post("/api/payroll/sync-employees", isAuthenticated, async (req, res) => {
+    try {
+      const { payrollEmployees } = req.body;
+      await payrollConnector.syncEmployeeMasterData(payrollEmployees);
+      res.json({ success: true, message: `Synced ${payrollEmployees.length} employees` });
+    } catch (error) {
+      console.error("Error syncing payroll employees:", error);
+      res.status(500).json({ error: "Failed to sync employees" });
+    }
+  });
+
+  app.post("/api/payroll/process-timesheets", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, startDate, endDate } = req.body;
+      const entries = await payrollConnector.processPunchEvents(
+        employeeId,
+        new Date(startDate),
+        new Date(endDate)
+      );
+      res.json({ entries, total: entries.length });
+    } catch (error) {
+      console.error("Error processing timesheets:", error);
+      res.status(500).json({ error: "Failed to process timesheets" });
+    }
+  });
+
+  app.post("/api/payroll/lock-timesheet", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, payPeriodStart, payPeriodEnd, approvedBy } = req.body;
+      await payrollConnector.lockTimesheet(employeeId, payPeriodStart, payPeriodEnd, approvedBy);
+      res.json({ success: true, message: "Timesheet locked successfully" });
+    } catch (error) {
+      console.error("Error locking timesheet:", error);
+      res.status(500).json({ error: "Failed to lock timesheet" });
+    }
+  });
+
+  app.post("/api/payroll/export-batch", isAuthenticated, async (req, res) => {
+    try {
+      const { payPeriodStart, payPeriodEnd, format } = req.body;
+      const batch = await payrollConnector.createExportBatch(payPeriodStart, payPeriodEnd, format);
+      res.json(batch);
+    } catch (error) {
+      console.error("Error creating export batch:", error);
+      res.status(500).json({ error: "Failed to create export batch" });
+    }
+  });
+
+  app.post("/api/payroll/submit-batch/:batchId", isAuthenticated, async (req, res) => {
+    try {
+      const { batchId } = req.params;
+      await payrollConnector.submitBatchAPI(batchId);
+      res.json({ success: true, message: "Batch submitted successfully" });
+    } catch (error) {
+      console.error("Error submitting batch:", error);
+      res.status(500).json({ error: "Failed to submit batch" });
+    }
+  });
+
+  app.get("/api/payroll/batches", isAuthenticated, async (req, res) => {
+    try {
+      const batches = payrollConnector.getAllExportBatches();
+      res.json(batches);
+    } catch (error) {
+      console.error("Error fetching export batches:", error);
+      res.status(500).json({ error: "Failed to fetch export batches" });
+    }
+  });
+
+  app.get("/api/payroll/batch/:batchId", isAuthenticated, async (req, res) => {
+    try {
+      const { batchId } = req.params;
+      const batch = payrollConnector.getExportBatch(batchId);
+      if (!batch) {
+        return res.status(404).json({ error: "Batch not found" });
+      }
+      res.json(batch);
+    } catch (error) {
+      console.error("Error fetching export batch:", error);
+      res.status(500).json({ error: "Failed to fetch export batch" });
+    }
+  });
+
+  app.get("/api/payroll/batch/:batchId/csv", isAuthenticated, async (req, res) => {
+    try {
+      const { batchId } = req.params;
+      const batch = payrollConnector.getExportBatch(batchId);
+      if (!batch) {
+        return res.status(404).json({ error: "Batch not found" });
+      }
+      const csv = payrollConnector.exportToCSV(batch);
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="payroll_${batchId}.csv"`);
+      res.send(csv);
+    } catch (error) {
+      console.error("Error exporting batch to CSV:", error);
+      res.status(500).json({ error: "Failed to export batch to CSV" });
+    }
+  });
+
+  app.get("/api/payroll/batch/:batchId/xml", isAuthenticated, async (req, res) => {
+    try {
+      const { batchId } = req.params;
+      const batch = payrollConnector.getExportBatch(batchId);
+      if (!batch) {
+        return res.status(404).json({ error: "Batch not found" });
+      }
+      const xml = payrollConnector.exportToXML(batch);
+      res.setHeader('Content-Type', 'application/xml');
+      res.setHeader('Content-Disposition', `attachment; filename="payroll_${batchId}.xml"`);
+      res.send(xml);
+    } catch (error) {
+      console.error("Error exporting batch to XML:", error);
+      res.status(500).json({ error: "Failed to export batch to XML" });
+    }
+  });
+
+  app.get("/api/payroll/timesheets", isAuthenticated, async (req, res) => {
+    try {
+      const { payPeriodStart, payPeriodEnd } = req.query;
+      const entries = payrollConnector.getTimesheetEntries(
+        payPeriodStart as string,
+        payPeriodEnd as string
+      );
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching timesheet entries:", error);
+      res.status(500).json({ error: "Failed to fetch timesheet entries" });
+    }
+  });
+
+  app.get("/api/payroll/health", isAuthenticated, async (req, res) => {
+    try {
+      const metrics = payrollConnector.getHealthMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching payroll health metrics:", error);
+      res.status(500).json({ error: "Failed to fetch health metrics" });
     }
   });
 

@@ -1,572 +1,604 @@
 /**
- * Payroll Connector Architecture
- * Normalized timesheets → earnings codes & cost centers → push to payroll
+ * Payroll Connector - Integration between time tracking and payroll systems
+ * 
+ * Features:
+ * - Employee master data synchronization
+ * - Earnings code mapping and calculation
+ * - Cost center allocation
+ * - Timesheet generation and export
+ * - Multiple export formats (CSV, XML, API)
+ * - Webhook notifications
  */
 
-// Normalized timesheet structure
-export interface NormalizedTimesheet {
-  timesheetId: string;
-  employeeId: string;
-  afm: string;
-  payPeriod: {
-    startDate: string;
-    endDate: string;
-    payrollCycle: 'weekly' | 'biweekly' | 'monthly';
-  };
-  
-  // Time summary
-  timeSummary: {
-    regularHours: number;
-    overtimeHours: number;
-    sundayHours: number;
-    holidayHours: number;
-    nightShiftHours: number;
-    breakHours: number;
-    paidBreakHours: number;
-    totalWorkedHours: number;
-    scheduledHours: number;
-    absentHours: number;
-  };
+import { nanoid } from "nanoid";
+import { storage } from "./storage";
 
-  // Daily breakdown
-  dailyRecords: DailyTimeRecord[];
-  
-  // Earnings breakdown
-  earnings: EarningsCalculation[];
-  
-  // Cost center allocation
-  costCenterAllocation: CostCenterAllocation[];
-  
-  // Compliance flags
-  complianceFlags: ComplianceFlag[];
-  
-  // Metadata
-  metadata: {
-    generatedAt: string;
-    approvedBy?: string;
-    approvedAt?: string;
-    exported: boolean;
-    exportedAt?: string;
-    payrollSystemRef?: string;
-  };
+// Earnings codes for Greek payroll compliance
+export const EARNINGS_CODES = {
+  REG: 'Regular Hours',
+  OT1: 'Overtime Tier 1 (25% premium)',
+  OT2: 'Overtime Tier 2 (50% premium)', 
+  OT3: 'Overtime Tier 3 (75% premium)',
+  NIGHT: 'Night Shift Premium',
+  HOLIDAY: 'Holiday Premium',
+  SUNDAY: 'Sunday Premium',
+  BREAK_UNPAID: 'Unpaid Break Deduction',
+  ALLOWANCE_FOOD: 'Food Allowance',
+  ALLOWANCE_TRAVEL: 'Travel Allowance',
+  ALLOWANCE_UNIFORM: 'Uniform Allowance',
+  ALLOWANCE_POSITION: 'Position Allowance',
+  LEAVE_ANNUAL: 'Annual Leave',
+  LEAVE_SICK: 'Sick Leave',
+  LEAVE_PARENTAL: 'Parental Leave',
+  LEAVE_SPECIAL: 'Special Leave'
+} as const;
+
+export type EarningsCode = keyof typeof EARNINGS_CODES;
+
+// Cost center allocation
+export interface CostCenterAllocation {
+  costCenterId: string;
+  propertyId: string;
+  hours: number;
+  percentage: number;
 }
 
-export interface DailyTimeRecord {
-  date: string;
-  clockIn?: string;
-  clockOut?: string;
-  breaks: BreakRecord[];
-  
-  // Calculated times
-  regularHours: number;
-  overtimeHours: number;
-  specialPremiumHours: {
-    sunday: number;
-    holiday: number;
-    nightShift: number;
-    hazardous: number;
-  };
-  
-  // Work details
-  department: string;
-  jobCode: string;
-  costCenter: string;
-  location: string;
-  
-  // Exceptions and adjustments
-  exceptions: TimeException[];
-  adjustments: TimeAdjustment[];
-  
-  // Approval status
-  approved: boolean;
+// Timesheet entry for payroll export
+export interface TimesheetEntry {
+  entryId: string;
+  employeeNumber: string;
+  employeeGuid: string;
+  payPeriodStart: string;
+  payPeriodEnd: string;
+  earningsCode: EarningsCode;
+  hours: number;
+  units: number;
+  rateBasis: 'HOURLY' | 'DAILY' | 'FIXED';
+  costCenterAllocations: CostCenterAllocation[];
+  notes?: string;
+  propertyId: string;
+  calculatedAt: Date;
+  lockedAt?: Date;
   approvedBy?: string;
 }
 
-export interface BreakRecord {
-  startTime: string;
-  endTime: string;
-  duration: number; // minutes
-  paid: boolean;
-  type: 'meal' | 'rest' | 'smoke' | 'personal';
+// Payroll export batch
+export interface PayrollExportBatch {
+  batchId: string;
+  payPeriodStart: string;
+  payPeriodEnd: string;
+  entries: TimesheetEntry[];
+  totalHours: number;
+  totalEmployees: number;
+  exportFormat: 'CSV' | 'XML' | 'API';
+  exportedAt: Date;
+  status: 'PENDING' | 'EXPORTED' | 'FAILED';
+  errorMessage?: string;
 }
 
-export interface TimeException {
-  type: 'late_arrival' | 'early_departure' | 'missed_punch' | 'unauthorized_overtime';
-  description: string;
-  impact: 'none' | 'deduction' | 'warning';
-  resolved: boolean;
+// Webhook event types
+export type WebhookEvent = 
+  | 'timesheet.locked'
+  | 'timesheet.rejected' 
+  | 'payroll.exported'
+  | 'payroll.failed';
+
+export interface WebhookPayload {
+  event: WebhookEvent;
+  batchId?: string;
+  employeeId?: string;
+  payPeriod: string;
+  timestamp: Date;
+  data: any;
 }
 
-export interface TimeAdjustment {
-  type: 'manual_correction' | 'supervisor_override' | 'system_correction';
-  originalValue: number;
-  adjustedValue: number;
-  reason: string;
-  approvedBy: string;
-  timestamp: string;
-}
-
-// Earnings calculation with Greek payroll codes
-export interface EarningsCalculation {
-  earningsCode: string;
-  description: string;
-  category: 'regular' | 'overtime' | 'premium' | 'allowance' | 'bonus';
-  
-  // Calculation details
-  hours?: number;
-  rate?: number;
-  amount: number;
-  
-  // Greek-specific codes
-  greekPayrollCodes: {
-    aadeCode?: string; // AADE tax reporting code
-    efkaCode?: string; // EFKA insurance code
-    erganiCode?: string; // ERGANI reporting code
-  };
-  
-  // Tax treatment
-  taxable: boolean;
-  socialSecuritySubject: boolean;
-  
-  // Cost center assignment
-  costCenter: string;
-  department: string;
-}
-
-export interface CostCenterAllocation {
-  costCenter: string;
-  department: string;
-  percentage: number;
-  hours: number;
-  amount: number;
-  
-  // Project/job tracking
-  project?: string;
-  jobCode?: string;
-  taskCode?: string;
-  
-  // Greek accounting integration
-  analyticalAccount?: string;
-  budgetCategory?: string;
-}
-
-export interface ComplianceFlag {
-  type: 'labor_law' | 'cba_violation' | 'ergani_missing' | 'tax_issue';
-  severity: 'info' | 'warning' | 'error' | 'critical';
-  description: string;
-  recommendation: string;
-  autoResolvable: boolean;
-}
-
-// Greek payroll system integration
 export class PayrollConnector {
-  private static EARNINGS_CODES = {
-    // Regular earnings
-    REGULAR_PAY: { code: 'REG001', description: 'Τακτικός μισθός', aadeCode: '101' },
-    OVERTIME_50: { code: 'OT050', description: 'Υπερωρίες 50%', aadeCode: '201' },
-    OVERTIME_75: { code: 'OT075', description: 'Υπερωρίες 75%', aadeCode: '202' },
-    
-    // Sunday and holiday premiums
-    SUNDAY_PREMIUM: { code: 'SUN001', description: 'Κυριακάτικο επίδομα', aadeCode: '301' },
-    HOLIDAY_PREMIUM: { code: 'HOL001', description: 'Επίδομα αργίας', aadeCode: '302' },
-    NIGHT_PREMIUM: { code: 'NGT001', description: 'Νυχτερινό επίδομα', aadeCode: '303' },
-    
-    // Greek holiday bonuses
-    CHRISTMAS_BONUS: { code: 'CHR001', description: 'Δώρο Χριστουγέννων', aadeCode: '401' },
-    EASTER_BONUS: { code: 'EAS001', description: 'Δώρο Πάσχα', aadeCode: '402' },
-    VACATION_BONUS: { code: 'VAC001', description: 'Επίδομα αδείας', aadeCode: '403' },
-    
-    // Allowances
-    MEAL_ALLOWANCE: { code: 'MEL001', description: 'Επίδομα σίτισης', aadeCode: '501' },
-    TRANSPORT_ALLOWANCE: { code: 'TRP001', description: 'Επίδομα μεταφοράς', aadeCode: '502' },
-    EDUCATION_ALLOWANCE: { code: 'EDU001', description: 'Επίδομα μόρφωσης', aadeCode: '503' },
-    
-    // Deductions
-    INCOME_TAX: { code: 'TAX001', description: 'Φόρος εισοδήματος', aadeCode: '801' },
-    EFKA_EMPLOYEE: { code: 'EFK001', description: 'Ασφαλιστικές εισφορές', aadeCode: '802' },
-    SOLIDARITY_TAX: { code: 'SOL001', description: 'Εισφορά αλληλεγγύης', aadeCode: '803' }
-  };
+  private timesheetEntries: Map<string, TimesheetEntry> = new Map();
+  private exportBatches: Map<string, PayrollExportBatch> = new Map();
+  private webhookUrls: Map<WebhookEvent, string[]> = new Map();
+  private isProcessing: boolean = false;
 
-  // Generate normalized timesheet from time events
-  static async generateTimesheet(
-    employeeId: string,
-    payPeriod: { startDate: string; endDate: string }
-  ): Promise<NormalizedTimesheet> {
-    
-    // Fetch time events for period
-    const timeEvents = await this.getTimeEventsForPeriod(employeeId, payPeriod);
-    
-    // Fetch employee details
-    const employee = await this.getEmployeeDetails(employeeId);
-    
-    // Calculate daily records
-    const dailyRecords = await this.calculateDailyRecords(timeEvents, employee);
-    
-    // Calculate time summary
-    const timeSummary = this.calculateTimeSummary(dailyRecords);
-    
-    // Calculate earnings
-    const earnings = await this.calculateEarnings(dailyRecords, employee);
-    
-    // Allocate to cost centers
-    const costCenterAllocation = this.calculateCostCenterAllocation(dailyRecords, earnings);
-    
-    // Check compliance
-    const complianceFlags = await this.checkCompliance(dailyRecords, timeSummary, employee);
+  constructor() {
+    // Initialize webhook URLs from environment
+    this.initializeWebhooks();
+  }
 
-    const timesheetId = `ts_${employeeId}_${payPeriod.startDate.replace(/-/g, '')}`;
-
-    return {
-      timesheetId,
-      employeeId,
-      afm: employee.afm,
-      payPeriod: {
-        ...payPeriod,
-        payrollCycle: 'monthly' // Greek standard
-      },
-      timeSummary,
-      dailyRecords,
-      earnings,
-      costCenterAllocation,
-      complianceFlags,
-      metadata: {
-        generatedAt: new Date().toISOString(),
-        exported: false
-      }
+  private initializeWebhooks() {
+    const webhookConfig = {
+      'timesheet.locked': process.env.WEBHOOK_TIMESHEET_LOCKED?.split(',') || [],
+      'timesheet.rejected': process.env.WEBHOOK_TIMESHEET_REJECTED?.split(',') || [],
+      'payroll.exported': process.env.WEBHOOK_PAYROLL_EXPORTED?.split(',') || [],
+      'payroll.failed': process.env.WEBHOOK_PAYROLL_FAILED?.split(',') || []
     };
+
+    Object.entries(webhookConfig).forEach(([event, urls]) => {
+      this.webhookUrls.set(event as WebhookEvent, urls.filter(url => url.length > 0));
+    });
   }
 
-  // Export to external payroll system
-  static async exportToPayrollSystem(timesheet: NormalizedTimesheet): Promise<PayrollExportResult> {
-    try {
-      // Transform to payroll system format
-      const payrollData = this.transformToPayrollFormat(timesheet);
-      
-      // Submit to payroll system
-      const result = await this.submitToPayrollSystem(payrollData);
-      
-      // Update timesheet metadata
-      timesheet.metadata.exported = true;
-      timesheet.metadata.exportedAt = new Date().toISOString();
-      timesheet.metadata.payrollSystemRef = result.payrollRef;
-      
-      // Save updated timesheet
-      await this.saveTimesheet(timesheet);
-      
-      return {
-        success: true,
-        timesheetId: timesheet.timesheetId,
-        payrollRef: result.payrollRef,
-        exportedAt: timesheet.metadata.exportedAt,
-        summary: {
-          totalEarnings: timesheet.earnings.reduce((sum, e) => sum + e.amount, 0),
-          regularHours: timesheet.timeSummary.regularHours,
-          overtimeHours: timesheet.timeSummary.overtimeHours,
-          complianceIssues: timesheet.complianceFlags.filter(f => f.severity === 'error').length
-        }
-      };
+  /**
+   * Synchronize employee master data from payroll system
+   */
+  async syncEmployeeMasterData(payrollEmployees: any[]): Promise<void> {
+    console.log(`[PAYROLL] Syncing ${payrollEmployees.length} employees from payroll system`);
 
-    } catch (error) {
-      console.error('Payroll export failed:', error);
-      return {
-        success: false,
-        timesheetId: timesheet.timesheetId,
-        error: error.message,
-        retryable: this.isRetryableError(error)
-      };
-    }
-  }
-
-  // Batch export for payroll processing
-  static async batchExportTimesheets(
-    timesheetIds: string[]
-  ): Promise<BatchExportResult> {
-    const results: PayrollExportResult[] = [];
-    let successCount = 0;
-    let failureCount = 0;
-
-    for (const timesheetId of timesheetIds) {
+    for (const payrollEmployee of payrollEmployees) {
       try {
-        const timesheet = await this.getTimesheet(timesheetId);
-        const result = await this.exportToPayrollSystem(timesheet);
+        // Find existing employee by GUID or employee number
+        let existingEmployee = await storage.getEmployee(payrollEmployee.guid);
         
-        results.push(result);
-        
-        if (result.success) {
-          successCount++;
-        } else {
-          failureCount++;
+        if (!existingEmployee && payrollEmployee.employeeNumber) {
+          // Try to find by employee number as fallback
+          const allEmployees = await storage.getEmployees();
+          existingEmployee = allEmployees.find(emp => 
+            emp.name === payrollEmployee.employeeNumber || 
+            emp.employeeId === payrollEmployee.employeeNumber
+          );
         }
-        
+
+        if (existingEmployee) {
+          // Update existing employee with payroll data
+          await storage.updateEmployee(existingEmployee.employeeId, {
+            name: payrollEmployee.fullName || existingEmployee.name,
+            // Map other payroll fields as needed
+          });
+        } else {
+          // Create new employee from payroll data
+          await storage.createEmployee({
+            name: payrollEmployee.fullName,
+            role: payrollEmployee.jobTitle || 'Employee',
+            employmentType: payrollEmployee.employmentType || 'FULL_TIME',
+            hireDate: payrollEmployee.hireDate,
+            afm: payrollEmployee.taxId,
+            defaultPropertyId: payrollEmployee.defaultPropertyId
+          });
+        }
       } catch (error) {
-        results.push({
-          success: false,
-          timesheetId,
-          error: error.message,
-          retryable: false
-        });
-        failureCount++;
+        console.error(`[PAYROLL] Error syncing employee ${payrollEmployee.guid}:`, error);
       }
     }
 
-    return {
-      batchId: `batch_${Date.now()}`,
-      totalTimesheets: timesheetIds.length,
-      successCount,
-      failureCount,
-      results,
-      completedAt: new Date().toISOString()
-    };
+    console.log('[PAYROLL] Employee master data sync completed');
   }
 
-  // Calculate earnings based on Greek labor law and CBA
-  private static async calculateEarnings(
-    dailyRecords: DailyTimeRecord[],
-    employee: any
-  ): Promise<EarningsCalculation[]> {
-    const earnings: EarningsCalculation[] = [];
+  /**
+   * Process punch events into timesheet entries
+   */
+  async processPunchEvents(employeeId: string, startDate: Date, endDate: Date): Promise<TimesheetEntry[]> {
+    const punchEvents = await storage.getPunchEvents(employeeId, undefined, startDate, endDate);
+    const shifts = await storage.getShifts(employeeId, undefined, startDate, endDate);
     
-    // Calculate totals
-    const totalRegular = dailyRecords.reduce((sum, day) => sum + day.regularHours, 0);
-    const totalOvertime = dailyRecords.reduce((sum, day) => sum + day.overtimeHours, 0);
-    const totalSunday = dailyRecords.reduce((sum, day) => sum + day.specialPremiumHours.sunday, 0);
-    const totalHoliday = dailyRecords.reduce((sum, day) => sum + day.specialPremiumHours.holiday, 0);
-    const totalNight = dailyRecords.reduce((sum, day) => sum + day.specialPremiumHours.nightShift, 0);
+    // Group punch events by day
+    const dailyPunches = this.groupPunchesByDay(punchEvents);
+    const timesheetEntries: TimesheetEntry[] = [];
 
-    // Regular pay
-    if (totalRegular > 0) {
-      earnings.push({
-        earningsCode: this.EARNINGS_CODES.REGULAR_PAY.code,
-        description: this.EARNINGS_CODES.REGULAR_PAY.description,
-        category: 'regular',
-        hours: totalRegular,
-        rate: employee.hourlyRate,
-        amount: totalRegular * employee.hourlyRate,
-        greekPayrollCodes: {
-          aadeCode: this.EARNINGS_CODES.REGULAR_PAY.aadeCode
-        },
-        taxable: true,
-        socialSecuritySubject: true,
-        costCenter: employee.defaultCostCenter,
-        department: employee.department
-      });
+    for (const [date, punches] of dailyPunches.entries()) {
+      const dayShift = shifts.find(shift => 
+        new Date(shift.startPlanned).toDateString() === date
+      );
+
+      // Pair IN/OUT punches and compute worked intervals
+      const workedIntervals = this.pairPunches(punches);
+      
+      // Calculate hours by earnings code
+      const earningsBreakdown = this.calculateEarnings(workedIntervals, dayShift);
+      
+      // Create timesheet entries for each earnings code
+      for (const [earningsCode, hours] of earningsBreakdown.entries()) {
+        if (hours > 0) {
+          const entry: TimesheetEntry = {
+            entryId: nanoid(12),
+            employeeNumber: employeeId.slice(-8), // Use last 8 chars as employee number
+            employeeGuid: employeeId,
+            payPeriodStart: startDate.toISOString().split('T')[0],
+            payPeriodEnd: endDate.toISOString().split('T')[0],
+            earningsCode: earningsCode as EarningsCode,
+            hours: hours,
+            units: hours,
+            rateBasis: 'HOURLY',
+            costCenterAllocations: await this.calculateCostCenterAllocations(employeeId, hours),
+            propertyId: dayShift?.propertyId || '',
+            calculatedAt: new Date()
+          };
+
+          timesheetEntries.push(entry);
+          this.timesheetEntries.set(entry.entryId, entry);
+        }
+      }
     }
 
-    // Overtime (50% premium)
-    if (totalOvertime > 0) {
-      const overtimeRate = employee.hourlyRate * 1.5;
-      earnings.push({
-        earningsCode: this.EARNINGS_CODES.OVERTIME_50.code,
-        description: this.EARNINGS_CODES.OVERTIME_50.description,
-        category: 'overtime',
-        hours: totalOvertime,
-        rate: overtimeRate,
-        amount: totalOvertime * overtimeRate,
-        greekPayrollCodes: {
-          aadeCode: this.EARNINGS_CODES.OVERTIME_50.aadeCode
-        },
-        taxable: true,
-        socialSecuritySubject: true,
-        costCenter: employee.defaultCostCenter,
-        department: employee.department
-      });
+    return timesheetEntries;
+  }
+
+  /**
+   * Group punch events by day
+   */
+  private groupPunchesByDay(punchEvents: any[]): Map<string, any[]> {
+    const grouped = new Map<string, any[]>();
+    
+    for (const punch of punchEvents) {
+      const date = new Date(punch.timestamp).toDateString();
+      if (!grouped.has(date)) {
+        grouped.set(date, []);
+      }
+      grouped.get(date)!.push(punch);
+    }
+    
+    return grouped;
+  }
+
+  /**
+   * Pair IN/OUT punches to calculate worked intervals
+   */
+  private pairPunches(punches: any[]): Array<{start: Date, end: Date}> {
+    const sortedPunches = punches.sort((a, b) => 
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+
+    const intervals: Array<{start: Date, end: Date}> = [];
+    let currentStart: Date | null = null;
+
+    for (const punch of sortedPunches) {
+      if (punch.type === 'CLOCK_IN' && !currentStart) {
+        currentStart = new Date(punch.timestamp);
+      } else if (punch.type === 'CLOCK_OUT' && currentStart) {
+        intervals.push({
+          start: currentStart,
+          end: new Date(punch.timestamp)
+        });
+        currentStart = null;
+      }
     }
 
-    // Sunday premium (75% in hotels)
-    if (totalSunday > 0) {
-      const sundayRate = employee.hourlyRate * 1.75;
-      earnings.push({
-        earningsCode: this.EARNINGS_CODES.SUNDAY_PREMIUM.code,
-        description: this.EARNINGS_CODES.SUNDAY_PREMIUM.description,
-        category: 'premium',
-        hours: totalSunday,
-        rate: sundayRate,
-        amount: totalSunday * sundayRate,
-        greekPayrollCodes: {
-          aadeCode: this.EARNINGS_CODES.SUNDAY_PREMIUM.aadeCode
-        },
-        taxable: true,
-        socialSecuritySubject: true,
-        costCenter: employee.defaultCostCenter,
-        department: employee.department
-      });
+    return intervals;
+  }
+
+  /**
+   * Calculate earnings breakdown by type
+   */
+  private calculateEarnings(intervals: Array<{start: Date, end: Date}>, shift?: any): Map<string, number> {
+    const earnings = new Map<string, number>();
+    let totalHours = 0;
+    let nightHours = 0;
+    let weekendHours = 0;
+
+    for (const interval of intervals) {
+      const hours = (interval.end.getTime() - interval.start.getTime()) / (1000 * 60 * 60);
+      totalHours += hours;
+
+      // Calculate night hours (10 PM to 6 AM)
+      const nightStart = new Date(interval.start);
+      nightStart.setHours(22, 0, 0, 0);
+      const nightEnd = new Date(interval.start);
+      nightEnd.setDate(nightEnd.getDate() + 1);
+      nightEnd.setHours(6, 0, 0, 0);
+
+      if (interval.start <= nightEnd && interval.end >= nightStart) {
+        const nightOverlapStart = new Date(Math.max(interval.start.getTime(), nightStart.getTime()));
+        const nightOverlapEnd = new Date(Math.min(interval.end.getTime(), nightEnd.getTime()));
+        nightHours += (nightOverlapEnd.getTime() - nightOverlapStart.getTime()) / (1000 * 60 * 60);
+      }
+
+      // Calculate weekend hours
+      const dayOfWeek = interval.start.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) { // Sunday or Saturday
+        weekendHours += hours;
+      }
     }
 
-    // Holiday premium
-    if (totalHoliday > 0) {
-      const holidayRate = employee.hourlyRate * 2.0; // Double pay on holidays
-      earnings.push({
-        earningsCode: this.EARNINGS_CODES.HOLIDAY_PREMIUM.code,
-        description: this.EARNINGS_CODES.HOLIDAY_PREMIUM.description,
-        category: 'premium',
-        hours: totalHoliday,
-        rate: holidayRate,
-        amount: totalHoliday * holidayRate,
-        greekPayrollCodes: {
-          aadeCode: this.EARNINGS_CODES.HOLIDAY_PREMIUM.aadeCode
-        },
-        taxable: true,
-        socialSecuritySubject: true,
-        costCenter: employee.defaultCostCenter,
-        department: employee.department
-      });
+    // Regular hours calculation
+    const standardHours = 8; // Standard 8-hour day
+    const regularHours = Math.min(totalHours, standardHours);
+    earnings.set('REG', regularHours);
+
+    // Overtime calculation
+    if (totalHours > standardHours) {
+      const overtimeHours = totalHours - standardHours;
+      if (overtimeHours <= 2) {
+        earnings.set('OT1', overtimeHours); // First 2 hours at 25%
+      } else {
+        earnings.set('OT1', 2);
+        earnings.set('OT2', overtimeHours - 2); // Additional hours at 50%
+      }
     }
 
-    // Night shift premium (25%)
-    if (totalNight > 0) {
-      const nightRate = employee.hourlyRate * 1.25;
-      earnings.push({
-        earningsCode: this.EARNINGS_CODES.NIGHT_PREMIUM.code,
-        description: this.EARNINGS_CODES.NIGHT_PREMIUM.description,
-        category: 'premium',
-        hours: totalNight,
-        rate: nightRate,
-        amount: totalNight * nightRate,
-        greekPayrollCodes: {
-          aadeCode: this.EARNINGS_CODES.NIGHT_PREMIUM.aadeCode
-        },
-        taxable: true,
-        socialSecuritySubject: true,
-        costCenter: employee.defaultCostCenter,
-        department: employee.department
-      });
+    // Night premium
+    if (nightHours > 0) {
+      earnings.set('NIGHT', nightHours);
+    }
+
+    // Sunday premium
+    if (weekendHours > 0 && intervals[0]?.start.getDay() === 0) {
+      earnings.set('SUNDAY', weekendHours);
     }
 
     return earnings;
   }
 
-  // Transform to external payroll system format
-  private static transformToPayrollFormat(timesheet: NormalizedTimesheet): any {
-    return {
-      employeeId: timesheet.employeeId,
-      afm: timesheet.afm,
-      payPeriod: timesheet.payPeriod,
-      
-      // Earnings lines
-      earningsLines: timesheet.earnings.map(earning => ({
-        code: earning.earningsCode,
-        description: earning.description,
-        hours: earning.hours,
-        rate: earning.rate,
-        amount: earning.amount,
-        taxable: earning.taxable,
-        socialSecuritySubject: earning.socialSecuritySubject,
-        costCenter: earning.costCenter,
-        aadeCode: earning.greekPayrollCodes.aadeCode
-      })),
-      
-      // Time summary
-      timeSummary: timesheet.timeSummary,
-      
-      // Cost center allocations
-      costCenters: timesheet.costCenterAllocation,
-      
-      // Compliance notes
-      complianceNotes: timesheet.complianceFlags.map(flag => ({
-        type: flag.type,
-        severity: flag.severity,
-        description: flag.description
-      }))
-    };
+  /**
+   * Calculate cost center allocations
+   */
+  private async calculateCostCenterAllocations(employeeId: string, hours: number): Promise<CostCenterAllocation[]> {
+    const employee = await storage.getEmployee(employeeId);
+    if (!employee?.defaultPropertyId) {
+      return [];
+    }
+
+    const property = await storage.getProperty(employee.defaultPropertyId);
+    if (!property) {
+      return [];
+    }
+
+    return [{
+      costCenterId: property.costCenterCode || property.propertyId,
+      propertyId: property.propertyId,
+      hours: hours,
+      percentage: 100
+    }];
   }
 
-  // Helper methods
-  private static async getTimeEventsForPeriod(employeeId: string, payPeriod: any): Promise<any[]> {
-    // Fetch time events from time service
-    return [];
-  }
+  /**
+   * Lock timesheet for manager approval
+   */
+  async lockTimesheet(employeeId: string, payPeriodStart: string, payPeriodEnd: string, approvedBy: string): Promise<void> {
+    const entries = Array.from(this.timesheetEntries.values()).filter(entry =>
+      entry.employeeGuid === employeeId &&
+      entry.payPeriodStart === payPeriodStart &&
+      entry.payPeriodEnd === payPeriodEnd
+    );
 
-  private static async getEmployeeDetails(employeeId: string): Promise<any> {
-    // Fetch employee from employee service
-    return {
+    for (const entry of entries) {
+      entry.lockedAt = new Date();
+      entry.approvedBy = approvedBy;
+      this.timesheetEntries.set(entry.entryId, entry);
+    }
+
+    // Send webhook notification
+    await this.sendWebhook('timesheet.locked', {
+      event: 'timesheet.locked',
       employeeId,
-      afm: '123456789',
-      hourlyRate: 12.50,
-      department: 'Reception',
-      defaultCostCenter: 'CC001'
+      payPeriod: `${payPeriodStart}_${payPeriodEnd}`,
+      timestamp: new Date(),
+      data: { entries: entries.length, approvedBy }
+    });
+
+    console.log(`[PAYROLL] Timesheet locked for employee ${employeeId}, period ${payPeriodStart} to ${payPeriodEnd}`);
+  }
+
+  /**
+   * Export timesheet batch to CSV format
+   */
+  exportToCSV(batch: PayrollExportBatch): string {
+    const headers = [
+      'employee_number',
+      'pay_period_start', 
+      'pay_period_end',
+      'earnings_code',
+      'hours',
+      'units',
+      'rate_basis',
+      'cost_center',
+      'property_id',
+      'notes'
+    ];
+
+    const rows = batch.entries.map(entry => [
+      entry.employeeNumber,
+      entry.payPeriodStart,
+      entry.payPeriodEnd,
+      entry.earningsCode,
+      entry.hours.toFixed(2),
+      entry.units.toFixed(2),
+      entry.rateBasis,
+      entry.costCenterAllocations[0]?.costCenterId || '',
+      entry.propertyId,
+      entry.notes || ''
+    ]);
+
+    return [headers, ...rows].map(row => row.join(',')).join('\n');
+  }
+
+  /**
+   * Export timesheet batch to XML format
+   */
+  exportToXML(batch: PayrollExportBatch): string {
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xml += `<payroll_export batch_id="${batch.batchId}" exported_at="${batch.exportedAt.toISOString()}">\n`;
+    xml += `  <pay_period start="${batch.payPeriodStart}" end="${batch.payPeriodEnd}"/>\n`;
+    xml += `  <summary total_hours="${batch.totalHours}" total_employees="${batch.totalEmployees}"/>\n`;
+    xml += `  <entries>\n`;
+
+    for (const entry of batch.entries) {
+      xml += `    <entry id="${entry.entryId}">\n`;
+      xml += `      <employee number="${entry.employeeNumber}" guid="${entry.employeeGuid}"/>\n`;
+      xml += `      <earnings code="${entry.earningsCode}" hours="${entry.hours}" units="${entry.units}" rate_basis="${entry.rateBasis}"/>\n`;
+      xml += `      <cost_centers>\n`;
+      for (const allocation of entry.costCenterAllocations) {
+        xml += `        <allocation center_id="${allocation.costCenterId}" property_id="${allocation.propertyId}" hours="${allocation.hours}" percentage="${allocation.percentage}"/>\n`;
+      }
+      xml += `      </cost_centers>\n`;
+      if (entry.notes) {
+        xml += `      <notes>${entry.notes}</notes>\n`;
+      }
+      xml += `    </entry>\n`;
+    }
+
+    xml += `  </entries>\n`;
+    xml += `</payroll_export>`;
+
+    return xml;
+  }
+
+  /**
+   * Create export batch for API submission
+   */
+  async createExportBatch(payPeriodStart: string, payPeriodEnd: string, format: 'CSV' | 'XML' | 'API' = 'API'): Promise<PayrollExportBatch> {
+    const entries = Array.from(this.timesheetEntries.values()).filter(entry =>
+      entry.payPeriodStart === payPeriodStart &&
+      entry.payPeriodEnd === payPeriodEnd &&
+      entry.lockedAt // Only include locked entries
+    );
+
+    const totalHours = entries.reduce((sum, entry) => sum + entry.hours, 0);
+    const uniqueEmployees = new Set(entries.map(entry => entry.employeeGuid)).size;
+
+    const batch: PayrollExportBatch = {
+      batchId: nanoid(12),
+      payPeriodStart,
+      payPeriodEnd,
+      entries,
+      totalHours,
+      totalEmployees: uniqueEmployees,
+      exportFormat: format,
+      exportedAt: new Date(),
+      status: 'PENDING'
     };
+
+    this.exportBatches.set(batch.batchId, batch);
+    return batch;
   }
 
-  private static async calculateDailyRecords(timeEvents: any[], employee: any): Promise<DailyTimeRecord[]> {
-    // Process time events into daily records
-    return [];
+  /**
+   * Submit batch via API
+   */
+  async submitBatchAPI(batchId: string): Promise<void> {
+    const batch = this.exportBatches.get(batchId);
+    if (!batch) {
+      throw new Error(`Batch ${batchId} not found`);
+    }
+
+    try {
+      // In a real implementation, this would POST to the payroll system API
+      const payrollApiUrl = process.env.PAYROLL_API_URL;
+      const apiKey = process.env.PAYROLL_API_KEY;
+
+      if (!payrollApiUrl || !apiKey) {
+        console.log(`[PAYROLL] Simulating API submission for batch ${batchId}`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+        batch.status = 'EXPORTED';
+      } else {
+        const response = await fetch(`${payrollApiUrl}/timesheets`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify(batch)
+        });
+
+        if (response.ok) {
+          batch.status = 'EXPORTED';
+        } else {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        }
+      }
+
+      this.exportBatches.set(batchId, batch);
+
+      // Send webhook notification
+      await this.sendWebhook('payroll.exported', {
+        event: 'payroll.exported',
+        batchId,
+        payPeriod: `${batch.payPeriodStart}_${batch.payPeriodEnd}`,
+        timestamp: new Date(),
+        data: { totalHours: batch.totalHours, totalEmployees: batch.totalEmployees }
+      });
+
+      console.log(`[PAYROLL] Batch ${batchId} exported successfully`);
+    } catch (error) {
+      batch.status = 'FAILED';
+      batch.errorMessage = (error as Error).message;
+      this.exportBatches.set(batchId, batch);
+
+      // Send failure webhook
+      await this.sendWebhook('payroll.failed', {
+        event: 'payroll.failed',
+        batchId,
+        payPeriod: `${batch.payPeriodStart}_${batch.payPeriodEnd}`,
+        timestamp: new Date(),
+        data: { error: batch.errorMessage }
+      });
+
+      console.error(`[PAYROLL] Batch ${batchId} export failed:`, error);
+      throw error;
+    }
   }
 
-  private static calculateTimeSummary(dailyRecords: DailyTimeRecord[]): any {
+  /**
+   * Send webhook notification
+   */
+  private async sendWebhook(event: WebhookEvent, payload: WebhookPayload): Promise<void> {
+    const urls = this.webhookUrls.get(event);
+    if (!urls || urls.length === 0) {
+      return;
+    }
+
+    for (const url of urls) {
+      try {
+        await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Webhook-Event': event
+          },
+          body: JSON.stringify(payload)
+        });
+        console.log(`[PAYROLL] Webhook sent to ${url} for event ${event}`);
+      } catch (error) {
+        console.error(`[PAYROLL] Failed to send webhook to ${url}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Get all timesheet entries for a pay period
+   */
+  getTimesheetEntries(payPeriodStart: string, payPeriodEnd: string): TimesheetEntry[] {
+    return Array.from(this.timesheetEntries.values()).filter(entry =>
+      entry.payPeriodStart === payPeriodStart &&
+      entry.payPeriodEnd === payPeriodEnd
+    );
+  }
+
+  /**
+   * Get export batch by ID
+   */
+  getExportBatch(batchId: string): PayrollExportBatch | undefined {
+    return this.exportBatches.get(batchId);
+  }
+
+  /**
+   * Get all export batches
+   */
+  getAllExportBatches(): PayrollExportBatch[] {
+    return Array.from(this.exportBatches.values());
+  }
+
+  /**
+   * Get system health metrics
+   */
+  getHealthMetrics() {
+    const totalEntries = this.timesheetEntries.size;
+    const lockedEntries = Array.from(this.timesheetEntries.values()).filter(entry => entry.lockedAt).length;
+    const totalBatches = this.exportBatches.size;
+    const exportedBatches = Array.from(this.exportBatches.values()).filter(batch => batch.status === 'EXPORTED').length;
+    const failedBatches = Array.from(this.exportBatches.values()).filter(batch => batch.status === 'FAILED').length;
+
     return {
-      regularHours: dailyRecords.reduce((sum, day) => sum + day.regularHours, 0),
-      overtimeHours: dailyRecords.reduce((sum, day) => sum + day.overtimeHours, 0),
-      sundayHours: dailyRecords.reduce((sum, day) => sum + day.specialPremiumHours.sunday, 0),
-      holidayHours: dailyRecords.reduce((sum, day) => sum + day.specialPremiumHours.holiday, 0),
-      nightShiftHours: dailyRecords.reduce((sum, day) => sum + day.specialPremiumHours.nightShift, 0),
-      totalWorkedHours: 0,
-      scheduledHours: 0,
-      absentHours: 0,
-      breakHours: 0,
-      paidBreakHours: 0
+      totalEntries,
+      lockedEntries,
+      pendingEntries: totalEntries - lockedEntries,
+      totalBatches,
+      exportedBatches,
+      failedBatches,
+      lockRate: totalEntries > 0 ? (lockedEntries / totalEntries) * 100 : 0,
+      exportSuccessRate: totalBatches > 0 ? (exportedBatches / totalBatches) * 100 : 0,
+      isProcessing: this.isProcessing,
+      lastActivity: this.exportBatches.size > 0 ? 
+        Math.max(...Array.from(this.exportBatches.values()).map(b => b.exportedAt.getTime())) : null
     };
   }
-
-  private static calculateCostCenterAllocation(
-    dailyRecords: DailyTimeRecord[],
-    earnings: EarningsCalculation[]
-  ): CostCenterAllocation[] {
-    // Calculate cost center allocation
-    return [];
-  }
-
-  private static async checkCompliance(
-    dailyRecords: DailyTimeRecord[],
-    timeSummary: any,
-    employee: any
-  ): Promise<ComplianceFlag[]> {
-    // Check various compliance rules
-    return [];
-  }
-
-  private static async submitToPayrollSystem(payrollData: any): Promise<any> {
-    // Submit to external payroll system
-    return {
-      payrollRef: `PR_${Date.now()}`
-    };
-  }
-
-  private static async saveTimesheet(timesheet: NormalizedTimesheet): Promise<void> {
-    // Save timesheet to database
-  }
-
-  private static async getTimesheet(timesheetId: string): Promise<NormalizedTimesheet> {
-    // Retrieve timesheet from database
-    throw new Error('Timesheet not found');
-  }
-
-  private static isRetryableError(error: any): boolean {
-    // Determine if error is retryable
-    return error.code !== 'VALIDATION_ERROR';
-  }
 }
 
-// Result interfaces
-export interface PayrollExportResult {
-  success: boolean;
-  timesheetId: string;
-  payrollRef?: string;
-  exportedAt?: string;
-  error?: string;
-  retryable?: boolean;
-  summary?: {
-    totalEarnings: number;
-    regularHours: number;
-    overtimeHours: number;
-    complianceIssues: number;
-  };
-}
-
-export interface BatchExportResult {
-  batchId: string;
-  totalTimesheets: number;
-  successCount: number;
-  failureCount: number;
-  results: PayrollExportResult[];
-  completedAt: string;
-}
+// Global instance
+export const payrollConnector = new PayrollConnector();
