@@ -27,9 +27,9 @@ const POLICY_SECTIONS: PolicySection[] = [
   {
     id: "regular-hours",
     title: "Regular Hours & Base Wages",
-    content: "REG (Regular Hours): Standard working hours paid at the contracted hourly rate. Forms the base calculation for all premium calculations. Must be accurately recorded for ERGANI II compliance and serves as the foundation for overtime, night, and weekend premiums.",
-    compliance: ["40-hour standard work week", "Minimum wage compliance", "ERGANI II time tracking"],
-    examples: ["40 hours × €15.50 = €620.00", "Daily wage: 8 hours × hourly rate"]
+    content: "REG (Regular Hours): Represents the employee's base wage. Calculated as hours multiplied by the agreed hourly rate. Fully taxable, contributory to EFKA, and included in APD. This code does not stack with any other earnings type. Forms the foundation for premium calculations but is recorded separately from premium payments.",
+    compliance: ["40-hour standard work week", "Minimum wage compliance", "ERGANI II time tracking", "No stacking with other earnings"],
+    examples: ["40 hours × €15.50 = €620.00 (standalone)", "REG cannot combine with premiums in same line", "Premiums reference REG for calculations but are separate entries"]
   },
   {
     id: "premium-rates",
@@ -90,11 +90,12 @@ const POLICY_SECTIONS: PolicySection[] = [
   {
     id: "compliance-rules",
     title: "Compliance & Stacking Rules",
-    content: "Earnings codes follow specific stacking rules to ensure legal compliance. Most premiums stack with regular hours and each other, but certain codes like ALLOWANCE_LEAVE and TIPS_DISTRIBUTED are non-stackable. Exceptional overtime triggers mandatory compliance alerts. All combinations must maintain proper ERGANI II, EFKA, and AADE treatment.",
-    compliance: ["Stacking validation requirements", "Compliance alert triggers", "Audit trail maintenance"],
+    content: "Earnings codes follow specific stacking rules to ensure legal compliance. REG (Regular Hours) does not stack with any other earnings type and must be recorded as separate payroll lines. Premiums can stack with each other but reference REG for calculations. Certain codes like ALLOWANCE_LEAVE and TIPS_DISTRIBUTED are non-stackable. Exceptional overtime triggers mandatory compliance alerts.",
+    compliance: ["REG recorded separately from all premiums", "Stacking validation requirements", "Compliance alert triggers", "Audit trail maintenance"],
     examples: [
-      "REG + NIGHT_25 + SUNDAY_75 + OT_TIER1_40 = Valid",
-      "ALLOWANCE_LEAVE + other allowances = Invalid",
+      "REG = €620.00 (separate line)",
+      "NIGHT_25 + SUNDAY_75 + OT_TIER1_40 = Valid stacking",
+      "REG + NIGHT_25 = Invalid (must be separate lines)",
       "OT_EXCEPTIONAL_80 = Triggers compliance review"
     ]
   }

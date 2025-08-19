@@ -35,12 +35,12 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   REG: {
     code: 'REG',
     name: 'Regular Hours',
-    description: 'Standard work hours at base hourly rate',
+    description: 'Represents the employee\'s base wage. Calculated as hours multiplied by the agreed hourly rate. Fully taxable, contributory to EFKA, and included in APD. This code does not stack with any other earnings type.',
     calculation: 'hours_times_rate',
     taxable: true,
     contributoryEFKA: true,
     includedAPD: true,
-    stackable: false, // Base wage doesn't stack
+    stackable: false, // This code does not stack with any other earnings type
     baseWage: true,
     constraints: {
       maxHoursPerWeek: 40,
@@ -353,6 +353,19 @@ export class StandardizedEarningsCodesService {
       return { valid: false, errors };
     }
     
+    // REG (Regular Hours) cannot stack with any other earnings type
+    if (primaryCode === 'REG') {
+      if (stackedCodes.length > 0) {
+        errors.push(`REG (Regular Hours) does not stack with any other earnings type. Premiums must be separate payroll lines.`);
+      }
+      return { valid: errors.length === 0, errors };
+    }
+    
+    // No other code can have REG as a stacked code
+    if (stackedCodes.includes('REG')) {
+      errors.push(`REG (Regular Hours) cannot be used as a stacked code. It must be a separate payroll line.`);
+    }
+    
     for (const stackedCode of stackedCodes) {
       const stackedRule = this.getEarningsCodeRule(stackedCode);
       
@@ -366,9 +379,10 @@ export class StandardizedEarningsCodesService {
         errors.push(`${stackedCode} (${stackedRule.name}) cannot be stacked with other codes`);
       }
       
-      // Check dependencies
-      if (stackedRule.dependsOn && !stackedRule.dependsOn.includes(primaryCode)) {
-        errors.push(`${stackedCode} depends on ${stackedRule.dependsOn?.join(', ')} but primary code is ${primaryCode}`);
+      // Check dependencies (premiums reference REG but as separate lines)
+      if (stackedRule.dependsOn && stackedRule.dependsOn.includes('REG')) {
+        // This is handled separately - premiums reference REG for calculation but are separate entries
+        continue;
       }
       
       // Special case: NIGHT_25 can stack with Sunday, holiday, or overtime
