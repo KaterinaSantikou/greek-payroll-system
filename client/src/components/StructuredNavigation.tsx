@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   Timer,
   Smartphone,
-  Calculator,
+  Banknote,
+  FileCheck,
   FileText,
   Building2,
   Euro,
@@ -59,13 +60,21 @@ interface StructuredNavigationProps {
   isTablet?: boolean;
 }
 
+// Utility function to truncate labels and provide tooltip
+function truncateLabel(label: string, maxLength: number = 24): { truncated: string; isTruncated: boolean } {
+  if (label.length <= maxLength) {
+    return { truncated: label, isTruncated: false };
+  }
+  return { truncated: label.substring(0, maxLength - 1) + '…', isTruncated: true };
+}
+
 export function StructuredNavigation({ collapsed = false, isMobile = false, isTablet = false }: StructuredNavigationProps) {
   const [location] = useLocation();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['dashboard', 'people']));
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const { user } = useAuth();
   const { t } = useLocale();
-  const userRole = user?.role || 'Employee';
+  const userRole = (user as any)?.role || 'Employee';
   const navRef = useRef<HTMLElement>(null);
   const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
 
@@ -159,7 +168,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     {
       id: 'payroll',
       label: t('nav.payroll'),
-      icon: Calculator,
+      icon: Banknote,
       badge: '1',
       children: [
         {
@@ -193,7 +202,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     {
       id: 'filings',
       label: t('nav.filings'),
-      icon: FileText,
+      icon: FileCheck,
       badge: '4',
       children: [
         {
@@ -605,7 +614,22 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
             <item.icon className="h-6 w-6 flex-shrink-0" />
             {!collapsed && (
               <>
-                <span className="truncate ml-3">{item.label}</span>
+                {(() => {
+                  const { truncated, isTruncated } = truncateLabel(item.label);
+                  const labelSpan = <span className="truncate ml-3">{truncated}</span>;
+                  return isTruncated ? (
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          {labelSpan}
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-xs">
+                          <div className="font-medium">{item.label}</div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : labelSpan;
+                })()}
                 <div className="flex items-center gap-2 ml-auto">
                   {renderBadge(item.badge, item.urgent, item.label)}
                   {isExpanded ? (
@@ -683,7 +707,22 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           <item.icon className="h-6 w-6 flex-shrink-0" />
           {!collapsed && (
             <>
-              <span className="truncate ml-3">{item.label}</span>
+              {(() => {
+                const { truncated, isTruncated } = truncateLabel(item.label);
+                const labelSpan = <span className="truncate ml-3">{truncated}</span>;
+                return isTruncated ? (
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {labelSpan}
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        <div className="font-medium">{item.label}</div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : labelSpan;
+              })()}
               <div className="ml-auto">
                 {renderBadge(item.badge, item.urgent, item.label)}
               </div>
