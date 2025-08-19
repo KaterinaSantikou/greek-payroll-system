@@ -30,6 +30,8 @@ import ModernPayrollEngine from "@/pages/modernPayrollEngine";
 import ProductVision from "@/pages/productVision";
 import ERGANICompliance from "@/pages/erganiCompliance";
 import Payments from "@/pages/payments";
+import EmployeeSelfService from "@/pages/employeeSelfService";
+import ManagerDashboard from "@/pages/managerDashboard";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -65,6 +67,8 @@ function Router() {
           <Route path="/modern-payroll" component={ModernPayrollEngine} />
           <Route path="/product-vision" component={ProductVision} />
           <Route path="/ergani-compliance" component={ERGANICompliance} />
+          <Route path="/employee-self-service" component={EmployeeSelfService} />
+          <Route path="/manager-dashboard" component={ManagerDashboard} />
         </Layout>
       )}
       <Route component={NotFound} />

@@ -18,7 +18,9 @@ import {
   Rocket,
   Target,
   Sparkles,
-  CreditCard
+  CreditCard,
+  User,
+  UserCheck
 } from "lucide-react";
 
 const navigationItems = [
@@ -46,6 +48,8 @@ const navigationItems = [
   { name: "Modern Payroll", href: "/modern-payroll", icon: Sparkles },
   { name: "Product Vision", href: "/product-vision", icon: Target },
   { name: "ERGANI Compliance", href: "/ergani-compliance", icon: Shield },
+  { name: "Employee Self-Service", href: "/employee-self-service", icon: User },
+  { name: "Manager Dashboard", href: "/manager-dashboard", icon: UserCheck },
 ];
 
 export default function Sidebar() {

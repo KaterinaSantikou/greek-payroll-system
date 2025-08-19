@@ -24,6 +24,7 @@ import { hotelOperationsManager } from "./hotelOperations";
 import { SepaPaymentService } from "./sepaPaymentService";
 import { GLExportService } from "./glExportService";
 import { FilingComplianceService } from "./filingComplianceService";
+import { SelfServiceManager } from "./selfServiceManager";
 import { 
   insertPaymentInstructionsSchema, 
   insertGlExportsSchema 
@@ -37,6 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const sepaPaymentService = new SepaPaymentService();
   const glExportService = new GLExportService();
   const filingComplianceService = new FilingComplianceService();
+  const selfServiceManager = new SelfServiceManager();
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -1609,6 +1611,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error submitting government flow:", error);
       res.status(500).json({ message: "Failed to submit government flow" });
+    }
+  });
+
+  // Self-Service & Mobile Routes
+  
+  // Employee Dashboard
+  app.get('/api/self-service/employee/:employeeId/dashboard', isAuthenticated, async (req, res) => {
+    try {
+      const employeeId = req.params.employeeId;
+      const dashboard = await selfServiceManager.getEmployeeDashboard(employeeId);
+      res.json(dashboard);
+    } catch (error) {
+      console.error("Error getting employee dashboard:", error);
+      res.status(500).json({ message: "Failed to get employee dashboard" });
+    }
+  });
+
+  // Generate Employee Payslip
+  app.get('/api/self-service/employee/:employeeId/payslip/:period', isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, period } = req.params;
+      const payslip = await selfServiceManager.generatePayslip(employeeId, period);
+      res.json(payslip);
+    } catch (error) {
+      console.error("Error generating payslip:", error);
+      res.status(500).json({ message: "Failed to generate payslip" });
+    }
+  });
+
+  // Generate Year-End Certificate
+  app.get('/api/self-service/employee/:employeeId/certificate/:year', isAuthenticated, async (req, res) => {
+    try {
+      const employeeId = req.params.employeeId;
+      const year = parseInt(req.params.year);
+      const certificate = await selfServiceManager.generateYearEndCertificate(employeeId, year);
+      res.json(certificate);
+    } catch (error) {
+      console.error("Error generating year-end certificate:", error);
+      res.status(500).json({ message: "Failed to generate year-end certificate" });
+    }
+  });
+
+  // Get Punch History
+  app.get('/api/self-service/employee/:employeeId/punch-history', isAuthenticated, async (req, res) => {
+    try {
+      const employeeId = req.params.employeeId;
+      const startDate = new Date(req.query.startDate as string);
+      const endDate = new Date(req.query.endDate as string);
+      const punchHistory = await selfServiceManager.getPunchHistory(employeeId, startDate, endDate);
+      res.json(punchHistory);
+    } catch (error) {
+      console.error("Error getting punch history:", error);
+      res.status(500).json({ message: "Failed to get punch history" });
+    }
+  });
+
+  // Submit Time Correction
+  app.post('/api/self-service/employee/:employeeId/time-correction', isAuthenticated, async (req, res) => {
+    try {
+      const employeeId = req.params.employeeId;
+      const { punchId, newTimestamp, reason } = req.body;
+      const result = await selfServiceManager.submitTimeCorrection(
+        employeeId, 
+        punchId, 
+        new Date(newTimestamp), 
+        reason
+      );
+      res.json(result);
+    } catch (error) {
+      console.error("Error submitting time correction:", error);
+      res.status(500).json({ message: "Failed to submit time correction" });
+    }
+  });
+
+  // Manager Dashboard
+  app.get('/api/self-service/manager/:managerId/dashboard', isAuthenticated, async (req, res) => {
+    try {
+      const managerId = req.params.managerId;
+      const propertyId = req.query.propertyId as string || 'default';
+      const dashboard = await selfServiceManager.getManagerDashboard(managerId, propertyId);
+      res.json(dashboard);
+    } catch (error) {
+      console.error("Error getting manager dashboard:", error);
+      res.status(500).json({ message: "Failed to get manager dashboard" });
+    }
+  });
+
+  // Get Pending Approvals
+  app.get('/api/self-service/manager/:managerId/approvals', isAuthenticated, async (req, res) => {
+    try {
+      const managerId = req.params.managerId;
+      const propertyId = req.query.propertyId as string || 'default';
+      const approvals = await selfServiceManager.getPendingApprovals(managerId, propertyId);
+      res.json(approvals);
+    } catch (error) {
+      console.error("Error getting pending approvals:", error);
+      res.status(500).json({ message: "Failed to get pending approvals" });
+    }
+  });
+
+  // Approve Overtime Request
+  app.post('/api/self-service/manager/:managerId/approve-overtime', isAuthenticated, async (req, res) => {
+    try {
+      const managerId = req.params.managerId;
+      const { requestId, approved, notes } = req.body;
+      const result = await selfServiceManager.approveOvertimeRequest(managerId, requestId, approved, notes);
+      res.json(result);
+    } catch (error) {
+      console.error("Error approving overtime request:", error);
+      res.status(500).json({ message: "Failed to approve overtime request" });
+    }
+  });
+
+  // Quick Hire
+  app.post('/api/self-service/manager/:managerId/quick-hire', isAuthenticated, async (req, res) => {
+    try {
+      const managerId = req.params.managerId;
+      const employeeData = req.body;
+      const result = await selfServiceManager.quickHire(managerId, employeeData);
+      res.json(result);
+    } catch (error) {
+      console.error("Error processing quick hire:", error);
+      res.status(500).json({ message: "Failed to process quick hire" });
     }
   });
 
