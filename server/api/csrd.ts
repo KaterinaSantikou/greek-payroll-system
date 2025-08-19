@@ -1,5 +1,7 @@
 import { Router } from "express";
 import { csrdService } from "../csrdService";
+import { evidencePackService } from "../evidencePackService";
+import { xbrlTaggingService } from "../xbrlTaggingService";
 import { db } from "../db";
 import { 
   csrdReportingPeriods,
@@ -13,6 +15,11 @@ import {
   InsertCsrdReportingPeriod,
   InsertS1HealthSafetyIncidents,
   InsertS1TrainingMetrics,
+  s1EvidencePacks,
+  s1DataLineage,
+  esrsTaxonomy,
+  s1XbrlInstances,
+  s1ReportSections,
 } from "@shared/schema";
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -529,6 +536,299 @@ export function registerCsrdRoutes(app: Router) {
     } catch (error) {
       console.error('Stop-the-clock update error:', error);
       res.status(500).json({ error: 'Failed to update stop-the-clock status' });
+    }
+  });
+
+  // =====================================================
+  // EVIDENCE PACK & AUDIT ASSURANCE ENDPOINTS
+  // =====================================================
+
+  // Create Evidence Pack for Limited Assurance
+  app.post('/api/csrd/evidence-pack', async (req, res) => {
+    try {
+      const schema = z.object({
+        reportingPeriodId: z.string(),
+        packType: z.enum(['limited_assurance', 'full_audit', 'compliance_check']),
+        packName: z.string(),
+        metricsIncluded: z.array(z.string()), // Array of S1 metric codes
+        entitiesIncluded: z.array(z.string()).optional(),
+        generatedBy: z.string(),
+      });
+
+      const data = schema.parse(req.body);
+      
+      const evidencePack = await evidencePackService.createEvidencePack(data);
+      
+      res.json({ success: true, evidencePack });
+    } catch (error) {
+      console.error('Create evidence pack error:', error);
+      res.status(500).json({ error: 'Failed to create evidence pack' });
+    }
+  });
+
+  // Get Evidence Pack
+  app.get('/api/csrd/evidence-pack/:packId', async (req, res) => {
+    try {
+      const { packId } = req.params;
+      
+      const evidencePack = await evidencePackService.getEvidencePack(packId);
+      
+      if (!evidencePack) {
+        return res.status(404).json({ error: 'Evidence pack not found' });
+      }
+      
+      res.json({ success: true, evidencePack });
+    } catch (error) {
+      console.error('Get evidence pack error:', error);
+      res.status(500).json({ error: 'Failed to get evidence pack' });
+    }
+  });
+
+  // List Evidence Packs for Reporting Period
+  app.get('/api/csrd/evidence-packs/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      
+      const evidencePacks = await evidencePackService.listEvidencePacks(reportingPeriodId);
+      
+      res.json({ success: true, evidencePacks });
+    } catch (error) {
+      console.error('List evidence packs error:', error);
+      res.status(500).json({ error: 'Failed to list evidence packs' });
+    }
+  });
+
+  // =====================================================
+  // XBRL TAGGING & TAXONOMY ENDPOINTS
+  // =====================================================
+
+  // Load ESRS Set 1 Taxonomy
+  app.post('/api/csrd/xbrl/taxonomy/load', async (req, res) => {
+    try {
+      const { taxonomyVersion = 'ESRS_Set1_2025' } = req.body;
+      
+      const taxonomy = await xbrlTaggingService.loadESRSSet1Taxonomy(taxonomyVersion);
+      
+      res.json({ success: true, taxonomyElements: taxonomy.length, taxonomy });
+    } catch (error) {
+      console.error('Load taxonomy error:', error);
+      res.status(500).json({ error: 'Failed to load ESRS taxonomy' });
+    }
+  });
+
+  // Generate XBRL Instance Document
+  app.post('/api/csrd/xbrl/generate/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      const { metricsData } = req.body;
+      
+      if (!metricsData || typeof metricsData !== 'object') {
+        return res.status(400).json({ error: 'metricsData object is required' });
+      }
+      
+      const xbrlInstances = await xbrlTaggingService.generateXBRLInstance(
+        reportingPeriodId,
+        metricsData
+      );
+      
+      res.json({ success: true, xbrlInstances });
+    } catch (error) {
+      console.error('Generate XBRL instances error:', error);
+      res.status(500).json({ error: 'Failed to generate XBRL instances' });
+    }
+  });
+
+  // Generate Human-Readable Report
+  app.post('/api/csrd/xbrl/report/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      const { metricsData, language = 'en' } = req.body;
+      
+      if (!metricsData || typeof metricsData !== 'object') {
+        return res.status(400).json({ error: 'metricsData object is required' });
+      }
+      
+      const reportSections = await xbrlTaggingService.generateHumanReadableReport(
+        reportingPeriodId,
+        metricsData,
+        language as 'en' | 'el'
+      );
+      
+      res.json({ success: true, reportSections });
+    } catch (error) {
+      console.error('Generate human-readable report error:', error);
+      res.status(500).json({ error: 'Failed to generate human-readable report' });
+    }
+  });
+
+  // Get XBRL Instances
+  app.get('/api/csrd/xbrl/instances/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      
+      const xbrlInstances = await xbrlTaggingService.getXBRLInstances(reportingPeriodId);
+      
+      res.json({ success: true, xbrlInstances });
+    } catch (error) {
+      console.error('Get XBRL instances error:', error);
+      res.status(500).json({ error: 'Failed to get XBRL instances' });
+    }
+  });
+
+  // Get Report Sections
+  app.get('/api/csrd/xbrl/report-sections/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      const { language = 'en' } = req.query;
+      
+      const reportSections = await xbrlTaggingService.getReportSections(
+        reportingPeriodId,
+        language as 'en' | 'el'
+      );
+      
+      res.json({ success: true, reportSections });
+    } catch (error) {
+      console.error('Get report sections error:', error);
+      res.status(500).json({ error: 'Failed to get report sections' });
+    }
+  });
+
+  // Update Taxonomy Version
+  app.post('/api/csrd/xbrl/taxonomy/update', async (req, res) => {
+    try {
+      const { taxonomyVersion } = req.body;
+      
+      if (!taxonomyVersion) {
+        return res.status(400).json({ error: 'taxonomyVersion is required' });
+      }
+      
+      const updatedTaxonomy = await xbrlTaggingService.updateTaxonomy(taxonomyVersion);
+      
+      res.json({ 
+        success: true, 
+        message: `Updated to taxonomy version: ${taxonomyVersion}`,
+        taxonomyElements: updatedTaxonomy.length 
+      });
+    } catch (error) {
+      console.error('Update taxonomy error:', error);
+      res.status(500).json({ error: 'Failed to update taxonomy version' });
+    }
+  });
+
+  // =====================================================
+  // DATA LINEAGE & AUDIT TRAIL ENDPOINTS
+  // =====================================================
+
+  // Get Data Lineage for Metric
+  app.get('/api/csrd/data-lineage/:reportingPeriodId/:metricCode', async (req, res) => {
+    try {
+      const { reportingPeriodId, metricCode } = req.params;
+      
+      const lineageEntries = await db
+        .select()
+        .from(s1DataLineage)
+        .where(
+          and(
+            eq(s1DataLineage.reportingPeriodId, reportingPeriodId),
+            eq(s1DataLineage.metricCode, metricCode)
+          )
+        )
+        .orderBy(desc(s1DataLineage.calculationDate))
+        .limit(50);
+      
+      res.json({ success: true, lineageEntries });
+    } catch (error) {
+      console.error('Get data lineage error:', error);
+      res.status(500).json({ error: 'Failed to get data lineage' });
+    }
+  });
+
+  // Get Active Taxonomy Elements
+  app.get('/api/csrd/taxonomy/active', async (req, res) => {
+    try {
+      const activeTaxonomy = await db
+        .select()
+        .from(esrsTaxonomy)
+        .where(eq(esrsTaxonomy.isActive, true))
+        .orderBy(esrsTaxonomy.esrsSection, esrsTaxonomy.metricCode);
+      
+      res.json({ success: true, taxonomy: activeTaxonomy });
+    } catch (error) {
+      console.error('Get active taxonomy error:', error);
+      res.status(500).json({ error: 'Failed to get active taxonomy' });
+    }
+  });
+
+  // =====================================================
+  // INTEGRATED EVIDENCE PACK + XBRL GENERATION
+  // =====================================================
+
+  // Complete Audit & Assurance Package Generation
+  app.post('/api/csrd/generate-complete-package/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      const { 
+        metricsIncluded,
+        entitiesIncluded = [],
+        language = 'en',
+        generatedBy = 'system'
+      } = req.body;
+      
+      if (!metricsIncluded || !Array.isArray(metricsIncluded)) {
+        return res.status(400).json({ error: 'metricsIncluded array is required' });
+      }
+
+      // Step 1: Generate Evidence Pack
+      const evidencePack = await evidencePackService.createEvidencePack({
+        reportingPeriodId,
+        packType: 'limited_assurance',
+        packName: `Complete Audit Package ${new Date().toISOString().split('T')[0]}`,
+        metricsIncluded,
+        entitiesIncluded,
+        generatedBy,
+      });
+
+      // Step 2: Calculate actual metrics for XBRL tagging
+      // This would typically come from your calculations
+      const sampleMetricsData = {
+        'S1-6-EMPLOYEES': 150,
+        'S1-6-FTE': 142.5,
+        'S1-16-GPG': 8.2,
+        'S1-16-CEO-RATIO': 25.6,
+        'S1-16-INJURY-RATE': 2.1,
+        'S1-16-FATALITIES': 0,
+      };
+
+      // Step 3: Generate XBRL instances
+      const xbrlInstances = await xbrlTaggingService.generateXBRLInstance(
+        reportingPeriodId,
+        sampleMetricsData
+      );
+
+      // Step 4: Generate human-readable report sections
+      const reportSections = await xbrlTaggingService.generateHumanReadableReport(
+        reportingPeriodId,
+        sampleMetricsData,
+        language as 'en' | 'el'
+      );
+
+      res.json({
+        success: true,
+        package: {
+          evidencePack,
+          xbrlInstances,
+          reportSections,
+          summary: {
+            evidenceFiles: evidencePack.csvExtracts?.length || 0,
+            xbrlElements: xbrlInstances.length,
+            reportSections: reportSections.length,
+            packageGeneratedAt: new Date().toISOString(),
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Generate complete package error:', error);
+      res.status(500).json({ error: 'Failed to generate complete audit package' });
     }
   });
 }

@@ -2494,6 +2494,16 @@ export type S1CalculationRulesets = typeof s1CalculationRulesets.$inferSelect;
 export type InsertS1CalculationRulesets = z.infer<typeof insertS1CalculationRulesetsSchema>;
 export type S1HSFatalities = typeof s1HSFatalities.$inferSelect;
 export type InsertS1HSFatalities = z.infer<typeof insertS1HSFatalitiesSchema>;
+export type S1DataLineage = typeof s1DataLineage.$inferSelect;
+export type InsertS1DataLineage = z.infer<typeof insertS1DataLineageSchema>;
+export type S1EvidencePacks = typeof s1EvidencePacks.$inferSelect;
+export type InsertS1EvidencePacks = z.infer<typeof insertS1EvidencePacksSchema>;
+export type EsrsTaxonomy = typeof esrsTaxonomy.$inferSelect;
+export type InsertEsrsTaxonomy = z.infer<typeof insertEsrsTaxonomySchema>;
+export type S1XbrlInstances = typeof s1XbrlInstances.$inferSelect;
+export type InsertS1XbrlInstances = z.infer<typeof insertS1XbrlInstancesSchema>;
+export type S1ReportSections = typeof s1ReportSections.$inferSelect;
+export type InsertS1ReportSections = z.infer<typeof insertS1ReportSectionsSchema>;
 
 // Insert schemas for CSRD/ESRS S1
 export const insertCsrdReportingPeriodSchema = createInsertSchema(csrdReportingPeriods);
@@ -2512,3 +2522,175 @@ export const insertS1MaterialityAssessmentSchema = createInsertSchema(s1Material
 export const insertS1CalculationRulesetsSchema = createInsertSchema(s1CalculationRulesets);
 export const insertS1HSFatalitiesSchema = createInsertSchema(s1HSFatalities);
 
+// Enhanced Data Lineage Tracking for Audit & Assurance
+export const s1DataLineage = pgTable("s1_data_lineage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").notNull().references(() => csrdReportingPeriods.id),
+  metricCode: varchar("metric_code", { length: 20 }).notNull(), // S1-6, S1-16, etc.
+  
+  // Complete data lineage: person → lines → filters
+  sourcePersonId: varchar("source_person_id").references(() => employees.employeeId),
+  sourceDataType: varchar("source_data_type", { length: 50 }).notNull(), // payroll_line, timesheet, leave_record
+  sourceRecordId: varchar("source_record_id").notNull(), // ID of the source record
+  sourceTableName: varchar("source_table_name", { length: 100 }).notNull(),
+  
+  // Filters and transformations applied
+  filtersApplied: jsonb("filters_applied").default('{}'), // Date ranges, employee criteria, etc.
+  transformationSteps: jsonb("transformation_steps").default('[]'), // Step-by-step calc process
+  calculationInputs: jsonb("calculation_inputs").default('{}'), // Raw input values
+  calculationOutputs: jsonb("calculation_outputs").default('{}'), // Calculated results
+  
+  // Calculation version and method tracking
+  calculationVersion: varchar("calculation_version", { length: 50 }).notNull(), // esrs_s1.v2025_quickfix
+  calculationMethod: text("calculation_method").notNull(), // Full formula description
+  explanatoryNote: text("explanatory_note"), // Human-readable explanation
+  
+  // Audit metadata
+  calculationDate: timestamp("calculation_date").notNull(),
+  calculatedBy: varchar("calculated_by").notNull(),
+  reviewedBy: varchar("reviewed_by"),
+  approvedBy: varchar("approved_by"),
+  
+  // Data quality indicators
+  confidenceLevel: varchar("confidence_level", { length: 20 }), // high, medium, low
+  dataQualityScore: decimal("data_quality_score", { precision: 5, scale: 2 }), // 0-100
+  limitationsNotes: text("limitations_notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Evidence Pack Management for Limited Assurance
+export const s1EvidencePacks = pgTable("s1_evidence_packs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").notNull().references(() => csrdReportingPeriods.id),
+  
+  // Evidence pack metadata
+  packType: varchar("pack_type", { length: 50 }).notNull(), // limited_assurance, full_audit, compliance_check
+  packName: varchar("pack_name", { length: 255 }).notNull(),
+  description: text("description"),
+  
+  // Scope of evidence
+  metricsIncluded: jsonb("metrics_included").default('[]'), // Array of S1 metric codes
+  periodCovered: jsonb("period_covered").notNull(), // Start/end dates
+  entitiesIncluded: jsonb("entities_included").default('[]'), // Properties/entities
+  
+  // Evidence files and extracts
+  csvExtracts: jsonb("csv_extracts").default('[]'), // File paths/URLs to CSV extracts
+  methodNotes: text("method_notes").notNull(), // Detailed calculation methods
+  supportingDocuments: jsonb("supporting_documents").default('[]'), // Additional evidence
+  
+  // Assurance level
+  assuranceLevel: varchar("assurance_level", { length: 20 }).notNull(), // limited, reasonable, none
+  assuranceProvider: varchar("assurance_provider", { length: 255 }), // External auditor
+  assuranceDate: date("assurance_date"),
+  assuranceOpinion: text("assurance_opinion"),
+  
+  // Status and workflow
+  status: varchar("status", { length: 20 }).default("draft"), // draft, review, approved, submitted
+  generatedBy: varchar("generated_by").notNull(),
+  reviewedBy: varchar("reviewed_by"),
+  approvedBy: varchar("approved_by"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ESRS Set 1 Taxonomy and XBRL Tagging
+export const esrsTaxonomy = pgTable("esrs_taxonomy", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Taxonomy versioning
+  taxonomyVersion: varchar("taxonomy_version", { length: 50 }).notNull(), // ESRS_Set1_2024, ESRS_Set1_2025
+  effectiveDate: date("effective_date").notNull(),
+  expiryDate: date("expiry_date"),
+  isActive: boolean("is_active").default(true),
+  
+  // XBRL element details
+  elementId: varchar("element_id", { length: 200 }).notNull(), // XBRL element identifier
+  elementName: varchar("element_name", { length: 500 }).notNull(),
+  elementType: varchar("element_type", { length: 50 }), // monetary, percent, count, text
+  
+  // ESRS mapping
+  esrsStandard: varchar("esrs_standard", { length: 20 }).notNull(), // ESRS S1
+  esrsSection: varchar("esrs_section", { length: 50 }), // S1-6, S1-16, S1-17
+  metricCode: varchar("metric_code", { length: 20 }), // Maps to our internal codes
+  
+  // XBRL technical details
+  namespace: varchar("namespace", { length: 200 }),
+  dataType: varchar("data_type", { length: 50 }), // xbrli:monetary, num:percent
+  periodType: varchar("period_type", { length: 20 }), // instant, duration
+  balance: varchar("balance", { length: 20 }), // debit, credit
+  
+  // Human-readable details
+  label: text("label").notNull(),
+  documentation: text("documentation"),
+  calculationFormula: text("calculation_formula"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// S1 XBRL Instance Documents
+export const s1XbrlInstances = pgTable("s1_xbrl_instances", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").notNull().references(() => csrdReportingPeriods.id),
+  taxonomyId: varchar("taxonomy_id").notNull().references(() => esrsTaxonomy.id),
+  
+  // XBRL instance details
+  elementId: varchar("element_id", { length: 200 }).notNull(),
+  contextRef: varchar("context_ref", { length: 100 }).notNull(), // Period and entity context
+  unitRef: varchar("unit_ref", { length: 50 }), // EUR, percent, pure
+  
+  // Value and metadata
+  xbrlValue: text("xbrl_value").notNull(), // The tagged value
+  originalValue: jsonb("original_value"), // Source calculation result
+  valueType: varchar("value_type", { length: 20 }), // numeric, text, boolean
+  
+  // Data lineage reference
+  lineageId: varchar("lineage_id").references(() => s1DataLineage.id),
+  
+  // Validation and quality
+  isValid: boolean("is_valid").default(true),
+  validationNotes: text("validation_notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Human-readable S1 Report Sections
+export const s1ReportSections = pgTable("s1_report_sections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").notNull().references(() => csrdReportingPeriods.id),
+  
+  // Section organization
+  sectionCode: varchar("section_code", { length: 20 }).notNull(), // S1-6, S1-16, etc.
+  sectionTitle: varchar("section_title", { length: 500 }).notNull(),
+  sectionType: varchar("section_type", { length: 50 }), // narrative, metrics, policies
+  sortOrder: integer("sort_order").default(0),
+  
+  // Content generation
+  humanReadableText: text("human_readable_text").notNull(), // Generated narrative
+  metricsIncluded: jsonb("metrics_included").default('[]'), // Referenced metrics
+  templatesUsed: jsonb("templates_used").default('[]'), // Template references
+  
+  // Language and localization
+  language: varchar("language", { length: 5 }).default("en"), // en, el (Greek)
+  generationMethod: varchar("generation_method", { length: 50 }), // template, ai_generated, manual
+  
+  // Quality and review
+  contentStatus: varchar("content_status", { length: 20 }).default("draft"), // draft, review, approved
+  reviewedBy: varchar("reviewed_by"),
+  approvedBy: varchar("approved_by"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+
+// Insert schemas for audit & XBRL system (placed after all table definitions)
+export const insertS1DataLineageSchema = createInsertSchema(s1DataLineage);
+export const insertS1EvidencePacksSchema = createInsertSchema(s1EvidencePacks);
+export const insertEsrsTaxonomySchema = createInsertSchema(esrsTaxonomy);
+export const insertS1XbrlInstancesSchema = createInsertSchema(s1XbrlInstances);
+export const insertS1ReportSectionsSchema = createInsertSchema(s1ReportSections);
