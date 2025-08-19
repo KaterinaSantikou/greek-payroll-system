@@ -157,6 +157,7 @@ const menuStructure: MenuLevel1Item[] = [
         items: [
           { name: "Payroll Engine", href: "/payroll", description: "Core calculations" },
           { name: "Modern Payroll", href: "/modern-payroll", description: "Next-gen platform" },
+          { name: "Payroll Processing", href: "/payroll-processing", description: "Complete Greek payroll workflow" },
         ]
       }
     ]

@@ -91,9 +91,9 @@ export class SuccessMetricsService {
 
       await db.insert(successMetrics).values({
         propertyId,
-        metricDate: currentDate,
-        payPeriodStart,
-        payPeriodEnd,
+        metricDate: new Date(),
+        payPeriodStart: new Date(payPeriodStart),
+        payPeriodEnd: new Date(payPeriodEnd),
         employeeCount,
         // Submission metrics
         erganiSubmissionTotal: erganiTotal + apdTotal + fmyTotal,

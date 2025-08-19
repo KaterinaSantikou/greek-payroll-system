@@ -1284,6 +1284,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Success Metrics routes
+  // === PAYROLL PROCESSING ROUTES ===
+  
+  // Generate payslip for employee
+  app.get('/api/payroll/payslip/:employeeId/:runId', isAuthenticated, async (req, res) => {
+    try {
+      const { PayslipGenerator } = await import('./payslipGenerator');
+      const payslipGenerator = new PayslipGenerator();
+      
+      const { employeeId, runId } = req.params;
+      const format = req.query.format as string || 'html';
+      
+      const payslipData = await payslipGenerator.generatePayslip(employeeId, runId);
+      
+      if (format === 'json') {
+        res.json(payslipData);
+      } else {
+        const htmlPayslip = await payslipGenerator.formatPayslip(payslipData, 'html');
+        res.setHeader('Content-Type', 'text/html');
+        res.send(htmlPayslip);
+      }
+    } catch (error) {
+      console.error('Error generating payslip:', error);
+      res.status(500).json({ message: 'Failed to generate payslip' });
+    }
+  });
+  
+  // Generate SEPA file for payroll run
+  app.get('/api/payroll/sepa/:runId', isAuthenticated, async (req, res) => {
+    try {
+      const { SEPAFileGenerator } = await import('./sepaFileGenerator');
+      const sepaGenerator = new SEPAFileGenerator();
+      
+      const { runId } = req.params;
+      const format = req.query.format as string || 'xml';
+      
+      if (format === 'xml') {
+        const sepaXML = await sepaGenerator.generateSEPAFile(runId);
+        res.setHeader('Content-Type', 'application/xml');
+        res.setHeader('Content-Disposition', `attachment; filename="SEPA_${runId}_${new Date().toISOString().split('T')[0]}.xml"`);
+        res.send(sepaXML);
+      } else {
+        // Return metadata only
+        const payments = await (sepaGenerator as any).getPayrollPayments(runId);
+        const metadata = sepaGenerator.generateSEPAMetadata(runId, payments);
+        res.json(metadata);
+      }
+    } catch (error) {
+      console.error('Error generating SEPA file:', error);
+      res.status(500).json({ message: 'Failed to generate SEPA file' });
+    }
+  });
+  
+  // Generate GL mapping for payroll run
+  app.get('/api/payroll/gl-mapping/:runId', isAuthenticated, async (req, res) => {
+    try {
+      const { GLMappingService } = await import('./glMappingService');
+      const glMapper = new GLMappingService();
+      
+      const { runId } = req.params;
+      const format = req.query.format as string || 'json';
+      
+      const glResult = await glMapper.generateGLMapping(runId);
+      const validation = glMapper.validateGLMapping(glResult);
+      
+      if (format === 'csv') {
+        const csvData = glMapper.exportToCSV(glResult);
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="GL_Mapping_${runId}.csv"`);
+        res.send(csvData);
+      } else if (format === 'summary') {
+        const summary = glMapper.generateAccountSummary(glResult);
+        res.json({
+          ...glResult,
+          accountSummary: summary,
+          validation
+        });
+      } else {
+        res.json({
+          ...glResult,
+          validation
+        });
+      }
+    } catch (error) {
+      console.error('Error generating GL mapping:', error);
+      res.status(500).json({ message: 'Failed to generate GL mapping' });
+    }
+  });
+
+  // === SUCCESS METRICS ROUTES ===
+
   app.get('/api/success-metrics/summary', isAuthenticated, async (req, res) => {
     try {
       const { successMetricsService } = await import('./successMetricsService');
