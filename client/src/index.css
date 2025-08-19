@@ -275,6 +275,18 @@
   --neutral-light: hsl(0, 0%, 96%);
   --purple-accent: hsl(280, 70%, 60%);
   --pink-accent: hsl(330, 70%, 60%);
+  
+  /* Sidebar theming tokens */
+  --sidebar-bg: hsl(0, 0%, 100%);
+  --sidebar-fg: hsl(0, 0%, 13%);
+  --sidebar-muted: hsl(0, 0%, 46%);
+  --sidebar-active-bg: hsl(210, 79%, 54%); /* +8% luminance from 46% */
+  --sidebar-active-bar: hsl(210, 79%, 38%); /* Active indicator bar */
+  
+  /* Badge theming tokens */
+  --badge-info: hsl(210, 79%, 46%);
+  --badge-warn: hsl(45, 90%, 55%);
+  --badge-danger: hsl(0, 84%, 60%);
 }
 
 .dark {
@@ -310,6 +322,19 @@
   --sidebar-accent-foreground: hsl(210, 79%, 53%);
   --sidebar-border: hsl(206, 16%, 26%);
   --sidebar-ring: hsl(210, 79%, 46%);
+  
+  /* Sidebar theming tokens - Dark mode with increased contrast */
+  --sidebar-bg: hsl(228, 10%, 8%); /* Darker than card for contrast */
+  --sidebar-fg: hsl(0, 0%, 95%); /* Higher contrast foreground */
+  --sidebar-muted: hsl(210, 3%, 55%); /* Increased contrast from 46% */
+  --sidebar-active-bg: hsl(210, 79%, 61%); /* +8% luminance from 53% */
+  --sidebar-active-bar: hsl(210, 79%, 69%); /* Bright active indicator */
+  
+  /* Badge theming tokens - Dark mode with increased contrast */
+  --badge-info: hsl(210, 79%, 53%);
+  --badge-warn: hsl(45, 90%, 65%); /* Brighter for dark backgrounds */
+  --badge-danger: hsl(0, 84%, 70%); /* Brighter for dark backgrounds */
+  
   --font-sans: Inter, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
