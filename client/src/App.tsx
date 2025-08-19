@@ -27,6 +27,7 @@ import Deployment from "@/pages/deployment";
 import SuccessMetrics from "@/pages/successMetrics";
 import ModernPayrollEngine from "@/pages/modernPayrollEngine";
 import ProductVision from "@/pages/productVision";
+import ERGANICompliance from "@/pages/erganiCompliance";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -59,6 +60,7 @@ function Router() {
           <Route path="/success-metrics" component={SuccessMetrics} />
           <Route path="/modern-payroll" component={ModernPayrollEngine} />
           <Route path="/product-vision" component={ProductVision} />
+          <Route path="/ergani-compliance" component={ERGANICompliance} />
         </Layout>
       )}
       <Route component={NotFound} />

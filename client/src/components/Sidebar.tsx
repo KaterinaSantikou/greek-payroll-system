@@ -42,6 +42,7 @@ const navigationItems = [
   { name: "Success Metrics", href: "/success-metrics", icon: BarChart },
   { name: "Modern Payroll", href: "/modern-payroll", icon: Sparkles },
   { name: "Product Vision", href: "/product-vision", icon: Target },
+  { name: "ERGANI Compliance", href: "/ergani-compliance", icon: Shield },
 ];
 
 export default function Sidebar() {

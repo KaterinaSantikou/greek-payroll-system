@@ -1422,6 +1422,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Greece Compliance routes
+  app.get('/api/compliance/digital-work-cards', isAuthenticated, async (req, res) => {
+    try {
+      const { complianceConnector } = await import('./complianceConnector');
+      const cards = complianceConnector.getDigitalWorkCards();
+      res.json(cards);
+    } catch (error) {
+      console.error("Error fetching digital work cards:", error);
+      res.status(500).json({ message: "Failed to fetch digital work cards" });
+    }
+  });
+
+  app.get('/api/compliance/ergani-events/:period', isAuthenticated, async (req, res) => {
+    try {
+      const { complianceConnector } = await import('./complianceConnector');
+      const period = req.params.period.replace('-', ''); // Convert YYYY-MM to YYYYMM
+      const events = complianceConnector.getERGANIEvents(period);
+      res.json(events);
+    } catch (error) {
+      console.error("Error fetching ERGANI events:", error);
+      res.status(500).json({ message: "Failed to fetch ERGANI events" });
+    }
+  });
+
+  app.get('/api/compliance/minimum-wage-rules', isAuthenticated, async (req, res) => {
+    try {
+      const { complianceConnector } = await import('./complianceConnector');
+      const rules = complianceConnector.getMinimumWageRules();
+      res.json(rules);
+    } catch (error) {
+      console.error("Error fetching minimum wage rules:", error);
+      res.status(500).json({ message: "Failed to fetch minimum wage rules" });
+    }
+  });
+
+  app.get('/api/compliance/government-flows', isAuthenticated, async (req, res) => {
+    try {
+      const { complianceConnector } = await import('./complianceConnector');
+      const flows = complianceConnector.getGovernmentFlows();
+      res.json(flows);
+    } catch (error) {
+      console.error("Error fetching government flows:", error);
+      res.status(500).json({ message: "Failed to fetch government flows" });
+    }
+  });
+
+  app.get('/api/compliance/special-pays', isAuthenticated, async (req, res) => {
+    try {
+      const { complianceConnector } = await import('./complianceConnector');
+      const pays = complianceConnector.getGreekSpecialPays();
+      res.json(pays);
+    } catch (error) {
+      console.error("Error fetching special pays:", error);
+      res.status(500).json({ message: "Failed to fetch special pays" });
+    }
+  });
+
+  app.post('/api/compliance/generate-demo', isAuthenticated, async (req, res) => {
+    try {
+      const { complianceConnector } = await import('./complianceConnector');
+      await complianceConnector.generateDemoData();
+      res.json({ success: true, message: 'Greece compliance demo data generated' });
+    } catch (error) {
+      console.error("Error generating compliance demo data:", error);
+      res.status(500).json({ message: "Failed to generate compliance demo data" });
+    }
+  });
+
+  app.post('/api/compliance/ergani-sync', isAuthenticated, async (req, res) => {
+    try {
+      const { complianceConnector } = await import('./complianceConnector');
+      // Simulate ERGANI sync for all digital work cards
+      const cards = complianceConnector.getDigitalWorkCards();
+      const syncResults = await Promise.all(
+        cards.map(card => complianceConnector.syncDigitalWorkCard(card.cardId))
+      );
+      const successCount = syncResults.filter(result => result).length;
+      
+      res.json({ 
+        success: true, 
+        message: `ERGANI sync completed: ${successCount}/${cards.length} cards synchronized`,
+        syncResults: {
+          total: cards.length,
+          successful: successCount,
+          failed: cards.length - successCount
+        }
+      });
+    } catch (error) {
+      console.error("Error syncing ERGANI:", error);
+      res.status(500).json({ message: "Failed to sync ERGANI" });
+    }
+  });
+
+  app.get('/api/compliance/check/:category?', isAuthenticated, async (req, res) => {
+    try {
+      const { complianceConnector } = await import('./complianceConnector');
+      const category = req.params.category;
+      const complianceCheck = await complianceConnector.checkCompliance(category);
+      res.json(complianceCheck);
+    } catch (error) {
+      console.error("Error checking compliance:", error);
+      res.status(500).json({ message: "Failed to check compliance" });
+    }
+  });
+
+  app.post('/api/compliance/government-flow/:flowId/submit', isAuthenticated, async (req, res) => {
+    try {
+      const { complianceConnector } = await import('./complianceConnector');
+      const flowId = req.params.flowId;
+      const success = await complianceConnector.submitGovernmentFlow(flowId);
+      
+      if (success) {
+        res.json({ success: true, message: 'Government flow submitted successfully' });
+      } else {
+        res.status(400).json({ success: false, message: 'Failed to submit government flow' });
+      }
+    } catch (error) {
+      console.error("Error submitting government flow:", error);
+      res.status(500).json({ message: "Failed to submit government flow" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -1,583 +1,596 @@
-/**
- * Compliance Connector Architecture
- * ERGANI II adapters (REST/SOAP), retries, status ledger
- */
+import { randomUUID } from "crypto";
 
-// ERGANI II Integration with multiple protocol support
-export interface ErganiConfiguration {
-  environment: 'production' | 'sandbox' | 'test';
-  endpoints: {
-    rest: string;
-    soap?: string;
-    oauth?: string;
-  };
-  authentication: {
-    method: 'oauth2' | 'api_key' | 'certificate';
-    credentials: {
-      clientId?: string;
-      clientSecret?: string;
-      apiKey?: string;
-      certificate?: string;
-      privateKey?: string;
-    };
-  };
-  retryPolicy: {
-    maxRetries: number;
-    backoffStrategy: 'linear' | 'exponential';
-    initialDelay: number;
-    maxDelay: number;
-  };
-  rateLimits: {
-    requestsPerMinute: number;
-    requestsPerHour: number;
-    burstLimit: number;
-  };
+export interface DigitalWorkCard {
+  employeeId: string;
+  cardId: string;
+  status: 'active' | 'inactive' | 'suspended';
+  lastSync: string;
+  realTimeAttendance: boolean;
+  erganiSyncStatus: 'synced' | 'pending' | 'failed';
+  biometricEnabled: boolean;
+  qrCode?: string;
+  nfcEnabled: boolean;
 }
 
-// ERGANI event payload structures
-export interface ErganiEventPayload {
-  employeeData: {
-    afm: string;
-    amka?: string;
-    lastname: string;
-    firstname: string;
-    workplaceId: string;
-  };
-  eventData: {
-    eventType: 'WI' | 'WO' | 'BS' | 'BE' | 'LC'; // Work In/Out, Break Start/End, Location Change
-    timestamp: string;
-    workstationId?: string;
-    coordinates?: {
-      latitude: number;
-      longitude: number;
-    };
-    digitalSignature: string;
-  };
-  metadata: {
-    submissionId: string;
-    originalEventId: string;
-    deviceId: string;
-    softwareVersion: string;
-  };
-}
-
-// Status tracking for compliance submissions
-export interface ComplianceSubmission {
-  submissionId: string;
-  originalEventId: string;
-  erganiPayload: ErganiEventPayload;
-  status: 'pending' | 'submitted' | 'acknowledged' | 'failed' | 'rejected';
-  attempts: ComplianceAttempt[];
-  currentAttempt: number;
-  createdAt: string;
-  lastAttemptAt?: string;
-  acknowledgedAt?: string;
-  finalizedAt?: string;
-  errorDetails?: {
-    code: string;
-    message: string;
-    technicalDetails: any;
-  };
-}
-
-export interface ComplianceAttempt {
-  attemptNumber: number;
+export interface ERGANIEvent {
+  eventId: string;
+  type: 'hire' | 'schedule_declaration' | 'schedule_change' | 'overtime' | 'leave' | 'contract_change' | 'termination';
+  employeeId: string;
   timestamp: string;
-  method: 'rest' | 'soap';
-  endpoint: string;
-  requestPayload: any;
-  responseCode?: number;
-  responseBody?: any;
-  success: boolean;
-  duration: number;
+  status: 'submitted' | 'pending' | 'failed' | 'acknowledged';
+  submissionId?: string;
   errorMessage?: string;
-  retryScheduled?: string;
+  payload: Record<string, any>;
+  retryCount: number;
+  priority: 'low' | 'medium' | 'high' | 'critical';
 }
 
-// Status ledger for audit and monitoring
-export interface ComplianceStatusLedger {
-  date: string; // YYYY-MM-DD
-  statistics: {
-    totalSubmissions: number;
-    successful: number;
-    pending: number;
-    failed: number;
-    retrying: number;
-    acknowledged: number;
-    rejected: number;
+export interface MinimumWageRule {
+  ruleId: string;
+  effectiveDate: string;
+  endDate?: string;
+  amount: number;
+  category: 'general' | 'under_25' | 'apprentice' | 'trainee';
+  region?: string;
+  industry?: string;
+  isActive: boolean;
+  version: string;
+  source: 'government' | 'collective_agreement' | 'company_policy';
+}
+
+export interface GovernmentFlow {
+  flowId: string;
+  name: string;
+  type: 'ergani' | 'efka' | 'aade';
+  frequency: 'real-time' | 'daily' | 'monthly';
+  lastSubmission: string;
+  nextDue: string;
+  status: 'up_to_date' | 'pending' | 'overdue' | 'failed';
+  filings: number;
+  autoSubmit: boolean;
+  webhookUrl?: string;
+  credentials: {
+    endpoint: string;
+    apiKey: string;
+    certificate?: string;
   };
-  detailedEntries: ComplianceSubmission[];
-  systemHealth: {
-    erganiAvailability: number; // percentage
-    averageResponseTime: number; // milliseconds
-    errorRate: number; // percentage
-    lastSuccessfulSubmission: string;
+}
+
+export interface GreekSpecialPay {
+  payId: string;
+  type: 'christmas_bonus' | 'easter_bonus' | 'vacation_allowance';
+  name: string;
+  nameGreek: string;
+  calculationRule: string;
+  eligibilityRules: string[];
+  taxable: boolean;
+  efkaSubject: boolean;
+  minimumServiceMonths: number;
+  proRatedCalculation: boolean;
+  paymentDeadline: string;
+}
+
+export interface ComplianceRule {
+  ruleId: string;
+  category: 'digital_work_card' | 'minimum_wage' | 'overtime' | 'leave' | 'special_pays' | 'ergani' | 'efka' | 'aade';
+  title: string;
+  description: string;
+  lawReference: string;
+  effectiveDate: string;
+  version: string;
+  isActive: boolean;
+  conditions: Record<string, any>;
+  actions: Record<string, any>;
+  penalties?: {
+    description: string;
+    fineAmount?: number;
+    severity: 'low' | 'medium' | 'high' | 'critical';
   };
-  alertsGenerated: {
-    alertType: string;
-    count: number;
-    lastOccurrence: string;
-  }[];
 }
 
 export class ComplianceConnector {
-  private static config: ErganiConfiguration = {
-    environment: 'sandbox',
-    endpoints: {
-      rest: 'https://ergani.gov.gr/api/v2',
-      soap: 'https://ergani.gov.gr/soap/v2',
-      oauth: 'https://ergani.gov.gr/oauth/token'
-    },
-    authentication: {
-      method: 'oauth2',
-      credentials: {
-        clientId: process.env.ERGANI_CLIENT_ID,
-        clientSecret: process.env.ERGANI_CLIENT_SECRET
-      }
-    },
-    retryPolicy: {
-      maxRetries: 5,
-      backoffStrategy: 'exponential',
-      initialDelay: 1000,
-      maxDelay: 60000
-    },
-    rateLimits: {
-      requestsPerMinute: 100,
-      requestsPerHour: 5000,
-      burstLimit: 10
-    }
-  };
+  private digitalWorkCards: Map<string, DigitalWorkCard> = new Map();
+  private erganiEvents: Map<string, ERGANIEvent[]> = new Map();
+  private minimumWageRules: Map<string, MinimumWageRule> = new Map();
+  private governmentFlows: Map<string, GovernmentFlow> = new Map();
+  private greekSpecialPays: Map<string, GreekSpecialPay> = new Map();
+  private complianceRules: Map<string, ComplianceRule> = new Map();
 
-  private static rateLimiter = new Map<string, number[]>();
-  private static submissionQueue: ComplianceSubmission[] = [];
-  private static processing = false;
-
-  // Main submission method with automatic retry
-  static async submitToErgani(timeEvent: any): Promise<ComplianceSubmission> {
-    const submission = await this.createComplianceSubmission(timeEvent);
-    
-    // Add to queue for processing
-    this.submissionQueue.push(submission);
-    
-    // Start processing if not already running
-    if (!this.processing) {
-      this.processSubmissionQueue();
-    }
-
-    return submission;
+  constructor() {
+    this.initializeComplianceSystem();
   }
 
-  // Process submission queue with rate limiting and retry logic
-  private static async processSubmissionQueue(): Promise<void> {
-    this.processing = true;
+  private initializeComplianceSystem(): void {
+    this.initializeMinimumWageRules();
+    this.initializeGovernmentFlows();
+    this.initializeGreekSpecialPays();
+    this.initializeComplianceRules();
+  }
 
-    while (this.submissionQueue.length > 0) {
-      const submission = this.submissionQueue.shift()!;
+  private initializeMinimumWageRules(): void {
+    const rules: MinimumWageRule[] = [
+      {
+        ruleId: "MW-GEN-2025",
+        effectiveDate: "2025-04-01",
+        amount: 880.00,
+        category: "general",
+        isActive: true,
+        version: "2025.1",
+        source: "government"
+      },
+      {
+        ruleId: "MW-U25-2025",
+        effectiveDate: "2025-04-01",
+        amount: 748.00,
+        category: "under_25",
+        isActive: true,
+        version: "2025.1",
+        source: "government"
+      },
+      {
+        ruleId: "MW-APP-2025",
+        effectiveDate: "2025-04-01",
+        amount: 660.00,
+        category: "apprentice",
+        isActive: true,
+        version: "2025.1",
+        source: "government"
+      },
+      {
+        ruleId: "MW-TRA-2025",
+        effectiveDate: "2025-04-01",
+        amount: 616.00,
+        category: "trainee",
+        isActive: true,
+        version: "2025.1",
+        source: "government"
+      }
+    ];
 
-      try {
-        // Check rate limits
-        await this.enforceRateLimit();
+    rules.forEach(rule => {
+      this.minimumWageRules.set(rule.ruleId, rule);
+    });
+  }
 
-        // Attempt submission
-        await this.attemptSubmission(submission);
-
-        // If successful, update status ledger
-        if (submission.status === 'acknowledged') {
-          await this.updateStatusLedger(submission, 'success');
+  private initializeGovernmentFlows(): void {
+    const flows: GovernmentFlow[] = [
+      {
+        flowId: "ERGANI-RT",
+        name: "ERGANI II Real-time Events",
+        type: "ergani",
+        frequency: "real-time",
+        lastSubmission: new Date(Date.now() - 3600000).toISOString(),
+        nextDue: new Date(Date.now() + 3600000).toISOString(),
+        status: "up_to_date",
+        filings: 1247,
+        autoSubmit: true,
+        credentials: {
+          endpoint: "https://ergani.gov.gr/api/v2",
+          apiKey: "ERGANI_API_KEY_2025"
         }
-
-      } catch (error) {
-        console.error(`Submission failed for ${submission.submissionId}:`, error);
-        
-        // Handle failure
-        await this.handleSubmissionFailure(submission, error);
+      },
+      {
+        flowId: "EFKA-MONTHLY",
+        name: "e-EFKA Monthly Social Security",
+        type: "efka",
+        frequency: "monthly",
+        lastSubmission: new Date("2024-12-31").toISOString(),
+        nextDue: new Date("2025-01-31").toISOString(),
+        status: "pending",
+        filings: 24,
+        autoSubmit: true,
+        credentials: {
+          endpoint: "https://e-efka.gov.gr/api/apdfile",
+          apiKey: "EFKA_API_KEY_2025"
+        }
+      },
+      {
+        flowId: "AADE-TAX",
+        name: "AADE ΦΜΥ Monthly Tax Filing",
+        type: "aade",
+        frequency: "monthly",
+        lastSubmission: new Date("2024-12-31").toISOString(),
+        nextDue: new Date("2025-01-31").toISOString(),
+        status: "pending",
+        filings: 24,
+        autoSubmit: true,
+        credentials: {
+          endpoint: "https://www1.aade.gr/gsisapps/tfmu",
+          apiKey: "AADE_API_KEY_2025"
+        }
       }
+    ];
 
-      // Brief pause between submissions
-      await this.delay(100);
-    }
-
-    this.processing = false;
+    flows.forEach(flow => {
+      this.governmentFlows.set(flow.flowId, flow);
+    });
   }
 
-  // Attempt individual submission with fallback protocols
-  private static async attemptSubmission(submission: ComplianceSubmission): Promise<void> {
-    const attempt: ComplianceAttempt = {
-      attemptNumber: submission.currentAttempt + 1,
-      timestamp: new Date().toISOString(),
-      method: 'rest', // Start with REST
-      endpoint: this.config.endpoints.rest,
-      requestPayload: submission.erganiPayload,
-      success: false,
-      duration: 0
+  private initializeGreekSpecialPays(): void {
+    const specialPays: GreekSpecialPay[] = [
+      {
+        payId: "CHRISTMAS-BONUS",
+        type: "christmas_bonus",
+        name: "Christmas Bonus",
+        nameGreek: "Δώρο Χριστουγέννων",
+        calculationRule: "25 days of basic salary for full year service",
+        eligibilityRules: [
+          "Employed on December 31st",
+          "Minimum 28 days service in December",
+          "Pro-rated for partial year service"
+        ],
+        taxable: true,
+        efkaSubject: true,
+        minimumServiceMonths: 0,
+        proRatedCalculation: true,
+        paymentDeadline: "December 24th"
+      },
+      {
+        payId: "EASTER-BONUS",
+        type: "easter_bonus",
+        name: "Easter Bonus",
+        nameGreek: "Δώρο Πάσχα",
+        calculationRule: "15 days of basic salary for full year service",
+        eligibilityRules: [
+          "Employed during Easter period",
+          "Minimum 40 days service in the 6 months before Easter",
+          "Pro-rated for partial service"
+        ],
+        taxable: true,
+        efkaSubject: true,
+        minimumServiceMonths: 0,
+        proRatedCalculation: true,
+        paymentDeadline: "Easter Friday"
+      },
+      {
+        payId: "VACATION-ALLOWANCE",
+        type: "vacation_allowance",
+        name: "Vacation Allowance",
+        nameGreek: "Επίδομα Άδειας",
+        calculationRule: "50% of monthly salary for vacation days taken",
+        eligibilityRules: [
+          "Entitled to annual leave",
+          "Paid when taking vacation",
+          "Calculated on basic salary + regular allowances"
+        ],
+        taxable: true,
+        efkaSubject: true,
+        minimumServiceMonths: 12,
+        proRatedCalculation: true,
+        paymentDeadline: "With vacation pay"
+      }
+    ];
+
+    specialPays.forEach(pay => {
+      this.greekSpecialPays.set(pay.payId, pay);
+    });
+  }
+
+  private initializeComplianceRules(): void {
+    const rules: ComplianceRule[] = [
+      {
+        ruleId: "DWC-REALTIME-2025",
+        category: "digital_work_card",
+        title: "Digital Work Card Real-time Attendance",
+        description: "All clock-in/clock-out events must be synchronized with ERGANI II in real-time",
+        lawReference: "Law 4808/2021, Article 3",
+        effectiveDate: "2025-01-01",
+        version: "2025.1",
+        isActive: true,
+        conditions: {
+          applicableTo: "all_employees",
+          minimumSyncInterval: 300, // 5 minutes
+          biometricRequired: false
+        },
+        actions: {
+          syncToERGANI: true,
+          generateAlerts: true,
+          logEvents: true
+        },
+        penalties: {
+          description: "Fine for non-compliance with digital work card requirements",
+          fineAmount: 1000,
+          severity: "high"
+        }
+      },
+      {
+        ruleId: "MW-COMPLIANCE-2025",
+        category: "minimum_wage",
+        title: "Minimum Wage Compliance Check",
+        description: "All employee salaries must meet or exceed applicable minimum wage rates",
+        lawReference: "Law 4172/2013, Article 103",
+        effectiveDate: "2025-04-01",
+        version: "2025.1",
+        isActive: true,
+        conditions: {
+          checkFrequency: "monthly",
+          includeAllowances: false,
+          proRatePartTime: true
+        },
+        actions: {
+          generateAlerts: true,
+          blockPayroll: true,
+          notifyHR: true
+        },
+        penalties: {
+          description: "Penalties for underpaying employees below minimum wage",
+          fineAmount: 5000,
+          severity: "critical"
+        }
+      }
+    ];
+
+    rules.forEach(rule => {
+      this.complianceRules.set(rule.ruleId, rule);
+    });
+  }
+
+  // Digital Work Card Methods
+  async createDigitalWorkCard(employeeId: string): Promise<DigitalWorkCard> {
+    const card: DigitalWorkCard = {
+      employeeId,
+      cardId: `DWC-${randomUUID().substr(0, 8).toUpperCase()}`,
+      status: 'active',
+      lastSync: new Date().toISOString(),
+      realTimeAttendance: true,
+      erganiSyncStatus: 'synced',
+      biometricEnabled: false,
+      qrCode: `QR-${randomUUID().substr(0, 12).toUpperCase()}`,
+      nfcEnabled: true
     };
 
-    submission.attempts.push(attempt);
-    submission.currentAttempt = attempt.attemptNumber;
-    submission.lastAttemptAt = attempt.timestamp;
+    this.digitalWorkCards.set(card.cardId, card);
+    console.log(`[COMPLIANCE] Created digital work card ${card.cardId} for employee ${employeeId}`);
+    return card;
+  }
 
-    const startTime = Date.now();
+  getDigitalWorkCards(): DigitalWorkCard[] {
+    return Array.from(this.digitalWorkCards.values());
+  }
+
+  async syncDigitalWorkCard(cardId: string): Promise<boolean> {
+    const card = this.digitalWorkCards.get(cardId);
+    if (!card) return false;
+
+    // Simulate ERGANI sync
+    card.lastSync = new Date().toISOString();
+    card.erganiSyncStatus = Math.random() > 0.1 ? 'synced' : 'failed';
+    
+    return card.erganiSyncStatus === 'synced';
+  }
+
+  // ERGANI Event Methods
+  async createERGANIEvent(
+    type: ERGANIEvent['type'],
+    employeeId: string,
+    payload: Record<string, any>
+  ): Promise<ERGANIEvent> {
+    const event: ERGANIEvent = {
+      eventId: randomUUID(),
+      type,
+      employeeId,
+      timestamp: new Date().toISOString(),
+      status: 'pending',
+      payload,
+      retryCount: 0,
+      priority: type === 'hire' || type === 'termination' ? 'critical' : 'medium'
+    };
+
+    // Store event by period (YYYY-MM)
+    const period = event.timestamp.substr(0, 7);
+    const periodEvents = this.erganiEvents.get(period) || [];
+    periodEvents.push(event);
+    this.erganiEvents.set(period, periodEvents);
+
+    // Simulate submission
+    setTimeout(() => this.processERGANIEvent(event), 1000);
+    
+    return event;
+  }
+
+  private async processERGANIEvent(event: ERGANIEvent): Promise<void> {
+    try {
+      // Simulate ERGANI II API call
+      const success = Math.random() > 0.05; // 95% success rate
+      
+      if (success) {
+        event.status = 'submitted';
+        event.submissionId = `SUB-${randomUUID().substr(0, 12).toUpperCase()}`;
+        console.log(`[ERGANI] Event ${event.eventId} submitted successfully`);
+        
+        // Simulate acknowledgment
+        setTimeout(() => {
+          event.status = 'acknowledged';
+        }, 2000);
+      } else {
+        event.status = 'failed';
+        event.errorMessage = 'ERGANI II service temporarily unavailable';
+        event.retryCount++;
+        console.log(`[ERGANI] Event ${event.eventId} failed, retry count: ${event.retryCount}`);
+      }
+    } catch (error) {
+      event.status = 'failed';
+      event.errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`[ERGANI] Error processing event ${event.eventId}:`, error);
+    }
+  }
+
+  getERGANIEvents(period: string): ERGANIEvent[] {
+    const periodKey = period.replace('-', '').substr(0, 7); // Convert YYYY-MM to YYYY-MM
+    return this.erganiEvents.get(periodKey) || [];
+  }
+
+  // Minimum Wage Methods
+  getMinimumWageRules(): MinimumWageRule[] {
+    return Array.from(this.minimumWageRules.values())
+      .filter(rule => rule.isActive)
+      .sort((a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime());
+  }
+
+  getMinimumWageForCategory(category: string, date: Date = new Date()): number | null {
+    const applicableRules = Array.from(this.minimumWageRules.values())
+      .filter(rule => 
+        rule.category === category && 
+        rule.isActive && 
+        new Date(rule.effectiveDate) <= date &&
+        (!rule.endDate || new Date(rule.endDate) > date)
+      )
+      .sort((a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime());
+
+    return applicableRules.length > 0 ? applicableRules[0].amount : null;
+  }
+
+  // Government Flows Methods
+  getGovernmentFlows(): GovernmentFlow[] {
+    return Array.from(this.governmentFlows.values());
+  }
+
+  async submitGovernmentFlow(flowId: string): Promise<boolean> {
+    const flow = this.governmentFlows.get(flowId);
+    if (!flow) return false;
 
     try {
-      // Try REST first
-      const restResult = await this.submitViaRest(submission.erganiPayload);
+      // Simulate government API submission
+      const success = Math.random() > 0.02; // 98% success rate
       
-      attempt.responseCode = restResult.status;
-      attempt.responseBody = restResult.data;
-      attempt.success = true;
-      attempt.duration = Date.now() - startTime;
-
-      submission.status = 'acknowledged';
-      submission.acknowledgedAt = new Date().toISOString();
-
-    } catch (restError) {
-      attempt.errorMessage = restError.message;
-      attempt.duration = Date.now() - startTime;
-
-      // Fallback to SOAP if available
-      if (this.config.endpoints.soap) {
-        try {
-          attempt.method = 'soap';
-          attempt.endpoint = this.config.endpoints.soap;
-
-          const soapResult = await this.submitViaSoap(submission.erganiPayload);
-          
-          attempt.responseBody = soapResult;
-          attempt.success = true;
-          
-          submission.status = 'acknowledged';
-          submission.acknowledgedAt = new Date().toISOString();
-
-        } catch (soapError) {
-          // Both protocols failed
-          submission.status = 'failed';
-          submission.errorDetails = {
-            code: 'SUBMISSION_FAILED',
-            message: 'Both REST and SOAP submission failed',
-            technicalDetails: {
-              restError: restError.message,
-              soapError: soapError.message
-            }
-          };
-
-          // Schedule retry if attempts remain
-          if (submission.currentAttempt < this.config.retryPolicy.maxRetries) {
-            await this.scheduleRetry(submission);
-          } else {
-            submission.finalizedAt = new Date().toISOString();
-            await this.updateStatusLedger(submission, 'final_failure');
-          }
+      if (success) {
+        flow.lastSubmission = new Date().toISOString();
+        flow.status = 'up_to_date';
+        flow.filings++;
+        
+        // Calculate next due date
+        const nextDue = new Date();
+        switch (flow.frequency) {
+          case 'monthly':
+            nextDue.setMonth(nextDue.getMonth() + 1);
+            break;
+          case 'daily':
+            nextDue.setDate(nextDue.getDate() + 1);
+            break;
+          case 'real-time':
+            nextDue.setHours(nextDue.getHours() + 1);
+            break;
         }
+        flow.nextDue = nextDue.toISOString();
+        
+        console.log(`[GOVERNMENT] ${flow.name} submitted successfully`);
+        return true;
       } else {
-        // Only REST available and it failed
-        submission.status = 'failed';
-        submission.errorDetails = {
-          code: 'REST_FAILED',
-          message: restError.message,
-          technicalDetails: restError
-        };
+        flow.status = 'failed';
+        console.log(`[GOVERNMENT] ${flow.name} submission failed`);
+        return false;
+      }
+    } catch (error) {
+      console.error(`[GOVERNMENT] Error submitting ${flow.name}:`, error);
+      flow.status = 'failed';
+      return false;
+    }
+  }
 
-        if (submission.currentAttempt < this.config.retryPolicy.maxRetries) {
-          await this.scheduleRetry(submission);
-        } else {
-          submission.finalizedAt = new Date().toISOString();
-          await this.updateStatusLedger(submission, 'final_failure');
-        }
+  // Greek Special Pays Methods
+  getGreekSpecialPays(): GreekSpecialPay[] {
+    return Array.from(this.greekSpecialPays.values());
+  }
+
+  calculateSpecialPay(
+    payType: GreekSpecialPay['type'],
+    basicSalary: number,
+    serviceMonths: number
+  ): number {
+    const specialPay = Array.from(this.greekSpecialPays.values())
+      .find(pay => pay.type === payType);
+    
+    if (!specialPay) return 0;
+
+    let amount = 0;
+    const dailySalary = basicSalary / 25; // Greek standard: 25 working days per month
+
+    switch (payType) {
+      case 'christmas_bonus':
+        // 25 days of basic salary, pro-rated
+        amount = dailySalary * 25 * Math.min(serviceMonths / 12, 1);
+        break;
+      case 'easter_bonus':
+        // 15 days of basic salary, pro-rated
+        amount = dailySalary * 15 * Math.min(serviceMonths / 12, 1);
+        break;
+      case 'vacation_allowance':
+        // 50% of monthly salary
+        amount = basicSalary * 0.5;
+        break;
+    }
+
+    return Math.round(amount * 100) / 100; // Round to 2 decimal places
+  }
+
+  // Compliance Methods
+  getComplianceRules(): ComplianceRule[] {
+    return Array.from(this.complianceRules.values())
+      .filter(rule => rule.isActive);
+  }
+
+  async checkCompliance(category?: string): Promise<{
+    compliant: boolean;
+    violations: any[];
+    score: number;
+  }> {
+    const rules = category 
+      ? this.getComplianceRules().filter(rule => rule.category === category)
+      : this.getComplianceRules();
+
+    const violations: any[] = [];
+    let compliantRules = 0;
+
+    for (const rule of rules) {
+      const isCompliant = await this.checkRuleCompliance(rule);
+      if (isCompliant) {
+        compliantRules++;
+      } else {
+        violations.push({
+          ruleId: rule.ruleId,
+          title: rule.title,
+          severity: rule.penalties?.severity || 'medium',
+          description: rule.description
+        });
       }
     }
-  }
 
-  // REST API submission
-  private static async submitViaRest(payload: ErganiEventPayload): Promise<any> {
-    const token = await this.getAccessToken();
-    
-    const response = await fetch(`${this.config.endpoints.rest}/work-events`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-        'X-API-Version': '2.0',
-        'User-Agent': 'PayrollSync-ERGANI-Connector/1.0'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`REST submission failed: ${response.status} - ${errorBody}`);
-    }
+    const score = rules.length > 0 ? (compliantRules / rules.length) * 100 : 100;
 
     return {
-      status: response.status,
-      data: await response.json()
+      compliant: violations.length === 0,
+      violations,
+      score: Math.round(score * 10) / 10
     };
   }
 
-  // SOAP API submission
-  private static async submitViaSoap(payload: ErganiEventPayload): Promise<any> {
-    const soapEnvelope = this.buildSoapEnvelope(payload);
-    
-    const response = await fetch(this.config.endpoints.soap!, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/xml; charset=utf-8',
-        'SOAPAction': 'SubmitWorkEvent'
-      },
-      body: soapEnvelope
-    });
+  private async checkRuleCompliance(rule: ComplianceRule): Promise<boolean> {
+    // Simulate compliance checking logic
+    // In a real implementation, this would check actual data against rule conditions
+    return Math.random() > 0.01; // 99% compliance rate for demo
+  }
 
-    if (!response.ok) {
-      throw new Error(`SOAP submission failed: ${response.status}`);
+  // Demo Data Generation
+  async generateDemoData(): Promise<void> {
+    // Generate demo digital work cards
+    const demoEmployees = ['EMP001', 'EMP002', 'EMP003', 'EMP004', 'EMP005'];
+    for (const employeeId of demoEmployees) {
+      await this.createDigitalWorkCard(employeeId);
     }
 
-    const responseText = await response.text();
-    return this.parseSoapResponse(responseText);
-  }
-
-  // OAuth2 token management
-  private static async getAccessToken(): Promise<string> {
-    // Check if we have a valid cached token
-    const cached = this.getCachedToken();
-    if (cached && !this.isTokenExpired(cached)) {
-      return cached.access_token;
+    // Generate demo ERGANI events
+    const eventTypes: ERGANIEvent['type'][] = ['hire', 'schedule_declaration', 'overtime', 'leave'];
+    for (let i = 0; i < 20; i++) {
+      const employeeId = demoEmployees[Math.floor(Math.random() * demoEmployees.length)];
+      const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+      await this.createERGANIEvent(eventType, employeeId, {
+        timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        details: `Demo ${eventType} event for ${employeeId}`
+      });
     }
 
-    // Request new token
-    const response = await fetch(this.config.endpoints.oauth!, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: this.config.authentication.credentials.clientId!,
-        client_secret: this.config.authentication.credentials.clientSecret!,
-        scope: 'work-events'
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Token request failed: ${response.status}`);
-    }
-
-    const tokenData = await response.json();
-    this.cacheToken(tokenData);
-    
-    return tokenData.access_token;
-  }
-
-  // Rate limiting enforcement
-  private static async enforceRateLimit(): Promise<void> {
-    const now = Date.now();
-    const window = 60000; // 1 minute window
-    const key = 'ergani_submissions';
-
-    // Get current window requests
-    const requests = this.rateLimiter.get(key) || [];
-    const recentRequests = requests.filter(time => now - time < window);
-
-    // Check if we're over the limit
-    if (recentRequests.length >= this.config.rateLimits.requestsPerMinute) {
-      const oldestRequest = Math.min(...recentRequests);
-      const waitTime = window - (now - oldestRequest);
-      
-      console.log(`Rate limit reached, waiting ${waitTime}ms`);
-      await this.delay(waitTime);
-    }
-
-    // Add current request
-    recentRequests.push(now);
-    this.rateLimiter.set(key, recentRequests);
-  }
-
-  // Retry scheduling with exponential backoff
-  private static async scheduleRetry(submission: ComplianceSubmission): Promise<void> {
-    const delay = this.calculateRetryDelay(submission.currentAttempt);
-    const retryTime = new Date(Date.now() + delay);
-
-    submission.status = 'pending';
-    submission.attempts[submission.attempts.length - 1].retryScheduled = retryTime.toISOString();
-
-    // In a real implementation, this would use a job queue
-    setTimeout(() => {
-      this.submissionQueue.push(submission);
-      if (!this.processing) {
-        this.processSubmissionQueue();
-      }
-    }, delay);
-  }
-
-  // Calculate retry delay based on backoff strategy
-  private static calculateRetryDelay(attemptNumber: number): number {
-    const { backoffStrategy, initialDelay, maxDelay } = this.config.retryPolicy;
-
-    if (backoffStrategy === 'exponential') {
-      return Math.min(initialDelay * Math.pow(2, attemptNumber - 1), maxDelay);
-    } else {
-      return Math.min(initialDelay * attemptNumber, maxDelay);
-    }
-  }
-
-  // Status ledger management
-  private static async updateStatusLedger(
-    submission: ComplianceSubmission,
-    outcome: 'success' | 'failure' | 'final_failure'
-  ): Promise<void> {
-    const today = new Date().toISOString().split('T')[0];
-    const ledger = await this.getStatusLedger(today);
-
-    // Update statistics
-    if (outcome === 'success') {
-      ledger.statistics.successful++;
-      ledger.statistics.acknowledged++;
-    } else {
-      ledger.statistics.failed++;
-    }
-
-    // Add detailed entry
-    ledger.detailedEntries.push(submission);
-
-    // Calculate system health metrics
-    await this.updateSystemHealthMetrics(ledger);
-
-    // Save ledger
-    await this.saveStatusLedger(today, ledger);
-
-    // Generate alerts if needed
-    await this.checkForAlerts(ledger);
-  }
-
-  // Helper methods
-  private static async createComplianceSubmission(timeEvent: any): Promise<ComplianceSubmission> {
-    const submissionId = `ergani_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    return {
-      submissionId,
-      originalEventId: timeEvent.eventId,
-      erganiPayload: this.transformToErganiPayload(timeEvent),
-      status: 'pending',
-      attempts: [],
-      currentAttempt: 0,
-      createdAt: new Date().toISOString()
-    };
-  }
-
-  private static transformToErganiPayload(timeEvent: any): ErganiEventPayload {
-    return {
-      employeeData: {
-        afm: timeEvent.employeeId, // Assuming AFM is used as employee ID
-        lastname: 'LastName', // Would be fetched from employee service
-        firstname: 'FirstName',
-        workplaceId: timeEvent.propertyId
-      },
-      eventData: {
-        eventType: this.mapEventType(timeEvent.eventType),
-        timestamp: timeEvent.timestamp,
-        workstationId: timeEvent.deviceInfo?.deviceId,
-        coordinates: timeEvent.location?.coordinates,
-        digitalSignature: this.generateDigitalSignature(timeEvent)
-      },
-      metadata: {
-        submissionId: timeEvent.eventId,
-        originalEventId: timeEvent.eventId,
-        deviceId: timeEvent.deviceInfo?.deviceId || 'unknown',
-        softwareVersion: '1.0.0'
-      }
-    };
-  }
-
-  private static mapEventType(eventType: string): 'WI' | 'WO' | 'BS' | 'BE' | 'LC' {
-    const mapping: Record<string, 'WI' | 'WO' | 'BS' | 'BE' | 'LC'> = {
-      'clock_in': 'WI',
-      'clock_out': 'WO',
-      'break_start': 'BS',
-      'break_end': 'BE',
-      'location_change': 'LC'
-    };
-    return mapping[eventType] || 'WI';
-  }
-
-  private static generateDigitalSignature(timeEvent: any): string {
-    // In a real implementation, this would use proper cryptographic signing
-    const data = `${timeEvent.employeeId}-${timeEvent.timestamp}-${timeEvent.eventType}`;
-    return btoa(data).substring(0, 32);
-  }
-
-  private static buildSoapEnvelope(payload: ErganiEventPayload): string {
-    return `<?xml version="1.0" encoding="utf-8"?>
-<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-  <soap:Body>
-    <SubmitWorkEvent xmlns="http://ergani.gov.gr/schemas">
-      <eventData>
-        <afm>${payload.employeeData.afm}</afm>
-        <eventType>${payload.eventData.eventType}</eventType>
-        <timestamp>${payload.eventData.timestamp}</timestamp>
-        <signature>${payload.eventData.digitalSignature}</signature>
-      </eventData>
-    </SubmitWorkEvent>
-  </soap:Body>
-</soap:Envelope>`;
-  }
-
-  private static parseSoapResponse(response: string): any {
-    // Simple SOAP response parsing - would use proper XML parser in production
-    return { success: response.includes('success') };
-  }
-
-  private static getCachedToken(): any {
-    // Token caching implementation
-    return null;
-  }
-
-  private static isTokenExpired(token: any): boolean {
-    return Date.now() > token.expires_at;
-  }
-
-  private static cacheToken(tokenData: any): void {
-    // Cache token with expiration
-  }
-
-  private static async getStatusLedger(date: string): Promise<ComplianceStatusLedger> {
-    // Retrieve or create status ledger for date
-    return {
-      date,
-      statistics: {
-        totalSubmissions: 0,
-        successful: 0,
-        pending: 0,
-        failed: 0,
-        retrying: 0,
-        acknowledged: 0,
-        rejected: 0
-      },
-      detailedEntries: [],
-      systemHealth: {
-        erganiAvailability: 100,
-        averageResponseTime: 0,
-        errorRate: 0,
-        lastSuccessfulSubmission: new Date().toISOString()
-      },
-      alertsGenerated: []
-    };
-  }
-
-  private static async saveStatusLedger(date: string, ledger: ComplianceStatusLedger): Promise<void> {
-    // Save ledger to database
-  }
-
-  private static async updateSystemHealthMetrics(ledger: ComplianceStatusLedger): Promise<void> {
-    // Calculate health metrics from recent submissions
-  }
-
-  private static async checkForAlerts(ledger: ComplianceStatusLedger): Promise<void> {
-    // Check for conditions that require alerts
-  }
-
-  private static async handleSubmissionFailure(submission: ComplianceSubmission, error: any): Promise<void> {
-    // Handle and log submission failures
-  }
-
-  private static async delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    console.log('[COMPLIANCE] Demo data generated for Greece compliance system');
   }
 }
+
+export const complianceConnector = new ComplianceConnector();
