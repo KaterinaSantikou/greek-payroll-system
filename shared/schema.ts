@@ -806,6 +806,119 @@ export const insertOvertimeRequestSchema = createInsertSchema(overtimeRequests).
   updatedAt: true,
 });
 
+// Notifications system for smart alerts and approvals
+export const notifications = pgTable("notifications", {
+  notificationId: varchar("notification_id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Target and source
+  userId: varchar("user_id").references(() => users.id),
+  employeeId: varchar("employee_id").references(() => employees.employeeId),
+  propertyId: varchar("property_id").references(() => properties.propertyId),
+  
+  // Notification content
+  type: varchar("type", { length: 50 }).notNull(), // overtime_approval, ergani_failure, compliance_alert, payroll_ready
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  priority: varchar("priority", { length: 20 }).default("medium"), // low, medium, high, urgent
+  category: varchar("category", { length: 50 }).notNull(), // approval, alert, digest, system
+  
+  // Related entities
+  relatedEntityType: varchar("related_entity_type", { length: 50 }), // overtime_request, shift, payroll_run
+  relatedEntityId: varchar("related_entity_id", { length: 36 }),
+  
+  // Delivery channels and status
+  channels: jsonb("channels").default('["web"]'), // web, email, slack, teams, sms
+  deliveryStatus: jsonb("delivery_status").default('{}'), // {slack: "sent", email: "failed"}
+  
+  // Action and workflow
+  actionRequired: boolean("action_required").default(false),
+  actionType: varchar("action_type", { length: 50 }), // approve, reject, acknowledge, retry
+  actionData: jsonb("action_data"), // Button configs, approval context
+  actionUrl: varchar("action_url", { length: 500 }), // Deep link for mobile/web
+  
+  // Status tracking
+  status: varchar("status", { length: 20 }).default("pending"), // pending, sent, delivered, read, acted_upon, expired
+  readAt: timestamp("read_at"),
+  actedAt: timestamp("acted_at"),
+  actionBy: varchar("action_by").references(() => users.id),
+  actionResult: varchar("action_result", { length: 50 }), // approved, rejected, acknowledged
+  
+  // Scheduling and expiry
+  scheduledFor: timestamp("scheduled_for"),
+  expiresAt: timestamp("expires_at"),
+  
+  // Digest aggregation
+  digestGroup: varchar("digest_group", { length: 100 }), // weekly_compliance, payroll_summary
+  includeInDigest: boolean("include_in_digest").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_notifications_user").on(table.userId),
+  index("idx_notifications_status").on(table.status),
+  index("idx_notifications_type").on(table.type),
+  index("idx_notifications_scheduled").on(table.scheduledFor),
+  index("idx_notifications_digest").on(table.digestGroup, table.includeInDigest),
+]);
+
+// Notification preferences per user
+export const notificationPreferences = pgTable("notification_preferences", {
+  preferenceId: varchar("preference_id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  
+  // Channel preferences
+  slackEnabled: boolean("slack_enabled").default(false),
+  slackChannelId: varchar("slack_channel_id", { length: 100 }),
+  teamsEnabled: boolean("teams_enabled").default(false),
+  teamsWebhookUrl: varchar("teams_webhook_url", { length: 500 }),
+  emailEnabled: boolean("email_enabled").default(true),
+  smsEnabled: boolean("sms_enabled").default(false),
+  phoneNumber: varchar("phone_number", { length: 20 }),
+  
+  // Notification type preferences
+  overtimeApprovals: jsonb("overtime_approvals").default('{"enabled": true, "channels": ["slack", "email"]}'),
+  erganiAlerts: jsonb("ergani_alerts").default('{"enabled": true, "channels": ["slack", "email"]}'),
+  complianceAlerts: jsonb("compliance_alerts").default('{"enabled": true, "channels": ["email"]}'),
+  payrollDigests: jsonb("payroll_digests").default('{"enabled": true, "channels": ["email"], "frequency": "weekly"}'),
+  
+  // Timing preferences
+  quietHoursStart: varchar("quiet_hours_start", { length: 5 }).default("22:00"), // HH:MM
+  quietHoursEnd: varchar("quiet_hours_end", { length: 5 }).default("08:00"), // HH:MM
+  timezone: varchar("timezone", { length: 50 }).default("Europe/Athens"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Slack/Teams integration logs
+export const integrationLogs = pgTable("integration_logs", {
+  logId: varchar("log_id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Integration details
+  integration: varchar("integration", { length: 20 }).notNull(), // slack, teams, email
+  action: varchar("action", { length: 50 }).notNull(), // send_message, create_approval, webhook_received
+  
+  // Request/Response
+  requestPayload: jsonb("request_payload"),
+  responsePayload: jsonb("response_payload"),
+  status: varchar("status", { length: 20 }).notNull(), // success, error, timeout
+  errorMessage: text("error_message"),
+  
+  // Related entities
+  notificationId: varchar("notification_id").references(() => notifications.notificationId),
+  userId: varchar("user_id").references(() => users.id),
+  
+  // Timing
+  duration: integer("duration_ms"), // Processing time in milliseconds
+  retryCount: integer("retry_count").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_integration_logs_status").on(table.status),
+  index("idx_integration_logs_integration").on(table.integration),
+  index("idx_integration_logs_notification").on(table.notificationId),
+]);
+
 export type ComplianceAlert = typeof complianceAlerts.$inferSelect;
 export type InsertComplianceAlert = z.infer<typeof insertComplianceAlertSchema>;
 
@@ -833,6 +946,72 @@ export type InsertDeviceRegistry = z.infer<typeof insertDeviceRegistrySchema>;
 
 export type OvertimeRequest = typeof overtimeRequests.$inferSelect;
 export type InsertOvertimeRequest = z.infer<typeof insertOvertimeRequestSchema>;
+
+// Notification system types
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+
+export type NotificationPreference = typeof notificationPreferences.$inferSelect;
+export type InsertNotificationPreference = typeof notificationPreferences.$inferInsert;
+
+export type IntegrationLog = typeof integrationLogs.$inferSelect;
+export type InsertIntegrationLog = typeof integrationLogs.$inferInsert;
+
+// Notification insert schemas
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  notificationId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertNotificationPreferenceSchema = createInsertSchema(notificationPreferences).omit({
+  preferenceId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertIntegrationLogSchema = createInsertSchema(integrationLogs).omit({
+  logId: true,
+  createdAt: true,
+});
+
+// Notification relations
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  user: one(users, {
+    fields: [notifications.userId],
+    references: [users.id],
+  }),
+  employee: one(employees, {
+    fields: [notifications.employeeId],
+    references: [employees.employeeId],
+  }),
+  property: one(properties, {
+    fields: [notifications.propertyId],
+    references: [properties.propertyId],
+  }),
+  actionByUser: one(users, {
+    fields: [notifications.actionBy],
+    references: [users.id],
+  }),
+}));
+
+export const notificationPreferencesRelations = relations(notificationPreferences, ({ one }) => ({
+  user: one(users, {
+    fields: [notificationPreferences.userId],
+    references: [users.id],
+  }),
+}));
+
+export const integrationLogsRelations = relations(integrationLogs, ({ one }) => ({
+  notification: one(notifications, {
+    fields: [integrationLogs.notificationId],
+    references: [notifications.notificationId],
+  }),
+  user: one(users, {
+    fields: [integrationLogs.userId],
+    references: [users.id],
+  }),
+}));
 
 // Analytics views for live tracking and reporting
 export const liveOccupancy = pgTable("live_occupancy", {

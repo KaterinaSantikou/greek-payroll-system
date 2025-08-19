@@ -45,6 +45,7 @@ import DocumentAI from "@/pages/documentAI";
 import ChangeLogLegalWatch from "@/pages/changeLogLegalWatch";
 import { Navigation } from "@/components/Navigation";
 import Layout from "@/components/Layout";
+import SmartNotifications from "@/pages/smartNotifications";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -107,6 +108,7 @@ function Router() {
             <Route path="/document-ai" component={DocumentAI} />
             <Route path="/changelog-legal-watch" component={ChangeLogLegalWatch} />
             <Route path="/payroll-run-wizard" component={lazy(() => import("./pages/payrollRunWizard"))} />
+            <Route path="/smart-notifications" component={SmartNotifications} />
             <Route path="/mobile-approvals" component={lazy(() => import("./components/MobileManagerApproval"))} />
             <Route component={NotFound} />
           </Switch>

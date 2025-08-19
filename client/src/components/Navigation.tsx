@@ -246,6 +246,12 @@ const navigationItems: NavigationItem[] = [
     icon: <Settings className="w-4 h-4" />,
     children: [
       {
+        id: 'smart-notifications',
+        title: 'Smart Notifications',
+        icon: <Settings className="w-4 h-4" />,
+        path: '/smart-notifications'
+      },
+      {
         id: 'ux-architecture',
         title: 'UX Roadmap',
         icon: <Settings className="w-4 h-4" />,

@@ -2986,6 +2986,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Register notification routes
+  try {
+    const { registerNotificationRoutes } = await import("./api/notifications");
+    registerNotificationRoutes(app);
+  } catch (error) {
+    console.warn("Notification routes not available:", error);
+  }
+
   const httpServer = createServer(app);
   return httpServer;
 }

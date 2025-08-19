@@ -2,6 +2,12 @@
 
 PayrollSync is a comprehensive Greek HR & Payroll Management System designed to manage employee data, perform Greek-compliant payroll calculations, and ensure adherence to Greek HR compliance requirements, including tax calculations, EFKA insurance, collective agreements, and multi-step employee onboarding. The system aims to automate complex labor law processes and ensure accuracy for Greek businesses. The business vision is to provide a cutting-edge platform matching global UX velocity and compliance depth, with significant market potential in the Greek HR and payroll sector.
 
+## Recent Changes (August 2025)
+- **Smart Notifications & Approvals System**: Implemented comprehensive notification system with Slack/Teams integration for overtime approvals and ERGANI failure alerts
+- **Real-time Approval Workflows**: Added direct approval buttons in Slack/Teams without context switching
+- **Email Digest Service**: Weekly compliance and payroll readiness summaries with professional templates
+- **Notification Center**: Modern React frontend with notification management, preferences, and integration settings
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
