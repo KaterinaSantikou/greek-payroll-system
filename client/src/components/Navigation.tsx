@@ -278,6 +278,7 @@ const commandItems = [
   { id: 'nav-employees', title: 'Employee Directory', category: 'Navigate', action: '/employees', keywords: ['employees', 'directory', 'people'] },
   { id: 'nav-ergani', title: 'ERGANI Compliance', category: 'Navigate', action: '/ergani-compliance', keywords: ['ergani', 'compliance'] },
   { id: 'nav-overtime', title: 'Overtime Management', category: 'Navigate', action: '/overtime', keywords: ['overtime', 'time'] },
+  { id: 'nav-mobile-approvals', title: 'Mobile Approvals', category: 'Navigate', action: '/mobile-approvals', keywords: ['mobile', 'approvals', 'manager'] },
   
   // Recent
   { id: 'recent-payroll', title: 'January 2025 Payroll', category: 'Recent', action: '/payroll/january-2025', keywords: ['january', 'payroll', 'recent'] },

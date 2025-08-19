@@ -2881,6 +2881,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mobile Manager Approval endpoints
+  app.get('/api/manager/pending-approvals', isAuthenticated, async (req, res) => {
+    try {
+      // Simulate fetching pending approvals
+      const pendingApprovals = [
+        {
+          id: 'app_001',
+          type: 'overtime',
+          employeeName: 'Maria Papadopoulou',
+          employeeId: 'EMP001',
+          requestDate: '2025-08-15',
+          details: {
+            date: '2025-08-15',
+            hours: 4.5,
+            reason: 'Covering for sick colleague during busy weekend',
+            startTime: '18:00',
+            endTime: '22:30',
+            description: 'Worked extra hours to cover reception desk during high occupancy weekend. Guest satisfaction critical.'
+          },
+          urgency: 'high',
+          status: 'pending',
+          submittedAt: '2025-08-16T09:30:00Z'
+        },
+        {
+          id: 'app_002',
+          type: 'leave',
+          employeeName: 'Dimitris Kostas',
+          employeeId: 'EMP002',
+          requestDate: '2025-08-20',
+          details: {
+            date: '2025-08-22',
+            reason: 'Medical appointment',
+            description: 'Annual health checkup - pre-scheduled appointment with specialist.',
+            startTime: '14:00',
+            endTime: '18:00'
+          },
+          urgency: 'medium',
+          status: 'pending',
+          submittedAt: '2025-08-16T10:15:00Z'
+        },
+        {
+          id: 'app_003',
+          type: 'schedule_change',
+          employeeName: 'Anna Nikolaou',
+          employeeId: 'EMP003',
+          requestDate: '2025-08-18',
+          details: {
+            date: '2025-08-19',
+            reason: 'Family emergency',
+            description: 'Need to swap shifts with colleague due to unexpected family situation.',
+            startTime: '06:00',
+            endTime: '14:00'
+          },
+          urgency: 'high',
+          status: 'pending',
+          submittedAt: '2025-08-16T11:45:00Z'
+        },
+        {
+          id: 'app_004',
+          type: 'expense',
+          employeeName: 'Giorgos Alexiou',
+          employeeId: 'EMP004',
+          requestDate: '2025-08-14',
+          details: {
+            amount: 85.50,
+            description: 'Taxi fare for emergency supply run to wholesale market - kitchen ran out of fresh fish during busy dinner service.',
+            reason: 'Emergency supply procurement'
+          },
+          urgency: 'low',
+          status: 'pending',
+          submittedAt: '2025-08-16T08:20:00Z'
+        }
+      ];
+      
+      res.json(pendingApprovals);
+    } catch (error) {
+      console.error('Error fetching pending approvals:', error);
+      res.status(500).json({ error: 'Failed to fetch pending approvals' });
+    }
+  });
+
+  app.post('/api/manager/approvals/:approvalId', isAuthenticated, async (req, res) => {
+    try {
+      const { approvalId } = req.params;
+      const { action, comment } = req.body;
+      
+      // Simulate processing approval
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const result = {
+        success: true,
+        approvalId,
+        action,
+        comment,
+        processedAt: new Date().toISOString(),
+        processedBy: req.user?.claims?.sub
+      };
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error processing approval:', error);
+      res.status(500).json({ error: 'Failed to process approval' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

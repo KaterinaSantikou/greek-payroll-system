@@ -107,6 +107,7 @@ function Router() {
             <Route path="/document-ai" component={DocumentAI} />
             <Route path="/changelog-legal-watch" component={ChangeLogLegalWatch} />
             <Route path="/payroll-run-wizard" component={lazy(() => import("./pages/payrollRunWizard"))} />
+            <Route path="/mobile-approvals" component={lazy(() => import("./components/MobileManagerApproval"))} />
             <Route component={NotFound} />
           </Switch>
         </div>
