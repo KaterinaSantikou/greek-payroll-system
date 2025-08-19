@@ -1,8 +1,10 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Calculator, FileText, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Users, Calculator, FileText, TrendingUp, Shield, CheckCircle, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
+import GreekComplianceInfo from "@/components/GreekComplianceInfo";
 
 export default function Home() {
   const { user } = useAuth();
@@ -119,41 +121,137 @@ export default function Home() {
         </Card>
       </div>
 
-      {/* System Information */}
+      {/* Greek Compliance Status */}
       <Card>
         <CardHeader>
-          <CardTitle>Πληροφορίες Συστήματος</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-green-600" />
+            Κατάσταση Συμμόρφωσης Ελληνικού Δικαίου 2025
+          </CardTitle>
           <CardDescription>
-            Χαρακτηριστικά και δυνατότητες του συστήματος
+            Ενημερωμένη συμμόρφωση με νόμο 4808/2021 και τελευταίες τροποποιήσεις
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <div>
+                <p className="font-medium text-sm">Ελληνικές Ταυτοποιήσεις</p>
+                <p className="text-xs text-muted-foreground">ΑΦΜ, ΑΜΚΑ, ΔΟΥ</p>
+                <Badge variant="outline" className="mt-1 text-xs">Ενεργό</Badge>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <div>
+                <p className="font-medium text-sm">Μισθοδοσία 2025</p>
+                <p className="text-xs text-muted-foreground">€760 κατώτατος</p>
+                <Badge variant="outline" className="mt-1 text-xs">Ενημερωμένο</Badge>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <div>
+                <p className="font-medium text-sm">ΕΦΚΑ Εισφορές</p>
+                <p className="text-xs text-muted-foreground">16% / 24.78%</p>
+                <Badge variant="outline" className="mt-1 text-xs">Συμμορφή</Badge>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <div>
+                <p className="font-medium text-sm">Νόμος 4808/2021</p>
+                <p className="text-xs text-muted-foreground">Ψηφιακή κάρτα</p>
+                <Badge variant="outline" className="mt-1 text-xs">Έτοιμο</Badge>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h4 className="font-semibold">Απαιτούμενα Ελληνικά Έγγραφα Ταυτοποίησης</h4>
+              <Button variant="outline" size="sm">
+                Περισσότερες Πληροφορίες
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="text-center p-3 border rounded-lg">
+                <p className="font-medium text-sm">ΑΦΜ</p>
+                <p className="text-xs text-muted-foreground">9-ψήφιος αριθμός</p>
+                <p className="text-xs text-green-600 mt-1">Φορολογικής Ταυτοποίησης</p>
+              </div>
+              
+              <div className="text-center p-3 border rounded-lg">
+                <p className="font-medium text-sm">ΑΜΚΑ</p>
+                <p className="text-xs text-muted-foreground">11-ψήφιος αριθμός</p>
+                <p className="text-xs text-green-600 mt-1">Κοινωνικής Ασφάλισης</p>
+              </div>
+              
+              <div className="text-center p-3 border rounded-lg">
+                <p className="font-medium text-sm">Αρ. Ταυτότητας</p>
+                <p className="text-xs text-muted-foreground">Ελληνικό ID</p>
+                <p className="text-xs text-green-600 mt-1">ή διαβατήριο</p>
+              </div>
+              
+              <div className="text-center p-3 border rounded-lg">
+                <p className="font-medium text-sm">ΔΟΥ</p>
+                <p className="text-xs text-muted-foreground">Φορολογικό γραφείο</p>
+                <p className="text-xs text-green-600 mt-1">Ανάθεση</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* System Features */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Χαρακτηριστικά Συστήματος</CardTitle>
+          <CardDescription>
+            Πλήρης λύση διαχείρισης ανθρώπινων πόρων με ελληνική συμμόρφωση
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <h4 className="font-semibold text-sm mb-2">Συμμόρφωση</h4>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                Ελληνική Συμμόρφωση
+              </h4>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Επικύρωση ΑΦΜ (9 ψηφία)</li>
-                <li>• Επικύρωση ΑΜΚΑ (11 ψηφία)</li>
-                <li>• Καταχώρηση ΔΟΥ</li>
-                <li>• Αρχεία ΕΦΚΑ</li>
+                <li>• Επικύρωση ΑΦΜ με αλγόριθμο checksum</li>
+                <li>• Επικύρωση ΑΜΚΑ με Luhn αλγόριθμο</li>
+                <li>• Καταχώρηση ΔΟΥ από προκαθορισμένη λίστα</li>
+                <li>• Αυτοματοποιημένα αρχεία ΕΦΚΑ</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-sm mb-2">Μισθοδοσία</h4>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <Calculator className="h-4 w-4 text-blue-600" />
+                Μισθοδοσία 2025
+              </h4>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Ελληνικές φορολογικές κλίμακες</li>
-                <li>• Υπολογισμός ΕΦΚΑ</li>
-                <li>• Υπερωρίες και επιδόματα</li>
-                <li>• Συλλογικές συμβάσεις</li>
+                <li>• Προοδευτικές φορολογικές κλίμακες</li>
+                <li>• Αυτόματος υπολογισμός ΕΦΚΑ</li>
+                <li>• Υπερωρίες και νυχτερινές αποζημιώσεις</li>
+                <li>• Συλλογικές συμβάσεις ανά κλάδο</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-sm mb-2">Αναφορές</h4>
+              <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-purple-600" />
+                Αναφορές & Εξαγωγές
+              </h4>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Εξαγωγή σε Excel</li>
-                <li>• Δημιουργία PDF</li>
+                <li>• Εξαγωγή σε Excel και PDF</li>
                 <li>• Μισθοδοτικές καταστάσεις</li>
-                <li>• Στατιστικές αναφορές</li>
+                <li>• Στατιστικές και αναλυτικές αναφορές</li>
+                <li>• Συμμόρφωση με ΓΔΠΡ</li>
               </ul>
             </div>
           </div>

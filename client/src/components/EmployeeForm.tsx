@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { validateAfm, validateAmka } from "@/lib/greekValidations";
+import { validateAfm, validateAmka, GREEK_TAX_OFFICES } from "@/lib/greekValidations";
 import { insertEmployeeSchema, type Employee, type InsertEmployee } from "@shared/schema";
 import { ChevronLeft, ChevronRight, Save } from "lucide-react";
 
@@ -553,12 +553,22 @@ export default function EmployeeForm({ employee, onSuccess, onCancel }: Employee
                   </div>
                   
                   <div>
-                    <Label htmlFor="taxOffice">ΔΟΥ</Label>
-                    <Input
-                      id="taxOffice"
-                      {...register("taxOffice")}
-                      placeholder="π.χ. Α' Αθηνών"
-                    />
+                    <Label htmlFor="taxOffice">ΔΟΥ *</Label>
+                    <Select onValueChange={(value) => setValue("taxOffice", value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Επιλέξτε ΔΟΥ" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {GREEK_TAX_OFFICES.map((office) => (
+                          <SelectItem key={office} value={office}>
+                            {office}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.taxOffice && (
+                      <p className="text-red-500 text-sm mt-1">{errors.taxOffice.message}</p>
+                    )}
                   </div>
                   
                   <div>
