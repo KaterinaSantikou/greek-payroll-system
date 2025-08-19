@@ -403,6 +403,89 @@ export const contractTypeDefinitions = pgTable("contract_type_definitions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Employee Allowances table - Greek Labor Law Allowances and Bonuses
+export const employeeAllowances = pgTable("employee_allowances", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.id).notNull(),
+  
+  // Allowance Details
+  allowanceType: varchar("allowance_type").notNull(), // holiday, regular, industry, family
+  allowanceCode: varchar("allowance_code").notNull(), // christmas-bonus, transport-allowance, etc.
+  allowanceSubType: varchar("allowance_sub_type"), // PUBLIC_TRANSPORT, CASH_ALLOWANCE, etc.
+  
+  // Amount Configuration
+  calculationType: varchar("calculation_type").notNull(), // fixed, percentage, performance_based
+  fixedAmount: decimal("fixed_amount", { precision: 10, scale: 2 }),
+  percentageRate: decimal("percentage_rate", { precision: 5, scale: 4 }),
+  basedOnSalary: boolean("based_on_salary").default(true),
+  
+  // Timing and Frequency
+  frequency: varchar("frequency").default("monthly"), // monthly, annual, one_time
+  paymentMonth: integer("payment_month"), // For holiday bonuses (1-12)
+  effectiveDate: date("effective_date").notNull(),
+  endDate: date("end_date"), // For temporary allowances
+  
+  // Tax and Legal
+  taxable: boolean("taxable").default(true),
+  socialSecuritySubject: boolean("social_security_subject").default(true),
+  taxExemptLimit: decimal("tax_exempt_limit", { precision: 10, scale: 2 }),
+  
+  // Eligibility and Requirements
+  minimumServiceMonths: integer("minimum_service_months").default(0),
+  requiresApproval: boolean("requires_approval").default(false),
+  requiresDocumentation: boolean("requires_documentation").default(false),
+  proRated: boolean("pro_rated").default(false),
+  
+  // Performance Data (JSON for flexibility)
+  performanceData: jsonb("performance_data"), // For performance-based allowances
+  
+  // Status
+  isActive: boolean("is_active").default(true),
+  approvedBy: varchar("approved_by"),
+  approvalDate: date("approval_date"),
+  
+  // Metadata
+  description: text("description"),
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Holiday Bonuses Tracking table - Mandatory Greek Holiday Bonuses
+export const holidayBonuses = pgTable("holiday_bonuses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.id).notNull(),
+  
+  // Bonus Details
+  bonusYear: integer("bonus_year").notNull(),
+  bonusType: varchar("bonus_type").notNull(), // christmas, easter, vacation
+  
+  // Calculation Details
+  baseSalary: decimal("base_salary", { precision: 10, scale: 2 }).notNull(),
+  serviceMonths: integer("service_months").notNull(),
+  workingDaysInPeriod: integer("working_days_in_period").default(25),
+  
+  // Amounts
+  grossAmount: decimal("gross_amount", { precision: 10, scale: 2 }).notNull(),
+  proRatedAmount: decimal("pro_rated_amount", { precision: 10, scale: 2 }).notNull(),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0"),
+  netAmount: decimal("net_amount", { precision: 10, scale: 2 }).notNull(),
+  
+  // Payment Details
+  paymentDate: date("payment_date"),
+  paymentStatus: varchar("payment_status").default("pending"), // pending, paid, cancelled
+  paymentMethod: varchar("payment_method").default("bank_transfer"),
+  
+  // Legal Compliance
+  isEligible: boolean("is_eligible").default(true),
+  eligibilityNotes: text("eligibility_notes"),
+  calculationMethod: text("calculation_method"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Collective agreements table - Updated for 2025 Greek Labor Standards
 export const collectiveAgreements = pgTable("collective_agreements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -422,6 +505,19 @@ export const collectiveAgreements = pgTable("collective_agreements", {
   sickLeave: integer("sick_leave").default(30), // Days per year
   maternityLeave: integer("maternity_leave").default(119), // 17 weeks
   paternityLeave: integer("paternity_leave").default(14), // 2 weeks
+  
+  // Allowances Configuration (per collective agreement)
+  marriageAllowance: decimal("marriage_allowance", { precision: 10, scale: 2 }).default("50"),
+  firstChildAllowance: decimal("first_child_allowance", { precision: 10, scale: 2 }).default("40"),
+  secondChildAllowance: decimal("second_child_allowance", { precision: 10, scale: 2 }).default("60"),
+  thirdChildAllowance: decimal("third_child_allowance", { precision: 10, scale: 2 }).default("80"),
+  additionalChildAllowance: decimal("additional_child_allowance", { precision: 10, scale: 2 }).default("100"),
+  
+  // Holiday Bonus Rates (as per collective agreement)
+  christmasBonus: decimal("christmas_bonus", { precision: 5, scale: 4 }).default("0.8333"), // 25/30 days
+  easterBonus: decimal("easter_bonus", { precision: 5, scale: 4 }).default("0.5000"), // 15/30 days
+  vacationBonus: decimal("vacation_bonus", { precision: 5, scale: 4 }).default("0.5000"), // 15/30 days
+  
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -430,6 +526,8 @@ export const employeesRelations = relations(employees, ({ many, one }) => ({
   payrollRecords: many(payrollRecords),
   workingTimeSchedules: many(workingTimeSchedules),
   trialPeriods: many(trialPeriods),
+  allowances: many(employeeAllowances),
+  holidayBonuses: many(holidayBonuses),
   collectiveAgreement: one(collectiveAgreements, {
     fields: [employees.collectiveAgreementId],
     references: [collectiveAgreements.id],
@@ -453,6 +551,20 @@ export const workingTimeSchedulesRelations = relations(workingTimeSchedules, ({ 
 export const trialPeriodsRelations = relations(trialPeriods, ({ one }) => ({
   employee: one(employees, {
     fields: [trialPeriods.employeeId],
+    references: [employees.id],
+  }),
+}));
+
+export const employeeAllowancesRelations = relations(employeeAllowances, ({ one }) => ({
+  employee: one(employees, {
+    fields: [employeeAllowances.employeeId],
+    references: [employees.id],
+  }),
+}));
+
+export const holidayBonusesRelations = relations(holidayBonuses, ({ one }) => ({
+  employee: one(employees, {
+    fields: [holidayBonuses.employeeId],
     references: [employees.id],
   }),
 }));

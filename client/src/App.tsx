@@ -10,6 +10,7 @@ import Home from "@/pages/home";
 import Employees from "@/pages/employees";
 import Payroll from "@/pages/payroll";
 import Schedules from "@/pages/schedules";
+import Allowances from "@/pages/allowances";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
           <Route path="/employees" component={Employees} />
           <Route path="/payroll" component={Payroll} />
           <Route path="/schedules" component={Schedules} />
+          <Route path="/allowances" component={Allowances} />
         </Layout>
       )}
       <Route component={NotFound} />

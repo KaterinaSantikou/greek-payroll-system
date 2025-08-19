@@ -62,6 +62,18 @@ Preferred communication style: Simple, everyday language.
 - **EU Working Time Directive**: Complete compliance monitoring with rest periods, consecutive work days, and maximum hours validation
 - **Greek Labor Law Integration**: Full compliance with Law 4808/2021 amendments including right to disconnect
 
+### Special Allowances & Bonuses System (August 2025)
+- **Greek Holiday Bonuses**: Mandatory Christmas (25 days salary), Easter (15 days), and Vacation bonuses (15 days) with automatic calculations
+- **Regular Allowances**: Transport, Food, Uniform, Education, and Position allowances with tax exemption tracking
+- **Industry-Specific Allowances**: Banking, Tourism, Construction, Healthcare, and Commerce sector allowances
+- **Family Allowances**: Marriage allowance (€50/month) and children allowances (€40-100 per child based on order)
+- **Premium Rate Calculations**: Automated calculation of night work, weekend, holiday, and hazardous work premiums
+- **Tax Compliance**: Comprehensive tax exemption limits and social security subject tracking
+- **Performance-Based Allowances**: Support for commission-based and performance-linked allowances
+- **Collective Agreement Integration**: Industry-specific allowance rates per collective agreements
+- **Holiday Bonus Tracking**: Complete tracking of mandatory Greek holiday bonuses with eligibility verification
+- **Allowances Calculator**: Interactive calculator for total allowances with real-time breakdown
+
 ### Recent Legal Updates (August 2025)
 - Updated minimum wage to €760/month
 - Enhanced EFKA rates: 16% employee, 24.78% employer
