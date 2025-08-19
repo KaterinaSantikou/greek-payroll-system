@@ -8,13 +8,15 @@ import {
   Shield, 
   Settings, 
   LogOut,
-  Home
+  Home,
+  Clock
 } from "lucide-react";
 
 const navigationItems = [
   { name: "Πίνακας Ελέγχου", href: "/", icon: Home },
   { name: "Εργαζόμενοι", href: "/employees", icon: Users },
   { name: "Μισθοδοσία", href: "/payroll", icon: Calculator },
+  { name: "Ωράρια", href: "/schedules", icon: Clock },
   { name: "Αναφορές", href: "/reports", icon: BarChart },
   { name: "Συμμόρφωση", href: "/compliance", icon: Shield },
 ];

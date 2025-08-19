@@ -52,6 +52,16 @@ Preferred communication style: Simple, everyday language.
 - **Military Service Tracking**: Comprehensive tracking of military service status and completion dates for Greek male citizens
 - **Multi-step Forms**: 7-tab employee onboarding with Greek compliance validation at each step
 
+### Working Time Arrangements System (August 2025)
+- **Predictable/Unpredictable Schedules**: Advanced schedule management with 48-hour notice requirements for unpredictable schedules
+- **Standard Weekly Hours Tracking**: EU compliance with 40-hour standard and 48-hour maximum weekly limits
+- **Trial Period Management**: Comprehensive tracking with 2-12 month durations based on position complexity
+- **Contract Types**: Full support for full-time, part-time, temporary, seasonal, freelance, apprenticeship, and internship contracts
+- **Schedule Flexibility**: Remote work arrangements, flexible hours, core working time requirements, and compressed workweeks
+- **Premium Rate Calculations**: Automated calculation of night work (25%), weekend work (75%), holiday work (100%), and hazardous work (20%) premiums
+- **EU Working Time Directive**: Complete compliance monitoring with rest periods, consecutive work days, and maximum hours validation
+- **Greek Labor Law Integration**: Full compliance with Law 4808/2021 amendments including right to disconnect
+
 ### Recent Legal Updates (August 2025)
 - Updated minimum wage to €760/month
 - Enhanced EFKA rates: 16% employee, 24.78% employer

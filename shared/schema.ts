@@ -124,10 +124,45 @@ export const employees = pgTable("employees", {
   militaryServiceNotes: text("military_service_notes"),
   
   // Employment Contract (Law 4808/2021 amendments)
-  contractType: varchar("contract_type").notNull(), // indefinite, fixed-term, apprenticeship, internship
+  contractType: varchar("contract_type").notNull(), // indefinite, fixed-term, apprenticeship, internship, seasonal, freelance
+  contractStartDate: date("contract_start_date").notNull(),
+  contractEndDate: date("contract_end_date"), // For fixed-term contracts
+  
+  // Trial Period Management
+  trialPeriodStartDate: date("trial_period_start_date"),
+  trialPeriodEndDate: date("trial_period_end_date"), // 2-12 months based on position
+  trialPeriodStatus: varchar("trial_period_status").default("active"), // active, completed, extended, terminated
+  trialPeriodDuration: integer("trial_period_duration"), // Months
+  
+  // Working Time Arrangements (EU Working Time Directive Compliance)
+  standardWeeklyHours: decimal("standard_weekly_hours", { precision: 5, scale: 2 }).default("40"), // EU 40h standard
+  contractedHours: decimal("contracted_hours", { precision: 5, scale: 2 }), // For part-time workers
+  maxWeeklyHours: decimal("max_weekly_hours", { precision: 5, scale: 2 }).default("48"), // EU working time directive
+  scheduleType: varchar("schedule_type").default("predictable"), // predictable, unpredictable, rotating, on-call, shift
+  workingTimeArrangement: varchar("working_time_arrangement").default("standard"), // standard, flexible, remote, hybrid, compressed
+  
+  // Schedule Flexibility & Remote Work (Law 4808/2021)
+  flexibleWorkArrangement: boolean("flexible_work_arrangement").default(false), // Remote work law
+  remoteWorkDays: integer("remote_work_days").default(0), // Days per week allowed remote
+  flexibleStartTime: varchar("flexible_start_time"), // e.g., "07:00-10:00"
+  flexibleEndTime: varchar("flexible_end_time"), // e.g., "15:00-18:00"
+  coreWorkingHours: varchar("core_working_hours"), // e.g., "10:00-15:00"
+  compressedWorkweek: boolean("compressed_workweek").default(false), // 4x10 schedule
+  
+  // Rest and Break Entitlements
+  minRestPeriod: integer("min_rest_period").default(11), // Hours between shifts
+  maxConsecutiveDays: integer("max_consecutive_days").default(6), // Before rest day required
+  lunchBreakDuration: integer("lunch_break_duration").default(30), // Minutes
+  shortBreakDuration: integer("short_break_duration").default(15), // Minutes per 4h period
+  
+  // Premium Rates for Special Working Conditions
+  nightWorkCompensation: decimal("night_work_compensation", { precision: 5, scale: 4 }).default("0.25"), // 25% premium
+  weekendWorkCompensation: decimal("weekend_work_compensation", { precision: 5, scale: 4 }).default("0.75"), // 75% premium
+  overtimeRate: decimal("overtime_rate", { precision: 5, scale: 4 }).default("0.25"), // 25% premium
+  
+  // Legacy fields for compatibility
   workingHours: integer("working_hours").default(40),
   probationPeriod: integer("probation_period"), // Max 12 months for indefinite contracts
-  flexibleWorkArrangement: boolean("flexible_work_arrangement").default(false), // Remote work law
   
   // Right to Disconnect (Law 4808/2021)
   rightToDisconnect: boolean("right_to_disconnect").default(true),
@@ -225,6 +260,149 @@ export const payrollRecords = pgTable("payroll_records", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Working Time Schedules table - Detailed schedule management
+export const workingTimeSchedules = pgTable("working_time_schedules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.id).notNull(),
+  
+  // Schedule Information
+  scheduleName: varchar("schedule_name").notNull(), // e.g., "Standard Office Hours", "Shift A", "Flexible Remote"
+  scheduleType: varchar("schedule_type").notNull(), // predictable, unpredictable, rotating, on-call, shift
+  isActive: boolean("is_active").default(true),
+  effectiveDate: date("effective_date").notNull(),
+  endDate: date("end_date"), // For temporary schedules
+  
+  // Daily Schedule Pattern (JSON for flexibility)
+  weeklyPattern: jsonb("weekly_pattern"), // Day-by-day schedule with start/end times
+  rotationCycle: integer("rotation_cycle"), // Days in rotation cycle (for rotating shifts)
+  
+  // Working Hours Configuration
+  standardDailyHours: decimal("standard_daily_hours", { precision: 4, scale: 2 }).default("8"),
+  standardWeeklyHours: decimal("standard_weekly_hours", { precision: 5, scale: 2 }).default("40"),
+  minHoursPerWeek: decimal("min_hours_per_week", { precision: 5, scale: 2 }),
+  maxHoursPerWeek: decimal("max_hours_per_week", { precision: 5, scale: 2 }).default("48"),
+  
+  // Flexibility Settings
+  allowFlexibleStart: boolean("allow_flexible_start").default(false),
+  flexibleStartWindow: varchar("flexible_start_window"), // e.g., "07:00-10:00"
+  allowFlexibleEnd: boolean("allow_flexible_end").default(false),
+  flexibleEndWindow: varchar("flexible_end_window"), // e.g., "15:00-18:00"
+  coreHours: varchar("core_hours"), // e.g., "10:00-15:00"
+  
+  // Remote Work Configuration
+  remoteWorkAllowed: boolean("remote_work_allowed").default(false),
+  maxRemoteDaysPerWeek: integer("max_remote_days_per_week").default(0),
+  hybridSchedule: jsonb("hybrid_schedule"), // Which days can be remote
+  
+  // Break and Rest Periods
+  lunchBreakMinutes: integer("lunch_break_minutes").default(30),
+  shortBreaksPerDay: integer("short_breaks_per_day").default(2),
+  shortBreakMinutes: integer("short_break_minutes").default(15),
+  minRestBetweenShifts: integer("min_rest_between_shifts").default(11), // Hours
+  
+  // Weekend and Holiday Configuration
+  weekendWork: boolean("weekend_work").default(false),
+  saturdayWork: boolean("saturday_work").default(false),
+  sundayWork: boolean("sunday_work").default(false),
+  holidayWork: boolean("holiday_work").default(false),
+  
+  // Overtime Configuration
+  overtimeAllowed: boolean("overtime_allowed").default(true),
+  maxOvertimeDaily: decimal("max_overtime_daily", { precision: 4, scale: 2 }).default("2"),
+  maxOvertimeWeekly: decimal("max_overtime_weekly", { precision: 5, scale: 2 }).default("10"),
+  overtimeApprovalRequired: boolean("overtime_approval_required").default(true),
+  
+  // Special Conditions
+  nightShiftWork: boolean("night_shift_work").default(false),
+  hazardousWork: boolean("hazardous_work").default(false),
+  shiftPremiumRate: decimal("shift_premium_rate", { precision: 5, scale: 4 }).default("0"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Trial Period Tracking table
+export const trialPeriods = pgTable("trial_periods", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.id).notNull(),
+  
+  // Trial Period Details
+  startDate: date("start_date").notNull(),
+  originalEndDate: date("original_end_date").notNull(),
+  currentEndDate: date("current_end_date").notNull(), // May be extended
+  durationMonths: integer("duration_months").notNull(), // 2-12 months max
+  
+  // Status Tracking
+  status: varchar("status").default("active"), // active, completed, extended, terminated, failed
+  extensionCount: integer("extension_count").default(0),
+  maxExtensions: integer("max_extensions").default(1), // Legal limit
+  
+  // Performance Tracking
+  reviewScheduled: boolean("review_scheduled").default(false),
+  reviewDate: date("review_date"),
+  reviewOutcome: varchar("review_outcome"), // satisfactory, needs_improvement, unsatisfactory
+  reviewNotes: text("review_notes"),
+  
+  // Legal Compliance
+  notificationGiven: boolean("notification_given").default(false), // 2 weeks notice before end
+  notificationDate: date("notification_date"),
+  contractConversion: boolean("contract_conversion").default(false), // To permanent
+  conversionDate: date("conversion_date"),
+  
+  // Documentation
+  evaluationCriteria: text("evaluation_criteria"),
+  performanceMetrics: jsonb("performance_metrics"), // Measurable goals
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Contract Types Configuration table
+export const contractTypeDefinitions = pgTable("contract_type_definitions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Contract Type Details
+  contractTypeName: varchar("contract_type_name").notNull(), // full-time, part-time, temporary, seasonal, freelance
+  displayName: varchar("display_name").notNull(), // Greek name for UI
+  description: text("description"),
+  
+  // Legal Framework
+  legalBasis: text("legal_basis"), // Reference to Greek labor law
+  maxDuration: integer("max_duration"), // Maximum contract duration in months
+  renewalAllowed: boolean("renewal_allowed").default(false),
+  maxRenewals: integer("max_renewals").default(0),
+  
+  // Working Time Requirements
+  minWeeklyHours: decimal("min_weekly_hours", { precision: 5, scale: 2 }),
+  maxWeeklyHours: decimal("max_weekly_hours", { precision: 5, scale: 2 }),
+  standardWeeklyHours: decimal("standard_weekly_hours", { precision: 5, scale: 2 }),
+  
+  // Trial Period Rules
+  trialPeriodAllowed: boolean("trial_period_allowed").default(true),
+  minTrialPeriodMonths: integer("min_trial_period_months").default(2),
+  maxTrialPeriodMonths: integer("max_trial_period_months").default(12),
+  
+  // Benefits and Entitlements
+  fullBenefitsEligible: boolean("full_benefits_eligible").default(true),
+  proRatedBenefits: boolean("pro_rated_benefits").default(false),
+  annualLeaveEntitlement: integer("annual_leave_entitlement").default(24),
+  sickLeaveEntitlement: integer("sick_leave_entitlement").default(15),
+  
+  // Notice Periods (in days)
+  employeeNoticeRequired: integer("employee_notice_required").default(30),
+  employerNoticeRequired: integer("employer_notice_required").default(30),
+  
+  // Special Conditions
+  seasonalWork: boolean("seasonal_work").default(false),
+  temporaryWork: boolean("temporary_work").default(false),
+  requiresWorkPermit: boolean("requires_work_permit").default(false),
+  
+  isActive: boolean("is_active").default(true),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Collective agreements table - Updated for 2025 Greek Labor Standards
 export const collectiveAgreements = pgTable("collective_agreements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -248,8 +426,14 @@ export const collectiveAgreements = pgTable("collective_agreements", {
 });
 
 // Relations
-export const employeesRelations = relations(employees, ({ many }) => ({
+export const employeesRelations = relations(employees, ({ many, one }) => ({
   payrollRecords: many(payrollRecords),
+  workingTimeSchedules: many(workingTimeSchedules),
+  trialPeriods: many(trialPeriods),
+  collectiveAgreement: one(collectiveAgreements, {
+    fields: [employees.collectiveAgreementId],
+    references: [collectiveAgreements.id],
+  }),
 }));
 
 export const payrollRecordsRelations = relations(payrollRecords, ({ one }) => ({
@@ -257,6 +441,24 @@ export const payrollRecordsRelations = relations(payrollRecords, ({ one }) => ({
     fields: [payrollRecords.employeeId],
     references: [employees.id],
   }),
+}));
+
+export const workingTimeSchedulesRelations = relations(workingTimeSchedules, ({ one }) => ({
+  employee: one(employees, {
+    fields: [workingTimeSchedules.employeeId],
+    references: [employees.id],
+  }),
+}));
+
+export const trialPeriodsRelations = relations(trialPeriods, ({ one }) => ({
+  employee: one(employees, {
+    fields: [trialPeriods.employeeId],
+    references: [employees.id],
+  }),
+}));
+
+export const collectiveAgreementsRelations = relations(collectiveAgreements, ({ many }) => ({
+  employees: many(employees),
 }));
 
 // Schemas for validation - Updated for 2025 Greek Labor Law Compliance

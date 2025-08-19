@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import Employees from "@/pages/employees";
 import Payroll from "@/pages/payroll";
+import Schedules from "@/pages/schedules";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -23,6 +24,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/employees" component={Employees} />
           <Route path="/payroll" component={Payroll} />
+          <Route path="/schedules" component={Schedules} />
         </Layout>
       )}
       <Route component={NotFound} />
