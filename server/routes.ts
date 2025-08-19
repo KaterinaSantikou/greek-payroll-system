@@ -1286,6 +1286,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Success Metrics routes
   // === PAYROLL PROCESSING ROUTES ===
   
+  // Get standardized earnings codes
+  app.get('/api/payroll/earnings-codes', isAuthenticated, async (req, res) => {
+    try {
+      const { StandardizedEarningsCodesService } = await import('./standardizedEarningsCodesService');
+      const earningsService = new StandardizedEarningsCodesService();
+      
+      const allCodes = earningsService.getAllEarningsCodesRules();
+      
+      // Structure response with categories
+      const categorized = {
+        baseWages: Object.values(allCodes).filter(rule => rule.baseWage),
+        premiums: Object.values(allCodes).filter(rule => !rule.baseWage && (rule.code.includes('NIGHT') || rule.code.includes('SUNDAY') || rule.code.includes('HOLIDAY') || rule.code.includes('OT'))),
+        allowances: Object.values(allCodes).filter(rule => ['MEAL_VOUCHER', 'TRANSPORT', 'HOUSING', 'HAZARD_PAY'].includes(rule.code)),
+        bonuses: Object.values(allCodes).filter(rule => rule.code.includes('BONUS') || rule.code.includes('VACATION_PAY')),
+        tips: Object.values(allCodes).filter(rule => rule.code.includes('TIP')),
+        summary: {
+          totalCodes: Object.keys(allCodes).length,
+          taxableCodes: Object.values(allCodes).filter(rule => rule.taxable).length,
+          efkaContributoryCodes: Object.values(allCodes).filter(rule => rule.contributoryEFKA).length,
+          apdIncludedCodes: Object.values(allCodes).filter(rule => rule.includedAPD).length,
+          stackableCodes: Object.values(allCodes).filter(rule => rule.stackable).length
+        }
+      };
+      
+      res.json(categorized);
+    } catch (error) {
+      console.error('Error fetching earnings codes:', error);
+      res.status(500).json({ message: 'Failed to fetch earnings codes' });
+    }
+  });
+  
+  // Validate earnings code stacking
+  app.post('/api/payroll/validate-stacking', isAuthenticated, async (req, res) => {
+    try {
+      const { StandardizedEarningsCodesService } = await import('./standardizedEarningsCodesService');
+      const earningsService = new StandardizedEarningsCodesService();
+      
+      const { primaryCode, stackedCodes } = req.body;
+      const validation = earningsService.validateCodeStacking(primaryCode, stackedCodes);
+      
+      res.json(validation);
+    } catch (error) {
+      console.error('Error validating code stacking:', error);
+      res.status(500).json({ message: 'Failed to validate code stacking' });
+    }
+  });
+  
+  // Calculate earnings breakdown
+  app.post('/api/payroll/calculate-earnings', isAuthenticated, async (req, res) => {
+    try {
+      const { StandardizedEarningsCodesService } = await import('./standardizedEarningsCodesService');
+      const earningsService = new StandardizedEarningsCodesService();
+      
+      const { earnings } = req.body; // Array of { code, hours, hourlyRate, fixedAmount? }
+      const breakdown = earningsService.generateEarningsBreakdown(earnings);
+      
+      res.json(breakdown);
+    } catch (error) {
+      console.error('Error calculating earnings:', error);
+      res.status(500).json({ message: 'Failed to calculate earnings breakdown' });
+    }
+  });
+
   // Generate payslip for employee
   app.get('/api/payroll/payslip/:employeeId/:runId', isAuthenticated, async (req, res) => {
     try {

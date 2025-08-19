@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { lazy } from "react";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
@@ -76,6 +77,7 @@ function Router() {
           <Route path="/success-metrics" component={SuccessMetrics} />
           <Route path="/kpi-dashboard" component={KPIDashboard} />
           <Route path="/payroll-processing" component={lazy(() => import("./pages/payrollProcessing"))} />
+          <Route path="/earnings-codes" component={lazy(() => import("./pages/earningsCodesDemo"))} />
           <Route path="/modern-payroll" component={ModernPayrollEngine} />
           <Route path="/product-vision" component={ProductVision} />
           <Route path="/rules-engine" component={RulesEngine} />

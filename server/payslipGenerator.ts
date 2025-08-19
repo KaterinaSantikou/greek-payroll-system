@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { employees, payrollLines, properties } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
+import { StandardizedEarningsCodesService, STANDARDIZED_EARNINGS_CODES } from "./standardizedEarningsCodesService";
 
 interface PayslipData {
   // Header Information
@@ -109,6 +110,11 @@ interface PayslipData {
 }
 
 export class PayslipGenerator {
+  private earningsCodesService: StandardizedEarningsCodesService;
+  
+  constructor() {
+    this.earningsCodesService = new StandardizedEarningsCodesService();
+  }
   
   // Generate payslip for employee
   async generatePayslip(employeeId: string, payrollRunId: string): Promise<PayslipData> {
