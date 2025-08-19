@@ -18,7 +18,10 @@ import {
   ExternalLink,
   Copy,
   Eye,
-  EyeOff
+  EyeOff,
+  AlertTriangle,
+  FileText,
+  CreditCard
 } from "lucide-react";
 
 interface Partner {
@@ -465,51 +468,206 @@ export default function EmbeddedPayroll() {
         </TabsContent>
 
         <TabsContent value="embeds" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Embed Token Generator</CardTitle>
-              <CardDescription>
-                Generate JWT tokens for embedded payroll surfaces
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Employee ID (Optional)</Label>
-                  <Input placeholder="emp-12345" />
-                </div>
-                <div>
-                  <Label>Origin Domain</Label>
-                  <Input placeholder="https://your-app.com" />
-                </div>
-                <div>
-                  <Label>Allowed Routes</Label>
-                  <Input placeholder="payroll/*, timesheets/*" />
-                </div>
-                <div>
-                  <Label>Expires In (Minutes)</Label>
-                  <Input type="number" placeholder="10" />
-                </div>
-              </div>
-              
-              <Button className="w-full">
-                <Plus className="w-4 h-4 mr-2" />
-                Generate Embed Token
-              </Button>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Live Demo Surfaces */}
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Live Demo Surfaces</CardTitle>
+                  <CardDescription>
+                    Interactive demos of embeddable payroll surfaces
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button 
+                      variant="outline" 
+                      className="h-auto p-4 flex flex-col items-center space-y-2"
+                      onClick={() => window.open(
+                        `/embed?surface=payroll_run&token=${accessToken?.access_token}&tenantId=demo-tenant&runId=run-001&theme=light`,
+                        '_blank'
+                      )}
+                      disabled={!accessToken}
+                    >
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Settings className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-sm">Payroll Wizard</div>
+                        <div className="text-xs text-muted-foreground">Draft → Validate → Finalize → Post</div>
+                      </div>
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      className="h-auto p-4 flex flex-col items-center space-y-2"
+                      onClick={() => window.open(
+                        `/embed?surface=exceptions_review&token=${accessToken?.access_token}&tenantId=demo-tenant&theme=light`,
+                        '_blank'
+                      )}
+                      disabled={!accessToken}
+                    >
+                      <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <AlertTriangle className="w-4 h-4 text-orange-600" />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-sm">Exceptions</div>
+                        <div className="text-xs text-muted-foreground">Missed punches, OT approvals</div>
+                      </div>
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      className="h-auto p-4 flex flex-col items-center space-y-2"
+                      onClick={() => window.open(
+                        `/embed?surface=filings_panel&token=${accessToken?.access_token}&tenantId=demo-tenant&theme=light`,
+                        '_blank'
+                      )}
+                      disabled={!accessToken}
+                    >
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <FileText className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-sm">Filings Panel</div>
+                        <div className="text-xs text-muted-foreground">ERGANI/APD/ΦΜΥ status</div>
+                      </div>
+                    </Button>
+                    
+                    <Button 
+                      variant="outline" 
+                      className="h-auto p-4 flex flex-col items-center space-y-2"
+                      onClick={() => window.open(
+                        `/embed?surface=payments_cockpit&token=${accessToken?.access_token}&tenantId=demo-tenant&theme=light`,
+                        '_blank'
+                      )}
+                      disabled={!accessToken}
+                    >
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                        <CreditCard className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold text-sm">Payments</div>
+                        <div className="text-xs text-muted-foreground">SEPA batch status</div>
+                      </div>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-              <div className="p-4 border rounded-lg bg-muted/50">
-                <h4 className="font-semibold mb-2">Embed Example</h4>
-                <code className="text-sm block whitespace-pre-wrap">
-{`<iframe 
-  src="https://payroll.yourapp.com/embed/payroll?token=JWT_TOKEN"
-  width="100%" 
-  height="600"
-  frameborder="0">
-</iframe>`}
-                </code>
-              </div>
-            </CardContent>
-          </Card>
+            {/* Integration Examples */}
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Integration Examples</CardTitle>
+                  <CardDescription>
+                    Code examples for both integration patterns
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center">
+                      <Globe className="w-4 h-4 mr-1" />
+                      Option A: iFrame + SDK
+                    </h4>
+                    <div className="p-3 bg-gray-50 rounded-lg text-sm font-mono">
+{`// Initialize SDK
+const sdk = new PayrollSDK({
+  tenantId: 'your-tenant',
+  token: 'jwt-token',
+  surface: 'payroll_run',
+  locale: 'en',
+  theme: 'light'
+});
+
+// Setup event handlers
+sdk.on('payroll.run.validated', (event, data) => {
+  console.log('Payroll validated:', data);
+});
+
+// Initialize in container
+await sdk.init(document.getElementById('payroll'));
+`}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold mb-2 flex items-center">
+                      <Settings className="w-4 h-4 mr-1" />
+                      Option B: Web Component
+                    </h4>
+                    <div className="p-3 bg-gray-50 rounded-lg text-sm font-mono">
+{`<!-- Direct HTML usage -->
+<payroll-surface 
+  surface="exceptions_review"
+  token="jwt-token"
+  tenant-id="your-tenant"
+  theme="light"
+  locale="en">
+</payroll-surface>
+
+<!-- Event handling -->
+<script>
+document.querySelector('payroll-surface')
+  .addEventListener('exceptions-resolved', (e) => {
+    console.log('Exception resolved:', e.detail);
+  });
+</script>`}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>PostMessage Events</CardTitle>
+                  <CardDescription>
+                    Available events for payroll lifecycle tracking
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <strong>Payroll Run:</strong>
+                        <ul className="text-xs text-muted-foreground ml-2 space-y-1">
+                          <li>• payroll.run.opened</li>
+                          <li>• payroll.run.validated</li>
+                          <li>• payroll.run.finalized</li>
+                          <li>• payroll.run.posted</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <strong>Exceptions:</strong>
+                        <ul className="text-xs text-muted-foreground ml-2 space-y-1">
+                          <li>• exceptions.loaded</li>
+                          <li>• exceptions.resolved</li>
+                          <li>• exceptions.failed</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <strong>Filings:</strong>
+                        <ul className="text-xs text-muted-foreground ml-2 space-y-1">
+                          <li>• filings.loaded</li>
+                          <li>• filing.submitted</li>
+                          <li>• filing.failed</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <strong>Payments:</strong>
+                        <ul className="text-xs text-muted-foreground ml-2 space-y-1">
+                          <li>• payments.loaded</li>
+                          <li>• payment.sent</li>
+                          <li>• payment.failed</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
