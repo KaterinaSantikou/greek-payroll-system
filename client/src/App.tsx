@@ -80,7 +80,7 @@ function Router() {
     <Layout>
       <CommandPalette open={open} onOpenChange={setOpen} />
       <Switch>
-        <Route path="/" component={RoleBasedDashboard} />
+        <Route path="/" component={lazy(() => import("./pages/dashboard"))} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
             <Route path="/employees" component={Employees} />
             <Route path="/employee-master" component={EmployeeMaster} />
