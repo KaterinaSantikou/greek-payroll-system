@@ -47,6 +47,7 @@ import { registerAICopilotRoutes } from "./api/aiCopilot";
 import { registerLaborNewsfeedRoutes } from "./api/laborNewsfeed";
 import { registerInstantPaymentRoutes } from "./api/instantPayments";
 import { registerPayEquityRoutes } from "./api/payEquity";
+import { registerCsrdRoutes } from "./api/csrd";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -3307,6 +3308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerLaborNewsfeedRoutes(app);
   registerInstantPaymentRoutes(app);
   registerPayEquityRoutes(app);
+  registerCsrdRoutes(app);
 
   // Register notification routes
   try {

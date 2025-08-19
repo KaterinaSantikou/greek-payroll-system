@@ -2028,3 +2028,329 @@ export const insertPayTransparencyRequestSchema = createInsertSchema(payTranspar
 export const insertPayDecisionExplanationSchema = createInsertSchema(payDecisionExplanations);
 export const insertPayEquityComplianceSchema = createInsertSchema(payEquityCompliance);
 
+// CSRD / ESRS S1 "Own Workforce" Sustainability Reporting
+// Corporate Sustainability Reporting Directive compliance
+export const csrdReportingPeriods = pgTable("csrd_reporting_periods", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
+  reportingYear: integer("reporting_year").notNull(),
+  periodStart: date("period_start").notNull(),
+  periodEnd: date("period_end").notNull(),
+  
+  // ESRS version and wave management
+  esrsVersion: varchar("esrs_version", { length: 20 }).default("1.0"), // Track July 2025 updates
+  implementationWave: integer("implementation_wave").default(1), // Wave 1, 2, 3
+  stopTheClockApplied: boolean("stop_the_clock_applied").default(false),
+  
+  // Materiality assessment
+  materialityAssessmentDate: date("materiality_assessment_date"),
+  s1WorkforceMaterial: boolean("s1_workforce_material").default(true),
+  materialityJustification: text("materiality_justification"),
+  
+  // Reporting status
+  reportingStatus: varchar("reporting_status", { length: 20 }).default("draft"), // draft, review, final, submitted
+  submissionDate: timestamp("submission_date"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ESRS S1 Workforce Characteristics (S1-6)
+export const s1WorkforceCharacteristics = pgTable("s1_workforce_characteristics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").references(() => csrdReportingPeriods.id).notNull(),
+  
+  // Data collection date
+  measurementDate: date("measurement_date").notNull(),
+  
+  // Employee categories (own workforce scope)
+  totalEmployees: integer("total_employees").notNull(),
+  totalFTE: decimal("total_fte", { precision: 8, scale: 2 }).notNull(),
+  nonEmployeeWorkers: integer("non_employee_workers").default(0), // Contractors, agency workers
+  
+  // Gender breakdown
+  employeesMale: integer("employees_male").default(0),
+  employeesFemale: integer("employees_female").default(0),
+  employeesNonBinary: integer("employees_non_binary").default(0),
+  employeesUndisclosed: integer("employees_undisclosed").default(0),
+  
+  // Age groups
+  employeesUnder30: integer("employees_under_30").default(0),
+  employees30to50: integer("employees_30_to_50").default(0),
+  employeesOver50: integer("employees_over_50").default(0),
+  
+  // Contract types
+  permanentContracts: integer("permanent_contracts").default(0),
+  temporaryContracts: integer("temporary_contracts").default(0),
+  partTimeEmployees: integer("part_time_employees").default(0),
+  fullTimeEmployees: integer("full_time_employees").default(0),
+  
+  // Geographic distribution (simplified)
+  employeesEU: integer("employees_eu").default(0),
+  employeesNonEU: integer("employees_non_eu").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ESRS S1 Turnover and Recruitment Metrics
+export const s1TurnoverMetrics = pgTable("s1_turnover_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").references(() => csrdReportingPeriods.id).notNull(),
+  
+  // Turnover data
+  totalLeavers: integer("total_leavers").notNull(),
+  voluntaryLeavers: integer("voluntary_leavers").default(0),
+  involuntaryLeavers: integer("involuntary_leavers").default(0),
+  turnoverRate: decimal("turnover_rate", { precision: 5, scale: 2 }).notNull(), // Percentage
+  
+  // Turnover by gender
+  leaversMale: integer("leavers_male").default(0),
+  leaversFemale: integer("leavers_female").default(0),
+  leaversNonBinary: integer("leavers_non_binary").default(0),
+  
+  // Turnover by age group
+  leaversUnder30: integer("leavers_under_30").default(0),
+  leavers30to50: integer("leavers_30_to_50").default(0),
+  leaversOver50: integer("leavers_over_50").default(0),
+  
+  // New hires
+  totalHires: integer("total_hires").default(0),
+  hireMale: integer("hire_male").default(0),
+  hireFemale: integer("hire_female").default(0),
+  hireRate: decimal("hire_rate", { precision: 5, scale: 2 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ESRS S1 Collective Bargaining Coverage
+export const s1CollectiveBargaining = pgTable("s1_collective_bargaining", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").references(() => csrdReportingPeriods.id).notNull(),
+  
+  // Coverage metrics
+  employeesCoveredByAgreements: integer("employees_covered_by_agreements").notNull(),
+  coveragePercentage: decimal("coverage_percentage", { precision: 5, scale: 2 }).notNull(),
+  
+  // Agreement details
+  activeAgreements: integer("active_agreements").default(0),
+  agreementTypes: jsonb("agreement_types").default('[]'), // Company, sectoral, national
+  
+  // Rights and consultation
+  workersRepresentationExists: boolean("workers_representation_exists").default(false),
+  consultationProcesses: jsonb("consultation_processes").default('[]'),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ESRS S1 Health & Safety Incidents (S1-16)
+export const s1HealthSafetyIncidents = pgTable("s1_health_safety_incidents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").references(() => csrdReportingPeriods.id).notNull(),
+  
+  // Incident data
+  incidentDate: date("incident_date").notNull(),
+  incidentType: varchar("incident_type", { length: 50 }).notNull(), // injury, illness, near_miss, fatality
+  severity: varchar("severity", { length: 20 }).notNull(), // minor, major, fatal
+  
+  // Affected person
+  affectedWorkerType: varchar("affected_worker_type", { length: 30 }).notNull(), // employee, contractor, visitor
+  workerGender: varchar("worker_gender", { length: 20 }),
+  workerAge: integer("worker_age"),
+  
+  // Incident details
+  location: varchar("location", { length: 100 }).notNull(),
+  department: varchar("department", { length: 100 }),
+  incidentDescription: text("incident_description"),
+  rootCause: text("root_cause"),
+  
+  // Impact metrics
+  workDaysLost: integer("work_days_lost").default(0),
+  medicalTreatmentRequired: boolean("medical_treatment_required").default(false),
+  
+  // Follow-up
+  correctiveActions: text("corrective_actions"),
+  preventiveActions: text("preventive_actions"),
+  investigationCompleted: boolean("investigation_completed").default(false),
+  
+  // Reporting compliance
+  reportedToAuthorities: boolean("reported_to_authorities").default(false),
+  reportingDate: date("reporting_date"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// ESRS S1 Training and Development
+export const s1TrainingMetrics = pgTable("s1_training_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").references(() => csrdReportingPeriods.id).notNull(),
+  employeeId: varchar("employee_id").references(() => employees.employeeId),
+  
+  // Training data
+  trainingType: varchar("training_type", { length: 50 }).notNull(), // safety, skills, leadership, compliance
+  trainingHours: decimal("training_hours", { precision: 6, scale: 2 }).notNull(),
+  trainingCost: decimal("training_cost", { precision: 10, scale: 2 }),
+  
+  // Demographics
+  participantGender: varchar("participant_gender", { length: 20 }),
+  participantAge: integer("participant_age"),
+  participantLevel: varchar("participant_level", { length: 30 }), // entry, mid, senior, executive
+  
+  // Training outcome
+  completionStatus: varchar("completion_status", { length: 20 }).default("completed"),
+  competencyGained: boolean("competency_gained").default(false),
+  
+  trainingDate: date("training_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ESRS S1 Work-Life Balance (Family-Related Leave)
+export const s1WorkLifeBalance = pgTable("s1_work_life_balance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").references(() => csrdReportingPeriods.id).notNull(),
+  
+  // Leave eligibility
+  employeesEligibleMaternityLeave: integer("employees_eligible_maternity_leave").default(0),
+  employeesEligiblePaternityLeave: integer("employees_eligible_paternity_leave").default(0),
+  employeesEligibleParentalLeave: integer("employees_eligible_parental_leave").default(0),
+  employeesEligibleFlexibleWork: integer("employees_eligible_flexible_work").default(0),
+  
+  // Leave usage
+  maternityLeaveTaken: integer("maternity_leave_taken").default(0),
+  paternityLeaveTaken: integer("paternity_leave_taken").default(0),
+  parentalLeaveTaken: integer("parental_leave_taken").default(0),
+  
+  // Flexible work arrangements
+  employeesRemoteWork: integer("employees_remote_work").default(0),
+  employeesFlexibleHours: integer("employees_flexible_hours").default(0),
+  employeesJobSharing: integer("employees_job_sharing").default(0),
+  
+  // Return rates
+  returnRateAfterMaternityLeave: decimal("return_rate_after_maternity_leave", { precision: 5, scale: 2 }),
+  returnRateAfterParentalLeave: decimal("return_rate_after_parental_leave", { precision: 5, scale: 2 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ESRS S1 Pay Metrics (CEO Pay Ratio + Gender Pay Gap)
+export const s1PayMetrics = pgTable("s1_pay_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").references(() => csrdReportingPeriods.id).notNull(),
+  
+  // CEO Pay Ratio (highest-paid individual to median employee)
+  highestPaidIndividualTotal: decimal("highest_paid_individual_total", { precision: 12, scale: 2 }).notNull(),
+  medianEmployeeCompensation: decimal("median_employee_compensation", { precision: 10, scale: 2 }).notNull(),
+  ceoPayRatio: decimal("ceo_pay_ratio", { precision: 8, scale: 2 }).notNull(), // Ratio calculation
+  
+  // Gender Pay Gap (gross hourly)
+  maleGrossHourlyPay: decimal("male_gross_hourly_pay", { precision: 8, scale: 2 }).notNull(),
+  femaleGrossHourlyPay: decimal("female_gross_hourly_pay", { precision: 8, scale: 2 }).notNull(),
+  genderPayGapPercentage: decimal("gender_pay_gap_percentage", { precision: 5, scale: 2 }).notNull(),
+  
+  // Pay gap methodology disclosure
+  calculationMethodology: text("calculation_methodology").notNull(),
+  contextualFactors: text("contextual_factors"),
+  
+  // Additional pay equity metrics
+  nonBinaryGrossHourlyPay: decimal("non_binary_gross_hourly_pay", { precision: 8, scale: 2 }),
+  payEquityActions: jsonb("pay_equity_actions").default('[]'),
+  
+  calculationDate: date("calculation_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CSRD Audit Trail and Data Lineage
+export const csrdAuditTrail = pgTable("csrd_audit_trail", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").references(() => csrdReportingPeriods.id).notNull(),
+  
+  // Audit metadata
+  auditDate: timestamp("audit_date").defaultNow(),
+  auditType: varchar("audit_type", { length: 30 }).notNull(), // calculation, data_source, export
+  tableName: varchar("table_name", { length: 100 }),
+  recordId: varchar("record_id"),
+  
+  // Data lineage
+  dataSource: varchar("data_source", { length: 100 }).notNull(), // payroll, time_attendance, manual_entry
+  calculationMethod: text("calculation_method"),
+  inputParameters: jsonb("input_parameters").default('{}'),
+  
+  // Changes tracking
+  oldValue: jsonb("old_value"),
+  newValue: jsonb("new_value"),
+  changeReason: text("change_reason"),
+  
+  // User and system info
+  userId: varchar("user_id"),
+  systemVersion: varchar("system_version", { length: 20 }),
+  esrsVersion: varchar("esrs_version", { length: 20 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CSRD Export Log and Compliance Tracking
+export const csrdExportLog = pgTable("csrd_export_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").references(() => csrdReportingPeriods.id).notNull(),
+  
+  // Export details
+  exportType: varchar("export_type", { length: 30 }).notNull(), // full_report, s1_only, metrics_only
+  exportFormat: varchar("export_format", { length: 10 }).default("json"), // json, xml, csv
+  exportDate: timestamp("export_date").defaultNow(),
+  
+  // Content summary
+  s1MetricsIncluded: jsonb("s1_metrics_included").default('[]'),
+  materialityApplied: boolean("materiality_applied").default(false),
+  dataQualityScore: decimal("data_quality_score", { precision: 3, scale: 1 }),
+  
+  // File details
+  fileName: varchar("file_name", { length: 200 }),
+  fileSizeBytes: integer("file_size_bytes"),
+  checksum: varchar("checksum", { length: 64 }),
+  
+  // Compliance status
+  esrsComplianceStatus: varchar("esrs_compliance_status", { length: 20 }).default("compliant"),
+  validationErrors: jsonb("validation_errors").default('[]'),
+  
+  // User tracking
+  exportedBy: varchar("exported_by").notNull(),
+  exportPurpose: varchar("export_purpose", { length: 100 }), // internal_review, audit, submission
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Type exports for CSRD/ESRS S1
+export type CsrdReportingPeriod = typeof csrdReportingPeriods.$inferSelect;
+export type InsertCsrdReportingPeriod = z.infer<typeof insertCsrdReportingPeriodSchema>;
+export type S1WorkforceCharacteristics = typeof s1WorkforceCharacteristics.$inferSelect;
+export type InsertS1WorkforceCharacteristics = z.infer<typeof insertS1WorkforceCharacteristicsSchema>;
+export type S1TurnoverMetrics = typeof s1TurnoverMetrics.$inferSelect;
+export type InsertS1TurnoverMetrics = z.infer<typeof insertS1TurnoverMetricsSchema>;
+export type S1CollectiveBargaining = typeof s1CollectiveBargaining.$inferSelect;
+export type InsertS1CollectiveBargaining = z.infer<typeof insertS1CollectiveBargainingSchema>;
+export type S1HealthSafetyIncidents = typeof s1HealthSafetyIncidents.$inferSelect;
+export type InsertS1HealthSafetyIncidents = z.infer<typeof insertS1HealthSafetyIncidentsSchema>;
+export type S1TrainingMetrics = typeof s1TrainingMetrics.$inferSelect;
+export type InsertS1TrainingMetrics = z.infer<typeof insertS1TrainingMetricsSchema>;
+export type S1WorkLifeBalance = typeof s1WorkLifeBalance.$inferSelect;
+export type InsertS1WorkLifeBalance = z.infer<typeof insertS1WorkLifeBalanceSchema>;
+export type S1PayMetrics = typeof s1PayMetrics.$inferSelect;
+export type InsertS1PayMetrics = z.infer<typeof insertS1PayMetricsSchema>;
+export type CsrdAuditTrail = typeof csrdAuditTrail.$inferSelect;
+export type InsertCsrdAuditTrail = z.infer<typeof insertCsrdAuditTrailSchema>;
+export type CsrdExportLog = typeof csrdExportLog.$inferSelect;
+export type InsertCsrdExportLog = z.infer<typeof insertCsrdExportLogSchema>;
+
+// Insert schemas for CSRD/ESRS S1
+export const insertCsrdReportingPeriodSchema = createInsertSchema(csrdReportingPeriods);
+export const insertS1WorkforceCharacteristicsSchema = createInsertSchema(s1WorkforceCharacteristics);
+export const insertS1TurnoverMetricsSchema = createInsertSchema(s1TurnoverMetrics);
+export const insertS1CollectiveBargainingSchema = createInsertSchema(s1CollectiveBargaining);
+export const insertS1HealthSafetyIncidentsSchema = createInsertSchema(s1HealthSafetyIncidents);
+export const insertS1TrainingMetricsSchema = createInsertSchema(s1TrainingMetrics);
+export const insertS1WorkLifeBalanceSchema = createInsertSchema(s1WorkLifeBalance);
+export const insertS1PayMetricsSchema = createInsertSchema(s1PayMetrics);
+export const insertCsrdAuditTrailSchema = createInsertSchema(csrdAuditTrail);
+export const insertCsrdExportLogSchema = createInsertSchema(csrdExportLog);
+

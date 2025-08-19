@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
+import { CsrdS1Dashboard } from "@/components/widgets/CsrdS1Dashboard";
+import { useProperty } from "@/contexts/PropertyContext";
 
 interface APDFiling {
   filingId: string;
@@ -277,6 +279,7 @@ export default function Compliance() {
       <Tabs defaultValue="dashboard" className="space-y-4">
         <TabsList>
           <TabsTrigger value="dashboard">Digital Work Card</TabsTrigger>
+          <TabsTrigger value="csrd">CSRD / ESRS S1</TabsTrigger>
           <TabsTrigger value="apd-efka">APD (e-EFKA)</TabsTrigger>
           <TabsTrigger value="fmy-aade">ΦΜΥ (AADE)</TabsTrigger>
           <TabsTrigger value="ergani">ERGANI II Forms</TabsTrigger>
@@ -369,6 +372,10 @@ export default function Compliance() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="csrd" className="space-y-4">
+          <CsrdS1Dashboard propertyId={selectedProperty} />
         </TabsContent>
 
         <TabsContent value="apd-efka" className="space-y-4">

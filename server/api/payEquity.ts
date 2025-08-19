@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { PayEquityService } from "../payEquityService";
-import { database } from "../database";
+import { db } from "../db";
 import { 
   payEquityAnalysis,
   payEquityCompliance,
@@ -26,7 +26,7 @@ export function registerPayEquityRoutes(app: Router) {
       const readinessData = await payEquityService.calculateComplianceReadiness(propertyId);
       
       // Get recent pay gap analyses
-      const recentAnalyses = await database
+      const recentAnalyses = await db
         .select()
         .from(payEquityAnalysis)
         .where(eq(payEquityAnalysis.propertyId, propertyId))
@@ -34,7 +34,7 @@ export function registerPayEquityRoutes(app: Router) {
         .limit(5);
       
       // Get pending transparency requests
-      const pendingRequests = await database
+      const pendingRequests = await db
         .select()
         .from(payTransparencyRequests)
         .where(
@@ -47,8 +47,8 @@ export function registerPayEquityRoutes(app: Router) {
         .limit(10);
 
       // Get salary ranges status
-      const salaryRangesCount = await database
-        .select({ count: database.$count() })
+      const salaryRangesCount = await db
+        .select({ count: db.$count() })
         .from(jobPostingSalaryRanges)
         .where(
           and(
