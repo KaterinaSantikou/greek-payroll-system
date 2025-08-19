@@ -32,6 +32,7 @@ import ModernPayrollEngine from "@/pages/modernPayrollEngine";
 import ProductVision from "@/pages/productVision";
 import Payments from "@/pages/payments";
 import EmployeeSelfService from "@/pages/employeeSelfService";
+import RulesEngine from "@/pages/rulesEngine";
 import ManagerDashboard from "@/pages/managerDashboard";
 import Layout from "@/components/Layout";
 
@@ -69,6 +70,7 @@ function Router() {
           <Route path="/success-metrics" component={SuccessMetrics} />
           <Route path="/modern-payroll" component={ModernPayrollEngine} />
           <Route path="/product-vision" component={ProductVision} />
+          <Route path="/rules-engine" component={RulesEngine} />
           <Route path="/employee-self-service" component={EmployeeSelfService} />
           <Route path="/manager-dashboard" component={ManagerDashboard} />
         </Layout>

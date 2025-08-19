@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { rulesAPIRouter } from "./rulesAPI";
+import { initializeRulesEngine } from "./rulesEngine";
 import { 
   insertEmployeeSchema, 
   insertPropertySchema, 
@@ -35,6 +37,9 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Initialize rules engine
+  await initializeRulesEngine();
 
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();
@@ -2236,6 +2241,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch split shifts" });
     }
   });
+
+  // Rules Engine API routes
+  app.use(rulesAPIRouter);
 
   const httpServer = createServer(app);
   return httpServer;
