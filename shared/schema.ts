@@ -282,7 +282,7 @@ export const overtimeRequests = pgTable("overtime_requests", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Punch Events table
+// Punch Events table - Enhanced for offline-first mobile operations
 export const punchEvents = pgTable("punch_events", {
   eventId: varchar("event_id").primaryKey().default(sql`gen_random_uuid()`),
   employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
@@ -293,12 +293,23 @@ export const punchEvents = pgTable("punch_events", {
   method: varchar("method", { length: 20 }).notNull(), // qr, nfc, kiosk, mobile, web
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  
+  // Offline-First Support
   offlineFlag: boolean("offline_flag").default(false),
+  clientEventId: varchar("client_event_id"), // Client-side UUID for offline tracking
+  syncStatus: varchar("sync_status", { length: 20 }).default("synced"), // pending, synced, failed, conflict
+  syncAttempts: integer("sync_attempts").default(0),
+  syncError: text("sync_error"),
+  lastSyncAttempt: timestamp("last_sync_attempt"),
+  syncConflictData: jsonb("sync_conflict_data"), // Store conflicting data for resolution
+  
   signatureHash: varchar("signature_hash", { length: 255 }), // For tamper-evident logging
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("idx_punch_events_employee_timestamp").on(table.employeeId, table.timestamp),
   index("idx_punch_events_property_timestamp").on(table.propertyId, table.timestamp),
+  index("idx_punch_events_sync_status").on(table.syncStatus),
+  index("idx_punch_events_client_id").on(table.clientEventId),
 ]);
 
 // Exceptions table

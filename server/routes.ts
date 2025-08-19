@@ -2990,6 +2990,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mobile Punch Events - Offline-first endpoints
+  app.post("/api/punch-events", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertPunchEventSchema.parse({
+        ...req.body,
+        userId: req.user?.claims?.sub
+      });
+      
+      const punchEvent = await storage.createPunchEvent(validatedData);
+      
+      // Trigger ERGANI sync if online (non-blocking)
+      if (!req.body.offlineFlag) {
+        erganiConnector.syncPunchEvent(punchEvent).catch(error => {
+          console.error("ERGANI sync failed:", error);
+        });
+      }
+      
+      res.json({
+        success: true,
+        punchEvent,
+        message: "Punch event recorded successfully"
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: "Invalid punch data",
+          details: fromZodError(error).toString()
+        });
+      }
+      console.error("Punch event error:", error);
+      res.status(500).json({ error: "Failed to record punch event" });
+    }
+  });
+
+  // Check if punch event exists (for conflict resolution)
+  app.post("/api/punch-events/check", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, timestamp, type, clientEventId } = req.body;
+      const existingEvent = await storage.findPunchEventByClientId(clientEventId);
+      
+      if (existingEvent) {
+        res.json({ exists: true, event: existingEvent });
+      } else {
+        // Check for similar events by timestamp and type
+        const similarEvents = await storage.findSimilarPunchEvents(
+          employeeId, 
+          timestamp, 
+          type, 
+          300 // 5 minute window
+        );
+        
+        res.json({ 
+          exists: similarEvents.length > 0, 
+          event: similarEvents[0] || null,
+          conflicts: similarEvents
+        });
+      }
+    } catch (error) {
+      console.error("Punch event check error:", error);
+      res.status(500).json({ error: "Failed to check punch event" });
+    }
+  });
+
+  // Get employee punch status
+  app.get("/api/employees/:employeeId/punch-status", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId } = req.params;
+      const lastPunch = await storage.getLastPunchEvent(employeeId);
+      
+      const status = {
+        lastPunch: lastPunch ? {
+          type: lastPunch.type,
+          timestamp: lastPunch.timestamp,
+          location: lastPunch.latitude && lastPunch.longitude ? 
+            `${lastPunch.latitude}, ${lastPunch.longitude}` : null
+        } : null,
+        isOnBreak: lastPunch?.type === 'break_in',
+        canPunchOut: lastPunch?.type === 'in' || lastPunch?.type === 'break_out'
+      };
+      
+      res.json(status);
+    } catch (error) {
+      console.error("Punch status error:", error);
+      res.status(500).json({ error: "Failed to get punch status" });
+    }
+  });
+
+  // Payroll Preview - Offline-capable endpoint
+  app.get("/api/payroll/preview/:payPeriod", isAuthenticated, async (req, res) => {
+    try {
+      const { payPeriod } = req.params;
+      const propertyId = req.query.propertyId as string;
+      
+      // Get employees for the property
+      const employees = await storage.getEmployeesByProperty(propertyId);
+      
+      // Calculate payroll preview
+      const employeeData = [];
+      let totalGrossPay = 0;
+      let totalNetPay = 0;
+      let totalDeductions = 0;
+      
+      for (const employee of employees) {
+        // Get timesheet data for the pay period
+        const timesheets = await storage.getTimesheetsByEmployeeAndPeriod(
+          employee.id, 
+          payPeriod
+        );
+        
+        // Calculate basic payroll data
+        const regularHours = timesheets.reduce((sum, ts) => sum + (ts.regularHours || 0), 0);
+        const overtimeHours = timesheets.reduce((sum, ts) => sum + (ts.overtimeHours || 0), 0);
+        const grossPay = (regularHours * (employee.hourlyRate || 0)) + 
+                         (overtimeHours * (employee.hourlyRate || 0) * 1.5);
+        const deductions = grossPay * 0.35; // Simplified calculation
+        const netPay = grossPay - deductions;
+        
+        employeeData.push({
+          employeeId: employee.id,
+          employeeName: `${employee.firstName} ${employee.lastName}`,
+          regularHours,
+          overtimeHours,
+          grossPay,
+          netPay,
+          deductions: {
+            tax: deductions * 0.6,
+            socialSecurity: deductions * 0.35,
+            other: deductions * 0.05
+          },
+          bonuses: 0,
+          allowances: 0
+        });
+        
+        totalGrossPay += grossPay;
+        totalNetPay += netPay;
+        totalDeductions += deductions;
+      }
+      
+      res.json({
+        totalEmployees: employees.length,
+        totalGrossPay,
+        totalNetPay,
+        totalDeductions,
+        payPeriod,
+        calculationDate: new Date().toISOString(),
+        isComplete: true,
+        employees: employeeData
+      });
+    } catch (error) {
+      console.error("Payroll preview error:", error);
+      res.status(500).json({ error: "Failed to generate payroll preview" });
+    }
+  });
+
   // Register self-service routes
   registerSelfServiceRoutes(app);
   registerPropertiesRoutes(app);

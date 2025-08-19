@@ -62,6 +62,14 @@ export interface IStorage {
   getPunchEvent(eventId: string): Promise<PunchEvent | undefined>;
   createPunchEvent(punchEvent: InsertPunchEvent): Promise<PunchEvent>;
   updatePunchEvent(eventId: string, punchEvent: Partial<InsertPunchEvent>): Promise<PunchEvent>;
+  
+  // Additional punch event methods for offline-first mobile support
+  findPunchEventByClientId(clientEventId: string): Promise<PunchEvent | undefined>;
+  findSimilarPunchEvents(employeeId: string, timestamp: Date, type: string, windowMinutes: number): Promise<PunchEvent[]>;
+  updatePunchEventByClientId(clientEventId: string, punchEvent: Partial<InsertPunchEvent>): Promise<PunchEvent>;
+  getLastPunchEvent(employeeId: string): Promise<PunchEvent | undefined>;
+  getEmployeesByProperty(propertyId: string): Promise<Employee[]>;
+  getTimesheetsByEmployeeAndPeriod(employeeId: string, payPeriod: string): Promise<Timesheet[]>;
 
   // Exception operations
   getExceptions(employeeId?: string, propertyId?: string, status?: string): Promise<Exception[]>;
@@ -150,9 +158,9 @@ export class DatabaseStorage implements IStorage {
     if (search) {
       conditions.push(
         or(
-          like(employees.name, `%${search}%`),
-          like(employees.afm, `%${search}%`),
-          like(employees.role, `%${search}%`)
+          like(employees.firstName, `%${search}%`),
+          like(employees.lastName, `%${search}%`),
+          like(employees.afm, `%${search}%`)
         )
       );
     }
@@ -296,6 +304,60 @@ export class DatabaseStorage implements IStorage {
       .where(eq(punchEvents.eventId, eventId))
       .returning();
     return event;
+  }
+
+  // Additional punch event methods for offline-first mobile support
+  async findPunchEventByClientId(clientEventId: string): Promise<PunchEvent | undefined> {
+    const [event] = await db.select().from(punchEvents).where(eq(punchEvents.clientEventId, clientEventId));
+    return event;
+  }
+
+  async findSimilarPunchEvents(employeeId: string, timestamp: Date, type: string, windowMinutes: number): Promise<PunchEvent[]> {
+    const startWindow = new Date(timestamp.getTime() - windowMinutes * 60 * 1000);
+    const endWindow = new Date(timestamp.getTime() + windowMinutes * 60 * 1000);
+    
+    return await db.select().from(punchEvents).where(
+      and(
+        eq(punchEvents.employeeId, employeeId),
+        eq(punchEvents.type, type),
+        between(punchEvents.timestamp, startWindow, endWindow)
+      )
+    ).orderBy(desc(punchEvents.timestamp));
+  }
+
+  async updatePunchEventByClientId(clientEventId: string, punchEventData: Partial<InsertPunchEvent>): Promise<PunchEvent> {
+    const [event] = await db
+      .update(punchEvents)
+      .set(punchEventData)
+      .where(eq(punchEvents.clientEventId, clientEventId))
+      .returning();
+    return event;
+  }
+
+  async getLastPunchEvent(employeeId: string): Promise<PunchEvent | undefined> {
+    const [event] = await db.select().from(punchEvents)
+      .where(eq(punchEvents.employeeId, employeeId))
+      .orderBy(desc(punchEvents.timestamp))
+      .limit(1);
+    return event;
+  }
+
+  async getEmployeesByProperty(propertyId: string): Promise<Employee[]> {
+    return await db.select().from(employees).where(eq(employees.defaultPropertyId, propertyId));
+  }
+
+  async getTimesheetsByEmployeeAndPeriod(employeeId: string, payPeriod: string): Promise<Timesheet[]> {
+    // Parse pay period format "YYYY-MM"
+    const [year, month] = payPeriod.split('-').map(Number);
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0); // Last day of the month
+    
+    return await db.select().from(timesheets).where(
+      and(
+        eq(timesheets.employeeId, employeeId),
+        between(timesheets.periodStart, startDate, endDate)
+      )
+    );
   }
 
   // Exception operations

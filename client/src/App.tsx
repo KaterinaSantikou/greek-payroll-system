@@ -53,6 +53,8 @@ import VisualAnalytics from "@/pages/visualAnalytics";
 import PropertyDashboard from "@/pages/propertyDashboard";
 import RoleBasedDashboard from "@/components/RoleBasedDashboard";
 import { AICopilot } from "@/components/AICopilot";
+import MobilePunch from "@/pages/mobilePunch";
+import PayrollPreview from "@/pages/payrollPreview";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -117,6 +119,8 @@ function Router() {
             <Route path="/smart-notifications" component={SmartNotifications} />
             <Route path="/visual-analytics" component={VisualAnalytics} />
             <Route path="/mobile-approvals" component={lazy(() => import("./components/MobileManagerApproval"))} />
+            <Route path="/mobile-punch" component={MobilePunch} />
+            <Route path="/payroll-preview" component={PayrollPreview} />
         <Route path="/ai-copilot" component={AICopilot} />
         <Route component={NotFound} />
       </Switch>
