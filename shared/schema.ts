@@ -739,10 +739,7 @@ export const insertFilingSchema = createInsertSchema(filings).omit({
   updatedAt: true,
 });
 
-export type InsertContract = z.infer<typeof insertContractSchema>;
-export type InsertPayrollRun = z.infer<typeof insertPayrollRunSchema>;
-export type InsertPayrollLine = z.infer<typeof insertPayrollLineSchema>;
-export type InsertFiling = z.infer<typeof insertFilingSchema>;
+// Insert types already defined above, removing duplicates
 
 export type PunchEvent = typeof punchEvents.$inferSelect;
 export type InsertPunchEvent = z.infer<typeof insertPunchEventSchema>;
@@ -891,36 +888,46 @@ export const complianceKpis = pgTable("compliance_kpis", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Success Metrics tables
+// Success Metrics tables - Enhanced for 2025 KPIs
 export const successMetrics = pgTable("success_metrics", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   propertyId: varchar("property_id").notNull(),
   metricDate: timestamp("metric_date").notNull(),
   payPeriodStart: timestamp("pay_period_start").notNull(),
   payPeriodEnd: timestamp("pay_period_end").notNull(),
+  employeeCount: integer("employee_count").notNull().default(0),
   
-  // ERGANI Submission Metrics
+  // KPI 1: Government Submission Success (≥99% ERGANI/APD/ΦΜΥ)
   erganiSubmissionTotal: integer("ergani_submission_total").notNull().default(0),
   erganiSubmissionSuccess: integer("ergani_submission_success").notNull().default(0),
-  erganiSubmissionRate: decimal("ergani_submission_rate").notNull().default("0"), // Percentage
+  erganiSubmissionRate: decimal("ergani_submission_rate").notNull().default("0"), // Combined ERGANI/APD/ΦΜΥ rate
   
-  // Exception Metrics
+  // KPI 2: Unresolved Exceptions (<1% per pay period)
   totalExceptions: integer("total_exceptions").notNull().default(0),
   resolvedExceptions: integer("resolved_exceptions").notNull().default(0),
   unresolvedExceptions: integer("unresolved_exceptions").notNull().default(0),
-  unresolvedExceptionRate: decimal("unresolved_exception_rate").notNull().default("0"), // Percentage
+  unresolvedExceptionRate: decimal("unresolved_exception_rate").notNull().default("0"), // Must be <1%
   
-  // Punch Verification Metrics
+  // KPI 3: Payroll Runtime (≤15 min for 200 employees)
+  payrollRuntimeMinutes: integer("payroll_runtime_minutes").notNull().default(0),
+  payrollRuntimeSeconds: integer("payroll_runtime_seconds").notNull().default(0),
+  payrollEmployeeCount: integer("payroll_employee_count").notNull().default(0),
+  
+  // KPI 4: ERP/SEPA Automation (100% automation, zero manual re-key)
+  totalERPEntries: integer("total_erp_entries").notNull().default(0),
+  manualERPEntries: integer("manual_erp_entries").notNull().default(0),
+  automatedERPEntries: integer("automated_erp_entries").notNull().default(0),
+  erpAutomationRate: decimal("erp_automation_rate").notNull().default("0"), // Must be 100%
+  totalSEPAPayments: integer("total_sepa_payments").notNull().default(0),
+  autoReconciledSEPA: integer("auto_reconciled_sepa").notNull().default(0),
+  sepaAutomationRate: decimal("sepa_automation_rate").notNull().default("0"), // Must be 100%
+  overallAutomationRate: decimal("overall_automation_rate").notNull().default("0"),
+  
+  // Supporting Metrics
   totalPunches: integer("total_punches").notNull().default(0),
   geoVerifiedPunches: integer("geo_verified_punches").notNull().default(0),
-  geoVerificationRate: decimal("geo_verification_rate").notNull().default("0"), // Percentage
-  manualPayrollEntries: integer("manual_payroll_entries").notNull().default(0),
-  
-  // Overtime Metrics
-  scheduledOvertimeHours: decimal("scheduled_overtime_hours").notNull().default("0"),
-  actualOvertimeHours: decimal("actual_overtime_hours").notNull().default("0"),
-  overtimeVariance: decimal("overtime_variance").notNull().default("0"), // Percentage
-  overtimePolicyCompliance: boolean("overtime_policy_compliance").notNull().default(true),
+  geoVerificationRate: decimal("geo_verification_rate").notNull().default("0"),
+  manualPunchEntries: integer("manual_punch_entries").notNull().default(0),
   
   // Audit Performance
   auditPackGenerationTime: integer("audit_pack_generation_time").notNull().default(0), // Seconds

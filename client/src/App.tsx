@@ -29,6 +29,7 @@ import Compliance from "@/pages/compliance";
 import Analytics from "@/pages/analytics";
 import Deployment from "@/pages/deployment";
 import SuccessMetrics from "@/pages/successMetrics";
+import KPIDashboard from "@/pages/kpiDashboard";
 import ModernPayrollEngine from "@/pages/modernPayrollEngine";
 import ProductVision from "@/pages/productVision";
 import Payments from "@/pages/payments";
@@ -73,6 +74,7 @@ function Router() {
           <Route path="/analytics" component={Analytics} />
           <Route path="/deployment" component={Deployment} />
           <Route path="/success-metrics" component={SuccessMetrics} />
+          <Route path="/kpi-dashboard" component={KPIDashboard} />
           <Route path="/modern-payroll" component={ModernPayrollEngine} />
           <Route path="/product-vision" component={ProductVision} />
           <Route path="/rules-engine" component={RulesEngine} />

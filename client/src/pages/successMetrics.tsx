@@ -69,6 +69,14 @@ interface MetricsSummary {
   trendsDirection: string;
 }
 
+// 2025 KPI Targets
+const KPI_TARGETS = {
+  UNRESOLVED_EXCEPTIONS_MAX: 1.0, // < 1% unresolved exceptions per pay period
+  GOVERNMENT_SUBMISSION_MIN: 99.0, // ≥ 99% ERGANI/APD/ΦΜΥ submission success
+  PAYROLL_RUNTIME_MAX: 15, // ≤ 15 min end-to-end payroll run for 200 employees
+  AUTOMATION_TARGET: 100.0, // Zero manual re-key to ERP; 100% SEPA auto-reconcile
+};
+
 export default function SuccessMetricsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();

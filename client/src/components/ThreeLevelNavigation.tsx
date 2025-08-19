@@ -128,11 +128,19 @@ const menuStructure: MenuLevel1Item[] = [
     color: "bg-green-500",
     items: [
       {
+        name: "2025 KPI Targets",
+        icon: Target,
+        items: [
+          { name: "KPI Dashboard", href: "/kpi-dashboard", description: "Critical 2025 success metrics" },
+          { name: "Success Metrics", href: "/success-metrics", description: "Detailed KPI tracking" },
+        ]
+      },
+      {
         name: "Labor Forecast",
         icon: TrendingUp,
         items: [
           { name: "Analytics Dashboard", href: "/analytics", description: "Predictive analytics" },
-          { name: "Success Metrics", href: "/success-metrics", description: "KPI monitoring" },
+          { name: "Forecasting", href: "/forecasting", description: "AI-driven workforce planning" },
         ]
       },
       {

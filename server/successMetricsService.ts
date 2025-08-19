@@ -10,6 +10,15 @@ import { eq, gte, lte, and, desc, count } from "drizzle-orm";
 export class SuccessMetricsService {
   constructor() {}
 
+  // Key Success Metrics Thresholds
+  private readonly KPI_THRESHOLDS = {
+    UNRESOLVED_EXCEPTIONS_MAX: 1.0, // < 1% unresolved exceptions per pay period
+    ERGANI_SUCCESS_MIN: 99.0, // ≥ 99% ERGANI/APD/ΦΜΥ submission success
+    PAYROLL_RUNTIME_MAX: 15, // ≤ 15 min end-to-end payroll run for 200 employees
+    ERP_AUTOMATION_TARGET: 100.0, // Zero manual re-key to ERP; 100% SEPA auto-reconcile
+    EMPLOYEE_COUNT_BASELINE: 200 // Baseline for payroll performance measurement
+  };
+
   // Generate demo success metrics data
   async generateDemoSuccessMetrics(): Promise<void> {
     const currentDate = new Date();
@@ -19,109 +28,158 @@ export class SuccessMetricsService {
     const properties = ['PRINCESS-FO', 'PRINCESS-HOUSE', 'PRINCESS-FB'];
 
     for (const propertyId of properties) {
-      // Generate metrics with realistic values
-      const erganiTotal = Math.floor(Math.random() * 500) + 300; // 300-800 submissions
-      const erganiSuccess = Math.floor(erganiTotal * (0.985 + Math.random() * 0.014)); // 98.5-99.9% success
+      // Generate metrics aligned with KPI targets
+      const employeeCount = Math.floor(Math.random() * 100) + 150; // 150-250 employees
+      
+      // ERGANI/APD/ΦΜΥ Submission Success (≥ 99%)
+      const erganiTotal = Math.floor(Math.random() * 500) + 300;
+      const erganiSuccess = Math.floor(erganiTotal * (0.985 + Math.random() * 0.014)); // 98.5-99.9%
       const erganiRate = (erganiSuccess / erganiTotal) * 100;
+      
+      const apdTotal = Math.floor(Math.random() * 200) + 100;
+      const apdSuccess = Math.floor(apdTotal * (0.99 + Math.random() * 0.009)); // 99-99.9%
+      const apdRate = (apdSuccess / apdTotal) * 100;
+      
+      const fmyTotal = Math.floor(Math.random() * 100) + 50;
+      const fmySuccess = Math.floor(fmyTotal * (0.995 + Math.random() * 0.005)); // 99.5-100%
+      const fmyRate = (fmySuccess / fmyTotal) * 100;
+      
+      const overallSubmissionRate = ((erganiSuccess + apdSuccess + fmySuccess) / (erganiTotal + apdTotal + fmyTotal)) * 100;
 
-      const totalExceptions = Math.floor(Math.random() * 20) + 5; // 5-25 exceptions
-      const resolvedExceptions = Math.floor(totalExceptions * (0.95 + Math.random() * 0.05)); // 95-100% resolved
+      // Unresolved Exceptions (< 1% per pay period)
+      const totalExceptions = Math.floor(Math.random() * 30) + 10; // 10-40 exceptions
+      const resolvedExceptions = Math.floor(totalExceptions * (0.985 + Math.random() * 0.014)); // 98.5-99.9% resolved
       const unresolvedExceptions = totalExceptions - resolvedExceptions;
       const unresolvedRate = (unresolvedExceptions / totalExceptions) * 100;
 
-      const totalPunches = Math.floor(Math.random() * 2000) + 1000; // 1000-3000 punches
-      const geoVerified = Math.floor(totalPunches * (0.94 + Math.random() * 0.06)); // 94-100% geo-verified
+      // Payroll Runtime (≤ 15 min for 200 employees)
+      const scalingFactor = employeeCount / this.KPI_THRESHOLDS.EMPLOYEE_COUNT_BASELINE;
+      const baseRuntimeMinutes = 8 + Math.random() * 10; // 8-18 minutes base
+      const payrollRuntimeMinutes = baseRuntimeMinutes * scalingFactor;
+      const payrollRuntimeSeconds = Math.floor(payrollRuntimeMinutes * 60);
+      
+      // ERP Integration & SEPA Auto-reconcile (100% automation target)
+      const totalERPEntries = employeeCount * 3; // 3 entries per employee average
+      const manualERPEntries = Math.floor(Math.random() * 3); // 0-2 manual entries
+      const automatedERPEntries = totalERPEntries - manualERPEntries;
+      const erpAutomationRate = (automatedERPEntries / totalERPEntries) * 100;
+      
+      const totalSEPAPayments = employeeCount;
+      const autoReconciledSEPA = Math.floor(totalSEPAPayments * (0.995 + Math.random() * 0.005)); // 99.5-100%
+      const sepaAutomationRate = (autoReconciledSEPA / totalSEPAPayments) * 100;
+      
+      // Overall automation score
+      const overallAutomationRate = (erpAutomationRate + sepaAutomationRate) / 2;
+
+      // Geo-verification and manual entries tracking
+      const totalPunches = employeeCount * 25; // ~25 punches per employee per period
+      const geoVerified = Math.floor(totalPunches * (0.96 + Math.random() * 0.04)); // 96-100% geo-verified
       const geoRate = (geoVerified / totalPunches) * 100;
-      const manualEntries = totalPunches - geoVerified;
+      const manualPunchEntries = totalPunches - geoVerified;
 
-      const scheduledOT = Math.random() * 200 + 50; // 50-250 hours
-      const actualOT = scheduledOT * (0.85 + Math.random() * 0.3); // 85-115% variance
-      const overtimeVariance = ((actualOT - scheduledOT) / scheduledOT) * 100;
-      const otCompliance = Math.abs(overtimeVariance) <= 15; // Within ±15%
+      // Audit pack generation performance
+      const auditTime = Math.floor(Math.random() * 120) + 30; // 30-150 seconds
+      const auditSize = Math.floor(Math.random() * 50) + 15; // 15-65 MB
+      const auditSuccess = Math.random() > 0.02; // 98% success rate
 
-      const auditTime = Math.floor(Math.random() * 180) + 60; // 60-240 seconds
-      const auditSize = Math.floor(Math.random() * 50) + 10; // 10-60 MB
-      const auditSuccess = Math.random() > 0.05; // 95% success rate
-
-      // Calculate overall compliance score
-      const erganiScore = Math.min(erganiRate, 100);
-      const exceptionScore = Math.max(0, 100 - unresolvedRate * 10);
-      const geoScore = Math.min(geoRate, 100);
-      const otScore = otCompliance ? 100 : Math.max(0, 100 - Math.abs(overtimeVariance) * 2);
-      const auditScore = auditSuccess && auditTime <= 300 ? 100 : 80;
-      const overallScore = (erganiScore + exceptionScore + geoScore + otScore + auditScore) / 5;
+      // Calculate KPI compliance scores
+      const submissionScore = overallSubmissionRate >= this.KPI_THRESHOLDS.ERGANI_SUCCESS_MIN ? 100 : (overallSubmissionRate / this.KPI_THRESHOLDS.ERGANI_SUCCESS_MIN) * 100;
+      const exceptionScore = unresolvedRate < this.KPI_THRESHOLDS.UNRESOLVED_EXCEPTIONS_MAX ? 100 : Math.max(0, 100 - (unresolvedRate * 50));
+      const runtimeScore = payrollRuntimeMinutes <= this.KPI_THRESHOLDS.PAYROLL_RUNTIME_MAX ? 100 : Math.max(0, 100 - ((payrollRuntimeMinutes - this.KPI_THRESHOLDS.PAYROLL_RUNTIME_MAX) * 5));
+      const automationScore = Math.min(overallAutomationRate, 100);
+      const overallScore = (submissionScore + exceptionScore + runtimeScore + automationScore) / 4;
 
       await db.insert(successMetrics).values({
         propertyId,
         metricDate: currentDate,
         payPeriodStart,
         payPeriodEnd,
-        erganiSubmissionTotal: erganiTotal,
-        erganiSubmissionSuccess: erganiSuccess,
-        erganiSubmissionRate: erganiRate.toString(),
+        employeeCount,
+        // Submission metrics
+        erganiSubmissionTotal: erganiTotal + apdTotal + fmyTotal,
+        erganiSubmissionSuccess: erganiSuccess + apdSuccess + fmySuccess,
+        erganiSubmissionRate: overallSubmissionRate.toString(),
+        // Exception metrics
         totalExceptions,
         resolvedExceptions,
         unresolvedExceptions,
         unresolvedExceptionRate: unresolvedRate.toString(),
+        // Payroll runtime metrics
+        payrollRuntimeMinutes: Math.round(payrollRuntimeMinutes),
+        payrollRuntimeSeconds,
+        payrollEmployeeCount: employeeCount,
+        // Automation metrics
+        totalERPEntries,
+        manualERPEntries,
+        automatedERPEntries,
+        erpAutomationRate: erpAutomationRate.toString(),
+        totalSEPAPayments,
+        autoReconciledSEPA,
+        sepaAutomationRate: sepaAutomationRate.toString(),
+        overallAutomationRate: overallAutomationRate.toString(),
+        // Punch tracking
         totalPunches,
         geoVerifiedPunches: geoVerified,
         geoVerificationRate: geoRate.toString(),
-        manualPayrollEntries: manualEntries,
-        scheduledOvertimeHours: scheduledOT.toString(),
-        actualOvertimeHours: actualOT.toString(),
-        overtimeVariance: overtimeVariance.toString(),
-        overtimePolicyCompliance: otCompliance,
+        manualPunchEntries,
+        // Audit metrics
         auditPackGenerationTime: auditTime,
         auditPackSize: auditSize,
         auditPackSuccess: auditSuccess,
+        // Overall score
         overallComplianceScore: overallScore.toString(),
       });
 
-      // Generate alerts for metrics below thresholds
-      if (erganiRate < 99.0) {
+      // Generate KPI-specific alerts based on targets
+      
+      // Alert 1: ERGANI/APD/ΦΜΥ Submission Success < 99%
+      if (overallSubmissionRate < this.KPI_THRESHOLDS.ERGANI_SUCCESS_MIN) {
         await db.insert(successMetricAlerts).values({
           propertyId,
-          metricType: 'ergani_submission',
-          alertLevel: erganiRate < 98.0 ? 'critical' : 'warning',
-          threshold: '99.0',
-          actualValue: erganiRate.toString(),
-          message: `ERGANI submission rate is ${erganiRate.toFixed(1)}%, below the required 99% threshold`,
+          metricType: 'government_submission',
+          alertLevel: overallSubmissionRate < 97.0 ? 'critical' : 'warning',
+          threshold: this.KPI_THRESHOLDS.ERGANI_SUCCESS_MIN.toString(),
+          actualValue: overallSubmissionRate.toFixed(1),
+          message: `Government submission success rate is ${overallSubmissionRate.toFixed(1)}%, below the required ≥99% KPI target`,
           isResolved: false,
         });
       }
 
-      if (unresolvedRate > 1.0) {
+      // Alert 2: Unresolved Exceptions ≥ 1%
+      if (unresolvedRate >= this.KPI_THRESHOLDS.UNRESOLVED_EXCEPTIONS_MAX) {
         await db.insert(successMetricAlerts).values({
           propertyId,
-          metricType: 'exceptions',
+          metricType: 'unresolved_exceptions',
           alertLevel: unresolvedRate > 2.0 ? 'critical' : 'warning',
-          threshold: '1.0',
-          actualValue: unresolvedRate.toString(),
-          message: `Unresolved exception rate is ${unresolvedRate.toFixed(1)}%, above the maximum 1% threshold`,
+          threshold: this.KPI_THRESHOLDS.UNRESOLVED_EXCEPTIONS_MAX.toString(),
+          actualValue: unresolvedRate.toFixed(2),
+          message: `Unresolved exception rate is ${unresolvedRate.toFixed(2)}%, exceeding the <1% per pay period KPI target`,
           isResolved: false,
         });
       }
 
-      if (geoRate < 95.0) {
+      // Alert 3: Payroll Runtime > 15 minutes
+      if (payrollRuntimeMinutes > this.KPI_THRESHOLDS.PAYROLL_RUNTIME_MAX) {
         await db.insert(successMetricAlerts).values({
           propertyId,
-          metricType: 'geo_verification',
-          alertLevel: geoRate < 90.0 ? 'critical' : 'warning',
-          threshold: '95.0',
-          actualValue: geoRate.toString(),
-          message: `Geo-verification rate is ${geoRate.toFixed(1)}%, below the required 95% threshold`,
+          metricType: 'payroll_runtime',
+          alertLevel: payrollRuntimeMinutes > 20 ? 'critical' : 'warning',
+          threshold: this.KPI_THRESHOLDS.PAYROLL_RUNTIME_MAX.toString(),
+          actualValue: payrollRuntimeMinutes.toFixed(1),
+          message: `Payroll runtime is ${payrollRuntimeMinutes.toFixed(1)} minutes for ${employeeCount} employees, exceeding the ≤15 min KPI target`,
           isResolved: false,
         });
       }
 
-      if (Math.abs(overtimeVariance) > 15.0) {
+      // Alert 4: ERP/SEPA Automation < 100%
+      if (overallAutomationRate < this.KPI_THRESHOLDS.ERP_AUTOMATION_TARGET) {
         await db.insert(successMetricAlerts).values({
           propertyId,
-          metricType: 'overtime_variance',
-          alertLevel: Math.abs(overtimeVariance) > 25.0 ? 'critical' : 'warning',
-          threshold: '15.0',
-          actualValue: Math.abs(overtimeVariance).toString(),
-          message: `Overtime variance is ${overtimeVariance.toFixed(1)}%, outside policy limits (±15%)`,
+          metricType: 'automation_rate',
+          alertLevel: overallAutomationRate < 95.0 ? 'critical' : 'warning',
+          threshold: this.KPI_THRESHOLDS.ERP_AUTOMATION_TARGET.toString(),
+          actualValue: overallAutomationRate.toFixed(1),
+          message: `ERP/SEPA automation rate is ${overallAutomationRate.toFixed(1)}%, below the 100% zero manual re-key KPI target`,
           isResolved: false,
         });
       }
