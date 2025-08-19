@@ -16,6 +16,14 @@ interface BankProfile {
     batchBookingSupported: boolean;
     hostToHostEncryption?: boolean;
     ePPSMassPayments?: boolean;
+    bulkFileManagement?: boolean;
+    sepaInstant?: boolean;
+    offCycleSupport?: boolean;
+    urgentCorrections?: boolean;
+    corporateXMLGuide?: boolean;
+    bulkPayrollSCT?: boolean;
+    bulkSCT?: boolean;
+    payrollSupport?: boolean;
   };
   cutoffTime: { hour: number; minute: number };
   notes: string;
@@ -106,8 +114,7 @@ export class SepaFileGenerator {
     const payrollData = await db
       .select({
         employeeId: payrollLines.employeeId,
-        employeeName: employees.firstName,
-        employeeLastName: employees.lastName,
+        employeeName: employees.name,
         iban: employees.bankIban, // Corrected field name from schema
         amount: payrollLines.amount
       })
@@ -122,7 +129,7 @@ export class SepaFileGenerator {
     
     return payrollData.map((row, index) => ({
       employeeId: row.employeeId,
-      employeeName: `${row.employeeName} ${row.employeeLastName}`,
+      employeeName: row.employeeName,
       iban: row.iban || "GR0000000000000000000000000", // IBAN mandatory
       bic: undefined, // BIC optional for domestic SCT
       amount: parseFloat(row.amount || "0"),
