@@ -334,27 +334,47 @@ export default function EarningsCodesDemoPage() {
 
                     {/* Special Allowances */}
                     {earningsCodesData.allowances && earningsCodesData.allowances.filter(code => 
-                      ['TIPS_DISTRIBUTED', 'MEAL_VOUCHER', 'SICK_EMP_50'].includes(code.code)
+                      ['TIPS_DISTRIBUTED', 'MEAL_VOUCHER', 'TRAVEL_PER_DIEM', 'SICK_EMP_50', 'SICK_EFKA', 'HOLIDAY_NOT_WORKED'].includes(code.code)
                     ).map((rule) => (
                       <div key={rule.code} className="bg-white p-4 rounded-lg border">
                         <div className="flex items-center justify-between mb-2">
                           <Badge variant="outline" className="font-mono text-xs">{rule.code}</Badge>
                           <div className="flex gap-1">
-                            {rule.taxable && <Badge variant="destructive" className="text-xs">Tax</Badge>}
-                            {rule.contributoryEFKA && <Badge variant="secondary" className="text-xs">EFKA</Badge>}
-                            {rule.includedAPD && <Badge variant="outline" className="text-xs">APD</Badge>}
+                            {rule.taxable ? <Badge variant="destructive" className="text-xs">Tax</Badge> : <Badge variant="default" className="text-xs bg-green-100 text-green-800">Tax-Free</Badge>}
+                            {rule.contributoryEFKA ? <Badge variant="secondary" className="text-xs">EFKA</Badge> : <Badge variant="outline" className="text-xs bg-gray-100">No EFKA</Badge>}
+                            {rule.includedAPD ? <Badge variant="outline" className="text-xs">APD</Badge> : <Badge variant="outline" className="text-xs bg-gray-100">No APD</Badge>}
                           </div>
                         </div>
                         <h4 className="font-semibold text-sm mb-1">{rule.name}</h4>
                         <p className="text-xs text-gray-600 mb-2">{rule.description}</p>
                         {rule.code === 'MEAL_VOUCHER' && (
                           <p className="text-xs text-blue-600 mt-1">
-                            ✓ €6/day tax-free, excess taxable
+                            ✓ €6/day tax-free limit, automatic excess splitting
                           </p>
                         )}
                         {rule.code === 'TIPS_DISTRIBUTED' && (
                           <p className="text-xs text-purple-600 mt-1">
-                            ✓ Employer pooling rules apply
+                            ✓ Always taxable, EFKA configurable by role
+                          </p>
+                        )}
+                        {rule.code === 'TRAVEL_PER_DIEM' && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            ✓ Within statutory limits, excess reclassified
+                          </p>
+                        )}
+                        {rule.code === 'SICK_EMP_50' && (
+                          <p className="text-xs text-orange-600 mt-1">
+                            ✓ First 3 days at 50%, EFKA offset after
+                          </p>
+                        )}
+                        {rule.code === 'SICK_EFKA' && (
+                          <p className="text-xs text-gray-600 mt-1">
+                            ⓘ Informational only - EFKA direct payment
+                          </p>
+                        )}
+                        {rule.code === 'HOLIDAY_NOT_WORKED' && (
+                          <p className="text-xs text-green-600 mt-1">
+                            ✓ Salaried employees daily wage entitlement
                           </p>
                         )}
                       </div>
@@ -432,7 +452,7 @@ export default function EarningsCodesDemoPage() {
                     id="stackedCodes"
                     value={stackedCodes}
                     onChange={(e) => setStackedCodes(e.target.value)}
-                    placeholder="NIGHT_25,SUNDAY_75,OT_TIER1_40"
+                    placeholder="NIGHT_25,SUNDAY_75,OT_TIER1_40,HOLIDAY_75"
                   />
                 </div>
               </div>

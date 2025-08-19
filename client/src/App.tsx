@@ -78,6 +78,7 @@ function Router() {
           <Route path="/kpi-dashboard" component={KPIDashboard} />
           <Route path="/payroll-processing" component={lazy(() => import("./pages/payrollProcessing"))} />
           <Route path="/earnings-codes" component={lazy(() => import("./pages/earningsCodesDemo"))} />
+          <Route path="/greek-payroll-demo" component={lazy(() => import("./pages/greekPayrollDemo"))} />
           <Route path="/modern-payroll" component={ModernPayrollEngine} />
           <Route path="/product-vision" component={ProductVision} />
           <Route path="/rules-engine" component={RulesEngine} />
