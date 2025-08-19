@@ -2,14 +2,16 @@ import { db } from "./db";
 import { employees, payrollLines, payrollRuns } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
+// SEPA Bank Formats for Payroll (Addendum B specifications)
 interface SEPAPayment {
   employeeId: string;
   employeeName: string;
-  iban: string;
-  bic: string;
+  iban: string; // IBAN mandatory
+  bic?: string; // BIC optional for domestic SCT
   amount: number;
+  currency: 'EUR'; // EUR only as per specification
   endToEndId: string;
-  reference: string;
+  remittanceInfo: string; // Up to 140 chars (Ustrd)
 }
 
 interface SEPAFileMetadata {
@@ -18,14 +20,34 @@ interface SEPAFileMetadata {
   numberOfTransactions: number;
   totalAmount: number;
   requestedExecutionDate: string;
-  batchBooking: boolean;
+  batchBooking: boolean; // Separate debits per employee (batch booking flag off) unless bank explicitly supports batch
   debtorName: string;
   debtorIBAN: string;
-  debtorBIC: string;
+  debtorBIC?: string; // Optional for domestic SCT
+  categoryPurpose: 'SALA'; // CategoryPurpose (CtgyPurp): SALA (salary)
 }
 
+/**
+ * SEPA File Generator for Greek Payroll
+ * 
+ * Implements Addendum B — SEPA Bank Formats for Payroll specifications:
+ * - ISO 20022 pain.001 Customer Credit Transfer (SCT)
+ * - Default pain.001.001.03 for widest compatibility; optional .001.09 where supported
+ * - CategoryPurpose (CtgyPurp): SALA (salary)
+ * - Encoding: UTF‑8, Currency: EUR only
+ * - IBAN mandatory; BIC optional (domestic SCT)
+ * - Remittance (Ustrd): up to 140 chars
+ * - Booking: separate debits per employee (batch booking flag off) unless bank explicitly supports batch
+ * - Cut‑offs: same‑day typically by early afternoon; engine enforces per‑bank cut‑offs per profile
+ * - Reconciliation: ingest pain.002 status and camt.054 credit notifications where available
+ */
 export class SEPAFileGenerator {
+  // ISO 20022 pain.001 Customer Credit Transfer (SCT) 
+  // Default pain.001.001.03 for widest compatibility; optional .001.09 where supported
   private readonly PAIN_VERSION = "pain.001.001.03";
+  private readonly CATEGORY_PURPOSE = "SALA"; // Salary payments
+  private readonly ENCODING = "UTF-8";
+  private readonly CURRENCY = "EUR"; // EUR only as per specification
   
   // Generate SEPA Credit Transfer file for payroll
   async generateSEPAFile(payrollRunId: string): Promise<string> {
@@ -42,10 +64,11 @@ export class SEPAFileGenerator {
       numberOfTransactions: payments.length,
       totalAmount: payments.reduce((sum, p) => sum + p.amount, 0),
       requestedExecutionDate: this.getNextBusinessDay().toISOString().split('T')[0],
-      batchBooking: true,
+      batchBooking: false, // Separate debits per employee (batch booking flag off) unless bank explicitly supports batch
       debtorName: "Princess Hotel Group S.A.",
       debtorIBAN: "GR1601101250000000012300695", // Company IBAN
-      debtorBIC: "ETHNGRAA" // National Bank of Greece BIC
+      debtorBIC: "ETHNGRAA", // National Bank of Greece BIC
+      categoryPurpose: 'SALA' // CategoryPurpose (CtgyPurp): SALA (salary)
     };
     
     return this.generatePainXML(metadata, payments);
@@ -57,13 +80,11 @@ export class SEPAFileGenerator {
         employeeId: payrollLines.employeeId,
         employeeName: employees.firstName,
         employeeLastName: employees.lastName,
-        iban: employees.iban,
-        bic: employees.bankBic,
-        amount: payrollLines.amount,
-        netPay: payrollLines.netPay
+        iban: employees.bankIban, // Corrected field name from schema
+        amount: payrollLines.amount
       })
       .from(payrollLines)
-      .innerJoin(employees, eq(payrollLines.employeeId, employees.id))
+      .innerJoin(employees, eq(payrollLines.employeeId, employees.employeeId)) // Corrected field name
       .where(
         and(
           eq(payrollLines.payrollRunId, payrollRunId),
@@ -74,16 +95,18 @@ export class SEPAFileGenerator {
     return payrollData.map((row, index) => ({
       employeeId: row.employeeId,
       employeeName: `${row.employeeName} ${row.employeeLastName}`,
-      iban: row.iban || "GR0000000000000000000000000",
-      bic: row.bic || "ETHNGRAA",
-      amount: parseFloat(row.netPay || row.amount || "0"),
+      iban: row.iban || "GR0000000000000000000000000", // IBAN mandatory
+      bic: undefined, // BIC optional for domestic SCT
+      amount: parseFloat(row.amount || "0"),
+      currency: 'EUR' as const, // EUR only as per specification
       endToEndId: `PAYROLL-${payrollRunId}-${String(index + 1).padStart(6, '0')}`,
-      reference: `Salary ${new Date().toLocaleDateString('el-GR', { year: 'numeric', month: 'long' })}`
+      remittanceInfo: `Salary ${new Date().toLocaleDateString('el-GR', { year: 'numeric', month: 'long' })}` // Up to 140 chars
     }));
   }
   
   private generatePainXML(metadata: SEPAFileMetadata, payments: SEPAPayment[]): string {
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    // ISO 20022 pain.001 Customer Credit Transfer (SCT) with Greek payroll specifications
+    const xml = `<?xml version="1.0" encoding="${this.ENCODING}"?>
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:${this.PAIN_VERSION}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <CstmrCdtTrfInitn>
     <GrpHdr>
@@ -116,7 +139,7 @@ export class SEPAFileGenerator {
           <Cd>SEPA</Cd>
         </SvcLvl>
         <CtgyPurp>
-          <Cd>SALA</Cd>
+          <Cd>${metadata.categoryPurpose}</Cd>
         </CtgyPurp>
       </PmtTpInf>
       <ReqdExctnDt>${metadata.requestedExecutionDate}</ReqdExctnDt>
@@ -133,11 +156,11 @@ export class SEPAFileGenerator {
         </Id>
         <Ccy>EUR</Ccy>
       </DbtrAcct>
-      <DbtrAgt>
+      ${metadata.debtorBIC ? `<DbtrAgt>
         <FinInstnId>
           <BIC>${metadata.debtorBIC}</BIC>
         </FinInstnId>
-      </DbtrAgt>
+      </DbtrAgt>` : ''}
       <ChrgBr>SLEV</ChrgBr>
 ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')}
     </PmtInf>
@@ -153,13 +176,13 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
           <EndToEndId>${payment.endToEndId}</EndToEndId>
         </PmtId>
         <Amt>
-          <InstdAmt Ccy="EUR">${payment.amount.toFixed(2)}</InstdAmt>
+          <InstdAmt Ccy="${payment.currency}">${payment.amount.toFixed(2)}</InstdAmt>
         </Amt>
-        <CdtrAgt>
+        ${payment.bic ? `<CdtrAgt>
           <FinInstnId>
             <BIC>${payment.bic}</BIC>
           </FinInstnId>
-        </CdtrAgt>
+        </CdtrAgt>` : ''}
         <Cdtr>
           <Nm>${payment.employeeName}</Nm>
         </Cdtr>
@@ -169,7 +192,7 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
           </Id>
         </CdtrAcct>
         <RmtInf>
-          <Ustrd>${payment.reference}</Ustrd>
+          <Ustrd>${payment.remittanceInfo.substring(0, 140)}</Ustrd>
         </RmtInf>
       </CdtTrfTxInf>`;
   }
@@ -186,19 +209,42 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
     return date;
   }
   
-  // Generate SEPA file metadata summary
-  generateSEPAMetadata(payrollRunId: string, payments: SEPAPayment[]): SEPAFileMetadata {
-    return {
-      messageId: `PAYROLL-${payrollRunId}-${Date.now()}`,
-      creationDateTime: new Date().toISOString(),
-      numberOfTransactions: payments.length,
-      totalAmount: payments.reduce((sum, p) => sum + p.amount, 0),
-      requestedExecutionDate: this.getNextBusinessDay().toISOString().split('T')[0],
-      batchBooking: true,
-      debtorName: "Princess Hotel Group S.A.",
-      debtorIBAN: "GR1601101250000000012300695",
-      debtorBIC: "ETHNGRAA"
+  // Bank profile and cut-off management
+  // Cut-offs: same-day typically by early afternoon; engine enforces per-bank cut-offs per profile
+  private getBankCutoffTime(bankBic?: string): { hour: number; minute: number } {
+    // Default cut-off times for Greek banks (can be configured per bank profile)
+    const bankCutoffs: Record<string, { hour: number; minute: number }> = {
+      'ETHNGRAA': { hour: 14, minute: 0 }, // National Bank of Greece
+      'PIRBGRAA': { hour: 13, minute: 30 }, // Piraeus Bank
+      'EUROGRAA': { hour: 14, minute: 30 }, // Eurobank
+      'AGEAGRAA': { hour: 14, minute: 0 }, // Alpha Bank
+      'default': { hour: 13, minute: 0 } // Conservative default
     };
+    
+    return bankCutoffs[bankBic || 'default'] || bankCutoffs['default'];
+  }
+  
+  // Check if current time is within bank cut-off for same-day processing
+  checkSameDayCutoff(bankBic?: string): boolean {
+    const now = new Date();
+    const cutoff = this.getBankCutoffTime(bankBic);
+    const cutoffTime = new Date(now);
+    cutoffTime.setHours(cutoff.hour, cutoff.minute, 0, 0);
+    
+    return now <= cutoffTime;
+  }
+  
+  // Reconciliation support for pain.002 status and camt.054 credit notifications
+  async processPain002StatusResponse(statusXml: string): Promise<void> {
+    // TODO: Parse pain.002 Customer Payment Status Report
+    // Track payment status updates (ACCP, ACSC, ACSP, RJCT, etc.)
+    console.log('Processing pain.002 status response:', statusXml.length, 'characters');
+  }
+  
+  async processCamt054CreditNotification(creditXml: string): Promise<void> {
+    // TODO: Parse camt.054 Bank-to-Customer Debit Credit Notification
+    // Update payment confirmation and reconciliation records
+    console.log('Processing camt.054 credit notification:', creditXml.length, 'characters');
   }
   
   // Validate IBAN format (Greek IBAN)

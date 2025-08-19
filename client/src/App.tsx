@@ -34,6 +34,7 @@ import KPIDashboard from "@/pages/kpiDashboard";
 import ModernPayrollEngine from "@/pages/modernPayrollEngine";
 import ProductVision from "@/pages/productVision";
 import Payments from "@/pages/payments";
+import SepaPayments from "@/pages/sepaPayments";
 import EmployeeSelfService from "@/pages/employeeSelfService";
 import RulesEngine from "@/pages/rulesEngine";
 import ManagerDashboard from "@/pages/managerDashboard";
@@ -56,6 +57,7 @@ function Router() {
           <Route path="/employee-master" component={EmployeeMaster} />
           <Route path="/payroll" component={Payroll} />
           <Route path="/payments" component={Payments} />
+          <Route path="/sepa-payments" component={SepaPayments} />
           <Route path="/schedules" component={Schedules} />
           <Route path="/allowances" component={Allowances} />
           <Route path="/overtime" component={Overtime} />
