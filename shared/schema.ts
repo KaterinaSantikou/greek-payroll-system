@@ -146,40 +146,70 @@ export const employees = pgTable("employees", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Payroll records table - Updated for 2025 Greek Tax Rates
+// Payroll records table - Updated for 2025 Greek Tax Rates with Enhanced Tax Compliance
 export const payrollRecords = pgTable("payroll_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   employeeId: varchar("employee_id").references(() => employees.id).notNull(),
   payrollMonth: varchar("payroll_month", { length: 7 }).notNull(), // YYYY-MM format
   
-  // Earnings
+  // Earnings Components
   basicSalary: decimal("basic_salary", { precision: 10, scale: 2 }).notNull(),
   overtime: decimal("overtime", { precision: 10, scale: 2 }).default("0"),
+  overtimeHours: decimal("overtime_hours", { precision: 5, scale: 2 }).default("0"),
+  sundayWork: decimal("sunday_work", { precision: 10, scale: 2 }).default("0"), // 75% premium
+  sundayHours: decimal("sunday_hours", { precision: 5, scale: 2 }).default("0"),
   nightShift: decimal("night_shift", { precision: 10, scale: 2 }).default("0"),
   holidayPay: decimal("holiday_pay", { precision: 10, scale: 2 }).default("0"),
   allowances: decimal("allowances", { precision: 10, scale: 2 }).default("0"),
   bonuses: decimal("bonuses", { precision: 10, scale: 2 }).default("0"),
   thirteenthSalary: decimal("thirteenth_salary", { precision: 10, scale: 2 }).default("0"), // Greek bonus
   fourteenthSalary: decimal("fourteenth_salary", { precision: 10, scale: 2 }).default("0"), // Holiday bonus
+  
+  // Collective Agreement Adjustments
+  experienceBonus: decimal("experience_bonus", { precision: 10, scale: 2 }).default("0"),
+  educationBonus: decimal("education_bonus", { precision: 10, scale: 2 }).default("0"),
+  maritalBonus: decimal("marital_bonus", { precision: 10, scale: 2 }).default("0"),
+  collectiveAgreementId: varchar("collective_agreement_id"),
+  
   grossTotal: decimal("gross_total", { precision: 10, scale: 2 }).notNull(),
   
-  // Deductions (2025 rates)
+  // Progressive Tax Deductions (2025 brackets: 9%, 22%, 28%, 36%, 44%)
   incomeTax: decimal("income_tax", { precision: 10, scale: 2 }).notNull(),
+  taxBracket9: decimal("tax_bracket_9", { precision: 10, scale: 2 }).default("0"), // 9% bracket
+  taxBracket22: decimal("tax_bracket_22", { precision: 10, scale: 2 }).default("0"), // 22% bracket
+  taxBracket28: decimal("tax_bracket_28", { precision: 10, scale: 2 }).default("0"), // 28% bracket
+  taxBracket36: decimal("tax_bracket_36", { precision: 10, scale: 2 }).default("0"), // 36% bracket
+  taxBracket44: decimal("tax_bracket_44", { precision: 10, scale: 2 }).default("0"), // 44% bracket
+  taxFreeAllowance: decimal("tax_free_allowance", { precision: 10, scale: 2 }).default("0"),
+  
+  // EFKA Insurance Contributions (Enhanced)
   employeeInsurance: decimal("employee_insurance", { precision: 10, scale: 2 }).notNull(), // 16%
-  solidarityTax: decimal("solidarity_tax", { precision: 10, scale: 2 }).default("0"), // 2.2% for income >12,000
-  unemploymentFund: decimal("unemployment_fund", { precision: 10, scale: 2 }).default("0"), // 0.5%
+  employerInsurance: decimal("employer_insurance", { precision: 10, scale: 2 }).notNull(), // 24.78%
+  unemploymentEmployee: decimal("unemployment_employee", { precision: 10, scale: 2 }).default("0"), // 0.5%
+  unemploymentEmployer: decimal("unemployment_employer", { precision: 10, scale: 2 }).default("0"), // 2.55%
+  healthInsurance: decimal("health_insurance", { precision: 10, scale: 2 }).default("0"),
+  familyBenefits: decimal("family_benefits", { precision: 10, scale: 2 }).default("0"), // 0.7%
+  supplementaryFund: decimal("supplementary_fund", { precision: 10, scale: 2 }).default("0"),
+  
+  // Special Insurance Categories
+  heavyWorkInsurance: decimal("heavy_work_insurance", { precision: 10, scale: 2 }).default("0"),
+  hazardousWorkInsurance: decimal("hazardous_work_insurance", { precision: 10, scale: 2 }).default("0"),
+  
+  // Special Taxes
+  solidarityTax: decimal("solidarity_tax", { precision: 10, scale: 2 }).default("0"), // 2.2% for income >€12,000
+  
   totalDeductions: decimal("total_deductions", { precision: 10, scale: 2 }).notNull(),
   
   // Net pay
   netPay: decimal("net_pay", { precision: 10, scale: 2 }).notNull(),
   
   // Employer costs (2025 rates)
-  employerInsurance: decimal("employer_insurance", { precision: 10, scale: 2 }).notNull(), // 24.78%
+  totalEmployerCost: decimal("total_employer_cost", { precision: 10, scale: 2 }).notNull(), // 24.78%
   employerUnemployment: decimal("employer_unemployment", { precision: 10, scale: 2 }).default("0"), // 2.55%
   totalCost: decimal("total_cost", { precision: 10, scale: 2 }).notNull(),
   
   // Working hours tracking
-  overtimeHours: decimal("overtime_hours", { precision: 5, scale: 2 }).default("0"),
+  totalOvertimeHours: decimal("total_overtime_hours", { precision: 5, scale: 2 }).default("0"),
   nightHours: decimal("night_hours", { precision: 5, scale: 2 }).default("0"),
   holidayHours: decimal("holiday_hours", { precision: 5, scale: 2 }).default("0"),
   regularHours: decimal("regular_hours", { precision: 5, scale: 2 }).default("168"), // Monthly standard
