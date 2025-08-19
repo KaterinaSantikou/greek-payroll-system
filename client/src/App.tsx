@@ -16,6 +16,7 @@ import Leave from "@/pages/leave";
 import Legal from "@/pages/legal";
 import DigitalWorkCard from "@/pages/digitalWorkCard";
 import AdvancedTimeCapture from "@/pages/advancedTimeCapture";
+import EnterpriseArchitecture from "@/pages/enterpriseArchitecture";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -37,6 +38,7 @@ function Router() {
           <Route path="/legal" component={Legal} />
           <Route path="/digital-work-card" component={DigitalWorkCard} />
           <Route path="/advanced-time-capture" component={AdvancedTimeCapture} />
+          <Route path="/enterprise-architecture" component={EnterpriseArchitecture} />
         </Layout>
       )}
       <Route component={NotFound} />
