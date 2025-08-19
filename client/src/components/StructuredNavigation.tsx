@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useLocation, Link } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -354,6 +354,65 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     setExpandedSections(newExpanded);
   };
 
+  // Handle click with modifier keys
+  const handleItemClick = useCallback((
+    event: React.MouseEvent,
+    href?: string,
+    label?: string
+  ) => {
+    if (!href) return;
+
+    // Ctrl/Cmd + Click for new tab
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      window.open(href, '_blank');
+      return;
+    }
+  }, []);
+
+  // Handle context menu
+  const handleContextMenu = useCallback((
+    event: React.MouseEvent,
+    href?: string,
+    label?: string
+  ) => {
+    if (!href) return;
+    
+    event.preventDefault();
+    
+    // Create simple context menu options
+    const options = [
+      {
+        label: 'Pin to top',
+        action: () => console.log('Pin to top:', label),
+        shortcut: ''
+      },
+      {
+        label: 'Copy link',
+        action: () => {
+          navigator.clipboard.writeText(window.location.origin + href);
+        },
+        shortcut: 'Ctrl+C'
+      },
+      {
+        label: 'Open in new tab',
+        action: () => window.open(href, '_blank'),
+        shortcut: 'Ctrl+Click'
+      }
+    ];
+
+    // Simple context menu implementation
+    // In a real app, you'd use a proper context menu component
+    const menuItems = options.map(option => 
+      `${option.label}${option.shortcut ? ` (${option.shortcut})` : ''}`
+    ).join('\n');
+    
+    // For demo, show alert - replace with actual context menu
+    if (confirm(`Context Menu for "${label}":\n\n${menuItems}\n\nClick OK to copy link`)) {
+      options[1].action(); // Copy link
+    }
+  }, []);
+
   const isActive = (href: string) => {
     if (href === '/') {
       return location === '/';
@@ -431,6 +490,10 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           variant="ghost"
           disabled={disabled}
           className={getButtonClasses(false)}
+          onClick={(e) => {
+            e.preventDefault();
+            if (!disabled) toggleSection(item.id);
+          }}
         >
           <div className="flex items-center flex-1 min-w-0">
             <item.icon className="h-6 w-6 flex-shrink-0" />
@@ -455,25 +518,33 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         <div key={item.id} className="mb-1">
           <Collapsible open={isExpanded} onOpenChange={() => !disabled && toggleSection(item.id)}>
             <CollapsibleTrigger asChild>
-              {collapsed ? (
-                <TooltipProvider delayDuration={300}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      {triggerButton}
-                    </TooltipTrigger>
-                    <TooltipContent side="right" className="max-w-xs">
-                      <div className="font-medium">{item.label}</div>
-                      {item.badge && (
-                        <div className="text-sm text-gray-500 mt-1">
-                          {item.badge} items
+              <div 
+                onContextMenu={(e) => handleContextMenu(e, item.href, item.label)}
+                className="w-full"
+              >
+                {collapsed ? (
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {triggerButton}
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="max-w-xs">
+                        <div className="font-medium">{item.label}</div>
+                        {item.badge && (
+                          <div className="text-sm text-gray-500 mt-1">
+                            {item.badge} items
+                          </div>
+                        )}
+                        <div className="text-xs text-gray-400 mt-1 pt-1 border-t">
+                          Click to {isExpanded ? 'collapse' : 'expand'}
                         </div>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                triggerButton
-              )}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  triggerButton
+                )}
+              </div>
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-0.5 pt-1">
               {item.children?.map((child) => renderNavigationItem(child, level + 1))}
@@ -489,6 +560,8 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         variant="ghost"
         disabled={disabled}
         className={getButtonClasses(true)}
+        onClick={(e) => item.href && handleItemClick(e, item.href, item.label)}
+        onContextMenu={(e) => handleContextMenu(e, item.href, item.label)}
       >
         <div className="flex items-center flex-1 min-w-0">
           <item.icon className="h-6 w-6 flex-shrink-0" />
@@ -517,7 +590,11 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
                 {item.urgent ? 'Urgent' : ''} {item.badge}
               </div>
             )}
-            {/* Shortcuts can be added here if available */}
+            {item.href && (
+              <div className="text-xs text-gray-400 mt-1 pt-1 border-t">
+                Ctrl+Click to open in new tab • Right-click for options
+              </div>
+            )}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -527,7 +604,18 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
 
     if (item.href) {
       return (
-        <Link key={item.id} to={item.href} className="block mb-1">
+        <Link 
+          key={item.id} 
+          to={item.href} 
+          className="block mb-1"
+          onClick={(e) => {
+            // Handle modifier keys before Link navigation
+            if (e.ctrlKey || e.metaKey) {
+              e.preventDefault();
+              window.open(item.href, '_blank');
+            }
+          }}
+        >
           {buttonWithTooltip}
         </Link>
       );
