@@ -215,6 +215,44 @@ const menuStructure: MenuLevel1Item[] = [
     ]
   },
   {
+    name: "Filings",
+    icon: Scale,
+    color: "bg-indigo-500",
+    items: [
+      {
+        name: "ERGANI II",
+        icon: UserCheck,
+        items: [
+          { name: "Hires", href: "/employee-master", description: "New employee notifications" },
+          { name: "Schedules", href: "/schedules", description: "Work schedule submissions" },
+          { name: "OT", href: "/overtime", description: "Overtime notifications" },
+          { name: "Terminations", href: "/employees", description: "Employee departure forms" },
+          { name: "Receipts", href: "/ergani-compliance", description: "Submission confirmations" },
+        ]
+      },
+      {
+        name: "e-EFKA/APD",
+        icon: Shield,
+        items: [
+          { name: "Build", href: "/payroll", description: "Insurance contribution files" },
+          { name: "Validate", href: "/compliance", description: "Data validation & checks" },
+          { name: "Submit", href: "/payroll-integration", description: "Electronic submission" },
+          { name: "Receipts", href: "/analytics", description: "Confirmation receipts" },
+        ]
+      },
+      {
+        name: "AADE/ΦΜΥ",
+        icon: CreditCard,
+        items: [
+          { name: "Build File", href: "/payments", description: "Payroll tax file generation" },
+          { name: "Merge", href: "/modern-payroll", description: "Multi-entity consolidation" },
+          { name: "Submit", href: "/legal", description: "Tax authority submission" },
+          { name: "Payment", href: "/manager-workflows", description: "Tax payment processing" },
+        ]
+      }
+    ]
+  },
+  {
     name: "Hotel Operations",
     icon: Building2,
     color: "bg-orange-500",

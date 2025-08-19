@@ -22,7 +22,9 @@ import {
   Rocket,
   Play,
   Calculator,
-  Settings
+  Settings,
+  Scale,
+  CreditCard
 } from "lucide-react";
 
 const uxExample = {
@@ -208,6 +210,48 @@ const uxExample = {
             { name: "Δώρο Πάσχα", path: "/payroll-integration", description: "Easter bonus calculation" },
             { name: "Χριστουγέννων", path: "/manager-workflows", description: "Christmas bonus calculation" },
             { name: "Επίδομα Άδειας", path: "/leave", description: "Vacation allowance calculation" }
+          ]
+        }
+      ]
+    },
+    {
+      name: "Filings",
+      icon: Scale,
+      color: "bg-indigo-500",
+      description: "Greek government compliance and submissions",
+      level2: [
+        {
+          name: "ERGANI II",
+          icon: UserCheck,
+          description: "Ministry of Labor submissions",
+          level3: [
+            { name: "Hires", path: "/employee-master", description: "New employee notifications" },
+            { name: "Schedules", path: "/schedules", description: "Work schedule submissions" },
+            { name: "OT", path: "/overtime", description: "Overtime notifications" },
+            { name: "Terminations", path: "/employees", description: "Employee departure forms" },
+            { name: "Receipts", path: "/ergani-compliance", description: "Submission confirmations" }
+          ]
+        },
+        {
+          name: "e-EFKA/APD",
+          icon: Shield,
+          description: "Social security submissions",
+          level3: [
+            { name: "Build", path: "/payroll", description: "Insurance contribution files" },
+            { name: "Validate", path: "/compliance", description: "Data validation & checks" },
+            { name: "Submit", path: "/payroll-integration", description: "Electronic submission" },
+            { name: "Receipts", path: "/analytics", description: "Confirmation receipts" }
+          ]
+        },
+        {
+          name: "AADE/ΦΜΥ",
+          icon: CreditCard,
+          description: "Tax authority submissions",
+          level3: [
+            { name: "Build File", path: "/payments", description: "Payroll tax file generation" },
+            { name: "Merge", path: "/modern-payroll", description: "Multi-entity consolidation" },
+            { name: "Submit", path: "/legal", description: "Tax authority submission" },
+            { name: "Payment", path: "/manager-workflows", description: "Tax payment processing" }
           ]
         }
       ]
@@ -444,6 +488,7 @@ export default function UXArchitecture() {
                 <Badge variant="outline">Live Compliance</Badge>
                 <Badge variant="outline">Cost Insights</Badge>
                 <Badge variant="outline">Payroll & Finance</Badge>
+                <Badge variant="outline">Filings</Badge>
                 <Badge variant="outline">Hotel Operations</Badge>
                 <Badge variant="outline">Platform</Badge>
               </div>
