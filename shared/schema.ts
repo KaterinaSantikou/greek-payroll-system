@@ -55,8 +55,7 @@ export const employees = pgTable("employees", {
   employeeNumber: varchar("employee_number", { length: 50 }).unique().notNull(), // Internal employee number
   
   // Personal Data
-  firstName: varchar("first_name", { length: 100 }).notNull(),
-  lastName: varchar("last_name", { length: 100 }).notNull(),
+  name: varchar("name", { length: 200 }).notNull(), // Full name
   afm: varchar("afm", { length: 9 }).unique(), // Greek Tax ID
   amka: varchar("amka", { length: 11 }).unique(), // Social Security Number
   paaypa: varchar("paaypa", { length: 20 }), // Unified Social Security Registry

@@ -177,6 +177,12 @@ const navigationItems: NavigationItem[] = [
         path: '/analytics'
       },
       {
+        id: 'visual-analytics',
+        title: 'Visual Analytics',
+        icon: <BarChart3 className="w-4 h-4" />,
+        path: '/analytics'
+      },
+      {
         id: 'allowances',
         title: 'Allowances',
         icon: <BarChart3 className="w-4 h-4" />,
