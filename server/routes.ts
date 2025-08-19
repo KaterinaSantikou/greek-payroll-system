@@ -2773,6 +2773,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Payroll Run Wizard API endpoints
+  app.post('/api/payroll-wizard/import-timesheets', isAuthenticated, async (req, res) => {
+    try {
+      // Simulate timesheet import with processing delay
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      const timesheetData = {
+        employeesProcessed: 45,
+        totalHours: 1840,
+        regularHours: 1680,
+        overtimeHours: 160,
+        exceptions: [
+          {
+            id: 'exc_001',
+            employeeName: 'Maria Papadopoulou',
+            type: 'overtime_approval',
+            description: 'Overtime hours (12.5h) require manager approval before processing',
+            severity: 'high',
+            suggestedAction: 'Request manager approval for overtime hours worked on weekend',
+            canAutoResolve: false
+          },
+          {
+            id: 'exc_002',
+            employeeName: 'Dimitris Kostas',
+            type: 'missing_punch',
+            description: 'Missing clock-out punch on August 15th',
+            severity: 'medium',
+            suggestedAction: 'Use scheduled end time (22:00) as clock-out time',
+            canAutoResolve: true
+          },
+          {
+            id: 'exc_003',
+            employeeName: 'Anna Nikolaou',
+            type: 'break_violation',
+            description: 'Break time exceeded by 30 minutes on August 12th',
+            severity: 'low',
+            suggestedAction: 'Deduct excess break time from regular hours',
+            canAutoResolve: true
+          }
+        ]
+      };
+      
+      res.json(timesheetData);
+    } catch (error) {
+      console.error('Error importing timesheets:', error);
+      res.status(500).json({ error: 'Failed to import timesheets' });
+    }
+  });
+
+  app.post('/api/payroll-wizard/generate-preview', isAuthenticated, async (req, res) => {
+    try {
+      // Simulate payroll calculation with processing delay
+      await new Promise(resolve => setTimeout(resolve, 4000));
+      
+      const payrollPreview = {
+        totalGrossPay: 142350.00,
+        totalNetPay: 98450.50,
+        totalTaxes: 28470.00,
+        totalInsurance: 15429.50,
+        employeeCount: 45,
+        variance: {
+          grossPay: { amount: 2850.00, percentage: 2.0 },
+          netPay: { amount: 1920.30, percentage: 2.0 },
+          overtime: { amount: 4800.00, percentage: 12.5 }
+        },
+        breakdown: {
+          regularPay: 118500.00,
+          overtimePay: 19200.00,
+          bonuses: 3200.00,
+          allowances: 1450.00,
+          deductions: 2150.00
+        }
+      };
+      
+      res.json(payrollPreview);
+    } catch (error) {
+      console.error('Error generating payroll preview:', error);
+      res.status(500).json({ error: 'Failed to generate payroll preview' });
+    }
+  });
+
+  app.post('/api/payroll-wizard/generate-final', isAuthenticated, async (req, res) => {
+    try {
+      // Simulate final payroll generation with processing delay
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      const finalResult = {
+        success: true,
+        payrollRunId: `PR-AUG-${Date.now()}`,
+        sepaFileGenerated: true,
+        sepaFileName: `SEPA_Payroll_AUG2025_${Date.now()}.xml`,
+        apdSubmitted: true,
+        apdConfirmationNumber: `APD${Date.now()}`,
+        fmySubmitted: true,
+        fmyConfirmationNumber: `FMY${Date.now()}`,
+        employeesProcessed: 45,
+        totalAmountPaid: 98450.50,
+        processingTime: '4 minutes 32 seconds',
+        completedAt: new Date().toISOString()
+      };
+      
+      res.json(finalResult);
+    } catch (error) {
+      console.error('Error generating final payroll:', error);
+      res.status(500).json({ error: 'Failed to generate final payroll' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

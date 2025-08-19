@@ -202,6 +202,12 @@ const navigationItems: NavigationItem[] = [
         path: '/payroll'
       },
       {
+        id: 'payroll-wizard',
+        title: 'Payroll Run Wizard',
+        icon: <CreditCard className="w-4 h-4" />,
+        path: '/payroll-run-wizard'
+      },
+      {
         id: 'payments',
         title: 'Payments',
         icon: <CreditCard className="w-4 h-4" />,
@@ -262,8 +268,8 @@ const commandItems = [
   { id: 'emp-dimitris', title: 'Dimitris Kostas', category: 'Employees', action: '/employees/dimitris', keywords: ['employee', 'dimitris', 'staff'] },
   
   // Actions
-  { id: 'run-payroll', title: 'Run Payroll', category: 'Actions', action: '/payroll/run', keywords: ['payroll', 'run', 'process'] },
-  { id: 'run-payroll-aug', title: 'Run Payroll August', category: 'Actions', action: '/payroll/august', keywords: ['payroll', 'august', 'run'] },
+  { id: 'run-payroll', title: 'Run Payroll', category: 'Actions', action: '/payroll-run-wizard', keywords: ['payroll', 'run', 'process'] },
+  { id: 'run-payroll-aug', title: 'Run Payroll August', category: 'Actions', action: '/payroll-run-wizard', keywords: ['payroll', 'august', 'run'] },
   { id: 'approve-overtime', title: 'Approve Overtime', category: 'Actions', action: '/overtime/approve', keywords: ['overtime', 'approve'] },
   { id: 'file-apd', title: 'File APD', category: 'Actions', action: '/compliance/apd', keywords: ['apd', 'file', 'compliance'] },
   
