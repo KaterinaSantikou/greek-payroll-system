@@ -292,7 +292,7 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
       },
       'eurobank': {
         name: 'Eurobank',
-        bic: 'EUROGRAA',
+        bic: 'ERBKGRAA',
         supportedPainVersions: ['pain.001.001.03'],
         statusReporting: ['pain.002.001.03'],
         reconciliation: ['camt.054'],
@@ -300,10 +300,14 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
           ibanOnly: true,
           separateDebitEntries: true,
           maxRemittanceChars: 140,
-          batchBookingSupported: false
+          batchBookingSupported: false,
+          corporateXMLGuide: true,
+          bulkPayrollSCT: true,
+          bulkSCT: true,
+          payrollSupport: true
         },
-        cutoffTime: { hour: 14, minute: 30 },
-        notes: 'Extended cut-off window'
+        cutoffTime: { hour: 15, minute: 0 },
+        notes: 'Corporate XML guide supports pain.001.001.03 for payroll and bulk SCT; status via pain.002.001.03'
       }
     };
 
@@ -315,7 +319,7 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
     const bankCutoffs: Record<string, { hour: number; minute: number }> = {
       'ETHNGRAA': { hour: 14, minute: 0 }, // National Bank of Greece
       'PIRBGRAA': { hour: 13, minute: 30 }, // Piraeus Bank
-      'EUROGRAA': { hour: 14, minute: 30 }, // Eurobank
+      'ERBKGRAA': { hour: 15, minute: 0 }, // Eurobank
       'AGEAGRAA': { hour: 14, minute: 0 }, // Alpha Bank
       'default': { hour: 13, minute: 0 } // Conservative default
     };
@@ -372,6 +376,23 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
     return {
       valid: issues.length === 0,
       issues
+    };
+  }
+
+  // Get Eurobank corporate XML specifications for bulk payroll SCT
+  getEurobankBulkPayrollSpecs(payrollRunId: string): {
+    corporateXMLGuide: string;
+    bulkSCTFormat: string;
+    payrollCategory: string;
+    processingMode: string;
+    cutoffTime: string;
+  } {
+    return {
+      corporateXMLGuide: "Eurobank Corporate XML Guide v2.1",
+      bulkSCTFormat: "pain.001.001.03",
+      payrollCategory: "SALA",
+      processingMode: "BULK_PAYROLL_SCT",
+      cutoffTime: "15:00"
     };
   }
 

@@ -105,12 +105,12 @@ export default function SepaPayments() {
     { 
       name: "Eurobank", 
       key: "eurobank",
-      bic: "EUROGRAA", 
-      cutoff: "14:30", 
+      bic: "ERBKGRAA", 
+      cutoff: "15:00", 
       painVersions: ["pain.001.001.03"],
       statusReporting: ["pain.002.001.03"],
       reconciliation: ["camt.054"],
-      features: ["Extended cut-off window"],
+      features: ["Corporate XML Guide", "Bulk payroll SCT", "Bulk SCT support"],
       status: "active"
     }
   ];
@@ -473,6 +473,80 @@ export default function SepaPayments() {
                 for high-volume payroll operations. The optional host-to-host encryption ensures 
                 maximum security for sensitive payroll data transmission. Sample schemas and 
                 integration guides are available through Piraeus Bank's developer portal.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Eurobank Corporate XML Features */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-blue-600" />
+              Eurobank Corporate XML Guide
+            </CardTitle>
+            <CardDescription>
+              Comprehensive support for pain.001.001.03 payroll and bulk SCT with corporate XML specifications
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Bulk Payroll SCT Features</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">Corporate XML Guide v2.1 compliance</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">pain.001.001.03 for bulk payroll</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">pain.002.001.03 status reporting</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">15:00 cut-off for same-day processing</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Processing Capabilities</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Euro className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm">Bulk SCT support</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm">SALA category purpose</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm">Corporate XML specifications</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm">Extended processing window</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+              <h5 className="font-medium mb-2">Corporate XML Guide</h5>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Eurobank's Corporate XML Guide provides comprehensive specifications for payroll and bulk SCT 
+                processing. The extended 15:00 cut-off time allows for flexible payroll processing schedules, 
+                while maintaining full compliance with ISO 20022 standards and Greek banking regulations.
               </p>
             </div>
           </CardContent>
