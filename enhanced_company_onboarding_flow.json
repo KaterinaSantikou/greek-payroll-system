@@ -1,0 +1,464 @@
+{
+  "flow_id": "new_company_signup_v2",
+  "goal": "Create a compliant Greece-native payroll tenant with ERGANI/e-EFKA/AADE and SEPA ready for first payroll.",
+  "states": [
+    {
+      "id": "sign_up",
+      "type": "ui_form",
+      "title": "Create Account",
+      "fields": [
+        { "id": "email", "type": "email", "required": true },
+        { "id": "password", "type": "password", "required": true, "policy": "min8+upper+lower+number" },
+        { "id": "agree_tos", "type": "checkbox", "required": true },
+        { "id": "gdpr_consent", "type": "checkbox", "required": true, "label": "I consent to processing personal data per GDPR" },
+        { "id": "data_processing_agreement", "type": "checkbox", "required": true, "label": "I acknowledge the Data Processing Agreement" }
+      ],
+      "next": "email_verify"
+    },
+    {
+      "id": "email_verify",
+      "type": "system",
+      "action": "send_magic_link|otp",
+      "success_next": "company_basics",
+      "failure_next": "email_verify"
+    },
+    {
+      "id": "company_basics",
+      "type": "ui_form",
+      "title": "Company Basics",
+      "fields": [
+        { "id": "legal_name", "type": "text", "required": true },
+        { "id": "display_name", "type": "text" },
+        { "id": "country", "type": "select", "required": true, "default": "GR", "options": ["GR"] },
+        { "id": "afm", "type": "text", "label": "AFM (VAT/TIN)", "required": true, "validation": "gr_afm" },
+        { "id": "gemi", "type": "text", "label": "GEMI", "required": false },
+        { "id": "head_office_address", "type": "address", "required": true },
+        { "id": "timezone", "type": "select", "required": true, "default": "Europe/Athens" },
+        { "id": "industry", "type": "select", "required": true, "default": "Hospitality" },
+        { "id": "business_license_number", "type": "text", "label": "Business License Number" },
+        { "id": "chamber_of_commerce_id", "type": "text", "label": "Chamber of Commerce ID" }
+      ],
+      "next": "document_upload"
+    },
+    {
+      "id": "document_upload",
+      "type": "ui_form",
+      "title": "Company Documents",
+      "description": "Upload essential company documents for compliance verification",
+      "fields": [
+        { "id": "business_registration", "type": "file", "accept": ".pdf,.jpg,.png", "required": true, "label": "Business Registration Certificate" },
+        { "id": "tax_registration", "type": "file", "accept": ".pdf,.jpg,.png", "required": true, "label": "Tax Registration Certificate" },
+        { "id": "chamber_certificate", "type": "file", "accept": ".pdf,.jpg,.png", "label": "Chamber of Commerce Certificate" },
+        { "id": "social_security_registration", "type": "file", "accept": ".pdf,.jpg,.png", "label": "Social Security Registration" },
+        { "id": "other_licenses", "type": "file_multiple", "accept": ".pdf,.jpg,.png", "label": "Other Business Licenses" }
+      ],
+      "post_actions": ["store_documents:secure_vault", "ocr_extract:document_data"],
+      "next": "org_structure"
+    },
+    {
+      "id": "org_structure",
+      "type": "ui_wizard",
+      "title": "Structure",
+      "steps": [
+        {
+          "id": "entities",
+          "fields": [
+            { "id": "has_group", "type": "toggle", "label": "Group with multiple legal entities?", "default": false },
+            { "id": "entities_list", "type": "table_add", "when": "has_group==true", "columns": ["legal_name", "afm", "gemi"] }
+          ]
+        },
+        {
+          "id": "properties",
+          "fields": [
+            { "id": "properties_list", "type": "table_add", "columns": ["property_id", "name", "address", "cost_center_code", "geofence_coords"] }
+          ]
+        },
+        {
+          "id": "departments",
+          "fields": [
+            { "id": "departments_list", "type": "table_add", "columns": ["name", "code", "manager_email", "cost_center"] }
+          ]
+        }
+      ],
+      "next": "collective_agreements"
+    },
+    {
+      "id": "collective_agreements",
+      "type": "ui_form",
+      "title": "Collective Bargaining Agreements",
+      "description": "Configure applicable CBAs for your industry and employees",
+      "fields": [
+        { "id": "primary_cba", "type": "select", "required": true, "options": ["GSEE_General", "Hotel_Workers_Fed", "Tourism_Workers_Union", "Custom"], "label": "Primary CBA" },
+        { "id": "custom_cba_name", "type": "text", "when": "primary_cba==Custom", "required": true },
+        { "id": "cba_effective_date", "type": "date", "required": true },
+        { "id": "additional_cba_list", "type": "table_add", "columns": ["cba_name", "applicable_departments", "effective_date"] },
+        { "id": "minimum_wage_override", "type": "toggle", "default": false, "label": "CBA minimum wage override" },
+        { "id": "cba_wage_rates", "type": "json_editor", "when": "minimum_wage_override==true" }
+      ],
+      "post_actions": ["validate_cba_compliance", "load_cba_rules"],
+      "next": "payroll_calendar"
+    },
+    {
+      "id": "payroll_calendar",
+      "type": "ui_form",
+      "title": "Payroll Calendar",
+      "fields": [
+        { "id": "periodicity", "type": "select", "options": ["Monthly"], "default": "Monthly" },
+        { "id": "first_period_start", "type": "date", "required": true },
+        { "id": "cutoff_day", "type": "number", "min": 1, "max": 31, "required": true },
+        { "id": "pay_date_rule", "type": "select", "options": ["LastBusinessDay", "FixedDay"], "default": "LastBusinessDay" },
+        { "id": "fixed_pay_day", "type": "number", "min": 1, "max": 31, "when": "pay_date_rule==FixedDay" },
+        { "id": "thirteenth_salary", "type": "select", "options": ["Christmas", "Easter", "Summer", "Split"], "default": "Christmas" },
+        { "id": "fourteenth_salary", "type": "toggle", "default": true, "label": "Enable 14th salary (vacation allowance)" }
+      ],
+      "next": "bank_setup"
+    },
+    {
+      "id": "bank_setup",
+      "type": "ui_form",
+      "title": "Bank & SEPA",
+      "fields": [
+        { "id": "bank_profile", "type": "select", "options": ["alpha", "piraeus", "eurobank", "nbg"], "required": true },
+        { "id": "debtor_iban", "type": "text", "validation": "iban_gr", "required": true },
+        { "id": "debtor_bic", "type": "text", "required": false },
+        { "id": "use_sct_inst", "type": "toggle", "default": false },
+        { "id": "backup_bank_account", "type": "text", "validation": "iban_gr", "label": "Backup IBAN (optional)" },
+        { "id": "sepa_batch_size", "type": "number", "default": 1000, "min": 1, "max": 10000 },
+        { "id": "payment_reference_format", "type": "select", "options": ["PAYROLL-YYYYMM-####", "SALARY-####-YYYYMM", "Custom"], "default": "PAYROLL-YYYYMM-####" }
+      ],
+      "post_actions": ["validate_sepa_profile", "test_bank_connection"],
+      "next": "government_integrations"
+    },
+    {
+      "id": "government_integrations",
+      "type": "ui_wizard",
+      "title": "Government Connections (Greece)",
+      "steps": [
+        {
+          "id": "ergani",
+          "fields": [
+            { "id": "ergani_username", "type": "text", "secret": true, "required": true },
+            { "id": "ergani_password", "type": "password", "secret": true, "required": true },
+            { "id": "ergani_sandbox_mode", "type": "toggle", "default": true, "label": "Use sandbox/test environment" }
+          ],
+          "post_actions": ["vault_store:ergani", "test_connection:ergani"]
+        },
+        {
+          "id": "efka",
+          "fields": [
+            { "id": "efka_employer_id", "type": "text", "required": true },
+            { "id": "efka_credentials", "type": "password", "secret": true, "required": true },
+            { "id": "efka_branch_codes", "type": "table_add", "columns": ["property_id", "efka_branch_code"] }
+          ],
+          "post_actions": ["vault_store:efka", "test_connection:efka"]
+        },
+        {
+          "id": "aade_fmy",
+          "fields": [
+            { "id": "taxis_username", "type": "text", "required": true },
+            { "id": "taxis_password", "type": "password", "secret": true, "required": true },
+            { "id": "fmy_submission_method", "type": "select", "options": ["Automatic", "Manual_Review"], "default": "Manual_Review" }
+          ],
+          "post_actions": ["vault_store:aade", "test_connection:aade"]
+        }
+      ],
+      "next": "tax_withholding"
+    },
+    {
+      "id": "tax_withholding",
+      "type": "ui_form",
+      "title": "Tax Configuration",
+      "description": "Configure tax withholding tables and special circumstances",
+      "fields": [
+        { "id": "load_2025_tax_tables", "type": "button", "label": "Load 2025 Greek tax tables" },
+        { "id": "special_tax_zones", "type": "table_add", "columns": ["property_id", "zone_type", "tax_reduction_pct"], "label": "Special Tax Zones (islands, border areas)" },
+        { "id": "solidarity_tax_threshold", "type": "number", "default": 12000, "label": "Solidarity tax threshold (€)" },
+        { "id": "disability_tax_exemptions", "type": "toggle", "default": true },
+        { "id": "family_allowance_rules", "type": "json_editor", "default": [{"dependents": 1, "allowance": 40}, {"dependents": 2, "allowance": 84}, {"dependents": 3, "allowance": 170}] }
+      ],
+      "post_actions": ["seed_tax_tables:2025", "validate_tax_calculations"],
+      "next": "policies_and_codes"
+    },
+    {
+      "id": "policies_and_codes",
+      "type": "ui_form",
+      "title": "Policies & Earnings Codes",
+      "fields": [
+        { "id": "load_greek_defaults", "type": "button", "label": "Load Greek defaults (min wage, night band, Sunday/holidays, OT tiers, tips)" },
+        { "id": "night_band", "type": "time_range", "default": { "start": "22:00", "end": "06:00" } },
+        { "id": "ot_tiers", "type": "json_editor", "default": [{ "code": "OT_TIER1_40", "premium": 0.4 }, { "code": "OT_TIER2_60", "premium": 0.6 }] },
+        { "id": "sixth_day_enabled", "type": "toggle", "default": false },
+        { "id": "sunday_premium_type", "type": "select", "options": ["Fixed_75pct", "CBA_Override", "Disabled"], "default": "Fixed_75pct" },
+        { "id": "holiday_calendar", "type": "select", "options": ["Orthodox_Greek", "Custom"], "default": "Orthodox_Greek" },
+        { "id": "tip_distribution_method", "type": "select", "options": ["Equal_Split", "Hours_Weighted", "Department_Based", "Performance_Based"], "default": "Hours_Weighted" },
+        { "id": "earnings_code_map", "type": "picker", "source": "greek_defaults", "editable": true }
+      ],
+      "post_actions": ["seed_minimum_wage_table:2025-04->880", "seed_public_holidays:GR", "validate_policy_rules"],
+      "next": "data_protection"
+    },
+    {
+      "id": "data_protection",
+      "type": "ui_form", 
+      "title": "Data Protection & GDPR",
+      "description": "Configure data protection policies and retention settings",
+      "fields": [
+        { "id": "data_retention_years", "type": "number", "default": 20, "min": 5, "max": 50, "label": "Payroll data retention (years)" },
+        { "id": "employee_data_retention_post_termination", "type": "number", "default": 10, "min": 3, "max": 20, "label": "Employee data retention after termination (years)" },
+        { "id": "audit_log_retention_years", "type": "number", "default": 7, "min": 1, "max": 10 },
+        { "id": "employee_consent_tracking", "type": "toggle", "default": true },
+        { "id": "data_subject_requests", "type": "toggle", "default": true, "label": "Enable data subject access requests" },
+        { "id": "anonymization_rules", "type": "json_editor", "default": [{"field": "name", "method": "hash"}, {"field": "personal_details", "method": "delete"}] },
+        { "id": "cross_border_transfers", "type": "select", "options": ["EU_Only", "Adequacy_Countries", "Custom"], "default": "EU_Only" }
+      ],
+      "post_actions": ["setup_retention_policies", "enable_gdpr_compliance"],
+      "next": "digital_work_card"
+    },
+    {
+      "id": "digital_work_card",
+      "type": "ui_wizard",
+      "title": "Digital Work Card",
+      "steps": [
+        {
+          "id": "enable_card",
+          "fields": [
+            { "id": "use_dwc", "type": "toggle", "default": true },
+            { "id": "offline_mode_duration", "type": "number", "default": 72, "min": 1, "max": 168, "label": "Offline mode duration (hours)" }
+          ]
+        },
+        {
+          "id": "geofences", 
+          "when": "use_dwc==true",
+          "fields": [
+            { "id": "geofence_list", "type": "table_add", "columns": ["property_id", "lat", "lng", "radius_m", "strict_mode"] },
+            { "id": "geofence_violations_action", "type": "select", "options": ["Block", "Warn", "Log"], "default": "Warn" }
+          ]
+        },
+        {
+          "id": "devices",
+          "when": "use_dwc==true", 
+          "fields": [
+            { "id": "kiosks", "type": "table_add", "columns": ["property_id", "device_name", "platform", "serial", "location"] },
+            { "id": "mobile_app_config", "type": "json_editor", "default": {"biometric_auth": true, "photo_punch": false, "nfc_enabled": true} }
+          ],
+          "post_actions": ["generate_qr_packs", "setup_device_certificates"]
+        }
+      ],
+      "next": "notifications"
+    },
+    {
+      "id": "notifications",
+      "type": "ui_form",
+      "title": "Notifications & Alerts",
+      "description": "Configure system notifications for payroll deadlines and compliance alerts",
+      "fields": [
+        { "id": "payroll_deadline_alerts", "type": "toggle", "default": true },
+        { "id": "deadline_alert_days", "type": "multi_select", "options": [1, 3, 7, 14], "default": [3, 7] },
+        { "id": "compliance_alerts", "type": "toggle", "default": true },
+        { "id": "ergani_deadline_alerts", "type": "toggle", "default": true },
+        { "id": "efka_submission_alerts", "type": "toggle", "default": true },
+        { "id": "exception_threshold_alerts", "type": "number", "default": 5, "min": 1, "max": 100, "label": "Exception threshold (%)" },
+        { "id": "notification_channels", "type": "multi_select", "options": ["Email", "SMS", "Slack", "Teams"], "default": ["Email"] },
+        { "id": "emergency_contact_list", "type": "emails", "label": "Emergency notification contacts" }
+      ],
+      "post_actions": ["setup_notification_rules", "test_notification_channels"],
+      "next": "users_and_roles"
+    },
+    {
+      "id": "users_and_roles",
+      "type": "ui_form",
+      "title": "Users & Roles",
+      "fields": [
+        { "id": "invite_admins", "type": "emails", "required": true, "role": "payroll_admin" },
+        { "id": "invite_hr", "type": "emails", "role": "hr_admin" },
+        { "id": "invite_managers", "type": "emails", "role": "manager" },
+        { "id": "invite_auditors", "type": "emails", "role": "auditor" },
+        { "id": "enforce_mfa", "type": "toggle", "default": true },
+        { "id": "password_policy", "type": "select", "options": ["Standard", "Strong", "Enterprise"], "default": "Strong" },
+        { "id": "session_timeout_minutes", "type": "number", "default": 480, "min": 30, "max": 1440 },
+        { "id": "employee_self_service", "type": "toggle", "default": true },
+        { "id": "employee_portal_features", "type": "multi_select", "options": ["Payslips", "Leave_Requests", "Profile_Edit", "Tax_Docs"], "default": ["Payslips", "Leave_Requests"] },
+        { "id": "sso_oidc", "type": "json_editor", "required": false }
+      ],
+      "post_actions": ["send_invitations", "setup_rbac_rules"],
+      "next": "audit_configuration"
+    },
+    {
+      "id": "audit_configuration",
+      "type": "ui_form",
+      "title": "Audit & Compliance Tracking",
+      "description": "Configure audit trails and compliance monitoring",
+      "fields": [
+        { "id": "audit_all_payroll_changes", "type": "toggle", "default": true },
+        { "id": "audit_employee_data_access", "type": "toggle", "default": true },
+        { "id": "audit_admin_actions", "type": "toggle", "default": true },
+        { "id": "immutable_audit_log", "type": "toggle", "default": true, "label": "Blockchain-backed audit log" },
+        { "id": "compliance_dashboard", "type": "toggle", "default": true },
+        { "id": "automated_compliance_checks", "type": "multi_select", "options": ["ERGANI_Sync", "Tax_Calculation", "CBA_Compliance", "Minimum_Wage"], "default": ["ERGANI_Sync", "Tax_Calculation"] },
+        { "id": "monthly_compliance_report", "type": "toggle", "default": true },
+        { "id": "external_auditor_access", "type": "toggle", "default": false }
+      ],
+      "post_actions": ["initialize_audit_system", "setup_compliance_monitoring"],
+      "next": "backup_recovery"
+    },
+    {
+      "id": "backup_recovery",
+      "type": "ui_form",
+      "title": "Backup & Disaster Recovery",
+      "description": "Configure backup and disaster recovery settings",
+      "fields": [
+        { "id": "backup_frequency", "type": "select", "options": ["Daily", "Hourly", "Real_Time"], "default": "Daily" },
+        { "id": "backup_retention_days", "type": "number", "default": 30, "min": 7, "max": 365 },
+        { "id": "offsite_backup", "type": "toggle", "default": true },
+        { "id": "backup_encryption", "type": "toggle", "default": true },
+        { "id": "disaster_recovery_rto", "type": "select", "options": ["1_Hour", "4_Hours", "24_Hours"], "default": "4_Hours", "label": "Recovery Time Objective" },
+        { "id": "disaster_recovery_rpo", "type": "select", "options": ["15_Minutes", "1_Hour", "4_Hours"], "default": "1_Hour", "label": "Recovery Point Objective" },
+        { "id": "backup_test_schedule", "type": "select", "options": ["Monthly", "Quarterly", "Annually"], "default": "Quarterly" }
+      ],
+      "post_actions": ["setup_backup_system", "test_backup_restore"],
+      "next": "employee_import"
+    },
+    {
+      "id": "employee_import",
+      "type": "ui_wizard",
+      "title": "Import Employees",
+      "steps": [
+        { "id": "download_template", "action": "download_csv:employees_template_gr" },
+        { "id": "upload", "fields": [{ "id": "csv_file", "type": "file", "accept": ".csv", "required": true }] },
+        { "id": "validate", "action": "run_validations:afm,amka,iban_gr,duplicate_contracts,cba_compliance" },
+        { "id": "fix_errors", "type": "ui_table_errors" },
+        { "id": "privacy_consent", "fields": [{ "id": "employee_consent_method", "type": "select", "options": ["Bulk_Consent", "Individual_Email", "Manual_Collection"], "default": "Individual_Email" }] },
+        { "id": "commit", "action": "create_employees_and_contracts" }
+      ],
+      "next": "integration_testing"
+    },
+    {
+      "id": "integration_testing",
+      "type": "system",
+      "title": "Integration Testing",
+      "description": "Comprehensive testing of all system integrations",
+      "tests": [
+        { "id": "ergani_full_flow", "action": "test_ergani_card_lifecycle" },
+        { "id": "efka_apd_submission", "action": "test_efka_apd_flow" },
+        { "id": "aade_fmy_submission", "action": "test_aade_fmy_flow" },
+        { "id": "sepa_generation", "action": "test_sepa_file_generation" },
+        { "id": "tax_calculations", "action": "test_tax_calculation_accuracy" },
+        { "id": "cba_compliance", "action": "test_cba_rule_application" }
+      ],
+      "success_next": "dry_run_payroll",
+      "failure_next": "integration_testing",
+      "retry_limit": 3
+    },
+    {
+      "id": "dry_run_payroll",
+      "type": "system",
+      "action": "simulate_first_run",
+      "inputs": {
+        "period": "$first_period_start..end",
+        "outputs": ["draft_payslips", "apd_preview", "fmy_preview", "pain001_sample", "compliance_report", "exception_analysis"]
+      },
+      "success_next": "go_live",
+      "failure_next": "dry_run_payroll"
+    },
+    {
+      "id": "go_live",
+      "type": "ui_confirm",
+      "title": "Go Live",
+      "checklist": [
+        "ERGANI test passed ✓",
+        "APD preview validated ✓", 
+        "ΦΜΥ preview validated ✓",
+        "SEPA sample validated by bank ✓",
+        "Tax calculations verified ✓",
+        "CBA rules applied correctly ✓",
+        "Backup system tested ✓",
+        "Audit system active ✓",
+        "GDPR compliance verified ✓",
+        "Exceptions < 1% ✓",
+        "All integrations tested ✓"
+      ],
+      "action": "activate_tenant_prod",
+      "post_actions": ["send_go_live_notifications", "schedule_first_payroll", "enable_monitoring"],
+      "done": true
+    }
+  ],
+  "validations": {
+    "gr_afm": "9-digit Greek TIN; checksum mod11",
+    "iban_gr": "Regex ^GR[0-9]{25}$ with IBAN checksum",
+    "amka": "11-digit Greek social security number",
+    "cba_compliance": "Validate employee assignments against applicable CBAs",
+    "tax_calculation_accuracy": "Verify tax calculations against 2025 Greek tax tables"
+  },
+  "apis": [
+    { "id": "POST /tenants", "purpose": "Create tenant", "auth": "public->provisioning" },
+    { "id": "POST /entities", "purpose": "Add legal entities" },
+    { "id": "POST /properties", "purpose": "Add properties (hotels)" },
+    { "id": "POST /departments", "purpose": "Add departments with managers" },
+    { "id": "POST /policies/cbas", "purpose": "Configure collective bargaining agreements" },
+    { "id": "POST /policies/rulesets", "purpose": "Set OT/night/min-wage" },
+    { "id": "POST /policies/tax-tables", "purpose": "Load 2025 tax withholding tables" },
+    { "id": "POST /integrations/ergani", "purpose": "Store & test ERGANI creds", "secrets": "vault" },
+    { "id": "POST /integrations/efka", "purpose": "Store & test e-EFKA" },
+    { "id": "POST /integrations/aade", "purpose": "Store & test AADE/ΦΜΥ" },
+    { "id": "POST /banking/sepa-profile", "purpose": "Set bank, IBAN, BIC, SCT Inst" },
+    { "id": "POST /gdpr/data-protection", "purpose": "Configure GDPR compliance settings" },
+    { "id": "POST /audit/configuration", "purpose": "Setup audit trails and compliance monitoring" },
+    { "id": "POST /backup/configuration", "purpose": "Configure backup and disaster recovery" },
+    { "id": "POST /notifications/rules", "purpose": "Setup notification preferences" },
+    { "id": "POST /employees:bulk", "purpose": "Create employees/contracts" },
+    { "id": "POST /payroll/runs:simulate", "purpose": "Dry run payroll" },
+    { "id": "POST /integrations:test-all", "purpose": "Comprehensive integration testing" }
+  ],
+  "events": [
+    "tenant.created",
+    "documents.uploaded",
+    "cbas.configured", 
+    "tax.tables.loaded",
+    "integrations.ergani.verified",
+    "integrations.efka.verified",
+    "integrations.aade.verified",
+    "sepa.profile.validated",
+    "gdpr.compliance.enabled",
+    "audit.system.initialized", 
+    "backup.system.configured",
+    "employees.import.validated",
+    "integrations.tested.comprehensive",
+    "payroll.simulation.completed",
+    "tenant.activated",
+    "monitoring.enabled"
+  ],
+  "acceptance_criteria": [
+    "New tenant can reach payroll simulation without human support in < 90 minutes.",
+    "All secrets stored in KMS/Vault; no plaintext at rest.",
+    "ERGANI/EFKA/AADE test calls return success or actionable errors with IDs.",
+    "SEPA pain.001 sample validates against selected bank profile.",
+    "Policy defaults reflect Greek 2025 min wage, night band 22:00–06:00, OT tiers.",
+    "CBA rules properly configured and tested for compliance.",
+    "Tax calculations verified against 2025 Greek tax tables.",
+    "GDPR compliance settings active with data retention policies.",
+    "Audit trails capturing all payroll and admin actions.",
+    "Backup system tested and verified functional.",
+    "Comprehensive integration testing passes all checks.",
+    "Employee portal configured and accessible.",
+    "Exception rate < 1% in dry run payroll.",
+    "All notification channels tested and functional."
+  ],
+  "i18n": {
+    "default_locale": "el-GR", 
+    "fallback": "en-US"
+  },
+  "security": {
+    "encryption_at_rest": true,
+    "encryption_in_transit": true,
+    "secrets_management": "vault",
+    "audit_logging": "immutable",
+    "access_control": "rbac",
+    "data_classification": "confidential",
+    "compliance_frameworks": ["GDPR", "Greek_Labour_Law", "ISO_27001"]
+  },
+  "monitoring": {
+    "health_checks": ["database", "integrations", "sepa_connectivity", "vault_access"],
+    "performance_metrics": ["payroll_processing_time", "integration_response_time", "exception_rate"],
+    "business_metrics": ["employee_count", "payroll_runs", "compliance_score"],
+    "alerts": ["integration_failures", "high_exception_rate", "compliance_violations", "backup_failures"]
+  }
+}
