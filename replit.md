@@ -8,6 +8,7 @@ PayrollSync is a comprehensive Greek HR & Payroll Management System designed for
 - **Greek Compliance Features**: Full integration with ERGANI II, e-EFKA/APD, and AADE/ΦΜΥ government systems with real-time synchronization
 - **Advanced Middleware**: Added idempotency protection, audit logging, and performance monitoring for enterprise-grade reliability
 - **Security, Privacy & Audit Framework**: Complete implementation of GDPR-native compliance, RBAC with separation of duties, immutable hash-chained audit logs, and EU data residency controls with AES-256 encryption and configurable PIT restore
+- **Document AI & E-Signature Pipeline**: Complete OCR processing system for Greek employment contracts and IDs using Google Cloud Document AI, plus comprehensive e-signature workflows with Greek legal compliance (Law 4070/2012), ERGANI notification triggers, and multi-party signing sequences
 
 # User Preferences
 

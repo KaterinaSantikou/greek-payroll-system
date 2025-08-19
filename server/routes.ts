@@ -15,6 +15,7 @@ import healthAPI from "./api/health";
 import securityAPI from "./api/security";
 import reportsAPI from "./api/reports";
 import { registerForecastingRoutes } from "./api/forecasting";
+import { registerDocumentAIRoutes } from "./api/documentAI";
 import { 
   insertEmployeeSchema, 
   insertPropertySchema, 
@@ -2270,6 +2271,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register forecasting API routes
   registerForecastingRoutes(app);
+  
+  // Register Document AI API routes
+  registerDocumentAIRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
