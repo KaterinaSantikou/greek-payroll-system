@@ -39,8 +39,9 @@ const navigationItems = [
   { name: "Αναφορές", href: "/analytics", icon: BarChart },
   { name: "Συμμόρφωση", href: "/compliance", icon: Shield },
   { name: "Site Deployment", href: "/deployment", icon: Rocket },
-  { name: "Success Metrics", href: "/success-metrics", icon: Target },
+  { name: "Success Metrics", href: "/success-metrics", icon: BarChart },
   { name: "Modern Payroll", href: "/modern-payroll", icon: Sparkles },
+  { name: "Product Vision", href: "/product-vision", icon: Target },
 ];
 
 export default function Sidebar() {

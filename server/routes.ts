@@ -1343,6 +1343,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Product Vision routes
+  app.get('/api/product-vision/principles', isAuthenticated, async (req, res) => {
+    try {
+      const { productVisionService } = await import('./productVisionService');
+      const principles = productVisionService.getPrinciples();
+      res.json(principles);
+    } catch (error) {
+      console.error("Error fetching product principles:", error);
+      res.status(500).json({ message: "Failed to fetch product principles" });
+    }
+  });
+
+  app.get('/api/product-vision/automation-flow', isAuthenticated, async (req, res) => {
+    try {
+      const { productVisionService } = await import('./productVisionService');
+      const flow = productVisionService.getAutomationFlow();
+      const totalTime = productVisionService.getTotalAutomationTime();
+      res.json({ flow, totalTime });
+    } catch (error) {
+      console.error("Error fetching automation flow:", error);
+      res.status(500).json({ message: "Failed to fetch automation flow" });
+    }
+  });
+
+  app.get('/api/product-vision/ux-metrics', isAuthenticated, async (req, res) => {
+    try {
+      const { productVisionService } = await import('./productVisionService');
+      const metrics = productVisionService.getUXMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching UX metrics:", error);
+      res.status(500).json({ message: "Failed to fetch UX metrics" });
+    }
+  });
+
+  app.get('/api/product-vision/compliance-metrics', isAuthenticated, async (req, res) => {
+    try {
+      const { productVisionService } = await import('./productVisionService');
+      const metrics = productVisionService.getComplianceMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching compliance metrics:", error);
+      res.status(500).json({ message: "Failed to fetch compliance metrics" });
+    }
+  });
+
+  app.get('/api/product-vision/automation-benefits', isAuthenticated, async (req, res) => {
+    try {
+      const { productVisionService } = await import('./productVisionService');
+      const benefits = productVisionService.getAutomationBenefits();
+      res.json(benefits);
+    } catch (error) {
+      console.error("Error fetching automation benefits:", error);
+      res.status(500).json({ message: "Failed to fetch automation benefits" });
+    }
+  });
+
+  app.get('/api/product-vision/api-architecture', isAuthenticated, async (req, res) => {
+    try {
+      const { productVisionService } = await import('./productVisionService');
+      const architecture = productVisionService.getAPIArchitecture();
+      res.json(architecture);
+    } catch (error) {
+      console.error("Error fetching API architecture:", error);
+      res.status(500).json({ message: "Failed to fetch API architecture" });
+    }
+  });
+
+  app.get('/api/product-vision/hotel-features', isAuthenticated, async (req, res) => {
+    try {
+      const { productVisionService } = await import('./productVisionService');
+      const features = productVisionService.getHotelFeatures();
+      res.json(features);
+    } catch (error) {
+      console.error("Error fetching hotel features:", error);
+      res.status(500).json({ message: "Failed to fetch hotel features" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
