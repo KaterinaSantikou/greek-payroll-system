@@ -229,6 +229,52 @@ export function registerCsrdRoutes(app: Router) {
     }
   });
 
+  // Calculate work-life balance metrics (S1-6 enhanced)
+  app.post('/api/csrd/calculate/work-life-balance/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      const { periodStart, periodEnd } = req.body;
+
+      if (!periodStart || !periodEnd) {
+        return res.status(400).json({ error: 'periodStart and periodEnd are required' });
+      }
+
+      const workLifeBalance = await csrdService.calculateWorkLifeBalance(
+        reportingPeriodId,
+        new Date(periodStart),
+        new Date(periodEnd)
+      );
+
+      res.json({ success: true, workLifeBalance });
+    } catch (error) {
+      console.error('Calculate work-life balance error:', error);
+      res.status(500).json({ error: 'Failed to calculate work-life balance metrics' });
+    }
+  });
+
+  // Calculate enhanced health & safety metrics (incidents per 100 FTE)
+  app.post('/api/csrd/calculate/health-safety/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      const { periodStart, periodEnd } = req.body;
+
+      if (!periodStart || !periodEnd) {
+        return res.status(400).json({ error: 'periodStart and periodEnd are required' });
+      }
+
+      const healthSafety = await csrdService.calculateHealthSafetyMetrics(
+        reportingPeriodId,
+        new Date(periodStart),
+        new Date(periodEnd)
+      );
+
+      res.json({ success: true, healthSafety });
+    } catch (error) {
+      console.error('Calculate health & safety error:', error);
+      res.status(500).json({ error: 'Failed to calculate health & safety metrics' });
+    }
+  });
+
   // One-click CSRD export
   app.get('/api/csrd/export/:reportingPeriodId', async (req, res) => {
     try {
