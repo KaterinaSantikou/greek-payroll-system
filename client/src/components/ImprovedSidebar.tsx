@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "./ui/badge";
 import { SidebarSection, SidebarDivider } from "./ui/sidebar-section";
+import { ProfileFooter } from "./ui/profile-footer";
 import {
   LayoutDashboard,
   Users,
@@ -264,16 +265,19 @@ export function ImprovedSidebar({
               {section.items.map((item) => (
                 <Link key={item.href} href={item.href}>
                   <div className={cn(
-                    "mx-3 px-3 py-2 rounded-lg transition-colors cursor-pointer group",
+                    "mx-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer group relative",
                     location === item.href
-                      ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100"
+                      ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow-sm border-l-4 border-blue-600 dark:border-blue-400"
                       : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
                   )}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <item.icon className="h-5 w-5" />
                         <div>
-                          <div className="font-medium text-sm">{item.name}</div>
+                          <div className={cn(
+                            "font-medium text-sm",
+                            location === item.href && "font-semibold"
+                          )}>{item.name}</div>
                           {item.description && (
                             <div className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                               {item.description}
@@ -296,31 +300,11 @@ export function ImprovedSidebar({
         ))}
       </nav>
 
-      {/* Footer - Property Context */}
-      <div className="border-t border-gray-200 dark:border-gray-800 p-4 space-y-3">
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-muted-foreground">Active Property</span>
-            <Badge variant="outline" className="text-xs">
-              {userRole}
-            </Badge>
-          </div>
-          <div className="font-medium text-sm text-foreground">
-            {currentProperty.name}
-          </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            {currentProperty.propertyId}
-          </div>
-        </div>
-        
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Greece Compliant</span>
-          <div className="flex items-center gap-1">
-            <CheckCircle className="h-3 w-3 text-green-500" />
-            <span>Active</span>
-          </div>
-        </div>
-      </div>
+      {/* Profile Footer */}
+      <ProfileFooter 
+        currentProperty={currentProperty}
+        userRole={userRole}
+      />
     </div>
   );
 }
