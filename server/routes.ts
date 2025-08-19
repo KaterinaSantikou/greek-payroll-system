@@ -41,6 +41,7 @@ import { GLExportService } from "./glExportService";
 import { FilingComplianceService } from "./filingComplianceService";
 import { SelfServiceManager } from "./selfServiceManager";
 import { registerSelfServiceRoutes } from "./api/selfService";
+import { registerPropertiesRoutes } from "./api/properties";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { 
@@ -2989,6 +2990,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register self-service routes
   registerSelfServiceRoutes(app);
+  registerPropertiesRoutes(app);
 
   // Register notification routes
   try {

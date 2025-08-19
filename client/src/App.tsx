@@ -47,6 +47,7 @@ import { Navigation } from "@/components/Navigation";
 import Layout from "@/components/Layout";
 import SmartNotifications from "@/pages/smartNotifications";
 import VisualAnalytics from "@/pages/visualAnalytics";
+import PropertyDashboard from "@/pages/propertyDashboard";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -55,6 +56,7 @@ function Router() {
     return (
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/property-dashboard" component={PropertyDashboard} />
         <Route component={NotFound} />
       </Switch>
     );
@@ -66,7 +68,7 @@ function Router() {
       <div className="flex flex-col flex-1 overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           <Switch>
-            <Route path="/" component={Home} />
+            <Route path="/" component={PropertyDashboard} />
             <Route path="/employees" component={Employees} />
             <Route path="/employee-master" component={EmployeeMaster} />
             <Route path="/payroll" component={Payroll} />
