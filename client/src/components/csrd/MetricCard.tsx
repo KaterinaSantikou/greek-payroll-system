@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { HelpCircleIcon, TrendingUpIcon, TrendingDownIcon, CalendarIcon, InfoIcon } from "lucide-react";
+import { HelpCircleIcon, TrendingUpIcon, TrendingDownIcon, CalendarIcon, InfoIcon, AlertTriangleIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MetricCardProps {
@@ -15,6 +15,15 @@ interface MetricCardProps {
   formula: string;
   inclusions: string[];
   metricCode: string;
+  status?: 'ready' | 'pending' | 'incomplete';
+  methodology?: {
+    hourlyDerivation?: string;
+    nonEmployeesExcluded?: number;
+    pppAdjusted?: boolean;
+    pppMethodology?: string;
+    sampleSize?: number;
+    methodologyDisclosure?: string;
+  };
 }
 
 export function MetricCard({
@@ -27,6 +36,8 @@ export function MetricCard({
   formula,
   inclusions,
   metricCode,
+  status = 'ready',
+  methodology,
 }: MetricCardProps) {
   const getTrendIcon = () => {
     if (trend > 0) return <TrendingUpIcon className="w-4 h-4 text-green-600" />;
@@ -60,6 +71,15 @@ export function MetricCard({
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <CardTitle className="text-lg">{title}</CardTitle>
+              {status !== 'ready' && (
+                <Badge variant={status === 'pending' ? 'secondary' : 'destructive'} className="text-xs">
+                  {status === 'pending' ? (
+                    <><AlertTriangleIcon className="w-3 h-3 mr-1" />Pending</>
+                  ) : (
+                    <><AlertTriangleIcon className="w-3 h-3 mr-1" />Incomplete</>
+                  )}
+                </Badge>
+              )}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
@@ -89,6 +109,54 @@ export function MetricCard({
                         ))}
                       </ul>
                     </div>
+                    
+                    {methodology && (
+                      <div>
+                        <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                          <AlertTriangleIcon className="w-3 h-3" />
+                          EFRAG Compliance Notes
+                        </h4>
+                        <div className="space-y-2 text-xs text-muted-foreground">
+                          {methodology.nonEmployeesExcluded !== undefined && (
+                            <div className="bg-blue-50 p-2 rounded">
+                              <span className="font-medium">Non-employees excluded:</span> {methodology.nonEmployeesExcluded}
+                              <br />
+                              <span className="text-blue-600">Contractors, consultants, temporary agency workers excluded per ESRS requirements</span>
+                            </div>
+                          )}
+                          
+                          {methodology.hourlyDerivation && (
+                            <div className="bg-amber-50 p-2 rounded">
+                              <span className="font-medium">Hourly derivation:</span>
+                              <br />
+                              <span className="text-amber-700">{methodology.hourlyDerivation}</span>
+                            </div>
+                          )}
+                          
+                          {methodology.pppAdjusted && (
+                            <div className="bg-purple-50 p-2 rounded">
+                              <span className="font-medium">PPP Adjustment:</span> Applied
+                              <br />
+                              <span className="text-purple-700">{methodology.pppMethodology}</span>
+                            </div>
+                          )}
+                          
+                          {methodology.sampleSize && (
+                            <div className="bg-gray-50 p-2 rounded">
+                              <span className="font-medium">Sample size:</span> {methodology.sampleSize} employees
+                            </div>
+                          )}
+                          
+                          {methodology.methodologyDisclosure && (
+                            <div className="bg-green-50 p-2 rounded max-h-32 overflow-y-auto">
+                              <span className="font-medium">Full Methodology:</span>
+                              <br />
+                              <span className="text-green-700 whitespace-pre-wrap">{methodology.methodologyDisclosure}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                     
                     <div className="pt-2 border-t">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">

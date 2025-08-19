@@ -20,39 +20,58 @@ interface MetricsData {
     value: number;
     trend: number;
     lastCalculated: string;
+    formula?: string;
+    inclusions?: string[];
+    methodology?: any;
+    status?: string;
   };
   topToMedianRatio: {
     value: number;
     trend: number;
     lastCalculated: string;
+    formula?: string;
+    inclusions?: string[];
+    methodology?: any;
+    status?: string;
   };
   healthSafetyCoverage: {
     value: number;
     trend: number;
     lastCalculated: string;
+    formula?: string;
+    inclusions?: string[];
+    methodology?: any;
+    status?: string;
   };
   incidentsRate: {
     value: number;
     trend: number;
     lastCalculated: string;
+    formula?: string;
+    inclusions?: string[];
+    methodology?: any;
+    status?: string;
   };
   workLifeUsage: {
     value: number;
     trend: number;
     lastCalculated: string;
+    formula?: string;
+    inclusions?: string[];
+    methodology?: any;
+    status?: string;
   };
 }
 
 export function S1MetricsPage() {
   const [filters, setFilters] = useState<FiltersState>({
-    entity: "",
+    entity: "hq-athens",
     country: "GRC",
     period: "2024",
   });
 
   const { data: metricsData, isLoading } = useQuery<MetricsData>({
     queryKey: ['/api/csrd/metrics', filters],
-    enabled: !!filters.entity,
   });
 
   const { data: entities } = useQuery<Array<{id: string, name: string}>>({
@@ -195,14 +214,16 @@ export function S1MetricsPage() {
             unit="%"
             trend={metricsData?.genderPayGap?.trend || 0}
             lastCalculated={metricsData?.genderPayGap?.lastCalculated}
-            formula="GPG = (Avg male gross hourly – Avg female gross hourly) ÷ Avg male gross hourly × 100"
-            inclusions={[
+            formula={metricsData?.genderPayGap?.formula || "GPG = (Avg male gross hourly – Avg female gross hourly) ÷ Avg male gross hourly × 100"}
+            inclusions={metricsData?.genderPayGap?.inclusions || [
               "All employees with recorded gender",
               "Valid payroll and hours data",
               "Excludes contractors and temporary staff",
               "Based on gross hourly rates including overtime"
             ]}
             metricCode="S1-16-GPG"
+            status={metricsData?.genderPayGap?.status as any || 'ready'}
+            methodology={metricsData?.genderPayGap?.methodology}
           />
           
           <MetricCard
@@ -212,14 +233,16 @@ export function S1MetricsPage() {
             unit=":1"
             trend={metricsData?.topToMedianRatio?.trend || 0}
             lastCalculated={metricsData?.topToMedianRatio?.lastCalculated}
-            formula="Ratio = Highest paid total compensation ÷ Median employee compensation"
-            inclusions={[
+            formula={metricsData?.topToMedianRatio?.formula || "Ratio = Highest paid total compensation ÷ Median employee compensation"}
+            inclusions={metricsData?.topToMedianRatio?.inclusions || [
               "Total annual compensation including bonuses",
               "All employees in calculation period",
               "Stock options valued at grant date",
               "Excludes CEO from median calculation"
             ]}
             metricCode="S1-16-CEO-RATIO"
+            status={metricsData?.topToMedianRatio?.status as any || 'ready'}
+            methodology={metricsData?.topToMedianRatio?.methodology}
           />
           
           <MetricCard
@@ -229,14 +252,16 @@ export function S1MetricsPage() {
             unit="%"
             trend={metricsData?.healthSafetyCoverage?.trend || 0}
             lastCalculated={metricsData?.healthSafetyCoverage?.lastCalculated}
-            formula="Coverage = (Workers under H&S system ÷ Total workers) × 100"
-            inclusions={[
+            formula={metricsData?.healthSafetyCoverage?.formula || "Coverage = (Workers under H&S system ÷ Total workers) × 100"}
+            inclusions={metricsData?.healthSafetyCoverage?.inclusions || [
               "All employees and contractors on-site",
               "Formal H&S management system coverage",
               "Regular safety training participation",
               "Incident reporting system access"
             ]}
             metricCode="S1-HS-COVERAGE"
+            status={metricsData?.healthSafetyCoverage?.status as any || 'ready'}
+            methodology={metricsData?.healthSafetyCoverage?.methodology}
           />
           
           <MetricCard
@@ -246,14 +271,16 @@ export function S1MetricsPage() {
             unit="/100 FTE"
             trend={metricsData?.incidentsRate?.trend || 0}
             lastCalculated={metricsData?.incidentsRate?.lastCalculated}
-            formula="Rate = (Total incidents ÷ Total FTE) × 100"
-            inclusions={[
+            formula={metricsData?.incidentsRate?.formula || "Rate = (Total incidents ÷ Total FTE) × 100"}
+            inclusions={metricsData?.incidentsRate?.inclusions || [
               "All recordable work-related injuries",
               "Incidents resulting in lost time",
               "Both employees and contractors",
               "Excludes commuting incidents"
             ]}
             metricCode="S1-16-INJURY-RATE"
+            status={metricsData?.incidentsRate?.status as any || 'ready'}
+            methodology={metricsData?.incidentsRate?.methodology}
           />
           
           <MetricCard
@@ -263,14 +290,16 @@ export function S1MetricsPage() {
             unit="%"
             trend={metricsData?.workLifeUsage?.trend || 0}
             lastCalculated={metricsData?.workLifeUsage?.lastCalculated}
-            formula="Usage = (Policy users ÷ Eligible population) × 100"
-            inclusions={[
+            formula={metricsData?.workLifeUsage?.formula || "Usage = (Policy users ÷ Eligible population) × 100"}
+            inclusions={metricsData?.workLifeUsage?.inclusions || [
               "Parental leave, flexible work, wellness programs",
               "Eligible employees with >12 months tenure",
               "Both male and female employees",
               "Voluntary and mandatory programs"
             ]}
             metricCode="S1-WORKLIFE"
+            status={metricsData?.workLifeUsage?.status as any || 'ready'}
+            methodology={metricsData?.workLifeUsage?.methodology}
           />
         </div>
       )}
