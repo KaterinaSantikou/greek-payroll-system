@@ -124,7 +124,7 @@ export class PaymentsOpsService {
           gte(paymentBatches.createdAt, dateRange.start),
           lte(paymentBatches.createdAt, dateRange.end)
         )
-      );
+      ) as any;
     }
 
     const batches = await query;
@@ -278,9 +278,9 @@ export class PaymentsOpsService {
         amount: batch.sctInstAmount || '0.00',
       },
       reconciliation: {
-        pain002Received: batch.pain002Received,
-        camt054Received: batch.camt054Received,
-        status: batch.reconciliationStatus,
+        pain002Received: batch.pain002Received || false,
+        camt054Received: batch.camt054Received || false,
+        status: batch.reconciliationStatus || 'pending',
         matchedTransactions,
         settledAmount,
       },
@@ -290,7 +290,7 @@ export class PaymentsOpsService {
         type: exc.exceptionType,
         severity: exc.severity,
         message: exc.errorMessage || 'Unknown error',
-        canReissue: exc.canReissue,
+        canReissue: exc.canReissue || false,
       })),
       timeline: timeline.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime()),
     };

@@ -57,6 +57,7 @@ import { reconciliationRoutes } from "./api/reconciliation";
 import { edgeCaseRoutes } from "./api/edgeCases";
 import { acceptanceCriteriaRoutes } from "./api/acceptanceCriteria";
 import { paymentsOpsRoutes } from "./api/paymentsOps";
+import { paymentBatchRoutes } from "./api/paymentBatch";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -3340,6 +3341,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Payments Operations Cockpit
   paymentsOpsRoutes(app);
+  
+  // Payment Batch Data Flow
+  paymentBatchRoutes(app);
 
   // Register notification routes
   try {
