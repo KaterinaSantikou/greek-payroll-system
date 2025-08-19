@@ -20,6 +20,7 @@ Preferred communication style: Simple, everyday language.
   - **Live Compliance**: Real-time monitoring with Digital Card Status, ERGANI Queue, APD & ΦΜΥ deadlines
   - **Cost Insights**: Predictive analytics with Labor Forecast, OT Heatmap, Variance vs Budget
   - **Payroll & Finance**: Comprehensive Greek payroll processing with Runs (Draft/Validate/Finalize/Post-Run Audit), Components (Earnings/Deductions/Rates/Benefits in Kind), and Bonuses (Δώρο Πάσχα/Χριστουγέννων/Επίδομα Άδειας)
+  - **Payments**: Salary payment processing with Salary Files (Create SEPA/Approvals/Bank Receipts) and Off-Cycle (Urgent/Corrections/Reversals)
   - **Filings**: Greek government compliance submissions with ERGANI II (Hires/Schedules/OT/Terminations/Receipts), e-EFKA/APD (Build/Validate/Submit/Receipts), and AADE/ΦΜΥ (Build File/Merge/Submit/Payment)
   - **Hotel Operations**: Multi-property management and deployment tools
   - **Platform**: Vision & strategy with product roadmap and UX architecture documentation

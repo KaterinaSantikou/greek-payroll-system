@@ -215,6 +215,31 @@ const menuStructure: MenuLevel1Item[] = [
     ]
   },
   {
+    name: "Payments",
+    icon: CreditCard,
+    color: "bg-teal-500",
+    items: [
+      {
+        name: "Salary Files",
+        icon: CreditCard,
+        items: [
+          { name: "Create SEPA", href: "/payments", description: "SEPA Direct Debit file generation" },
+          { name: "Approvals", href: "/manager-workflows", description: "Payment approval workflow" },
+          { name: "Bank Receipts", href: "/analytics", description: "Bank confirmation processing" },
+        ]
+      },
+      {
+        name: "Off-Cycle",
+        icon: Zap,
+        items: [
+          { name: "Urgent", href: "/overtime", description: "Emergency payment processing" },
+          { name: "Corrections", href: "/compliance", description: "Payroll error corrections" },
+          { name: "Reversals", href: "/payroll-integration", description: "Payment reversal processing" },
+        ]
+      }
+    ]
+  },
+  {
     name: "Filings",
     icon: Scale,
     color: "bg-indigo-500",

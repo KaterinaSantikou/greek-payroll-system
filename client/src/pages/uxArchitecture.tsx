@@ -215,6 +215,34 @@ const uxExample = {
       ]
     },
     {
+      name: "Payments",
+      icon: CreditCard,
+      color: "bg-teal-500",
+      description: "Salary payment processing and management",
+      level2: [
+        {
+          name: "Salary Files",
+          icon: CreditCard,
+          description: "SEPA and bank file generation",
+          level3: [
+            { name: "Create SEPA", path: "/payments", description: "SEPA Direct Debit file generation" },
+            { name: "Approvals", path: "/manager-workflows", description: "Payment approval workflow" },
+            { name: "Bank Receipts", path: "/analytics", description: "Bank confirmation processing" }
+          ]
+        },
+        {
+          name: "Off-Cycle",
+          icon: Zap,
+          description: "Emergency and correction payments",
+          level3: [
+            { name: "Urgent", path: "/overtime", description: "Emergency payment processing" },
+            { name: "Corrections", path: "/compliance", description: "Payroll error corrections" },
+            { name: "Reversals", path: "/payroll-integration", description: "Payment reversal processing" }
+          ]
+        }
+      ]
+    },
+    {
       name: "Filings",
       icon: Scale,
       color: "bg-indigo-500",
@@ -488,6 +516,7 @@ export default function UXArchitecture() {
                 <Badge variant="outline">Live Compliance</Badge>
                 <Badge variant="outline">Cost Insights</Badge>
                 <Badge variant="outline">Payroll & Finance</Badge>
+                <Badge variant="outline">Payments</Badge>
                 <Badge variant="outline">Filings</Badge>
                 <Badge variant="outline">Hotel Operations</Badge>
                 <Badge variant="outline">Platform</Badge>
