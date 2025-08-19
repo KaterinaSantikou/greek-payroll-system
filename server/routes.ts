@@ -1951,6 +1951,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Piraeus Bank encrypted SEPA file generation with e-PPS Mass Payments
+  app.post('/api/payments/sepa/generate-encrypted', isAuthenticated, async (req, res) => {
+    try {
+      const { payrollRunId, encryptionKey, ePPSMode = true } = req.body;
+      
+      if (!payrollRunId) {
+        return res.status(400).json({ error: "Payroll run ID is required" });
+      }
+      
+      const { SEPAFileGenerator } = await import("./sepaFileGenerator");
+      const sepaFileGenerator = new SEPAFileGenerator();
+      
+      // Validate Piraeus Bank capabilities for e-PPS Mass Payments
+      const validation = sepaFileGenerator.validateBankCapabilities('piraeus', {
+        painVersion: 'pain.001.001.03',
+        hostToHostEncryption: !!encryptionKey,
+        ePPSMassPayments: ePPSMode
+      });
+      
+      if (!validation.valid) {
+        return res.status(400).json({ 
+          error: "Piraeus Bank e-PPS validation failed", 
+          issues: validation.issues 
+        });
+      }
+      
+      // Generate encrypted SEPA file with e-PPS format
+      const result = await sepaFileGenerator.generateEncryptedSEPAFile(payrollRunId, encryptionKey);
+      const ePPSFormat = sepaFileGenerator.getPiraeusePPSFormat(payrollRunId);
+      const bankProfile = sepaFileGenerator.getBankProfileInfo('piraeus');
+      
+      res.json({
+        ...result,
+        ePPSFormat,
+        bankProfile,
+        validation,
+        cutoffTime: "13:30",
+        processingMode: "BATCH_CREDIT_TRANSFER"
+      });
+    } catch (error) {
+      console.error("Error generating encrypted SEPA file:", error);
+      res.status(500).json({ error: "Failed to generate encrypted SEPA file" });
+    }
+  });
+
   // Get payment history
   app.get('/api/payments/history', isAuthenticated, async (req, res) => {
     try {

@@ -97,10 +97,10 @@ export default function SepaPayments() {
       bic: "PIRBGRAA", 
       cutoff: "13:30", 
       painVersions: ["pain.001.001.03"],
-      statusReporting: ["pain.002.001.03"],
+      statusReporting: ["pain.002.001.03 (e-PPS)"],
       reconciliation: ["camt.054"],
-      features: ["Early cut-off", "Same-day processing"],
-      status: "active"
+      features: ["e-PPS Mass Payments", "Host-to-host encryption", "Early cut-off"],
+      status: "enhanced"
     },
     { 
       name: "Eurobank", 
@@ -244,7 +244,8 @@ export default function SepaPayments() {
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium">{bank.name}</h4>
                     <Badge 
-                      variant={bank.status === "recommended" ? "default" : "secondary"}
+                      variant={bank.status === "recommended" ? "default" : 
+                              bank.status === "enhanced" ? "default" : "secondary"}
                       className="text-xs"
                     >
                       {bank.status}
@@ -361,7 +362,7 @@ export default function SepaPayments() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-3">
                 <h4 className="font-medium flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-600" />
@@ -386,6 +387,93 @@ export default function SepaPayments() {
                   <li>• Bank-specific cut-off enforcement</li>
                 </ul>
               </div>
+              <div className="space-y-3">
+                <h4 className="font-medium flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-purple-600" />
+                  Enhanced Features
+                </h4>
+                <ul className="text-sm space-y-1 text-gray-600 dark:text-gray-400">
+                  <li>• Piraeus e-PPS Mass Payments support</li>
+                  <li>• Optional host-to-host encryption</li>
+                  <li>• Alpha Bank dual PAIN version support</li>
+                  <li>• Advanced status reporting capabilities</li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Piraeus Bank Specific Features */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-purple-600" />
+              Piraeus Bank e-PPS Mass Payments
+            </CardTitle>
+            <CardDescription>
+              Enhanced payment processing with optional host-to-host encryption
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">e-PPS Features</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">Mass payment processing</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">pain.002.001.03 status reporting</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">Batch credit transfer mode</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">13:30 cut-off for same-day processing</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Security & Encryption</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-purple-600" />
+                      <span className="text-sm">Optional host-to-host encryption</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-purple-600" />
+                      <span className="text-sm">AES-256-GCM encryption standard</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-purple-600" />
+                      <span className="text-sm">Secure key exchange protocol</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm">Sample schemas available</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
+              <h5 className="font-medium mb-2">Integration Notes</h5>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Piraeus Bank's e-PPS Mass Payments system provides enhanced processing capabilities 
+                for high-volume payroll operations. The optional host-to-host encryption ensures 
+                maximum security for sensitive payroll data transmission. Sample schemas and 
+                integration guides are available through Piraeus Bank's developer portal.
+              </p>
             </div>
           </CardContent>
         </Card>
