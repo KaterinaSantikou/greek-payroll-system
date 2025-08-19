@@ -67,7 +67,7 @@ export class ComplianceRecommendationEngine {
 
     // Check disability quota compliance (8% for companies with 50+ employees)
     if (allEmployees.length >= 50) {
-      const disabledEmployees = allEmployees.filter(emp => emp.disabilityPercentage > 0);
+      const disabledEmployees = allEmployees.filter(emp => emp.disabilityPercentage && emp.disabilityPercentage > 0);
       const requiredQuota = Math.ceil(allEmployees.length * 0.08);
       
       if (disabledEmployees.length < requiredQuota) {
@@ -265,7 +265,7 @@ export class ComplianceRecommendationEngine {
   private checkDisabilityCompliance(employee: Employee): ComplianceRecommendation[] {
     const recommendations: ComplianceRecommendation[] = [];
 
-    if (employee.disabilityPercentage > 0) {
+    if (employee.disabilityPercentage && employee.disabilityPercentage > 0) {
       if (!employee.disabilityCertificateNumber) {
         recommendations.push({
           id: `disability-cert-missing-${employee.id}`,
@@ -323,6 +323,38 @@ export class ComplianceRecommendationEngine {
         actionRequired: "Εκχωρήστε την κατάλληλη συλλογική σύμβαση",
         affectedEmployees: [employee.id]
       });
+    }
+
+    // Check military service status (for male Greek citizens)
+    if (employee.gender === 'MALE' && employee.nationality === 'GR') {
+      const birthDate = new Date(employee.dateOfBirth);
+      const age = new Date().getFullYear() - birthDate.getFullYear();
+      
+      if (age >= 18 && age <= 45) {
+        if (!employee.militaryServiceStatus) {
+          recommendations.push({
+            id: `military-service-status-${employee.id}`,
+            type: "WARNING",
+            priority: "MEDIUM",
+            category: "GENERAL",
+            title: "Λείπει Κατάσταση Στρατιωτικής Θητείας",
+            description: "Για άνδρες Έλληνες πολίτες 18-45 ετών απαιτείται η κατάσταση στρατιωτικής θητείας",
+            actionRequired: "Συμπληρώστε την κατάσταση στρατιωτικής θητείας (Ολοκληρώθηκε, Αναβολή, Απαλλαγή, κλπ.)",
+            affectedEmployees: [employee.id]
+          });
+        } else if (employee.militaryServiceStatus === 'COMPLETED' && !employee.militaryServiceCompletionDate) {
+          recommendations.push({
+            id: `military-service-completion-${employee.id}`,
+            type: "INFO",
+            priority: "LOW",
+            category: "GENERAL",
+            title: "Λείπει Ημερομηνία Ολοκλήρωσης Στρατιωτικής Θητείας",
+            description: "Για ολοκληρωμένη στρατιωτική θητεία συνιστάται η ημερομηνία ολοκλήρωσης",
+            actionRequired: "Συμπληρώστε την ημερομηνία ολοκλήρωσης της στρατιωτικής θητείας",
+            affectedEmployees: [employee.id]
+          });
+        }
+      }
     }
 
     return recommendations;

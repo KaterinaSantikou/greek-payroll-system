@@ -379,3 +379,60 @@ export const GREEK_TAX_OFFICES = [
   "Τρικάλων",
   "Χανίων",
 ];
+
+// Military Service Validation Functions
+export function validateMilitaryServiceStatus(status: string): boolean {
+  const validStatuses = ['COMPLETED', 'POSTPONED', 'EXEMPT', 'PENDING', 'NOT_APPLICABLE'];
+  return validStatuses.includes(status);
+}
+
+export function validateMilitaryServiceBranch(branch: string): boolean {
+  const validBranches = ['ARMY', 'NAVY', 'AIR_FORCE', 'ALTERNATIVE_SERVICE'];
+  return validBranches.includes(branch);
+}
+
+export function isMilitaryServiceRequired(birthDate: string, gender: string): boolean {
+  if (gender !== 'MALE') return false;
+  
+  const birth = new Date(birthDate);
+  const today = new Date();
+  const age = today.getFullYear() - birth.getFullYear();
+  
+  // Military service is generally required for Greek male citizens aged 18-45
+  return age >= 18 && age <= 45;
+}
+
+export function getMilitaryServiceStatusOptions() {
+  return [
+    { value: 'COMPLETED', label: 'Ολοκληρώθηκε' },
+    { value: 'POSTPONED', label: 'Αναβολή' },
+    { value: 'EXEMPT', label: 'Απαλλαγή' },
+    { value: 'PENDING', label: 'Εκκρεμεί' },
+    { value: 'NOT_APPLICABLE', label: 'Δεν Απαιτείται' }
+  ];
+}
+
+export function getMilitaryServiceBranchOptions() {
+  return [
+    { value: 'ARMY', label: 'Στρατός Ξηράς' },
+    { value: 'NAVY', label: 'Πολεμικό Ναυτικό' },
+    { value: 'AIR_FORCE', label: 'Πολεμική Αεροπορία' },
+    { value: 'ALTERNATIVE_SERVICE', label: 'Εναλλακτική Υπηρεσία' }
+  ];
+}
+
+export function getDocumentExpiryStatus(expiryDate: string | null): { status: 'valid' | 'warning' | 'expired'; message: string } {
+  if (!expiryDate) return { status: 'valid', message: 'Δεν έχει οριστεί ημερομηνία λήξης' };
+  
+  const expiry = new Date(expiryDate);
+  const today = new Date();
+  const daysUntilExpiry = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (daysUntilExpiry < 0) {
+    return { status: 'expired', message: `Έληξε πριν ${Math.abs(daysUntilExpiry)} ημέρες` };
+  } else if (daysUntilExpiry <= 30) {
+    return { status: 'warning', message: `Λήγει σε ${daysUntilExpiry} ημέρες` };
+  } else {
+    return { status: 'valid', message: `Ισχύει για ${daysUntilExpiry} ημέρες` };
+  }
+}

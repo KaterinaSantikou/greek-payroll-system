@@ -43,6 +43,7 @@ Preferred communication style: Simple, everyday language.
 - **Right to Disconnect**: Implementation of after-hours contact restrictions per Law 4808/2021
 - **Flexible Work Arrangements**: Remote work support as mandated by recent legislation
 - **Enhanced Leave System**: 24+ days annual leave, 119 days maternity, 14 days paternity leave
+- **Military Service Tracking**: Comprehensive tracking of military service status and completion dates for Greek male citizens
 - **Multi-step Forms**: 7-tab employee onboarding with Greek compliance validation at each step
 
 ### Recent Legal Updates (August 2025)
@@ -85,6 +86,7 @@ Preferred communication style: Simple, everyday language.
 - **Auto-Fix Capabilities**: Automated corrections for simple compliance issues with user approval
 - **Organization-Wide Monitoring**: Company-level compliance including disability quotas and young worker subsidies
 - **Deadline Tracking**: Automatic alerts for expiring work permits, residence permits, and passports
+- **Military Service Compliance**: Automated detection of missing military service information for eligible Greek citizens
 - **Compliance Dashboard**: Visual overview of compliance status with actionable recommendations
 
 # External Dependencies

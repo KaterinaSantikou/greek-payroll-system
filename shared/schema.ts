@@ -117,6 +117,12 @@ export const employees = pgTable("employees", {
   residencePermitNumber: varchar("residence_permit_number"),
   residencePermitExpiryDate: date("residence_permit_expiry_date"),
   
+  // Military Service Information (Greek Military Service Requirements)
+  militaryServiceStatus: varchar("military_service_status"), // COMPLETED, POSTPONED, EXEMPT, PENDING, NOT_APPLICABLE
+  militaryServiceCompletionDate: date("military_service_completion_date"),
+  militaryServiceBranch: varchar("military_service_branch"), // ARMY, NAVY, AIR_FORCE, ALTERNATIVE_SERVICE
+  militaryServiceNotes: text("military_service_notes"),
+  
   // Employment Contract (Law 4808/2021 amendments)
   contractType: varchar("contract_type").notNull(), // indefinite, fixed-term, apprenticeship, internship
   workingHours: integer("working_hours").default(40),
