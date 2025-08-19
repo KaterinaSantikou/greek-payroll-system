@@ -19,6 +19,7 @@ import {
 export default function SepaPayments() {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedBank, setSelectedBank] = useState("alpha");
 
   const handleGenerateSEPA = async () => {
     setIsGenerating(true);
@@ -67,11 +68,51 @@ export default function SepaPayments() {
     }
   ];
 
-  const bankCutoffs = [
-    { bank: "National Bank of Greece", bic: "ETHNGRAA", cutoff: "14:00", status: "active" },
-    { bank: "Piraeus Bank", bic: "PIRBGRAA", cutoff: "13:30", status: "active" },
-    { bank: "Eurobank", bic: "EUROGRAA", cutoff: "14:30", status: "active" },
-    { bank: "Alpha Bank", bic: "AGEAGRAA", cutoff: "14:00", status: "active" }
+  const bankProfiles = [
+    { 
+      name: "Alpha Bank", 
+      key: "alpha",
+      bic: "AGEAGRAA", 
+      cutoff: "14:00", 
+      painVersions: ["pain.001.001.03", "pain.001.001.09"],
+      statusReporting: ["pain.002.001.03", "pain.002.001.10"],
+      reconciliation: ["camt.054"],
+      features: ["IBAN only", "Separate debit entries", "140 char remittance"],
+      status: "recommended"
+    },
+    { 
+      name: "National Bank of Greece", 
+      key: "nbg",
+      bic: "ETHNGRAA", 
+      cutoff: "14:00", 
+      painVersions: ["pain.001.001.03"],
+      statusReporting: ["pain.002.001.03"],
+      reconciliation: ["camt.054"],
+      features: ["Standard SEPA implementation"],
+      status: "active"
+    },
+    { 
+      name: "Piraeus Bank", 
+      key: "piraeus",
+      bic: "PIRBGRAA", 
+      cutoff: "13:30", 
+      painVersions: ["pain.001.001.03"],
+      statusReporting: ["pain.002.001.03"],
+      reconciliation: ["camt.054"],
+      features: ["Early cut-off", "Same-day processing"],
+      status: "active"
+    },
+    { 
+      name: "Eurobank", 
+      key: "eurobank",
+      bic: "EUROGRAA", 
+      cutoff: "14:30", 
+      painVersions: ["pain.001.001.03"],
+      statusReporting: ["pain.002.001.03"],
+      reconciliation: ["camt.054"],
+      features: ["Extended cut-off window"],
+      status: "active"
+    }
   ];
 
   const reconciliationFeatures = [
@@ -114,30 +155,49 @@ export default function SepaPayments() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-medium">Ready to generate payroll SEPA file</p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Includes all active employees with valid IBANs
-                </p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="font-medium">Ready to generate payroll SEPA file</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Includes all active employees with valid IBANs
+                  </p>
+                </div>
+                <Button 
+                  onClick={handleGenerateSEPA}
+                  disabled={isGenerating}
+                  className="flex items-center gap-2"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Clock className="w-4 h-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4" />
+                      Generate SEPA File
+                    </>
+                  )}
+                </Button>
               </div>
-              <Button 
-                onClick={handleGenerateSEPA}
-                disabled={isGenerating}
-                className="flex items-center gap-2"
-              >
-                {isGenerating ? (
-                  <>
-                    <Clock className="w-4 h-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4" />
-                    Generate SEPA File
-                  </>
-                )}
-              </Button>
+              
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Bank Profile:</span>
+                <select 
+                  value={selectedBank}
+                  onChange={(e) => setSelectedBank(e.target.value)}
+                  className="border rounded px-2 py-1 text-sm bg-white dark:bg-gray-800"
+                >
+                  <option value="alpha">Alpha Bank (Recommended)</option>
+                  <option value="nbg">National Bank of Greece</option>
+                  <option value="piraeus">Piraeus Bank</option>
+                  <option value="eurobank">Eurobank</option>
+                </select>
+                <Badge variant="outline" className="text-xs">
+                  {bankProfiles.find(p => p.key === selectedBank)?.bic}
+                </Badge>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -166,32 +226,89 @@ export default function SepaPayments() {
           ))}
         </div>
 
-        {/* Bank Cut-offs */}
+        {/* Bank Profiles */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Bank Cut-off Times
+              <Building2 className="w-5 h-5" />
+              Greek Bank Profiles
             </CardTitle>
             <CardDescription>
-              Same-day processing cut-offs for Greek banks
+              Comprehensive SEPA capabilities and specifications for each bank
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {bankCutoffs.map((bank, index) => (
-                <div key={index} className="border rounded-lg p-4">
-                  <div className="space-y-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {bankProfiles.map((bank, index) => (
+                <div key={index} className="border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">{bank.name}</h4>
+                    <Badge 
+                      variant={bank.status === "recommended" ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {bank.status}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-2 text-sm">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-sm">{bank.bank}</h4>
-                      <Badge variant="outline" className="text-xs">
-                        {bank.status}
-                      </Badge>
+                      <span className="text-gray-600 dark:text-gray-400">BIC:</span>
+                      <span className="font-mono">{bank.bic}</span>
                     </div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">{bank.bic}</p>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span className="text-sm font-medium">{bank.cutoff}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Cut-off:</span>
+                      <span className="font-medium">{bank.cutoff}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Profile Key:</span>
+                      <span className="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                        {bank.key}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-3">
+                    <div>
+                      <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                        PAIN Versions
+                      </h5>
+                      <div className="flex flex-wrap gap-1">
+                        {bank.painVersions.map((version, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {version}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                        Status Reporting
+                      </h5>
+                      <div className="flex flex-wrap gap-1">
+                        {bank.statusReporting.map((status, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {status}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
+                        Features
+                      </h5>
+                      <div className="space-y-1">
+                        {bank.features.map((feature, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <CheckCircle className="w-3 h-3 text-green-600" />
+                            <span className="text-xs">{feature}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>

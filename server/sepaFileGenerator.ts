@@ -2,6 +2,23 @@ import { db } from "./db";
 import { employees, payrollLines, payrollRuns } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 
+// Bank profile interface for comprehensive SEPA support
+interface BankProfile {
+  name: string;
+  bic: string;
+  supportedPainVersions: string[];
+  statusReporting: string[];
+  reconciliation: string[];
+  features: {
+    ibanOnly: boolean;
+    separateDebitEntries: boolean;
+    maxRemittanceChars: number;
+    batchBookingSupported: boolean;
+  };
+  cutoffTime: { hour: number; minute: number };
+  notes: string;
+}
+
 // SEPA Bank Formats for Payroll (Addendum B specifications)
 interface SEPAPayment {
   employeeId: string;
@@ -49,8 +66,8 @@ export class SEPAFileGenerator {
   private readonly ENCODING = "UTF-8";
   private readonly CURRENCY = "EUR"; // EUR only as per specification
   
-  // Generate SEPA Credit Transfer file for payroll
-  async generateSEPAFile(payrollRunId: string): Promise<string> {
+  // Generate SEPA Credit Transfer file for payroll with bank profile support
+  async generateSEPAFile(payrollRunId: string, bankProfile: string = 'alpha'): Promise<string> {
     // Fetch payroll run and associated payments
     const payments = await this.getPayrollPayments(payrollRunId);
     
@@ -58,20 +75,29 @@ export class SEPAFileGenerator {
       throw new Error(`No payments found for payroll run: ${payrollRunId}`);
     }
     
+    const profile = this.getBankProfile(bankProfile);
+    
+    // Validate remittance info length against bank profile
+    payments.forEach(payment => {
+      if (payment.remittanceInfo.length > profile.features.maxRemittanceChars) {
+        payment.remittanceInfo = payment.remittanceInfo.substring(0, profile.features.maxRemittanceChars);
+      }
+    });
+    
     const metadata: SEPAFileMetadata = {
       messageId: `PAYROLL-${payrollRunId}-${Date.now()}`,
       creationDateTime: new Date().toISOString(),
       numberOfTransactions: payments.length,
       totalAmount: payments.reduce((sum, p) => sum + p.amount, 0),
       requestedExecutionDate: this.getNextBusinessDay().toISOString().split('T')[0],
-      batchBooking: false, // Separate debits per employee (batch booking flag off) unless bank explicitly supports batch
+      batchBooking: !profile.features.separateDebitEntries, // Use bank profile preference
       debtorName: "Princess Hotel Group S.A.",
       debtorIBAN: "GR1601101250000000012300695", // Company IBAN
-      debtorBIC: "ETHNGRAA", // National Bank of Greece BIC
+      debtorBIC: profile.bic, // Use bank profile BIC
       categoryPurpose: 'SALA' // CategoryPurpose (CtgyPurp): SALA (salary)
     };
     
-    return this.generatePainXML(metadata, payments);
+    return this.generatePainXML(metadata, payments, profile);
   }
   
   private async getPayrollPayments(payrollRunId: string): Promise<SEPAPayment[]> {
@@ -104,10 +130,13 @@ export class SEPAFileGenerator {
     }));
   }
   
-  private generatePainXML(metadata: SEPAFileMetadata, payments: SEPAPayment[]): string {
+  private generatePainXML(metadata: SEPAFileMetadata, payments: SEPAPayment[], profile?: BankProfile): string {
+    // Use bank profile to determine PAIN version (Alpha Bank supports both .03 and .09)
+    const painVersion = profile?.supportedPainVersions[0] || this.PAIN_VERSION;
+    
     // ISO 20022 pain.001 Customer Credit Transfer (SCT) with Greek payroll specifications
     const xml = `<?xml version="1.0" encoding="${this.ENCODING}"?>
-<Document xmlns="urn:iso:std:iso:20022:tech:xsd:${this.PAIN_VERSION}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:${painVersion}" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <CstmrCdtTrfInitn>
     <GrpHdr>
       <MsgId>${metadata.messageId}</MsgId>
@@ -209,10 +238,76 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
     return date;
   }
   
-  // Bank profile and cut-off management
-  // Cut-offs: same-day typically by early afternoon; engine enforces per-bank cut-offs per profile
+  // Bank profiles with comprehensive support specifications
+  private getBankProfile(bankKey: string): BankProfile {
+    const profiles: Record<string, BankProfile> = {
+      'alpha': {
+        name: 'Alpha Bank',
+        bic: 'AGEAGRAA',
+        supportedPainVersions: ['pain.001.001.03', 'pain.001.001.09'],
+        statusReporting: ['pain.002.001.03', 'pain.002.001.10'],
+        reconciliation: ['camt.054'],
+        features: {
+          ibanOnly: true,
+          separateDebitEntries: true,
+          maxRemittanceChars: 140,
+          batchBookingSupported: false
+        },
+        cutoffTime: { hour: 14, minute: 0 },
+        notes: 'IBAN only; separate debit entries; remittance info up to 140 chars'
+      },
+      'nbg': {
+        name: 'National Bank of Greece',
+        bic: 'ETHNGRAA',
+        supportedPainVersions: ['pain.001.001.03'],
+        statusReporting: ['pain.002.001.03'],
+        reconciliation: ['camt.054'],
+        features: {
+          ibanOnly: true,
+          separateDebitEntries: true,
+          maxRemittanceChars: 140,
+          batchBookingSupported: false
+        },
+        cutoffTime: { hour: 14, minute: 0 },
+        notes: 'Standard SEPA implementation'
+      },
+      'piraeus': {
+        name: 'Piraeus Bank',
+        bic: 'PIRBGRAA',
+        supportedPainVersions: ['pain.001.001.03'],
+        statusReporting: ['pain.002.001.03'],
+        reconciliation: ['camt.054'],
+        features: {
+          ibanOnly: true,
+          separateDebitEntries: true,
+          maxRemittanceChars: 140,
+          batchBookingSupported: false
+        },
+        cutoffTime: { hour: 13, minute: 30 },
+        notes: 'Early cut-off for same-day processing'
+      },
+      'eurobank': {
+        name: 'Eurobank',
+        bic: 'EUROGRAA',
+        supportedPainVersions: ['pain.001.001.03'],
+        statusReporting: ['pain.002.001.03'],
+        reconciliation: ['camt.054'],
+        features: {
+          ibanOnly: true,
+          separateDebitEntries: true,
+          maxRemittanceChars: 140,
+          batchBookingSupported: false
+        },
+        cutoffTime: { hour: 14, minute: 30 },
+        notes: 'Extended cut-off window'
+      }
+    };
+
+    return profiles[bankKey] || profiles['alpha']; // Default to Alpha Bank profile
+  }
+
+  // Legacy method for backward compatibility
   private getBankCutoffTime(bankBic?: string): { hour: number; minute: number } {
-    // Default cut-off times for Greek banks (can be configured per bank profile)
     const bankCutoffs: Record<string, { hour: number; minute: number }> = {
       'ETHNGRAA': { hour: 14, minute: 0 }, // National Bank of Greece
       'PIRBGRAA': { hour: 13, minute: 30 }, // Piraeus Bank
@@ -225,13 +320,45 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
   }
   
   // Check if current time is within bank cut-off for same-day processing
-  checkSameDayCutoff(bankBic?: string): boolean {
+  checkSameDayCutoff(bankProfile: string = 'alpha'): boolean {
     const now = new Date();
-    const cutoff = this.getBankCutoffTime(bankBic);
+    const profile = this.getBankProfile(bankProfile);
     const cutoffTime = new Date(now);
-    cutoffTime.setHours(cutoff.hour, cutoff.minute, 0, 0);
+    cutoffTime.setHours(profile.cutoffTime.hour, profile.cutoffTime.minute, 0, 0);
     
     return now <= cutoffTime;
+  }
+  
+  // Get bank profile information
+  getBankProfileInfo(bankProfile: string = 'alpha'): BankProfile {
+    return this.getBankProfile(bankProfile);
+  }
+  
+  // Validate bank profile capabilities
+  validateBankCapabilities(bankProfile: string, requirements: {
+    painVersion?: string;
+    statusReporting?: boolean;
+    reconciliation?: boolean;
+  }): { valid: boolean; issues: string[] } {
+    const profile = this.getBankProfile(bankProfile);
+    const issues: string[] = [];
+    
+    if (requirements.painVersion && !profile.supportedPainVersions.includes(requirements.painVersion)) {
+      issues.push(`Bank does not support PAIN version ${requirements.painVersion}`);
+    }
+    
+    if (requirements.statusReporting && profile.statusReporting.length === 0) {
+      issues.push('Bank does not support status reporting');
+    }
+    
+    if (requirements.reconciliation && profile.reconciliation.length === 0) {
+      issues.push('Bank does not support reconciliation messages');
+    }
+    
+    return {
+      valid: issues.length === 0,
+      issues
+    };
   }
   
   // Reconciliation support for pain.002 status and camt.054 credit notifications
