@@ -22,6 +22,7 @@ const navigationItems = [
   { name: "Μισθοδοσία", href: "/payroll", icon: Calculator },
   { name: "Ωράρια", href: "/schedules", icon: Clock },
   { name: "Ψηφιακή Κάρτα", href: "/digital-work-card", icon: Smartphone },
+  { name: "Προηγμένη Καταγραφή", href: "/advanced-time-capture", icon: Clock },
   { name: "Επιδόματα", href: "/allowances", icon: Gift },
   { name: "Υπερωρίες", href: "/overtime", icon: Clock },
   { name: "Άδειες", href: "/leave", icon: Plane },

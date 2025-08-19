@@ -15,6 +15,7 @@ import Overtime from "@/pages/overtime";
 import Leave from "@/pages/leave";
 import Legal from "@/pages/legal";
 import DigitalWorkCard from "@/pages/digitalWorkCard";
+import AdvancedTimeCapture from "@/pages/advancedTimeCapture";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -35,6 +36,7 @@ function Router() {
           <Route path="/leave" component={Leave} />
           <Route path="/legal" component={Legal} />
           <Route path="/digital-work-card" component={DigitalWorkCard} />
+          <Route path="/advanced-time-capture" component={AdvancedTimeCapture} />
         </Layout>
       )}
       <Route component={NotFound} />
