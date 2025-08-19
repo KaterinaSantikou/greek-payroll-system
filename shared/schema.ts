@@ -653,6 +653,68 @@ export const insertTimesheetSchema = createInsertSchema(timesheets).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type UpsertUser = typeof users.$inferInsert;
+
+// Self-Service Portal tables
+export const paycheckHistory = pgTable("paycheck_history", {
+  paycheckId: varchar("paycheck_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  payPeriodStart: date("pay_period_start").notNull(),
+  payPeriodEnd: date("pay_period_end").notNull(),
+  payDate: date("pay_date").notNull(),
+  grossPay: decimal("gross_pay", { precision: 10, scale: 2 }).notNull(),
+  netPay: decimal("net_pay", { precision: 10, scale: 2 }).notNull(),
+  taxWithheld: decimal("tax_withheld", { precision: 10, scale: 2 }).default("0"),
+  efkaContributions: decimal("efka_contributions", { precision: 10, scale: 2 }).default("0"),
+  solidarityTax: decimal("solidarity_tax", { precision: 10, scale: 2 }).default("0"),
+  otherDeductions: decimal("other_deductions", { precision: 10, scale: 2 }).default("0"),
+  payslipData: jsonb("payslip_data"), // Complete payslip breakdown
+  status: varchar("status").default("paid"), // pending, paid, cancelled
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const digitalWorkCardLogs = pgTable("digital_work_card_logs", {
+  logId: varchar("log_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  workDate: date("work_date").notNull(),
+  clockInTime: timestamp("clock_in_time"),
+  clockOutTime: timestamp("clock_out_time"),
+  totalHours: decimal("total_hours", { precision: 5, scale: 2 }),
+  breakMinutes: integer("break_minutes").default(0),
+  overtimeHours: decimal("overtime_hours", { precision: 5, scale: 2 }).default("0"),
+  location: varchar("location"), // Work location/property
+  clockMethod: varchar("clock_method"), // mobile, kiosk, web, manual
+  gpsCoordinates: varchar("gps_coordinates"),
+  deviceInfo: jsonb("device_info"),
+  erganiSyncStatus: varchar("ergani_sync_status").default("pending"), // pending, synced, failed
+  erganiSubmissionId: varchar("ergani_submission_id"),
+  notes: text("notes"),
+  status: varchar("status").default("active"), // active, corrected, cancelled
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const timeCorrectionRequests = pgTable("time_correction_requests", {
+  requestId: varchar("request_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  workCardLogId: varchar("work_card_log_id").references(() => digitalWorkCardLogs.logId),
+  requestType: varchar("request_type").notNull(), // clock_in, clock_out, break, overtime
+  originalValue: varchar("original_value"),
+  requestedValue: varchar("requested_value").notNull(),
+  reason: text("reason").notNull(),
+  photoEvidence: varchar("photo_evidence"), // URL to uploaded photo
+  location: varchar("location"),
+  submittedVia: varchar("submitted_via").default("mobile"), // mobile, web
+  managerNotes: text("manager_notes"),
+  status: varchar("status").default("pending"), // pending, approved, rejected
+  reviewedBy: varchar("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type PaycheckHistory = typeof paycheckHistory.$inferSelect;
+export type DigitalWorkCardLog = typeof digitalWorkCardLogs.$inferSelect;
+export type TimeCorrectionRequest = typeof timeCorrectionRequests.$inferSelect;
+export type InsertTimeCorrectionRequest = typeof timeCorrectionRequests.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type Property = typeof properties.$inferSelect;

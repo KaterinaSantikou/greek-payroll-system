@@ -40,6 +40,7 @@ import { SepaPaymentService } from "./sepaPaymentService";
 import { GLExportService } from "./glExportService";
 import { FilingComplianceService } from "./filingComplianceService";
 import { SelfServiceManager } from "./selfServiceManager";
+import { registerSelfServiceRoutes } from "./api/selfService";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { 
@@ -2985,6 +2986,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to process approval' });
     }
   });
+
+  // Register self-service routes
+  registerSelfServiceRoutes(app);
 
   // Register notification routes
   try {

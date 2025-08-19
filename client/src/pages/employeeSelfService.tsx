@@ -1,3 +1,6 @@
+import { useState, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,640 +10,632 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import { format, subDays, startOfMonth, endOfMonth, parseISO } from "date-fns";
 import { 
-  User, 
-  Clock, 
-  FileText, 
-  Calendar, 
-  Edit, 
-  Download, 
-  CheckCircle, 
-  AlertCircle,
-  Euro,
-  Timer,
-  Coffee,
-  MapPin
+  User, Clock, FileText, Calendar, Edit, Download, CheckCircle, AlertCircle,
+  Euro, Timer, Coffee, MapPin, Camera, Upload, TrendingUp, BarChart3,
+  Eye, History, Smartphone, Award, Target, DollarSign
 } from "lucide-react";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+
+interface PaycheckTimelineItem {
+  paycheckId: string;
+  payPeriodStart: string;
+  payPeriodEnd: string;
+  payDate: string;
+  grossPay: number;
+  netPay: number;
+  taxWithheld: number;
+  efkaContributions: number;
+  status: string;
+  payslipData: any;
+}
+
+interface WorkCardLog {
+  logId: string;
+  workDate: string;
+  clockInTime: string;
+  clockOutTime: string;
+  totalHours: number;
+  breakMinutes: number;
+  overtimeHours: number;
+  location: string;
+  clockMethod: string;
+  erganiSyncStatus: string;
+  status: string;
+}
+
+interface CorrectionRequest {
+  requestId: string;
+  workCardLogId: string;
+  requestType: string;
+  originalValue: string;
+  requestedValue: string;
+  reason: string;
+  photoEvidence?: string;
+  status: string;
+  createdAt: string;
+}
 
 export default function EmployeeSelfServicePage() {
   const { toast } = useToast();
-  const [selectedPeriod, setSelectedPeriod] = useState(format(new Date(), 'yyyy-MM'));
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [correctionDialog, setCorrectionDialog] = useState({ open: false, punchId: '', originalTime: '' });
-  const [correctionReason, setCorrectionReason] = useState('');
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Mock employee ID - in real app would come from auth context
-  const employeeId = "EMP_001";
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
+  const [correctionDialog, setCorrectionDialog] = useState({ 
+    open: false, 
+    logId: '', 
+    type: '',
+    originalValue: '',
+    workDate: ''
+  });
+  const [correctionForm, setCorrectionForm] = useState({
+    requestedValue: '',
+    reason: '',
+    photoEvidence: ''
+  });
 
   // Employee Dashboard Data
   const { data: dashboard, isLoading: dashboardLoading } = useQuery({
-    queryKey: ['/api/self-service/employee', employeeId, 'dashboard'],
-    queryFn: () => apiRequest(`/api/self-service/employee/${employeeId}/dashboard`)
+    queryKey: ['/api/self-service/dashboard'],
   });
 
-  // Payslip Data
-  const { data: payslip, isLoading: payslipLoading } = useQuery({
-    queryKey: ['/api/self-service/employee', employeeId, 'payslip', selectedPeriod],
-    queryFn: () => apiRequest(`/api/self-service/employee/${employeeId}/payslip/${selectedPeriod}`)
+  // Paycheck Timeline Data
+  const { data: paycheckTimeline = [], isLoading: paycheckLoading } = useQuery({
+    queryKey: ['/api/self-service/paycheck-timeline', selectedYear],
   });
 
-  // Year-End Certificate Data
-  const { data: certificate, isLoading: certificateLoading } = useQuery({
-    queryKey: ['/api/self-service/employee', employeeId, 'certificate', selectedYear],
-    queryFn: () => apiRequest(`/api/self-service/employee/${employeeId}/certificate/${selectedYear}`)
+  // Digital Work Card Logs
+  const { data: workCardLogs = [], isLoading: workCardLoading } = useQuery({
+    queryKey: ['/api/self-service/work-card-logs', selectedMonth],
   });
 
-  // Punch History Data
-  const { data: punchHistory, isLoading: punchHistoryLoading } = useQuery({
-    queryKey: ['/api/self-service/employee', employeeId, 'punch-history'],
-    queryFn: () => {
-      const startDate = startOfMonth(new Date()).toISOString();
-      const endDate = endOfMonth(new Date()).toISOString();
-      return apiRequest(`/api/self-service/employee/${employeeId}/punch-history?startDate=${startDate}&endDate=${endDate}`);
-    }
+  // Time Correction Requests
+  const { data: correctionRequests = [], isLoading: correctionsLoading } = useQuery({
+    queryKey: ['/api/self-service/correction-requests'],
   });
 
-  // Time Correction Mutation
-  const timeCorrectionMutation = useMutation({
-    mutationFn: (data: { punchId: string; newTimestamp: string; reason: string }) =>
-      apiRequest(`/api/self-service/employee/${employeeId}/time-correction`, {
-        method: 'POST',
-        body: JSON.stringify(data)
-      }),
+  // Current Pay Period Details
+  const { data: currentPayPeriod, isLoading: currentPeriodLoading } = useQuery({
+    queryKey: ['/api/self-service/current-pay-period'],
+  });
+
+  // Submit Time Correction Mutation
+  const correctionMutation = useMutation({
+    mutationFn: (data: { 
+      workCardLogId: string; 
+      requestType: string; 
+      originalValue: string;
+      requestedValue: string; 
+      reason: string; 
+      photoEvidence?: string;
+    }) => apiRequest('/api/self-service/time-correction', {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'application/json' }
+    }),
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "Time correction request submitted successfully",
+        description: "Time correction request submitted successfully"
       });
-      setCorrectionDialog({ open: false, punchId: '', originalTime: '' });
-      setCorrectionReason('');
+      setCorrectionDialog({ open: false, logId: '', type: '', originalValue: '', workDate: '' });
+      setCorrectionForm({ requestedValue: '', reason: '', photoEvidence: '' });
+      queryClient.invalidateQueries({ queryKey: ['/api/self-service/correction-requests'] });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to submit time correction request",
-        variant: "destructive",
+        title: "Error", 
+        description: "Failed to submit correction request",
+        variant: "destructive"
       });
     }
   });
 
-  const handleTimeCorrection = () => {
-    if (!correctionReason.trim()) {
+  // File Upload for Photo Evidence
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => {
+      const formData = new FormData();
+      formData.append('photo', file);
+      return apiRequest('/api/upload/photo-evidence', {
+        method: 'POST',
+        body: formData
+      });
+    },
+    onSuccess: (data: any) => {
+      setCorrectionForm(prev => ({ ...prev, photoEvidence: data.url }));
+      toast({
+        title: "Success",
+        description: "Photo uploaded successfully"
+      });
+    }
+  });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadMutation.mutate(file);
+    }
+  };
+
+  const handleSubmitCorrection = () => {
+    if (!correctionForm.requestedValue || !correctionForm.reason) {
       toast({
         title: "Error",
-        description: "Please provide a reason for the correction",
-        variant: "destructive",
+        description: "Please fill in all required fields",
+        variant: "destructive"
       });
       return;
     }
 
-    timeCorrectionMutation.mutate({
-      punchId: correctionDialog.punchId,
-      newTimestamp: correctionDialog.originalTime,
-      reason: correctionReason
+    correctionMutation.mutate({
+      workCardLogId: correctionDialog.logId,
+      requestType: correctionDialog.type,
+      originalValue: correctionDialog.originalValue,
+      requestedValue: correctionForm.requestedValue,
+      reason: correctionForm.reason,
+      photoEvidence: correctionForm.photoEvidence
     });
   };
 
-  const downloadPayslip = () => {
-    // In a real app, this would download the PDF
-    toast({
-      title: "Download Started",
-      description: `Payslip for ${selectedPeriod} is being downloaded`,
-    });
-  };
+  const renderPaycheckTimeline = () => {
+    if (paycheckLoading) return <div>Loading paycheck timeline...</div>;
 
-  const downloadCertificate = () => {
-    // In a real app, this would download the PDF
-    toast({
-      title: "Download Started",
-      description: `Year-end certificate for ${selectedYear} is being downloaded`,
-    });
-  };
-
-  if (dashboardLoading) {
     return (
       <div className="space-y-6">
-        <div className="h-8 bg-gray-200 rounded animate-pulse" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded animate-pulse" />
+        {/* Year Selector */}
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">Paycheck Timeline</h3>
+          <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[2025, 2024, 2023].map(year => (
+                <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Timeline Visualization */}
+        <div className="space-y-4">
+          {paycheckTimeline.map((paycheck: PaycheckTimelineItem, index: number) => (
+            <Card key={paycheck.paycheckId} className="relative">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-base">
+                      {format(parseISO(paycheck.payPeriodStart), 'MMM dd')} - {format(parseISO(paycheck.payPeriodEnd), 'MMM dd, yyyy')}
+                    </CardTitle>
+                    <CardDescription>
+                      Paid on {format(parseISO(paycheck.payDate), 'MMM dd, yyyy')}
+                    </CardDescription>
+                  </div>
+                  <Badge variant={paycheck.status === 'paid' ? 'default' : 'secondary'}>
+                    {paycheck.status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Gross Pay</p>
+                    <p className="text-lg font-semibold text-green-600">€{paycheck.grossPay.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Tax Withheld</p>
+                    <p className="text-lg font-medium text-red-600">-€{paycheck.taxWithheld.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">EFKA Contributions</p>
+                    <p className="text-lg font-medium text-red-600">-€{paycheck.efkaContributions.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Net Pay</p>
+                    <p className="text-xl font-bold text-blue-600">€{paycheck.netPay.toFixed(2)}</p>
+                  </div>
+                </div>
+                
+                {/* Payslip Breakdown */}
+                {paycheck.payslipData && (
+                  <div className="mt-4 pt-4 border-t">
+                    <details className="group">
+                      <summary className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-800">
+                        View Detailed Breakdown
+                      </summary>
+                      <div className="mt-3 space-y-2 text-sm">
+                        {paycheck.payslipData.earnings && (
+                          <div>
+                            <p className="font-medium">Earnings:</p>
+                            {Object.entries(paycheck.payslipData.earnings).map(([key, value]) => (
+                              <div key={key} className="flex justify-between ml-4">
+                                <span className="capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                                <span>€{(value as number).toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {paycheck.payslipData.deductions && (
+                          <div>
+                            <p className="font-medium">Deductions:</p>
+                            {Object.entries(paycheck.payslipData.deductions).map(([key, value]) => (
+                              <div key={key} className="flex justify-between ml-4">
+                                <span className="capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                                <span>-€{(value as number).toFixed(2)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </details>
+                  </div>
+                )}
+                
+                <div className="mt-4 flex justify-end">
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Payslip
+                  </Button>
+                </div>
+              </CardContent>
+              
+              {/* Timeline connector */}
+              {index < paycheckTimeline.length - 1 && (
+                <div className="absolute left-6 bottom-0 w-0.5 h-6 bg-gray-300 transform translate-y-full"></div>
+              )}
+            </Card>
           ))}
         </div>
       </div>
     );
-  }
+  };
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Employee Self-Service</h1>
-          <p className="text-muted-foreground">
-            Access your payslips, certificates, hours, and leave information
-          </p>
+  const renderWorkCardLogs = () => {
+    if (workCardLoading) return <div>Loading work card logs...</div>;
+
+    return (
+      <div className="space-y-6">
+        {/* Month Selector */}
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">Digital Work Card History</h3>
+          <Input
+            type="month"
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="w-40"
+          />
+        </div>
+
+        {/* Export Button */}
+        <div className="flex justify-end">
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Export Work History
+          </Button>
+        </div>
+
+        {/* Work Card Logs Table */}
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Clock In</TableHead>
+                <TableHead>Clock Out</TableHead>
+                <TableHead>Total Hours</TableHead>
+                <TableHead>Overtime</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead>ERGANI Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {workCardLogs.map((log: WorkCardLog) => (
+                <TableRow key={log.logId}>
+                  <TableCell>{format(parseISO(log.workDate), 'MMM dd, yyyy')}</TableCell>
+                  <TableCell>
+                    {log.clockInTime ? format(parseISO(log.clockInTime), 'HH:mm') : '-'}
+                  </TableCell>
+                  <TableCell>
+                    {log.clockOutTime ? format(parseISO(log.clockOutTime), 'HH:mm') : '-'}
+                  </TableCell>
+                  <TableCell>{log.totalHours?.toFixed(2) || '0.00'}h</TableCell>
+                  <TableCell className="text-orange-600">
+                    {log.overtimeHours?.toFixed(2) || '0.00'}h
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      {log.location}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={
+                      log.erganiSyncStatus === 'synced' ? 'default' : 
+                      log.erganiSyncStatus === 'failed' ? 'destructive' : 'secondary'
+                    }>
+                      {log.erganiSyncStatus}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setCorrectionDialog({
+                          open: true,
+                          logId: log.logId,
+                          type: 'clock_in',
+                          originalValue: log.clockInTime || '',
+                          workDate: log.workDate
+                        })}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      </div>
+    );
+  };
+
+  const renderCorrectionRequests = () => {
+    if (correctionsLoading) return <div>Loading correction requests...</div>;
+
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold">Time Correction Requests</h3>
+        
+        <div className="space-y-4">
+          {correctionRequests.map((request: CorrectionRequest) => (
+            <Card key={request.requestId}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-base capitalize">
+                      {request.requestType.replace('_', ' ')} Correction
+                    </CardTitle>
+                    <CardDescription>
+                      Submitted on {format(parseISO(request.createdAt), 'MMM dd, yyyy HH:mm')}
+                    </CardDescription>
+                  </div>
+                  <Badge variant={
+                    request.status === 'approved' ? 'default' :
+                    request.status === 'rejected' ? 'destructive' : 'secondary'
+                  }>
+                    {request.status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Original Value</p>
+                    <p className="font-medium">{request.originalValue}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Requested Value</p>
+                    <p className="font-medium">{request.requestedValue}</p>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <p className="text-sm text-gray-600">Reason</p>
+                  <p className="font-medium">{request.reason}</p>
+                </div>
+                {request.photoEvidence && (
+                  <div className="mt-3">
+                    <p className="text-sm text-gray-600">Photo Evidence</p>
+                    <img 
+                      src={request.photoEvidence} 
+                      alt="Evidence" 
+                      className="w-32 h-24 object-cover rounded border mt-1"
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
+    );
+  };
 
-      {/* Quick Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Current Hours</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboard?.currentPeriod?.hoursWorked || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              +{dashboard?.currentPeriod?.overtimeHours || 0} overtime
-            </p>
-          </CardContent>
-        </Card>
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Employee Self-Service</h1>
+          <p className="mt-2 text-gray-600">Manage your paycheck timeline, work history, and time corrections</p>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Leave Balance</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboard?.currentPeriod?.leaveBalance?.annual || 0}h</div>
-            <p className="text-xs text-muted-foreground">
-              Annual leave remaining
-            </p>
-          </CardContent>
-        </Card>
+        {/* Dashboard Cards */}
+        {!dashboardLoading && dashboard && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <Euro className="h-8 w-8 text-green-600" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Current Month Gross</p>
+                    <p className="text-2xl font-bold text-gray-900">€{dashboard.currentMonthGross || '0.00'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <Clock className="h-8 w-8 text-blue-600" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Hours This Month</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashboard.hoursThisMonth || '0'}h</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <Timer className="h-8 w-8 text-orange-600" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Overtime Hours</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashboard.overtimeHours || '0'}h</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <AlertCircle className="h-8 w-8 text-red-600" />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">Pending Requests</p>
+                    <p className="text-2xl font-bold text-gray-900">{dashboard.pendingRequests || '0'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Status</CardTitle>
-            <User className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {dashboard?.recentActivity?.lastPunchIn && !dashboard?.recentActivity?.lastPunchOut ? (
-                <Badge variant="default" className="bg-green-500">On Duty</Badge>
-              ) : (
-                <Badge variant="secondary">Off Duty</Badge>
-              )}
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="timeline" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="timeline">Paycheck Timeline</TabsTrigger>
+            <TabsTrigger value="workcard">Digital Work Card</TabsTrigger>
+            <TabsTrigger value="corrections">Time Corrections</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="timeline" className="space-y-6">
+            {renderPaycheckTimeline()}
+          </TabsContent>
+
+          <TabsContent value="workcard" className="space-y-6">
+            {renderWorkCardLogs()}
+          </TabsContent>
+
+          <TabsContent value="corrections" className="space-y-6">
+            {renderCorrectionRequests()}
+          </TabsContent>
+        </Tabs>
+
+        {/* Time Correction Dialog */}
+        <Dialog open={correctionDialog.open} onOpenChange={(open) => 
+          setCorrectionDialog(prev => ({ ...prev, open }))
+        }>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Request Time Correction</DialogTitle>
+              <DialogDescription>
+                Submit a correction request for {format(parseISO(correctionDialog.workDate || new Date().toISOString()), 'MMM dd, yyyy')}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="correction-type">Correction Type</Label>
+                <Select 
+                  value={correctionDialog.type} 
+                  onValueChange={(value) => setCorrectionDialog(prev => ({ ...prev, type: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select correction type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="clock_in">Clock In Time</SelectItem>
+                    <SelectItem value="clock_out">Clock Out Time</SelectItem>
+                    <SelectItem value="break">Break Duration</SelectItem>
+                    <SelectItem value="overtime">Overtime Hours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="original-value">Original Value</Label>
+                <Input
+                  value={correctionDialog.originalValue}
+                  disabled
+                  className="bg-gray-50"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="requested-value">Requested Value</Label>
+                <Input
+                  value={correctionForm.requestedValue}
+                  onChange={(e) => setCorrectionForm(prev => ({ ...prev, requestedValue: e.target.value }))}
+                  placeholder="Enter new value"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="reason">Reason for Correction</Label>
+                <Textarea
+                  value={correctionForm.reason}
+                  onChange={(e) => setCorrectionForm(prev => ({ ...prev, reason: e.target.value }))}
+                  placeholder="Explain why this correction is needed"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label>Photo Evidence (Optional)</Label>
+                <div className="flex items-center space-x-2 mt-1">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadMutation.isPending}
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    {uploadMutation.isPending ? 'Uploading...' : 'Add Photo'}
+                  </Button>
+                  {correctionForm.photoEvidence && (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  )}
+                </div>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {dashboard?.recentActivity?.lastPunchIn && 
-                `Since ${format(new Date(dashboard.recentActivity.lastPunchIn), 'HH:mm')}`
-              }
-            </p>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Items</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {(dashboard?.recentActivity?.pendingExceptions || 0) + 
-               (dashboard?.recentActivity?.pendingLeaveRequests || 0)}
+            <div className="flex justify-end space-x-2 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setCorrectionDialog(prev => ({ ...prev, open: false }))}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmitCorrection}
+                disabled={correctionMutation.isPending}
+              >
+                {correctionMutation.isPending ? 'Submitting...' : 'Submit Request'}
+              </Button>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Requiring attention
-            </p>
-          </CardContent>
-        </Card>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="payslips" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="payslips">Payslips</TabsTrigger>
-          <TabsTrigger value="certificates">Certificates</TabsTrigger>
-          <TabsTrigger value="hours">Hours & Attendance</TabsTrigger>
-          <TabsTrigger value="schedule">Schedule</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="payslips" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Monthly Payslips</CardTitle>
-                  <CardDescription>View and download your payslips</CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="period">Period:</Label>
-                  <Input
-                    id="period"
-                    type="month"
-                    value={selectedPeriod}
-                    onChange={(e) => setSelectedPeriod(e.target.value)}
-                    className="w-40"
-                  />
-                  <Button onClick={downloadPayslip} disabled={payslipLoading}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download PDF
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {payslipLoading ? (
-                <div className="h-64 bg-gray-200 rounded animate-pulse" />
-              ) : payslip ? (
-                <div className="space-y-6">
-                  {/* Payslip Summary */}
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Gross Wages</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-green-600">
-                          €{payslip.grossWages.toFixed(2)}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Deductions</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-red-600">
-                          €{(payslip.deductions.incomeTax + payslip.deductions.efkaEmployee + payslip.deductions.specialTax).toFixed(2)}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Net Wages</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-blue-600">
-                          €{payslip.netWages.toFixed(2)}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Detailed Breakdown */}
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Earnings</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <div className="flex justify-between">
-                          <span>Basic Salary</span>
-                          <span>€{payslip.basicSalary.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Food Allowance</span>
-                          <span>€{payslip.allowances.food.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Transport Allowance</span>
-                          <span>€{payslip.allowances.transport.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Position Allowance</span>
-                          <span>€{payslip.allowances.position.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Regular Overtime</span>
-                          <span>€{payslip.overtime.regular.toFixed(2)}</span>
-                        </div>
-                        {payslip.bonuses.christmas > 0 && (
-                          <div className="flex justify-between font-medium text-green-600">
-                            <span>Christmas Bonus</span>
-                            <span>€{payslip.bonuses.christmas.toFixed(2)}</span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Deductions</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <div className="flex justify-between">
-                          <span>Income Tax (22%)</span>
-                          <span>€{payslip.deductions.incomeTax.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>EFKA Employee (16%)</span>
-                          <span>€{payslip.deductions.efkaEmployee.toFixed(2)}</span>
-                        </div>
-                        {payslip.deductions.specialTax > 0 && (
-                          <div className="flex justify-between">
-                            <span>Solidarity Tax</span>
-                            <span>€{payslip.deductions.specialTax.toFixed(2)}</span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No payslip data available for the selected period
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="certificates" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Year-End Certificates</CardTitle>
-                  <CardDescription>Annual tax certificates for personal records</CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="year">Year:</Label>
-                  <Input
-                    id="year"
-                    type="number"
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    className="w-24"
-                    min="2020"
-                    max={new Date().getFullYear()}
-                  />
-                  <Button onClick={downloadCertificate} disabled={certificateLoading}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download PDF
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {certificateLoading ? (
-                <div className="h-64 bg-gray-200 rounded animate-pulse" />
-              ) : certificate ? (
-                <div className="space-y-6">
-                  {/* Certificate Summary */}
-                  <div className="grid md:grid-cols-4 gap-4">
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Total Gross</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-xl font-bold">
-                          €{certificate.totalGrossWages.toFixed(2)}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Tax Withheld</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-xl font-bold">
-                          €{certificate.totalTaxWithheld.toFixed(2)}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">EFKA Contributions</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-xl font-bold">
-                          €{certificate.totalEfkaContributions.toFixed(2)}
-                        </div>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">Working Days</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-xl font-bold">
-                          {certificate.totalWorkingDays}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Monthly Breakdown */}
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Monthly Breakdown</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Month</TableHead>
-                            <TableHead>Gross Wages</TableHead>
-                            <TableHead>Tax Withheld</TableHead>
-                            <TableHead>Working Days</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {certificate.monthlyBreakdown.map((month, index) => (
-                            <TableRow key={index}>
-                              <TableCell>{month.month}</TableCell>
-                              <TableCell>€{month.grossWages.toFixed(2)}</TableCell>
-                              <TableCell>€{month.taxWithheld.toFixed(2)}</TableCell>
-                              <TableCell>{month.workingDays}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No certificate data available for the selected year
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="hours" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Punch History</CardTitle>
-              <CardDescription>Your time tracking records and corrections</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {punchHistoryLoading ? (
-                <div className="h-64 bg-gray-200 rounded animate-pulse" />
-              ) : punchHistory && punchHistory.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date & Time</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Method</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {punchHistory.slice(0, 20).map((punch) => (
-                      <TableRow key={punch.punchId}>
-                        <TableCell>
-                          {format(new Date(punch.timestamp), 'MMM d, HH:mm')}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={punch.type === 'in' ? 'default' : 'secondary'}>
-                            {punch.type === 'in' ? 'Clock In' :
-                             punch.type === 'out' ? 'Clock Out' :
-                             punch.type === 'break_start' ? 'Break Start' : 'Break End'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            {punch.method === 'mobile' ? <Timer className="h-3 w-3" /> :
-                             punch.method === 'kiosk' ? <Coffee className="h-3 w-3" /> :
-                             <MapPin className="h-3 w-3" />}
-                            <span className="capitalize">{punch.method}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>{punch.location}</TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            punch.status === 'valid' ? 'default' :
-                            punch.status === 'corrected' ? 'secondary' : 'destructive'
-                          }>
-                            {punch.status === 'valid' ? 'Valid' :
-                             punch.status === 'corrected' ? 'Corrected' : 'Flagged'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {punch.status === 'flagged' && (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setCorrectionDialog({
-                                      open: true,
-                                      punchId: punch.punchId,
-                                      originalTime: punch.timestamp.toString()
-                                    });
-                                  }}
-                                >
-                                  <Edit className="h-3 w-3 mr-1" />
-                                  Correct
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Submit Time Correction</DialogTitle>
-                                  <DialogDescription>
-                                    Request a correction for this punch time. Your manager will review and approve.
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div>
-                                    <Label htmlFor="original-time">Original Time</Label>
-                                    <Input
-                                      id="original-time"
-                                      type="datetime-local"
-                                      value={correctionDialog.originalTime}
-                                      readOnly
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label htmlFor="reason">Reason for Correction</Label>
-                                    <Textarea
-                                      id="reason"
-                                      placeholder="Explain why this time needs to be corrected..."
-                                      value={correctionReason}
-                                      onChange={(e) => setCorrectionReason(e.target.value)}
-                                    />
-                                  </div>
-                                  <div className="flex gap-2">
-                                    <Button 
-                                      onClick={handleTimeCorrection}
-                                      disabled={timeCorrectionMutation.isPending}
-                                    >
-                                      {timeCorrectionMutation.isPending ? 'Submitting...' : 'Submit Request'}
-                                    </Button>
-                                    <Button 
-                                      variant="outline"
-                                      onClick={() => setCorrectionDialog({ open: false, punchId: '', originalTime: '' })}
-                                    >
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No punch history available
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="schedule" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upcoming Shifts</CardTitle>
-              <CardDescription>Your scheduled work periods</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {dashboard?.currentPeriod?.upcomingShifts && dashboard.currentPeriod.upcomingShifts.length > 0 ? (
-                <div className="space-y-4">
-                  {dashboard.currentPeriod.upcomingShifts.map((shift, index) => (
-                    <Card key={index}>
-                      <CardContent className="flex items-center justify-between p-4">
-                        <div className="flex items-center gap-4">
-                          <div className="text-center">
-                            <div className="text-sm text-muted-foreground">
-                              {format(new Date(shift.date), 'MMM')}
-                            </div>
-                            <div className="text-2xl font-bold">
-                              {format(new Date(shift.date), 'd')}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="font-medium">
-                              {shift.startTime} - {shift.endTime}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {shift.department}
-                            </div>
-                          </div>
-                        </div>
-                        <Badge variant="outline">
-                          {format(new Date(`${shift.date} ${shift.startTime}`), 'EEEE')}
-                        </Badge>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No upcoming shifts scheduled
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
