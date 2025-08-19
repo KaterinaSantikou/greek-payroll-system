@@ -14,6 +14,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { erganiConnector } from "./erganiConnector";
 import { payrollConnector } from "./payrollConnector";
+import { workflowManager } from "./workflowManager";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -593,6 +594,171 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error processing demo payroll batch:", error);
       res.status(500).json({ error: "Failed to process demo batch" });
+    }
+  });
+
+  // Manager & Payroll Workflow routes
+  app.get("/api/workflow/metrics", isAuthenticated, async (req, res) => {
+    try {
+      const metrics = workflowManager.getWorkflowMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching workflow metrics:", error);
+      res.status(500).json({ error: "Failed to fetch workflow metrics" });
+    }
+  });
+
+  app.post("/api/workflow/validate-exceptions", isAuthenticated, async (req, res) => {
+    try {
+      const { date, managerId } = req.body;
+      const validations = await workflowManager.validateExceptions(date, managerId);
+      res.json(validations);
+    } catch (error) {
+      console.error("Error validating exceptions:", error);
+      res.status(500).json({ error: "Failed to validate exceptions" });
+    }
+  });
+
+  app.post("/api/workflow/approve-exception", isAuthenticated, async (req, res) => {
+    try {
+      const { exceptionId, status, managerId, reason, correctedValue } = req.body;
+      await workflowManager.approveRejectException(exceptionId, status, managerId, reason, correctedValue);
+      res.json({ success: true, message: `Exception ${status.toLowerCase()}` });
+    } catch (error) {
+      console.error("Error approving/rejecting exception:", error);
+      res.status(500).json({ error: "Failed to process exception approval" });
+    }
+  });
+
+  app.post("/api/workflow/overtime-approval", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, date, requestedHours, earningsCode, reason, requestedBy } = req.body;
+      const approval = await workflowManager.createOvertimeApproval(
+        employeeId, date, requestedHours, earningsCode, reason, requestedBy
+      );
+      res.json(approval);
+    } catch (error) {
+      console.error("Error creating overtime approval:", error);
+      res.status(500).json({ error: "Failed to create overtime approval" });
+    }
+  });
+
+  app.post("/api/workflow/approve-overtime", isAuthenticated, async (req, res) => {
+    try {
+      const { approvalId, status, managerId, approvedHours, justification } = req.body;
+      await workflowManager.approveRejectOvertime(approvalId, status, managerId, approvedHours, justification);
+      res.json({ success: true, message: `Overtime ${status.toLowerCase()}` });
+    } catch (error) {
+      console.error("Error approving/rejecting overtime:", error);
+      res.status(500).json({ error: "Failed to process overtime approval" });
+    }
+  });
+
+  app.get("/api/workflow/ergani-status", isAuthenticated, async (req, res) => {
+    try {
+      const { date } = req.query;
+      const status = await workflowManager.checkErganiStatus(date as string);
+      res.json(status);
+    } catch (error) {
+      console.error("Error checking ERGANI status:", error);
+      res.status(500).json({ error: "Failed to check ERGANI status" });
+    }
+  });
+
+  app.post("/api/workflow/lock-timesheets", isAuthenticated, async (req, res) => {
+    try {
+      const { payPeriodStart, payPeriodEnd, managerId, employeeIds } = req.body;
+      const locks = await workflowManager.lockTimesheets(payPeriodStart, payPeriodEnd, managerId, employeeIds);
+      res.json({ locks, totalLocked: locks.length });
+    } catch (error) {
+      console.error("Error locking timesheets:", error);
+      res.status(500).json({ error: "Failed to lock timesheets" });
+    }
+  });
+
+  app.post("/api/workflow/export-payroll", isAuthenticated, async (req, res) => {
+    try {
+      const { payPeriodStart, payPeriodEnd, format } = req.body;
+      const batchId = await workflowManager.exportToPayroll(payPeriodStart, payPeriodEnd, format);
+      res.json({ success: true, batchId, message: "Payroll exported successfully" });
+    } catch (error) {
+      console.error("Error exporting payroll:", error);
+      res.status(500).json({ error: "Failed to export payroll" });
+    }
+  });
+
+  app.post("/api/workflow/reconciliation-report", isAuthenticated, async (req, res) => {
+    try {
+      const { payPeriodStart, payPeriodEnd, managerId } = req.body;
+      const report = await workflowManager.generateReconciliationReport(payPeriodStart, payPeriodEnd, managerId);
+      res.json(report);
+    } catch (error) {
+      console.error("Error generating reconciliation report:", error);
+      res.status(500).json({ error: "Failed to generate reconciliation report" });
+    }
+  });
+
+  app.post("/api/workflow/audit-pack", isAuthenticated, async (req, res) => {
+    try {
+      const { payPeriodStart, payPeriodEnd, requestedBy } = req.body;
+      const auditPack = await workflowManager.generateAuditPack(payPeriodStart, payPeriodEnd, requestedBy);
+      res.json(auditPack);
+    } catch (error) {
+      console.error("Error generating audit pack:", error);
+      res.status(500).json({ error: "Failed to generate audit pack" });
+    }
+  });
+
+  app.get("/api/workflow/exception-validations", isAuthenticated, async (req, res) => {
+    try {
+      const { date } = req.query;
+      const validations = workflowManager.getExceptionValidations(date as string);
+      res.json(validations);
+    } catch (error) {
+      console.error("Error fetching exception validations:", error);
+      res.status(500).json({ error: "Failed to fetch exception validations" });
+    }
+  });
+
+  app.get("/api/workflow/overtime-approvals", isAuthenticated, async (req, res) => {
+    try {
+      const { status } = req.query;
+      const approvals = workflowManager.getOvertimeApprovals(status as any);
+      res.json(approvals);
+    } catch (error) {
+      console.error("Error fetching overtime approvals:", error);
+      res.status(500).json({ error: "Failed to fetch overtime approvals" });
+    }
+  });
+
+  app.get("/api/workflow/timesheet-locks", isAuthenticated, async (req, res) => {
+    try {
+      const { payPeriodStart, payPeriodEnd } = req.query;
+      const locks = workflowManager.getTimesheetLocks(payPeriodStart as string, payPeriodEnd as string);
+      res.json(locks);
+    } catch (error) {
+      console.error("Error fetching timesheet locks:", error);
+      res.status(500).json({ error: "Failed to fetch timesheet locks" });
+    }
+  });
+
+  app.get("/api/workflow/reconciliation-reports", isAuthenticated, async (req, res) => {
+    try {
+      const reports = workflowManager.getReconciliationReports();
+      res.json(reports);
+    } catch (error) {
+      console.error("Error fetching reconciliation reports:", error);
+      res.status(500).json({ error: "Failed to fetch reconciliation reports" });
+    }
+  });
+
+  app.get("/api/workflow/audit-packs", isAuthenticated, async (req, res) => {
+    try {
+      const auditPacks = workflowManager.getAuditPacks();
+      res.json(auditPacks);
+    } catch (error) {
+      console.error("Error fetching audit packs:", error);
+      res.status(500).json({ error: "Failed to fetch audit packs" });
     }
   });
 

@@ -19,6 +19,7 @@ import AdvancedTimeCapture from "@/pages/advancedTimeCapture";
 import EnterpriseArchitecture from "@/pages/enterpriseArchitecture";
 import ErganiCompliance from "@/pages/erganiCompliance";
 import PayrollIntegration from "@/pages/payrollIntegration";
+import ManagerWorkflows from "@/pages/managerWorkflows";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -43,6 +44,7 @@ function Router() {
           <Route path="/enterprise-architecture" component={EnterpriseArchitecture} />
           <Route path="/ergani-compliance" component={ErganiCompliance} />
           <Route path="/payroll-integration" component={PayrollIntegration} />
+          <Route path="/manager-workflows" component={ManagerWorkflows} />
         </Layout>
       )}
       <Route component={NotFound} />

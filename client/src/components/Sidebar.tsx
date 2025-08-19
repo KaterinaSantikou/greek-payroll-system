@@ -26,6 +26,7 @@ const navigationItems = [
   { name: "Enterprise Architecture", href: "/enterprise-architecture", icon: BarChart },
   { name: "ERGANI II Compliance", href: "/ergani-compliance", icon: Shield },
   { name: "Payroll Integration", href: "/payroll-integration", icon: Calculator },
+  { name: "Manager Workflows", href: "/manager-workflows", icon: Users },
   { name: "Επιδόματα", href: "/allowances", icon: Gift },
   { name: "Υπερωρίες", href: "/overtime", icon: Clock },
   { name: "Άδειες", href: "/leave", icon: Plane },
