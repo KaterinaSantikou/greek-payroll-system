@@ -17,6 +17,10 @@ import {
   calculateLeaveDays,
   checkLeaveConflicts,
   getLeaveTypesAndEntitlements,
+  calculateEnhancedParentalLeave,
+  calculateSpecialMaternityLeaveTransfer,
+  calculateCarersLeave,
+  calculateForceMajeureLeave,
   ANNUAL_LEAVE_ENTITLEMENTS,
   SICK_LEAVE_ENTITLEMENTS,
   PARENTAL_LEAVE_ENTITLEMENTS,
@@ -51,6 +55,34 @@ export default function LeavePage() {
 
   const [calculations, setCalculations] = useState<any>(null);
   const [validation, setValidation] = useState<any>(null);
+
+  // Law 5089/2024 specific state
+  const [parentalData2024, setParentalData2024] = useState({
+    monthsEmployed: 18,
+    children: [
+      { birthDate: '2020-03-15', age: 4 },
+      { birthDate: '2022-08-20', age: 2 }
+    ],
+    isParent: true,
+    contractType: 'permanent' as 'fixed_term' | 'permanent' | 'temporary',
+    hasEligibleCareRecipient: true,
+    careRecipientRelation: 'relative' as 'relative' | 'household_member',
+    medicalDocumentationAvailable: true,
+    isParentOrCarer: true,
+    usedOccurrencesThisYear: 0,
+    emergencyType: 'illness' as 'illness' | 'accident' | 'emergency_care' | 'other',
+    hasMedicalCertificate: true,
+    familyMemberAffected: 'child' as 'spouse' | 'child' | 'parent' | 'sibling' | 'other'
+  });
+
+  const [maternityTransfer, setMaternityTransfer] = useState({
+    isEligibleMother: true,
+    motherType: 'birth_mother' as 'birth_mother' | 'adoptive_mother' | 'surrogacy_mother' | 'presumed_mother',
+    monthsToTransfer: 3,
+    partnerEligible: true
+  });
+
+  const [law2024Results, setLaw2024Results] = useState<any>(null);
 
   const leaveTypes = getLeaveTypesAndEntitlements();
 
@@ -111,6 +143,23 @@ export default function LeavePage() {
     });
   };
 
+  const handleCalculateLaw2024 = () => {
+    const enhancedParental = calculateEnhancedParentalLeave(parentalData2024);
+    const maternityTransferCalc = calculateSpecialMaternityLeaveTransfer(
+      { isEligibleMother: maternityTransfer.isEligibleMother, motherType: maternityTransfer.motherType },
+      { monthsToTransfer: maternityTransfer.monthsToTransfer, partnerEligible: maternityTransfer.partnerEligible }
+    );
+    const carersLeave = calculateCarersLeave(parentalData2024);
+    const forceMajeureLeave = calculateForceMajeureLeave(parentalData2024);
+
+    setLaw2024Results({
+      enhancedParental,
+      maternityTransfer: maternityTransferCalc,
+      carersLeave,
+      forceMajeureLeave
+    });
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
@@ -122,10 +171,11 @@ export default function LeavePage() {
       </div>
 
       <Tabs defaultValue="balance" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="balance">Υπόλοιπα</TabsTrigger>
           <TabsTrigger value="request">Αίτημα Άδειας</TabsTrigger>
           <TabsTrigger value="entitlements">Δικαιώματα</TabsTrigger>
+          <TabsTrigger value="parental-2024">Ν. 5089/2024</TabsTrigger>
           <TabsTrigger value="calendar">Ημερολόγιο</TabsTrigger>
           <TabsTrigger value="reports">Αναφορές</TabsTrigger>
         </TabsList>
@@ -819,6 +869,432 @@ export default function LeavePage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </TabsContent>
+
+        {/* Law 5089/2024 Parental & Family Leave Enhancements */}
+        <TabsContent value="parental-2024">
+          <div className="space-y-6">
+            {/* Input Form */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Baby className="h-5 w-5" />
+                  Νόμος 5089/2024 - Βελτιώσεις Γονικών & Οικογενειακών Αδειών
+                </CardTitle>
+                <CardDescription>
+                  Νέες βελτιώσεις: Ενισχυμένη γονική άδεια, ειδική άδεια μητρότητας, άδεια φροντιστή, άδεια ανωτέρας βίας
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="monthsEmployed">Μήνες Απασχόλησης</Label>
+                    <Input
+                      id="monthsEmployed"
+                      type="number"
+                      value={parentalData2024.monthsEmployed}
+                      onChange={(e) => setParentalData2024({...parentalData2024, monthsEmployed: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="contractType">Τύπος Σύμβασης</Label>
+                    <Select value={parentalData2024.contractType} onValueChange={(value: any) => setParentalData2024({...parentalData2024, contractType: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="permanent">Αορίστου Χρόνου</SelectItem>
+                        <SelectItem value="fixed_term">Ορισμένου Χρόνου</SelectItem>
+                        <SelectItem value="temporary">Προσωρινή</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="emergencyType">Τύπος Επείγουσας Κατάστασης</Label>
+                    <Select value={parentalData2024.emergencyType} onValueChange={(value: any) => setParentalData2024({...parentalData2024, emergencyType: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="illness">Ασθένεια</SelectItem>
+                        <SelectItem value="accident">Ατύχημα</SelectItem>
+                        <SelectItem value="emergency_care">Επείγουσα Φροντίδα</SelectItem>
+                        <SelectItem value="other">Άλλο</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="familyMember">Μέλος Οικογένειας</Label>
+                    <Select value={parentalData2024.familyMemberAffected} onValueChange={(value: any) => setParentalData2024({...parentalData2024, familyMemberAffected: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="spouse">Σύζυγος</SelectItem>
+                        <SelectItem value="child">Παιδί</SelectItem>
+                        <SelectItem value="parent">Γονέας</SelectItem>
+                        <SelectItem value="sibling">Αδελφός/ή</SelectItem>
+                        <SelectItem value="other">Άλλο</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="monthsToTransfer">Μήνες προς Μεταφορά (Ειδική Άδεια Μητρότητας)</Label>
+                    <Input
+                      id="monthsToTransfer"
+                      type="number"
+                      min="0"
+                      max="7"
+                      value={maternityTransfer.monthsToTransfer}
+                      onChange={(e) => setMaternityTransfer({...maternityTransfer, monthsToTransfer: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="motherType">Τύπος Μητρότητας</Label>
+                    <Select value={maternityTransfer.motherType} onValueChange={(value: any) => setMaternityTransfer({...maternityTransfer, motherType: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="birth_mother">Βιολογική Μητέρα</SelectItem>
+                        <SelectItem value="adoptive_mother">Υιοθετούσα Μητέρα</SelectItem>
+                        <SelectItem value="surrogacy_mother">Παρένθετη Μητέρα</SelectItem>
+                        <SelectItem value="presumed_mother">Θεωρούμενη Μητέρα</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-4">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="isParent"
+                      checked={parentalData2024.isParent}
+                      onCheckedChange={(checked) => setParentalData2024({...parentalData2024, isParent: checked})}
+                    />
+                    <Label htmlFor="isParent">Είναι Γονέας</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="hasEligibleCareRecipient"
+                      checked={parentalData2024.hasEligibleCareRecipient}
+                      onCheckedChange={(checked) => setParentalData2024({...parentalData2024, hasEligibleCareRecipient: checked})}
+                    />
+                    <Label htmlFor="hasEligibleCareRecipient">Έχει Επιλέξιμο Δικαιούχο Φροντίδας</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="medicalDocumentationAvailable"
+                      checked={parentalData2024.medicalDocumentationAvailable}
+                      onCheckedChange={(checked) => setParentalData2024({...parentalData2024, medicalDocumentationAvailable: checked})}
+                    />
+                    <Label htmlFor="medicalDocumentationAvailable">Ιατρική Τεκμηρίωση Διαθέσιμη</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="partnerEligible"
+                      checked={maternityTransfer.partnerEligible}
+                      onCheckedChange={(checked) => setMaternityTransfer({...maternityTransfer, partnerEligible: checked})}
+                    />
+                    <Label htmlFor="partnerEligible">Σύντροφος Επιλέξιμος</Label>
+                  </div>
+                </div>
+
+                <Button onClick={handleCalculateLaw2024} className="w-full" size="lg">
+                  <Calculator className="mr-2 h-4 w-4" />
+                  Υπολογισμός Δικαιωμάτων Νόμου 5089/2024
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Results Display */}
+            {law2024Results && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Enhanced Parental Leave */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Baby className="h-5 w-5" />
+                      Ενισχυμένη Γονική Άδεια
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`p-4 rounded-lg border-l-4 ${
+                      law2024Results.enhancedParental.isEligible 
+                        ? 'bg-green-50 border-green-500' 
+                        : 'bg-red-50 border-red-500'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        {law2024Results.enhancedParental.isEligible ? (
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <AlertTriangle className="h-5 w-5 text-red-600" />
+                        )}
+                        <span className="font-medium">
+                          {law2024Results.enhancedParental.isEligible ? 'Επιλέξιμος' : 'Μη Επιλέξιμος'}
+                        </span>
+                      </div>
+                      
+                      {law2024Results.enhancedParental.isEligible && (
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <span>Διαθέσιμοι μήνες:</span>
+                            <Badge variant="default">
+                              {law2024Results.enhancedParental.totalMonthsAvailable} μήνες
+                            </Badge>
+                          </div>
+                          
+                          <div className="flex justify-between items-center">
+                            <span>Επιλέξιμα τέκνα:</span>
+                            <Badge variant="outline">
+                              {law2024Results.enhancedParental.eligibleChildren.length}
+                            </Badge>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1">
+                            {law2024Results.enhancedParental.canBeSharedWithPartner && (
+                              <Badge variant="secondary" className="text-xs">Διαμοιραζόμενη</Badge>
+                            )}
+                            {law2024Results.enhancedParental.canBeTakenInParts && (
+                              <Badge variant="secondary" className="text-xs">Τμηματική</Badge>
+                            )}
+                          </div>
+                          
+                          {law2024Results.enhancedParental.benefits.length > 0 && (
+                            <div>
+                              <h5 className="font-medium mb-2">Παροχές:</h5>
+                              <ul className="list-disc list-inside space-y-1 text-sm">
+                                {law2024Results.enhancedParental.benefits.map((benefit: string, index: number) => (
+                                  <li key={index}>{benefit}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {law2024Results.enhancedParental.restrictions.length > 0 && (
+                        <div className="mt-3">
+                          <h5 className="font-medium mb-2 text-red-600">Περιορισμοί:</h5>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-red-600">
+                            {law2024Results.enhancedParental.restrictions.map((restriction: string, index: number) => (
+                              <li key={index}>{restriction}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Special Maternity Leave Transfer */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Heart className="h-5 w-5" />
+                      Ειδική Άδεια Μητρότητας
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`p-4 rounded-lg border-l-4 ${
+                      law2024Results.maternityTransfer.isTransferValid 
+                        ? 'bg-green-50 border-green-500' 
+                        : 'bg-red-50 border-red-500'
+                    }`}>
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="text-center p-2 bg-blue-50 rounded">
+                            <div className="text-lg font-bold text-blue-600">
+                              {law2024Results.maternityTransfer.motherRetainsMonths}
+                            </div>
+                            <div className="text-xs text-gray-600">Μήνες Μητέρας</div>
+                          </div>
+                          
+                          <div className="text-center p-2 bg-green-50 rounded">
+                            <div className="text-lg font-bold text-green-600">
+                              {law2024Results.maternityTransfer.partnerReceivesMonths}
+                            </div>
+                            <div className="text-xs text-gray-600">Μήνες Συντρόφου</div>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                          <span>Μέγιστη μεταφορά:</span>
+                          <Badge variant="outline">
+                            {law2024Results.maternityTransfer.maxTransferableMonths} μήνες
+                          </Badge>
+                        </div>
+
+                        {law2024Results.maternityTransfer.warnings.length > 0 && (
+                          <div>
+                            <h5 className="font-medium mb-2 text-yellow-600">Προειδοποιήσεις:</h5>
+                            <ul className="list-disc list-inside space-y-1 text-sm text-yellow-600">
+                              {law2024Results.maternityTransfer.warnings.map((warning: string, index: number) => (
+                                <li key={index}>{warning}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {law2024Results.maternityTransfer.errors.length > 0 && (
+                          <div>
+                            <h5 className="font-medium mb-2 text-red-600">Σφάλματα:</h5>
+                            <ul className="list-disc list-inside space-y-1 text-sm text-red-600">
+                              {law2024Results.maternityTransfer.errors.map((error: string, index: number) => (
+                                <li key={index}>{error}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Carer's Leave */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Άδεια Φροντιστή
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`p-4 rounded-lg border-l-4 ${
+                      law2024Results.carersLeave.isEligible 
+                        ? 'bg-green-50 border-green-500' 
+                        : 'bg-red-50 border-red-500'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        {law2024Results.carersLeave.isEligible ? (
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <AlertTriangle className="h-5 w-5 text-red-600" />
+                        )}
+                        <span className="font-medium">
+                          {law2024Results.carersLeave.isEligible ? 'Επιλέξιμος' : 'Μη Επιλέξιμος'}
+                        </span>
+                      </div>
+
+                      {law2024Results.carersLeave.isEligible && (
+                        <div className="flex justify-between items-center mb-3">
+                          <span>Διαθέσιμες ημέρες:</span>
+                          <Badge variant="default">
+                            {law2024Results.carersLeave.totalDaysAvailable} ημέρες
+                          </Badge>
+                        </div>
+                      )}
+
+                      {law2024Results.carersLeave.requirements.length > 0 && (
+                        <div className="mb-3">
+                          <h5 className="font-medium mb-2">Απαιτήσεις:</h5>
+                          <ul className="list-disc list-inside space-y-1 text-sm">
+                            {law2024Results.carersLeave.requirements.map((req: string, index: number) => (
+                              <li key={index}>{req}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {law2024Results.carersLeave.restrictions.length > 0 && (
+                        <div>
+                          <h5 className="font-medium mb-2 text-gray-600">Περιορισμοί:</h5>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                            {law2024Results.carersLeave.restrictions.map((restriction: string, index: number) => (
+                              <li key={index}>{restriction}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Force Majeure Leave */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5" />
+                      Άδεια Ανωτέρας Βίας
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`p-4 rounded-lg border-l-4 ${
+                      law2024Results.forceMajeureLeave.isEligible 
+                        ? 'bg-green-50 border-green-500' 
+                        : 'bg-red-50 border-red-500'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-3">
+                        {law2024Results.forceMajeureLeave.isEligible ? (
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <AlertTriangle className="h-5 w-5 text-red-600" />
+                        )}
+                        <span className="font-medium">
+                          {law2024Results.forceMajeureLeave.isEligible ? 'Επιλέξιμος' : 'Μη Επιλέξιμος'}
+                        </span>
+                        {law2024Results.forceMajeureLeave.isPaid && (
+                          <Badge variant="default" className="text-xs">Αμειβόμενη</Badge>
+                        )}
+                      </div>
+
+                      {law2024Results.forceMajeureLeave.isEligible && (
+                        <div className="grid grid-cols-2 gap-4 mb-3">
+                          <div className="text-center p-2 bg-blue-50 rounded">
+                            <div className="text-lg font-bold text-blue-600">
+                              {law2024Results.forceMajeureLeave.remainingOccurrences}
+                            </div>
+                            <div className="text-xs text-gray-600">Περιστατικά</div>
+                          </div>
+                          
+                          <div className="text-center p-2 bg-green-50 rounded">
+                            <div className="text-lg font-bold text-green-600">
+                              {law2024Results.forceMajeureLeave.remainingDays}
+                            </div>
+                            <div className="text-xs text-gray-600">Ημέρες</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {law2024Results.forceMajeureLeave.nextSteps.length > 0 && (
+                        <div className="mb-3">
+                          <h5 className="font-medium mb-2 text-green-600">Επόμενα Βήματα:</h5>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-green-600">
+                            {law2024Results.forceMajeureLeave.nextSteps.map((step: string, index: number) => (
+                              <li key={index}>{step}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {law2024Results.forceMajeureLeave.eligibilityIssues.length > 0 && (
+                        <div>
+                          <h5 className="font-medium mb-2 text-red-600">Προβλήματα Επιλεξιμότητας:</h5>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-red-600">
+                            {law2024Results.forceMajeureLeave.eligibilityIssues.map((issue: string, index: number) => (
+                              <li key={index}>{issue}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         </TabsContent>
       </Tabs>

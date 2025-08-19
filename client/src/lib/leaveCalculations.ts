@@ -155,6 +155,78 @@ export const PARENTAL_LEAVE_ENTITLEMENTS = {
     childAgeLimit: 12, // Child must be under 12 years old
     paymentRate: 1.0, // 100% salary
     documentationRequired: true
+  },
+
+  // Law 5089/2024 - Parental & Family-Related Leave Enhancements
+  ENHANCED_PARENTAL_LEAVE: {
+    code: 'enhanced-parental-leave',
+    name: 'Ενισχυμένη Γονική Άδεια (Ν. 5089/2024)',
+    description: 'Νέα βελτιωμένη γονική άδεια σύμφωνα με τον Νόμο 5089/2024',
+    totalMonths: 4, // 4 months parental leave
+    childAgeLimit: 8, // Child must be under 8 years old (extended from 6)
+    paymentRate: 0.0, // Unpaid leave
+    jobProtection: true,
+    canBeShared: true, // Can be shared between parents
+    partTimeOption: true,
+    consecutiveOrParts: true, // Can be taken consecutively or in parts
+    minimumEmploymentPeriod: 12, // At least 1 year employment required
+    socialSecurityContinues: true,
+    seniorityCounts: true, // Service time counts toward seniority
+    annualLeaveAccrues: true, // Annual leave continues to accrue
+    severanceRightsMaintained: true, // Severance rights maintained
+    benefitsContinue: true, // Benefits continue during leave
+    samePositionGuarantee: true // Must be reinstated to same or equivalent position
+  },
+
+  SPECIAL_MATERNITY_LEAVE: {
+    code: 'special-maternity-leave',
+    name: 'Ειδική Άδεια Μητρότητας (Ν. 5089/2024)',
+    description: 'Εννεάμηνη ειδική άδεια μητρότητας μετά τη νόμιμη άδεια',
+    totalMonths: 9, // 9 months special maternity leave
+    followsStatutoryLeave: true, // Follows statutory maternity leave
+    applicableToAll: ['birth_mothers', 'adoptive_mothers', 'surrogacy_mothers', 'presumed_mothers'],
+    transferableMonths: 7, // Up to 7 months can be transferred to other parent
+    minimumRetainedMonths: 2, // Mother must retain at least 2 months
+    paymentRate: 0.0, // Unpaid leave
+    alternativeReducedHours: true, // Can be taken as reduced working hours
+    jobProtection: true,
+    seniorityCounts: true, // Service time counts toward seniority
+    annualLeaveAccrues: true, // Annual leave continues to accrue
+    severanceRightsMaintained: true, // Severance rights maintained
+    benefitsContinue: true, // Benefits continue during leave
+    samePositionGuarantee: true, // Must be reinstated to same or equivalent position
+    socialSecurityContinues: true
+  },
+
+  CARERS_LEAVE: {
+    code: 'carers-leave',
+    name: 'Άδεια Φροντιστή (Ν. 5089/2024)',
+    description: 'Άδεια για φροντίδα συγγενούς ή μέλους νοικοκυριού',
+    totalDays: 5, // 5 working days per year
+    minimumEmploymentPeriod: 6, // 6 months in fixed-term role
+    paymentRate: 0.0, // Unpaid leave
+    careRecipients: ['relative', 'household_member'],
+    medicalNeedsRequired: true, // Serious medical needs required
+    documentationRequired: true, // Medical documentation required
+    jobProtection: true,
+    eligibleContractTypes: ['fixed_term', 'permanent'],
+    annualEntitlement: true // Annual entitlement resets each year
+  },
+
+  FORCE_MAJEURE_LEAVE: {
+    code: 'force-majeure-leave',
+    name: 'Άδεια Ανωτέρας Βίας (Ν. 5089/2024)',
+    description: 'Άδεια για επείγουσες οικογενειακές καταστάσεις',
+    daysPerOccurrence: 1, // 1 working day per occurrence
+    maxOccurrencesPerYear: 2, // Up to twice yearly
+    totalDaysPerYear: 2, // Maximum 2 days per year
+    paymentRate: 1.0, // Paid leave
+    urgentFamilyEmergencies: ['illness', 'accident', 'emergency_care'],
+    medicalCertificateRequired: true,
+    applicableTo: ['working_parents', 'carers'],
+    immediateFamily: ['spouse', 'children', 'parents', 'siblings'],
+    documentationDeadline: 48, // Must provide documentation within 48 hours
+    jobProtection: true
   }
 };
 
@@ -577,5 +649,294 @@ export function checkLeaveConflicts(
   return {
     hasConflicts: conflicts.length > 0,
     conflicts
+  };
+}
+
+/**
+ * Calculate eligibility and entitlement for Law 5089/2024 Enhanced Parental Leave
+ */
+export function calculateEnhancedParentalLeave(
+  employeeData: {
+    monthsEmployed: number;
+    children: Array<{ birthDate: string; age: number }>;
+    isParent: boolean;
+  }
+): {
+  isEligible: boolean;
+  eligibleChildren: Array<{ age: number; birthDate: string }>;
+  totalMonthsAvailable: number;
+  canBeSharedWithPartner: boolean;
+  canBeTakenInParts: boolean;
+  restrictions: string[];
+  benefits: string[];
+} {
+  const restrictions: string[] = [];
+  const benefits: string[] = [];
+  
+  // Check employment period requirement
+  const isEligible = employeeData.monthsEmployed >= PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.minimumEmploymentPeriod;
+  
+  if (!isEligible) {
+    restrictions.push(`Απαιτείται τουλάχιστον ${PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.minimumEmploymentPeriod} μήνες απασχόλησης`);
+  }
+  
+  // Find eligible children (under 8 years old)
+  const eligibleChildren = employeeData.children.filter(
+    child => child.age < PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.childAgeLimit
+  );
+  
+  if (eligibleChildren.length === 0 && employeeData.children.length > 0) {
+    restrictions.push(`Τα τέκνα πρέπει να είναι κάτω από ${PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.childAgeLimit} ετών`);
+  }
+  
+  const totalMonthsAvailable = eligibleChildren.length > 0 ? PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.totalMonths : 0;
+  
+  // Add benefits information
+  if (isEligible && eligibleChildren.length > 0) {
+    benefits.push('Προστασία θέσης εργασίας');
+    benefits.push('Συνέχιση κοινωνικής ασφάλισης');
+    benefits.push('Μέτρηση χρόνου για προαγωγή');
+    benefits.push('Συσσώρευση ετήσιας άδειας');
+    benefits.push('Διατήρηση δικαιωμάτων αποζημίωσης');
+    benefits.push('Συνέχιση παροχών');
+    benefits.push('Επιστροφή στην ίδια ή ισοδύναμη θέση');
+  }
+  
+  return {
+    isEligible: isEligible && eligibleChildren.length > 0,
+    eligibleChildren,
+    totalMonthsAvailable,
+    canBeSharedWithPartner: PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.canBeShared,
+    canBeTakenInParts: PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.consecutiveOrParts,
+    restrictions,
+    benefits
+  };
+}
+
+/**
+ * Calculate Special Maternity Leave transfer options (Law 5089/2024)
+ */
+export function calculateSpecialMaternityLeaveTransfer(
+  motherData: {
+    isEligibleMother: boolean;
+    motherType: 'birth_mother' | 'adoptive_mother' | 'surrogacy_mother' | 'presumed_mother';
+  },
+  transferData: {
+    monthsToTransfer: number;
+    partnerEligible: boolean;
+  }
+): {
+  isTransferValid: boolean;
+  motherRetainsMonths: number;
+  partnerReceivesMonths: number;
+  maxTransferableMonths: number;
+  minimumMotherMonths: number;
+  errors: string[];
+  warnings: string[];
+} {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  
+  const maxTransferable = PARENTAL_LEAVE_ENTITLEMENTS.SPECIAL_MATERNITY_LEAVE.transferableMonths;
+  const minimumRetained = PARENTAL_LEAVE_ENTITLEMENTS.SPECIAL_MATERNITY_LEAVE.minimumRetainedMonths;
+  const totalMonths = PARENTAL_LEAVE_ENTITLEMENTS.SPECIAL_MATERNITY_LEAVE.totalMonths;
+  
+  // Validate transfer amount
+  if (transferData.monthsToTransfer > maxTransferable) {
+    errors.push(`Δεν μπορούν να μεταφερθούν περισσότεροι από ${maxTransferable} μήνες`);
+  }
+  
+  if (transferData.monthsToTransfer < 0) {
+    errors.push('Ο αριθμός μηνών προς μεταφορά δεν μπορεί να είναι αρνητικός');
+  }
+  
+  const motherRetains = totalMonths - transferData.monthsToTransfer;
+  
+  if (motherRetains < minimumRetained) {
+    errors.push(`Η μητέρα πρέπει να διατηρήσει τουλάχιστον ${minimumRetained} μήνες`);
+  }
+  
+  // Check partner eligibility
+  if (transferData.monthsToTransfer > 0 && !transferData.partnerEligible) {
+    errors.push('Ο/Η σύντροφος δεν είναι επιλέξιμος/η για τη λήψη μεταφερόμενων μηνών');
+  }
+  
+  // Check mother eligibility
+  if (!motherData.isEligibleMother) {
+    errors.push('Η μητέρα δεν είναι επιλέξιμη για ειδική άδεια μητρότητας');
+  }
+  
+  // Add warnings for optimal planning
+  if (transferData.monthsToTransfer > 0 && transferData.monthsToTransfer < 2) {
+    warnings.push('Συνιστάται μεταφορά τουλάχιστον 2 μηνών για αποτελεσματική οικογενειακή υποστήριξη');
+  }
+  
+  if (transferData.monthsToTransfer === maxTransferable) {
+    warnings.push('Μεταφέρθηκε ο μέγιστος αριθμός μηνών - η μητέρα διατηρεί μόνο το ελάχιστο');
+  }
+  
+  return {
+    isTransferValid: errors.length === 0,
+    motherRetainsMonths: motherRetains,
+    partnerReceivesMonths: transferData.monthsToTransfer,
+    maxTransferableMonths: maxTransferable,
+    minimumMotherMonths: minimumRetained,
+    errors,
+    warnings
+  };
+}
+
+/**
+ * Calculate Carer's Leave eligibility (Law 5089/2024)
+ */
+export function calculateCarersLeave(
+  employeeData: {
+    monthsEmployed: number;
+    contractType: 'fixed_term' | 'permanent' | 'temporary';
+    hasEligibleCareRecipient: boolean;
+    careRecipientRelation: 'relative' | 'household_member';
+    medicalDocumentationAvailable: boolean;
+  }
+): {
+  isEligible: boolean;
+  totalDaysAvailable: number;
+  eligibilityReasons: string[];
+  requirements: string[];
+  restrictions: string[];
+} {
+  const eligibilityReasons: string[] = [];
+  const requirements: string[] = [];
+  const restrictions: string[] = [];
+  
+  // Check employment period
+  const hasMinimumEmployment = employeeData.monthsEmployed >= PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.minimumEmploymentPeriod;
+  
+  if (!hasMinimumEmployment) {
+    eligibilityReasons.push(`Απαιτούνται τουλάχιστον ${PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.minimumEmploymentPeriod} μήνες απασχόλησης`);
+  }
+  
+  // Check contract type eligibility
+  const isEligibleContract = PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.eligibleContractTypes.includes(employeeData.contractType);
+  
+  if (!isEligibleContract) {
+    eligibilityReasons.push('Ο τύπος σύμβασης δεν είναι επιλέξιμος για άδεια φροντιστή');
+  }
+  
+  // Check care recipient
+  if (!employeeData.hasEligibleCareRecipient) {
+    eligibilityReasons.push('Δεν υπάρχει επιλέξιμος δικαιούχος φροντίδας');
+  }
+  
+  // Check medical documentation
+  if (!employeeData.medicalDocumentationAvailable) {
+    requirements.push('Απαιτείται ιατρική τεκμηρίωση σοβαρών ιατρικών αναγκών');
+  }
+  
+  const isEligible = hasMinimumEmployment && 
+                    isEligibleContract && 
+                    employeeData.hasEligibleCareRecipient;
+  
+  // Add general requirements
+  requirements.push('Υποβολή αίτησης με ιατρική βεβαίωση');
+  requirements.push('Προηγούμενη ειδοποίηση εργοδότη');
+  
+  // Add restrictions
+  restrictions.push('Μέγιστο 5 ημέρες ανά έτος');
+  restrictions.push('Άδεια χωρίς αποδοχές');
+  restrictions.push('Ετήσια ανανέωση δικαιώματος');
+  
+  return {
+    isEligible,
+    totalDaysAvailable: isEligible ? PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.totalDays : 0,
+    eligibilityReasons,
+    requirements,
+    restrictions
+  };
+}
+
+/**
+ * Calculate Force Majeure Leave usage and eligibility (Law 5089/2024)
+ */
+export function calculateForceMajeureLeave(
+  employeeData: {
+    isParentOrCarer: boolean;
+    usedOccurrencesThisYear: number;
+    emergencyType: 'illness' | 'accident' | 'emergency_care' | 'other';
+    hasMedicalCertificate: boolean;
+    familyMemberAffected: 'spouse' | 'child' | 'parent' | 'sibling' | 'other';
+  }
+): {
+  isEligible: boolean;
+  remainingOccurrences: number;
+  remainingDays: number;
+  isPaid: boolean;
+  requirements: string[];
+  nextSteps: string[];
+  eligibilityIssues: string[];
+} {
+  const requirements: string[] = [];
+  const nextSteps: string[] = [];
+  const eligibilityIssues: string[] = [];
+  
+  // Check if user is parent or carer
+  if (!employeeData.isParentOrCarer) {
+    eligibilityIssues.push('Δικαίωμα μόνο για εργαζόμενους γονείς ή φροντιστές');
+  }
+  
+  // Check remaining occurrences
+  const maxOccurrences = PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.maxOccurrencesPerYear;
+  const remainingOccurrences = Math.max(0, maxOccurrences - employeeData.usedOccurrencesThisYear);
+  
+  if (remainingOccurrences === 0) {
+    eligibilityIssues.push(`Έχει εξαντληθεί το όριο των ${maxOccurrences} περιστατικών ανά έτος`);
+  }
+  
+  // Check emergency type eligibility
+  const eligibleEmergencyTypes = PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.urgentFamilyEmergencies;
+  const isEligibleEmergency = eligibleEmergencyTypes.includes(employeeData.emergencyType);
+  
+  if (!isEligibleEmergency && employeeData.emergencyType !== 'other') {
+    eligibilityIssues.push('Ο τύπος επείγουσας κατάστασης δεν καλύπτεται');
+  }
+  
+  // Check family member eligibility
+  const eligibleFamilyMembers = PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.immediateFamily;
+  const isEligibleFamilyMember = eligibleFamilyMembers.includes(employeeData.familyMemberAffected);
+  
+  if (!isEligibleFamilyMember && employeeData.familyMemberAffected !== 'other') {
+    eligibilityIssues.push('Το μέλος της οικογένειας δεν καλύπτεται από την άδεια');
+  }
+  
+  // Medical certificate requirements
+  if (!employeeData.hasMedicalCertificate && employeeData.emergencyType !== 'other') {
+    requirements.push('Απαιτείται ιατρική βεβαίωση');
+  }
+  
+  const isEligible = employeeData.isParentOrCarer && 
+                    remainingOccurrences > 0 && 
+                    isEligibleEmergency && 
+                    isEligibleFamilyMember;
+  
+  // Add standard requirements
+  requirements.push('Άμεση ειδοποίηση εργοδότη');
+  requirements.push(`Υποβολή τεκμηρίωσης εντός ${PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.documentationDeadline} ωρών`);
+  
+  // Add next steps if eligible
+  if (isEligible) {
+    nextSteps.push('Υποβολή αίτησης άδειας ανωτέρας βίας');
+    nextSteps.push('Συλλογή απαραίτητων ιατρικών βεβαιώσεων');
+    nextSteps.push('Συντονισμός με διεύθυνση ανθρώπινου δυναμικού');
+  }
+  
+  const remainingDays = remainingOccurrences * PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.daysPerOccurrence;
+  
+  return {
+    isEligible,
+    remainingOccurrences,
+    remainingDays,
+    isPaid: PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.paymentRate === 1.0,
+    requirements,
+    nextSteps,
+    eligibilityIssues
   };
 }
