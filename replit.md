@@ -48,8 +48,16 @@ Preferred communication style: Simple, everyday language.
 ## Database Design
 - **Primary Database**: PostgreSQL via Neon serverless.
 - **Schema Management**: Drizzle Kit for migrations.
-- **Key Tables**: Employees, payroll records, users, sessions.
-- **Validation**: Greek-specific validations for AFM and AMKA.
+- **Core Data Model**: Complete Greek payroll system with 7 primary entities:
+  - **Employee**: Personal data (AFM, AMKA, IBAN), employment details, multi-property assignments
+  - **Contract**: Employment contracts with type, grade, base pay, allowances, FTE percentage, CBA references
+  - **Shift**: Scheduled work periods with planned/actual times, role assignments, overtime pre-approval
+  - **Punch**: Time tracking events with timestamp, type, source device, location, offline support
+  - **Timesheet**: Calculated work hours (regular, night, Sunday, holiday, overtime tiers, leave)
+  - **PayrollLine**: Individual payroll calculations with earnings codes, hours, units, amounts, cost centers
+  - **Filing**: Government compliance submissions (ERGANI II, e-EFKA/APD, AADE/ΦΜΥ) with status tracking
+- **Supporting Tables**: Properties, departments, wage components, device registry, overtime requests, exceptions, compliance alerts
+- **Validation**: Greek-specific validations for AFM (9-digit) and AMKA (11-digit) with proper formatting.
 
 ## System Design & Business Logic
 - **Advanced Payroll Engine**: Complete Greek tax calculation with progressive brackets and EFKA insurance calculations.

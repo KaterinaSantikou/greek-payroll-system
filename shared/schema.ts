@@ -422,6 +422,91 @@ export const dataRetentionPolicy = pgTable("data_retention_policy", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Contracts table - Employment contract details
+export const contracts = pgTable("contracts", {
+  contractId: varchar("contract_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  type: varchar("type", { length: 50 }).notNull(), // indefinite, fixed_term, seasonal, trial
+  grade: varchar("grade", { length: 50 }), // Job grade/level from CBA
+  basePay: decimal("base_pay", { precision: 10, scale: 2 }).notNull(),
+  allowancesJson: jsonb("allowances_json").default('{}'), // Structured allowances
+  ftePct: decimal("fte_pct", { precision: 5, scale: 2 }).default("100"), // FTE percentage
+  propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
+  cbaId: varchar("cba_id", { length: 100 }), // Collective Bargaining Agreement ID
+  effectiveFrom: date("effective_from").notNull(),
+  effectiveTo: date("effective_to"), // null means current
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Payroll Runs table - Master payroll processing batches
+export const payrollRuns = pgTable("payroll_runs", {
+  runId: varchar("run_id").primaryKey().default(sql`gen_random_uuid()`),
+  period: varchar("period", { length: 7 }).notNull(), // YYYY-MM format
+  runType: varchar("run_type", { length: 20 }).notNull(), // regular, bonus, correction
+  status: varchar("status", { length: 20 }).default("draft"), // draft, calculated, validated, finalized, posted
+  propertyIds: jsonb("property_ids").default('[]'), // Array of property IDs included
+  totalEmployees: integer("total_employees").default(0),
+  totalGrossPay: decimal("total_gross_pay", { precision: 12, scale: 2 }).default("0"),
+  totalTaxes: decimal("total_taxes", { precision: 12, scale: 2 }).default("0"),
+  totalInsurance: decimal("total_insurance", { precision: 12, scale: 2 }).default("0"),
+  totalNetPay: decimal("total_net_pay", { precision: 12, scale: 2 }).default("0"),
+  calculatedAt: timestamp("calculated_at"),
+  finalizedAt: timestamp("finalized_at"),
+  postedAt: timestamp("posted_at"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Payroll Lines table - Individual employee payroll calculations
+export const payrollLines = pgTable("payroll_lines", {
+  lineId: varchar("line_id").primaryKey().default(sql`gen_random_uuid()`),
+  runId: varchar("run_id").references(() => payrollRuns.runId).notNull(),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  code: varchar("code", { length: 20 }).notNull(), // BASIC, OT1, NIGHT, FOOD_ALL, TAX, INS_EMP
+  description: varchar("description", { length: 200 }).notNull(),
+  hours: decimal("hours", { precision: 8, scale: 2 }).default("0"),
+  units: decimal("units", { precision: 8, scale: 2 }).default("0"),
+  rate: decimal("rate", { precision: 10, scale: 4 }).default("0"),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  costCenter: varchar("cost_center", { length: 50 }),
+  notes: text("notes"),
+  isDeduction: boolean("is_deduction").default(false),
+  isTaxable: boolean("is_taxable").default(true),
+  isInsurable: boolean("is_insurable").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_payroll_lines_run").on(table.runId),
+  index("idx_payroll_lines_employee").on(table.employeeId),
+  index("idx_payroll_lines_code").on(table.code),
+]);
+
+// Filings table - Government compliance submissions
+export const filings = pgTable("filings", {
+  filingId: varchar("filing_id").primaryKey().default(sql`gen_random_uuid()`),
+  type: varchar("type", { length: 50 }).notNull(), // ERGANI_HIRE, ERGANI_SCHEDULE, EFKA_APD, AADE_FMY
+  period: varchar("period", { length: 7 }).notNull(), // YYYY-MM format
+  status: varchar("status", { length: 20 }).default("draft"), // draft, built, validated, submitted, confirmed, rejected
+  receiptRef: varchar("receipt_ref", { length: 100 }), // Government receipt reference
+  payloadHash: varchar("payload_hash", { length: 64 }), // SHA256 hash of submission payload
+  submissionUrl: varchar("submission_url", { length: 500 }),
+  submittedAt: timestamp("submitted_at"),
+  confirmedAt: timestamp("confirmed_at"),
+  rejectedAt: timestamp("rejected_at"),
+  rejectionReason: text("rejection_reason"),
+  propertyIds: jsonb("property_ids").default('[]'), // Properties included in filing
+  employeeCount: integer("employee_count").default(0),
+  totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).default("0"), // For tax/insurance filings
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_filings_type_period").on(table.type, table.period),
+  index("idx_filings_status").on(table.status),
+  index("idx_filings_receipt").on(table.receiptRef),
+]);
+
 // Relations
 export const propertiesRelations = relations(properties, ({ many }) => ({
   employees: many(employees),
@@ -578,6 +663,86 @@ export type InsertEmployee = z.infer<typeof insertEmployeeSchema>;
 
 export type Shift = typeof shifts.$inferSelect;
 export type InsertShift = z.infer<typeof insertShiftSchema>;
+
+// Add new data model relations
+export const contractsRelations = relations(contracts, ({ one }) => ({
+  employee: one(employees, {
+    fields: [contracts.employeeId],
+    references: [employees.employeeId],
+  }),
+  property: one(properties, {
+    fields: [contracts.propertyId],
+    references: [properties.propertyId],
+  }),
+}));
+
+export const payrollRunsRelations = relations(payrollRuns, ({ one, many }) => ({
+  createdByUser: one(users, {
+    fields: [payrollRuns.createdBy],
+    references: [users.id],
+  }),
+  payrollLines: many(payrollLines),
+}));
+
+export const payrollLinesRelations = relations(payrollLines, ({ one }) => ({
+  run: one(payrollRuns, {
+    fields: [payrollLines.runId],
+    references: [payrollRuns.runId],
+  }),
+  employee: one(employees, {
+    fields: [payrollLines.employeeId],
+    references: [employees.employeeId],
+  }),
+}));
+
+export const filingsRelations = relations(filings, ({ one }) => ({
+  createdByUser: one(users, {
+    fields: [filings.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// Additional type definitions for new data model
+export type Contract = typeof contracts.$inferSelect;
+export type InsertContract = typeof contracts.$inferInsert;
+
+export type PayrollRun = typeof payrollRuns.$inferSelect;
+export type InsertPayrollRun = typeof payrollRuns.$inferInsert;
+
+export type PayrollLine = typeof payrollLines.$inferSelect;
+export type InsertPayrollLine = typeof payrollLines.$inferInsert;
+
+export type Filing = typeof filings.$inferSelect;
+export type InsertFiling = typeof filings.$inferInsert;
+
+// Add additional insert schemas
+export const insertContractSchema = createInsertSchema(contracts).omit({
+  contractId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPayrollRunSchema = createInsertSchema(payrollRuns).omit({
+  runId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPayrollLineSchema = createInsertSchema(payrollLines).omit({
+  lineId: true,
+  createdAt: true,
+});
+
+export const insertFilingSchema = createInsertSchema(filings).omit({
+  filingId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertContract = z.infer<typeof insertContractSchema>;
+export type InsertPayrollRun = z.infer<typeof insertPayrollRunSchema>;
+export type InsertPayrollLine = z.infer<typeof insertPayrollLineSchema>;
+export type InsertFiling = z.infer<typeof insertFilingSchema>;
 
 export type PunchEvent = typeof punchEvents.$inferSelect;
 export type InsertPunchEvent = z.infer<typeof insertPunchEventSchema>;
