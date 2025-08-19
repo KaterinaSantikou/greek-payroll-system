@@ -244,6 +244,93 @@ const navigationData: NavigationItem[] = [
         href: '/accounting/reconciliation'
       }
     ]
+  },
+  {
+    id: 'analytics',
+    label: 'Analytics',
+    icon: BarChart3,
+    children: [
+      {
+        id: 'cost-ot',
+        label: 'Cost & OT',
+        icon: BarChart3,
+        href: '/analytics/cost-ot'
+      },
+      {
+        id: 'absence-turnover',
+        label: 'Absence & Turnover',
+        icon: Users,
+        href: '/analytics/absence-turnover'
+      },
+      {
+        id: 'custom-reports',
+        label: 'Custom Reports',
+        icon: FileText,
+        href: '/analytics/custom-reports'
+      }
+    ]
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    children: [
+      {
+        id: 'policies',
+        label: 'Policies',
+        icon: Shield,
+        href: '/settings/policies'
+      },
+      {
+        id: 'compliance',
+        label: 'Compliance',
+        icon: CheckCircle,
+        href: '/settings/compliance'
+      },
+      {
+        id: 'integrations',
+        label: 'Integrations',
+        icon: Settings,
+        href: '/settings/integrations'
+      },
+      {
+        id: 'security',
+        label: 'Security',
+        icon: Shield,
+        href: '/settings/security'
+      },
+      {
+        id: 'localization',
+        label: 'Localization',
+        icon: Settings,
+        href: '/settings/localization'
+      }
+    ]
+  },
+  {
+    id: 'help-audit',
+    label: 'Help & Audit',
+    icon: Activity,
+    children: [
+      {
+        id: 'guides',
+        label: 'Guides',
+        icon: FileText,
+        href: '/help/guides'
+      },
+      {
+        id: 'support',
+        label: 'Support',
+        icon: Activity,
+        href: '/help/support'
+      },
+      {
+        id: 'audit-log',
+        label: 'Audit Log',
+        icon: Activity,
+        href: '/help/audit-log'
+      }
+    ]
   }
 ];
 
@@ -285,7 +372,11 @@ export function MainNavigation({ collapsed = false }: MainNavigationProps) {
   React.useEffect(() => {
     const activeSection = getActiveSection();
     if (activeSection) {
-      setExpandedSections(prev => new Set([...prev, activeSection]));
+      setExpandedSections(prev => {
+        const newSet = new Set(prev);
+        newSet.add(activeSection);
+        return newSet;
+      });
     }
   }, [location]);
 
