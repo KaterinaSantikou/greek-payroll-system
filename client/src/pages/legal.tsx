@@ -29,6 +29,10 @@ import {
   checkDocumentCompliance,
   generateTerminationChecklist,
   getLegalDocumentationRequirements,
+  checkHealthSafetyCoordinatorRequirement,
+  generateFirstAidTrainingRequirements,
+  validateDigitalWorkCardProtection,
+  generateHealthSafetyComplianceReport,
   REQUIRED_LEGAL_DOCUMENTS,
   LEGAL_RESTRICTIONS,
   LAYOFF_NOTICE_PERIODS,
@@ -65,6 +69,35 @@ export default function LegalPage() {
   const [complianceResults, setComplianceResults] = useState<any>(null);
   const [layoffResults, setLayoffResults] = useState<any>(null);
   const [terminationChecklist, setTerminationChecklist] = useState<any>(null);
+  const [healthSafetyResults, setHealthSafetyResults] = useState<any>(null);
+  const [projectData, setProjectData] = useState({
+    type: "construction",
+    value: 750000,
+    riskLevel: "high" as const,
+    duration: 8
+  });
+  const [companyData, setCompanyData] = useState({
+    industry: "construction",
+    employeeCount: 150,
+    hasConstructionProjects: true,
+    hasHazardousWork: true,
+    digitalCardImplemented: true,
+    currentProjects: [
+      {
+        type: "construction",
+        value: 750000,
+        riskLevel: "high" as const,
+        duration: 8
+      }
+    ]
+  });
+  const [salaryProtectionData, setSalaryProtectionData] = useState({
+    previousSalary: 2500,
+    currentSalary: 2300,
+    digitalCardImplementationDate: "2025-01-01",
+    salaryChangeDate: "2025-02-15",
+    salaryChangeReason: "Αναδιοργάνωση λόγω ψηφιακής κάρτας εργασίας"
+  });
 
   const legalRequirements = getLegalDocumentationRequirements();
 
@@ -90,6 +123,25 @@ export default function LegalPage() {
     setTerminationChecklist(checklist);
   };
 
+  const handleHealthSafetyAnalysis = () => {
+    const coordinatorCheck = checkHealthSafetyCoordinatorRequirement(projectData);
+    const firstAidTraining = generateFirstAidTrainingRequirements({
+      totalEmployees: companyData.employeeCount,
+      workplaceType: companyData.industry,
+      hasRemoteWorkers: true,
+      hasHazardousWork: companyData.hasHazardousWork
+    });
+    const salaryProtection = validateDigitalWorkCardProtection(salaryProtectionData);
+    const complianceReport = generateHealthSafetyComplianceReport(companyData);
+
+    setHealthSafetyResults({
+      coordinatorCheck,
+      firstAidTraining,
+      salaryProtection,
+      complianceReport
+    });
+  };
+
   const updateDocumentStatus = (type: string, field: string, value: any) => {
     setDocuments(docs => 
       docs.map(doc => 
@@ -109,9 +161,10 @@ export default function LegalPage() {
       </div>
 
       <Tabs defaultValue="documents" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="documents">Έγγραφα</TabsTrigger>
           <TabsTrigger value="restrictions">Περιορισμοί</TabsTrigger>
+          <TabsTrigger value="health-safety">Υγεία & Ασφάλεια</TabsTrigger>
           <TabsTrigger value="layoffs">Απολύσεις</TabsTrigger>
           <TabsTrigger value="termination">Λύση Σύμβασης</TabsTrigger>
         </TabsList>
@@ -489,6 +542,301 @@ export default function LegalPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        </TabsContent>
+
+        {/* Health & Safety Requirements (2025 Updates) */}
+        <TabsContent value="health-safety">
+          <div className="space-y-6">
+            {/* Project Analysis Form */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Ανάλυση Απαιτήσεων Υγείας & Ασφάλειας
+                </CardTitle>
+                <CardDescription>
+                  Νέες απαιτήσεις 2025 για συντονιστές ασφάλειας, εκπαίδευση πρώτων βοηθειών και προστασία μισθών
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="projectType">Τύπος Έργου</Label>
+                    <Select value={projectData.type} onValueChange={(value) => setProjectData({...projectData, type: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="construction">Κατασκευές</SelectItem>
+                        <SelectItem value="infrastructure">Υποδομές</SelectItem>
+                        <SelectItem value="manufacturing">Παραγωγή</SelectItem>
+                        <SelectItem value="services">Υπηρεσίες</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="projectValue">Αξία Έργου (€)</Label>
+                    <Input
+                      id="projectValue"
+                      type="number"
+                      value={projectData.value}
+                      onChange={(e) => setProjectData({...projectData, value: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="riskLevel">Επίπεδο Κινδύνου</Label>
+                    <Select value={projectData.riskLevel} onValueChange={(value: any) => setProjectData({...projectData, riskLevel: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Χαμηλός</SelectItem>
+                        <SelectItem value="medium">Μεσαίος</SelectItem>
+                        <SelectItem value="high">Υψηλός</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="duration">Διάρκεια (μήνες)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={projectData.duration}
+                      onChange={(e) => setProjectData({...projectData, duration: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="employeeCount">Αριθμός Εργαζομένων</Label>
+                    <Input
+                      id="employeeCount"
+                      type="number"
+                      value={companyData.employeeCount}
+                      onChange={(e) => setCompanyData({...companyData, employeeCount: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="industry">Κλάδος</Label>
+                    <Select value={companyData.industry} onValueChange={(value) => setCompanyData({...companyData, industry: value})}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="construction">Κατασκευές</SelectItem>
+                        <SelectItem value="manufacturing">Παραγωγή</SelectItem>
+                        <SelectItem value="healthcare">Υγεία</SelectItem>
+                        <SelectItem value="education">Εκπαίδευση</SelectItem>
+                        <SelectItem value="administrative">Διοικητικό</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="digitalCard"
+                    checked={companyData.digitalCardImplemented}
+                    onCheckedChange={(checked) => setCompanyData({...companyData, digitalCardImplemented: checked})}
+                  />
+                  <Label htmlFor="digitalCard">Ψηφιακή Κάρτα Εργασίας Ενεργοποιημένη</Label>
+                </div>
+
+                <Button onClick={handleHealthSafetyAnalysis} className="w-full" size="lg">
+                  <Shield className="mr-2 h-4 w-4" />
+                  Ανάλυση Απαιτήσεων Υγείας & Ασφάλειας
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Results Display */}
+            {healthSafetyResults && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Construction Safety Coordinator */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Briefcase className="h-5 w-5" />
+                      Συντονιστής Ασφάλειας Κατασκευών
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`p-4 rounded-lg border-l-4 ${
+                      healthSafetyResults.coordinatorCheck.required 
+                        ? 'bg-red-50 border-red-500' 
+                        : 'bg-green-50 border-green-500'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        {healthSafetyResults.coordinatorCheck.required ? (
+                          <AlertTriangle className="h-5 w-5 text-red-600" />
+                        ) : (
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        )}
+                        <span className="font-medium">
+                          {healthSafetyResults.coordinatorCheck.required ? 'Απαιτείται Διορισμός' : 'Δεν Απαιτείται'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">
+                        {healthSafetyResults.coordinatorCheck.reason}
+                      </p>
+                      
+                      {healthSafetyResults.coordinatorCheck.required && (
+                        <div>
+                          <h5 className="font-medium mb-2">Απαιτούμενα Προσόντα:</h5>
+                          <ul className="list-disc list-inside space-y-1 text-sm">
+                            {healthSafetyResults.coordinatorCheck.qualificationRequirements.map((req: string, index: number) => (
+                              <li key={index}>{req}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* First Aid Training */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="h-5 w-5" />
+                      Εκπαίδευση Πρώτων Βοηθειών
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span>Συμμετέχοντες Εργαζόμενοι:</span>
+                        <Badge variant="default">
+                          {companyData.employeeCount - healthSafetyResults.firstAidTraining.exemptEmployees}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span>Εκτιμώμενο Κόστος:</span>
+                        <Badge variant="outline">
+                          €{healthSafetyResults.firstAidTraining.estimatedCost.toLocaleString()}
+                        </Badge>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span>Συχνότητα Εκπαίδευσης:</span>
+                        <Badge variant="secondary">Κάθε 2 έτη</Badge>
+                      </div>
+
+                      <div>
+                        <h5 className="font-medium mb-2">Μαθήματα Εκπαίδευσης:</h5>
+                        <div className="flex flex-wrap gap-1">
+                          {healthSafetyResults.firstAidTraining.trainingModules.map((module: string, index: number) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {module}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Digital Work Card Protection */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="h-5 w-5" />
+                      Προστασία Ψηφιακής Κάρτας
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className={`p-4 rounded-lg border-l-4 ${
+                      healthSafetyResults.salaryProtection.violation 
+                        ? 'bg-red-50 border-red-500' 
+                        : 'bg-green-50 border-green-500'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        {healthSafetyResults.salaryProtection.violation ? (
+                          <AlertTriangle className="h-5 w-5 text-red-600" />
+                        ) : (
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                        )}
+                        <span className="font-medium">
+                          {healthSafetyResults.salaryProtection.violation ? 'Παραβίαση Εντοπίστηκε' : 'Πλήρης Συμμόρφωση'}
+                        </span>
+                      </div>
+                      
+                      {healthSafetyResults.salaryProtection.recommendations.length > 0 && (
+                        <div className="mt-3">
+                          <h5 className="font-medium mb-2">Συστάσεις:</h5>
+                          <ul className="list-disc list-inside space-y-1 text-sm">
+                            {healthSafetyResults.salaryProtection.recommendations.map((rec: string, index: number) => (
+                              <li key={index}>{rec}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {healthSafetyResults.salaryProtection.legalActions.length > 0 && (
+                        <div className="mt-3">
+                          <h5 className="font-medium mb-2 text-red-600">Νομικές Ενέργειες:</h5>
+                          <ul className="list-disc list-inside space-y-1 text-sm text-red-600">
+                            {healthSafetyResults.salaryProtection.legalActions.map((action: string, index: number) => (
+                              <li key={index}>{action}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Compliance Score */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5" />
+                      Βαθμολογία Συμμόρφωσης
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center space-y-4">
+                      <div className="text-4xl font-bold text-center">
+                        <span className={
+                          healthSafetyResults.complianceReport.complianceScore >= 80 
+                            ? 'text-green-600' 
+                            : healthSafetyResults.complianceReport.complianceScore >= 60 
+                            ? 'text-yellow-600' 
+                            : 'text-red-600'
+                        }>
+                          {healthSafetyResults.complianceReport.complianceScore}%
+                        </span>
+                      </div>
+                      
+                      <Progress 
+                        value={healthSafetyResults.complianceReport.complianceScore} 
+                        className="w-full" 
+                      />
+
+                      {healthSafetyResults.complianceReport.recommendations.length > 0 && (
+                        <div className="text-left">
+                          <h5 className="font-medium mb-2">Προτάσεις Βελτίωσης:</h5>
+                          <ul className="list-disc list-inside space-y-1 text-sm">
+                            {healthSafetyResults.complianceReport.recommendations.map((rec: string, index: number) => (
+                              <li key={index}>{rec}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         </TabsContent>
 

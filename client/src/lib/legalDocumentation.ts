@@ -98,6 +98,43 @@ export const REQUIRED_LEGAL_DOCUMENTS = {
         renewalPeriod: 365, // Annual
         renewalNotice: 30,
         companySize: '>50_employees'
+      },
+      {
+        code: 'health-safety-coordinator',
+        name: 'Συντονιστής Υγείας & Ασφάλειας',
+        description: 'Διορισμός συντονιστή για μεγάλα έργα κατασκευών',
+        mandatory: true,
+        applicableTo: ['construction_projects'],
+        projectSize: 'large_construction',
+        qualificationRequired: true,
+        certificationTracking: true,
+        digitalCopy: true,
+        lawReference: '2025_health_safety_expansion'
+      },
+      {
+        code: 'first-aid-training',
+        name: 'Εκπαίδευση Πρώτων Βοηθειών',
+        description: 'Υποχρεωτική εκπαίδευση σε βασικές διαδικασίες έκτακτης ανάγκης',
+        mandatory: true,
+        trainingContent: ['cpr', 'heimlich_maneuver', 'basic_emergency_procedures'],
+        expiryTracking: true,
+        renewalPeriod: 730, // 2 years
+        renewalNotice: 60,
+        allEmployees: true,
+        certificationRequired: true,
+        digitalCopy: true,
+        lawReference: '2025_first_aid_requirements'
+      },
+      {
+        code: 'digital-work-card-protection',
+        name: 'Προστασία Ψηφιακής Κάρτας Εργασίας',
+        description: 'Δήλωση προστασίας κατά μείωσης μισθού λόγω ψηφιακής κάρτας',
+        mandatory: true,
+        protectionType: 'salary_reduction_prohibition',
+        digitalImplementation: true,
+        complianceCheck: 'automatic',
+        employeeRights: ['salary_protection', 'no_reduction_due_to_digital_card'],
+        lawReference: '2025_digital_work_card_protection'
       }
     ]
   },
@@ -307,6 +344,61 @@ export const LEGAL_RESTRICTIONS = {
         periodicHealthChecks: true,
         maxDailyHours: 6,
         categories: ['chemical', 'nuclear', 'height_work', 'mining']
+      },
+      {
+        code: 'construction-safety-coordinator',
+        name: 'Συντονιστής Ασφάλειας Κατασκευών',
+        description: 'Υποχρεωτικός διορισμός συντονιστή για μεγάλα κατασκευαστικά έργα',
+        projectTypes: ['large_construction', 'infrastructure', 'high_risk_construction'],
+        minimumProjectValue: 500000, // €500,000
+        qualificationRequirements: [
+          'engineering_degree',
+          'safety_certification',
+          'construction_experience'
+        ],
+        responsibilities: [
+          'safety_planning',
+          'risk_assessment',
+          'safety_monitoring',
+          'incident_reporting',
+          'worker_training_oversight'
+        ],
+        lawReference: '2025_health_safety_expansion'
+      },
+      {
+        code: 'mandatory-first-aid-training',
+        name: 'Υποχρεωτική Εκπαίδευση Πρώτων Βοηθειών',
+        description: 'Εκπαίδευση όλων των εργαζομένων σε βασικές διαδικασίες έκτακτης ανάγκης',
+        trainingModules: [
+          'cpr_certification',
+          'heimlich_maneuver',
+          'basic_wound_care',
+          'emergency_response_procedures',
+          'workplace_specific_hazards'
+        ],
+        trainingFrequency: 730, // Every 2 years
+        certificationRequired: true,
+        applicableToAllEmployees: true,
+        exemptions: ['remote_workers', 'administrative_only'],
+        lawReference: '2025_first_aid_requirements'
+      },
+      {
+        code: 'digital-work-card-salary-protection',
+        name: 'Προστασία Μισθού από Ψηφιακή Κάρτα Εργασίας',
+        description: 'Απαγόρευση μείωσης μισθών εξαιτίας της εισαγωγής ψηφιακής κάρτας εργασίας',
+        protectionScope: [
+          'salary_reduction_prohibition',
+          'benefit_reduction_prohibition',
+          'working_conditions_protection'
+        ],
+        enforcementMechanism: 'automatic_system_check',
+        penaltiesForViolation: [
+          'administrative_fines',
+          'labor_court_action',
+          'compensation_orders'
+        ],
+        reportingMechanism: 'digital_platform_integrated',
+        lawReference: '2025_digital_work_card_protection'
       }
     ]
   },
@@ -826,5 +918,244 @@ export function getLegalDocumentationRequirements(): {
     legalRestrictions: LEGAL_RESTRICTIONS,
     layoffNotices: LAYOFF_NOTICE_PERIODS,
     terminationProcedures: TERMINATION_PROCEDURES
+  };
+}
+
+/**
+ * Check if health and safety coordinator is required for construction project
+ */
+export function checkHealthSafetyCoordinatorRequirement(
+  projectData: {
+    type: string;
+    value: number;
+    riskLevel: 'low' | 'medium' | 'high';
+    duration: number; // months
+  }
+): {
+  required: boolean;
+  reason: string;
+  qualificationRequirements: string[];
+  compliance: string;
+} {
+  const isConstructionProject = projectData.type.toLowerCase().includes('construction') || 
+                               projectData.type.toLowerCase().includes('infrastructure');
+  
+  const isLargeProject = projectData.value >= 500000; // €500,000 threshold
+  const isHighRisk = projectData.riskLevel === 'high';
+  const isLongTerm = projectData.duration >= 6; // 6+ months
+
+  const required = isConstructionProject && (isLargeProject || isHighRisk || isLongTerm);
+
+  return {
+    required,
+    reason: required 
+      ? `Υποχρεωτικός διορισμός λόγω: ${isLargeProject ? 'μεγάλο έργο (>€500K), ' : ''}${isHighRisk ? 'υψηλός κίνδυνος, ' : ''}${isLongTerm ? 'μακροχρόνιο έργο (6+ μήνες)' : ''}`.trim().replace(/,$/, '')
+      : 'Δεν απαιτείται για αυτό το έργο',
+    qualificationRequirements: required ? [
+      'Πτυχίο μηχανικού ή συναφούς ειδικότητας',
+      'Πιστοποίηση ασφάλειας εργασίας',
+      'Εμπειρία σε κατασκευαστικά έργα (min 3 έτη)',
+      'Εκπαίδευση σε νομοθεσία υγείας & ασφάλειας'
+    ] : [],
+    compliance: '2025_health_safety_expansion'
+  };
+}
+
+/**
+ * Generate first aid training requirements for employees
+ */
+export function generateFirstAidTrainingRequirements(
+  employeeData: {
+    totalEmployees: number;
+    workplaceType: string;
+    hasRemoteWorkers: boolean;
+    hasHazardousWork: boolean;
+  }
+): {
+  trainingRequired: boolean;
+  exemptEmployees: number;
+  trainingModules: string[];
+  frequency: number; // days
+  certificationRequired: boolean;
+  estimatedCost: number;
+} {
+  const administrativeOnly = employeeData.workplaceType === 'administrative' && !employeeData.hasHazardousWork;
+  const remoteWorkers = employeeData.hasRemoteWorkers ? Math.floor(employeeData.totalEmployees * 0.3) : 0;
+  const exemptEmployees = administrativeOnly ? Math.floor(employeeData.totalEmployees * 0.2) : remoteWorkers;
+
+  const trainingModules = [
+    'Καρδιοπνευμονική Αναζωογόνηση (CPR)',
+    'Τεχνική Heimlich',
+    'Βασική Φροντίδα Τραυμάτων',
+    'Διαδικασίες Έκτακτης Ανάγκης',
+    'Ειδικοί Κίνδυνοι Χώρου Εργασίας'
+  ];
+
+  if (employeeData.hasHazardousWork) {
+    trainingModules.push(
+      'Χειρισμός Χημικών Εκτάκτων Αναγκών',
+      'Πρώτες Βοήθειες σε Εγκαύματα',
+      'Αντιμετώπιση Τοξικών Εισπνοών'
+    );
+  }
+
+  const trainingCostPerEmployee = 150; // €150 per employee
+  const participatingEmployees = employeeData.totalEmployees - exemptEmployees;
+
+  return {
+    trainingRequired: true,
+    exemptEmployees,
+    trainingModules,
+    frequency: 730, // Every 2 years
+    certificationRequired: true,
+    estimatedCost: participatingEmployees * trainingCostPerEmployee
+  };
+}
+
+/**
+ * Validate digital work card salary protection compliance
+ */
+export function validateDigitalWorkCardProtection(
+  salaryData: {
+    previousSalary: number;
+    currentSalary: number;
+    digitalCardImplementationDate: string;
+    salaryChangeDate: string;
+    salaryChangeReason: string;
+  }
+): {
+  compliant: boolean;
+  violation: boolean;
+  protectionTriggered: boolean;
+  recommendations: string[];
+  legalActions: string[];
+} {
+  const implementationDate = new Date(salaryData.digitalCardImplementationDate);
+  const salaryChangeDate = new Date(salaryData.salaryChangeDate);
+  
+  const salaryReduced = salaryData.currentSalary < salaryData.previousSalary;
+  const changedAfterImplementation = salaryChangeDate >= implementationDate;
+  const reasonRelatedToDigitalCard = salaryData.salaryChangeReason.toLowerCase().includes('digital') || 
+                                   salaryData.salaryChangeReason.toLowerCase().includes('ψηφιακ') ||
+                                   salaryData.salaryChangeReason.toLowerCase().includes('κάρτα');
+
+  const violation = salaryReduced && changedAfterImplementation && reasonRelatedToDigitalCard;
+  const protectionTriggered = salaryReduced && changedAfterImplementation;
+
+  const recommendations = [];
+  const legalActions = [];
+
+  if (violation) {
+    recommendations.push(
+      'Άμεση επαναφορά μισθού στο προηγούμενο επίπεδο',
+      'Καταβολή διαφοράς για την περίοδο μείωσης',
+      'Αναθεώρηση αιτιολογίας αλλαγής μισθού'
+    );
+    
+    legalActions.push(
+      'Αναφορά στο Σώμα Επιθεώρησης Εργασίας',
+      'Πιθανή επιβολή διοικητικών προστίμων',
+      'Αγωγή εργαζομένου για αποζημίωση'
+    );
+  } else if (protectionTriggered) {
+    recommendations.push(
+      'Τεκμηρίωση εναλλακτικών λόγων μείωσης μισθού',
+      'Συμβουλή νομικού τμήματος',
+      'Διαβούλευση με εργαζόμενο'
+    );
+  }
+
+  return {
+    compliant: !violation,
+    violation,
+    protectionTriggered,
+    recommendations,
+    legalActions
+  };
+}
+
+/**
+ * Generate comprehensive health and safety compliance report
+ */
+export function generateHealthSafetyComplianceReport(
+  companyData: {
+    industry: string;
+    employeeCount: number;
+    hasConstructionProjects: boolean;
+    hasHazardousWork: boolean;
+    digitalCardImplemented: boolean;
+    currentProjects: Array<{
+      type: string;
+      value: number;
+      riskLevel: 'low' | 'medium' | 'high';
+      duration: number;
+    }>;
+  }
+): {
+  coordinatorRequirements: Array<{
+    projectId: number;
+    required: boolean;
+    reason: string;
+  }>;
+  firstAidTraining: {
+    required: boolean;
+    participatingEmployees: number;
+    estimatedCost: number;
+  };
+  digitalCardProtection: {
+    active: boolean;
+    monitoringRequired: boolean;
+  };
+  complianceScore: number;
+  recommendations: string[];
+} {
+  const coordinatorRequirements = companyData.currentProjects.map((project, index) => {
+    const check = checkHealthSafetyCoordinatorRequirement(project);
+    return {
+      projectId: index + 1,
+      required: check.required,
+      reason: check.reason
+    };
+  });
+
+  const firstAidTraining = generateFirstAidTrainingRequirements({
+    totalEmployees: companyData.employeeCount,
+    workplaceType: companyData.industry,
+    hasRemoteWorkers: true,
+    hasHazardousWork: companyData.hasHazardousWork
+  });
+
+  let complianceScore = 100;
+  const recommendations = [];
+
+  // Deduct points for missing requirements
+  const requiredCoordinators = coordinatorRequirements.filter(req => req.required).length;
+  if (requiredCoordinators > 0) {
+    complianceScore -= requiredCoordinators * 15;
+    recommendations.push(`Διορισμός ${requiredCoordinators} συντονιστή/ών ασφάλειας για κατασκευαστικά έργα`);
+  }
+
+  if (firstAidTraining.trainingRequired) {
+    complianceScore -= 20;
+    recommendations.push('Οργάνωση προγράμματος εκπαίδευσης πρώτων βοηθειών');
+  }
+
+  if (companyData.digitalCardImplemented) {
+    recommendations.push('Ενεργοποίηση συστήματος παρακολούθησης προστασίας μισθών');
+  }
+
+  return {
+    coordinatorRequirements,
+    firstAidTraining: {
+      required: firstAidTraining.trainingRequired,
+      participatingEmployees: companyData.employeeCount - firstAidTraining.exemptEmployees,
+      estimatedCost: firstAidTraining.estimatedCost
+    },
+    digitalCardProtection: {
+      active: companyData.digitalCardImplemented,
+      monitoringRequired: true
+    },
+    complianceScore: Math.max(0, complianceScore),
+    recommendations
   };
 }
