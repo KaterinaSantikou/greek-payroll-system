@@ -6,7 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useLocale } from "@/hooks/useLocale";
 import { useAuth } from "@/hooks/useAuth";
-import { getUserRole, canAccessSection } from "@/lib/roleBasedRouting";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard,
@@ -64,7 +63,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['dashboard', 'people']));
   const { user } = useAuth();
   const { t } = useLocale();
-  const userRole = getUserRole(user) as string;
+  const userRole = user?.role || 'Employee';
 
   // Create structured navigation data
   const navigationGroups: NavigationItem[] = [
@@ -364,22 +363,38 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
   const renderBadge = (badge?: string | number, urgent?: boolean) => {
     if (!badge) return null;
     
+    // Determine badge type based on context
+    const getBadgeClass = () => {
+      if (urgent) return "bg-red-500 text-white"; // Danger for failures
+      const numValue = typeof badge === 'string' ? parseInt(badge) : badge;
+      if (numValue > 0 && numValue < 10) return "bg-amber-500 text-white"; // Warning for due items
+      return "bg-blue-500 text-white"; // Info for counts
+    };
+    
     return (
-      <Badge
-        variant={urgent ? "destructive" : "secondary"}
+      <div
         className={cn(
-          "text-xs font-medium min-w-[20px] h-5 flex items-center justify-center",
-          urgent ? "bg-red-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+          "px-2 py-0.5 rounded-full text-xs font-medium min-w-[18px] h-[18px] flex items-center justify-center",
+          getBadgeClass()
         )}
       >
         {badge}
-      </Badge>
+      </div>
     );
   };
 
   const renderNavigationItem = (item: NavigationItem, level: number = 0) => {
-    // Check role-based access
-    if (!canAccessSection(item.id, userRole)) {
+    // Check role-based access - simplified for demo
+    const hasAccess = (sectionId: string, role: string) => {
+      const restrictedSections = {
+        'Employee': ['payroll', 'filings', 'payments', 'accounting'],
+        'Manager': ['filings', 'payments', 'accounting'],
+        'HR': ['payroll', 'payments', 'accounting'],
+      };
+      return !restrictedSections[role]?.includes(sectionId);
+    };
+
+    if (!hasAccess(item.id, userRole)) {
       return null;
     }
 
@@ -395,22 +410,22 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
               <Button
                 variant="ghost"
                 className={cn(
-                  "w-full justify-start h-11 px-3 font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors",
-                  level > 0 && "ml-6 relative before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
-                  active && "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400"
+                  "w-full justify-start px-4 font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors relative",
+                  level === 0 ? "h-10 text-[15px]" : "h-9 text-[14px] ml-6 before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
+                  active && "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-blue-600 before:rounded-r-sm"
                 )}
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex items-center flex-1 min-w-0">
                   <item.icon className="h-6 w-6 flex-shrink-0" />
                   {!collapsed && (
                     <>
-                      <span className="truncate">{item.label}</span>
+                      <span className="truncate ml-3">{item.label}</span>
                       <div className="flex items-center gap-2 ml-auto">
                         {renderBadge(item.badge, item.urgent)}
                         {isExpanded ? (
-                          <ChevronDown className="h-4 w-4 text-gray-400" />
+                          <ChevronDown className="h-4 w-4 text-gray-400 transition-transform" />
                         ) : (
-                          <ChevronRight className="h-4 w-4 text-gray-400" />
+                          <ChevronRight className="h-4 w-4 text-gray-400 transition-transform" />
                         )}
                       </div>
                     </>
@@ -418,7 +433,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
                 </div>
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1">
+            <CollapsibleContent className="space-y-0.5 pt-1">
               {item.children?.map((child) => renderNavigationItem(child, level + 1))}
             </CollapsibleContent>
           </Collapsible>
@@ -433,9 +448,9 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           <Button
           variant="ghost"
           className={cn(
-            "w-full justify-start h-11 px-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors",
-            level > 0 && "ml-6 relative before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
-            active && "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400"
+            "w-full justify-start px-4 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors relative",
+            level === 0 ? "h-10 text-[15px] font-medium" : "h-9 text-[14px] ml-6 before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
+            active && "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-blue-600 before:rounded-r-sm"
           )}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -456,17 +471,19 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           <Button
             variant="ghost"
             className={cn(
-              "w-full justify-start h-11 px-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors",
-              level > 0 && "ml-6 relative before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
-              active && "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400"
+              "w-full justify-start px-4 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors relative",
+              level === 0 ? "h-10 text-[15px] font-medium" : "h-9 text-[14px] ml-6 before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
+              active && "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-blue-600 before:rounded-r-sm"
             )}
           >
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="flex items-center flex-1 min-w-0">
               <item.icon className="h-6 w-6 flex-shrink-0" />
               {!collapsed && (
                 <>
-                  <span className="truncate">{item.label}</span>
-                  {renderBadge(item.badge, item.urgent)}
+                  <span className="truncate ml-3">{item.label}</span>
+                  <div className="ml-auto">
+                    {renderBadge(item.badge, item.urgent)}
+                  </div>
                 </>
               )}
             </div>
@@ -477,23 +494,23 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full font-sans">
       {/* Optional Header */}
       {!collapsed && (
-        <div className="px-3 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
+        <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <Avatar className="h-8 w-8">
                 <AvatarImage src="/api/placeholder/32/32" />
                 <AvatarFallback className="text-xs font-medium bg-blue-100 text-blue-600">
-                  KS
+                  PR
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   Princess Resort
                 </p>
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs mt-1">
                   {userRole}
                 </Badge>
               </div>
@@ -506,8 +523,15 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       )}
 
       {/* Navigation Groups */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {navigationGroups.map((group) => renderNavigationItem(group))}
+      <div className="flex-1 overflow-y-auto py-2">
+        {navigationGroups.map((group, index) => (
+          <div key={group.id}>
+            {index > 0 && (
+              <div className="h-px bg-gray-200 dark:bg-gray-700 mx-4 my-2" />
+            )}
+            {renderNavigationItem(group)}
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -1,0 +1,64 @@
+Below is a single, developer-ready user story for Garnishments & Court Orders that you can drop into your tracker. It includes scope, UX, APIs, calc rules, GL posting, edge cases, and BDD tests—aligned with the ship test (“net pay never goes negative; liability lines posted correctly”).
+
+{
+  "id": "ST-004-1",
+  "epic": "EP-004 Garnishments & Court Orders",
+  "title": "Create & apply garnishments without driving net negative; post liabilities correctly",
+  "type": "feature",
+  "priority": "P2",
+  "owner": "Payroll Platform",
+  "goal": "Payroll admins can register court orders/garnishments that automatically deduct within legal/policy caps, never make net pay negative, and post liability lines to the correct creditor account.",
+  "personas": ["Payroll Admin", "Finance/GL", "Auditor"]
+}
+
+Scope (Do/Don’t)
+
+Do
+
+Create/edit/stop garnishments per employee.
+
+Support amount or percentage deductions with caps, priority, protected net floor, and lump-sum balance tracking.
+
+Apply in payroll calc engine with stacking order.
+
+Emit payslip lines + GL liability to creditor; include audit.
+
+Block over-deduction and carry forward uncollected amounts.
+
+Don’t (v1)
+
+No automatic creditor bank payments (we post liability; payments handled in Payments module).
+
+No cross-tenant orders.
+
+UX (Admin)
+
+Path: Employee → Deductions → New Garnishment
+
+Fields:
+
+Type: wage_garnishment | child_support | tax_levy | court_order | other
+
+Creditor (name + optional IBAN)
+
+Order ref/Case ID (text), Document upload (PDF)
+
+Priority (1 = highest), Start date, End/stop after (date or balance = 0)
+
+Method: fixed_amount OR percent_of_disposable_net
+
+Amount / Percent (e.g., €150 or 20%)
+
+Protected net floor (€, default from policy)
+
+Max percent cap (e.g., 50% of disposable net), Per-run cap (€)
+
+Total balance (optional for arrears), Per-run min (optional)
+
+Apply to: all runs | only regular | only off-cycle
+
+Notes
+
+UI shows preview for next run: gross → taxes/contribs → disposable net → proposed deduction(s) → net remaining. If below floor, we auto-reduce and surface a warning chip (“Capped to maintain net floor”).
+
+Payslip: section “Garnishments” with creditor, order ref, this-period amount, YTD, remaining balance.
