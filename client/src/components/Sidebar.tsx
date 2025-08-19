@@ -1,59 +1,13 @@
-import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { 
   Users, 
-  Calculator, 
-  BarChart, 
-  Shield, 
   Settings, 
-  LogOut,
-  Home,
-  Clock,
-  Gift,
-  Plane,
-  Scale,
-  Smartphone,
-  Building2,
-  Rocket,
-  Target,
-  Sparkles,
-  CreditCard,
-  User,
-  UserCheck
+  LogOut
 } from "lucide-react";
-
-const navigationItems = [
-  { name: "Πίνακας Ελέγχου", href: "/", icon: Home },
-  { name: "Employee Master", href: "/employee-master", icon: Users },
-  { name: "Εργαζόμενοι", href: "/employees", icon: Users },
-  { name: "Μισθοδοσία", href: "/payroll", icon: Calculator },
-  { name: "Πληρωμές & Λογιστική", href: "/payments", icon: CreditCard },
-  { name: "Ωράρια", href: "/schedules", icon: Clock },
-  { name: "Ψηφιακή Κάρτα", href: "/digital-work-card", icon: Smartphone },
-  { name: "Προηγμένη Καταγραφή", href: "/advanced-time-capture", icon: Clock },
-  { name: "Enterprise Architecture", href: "/enterprise-architecture", icon: BarChart },
-  { name: "ERGANI II Compliance", href: "/ergani-compliance", icon: Shield },
-  { name: "Payroll Integration", href: "/payroll-integration", icon: Calculator },
-  { name: "Manager Workflows", href: "/manager-workflows", icon: Users },
-  { name: "Hotel Operations", href: "/hotel-operations", icon: Building2 },
-  { name: "Hotel Enhancements", href: "/hotel-enhancements", icon: Sparkles },
-  { name: "Επιδόματα", href: "/allowances", icon: Gift },
-  { name: "Υπερωρίες", href: "/overtime", icon: Clock },
-  { name: "Άδειες", href: "/leave", icon: Plane },
-  { name: "Νομικά", href: "/legal", icon: Scale },
-  { name: "Αναφορές", href: "/analytics", icon: BarChart },
-  { name: "Συμμόρφωση", href: "/compliance", icon: Shield },
-  { name: "Site Deployment", href: "/deployment", icon: Rocket },
-  { name: "Success Metrics", href: "/success-metrics", icon: BarChart },
-  { name: "Modern Payroll", href: "/modern-payroll", icon: Sparkles },
-  { name: "Product Vision", href: "/product-vision", icon: Target },
-  { name: "Employee Self-Service", href: "/employee-self-service", icon: User },
-  { name: "Manager Dashboard", href: "/manager-dashboard", icon: UserCheck },
-];
+import ThreeLevelNavigation from "./ThreeLevelNavigation";
 
 export default function Sidebar() {
-  const [location] = useLocation();
   const { user } = useAuth();
 
   const getInitials = (firstName?: string, lastName?: string) => {
@@ -62,9 +16,9 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 bg-white shadow-lg border-r border-neutral-200 fixed h-full z-10">
+    <aside className="w-64 bg-white shadow-lg border-r border-neutral-200 fixed h-full z-10 flex flex-col">
       {/* Logo */}
-      <div className="p-6 border-b border-neutral-200">
+      <div className="p-6 border-b border-neutral-200 flex-shrink-0">
         <div className="flex items-center">
           <div className="bg-primary text-white w-10 h-10 rounded-lg flex items-center justify-center mr-3">
             <Users size={20} />
@@ -74,54 +28,31 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="mt-6">
-        <div className="px-6">
-          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
-            ΚΥΡΙΟ ΜΕΝΟΥ
-          </p>
-        </div>
+      <div className="flex-1 overflow-hidden">
+        <nav className="h-full px-4 py-6 overflow-y-auto">
+          <div className="px-2 mb-4">
+            <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider">
+              ΚΥΡΙΟ ΜΕΝΟΥ
+            </p>
+          </div>
 
-        {navigationItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = location === item.href;
+          <ThreeLevelNavigation />
 
-          return (
-            <Link key={item.href} href={item.href}>
-              <a className={cn(
-                "flex items-center px-6 py-3 text-neutral-700 hover:bg-neutral-100 hover:text-primary-600 transition-colors group",
-                isActive && "bg-primary-50 text-primary-600 border-r-3 border-primary-500"
-              )}>
-                <Icon className={cn(
-                  "mr-3 h-5 w-5 text-neutral-500 group-hover:text-primary-600",
-                  isActive && "text-primary-600"
-                )} />
-                <span className={cn(
-                  "font-medium",
-                  isActive && "text-primary-600"
-                )}>
-                  {item.name}
-                </span>
-              </a>
-            </Link>
-          );
-        })}
+          <div className="mt-8 px-2">
+            <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
+              ΡΥΘΜΙΣΕΙΣ
+            </p>
+          </div>
 
-        <div className="mt-8 px-6">
-          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
-            ΡΥΘΜΙΣΕΙΣ
-          </p>
-        </div>
-
-        <Link href="/settings">
-          <a className="flex items-center px-6 py-3 text-neutral-700 hover:bg-neutral-100 hover:text-primary-600 transition-colors group">
-            <Settings className="mr-3 h-5 w-5 text-neutral-500 group-hover:text-primary-600" />
+          <button className="w-full flex items-center px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-100 hover:text-primary-600 transition-colors group">
+            <Settings className="mr-3 h-4 w-4 text-neutral-500 group-hover:text-primary-600" />
             <span className="font-medium">Ρυθμίσεις</span>
-          </a>
-        </Link>
-      </nav>
+          </button>
+        </nav>
+      </div>
 
       {/* User Profile */}
-      <div className="absolute bottom-6 left-6 right-6">
+      <div className="p-6 border-t border-neutral-200 flex-shrink-0">
         <div className="bg-neutral-100 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
