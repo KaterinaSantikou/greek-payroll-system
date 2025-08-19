@@ -33,10 +33,14 @@ import {
   generateFirstAidTrainingRequirements,
   validateDigitalWorkCardProtection,
   generateHealthSafetyComplianceReport,
+  checkEUDirectiveCompliance,
+  assessStrikeImpact,
   REQUIRED_LEGAL_DOCUMENTS,
   LEGAL_RESTRICTIONS,
   LAYOFF_NOTICE_PERIODS,
-  TERMINATION_PROCEDURES
+  TERMINATION_PROCEDURES,
+  EU_PREDICTABLE_CONDITIONS_DIRECTIVE,
+  LABOR_RELATIONS_2025
 } from "@/lib/legalDocumentation";
 
 export default function LegalPage() {
@@ -70,6 +74,45 @@ export default function LegalPage() {
   const [layoffResults, setLayoffResults] = useState<any>(null);
   const [terminationChecklist, setTerminationChecklist] = useState<any>(null);
   const [healthSafetyResults, setHealthSafetyResults] = useState<any>(null);
+  const [euDirectiveResults, setEuDirectiveResults] = useState<any>(null);
+  const [strikeAssessmentResults, setStrikeAssessmentResults] = useState<any>(null);
+  
+  // EU Directive compliance data
+  const [contractData, setContractData] = useState({
+    hasWrittenContract: true,
+    contractProvidedOn: "2024-01-02",
+    employmentStartDate: "2024-01-01",
+    probationPeriodMonths: 4,
+    hasAllRequiredTerms: false,
+    missingTerms: ["training_entitlement", "collective_agreements"],
+    contractType: "permanent" as const
+  });
+
+  // Strike assessment data
+  const [companyStrikeData, setCompanyStrikeData] = useState({
+    industry: "technology",
+    employeeCount: 150,
+    unionizedEmployees: 45,
+    criticalOperations: ["server_maintenance", "customer_support", "production"],
+    hasContingencyPlans: true,
+    previousStrikeHistory: [
+      {
+        date: "2023-05-15",
+        duration: 8,
+        participationRate: 40,
+        impact: "medium" as const
+      }
+    ]
+  });
+
+  const [currentStrikeData, setCurrentStrikeData] = useState({
+    type: "general_strike" as const,
+    expectedDuration: 24,
+    expectedParticipation: 75,
+    affectedSectors: ["technology", "manufacturing", "education"],
+    demands: ["higher_minimum_wage", "collective_bargaining_restoration"]
+  });
+
   const [projectData, setProjectData] = useState({
     type: "construction",
     value: 750000,
@@ -150,6 +193,16 @@ export default function LegalPage() {
     );
   };
 
+  const handleEUDirectiveCheck = () => {
+    const results = checkEUDirectiveCompliance(contractData);
+    setEuDirectiveResults(results);
+  };
+
+  const handleStrikeAssessment = () => {
+    const results = assessStrikeImpact(companyStrikeData, currentStrikeData);
+    setStrikeAssessmentResults(results);
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
@@ -161,10 +214,12 @@ export default function LegalPage() {
       </div>
 
       <Tabs defaultValue="documents" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="documents">Έγγραφα</TabsTrigger>
           <TabsTrigger value="restrictions">Περιορισμοί</TabsTrigger>
           <TabsTrigger value="health-safety">Υγεία & Ασφάλεια</TabsTrigger>
+          <TabsTrigger value="eu-compliance">ΕΕ Οδηγία</TabsTrigger>
+          <TabsTrigger value="strike-assessment">Απεργίες 2025</TabsTrigger>
           <TabsTrigger value="layoffs">Απολύσεις</TabsTrigger>
           <TabsTrigger value="termination">Λύση Σύμβασης</TabsTrigger>
         </TabsList>
@@ -1084,6 +1139,350 @@ export default function LegalPage() {
                       value={(terminationChecklist.checklist.filter((item: any) => item.completed).length / terminationChecklist.checklist.length) * 100}
                       className="mt-2"
                     />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* EU Directive Compliance */}
+        <TabsContent value="eu-compliance">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Scale className="h-5 w-5" />
+                    ΕΕ Οδηγία 2019/1152 (Νόμος 5053/2023)
+                  </CardTitle>
+                  <CardDescription>
+                    Διαφανείς και προβλέψιμες συνθήκες εργασίας
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="employmentStartDate">Ημερομηνία Έναρξης</Label>
+                      <Input
+                        id="employmentStartDate"
+                        type="date"
+                        value={contractData.employmentStartDate}
+                        onChange={(e) => setContractData({...contractData, employmentStartDate: e.target.value})}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="contractProvidedOn">Ημερομηνία Παροχής Σύμβασης</Label>
+                      <Input
+                        id="contractProvidedOn"
+                        type="date"
+                        value={contractData.contractProvidedOn}
+                        onChange={(e) => setContractData({...contractData, contractProvidedOn: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="probationPeriod">Περίοδος Δοκιμασίας (μήνες)</Label>
+                    <Input
+                      id="probationPeriod"
+                      type="number"
+                      max="6"
+                      value={contractData.probationPeriodMonths}
+                      onChange={(e) => setContractData({...contractData, probationPeriodMonths: parseInt(e.target.value)})}
+                    />
+                    <div className="text-sm text-gray-600 mt-1">
+                      Μέγιστη διάρκεια: 6 μήνες (3 μήνες για συμβάσεις ορισμένου χρόνου)
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="contractType">Τύπος Σύμβασης</Label>
+                    <Select 
+                      value={contractData.contractType} 
+                      onValueChange={(value) => setContractData({...contractData, contractType: value as any})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="permanent">Αορίστου Χρόνου</SelectItem>
+                        <SelectItem value="fixed_term">Ορισμένου Χρόνου</SelectItem>
+                        <SelectItem value="part_time">Μερικής Απασχόλησης</SelectItem>
+                        <SelectItem value="temporary">Προσωρινή</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="hasWrittenContract"
+                      checked={contractData.hasWrittenContract}
+                      onCheckedChange={(checked) => setContractData({...contractData, hasWrittenContract: checked})}
+                    />
+                    <Label htmlFor="hasWrittenContract">Έχει Έγγραφη Σύμβαση</Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="hasAllTerms"
+                      checked={contractData.hasAllRequiredTerms}
+                      onCheckedChange={(checked) => setContractData({...contractData, hasAllRequiredTerms: checked})}
+                    />
+                    <Label htmlFor="hasAllTerms">Περιλαμβάνει Όλους τους Απαιτούμενους Όρους</Label>
+                  </div>
+
+                  <Button 
+                    onClick={handleEUDirectiveCheck} 
+                    className="w-full" 
+                    size="lg"
+                  >
+                    <FileCheck className="mr-2 h-4 w-4" />
+                    Έλεγχος Συμμόρφωσης ΕΕ Οδηγίας
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* EU Directive Results */}
+            {euDirectiveResults && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    {euDirectiveResults.isCompliant ? 
+                      <CheckCircle className="h-5 w-5 text-green-600" /> : 
+                      <AlertTriangle className="h-5 w-5 text-red-600" />
+                    }
+                    Αποτελέσματα Ελέγχου
+                  </CardTitle>
+                  <CardDescription>
+                    Βαθμός Συμμόρφωσης: {euDirectiveResults.complianceScore}%
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Progress value={euDirectiveResults.complianceScore} className="mb-4" />
+                  
+                  {euDirectiveResults.violations.length > 0 && (
+                    <div className="space-y-3 mb-4">
+                      <h4 className="font-medium text-red-600">Παραβάσεις</h4>
+                      {euDirectiveResults.violations.map((violation: any, index: number) => (
+                        <div key={index} className="p-3 border border-red-200 bg-red-50 rounded">
+                          <div className="font-medium">{violation.description}</div>
+                          <div className="text-sm text-gray-600 mt-1">
+                            <strong>Επίλυση:</strong> {violation.remedy}
+                          </div>
+                          <Badge 
+                            variant={
+                              violation.severity === 'critical' ? 'destructive' :
+                              violation.severity === 'major' ? 'default' : 'secondary'
+                            }
+                            className="mt-2"
+                          >
+                            {violation.severity === 'critical' ? 'Κρίσιμη' :
+                             violation.severity === 'major' ? 'Σημαντική' : 'Μικρή'}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Επόμενες Ενέργειες</h4>
+                    {euDirectiveResults.nextActions.map((action: string, index: number) => (
+                      <div key={index} className="flex items-center gap-2 text-sm">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        {action}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Strike Assessment 2025 */}
+        <TabsContent value="strike-assessment">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Εκτίμηση Επιπτώσεων Απεργίας 2025
+                  </CardTitle>
+                  <CardDescription>
+                    Γενική απεργία Απριλίου 2025 και συλλογικές διαπραγματεύσεις
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="employeeCount">Αριθμός Εργαζομένων</Label>
+                      <Input
+                        id="employeeCount"
+                        type="number"
+                        value={companyStrikeData.employeeCount}
+                        onChange={(e) => setCompanyStrikeData({...companyStrikeData, employeeCount: parseInt(e.target.value)})}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="unionizedEmployees">Συνδικαλισμένοι Εργαζόμενοι</Label>
+                      <Input
+                        id="unionizedEmployees"
+                        type="number"
+                        value={companyStrikeData.unionizedEmployees}
+                        onChange={(e) => setCompanyStrikeData({...companyStrikeData, unionizedEmployees: parseInt(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="industry">Κλάδος</Label>
+                    <Select 
+                      value={companyStrikeData.industry} 
+                      onValueChange={(value) => setCompanyStrikeData({...companyStrikeData, industry: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="technology">Τεχνολογία</SelectItem>
+                        <SelectItem value="manufacturing">Μεταποίηση</SelectItem>
+                        <SelectItem value="construction">Κατασκευές</SelectItem>
+                        <SelectItem value="healthcare">Υγεία</SelectItem>
+                        <SelectItem value="education">Εκπαίδευση</SelectItem>
+                        <SelectItem value="tourism_hospitality">Τουρισμός</SelectItem>
+                        <SelectItem value="public_sector">Δημόσιος Τομέας</SelectItem>
+                        <SelectItem value="transportation">Μεταφορές</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="strikeType">Τύπος Απεργίας</Label>
+                    <Select 
+                      value={currentStrikeData.type} 
+                      onValueChange={(value) => setCurrentStrikeData({...currentStrikeData, type: value as any})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general_strike">Γενική Απεργία</SelectItem>
+                        <SelectItem value="sectoral_strike">Κλαδική Απεργία</SelectItem>
+                        <SelectItem value="company_strike">Εταιρική Απεργία</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="expectedDuration">Αναμενόμενη Διάρκεια (ώρες)</Label>
+                    <Input
+                      id="expectedDuration"
+                      type="number"
+                      value={currentStrikeData.expectedDuration}
+                      onChange={(e) => setCurrentStrikeData({...currentStrikeData, expectedDuration: parseInt(e.target.value)})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="expectedParticipation">Αναμενόμενη Συμμετοχή (%)</Label>
+                    <Input
+                      id="expectedParticipation"
+                      type="number"
+                      max="100"
+                      value={currentStrikeData.expectedParticipation}
+                      onChange={(e) => setCurrentStrikeData({...currentStrikeData, expectedParticipation: parseInt(e.target.value)})}
+                    />
+                  </div>
+
+                  <Button 
+                    onClick={handleStrikeAssessment} 
+                    className="w-full" 
+                    size="lg"
+                  >
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Εκτίμηση Επιπτώσεων Απεργίας
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Strike Assessment Results */}
+            {strikeAssessmentResults && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertCircle className={`h-5 w-5 ${
+                      strikeAssessmentResults.riskLevel === 'critical' ? 'text-red-600' :
+                      strikeAssessmentResults.riskLevel === 'high' ? 'text-orange-600' :
+                      strikeAssessmentResults.riskLevel === 'medium' ? 'text-yellow-600' : 'text-green-600'
+                    }`} />
+                    Εκτίμηση Κινδύνου: {
+                      strikeAssessmentResults.riskLevel === 'critical' ? 'Κρίσιμος' :
+                      strikeAssessmentResults.riskLevel === 'high' ? 'Υψηλός' :
+                      strikeAssessmentResults.riskLevel === 'medium' ? 'Μεσαίος' : 'Χαμηλός'
+                    }
+                  </CardTitle>
+                  <CardDescription>
+                    Αναλυτική εκτίμηση επιπτώσεων για την επιχείρηση
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="text-center p-3 border rounded">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {strikeAssessmentResults.expectedImpact.operationalImpact}%
+                        </div>
+                        <div className="text-sm text-gray-600">Λειτουργικό Αντίκτυπο</div>
+                      </div>
+                      <div className="text-center p-3 border rounded">
+                        <div className="text-2xl font-bold text-red-600">
+                          €{strikeAssessmentResults.expectedImpact.financialImpact.toLocaleString()}
+                        </div>
+                        <div className="text-sm text-gray-600">Οικονομικές Απώλειες</div>
+                      </div>
+                      <div className="text-center p-3 border rounded">
+                        <div className="text-2xl font-bold text-purple-600">
+                          {strikeAssessmentResults.expectedImpact.employeeParticipation}%
+                        </div>
+                        <div className="text-sm text-gray-600">Συμμετοχή Εργαζομένων</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="font-medium">Μέτρα Έκτακτης Ανάγκης</h4>
+                      {strikeAssessmentResults.contingencyMeasures.map((measure: string, index: number) => (
+                        <div key={index} className="flex items-center gap-2 text-sm p-2 bg-yellow-50 border border-yellow-200 rounded">
+                          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                          {measure}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="font-medium">Συστάσεις Διαπραγμάτευσης</h4>
+                      {strikeAssessmentResults.negotiationRecommendations.map((recommendation: string, index: number) => (
+                        <div key={index} className="flex items-center gap-2 text-sm p-2 bg-blue-50 border border-blue-200 rounded">
+                          <Scale className="h-4 w-4 text-blue-600" />
+                          {recommendation}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="font-medium">Checklist Συμμόρφωσης</h4>
+                      {strikeAssessmentResults.complianceChecklist.map((item: string, index: number) => (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          <Checkbox />
+                          {item}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

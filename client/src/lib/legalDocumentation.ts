@@ -1,6 +1,7 @@
 /**
  * Legal Documentation System
  * Greek Labor Law Compliance and Legal Document Management
+ * Updated with EU Directive 2019/1152 (Law 5053/2023) and 2025 Strike Actions
  */
 
 // Required Legal Documents for Greek Employment
@@ -532,6 +533,303 @@ export const LAYOFF_NOTICE_PERIODS = {
         protection: 'enhanced_protection',
         justificationRequired: true,
         accommodationFirst: true
+      }
+    ]
+  }
+};
+
+// EU Directive 2019/1152 Compliance (Law 5053/2023)
+export const EU_PREDICTABLE_CONDITIONS_DIRECTIVE = {
+  directive: 'EU-2019-1152',
+  greekLaw: 'Law 5053/2023',
+  implementationDate: '2023-12-15',
+  name: 'Διαφανείς και Προβλέψιμες Συνθήκες Εργασίας',
+  description: 'Ευρωπαϊκή Οδηγία για διαφανείς και προβλέψιμες συνθήκες εργασίας',
+  
+  CORE_EMPLOYMENT_TERMS: {
+    category: 'core-terms',
+    name: 'Βασικοί Όροι Απασχόλησης',
+    description: 'Υποχρεωτικές πληροφορίες που πρέπει να παρέχονται εγγράφως',
+    
+    IMMEDIATE_INFORMATION: {
+      timeframe: 'first_day',
+      name: 'Άμεση Παροχή Πληροφοριών',
+      requiredInfo: [
+        {
+          item: 'employer_identity',
+          description: 'Ταυτότητα εργοδότη και εργαζομένου',
+          mandatory: true
+        },
+        {
+          item: 'workplace_location',
+          description: 'Τόπος εργασίας ή βάση εργαζομένου',
+          mandatory: true,
+          flexibilityAllowed: true
+        },
+        {
+          item: 'job_title_duties',
+          description: 'Τίτλος θέσης εργασίας και περιγραφή καθηκόντων',
+          mandatory: true
+        },
+        {
+          item: 'employment_start',
+          description: 'Ημερομηνία έναρξης εργασίας',
+          mandatory: true
+        },
+        {
+          item: 'contract_duration',
+          description: 'Διάρκεια σύμβασης (για ορισμένου χρόνου)',
+          mandatory: true,
+          applicableTo: 'fixed_term_contracts'
+        },
+        {
+          item: 'probation_period',
+          description: 'Περίοδος δοκιμασίας και διάρκεια',
+          mandatory: true,
+          maxDuration: '6_months',
+          note: 'Μέγιστη διάρκεια 6 μήνες σύμφωνα με την Οδηγία'
+        }
+      ]
+    },
+    
+    WRITTEN_STATEMENT_DEADLINE: {
+      timeframe: 'within_7_days',
+      name: 'Έγγραφη Δήλωση Όρων',
+      description: 'Υποχρεωτική έγγραφη δήλωση όρων εντός 7 ημερών',
+      requiredInfo: [
+        {
+          item: 'remuneration_details',
+          description: 'Αμοιβή, συχνότητα πληρωμής, και συνθέσεις',
+          mandatory: true,
+          includes: ['basic_salary', 'allowances', 'bonuses', 'overtime_rates']
+        },
+        {
+          item: 'working_time',
+          description: 'Ωράριο εργασίας και κατανομή',
+          mandatory: true,
+          includes: ['daily_hours', 'weekly_hours', 'rest_breaks', 'flexible_arrangements']
+        },
+        {
+          item: 'paid_leave',
+          description: 'Δικαίωμα άδειας με αποδοχές',
+          mandatory: true,
+          includes: ['annual_leave', 'sick_leave', 'special_leave']
+        },
+        {
+          item: 'notice_periods',
+          description: 'Περίοδοι προειδοποίησης για καταγγελία',
+          mandatory: true,
+          applies: 'both_parties'
+        },
+        {
+          item: 'training_entitlement',
+          description: 'Δικαίωμα επαγγελματικής εκπαίδευσης',
+          mandatory: true,
+          note: 'Νέα απαίτηση της Οδηγίας'
+        },
+        {
+          item: 'social_security',
+          description: 'Κοινωνική ασφάλιση και παροχές',
+          mandatory: true,
+          includes: ['insurance_fund', 'contributions', 'benefits']
+        },
+        {
+          item: 'collective_agreements',
+          description: 'Εφαρμοστέες συλλογικές συμβάσεις',
+          mandatory: true,
+          condition: 'if_applicable'
+        }
+      ]
+    }
+  },
+  
+  PROBATION_PERIOD_LIMITS: {
+    category: 'probation-limits',
+    name: 'Όρια Περιόδου Δοκιμασίας',
+    description: 'Μέγιστη διάρκεια δοκιμαστικής περιόδου 6 μήνες',
+    rules: [
+      {
+        contractType: 'permanent',
+        maxProbation: 6, // months
+        renewalAllowed: false,
+        justificationRequired: true
+      },
+      {
+        contractType: 'fixed_term',
+        maxProbation: 3, // months for contracts under 2 years
+        condition: 'contract_under_24_months',
+        renewalAllowed: false
+      },
+      {
+        contractType: 'part_time',
+        maxProbation: 6, // months
+        proRated: false,
+        sameAsFullTime: true
+      }
+    ],
+    violations: {
+      excessiveProbation: 'Automatic conversion to permanent employment',
+      renewalAttempt: 'Prohibited - considered permanent from first day',
+      discriminatoryUse: 'Legal action and compensation'
+    }
+  },
+  
+  TRANSPARENCY_OBLIGATIONS: {
+    category: 'transparency',
+    name: 'Υποχρεώσεις Διαφάνειας',
+    description: 'Νέες υποχρεώσεις διαφάνειας για εργοδότες',
+    obligations: [
+      {
+        requirement: 'written_information_update',
+        description: 'Ενημέρωση εγγράφων όρων εντός 30 ημερών από αλλαγή',
+        timeframe: 30, // days
+        triggers: ['salary_change', 'role_change', 'location_change', 'hours_change']
+      },
+      {
+        requirement: 'predictable_scheduling',
+        description: 'Προβλέψιμος προγραμματισμός για μεταβλητές συμβάσεις',
+        applies: 'variable_hour_contracts',
+        minNotice: 4, // days for schedule changes
+        compensationRequired: true
+      },
+      {
+        requirement: 'training_opportunities',
+        description: 'Υποχρεωτική ενημέρωση για ευκαιρίες εκπαίδευσης',
+        frequency: 'annual',
+        documentation: 'training_register'
+      }
+    ]
+  }
+};
+
+// Labor Relations and Strike Activity (2025)
+export const LABOR_RELATIONS_2025 = {
+  year: 2025,
+  name: 'Εργασιακές Σχέσεις και Απεργιακή Δραστηριότητα 2025',
+  description: 'Εξελίξεις στις εργασιακές σχέσεις και συλλογικές διαπραγματεύσεις',
+  
+  APRIL_2025_STRIKE: {
+    date: '2025-04-15',
+    type: 'general_strike',
+    name: 'Γενική Απεργία Απριλίου 2025',
+    description: 'Γενική απεργία για μισθολογικές αυξήσεις και συλλογικές διαπραγματεύσεις',
+    
+    DEMANDS: {
+      category: 'union_demands',
+      primaryDemands: [
+        {
+          demand: 'higher_minimum_wage',
+          description: 'Περαιτέρω αύξηση κατώτατου μισθού πέραν των €880',
+          justification: 'Αυξημένο κόστος ζωής και πληθωρισμός',
+          status: 'pending_negotiation'
+        },
+        {
+          demand: 'collective_bargaining_restoration',
+          description: 'Αποκατάσταση δικαιωμάτων συλλογικών διαπραγματεύσεων',
+          justification: 'Ενίσχυση συνδικαλιστικών δικαιωμάτων',
+          status: 'under_discussion'
+        },
+        {
+          demand: 'sectoral_agreements',
+          description: 'Ενίσχυση κλαδικών συλλογικών συμβάσεων',
+          justification: 'Βελτίωση όρων εργασίας ανά κλάδο',
+          status: 'partial_progress'
+        },
+        {
+          demand: 'working_conditions',
+          description: 'Βελτίωση συνθηκών εργασίας και ωραρίων',
+          justification: 'Εναρμόνιση με ευρωπαϊκά πρότυπα',
+          status: 'ongoing_negotiations'
+        }
+      ]
+    },
+    
+    IMPACT_ASSESSMENT: {
+      economicImpact: 'high',
+      sectorsAffected: [
+        'public_sector',
+        'transportation',
+        'education',
+        'healthcare',
+        'manufacturing',
+        'retail'
+      ],
+      participationRate: '75%',
+      duration: '24_hours',
+      followUpActions: 'continued_negotiations'
+    }
+  },
+  
+  WAGE_PRESSURE_CONTEXT: {
+    category: 'economic_context',
+    name: 'Πλαίσιο Μισθολογικών Πιέσεων',
+    description: 'Οικονομικό πλαίσιο που οδήγησε στις απεργιακές κινητοποιήσεις',
+    
+    factors: [
+      {
+        factor: 'cost_of_living_increase',
+        description: 'Αύξηση κόστους ζωής',
+        impact: 'high',
+        percentage: '8.5%', // estimated inflation impact
+        sectors: 'all'
+      },
+      {
+        factor: 'housing_costs',
+        description: 'Αύξηση κόστους στέγασης',
+        impact: 'very_high',
+        percentage: '15%',
+        geographicImpact: 'urban_areas_primarily'
+      },
+      {
+        factor: 'energy_prices',
+        description: 'Αύξηση τιμών ενέργειας',
+        impact: 'high',
+        percentage: '12%',
+        sectors: 'energy_intensive_industries'
+      },
+      {
+        factor: 'minimum_wage_inadequacy',
+        description: 'Ανεπάρκεια κατώτατου μισθού €880',
+        impact: 'high',
+        unionPosition: 'insufficient_for_living_standards',
+        proposedIncrease: '€950-1000'
+      }
+    ]
+  },
+  
+  COLLECTIVE_BARGAINING_STATUS: {
+    category: 'bargaining_status',
+    name: 'Κατάσταση Συλλογικών Διαπραγματεύσεων',
+    description: 'Τρέχουσα κατάσταση συλλογικών διαπραγματεύσεων ανά κλάδο',
+    
+    SECTORAL_NEGOTIATIONS: [
+      {
+        sector: 'construction',
+        status: 'active_negotiations',
+        issues: ['safety_standards', 'overtime_compensation', 'seasonal_adjustments'],
+        deadline: '2025-06-30',
+        progress: 'moderate'
+      },
+      {
+        sector: 'tourism_hospitality',
+        status: 'stalled',
+        issues: ['seasonal_work_protection', 'tip_allocation', 'accommodation_standards'],
+        deadline: '2025-05-15',
+        progress: 'limited'
+      },
+      {
+        sector: 'healthcare',
+        status: 'concluded',
+        outcome: 'agreement_reached',
+        improvements: ['shift_premiums', 'continuing_education', 'safety_equipment'],
+        effectiveDate: '2025-01-01'
+      },
+      {
+        sector: 'education',
+        status: 'pending',
+        issues: ['workload_reduction', 'professional_development', 'classroom_conditions'],
+        expectedStart: '2025-09-01',
+        progress: 'preliminary_discussions'
       }
     ]
   }
@@ -1157,5 +1455,204 @@ export function generateHealthSafetyComplianceReport(
     },
     complianceScore: Math.max(0, complianceScore),
     recommendations
+  };
+}
+
+/**
+ * Check EU Directive 2019/1152 compliance for employment contracts
+ */
+export function checkEUDirectiveCompliance(
+  contractData: {
+    hasWrittenContract: boolean;
+    contractProvidedOn: string; // Date when contract was provided
+    employmentStartDate: string;
+    probationPeriodMonths: number;
+    hasAllRequiredTerms: boolean;
+    missingTerms: string[];
+    contractType: 'permanent' | 'fixed_term' | 'part_time' | 'temporary';
+  }
+): {
+  isCompliant: boolean;
+  violations: Array<{
+    type: string;
+    description: string;
+    severity: 'critical' | 'major' | 'minor';
+    remedy: string;
+  }>;
+  complianceScore: number;
+  nextActions: string[];
+} {
+  const violations = [];
+  let complianceScore = 100;
+
+  // Check if written contract provided within 7 days
+  const contractDate = new Date(contractData.contractProvidedOn);
+  const startDate = new Date(contractData.employmentStartDate);
+  const daysDifference = Math.ceil((contractDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
+
+  if (!contractData.hasWrittenContract) {
+    violations.push({
+      type: 'missing_written_contract',
+      description: 'Δεν έχει παρασχεθεί έγγραφη σύμβαση εργασίας',
+      severity: 'critical' as const,
+      remedy: 'Άμεση παροχή εγγράφου σύμβασης με όλους τους απαιτούμενους όρους'
+    });
+    complianceScore -= 40;
+  } else if (daysDifference > 7) {
+    violations.push({
+      type: 'late_contract_provision',
+      description: `Έγγραφη σύμβαση παρασχέθηκε ${daysDifference} ημέρες μετά την έναρξη (όριο: 7 ημέρες)`,
+      severity: 'major' as const,
+      remedy: 'Βελτίωση διαδικασιών για παροχή συμβάσεων εντός προθεσμίας'
+    });
+    complianceScore -= 25;
+  }
+
+  // Check probation period limits
+  const maxProbation = contractData.contractType === 'fixed_term' ? 3 : 6;
+  if (contractData.probationPeriodMonths > maxProbation) {
+    violations.push({
+      type: 'excessive_probation',
+      description: `Περίοδος δοκιμασίας ${contractData.probationPeriodMonths} μήνες υπερβαίνει το όριο των ${maxProbation} μηνών`,
+      severity: 'critical' as const,
+      remedy: 'Μείωση περιόδου δοκιμασίας εντός νόμιμων ορίων - αυτόματη μετατροπή σε μόνιμη'
+    });
+    complianceScore -= 35;
+  }
+
+  // Check required terms
+  if (!contractData.hasAllRequiredTerms) {
+    violations.push({
+      type: 'missing_contract_terms',
+      description: `Λείπουν απαιτούμενοι όροι: ${contractData.missingTerms.join(', ')}`,
+      severity: 'major' as const,
+      remedy: 'Συμπλήρωση όλων των απαιτούμενων όρων σύμφωνα με την Οδηγία'
+    });
+    complianceScore -= Math.min(30, contractData.missingTerms.length * 5);
+  }
+
+  const nextActions = [];
+  if (violations.length > 0) {
+    nextActions.push('Άμεση επίλυση παραβάσεων Ευρωπαϊκής Οδηγίας');
+    nextActions.push('Ενημέρωση εργαζομένων για τα δικαιώματά τους');
+    nextActions.push('Εκπαίδευση HR προσωπικού στις νέες απαιτήσεις');
+  } else {
+    nextActions.push('Συνέχιση παρακολούθησης συμμόρφωσης');
+    nextActions.push('Ετήσια αξιολόγηση διαδικασιών');
+  }
+
+  return {
+    isCompliant: violations.length === 0,
+    violations,
+    complianceScore: Math.max(0, complianceScore),
+    nextActions
+  };
+}
+
+/**
+ * Assess impact of labor strikes on business operations
+ */
+export function assessStrikeImpact(
+  companyData: {
+    industry: string;
+    employeeCount: number;
+    unionizedEmployees: number;
+    criticalOperations: string[];
+    hasContingencyPlans: boolean;
+    previousStrikeHistory: Array<{
+      date: string;
+      duration: number;
+      participationRate: number;
+      impact: 'low' | 'medium' | 'high';
+    }>;
+  },
+  strikeData: {
+    type: 'general_strike' | 'sectoral_strike' | 'company_strike';
+    expectedDuration: number; // hours
+    expectedParticipation: number; // percentage
+    affectedSectors: string[];
+    demands: string[];
+  }
+): {
+  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  expectedImpact: {
+    operationalImpact: number; // percentage
+    financialImpact: number; // estimated daily loss
+    employeeParticipation: number; // expected percentage
+  };
+  contingencyMeasures: string[];
+  negotiationRecommendations: string[];
+  complianceChecklist: string[];
+} {
+  let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
+  
+  // Calculate base risk factors
+  const unionizationRate = (companyData.unionizedEmployees / companyData.employeeCount) * 100;
+  const sectorAffected = strikeData.affectedSectors.includes(companyData.industry);
+  
+  // Determine risk level
+  if (strikeData.type === 'general_strike' && sectorAffected) {
+    riskLevel = unionizationRate > 60 ? 'critical' : 'high';
+  } else if (strikeData.type === 'sectoral_strike' && sectorAffected) {
+    riskLevel = unionizationRate > 40 ? 'high' : 'medium';
+  } else if (strikeData.type === 'company_strike') {
+    riskLevel = 'critical';
+  } else if (strikeData.expectedParticipation > 50) {
+    riskLevel = 'medium';
+  }
+
+  // Calculate expected impact
+  const baseParticipation = Math.min(unionizationRate, strikeData.expectedParticipation);
+  const operationalImpact = sectorAffected ? baseParticipation * 0.8 : baseParticipation * 0.3;
+  
+  // Estimate financial impact (daily revenue loss)
+  const avgDailyRevenue = companyData.employeeCount * 300; // Rough estimate
+  const financialImpact = (avgDailyRevenue * operationalImpact / 100) * (strikeData.expectedDuration / 8);
+
+  // Generate contingency measures
+  const contingencyMeasures = [];
+  if (riskLevel === 'high' || riskLevel === 'critical') {
+    contingencyMeasures.push('Ενεργοποίηση σχεδίου έκτακτης ανάγκης');
+    contingencyMeasures.push('Επικοινωνία με πελάτες για πιθανές καθυστερήσεις');
+    contingencyMeasures.push('Αξιολόγηση εναλλακτικών προμηθευτών/υπεργολάβων');
+  }
+  
+  if (companyData.criticalOperations.length > 0) {
+    contingencyMeasures.push('Εξασφάλιση ελάχιστου προσωπικού για κρίσιμες λειτουργίες');
+    contingencyMeasures.push('Ενεργοποίηση εφεδρικών συστημάτων');
+  }
+
+  // Negotiation recommendations based on 2025 context
+  const negotiationRecommendations = [];
+  if (strikeData.demands.includes('higher_minimum_wage')) {
+    negotiationRecommendations.push('Εξέταση προσφοράς μισθολογικών αυξήσεων πέραν του νόμιμου κατώτατου');
+    negotiationRecommendations.push('Προσφορά εναλλακτικών παροχών (vouchers, ασφάλεια, εκπαίδευση)');
+  }
+  
+  if (strikeData.demands.includes('collective_bargaining_restoration')) {
+    negotiationRecommendations.push('Διερεύνηση συμμετοχής σε κλαδικές διαπραγματεύσεις');
+    negotiationRecommendations.push('Ενίσχυση διαλόγου με συνδικαλιστικές οργανώσεις');
+  }
+
+  // Compliance checklist during strikes
+  const complianceChecklist = [
+    'Σεβασμός δικαιώματος απεργίας των εργαζομένων',
+    'Μη επιβολή κυρώσεων για συμμετοχή σε νόμιμη απεργία',
+    'Εξασφάλιση ελάχιστων υπηρεσιών όπου απαιτείται',
+    'Τήρηση διαδικασιών επικοινωνίας με αρχές',
+    'Προστασία μη απεργών εργαζομένων',
+    'Τεκμηρίωση οικονομικών επιπτώσεων για ασφαλιστικούς σκοπούς'
+  ];
+
+  return {
+    riskLevel,
+    expectedImpact: {
+      operationalImpact: Math.round(operationalImpact),
+      financialImpact: Math.round(financialImpact),
+      employeeParticipation: Math.round(baseParticipation)
+    },
+    contingencyMeasures,
+    negotiationRecommendations,
+    complianceChecklist
   };
 }

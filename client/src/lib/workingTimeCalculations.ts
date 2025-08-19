@@ -1,6 +1,7 @@
 /**
  * Working Time Arrangements and Schedule Management
  * EU Working Time Directive and Greek Labor Law Compliance
+ * Updated with EU Directive 2019/1152 (Law 5053/2023) - Probation Period Limits
  */
 
 // Contract Types with Greek Labor Law Specifications
@@ -11,7 +12,7 @@ export const CONTRACT_TYPES = {
     minWeeklyHours: 35,
     maxWeeklyHours: 40,
     standardWeeklyHours: 40,
-    trialPeriodMonths: { min: 2, max: 12 },
+    trialPeriodMonths: { min: 2, max: 6 }, // EU Directive 2019/1152 limit
     fullBenefits: true,
     description: 'Συμβάσεις αορίστου ή ορισμένου χρόνου με πλήρη απασχόληση'
   },
@@ -21,7 +22,7 @@ export const CONTRACT_TYPES = {
     minWeeklyHours: 10,
     maxWeeklyHours: 34,
     standardWeeklyHours: 20,
-    trialPeriodMonths: { min: 1, max: 6 },
+    trialPeriodMonths: { min: 1, max: 6 }, // EU Directive 2019/1152 compliant
     fullBenefits: false,
     proRatedBenefits: true,
     description: 'Συμβάσεις μερικής απασχόλησης με αναλογικά δικαιώματα'
@@ -34,7 +35,7 @@ export const CONTRACT_TYPES = {
     maxDurationMonths: 24,
     renewalAllowed: true,
     maxRenewals: 2,
-    trialPeriodMonths: { min: 1, max: 3 },
+    trialPeriodMonths: { min: 1, max: 3 }, // Shorter for temporary contracts
     description: 'Προσωρινές συμβάσεις εργασίας για συγκεκριμένες ανάγκες'
   },
   SEASONAL: {

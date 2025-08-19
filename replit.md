@@ -41,11 +41,15 @@ Preferred communication style: Simple, everyday language.
 - **Working Time Arrangements**: Management of predictable/unpredictable schedules, standard weekly hours, trial periods, various contract types, schedule flexibility, and EU Working Time Directive compliance.
 - **Legal Documentation System**: Management of required documents, compliance tracking, legal restrictions, layoff notice calculations, contract termination procedures, and special category protections.
 - **Health, Safety & Work Conditions (2025 Updates)**: Expanded health and safety requirements including mandatory health and safety coordinators for large construction projects (>€500K value), mandatory first aid training for all employees (CPR, Heimlich maneuver, emergency procedures) with 2-year renewal cycles, and digital work card salary protection preventing pay cuts due to digital card implementation. Includes automated compliance scoring and violation detection.
-- **Recent Legal Updates (August 2025)**: Incorporates updated minimum wage (€760/month), enhanced EFKA rates (16% employee, 24.78% employer), digital labor card integration, collective agreements for major industries, and specific Sunday/dangerous work premiums.
+- **Recent Legal Updates (August 2025)**: Incorporates updated minimum wage (€880/month), enhanced EFKA rates (16% employee, 24.78% employer), digital labor card integration, collective agreements for major industries, and specific Sunday/dangerous work premiums.
+- **EU Directive 2019/1152 Compliance (Law 5053/2023)**: Full implementation of predictable conditions directive requiring written employment terms within 7 days, maximum 6-month probation periods, and transparency obligations.
+- **2025 Strike Impact Assessment**: Comprehensive analysis of April 2025 general strike, wage pressure evaluation, sectoral negotiation tracking, and business continuity planning tools.
 - **EFKA Insurance System Integration**: Comprehensive insurance categories (IKA, OAEE, ETAA), package types, special professional categories, fund affiliations, and additional registrations (ERGANI, TEKA).
 - **Employment Compliance & Worker Classifications**: Support for various worker categories (employee, contractor, seasonal), young worker protection, disability support (8% quota for companies over 50 employees).
 - **Foreign Worker Requirements**: Management of residency status, document management (passport, visa, work/residence permits), and compliance monitoring.
 - **AI-Powered Compliance Recommendation Engine**: Intelligent analysis of employee data for compliance gaps, multi-category recommendations with priority, real-time validation, auto-fix capabilities, organization-wide monitoring, deadline tracking, and a compliance dashboard.
+- **EU Directive Compliance Engine**: Automated checking of contract compliance with EU Directive 2019/1152, probation period validation, written terms verification, and transparency obligation monitoring.
+- **Labor Relations Analytics**: Strike impact assessment tools, union participation analysis, sectoral negotiation tracking, and business continuity risk evaluation for the 2025 labor relations environment.
 
 # External Dependencies
 
