@@ -23,6 +23,7 @@ import ManagerWorkflows from "@/pages/managerWorkflows";
 import HotelOperations from "@/pages/hotelOperations";
 import Compliance from "@/pages/compliance";
 import Analytics from "@/pages/analytics";
+import Deployment from "@/pages/deployment";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -51,6 +52,7 @@ function Router() {
           <Route path="/hotel-operations" component={HotelOperations} />
           <Route path="/compliance" component={Compliance} />
           <Route path="/analytics" component={Analytics} />
+          <Route path="/deployment" component={Deployment} />
         </Layout>
       )}
       <Route component={NotFound} />
