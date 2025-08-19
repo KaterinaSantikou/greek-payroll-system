@@ -16,7 +16,8 @@ import {
   Smartphone,
   Building2,
   Rocket,
-  Target
+  Target,
+  Sparkles
 } from "lucide-react";
 
 const navigationItems = [
@@ -39,6 +40,7 @@ const navigationItems = [
   { name: "Συμμόρφωση", href: "/compliance", icon: Shield },
   { name: "Site Deployment", href: "/deployment", icon: Rocket },
   { name: "Success Metrics", href: "/success-metrics", icon: Target },
+  { name: "Modern Payroll", href: "/modern-payroll", icon: Sparkles },
 ];
 
 export default function Sidebar() {

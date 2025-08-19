@@ -25,6 +25,7 @@ import Compliance from "@/pages/compliance";
 import Analytics from "@/pages/analytics";
 import Deployment from "@/pages/deployment";
 import SuccessMetrics from "@/pages/successMetrics";
+import ModernPayrollEngine from "@/pages/modernPayrollEngine";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -55,6 +56,7 @@ function Router() {
           <Route path="/analytics" component={Analytics} />
           <Route path="/deployment" component={Deployment} />
           <Route path="/success-metrics" component={SuccessMetrics} />
+          <Route path="/modern-payroll" component={ModernPayrollEngine} />
         </Layout>
       )}
       <Route component={NotFound} />

@@ -1263,6 +1263,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Modern Payroll Engine routes
+  app.get('/api/payroll-engine/status', isAuthenticated, async (req, res) => {
+    try {
+      const { modernPayrollEngine } = await import('./modernPayrollEngine');
+      const engines = modernPayrollEngine.getEngines();
+      res.json(engines);
+    } catch (error) {
+      console.error("Error fetching payroll engines:", error);
+      res.status(500).json({ message: "Failed to fetch payroll engines" });
+    }
+  });
+
+  app.get('/api/payroll-engine/calculations/:period', isAuthenticated, async (req, res) => {
+    try {
+      const { modernPayrollEngine } = await import('./modernPayrollEngine');
+      const period = req.params.period;
+      const engineId = req.query.engineId as string || 'greece-2025';
+      const calculations = modernPayrollEngine.getCalculations(engineId, period);
+      res.json(calculations);
+    } catch (error) {
+      console.error("Error fetching payroll calculations:", error);
+      res.status(500).json({ message: "Failed to fetch payroll calculations" });
+    }
+  });
+
+  app.post('/api/payroll-engine/calculate', isAuthenticated, async (req, res) => {
+    try {
+      const { modernPayrollEngine } = await import('./modernPayrollEngine');
+      const { engineId, period, employees } = req.body;
+      
+      // For demo purposes, use sample employees if 'all' is specified
+      const employeeList = employees.includes('all') 
+        ? ['EMP001', 'EMP002', 'EMP003', 'EMP004', 'EMP005']
+        : employees;
+      
+      const calculations = await modernPayrollEngine.calculatePayroll(engineId, period, employeeList);
+      res.json({ success: true, calculations, count: calculations.length });
+    } catch (error) {
+      console.error("Error calculating payroll:", error);
+      res.status(500).json({ message: "Failed to calculate payroll" });
+    }
+  });
+
+  app.post('/api/payroll-engine/generate-demo', isAuthenticated, async (req, res) => {
+    try {
+      const { modernPayrollEngine } = await import('./modernPayrollEngine');
+      await modernPayrollEngine.generateDemoData();
+      res.json({ success: true, message: 'Modern payroll demo data generated' });
+    } catch (error) {
+      console.error("Error generating payroll demo data:", error);
+      res.status(500).json({ message: "Failed to generate payroll demo data" });
+    }
+  });
+
+  app.get('/api/payroll-engine/features', isAuthenticated, async (req, res) => {
+    try {
+      const { modernPayrollEngine } = await import('./modernPayrollEngine');
+      const features = modernPayrollEngine.getFeatures();
+      res.json(features);
+    } catch (error) {
+      console.error("Error fetching payroll features:", error);
+      res.status(500).json({ message: "Failed to fetch payroll features" });
+    }
+  });
+
+  app.get('/api/payroll-engine/performance/:engineId', isAuthenticated, async (req, res) => {
+    try {
+      const { modernPayrollEngine } = await import('./modernPayrollEngine');
+      const engineId = req.params.engineId;
+      const metrics = modernPayrollEngine.getPerformanceMetrics(engineId);
+      if (!metrics) {
+        return res.status(404).json({ message: "Engine not found" });
+      }
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error fetching performance metrics:", error);
+      res.status(500).json({ message: "Failed to fetch performance metrics" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
