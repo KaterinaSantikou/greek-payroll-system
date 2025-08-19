@@ -2,24 +2,68 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Users, Calculator, FileText, TrendingUp, Shield, CheckCircle, AlertTriangle, Sparkles } from "lucide-react";
+import { Users, Calculator, FileText, TrendingUp, Shield, CheckCircle, AlertTriangle, Sparkles, UserCog, Eye } from "lucide-react";
 import { Link } from "wouter";
 import GreekComplianceInfo from "@/components/GreekComplianceInfo";
 import ComplianceRecommendations from "@/components/ComplianceRecommendations";
+import { useAppContext } from "@/contexts/AppContext";
 
 export default function Home() {
   const { user } = useAuth();
+  const { viewingMode, setViewingMode } = useAppContext();
+
+  const toggleEmployeeView = () => {
+    if (viewingMode.type === "normal") {
+      setViewingMode({
+        type: "employee_view",
+        originalRole: user?.firstName || "Manager"
+      });
+    } else {
+      setViewingMode({ type: "normal" });
+    }
+  };
 
   return (
     <div className="space-y-8">
       {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold text-neutral-900 mb-2">
-          Καλώς ήρθατε, {user?.firstName || 'Χρήστη'}!
-        </h1>
-        <p className="text-neutral-600">
-          Επισκόπηση του συστήματος διαχείρισης ανθρώπινων πόρων και μισθοδοσίας
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-neutral-900 mb-2">
+            Καλώς ήρθατε, {user?.firstName || 'Χρήστη'}!
+          </h1>
+          <p className="text-neutral-600">
+            Επισκόπηση του συστήματος διαχείρισης ανθρώπινων πόρων και μισθοδοσίας
+          </p>
+        </div>
+        
+        {/* Demo Context Controls */}
+        <div className="flex items-center gap-3">
+          <Button
+            variant={viewingMode.type === "employee_view" ? "default" : "outline"}
+            size="sm"
+            onClick={toggleEmployeeView}
+            className="flex items-center gap-2"
+          >
+            <Eye className="h-4 w-4" />
+            {viewingMode.type === "employee_view" ? "Exit Employee View" : "View as Employee"}
+          </Button>
+          
+          {viewingMode.type === "normal" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewingMode({
+                type: "impersonation",
+                originalRole: user?.firstName || "Manager",
+                targetEmployee: { id: "emp-123", name: "Maria Papadakis" }
+              })}
+              className="flex items-center gap-2"
+            >
+              <UserCog className="h-4 w-4" />
+              Demo Impersonation
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Quick Stats */}

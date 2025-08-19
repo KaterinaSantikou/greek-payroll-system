@@ -48,6 +48,7 @@ import Layout from "@/components/Layout";
 import { PropertyProvider } from "@/contexts/PropertyContext";
 import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AppProvider } from "@/contexts/AppContext";
 import SmartNotifications from "@/pages/smartNotifications";
 import VisualAnalytics from "@/pages/visualAnalytics";
 import PropertyDashboard from "@/pages/propertyDashboard";
@@ -134,10 +135,12 @@ function App() {
       <ThemeProvider>
         <UserRoleProvider>
           <PropertyProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-            </TooltipProvider>
+            <AppProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Router />
+              </TooltipProvider>
+            </AppProvider>
           </PropertyProvider>
         </UserRoleProvider>
       </ThemeProvider>

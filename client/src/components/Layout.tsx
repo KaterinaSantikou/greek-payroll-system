@@ -1,7 +1,10 @@
-import Sidebar from "./Sidebar";
+import { ImprovedSidebar } from "./ImprovedSidebar";
+import { ContextAwareBanner } from "./ContextAwareBanner";
 import { PropertySwitcher } from "./PropertySwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { useProperty } from "@/contexts/PropertyContext";
+import { useAppContext } from "@/contexts/AppContext";
+import { useAuth } from "@/hooks/useAuth";
 import { motion } from "framer-motion";
 
 interface LayoutProps {
@@ -10,11 +13,30 @@ interface LayoutProps {
 
 function LayoutContent({ children }: LayoutProps) {
   const { selectedPropertyId, setSelectedPropertyId, toggleGroupView, isGroupView } = useProperty();
+  const { user } = useAuth();
+  
+  // Try to use app context, but provide fallback
+  let currentProperty, contextBanner;
+  try {
+    const { currentProperty: appProperty } = useAppContext();
+    currentProperty = appProperty;
+    contextBanner = <ContextAwareBanner />;
+  } catch {
+    currentProperty = { propertyId: "prop-princess", name: "Princess Resort & Spa" };
+    contextBanner = null;
+  }
 
   return (
     <div className="flex h-screen bg-background transition-colors duration-300">
-      <Sidebar />
+      <ImprovedSidebar 
+        currentProperty={currentProperty}
+        userRole={user?.firstName || "User"}
+        onPropertyChange={setSelectedPropertyId}
+      />
       <main className="flex-1 overflow-auto">
+        {/* Context Banner */}
+        {contextBanner}
+        
         {/* Top Bar with Property Switcher */}
         <motion.div 
           initial={{ y: -10, opacity: 0 }}
@@ -30,7 +52,7 @@ function LayoutContent({ children }: LayoutProps) {
                 transition={{ duration: 0.4, delay: 0.1 }}
                 className="text-lg font-semibold text-foreground"
               >
-                {isGroupView ? "Group Dashboard" : "Property Dashboard"}
+                {isGroupView ? "Group Dashboard" : currentProperty.name}
               </motion.h1>
             </div>
             <div className="flex items-center space-x-3">
