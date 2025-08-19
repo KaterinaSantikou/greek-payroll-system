@@ -55,6 +55,7 @@ import { nativeConnectorRoutes } from "./api/nativeConnectors";
 import { guidedSetupRoutes } from "./api/guidedSetup";
 import { reconciliationRoutes } from "./api/reconciliation";
 import { edgeCaseRoutes } from "./api/edgeCases";
+import { acceptanceCriteriaRoutes } from "./api/acceptanceCriteria";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -3332,6 +3333,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Edge Cases & Business Rules
   edgeCaseRoutes(app);
+  
+  // Acceptance Criteria & Performance Testing
+  acceptanceCriteriaRoutes(app);
 
   // Register notification routes
   try {
