@@ -2663,6 +2663,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerHotelTipPoolingRoutes } = await import("./api/hotelTipPooling");
   registerHotelTipPoolingRoutes(app);
 
+  // Executive Dashboard API endpoints
+  app.get('/api/compliance/live-status', isAuthenticated, async (req, res) => {
+    try {
+      // Simulate real-time compliance status
+      const complianceStatus = {
+        erganiSync: { status: 'compliant', employeesCovered: 45, totalEmployees: 45 },
+        apdDeadline: { status: 'warning', daysRemaining: 3, dueDate: '2025-01-31' },
+        fmySubmission: { status: 'critical', overdue: true, dueDate: '2025-01-15' },
+        digitalCards: { status: 'compliant', coverage: 100 },
+        lastUpdated: new Date().toISOString()
+      };
+      
+      res.json(complianceStatus);
+    } catch (error) {
+      console.error('Error fetching compliance status:', error);
+      res.status(500).json({ error: 'Failed to fetch compliance status' });
+    }
+  });
+
+  app.get('/api/analytics/kpi-metrics', isAuthenticated, async (req, res) => {
+    try {
+      // Simulate real-time KPI metrics
+      const kpiMetrics = {
+        laborCost: {
+          current: 142350,
+          budget: 145000,
+          variance: -3.2,
+          currency: 'EUR'
+        },
+        overtimeVariance: {
+          current: 12.5,
+          target: 5.0,
+          trend: 'increasing'
+        },
+        staffingForecast: {
+          optimal: 92,
+          target: 95,
+          trend: 'stable'
+        },
+        complianceScore: {
+          current: 94.5,
+          target: 95.0,
+          issues: 2
+        },
+        lastUpdated: new Date().toISOString()
+      };
+      
+      res.json(kpiMetrics);
+    } catch (error) {
+      console.error('Error fetching KPI metrics:', error);
+      res.status(500).json({ error: 'Failed to fetch KPI metrics' });
+    }
+  });
+
+  app.post('/api/payroll/run-quick', isAuthenticated, async (req, res) => {
+    try {
+      // Simulate quick payroll run
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      res.json({
+        success: true,
+        payrollRunId: `PR-${Date.now()}`,
+        employeesProcessed: 45,
+        totalAmount: 142350.00,
+        processingTime: '90 seconds',
+        status: 'COMPLETED'
+      });
+    } catch (error) {
+      console.error('Error running quick payroll:', error);
+      res.status(500).json({ error: 'Failed to run payroll' });
+    }
+  });
+
+  app.post('/api/overtime/approve-pending', isAuthenticated, async (req, res) => {
+    try {
+      // Simulate overtime approval
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      res.json({
+        success: true,
+        approvedRequests: 12,
+        totalHours: 48.5,
+        estimatedCost: 1850.00,
+        status: 'APPROVED'
+      });
+    } catch (error) {
+      console.error('Error approving overtime:', error);
+      res.status(500).json({ error: 'Failed to approve overtime' });
+    }
+  });
+
+  app.post('/api/compliance/file-apd', isAuthenticated, async (req, res) => {
+    try {
+      // Simulate APD filing
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      res.json({
+        success: true,
+        filingId: `APD-${Date.now()}`,
+        submissionDate: new Date().toISOString(),
+        employeesCovered: 45,
+        status: 'SUBMITTED',
+        confirmationNumber: `APD${Date.now()}`
+      });
+    } catch (error) {
+      console.error('Error filing APD:', error);
+      res.status(500).json({ error: 'Failed to file APD' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

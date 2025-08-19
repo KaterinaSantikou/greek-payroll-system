@@ -1,563 +1,378 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { format } from "date-fns";
+import { Progress } from "@/components/ui/progress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
-  Users, 
+  Shield, 
   Clock, 
-  AlertCircle, 
-  CheckCircle, 
-  X, 
-  Eye,
-  UserPlus,
-  Timer,
-  Calendar,
+  Users, 
+  DollarSign, 
+  AlertTriangle,
+  CheckCircle,
   TrendingUp,
-  Building,
-  Activity
+  TrendingDown,
+  Calendar,
+  FileText,
+  Zap,
+  Building2,
+  Timer,
+  CreditCard,
+  Gauge,
+  Target
 } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
 
-export default function ManagerDashboardPage() {
-  const { toast } = useToast();
-  const [selectedPropertyId] = useState('default'); // In real app, would be selectable
-  const [quickHireDialog, setQuickHireDialog] = useState(false);
-  const [approvalDialog, setApprovalDialog] = useState({ open: false, type: '', requestId: '', employeeName: '' });
-  const [approvalNotes, setApprovalNotes] = useState('');
-  
-  // Mock manager ID - in real app would come from auth context
-  const managerId = "MGR_001";
+interface ComplianceCard {
+  id: string;
+  title: string;
+  status: 'compliant' | 'warning' | 'critical';
+  value: string;
+  description: string;
+  deadline?: string;
+  actionRequired: boolean;
+}
 
-  // Manager Dashboard Data
-  const { data: dashboard, isLoading: dashboardLoading } = useQuery({
-    queryKey: ['/api/self-service/manager', managerId, 'dashboard', selectedPropertyId],
-    queryFn: () => apiRequest(`/api/self-service/manager/${managerId}/dashboard?propertyId=${selectedPropertyId}`)
+interface KPIMetric {
+  id: string;
+  title: string;
+  value: string;
+  change: number;
+  changeType: 'positive' | 'negative' | 'neutral';
+  target?: string;
+  description: string;
+}
+
+export default function ManagerDashboard() {
+  const queryClient = useQueryClient();
+
+  // Live compliance data
+  const { data: complianceData, isLoading: complianceLoading } = useQuery({
+    queryKey: ['/api/compliance/live-status'],
+    refetchInterval: 30000 // Refresh every 30 seconds
   });
 
-  // Pending Approvals Data
-  const { data: approvals, isLoading: approvalsLoading } = useQuery({
-    queryKey: ['/api/self-service/manager', managerId, 'approvals', selectedPropertyId],
-    queryFn: () => apiRequest(`/api/self-service/manager/${managerId}/approvals?propertyId=${selectedPropertyId}`)
+  // KPI metrics
+  const { data: kpiData, isLoading: kpiLoading } = useQuery({
+    queryKey: ['/api/analytics/kpi-metrics'],
+    refetchInterval: 60000 // Refresh every minute
   });
 
-  // Overtime Approval Mutation
-  const overtimeApprovalMutation = useMutation({
-    mutationFn: (data: { requestId: string; approved: boolean; notes?: string }) =>
-      apiRequest(`/api/self-service/manager/${managerId}/approve-overtime`, {
+  // Quick actions mutations
+  const runPayroll = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/payroll/run-quick', {
         method: 'POST',
-        body: JSON.stringify(data)
-      }),
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Overtime request processed successfully",
+        headers: { 'Content-Type': 'application/json' }
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/self-service/manager', managerId, 'approvals'] });
-      setApprovalDialog({ open: false, type: '', requestId: '', employeeName: '' });
-      setApprovalNotes('');
+      return response.json();
     },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to process overtime request",
-        variant: "destructive",
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/analytics/kpi-metrics'] });
     }
   });
 
-  // Quick Hire Mutation
-  const quickHireMutation = useMutation({
-    mutationFn: (employeeData: any) =>
-      apiRequest(`/api/self-service/manager/${managerId}/quick-hire`, {
+  const approveOvertime = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/overtime/approve-pending', {
         method: 'POST',
-        body: JSON.stringify(employeeData)
-      }),
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Employee hired successfully",
+        headers: { 'Content-Type': 'application/json' }
       });
-      setQuickHireDialog(false);
+      return response.json();
     },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to hire employee",
-        variant: "destructive",
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/compliance/live-status'] });
     }
   });
 
-  const handleOvertimeApproval = (approved: boolean) => {
-    overtimeApprovalMutation.mutate({
-      requestId: approvalDialog.requestId,
-      approved,
-      notes: approvalNotes
-    });
-  };
+  const fileAPD = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/compliance/file-apd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/compliance/live-status'] });
+    }
+  });
 
-  const getStatusBadge = (status: string) => {
+  // Mock data with realistic Greek payroll metrics
+  const mockComplianceCards: ComplianceCard[] = [
+    {
+      id: 'ergani-sync',
+      title: 'ERGANI Sync Status',
+      status: 'compliant',
+      value: '45/45 Employees',
+      description: 'All employee data synchronized with ERGANI II',
+      actionRequired: false
+    },
+    {
+      id: 'apd-deadline',
+      title: 'APD Filing Deadline',
+      status: 'warning',
+      value: '3 Days Remaining',
+      description: 'Monthly APD filing due January 31st',
+      deadline: '2025-01-31',
+      actionRequired: true
+    },
+    {
+      id: 'fmy-deadline',
+      title: 'ΦΜΥ Submission',
+      status: 'critical',
+      value: 'Overdue',
+      description: 'Quarterly ΦΜΥ submission pending',
+      deadline: '2025-01-15',
+      actionRequired: true
+    },
+    {
+      id: 'digital-cards',
+      title: 'Digital Work Cards',
+      status: 'compliant',
+      value: '100% Coverage',
+      description: 'All active employees have digital work cards',
+      actionRequired: false
+    }
+  ];
+
+  const mockKPIMetrics: KPIMetric[] = [
+    {
+      id: 'labor-cost',
+      title: 'Labor Cost vs Budget',
+      value: '€142,350',
+      change: -3.2,
+      changeType: 'positive',
+      target: '€145,000',
+      description: 'Monthly labor costs under budget'
+    },
+    {
+      id: 'overtime-variance',
+      title: 'Overtime Variance',
+      value: '+12.5%',
+      change: 5.1,
+      changeType: 'negative',
+      target: '±5%',
+      description: 'Above target variance range'
+    },
+    {
+      id: 'staffing-forecast',
+      title: 'Staffing Forecast',
+      value: '92% Optimal',
+      change: 2.8,
+      changeType: 'positive',
+      target: '90-100%',
+      description: 'Near optimal staffing levels'
+    },
+    {
+      id: 'compliance-score',
+      title: 'Compliance Score',
+      value: '94.5%',
+      change: -1.2,
+      changeType: 'negative',
+      target: '95%',
+      description: 'Minor compliance gaps detected'
+    }
+  ];
+
+  const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'on_time':
-        return <Badge className="bg-green-500">On Time</Badge>;
-      case 'overtime':
-        return <Badge className="bg-orange-500">Overtime</Badge>;
-      case 'late_start':
-        return <Badge variant="destructive">Late Start</Badge>;
-      case 'missing_punch':
-        return <Badge variant="outline" className="border-red-500 text-red-500">Missing Punch</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
+      case 'compliant': return <CheckCircle className="w-5 h-5 text-green-600" />;
+      case 'warning': return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
+      case 'critical': return <AlertTriangle className="w-5 h-5 text-red-600" />;
+      default: return <Clock className="w-5 h-5 text-gray-600" />;
     }
   };
 
-  if (dashboardLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="h-8 bg-gray-200 rounded animate-pulse" />
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded animate-pulse" />
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'compliant': return 'border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800';
+      case 'warning': return 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800';
+      case 'critical': return 'border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800';
+      default: return 'border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800';
+    }
+  };
+
+  const getChangeIcon = (changeType: string) => {
+    switch (changeType) {
+      case 'positive': return <TrendingUp className="w-4 h-4 text-green-600" />;
+      case 'negative': return <TrendingDown className="w-4 h-4 text-red-600" />;
+      default: return <Gauge className="w-4 h-4 text-gray-600" />;
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-6 space-y-8">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <Building2 className="w-8 h-8 text-blue-600" />
+          <div>
+            <h1 className="text-3xl font-bold">Executive Dashboard</h1>
+            <p className="text-muted-foreground">Real-time payroll and compliance overview</p>
+          </div>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          Last updated: {new Date().toLocaleTimeString('el-GR')}
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <Card className="border-2 border-blue-200 dark:border-blue-800">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-blue-600" />
+            Quick Actions
+          </CardTitle>
+          <CardDescription>
+            Essential operations at your fingertips
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button 
+              onClick={() => runPayroll.mutate()}
+              disabled={runPayroll.isPending}
+              className="h-16 text-lg flex items-center gap-3 bg-green-600 hover:bg-green-700"
+            >
+              <CreditCard className="w-6 h-6" />
+              {runPayroll.isPending ? 'Processing...' : 'Run Payroll'}
+            </Button>
+            
+            <Button 
+              onClick={() => approveOvertime.mutate()}
+              disabled={approveOvertime.isPending}
+              variant="outline"
+              className="h-16 text-lg flex items-center gap-3"
+            >
+              <Timer className="w-6 h-6" />
+              {approveOvertime.isPending ? 'Approving...' : 'Approve Overtime'}
+            </Button>
+            
+            <Button 
+              onClick={() => fileAPD.mutate()}
+              disabled={fileAPD.isPending}
+              variant="outline"
+              className="h-16 text-lg flex items-center gap-3"
+            >
+              <FileText className="w-6 h-6" />
+              {fileAPD.isPending ? 'Filing...' : 'File APD'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Live Compliance Cards */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold flex items-center gap-2">
+          <Shield className="w-6 h-6 text-green-600" />
+          Live Compliance Status
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {mockComplianceCards.map((card) => (
+            <Card key={card.id} className={`${getStatusColor(card.status)} shadow-md hover:shadow-lg transition-shadow`}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">{card.title}</CardTitle>
+                  {getStatusIcon(card.status)}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-2xl font-bold">{card.value}</div>
+                <p className="text-sm text-muted-foreground">{card.description}</p>
+                
+                {card.deadline && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="w-4 h-4" />
+                    <span>Due: {new Date(card.deadline).toLocaleDateString('el-GR')}</span>
+                  </div>
+                )}
+                
+                {card.actionRequired && (
+                  <Badge variant="destructive" className="text-xs">
+                    Action Required
+                  </Badge>
+                )}
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Manager Dashboard</h1>
-          <p className="text-muted-foreground">
-            Real-time staff monitoring, approvals, and workforce management
-          </p>
+      {/* KPI Panels */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold flex items-center gap-2">
+          <Target className="w-6 h-6 text-blue-600" />
+          Key Performance Indicators
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {mockKPIMetrics.map((metric) => (
+            <Card key={metric.id} className="shadow-md hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">{metric.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-baseline justify-between">
+                  <div className="text-3xl font-bold">{metric.value}</div>
+                  <div className="flex items-center gap-1">
+                    {getChangeIcon(metric.changeType)}
+                    <span className={`text-sm font-medium ${
+                      metric.changeType === 'positive' ? 'text-green-600' : 
+                      metric.changeType === 'negative' ? 'text-red-600' : 'text-gray-600'
+                    }`}>
+                      {metric.change > 0 ? '+' : ''}{metric.change}%
+                    </span>
+                  </div>
+                </div>
+                
+                {metric.target && (
+                  <div className="text-sm text-muted-foreground">
+                    <strong>Target:</strong> {metric.target}
+                  </div>
+                )}
+                
+                <p className="text-sm text-muted-foreground">{metric.description}</p>
+                
+                {metric.id === 'labor-cost' && (
+                  <Progress value={98.2} className="h-2" />
+                )}
+                {metric.id === 'overtime-variance' && (
+                  <Progress value={75} className="h-2" />
+                )}
+                {metric.id === 'staffing-forecast' && (
+                  <Progress value={92} className="h-2" />
+                )}
+                {metric.id === 'compliance-score' && (
+                  <Progress value={94.5} className="h-2" />
+                )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        <Dialog open={quickHireDialog} onOpenChange={setQuickHireDialog}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Quick Hire
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Quick Hire Employee</DialogTitle>
-              <DialogDescription>
-                Add a new employee to your property quickly
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" placeholder="Maria" />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" placeholder="Papadopoulos" />
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="maria@example.com" />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" placeholder="+30 694 123 4567" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="position">Position</Label>
-                  <Input id="position" placeholder="Housekeeper" />
-                </div>
-                <div>
-                  <Label htmlFor="department">Department</Label>
-                  <Input id="department" placeholder="Housekeeping" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input id="startDate" type="date" />
-                </div>
-                <div>
-                  <Label htmlFor="salary">Base Salary (€)</Label>
-                  <Input id="salary" type="number" placeholder="1200" />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={() => quickHireMutation.mutate({})}
-                  disabled={quickHireMutation.isPending}
-                  className="flex-1"
-                >
-                  {quickHireMutation.isPending ? 'Hiring...' : 'Hire Employee'}
-                </Button>
-                <Button variant="outline" onClick={() => setQuickHireDialog(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Currently Working</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboard?.currentlyOnSite?.length || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              of {dashboard?.todayMetrics?.scheduledEmployees || 0} scheduled
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overtime Hours</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboard?.todayMetrics?.overtimeHours || 0}h</div>
-            <p className="text-xs text-muted-foreground">
-              Today's overtime
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {(dashboard?.pendingApprovals?.overtime || 0) + 
-               (dashboard?.pendingApprovals?.exceptions || 0) +
-               (dashboard?.pendingApprovals?.leaveRequests || 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Requiring attention
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Absent Today</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dashboard?.todayMetrics?.absentEmployees || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Unplanned absences
-            </p>
-          </CardContent>
-        </Card>
+      {/* Critical Alerts */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-semibold">Priority Alerts</h2>
+        
+        <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800 dark:text-red-200">
+            <strong>ΦΜΥ Submission Overdue:</strong> Quarterly filing is past due. 
+            Complete submission immediately to avoid penalties.
+          </AlertDescription>
+        </Alert>
+        
+        <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
+          <Clock className="h-4 w-4 text-yellow-600" />
+          <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+            <strong>APD Filing Due Soon:</strong> Monthly APD filing due in 3 days. 
+            Review overtime approvals before submission.
+          </AlertDescription>
+        </Alert>
       </div>
-
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="whos-on-now" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="whos-on-now">Who's On Now</TabsTrigger>
-          <TabsTrigger value="approvals">Pending Approvals</TabsTrigger>
-          <TabsTrigger value="departments">Department Summary</TabsTrigger>
-          <TabsTrigger value="roster">Roster Management</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="whos-on-now" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Currently On-Site Staff</CardTitle>
-              <CardDescription>Real-time view of who's working right now</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {dashboard?.currentlyOnSite && dashboard.currentlyOnSite.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Employee</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Punch In</TableHead>
-                      <TableHead>Expected End</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dashboard.currentlyOnSite.map((employee) => (
-                      <TableRow key={employee.employeeId}>
-                        <TableCell className="font-medium">{employee.name}</TableCell>
-                        <TableCell>{employee.department}</TableCell>
-                        <TableCell>{format(new Date(employee.punchInTime), 'HH:mm')}</TableCell>
-                        <TableCell>{format(new Date(employee.expectedEndTime), 'HH:mm')}</TableCell>
-                        <TableCell>{getStatusBadge(employee.status)}</TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-3 w-3 mr-1" />
-                            View Details
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No staff currently on-site
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="approvals" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Overtime Requests */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Timer className="h-4 w-4" />
-                  Overtime Requests ({approvals?.overtime?.length || 0})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {approvals?.overtime && approvals.overtime.length > 0 ? (
-                  <div className="space-y-3">
-                    {approvals.overtime.map((request: any) => (
-                      <Card key={request.requestId} className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">{request.employeeName}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {request.hours}h on {format(new Date(request.date), 'MMM d')}
-                            </div>
-                            <div className="text-sm">{request.reason}</div>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700"
-                              onClick={() => {
-                                setApprovalDialog({
-                                  open: true,
-                                  type: 'overtime',
-                                  requestId: request.requestId,
-                                  employeeName: request.employeeName
-                                });
-                              }}
-                            >
-                              <CheckCircle className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleOvertimeApproval(false)}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No pending overtime requests</p>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Leave Requests */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Leave Requests ({approvals?.leaveRequests?.length || 0})
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {approvals?.leaveRequests && approvals.leaveRequests.length > 0 ? (
-                  <div className="space-y-3">
-                    {approvals.leaveRequests.map((request: any) => (
-                      <Card key={request.requestId} className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium">{request.employeeName}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {request.type} - {request.days} days
-                            </div>
-                            <div className="text-sm">
-                              {format(new Date(request.startDate), 'MMM d')} - {format(new Date(request.endDate), 'MMM d')}
-                            </div>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                              <CheckCircle className="h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="destructive">
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No pending leave requests</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Approval Dialog */}
-          <Dialog open={approvalDialog.open} onOpenChange={(open) => setApprovalDialog(prev => ({ ...prev, open }))}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Approve {approvalDialog.type} Request</DialogTitle>
-                <DialogDescription>
-                  Reviewing request from {approvalDialog.employeeName}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="approval-notes">Notes (Optional)</Label>
-                  <Textarea
-                    id="approval-notes"
-                    placeholder="Add any notes about this approval..."
-                    value={approvalNotes}
-                    onChange={(e) => setApprovalNotes(e.target.value)}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={() => handleOvertimeApproval(true)}
-                    disabled={overtimeApprovalMutation.isPending}
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    {overtimeApprovalMutation.isPending ? 'Approving...' : 'Approve'}
-                  </Button>
-                  <Button 
-                    variant="destructive"
-                    className="flex-1"
-                    onClick={() => handleOvertimeApproval(false)}
-                    disabled={overtimeApprovalMutation.isPending}
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    {overtimeApprovalMutation.isPending ? 'Rejecting...' : 'Reject'}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
-
-        <TabsContent value="departments" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Department Performance Summary</CardTitle>
-              <CardDescription>Key metrics by department for today</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {dashboard?.departmentSummary && dashboard.departmentSummary.length > 0 ? (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {dashboard.departmentSummary.map((dept, index) => (
-                    <Card key={index}>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-base">{dept.department}</CardTitle>
-                        <Building className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Staff Count</span>
-                            <span className="font-medium">{dept.staffCount}</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Hours Worked</span>
-                            <span className="font-medium">{dept.hoursWorked}h</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Overtime Hours</span>
-                            <span className="font-medium">{dept.overtimeHours}h</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Efficiency</span>
-                            <div className="flex items-center gap-1">
-                              <span className="font-medium">{dept.efficiency}%</span>
-                              {dept.efficiency >= 90 ? (
-                                <TrendingUp className="h-3 w-3 text-green-500" />
-                              ) : (
-                                <AlertCircle className="h-3 w-3 text-orange-500" />
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No department data available
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="roster" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Roster Management</CardTitle>
-                  <CardDescription>Manage schedules and staffing assignments</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    View Schedule
-                  </Button>
-                  <Button>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Add Shift
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center py-8">
-                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Roster Management</h3>
-                <p className="text-muted-foreground mb-4">
-                  Advanced schedule management features coming soon
-                </p>
-                <Button variant="outline">
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Current Week
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
 }
