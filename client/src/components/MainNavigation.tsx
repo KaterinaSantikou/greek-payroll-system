@@ -25,7 +25,9 @@ import {
   Gift,
   BarChart3,
   FileSearch,
-  Activity
+  Activity,
+  FileText,
+  CheckCircle
 } from "lucide-react";
 
 interface NavigationItem {
@@ -159,6 +161,87 @@ const navigationData: NavigationItem[] = [
         label: 'Audit',
         icon: FileSearch,
         href: '/payroll/audit'
+      }
+    ]
+  },
+  {
+    id: 'filings',
+    label: 'Filings',
+    icon: FileText,
+    children: [
+      {
+        id: 'ergani',
+        label: 'ERGANI II',
+        icon: Shield,
+        href: '/filings/ergani'
+      },
+      {
+        id: 'efka',
+        label: 'e-EFKA / APD',
+        icon: Building2,
+        href: '/filings/efka'
+      },
+      {
+        id: 'aade',
+        label: 'AADE / ΦΜΥ',
+        icon: Target,
+        href: '/filings/aade'
+      },
+      {
+        id: 'inspector',
+        label: 'Inspector Pack',
+        icon: FileSearch,
+        href: '/filings/inspector'
+      }
+    ]
+  },
+  {
+    id: 'payments',
+    label: 'Payments',
+    icon: Calculator,
+    children: [
+      {
+        id: 'salary-files',
+        label: 'Salary Files (SEPA)',
+        icon: Play,
+        href: '/payments/salary-files'
+      },
+      {
+        id: 'off-cycle',
+        label: 'Off-Cycle / Corrections',
+        icon: Timer,
+        href: '/payments/off-cycle'
+      },
+      {
+        id: 'reconciliation',
+        label: 'Reconciliation',
+        icon: CheckCircle,
+        href: '/payments/reconciliation'
+      }
+    ]
+  },
+  {
+    id: 'accounting',
+    label: 'Accounting',
+    icon: BarChart3,
+    children: [
+      {
+        id: 'gl-export',
+        label: 'GL Export',
+        icon: FileText,
+        href: '/accounting/gl-export'
+      },
+      {
+        id: 'postings',
+        label: 'Postings',
+        icon: Settings,
+        href: '/accounting/postings'
+      },
+      {
+        id: 'gl-reconciliation',
+        label: 'GL Reconciliation',
+        icon: Activity,
+        href: '/accounting/reconciliation'
       }
     ]
   }

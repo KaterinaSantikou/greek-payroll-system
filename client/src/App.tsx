@@ -97,6 +97,14 @@ function Router() {
         {/* Time Section */}
         <Route path="/punches" component={lazy(() => import("./pages/punches"))} />
         <Route path="/exceptions" component={lazy(() => import("./pages/exceptions"))} />
+        <Route path="/devices" component={lazy(() => import("./pages/devices"))} />
+        
+        {/* Filings Section */}
+        <Route path="/filings" component={lazy(() => import("./pages/filings"))} />
+        <Route path="/filings/ergani" component={lazy(() => import("./pages/filings"))} />
+        <Route path="/filings/efka" component={lazy(() => import("./pages/filings"))} />
+        <Route path="/filings/aade" component={lazy(() => import("./pages/filings"))} />
+        <Route path="/filings/inspector" component={lazy(() => import("./pages/filings"))} />
             <Route path="/payroll" component={Payroll} />
             <Route path="/payments" component={Payments} />
             <Route path="/sepa-payments" component={SepaPayments} />
