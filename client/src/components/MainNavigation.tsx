@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { getUserRole, canAccessSection } from "@/lib/roleBasedRouting";
 import { useLocale } from "@/hooks/useLocale";
+import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard,
   Users,
@@ -340,9 +341,11 @@ const createNavigationData = (t: (key: string) => string): NavigationItem[] => [
 
 interface MainNavigationProps {
   collapsed?: boolean;
+  isMobile?: boolean;
+  isTablet?: boolean;
 }
 
-export function MainNavigation({ collapsed = false }: MainNavigationProps) {
+export function MainNavigation({ collapsed = false, isMobile = false, isTablet = false }: MainNavigationProps) {
   const [location] = useLocation();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['dashboard']));
   const { user } = useAuth();
@@ -400,14 +403,25 @@ export function MainNavigation({ collapsed = false }: MainNavigationProps) {
           <CollapsibleTrigger asChild>
             <Button
               variant="ghost"
-              className={`w-full justify-between h-auto py-2 px-3 ${
-                level === 0 ? 'font-medium' : 'text-sm'
-              } ${collapsed ? 'px-2' : ''}`}
+              className={cn(
+                "w-full justify-between h-auto py-2 px-3 transition-all duration-200",
+                level === 0 ? 'font-medium' : 'text-sm',
+                collapsed ? 'px-2' : '',
+                "hover:bg-gray-100 dark:hover:bg-gray-800"
+              )}
             >
               <div className="flex items-center gap-3">
-                <item.icon className={`h-4 w-4 ${level === 0 ? 'text-blue-600' : 'text-gray-500'}`} />
+                <item.icon className={cn(
+                  "h-4 w-4 transition-colors",
+                  level === 0 ? 'text-blue-600' : 'text-gray-500'
+                )} />
                 {!collapsed && (
-                  <span className={level === 0 ? 'font-medium' : 'text-sm'}>{item.label}</span>
+                  <span className={cn(
+                    "transition-opacity duration-200",
+                    level === 0 ? 'font-medium' : 'text-sm'
+                  )}>
+                    {item.label}
+                  </span>
                 )}
               </div>
               {!collapsed && (

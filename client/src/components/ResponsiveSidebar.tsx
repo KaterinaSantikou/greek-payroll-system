@@ -1,26 +1,16 @@
-import { MainNavigation } from "./MainNavigation";
-import { PropertySwitcher } from "./PropertySwitcher";
-import LanguageSwitcher from "./LanguageSwitcher";
-import { ThemeToggle } from "./ThemeToggle";
-import { CommandPaletteButton } from "./CommandPaletteButton";
-import { useCommandPalette } from "@/hooks/useCommandPalette";
-import { useProperty } from "@/contexts/PropertyContext";
-import { useAuth } from "@/hooks/useAuth";
-import { useSidebarState } from "@/hooks/useSidebarState";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { X, Menu } from "lucide-react";
+import { MainNavigation } from "./MainNavigation";
+import { useSidebarState } from "@/hooks/useSidebarState";
 import { cn } from "@/lib/utils";
 
-interface LayoutProps {
-  children: React.ReactNode;
+interface ResponsiveSidebarProps {
+  children?: React.ReactNode;
 }
 
-function LayoutContent({ children }: LayoutProps) {
-  const { setOpen } = useCommandPalette();
-  const currentProperty = { propertyId: "prop-princess", name: "Princess Resort & Spa" };
-  
+export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
   const {
     isExpanded,
     isCollapsed,
@@ -32,7 +22,7 @@ function LayoutContent({ children }: LayoutProps) {
     isDesktop
   } = useSidebarState();
 
-  const [isHovering, setIsHovering] = useState(false);
+  const [isHovering, setIsHovering] = React.useState(false);
 
   // Handle tablet hover behavior
   const handleMouseEnter = () => {
@@ -62,32 +52,39 @@ function LayoutContent({ children }: LayoutProps) {
     return 'w-18'; // 72px equivalent for collapsed rail
   };
 
-  return (
-    <div className="h-screen bg-background transition-colors duration-300">
-      {/* Mobile overlay */}
-      <AnimatePresence>
-        {shouldShowOverlay && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setSidebarState('hidden')}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Mobile menu button */}
-      {isMobile && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 lg:hidden"
-        >
-          {isExpanded ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-        </Button>
+  // Mobile overlay
+  const MobileOverlay = () => (
+    <AnimatePresence>
+      {shouldShowOverlay && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarState('hidden')}
+        />
       )}
+    </AnimatePresence>
+  );
+
+  // Mobile menu button
+  const MobileMenuButton = () => (
+    isMobile && (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={toggleSidebar}
+        className="fixed top-4 left-4 z-50 lg:hidden"
+      >
+        {isExpanded ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+      </Button>
+    )
+  );
+
+  return (
+    <>
+      <MobileOverlay />
+      <MobileMenuButton />
       
       {/* Sidebar */}
       <motion.aside
@@ -173,59 +170,20 @@ function LayoutContent({ children }: LayoutProps) {
       {/* Main content area with responsive margin */}
       <main 
         className={cn(
-          "transition-all duration-300",
+          "transition-all duration-300 flex-1 overflow-auto",
           {
             // Desktop: always account for sidebar
             "ml-70": isDesktop && shouldShowExpanded,
-            "ml-18": isDesktop && !shouldShowExpanded,
-            // Tablet: always account for collapsed sidebar
-            "ml-18": isTablet,
+            "ml-18": isDesktop && !shouldShowExpanded && !isMobile,
+            // Tablet: always account for collapsed sidebar unless mobile
+            "ml-18": isTablet && !isMobile,
             // Mobile: no margin (sidebar is overlay)
             "ml-0": isMobile,
           }
         )}
       >
-        {/* Top Bar */}
-        <motion.div 
-          initial={{ y: -10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 px-6 py-4 sticky top-0 z-10"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <motion.h1 
-                initial={{ x: -20, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-                className="text-lg font-semibold text-gray-900 dark:text-white"
-              >
-                {currentProperty.name}
-              </motion.h1>
-            </div>
-            <div className="flex items-center space-x-3">
-              <CommandPaletteButton onClick={() => setOpen(true)} />
-              <LanguageSwitcher />
-              <PropertySwitcher />
-              <ThemeToggle />
-            </div>
-          </div>
-        </motion.div>
-        
-        {/* Page Content */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="flex-1 overflow-auto"
-        >
-          {children}
-        </motion.div>
+        {children}
       </main>
-    </div>
+    </>
   );
-}
-
-export default function Layout({ children }: LayoutProps) {
-  return <LayoutContent>{children}</LayoutContent>;
 }
