@@ -583,6 +583,42 @@ export class DatabaseStorage implements IStorage {
     // In a real implementation, you'd join on the appropriate foreign key
     return [];
   }
+
+  // Additional methods for overtime prevention and exception resolution engines
+  async getShiftsByEmployeeAndWeek(employeeId: string, weekStarting: string): Promise<Shift[]> {
+    const weekStart = new Date(weekStarting);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    
+    return await db
+      .select()
+      .from(shifts)
+      .where(
+        and(
+          eq(shifts.employeeId, employeeId),
+          gte(shifts.date, weekStart.toISOString().split('T')[0]),
+          lt(shifts.date, weekEnd.toISOString().split('T')[0])
+        )
+      )
+      .orderBy(shifts.date, shifts.startPlanned);
+  }
+
+  async getPunchEventsByEmployeeAndDate(employeeId: string, date: string): Promise<PunchEvent[]> {
+    const startOfDay = new Date(`${date}T00:00:00`);
+    const endOfDay = new Date(`${date}T23:59:59`);
+    
+    return await db
+      .select()
+      .from(punchEvents)
+      .where(
+        and(
+          eq(punchEvents.employeeId, employeeId),
+          gte(punchEvents.timestamp, startOfDay),
+          lte(punchEvents.timestamp, endOfDay)
+        )
+      )
+      .orderBy(punchEvents.timestamp);
+  }
 }
 
 export const storage = new DatabaseStorage();

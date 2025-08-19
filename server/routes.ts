@@ -67,6 +67,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const advancedAnalyticsService = new AdvancedAnalyticsService();
   const hotelEnhancementsService = new HotelEnhancementsService();
   const payExplanationService = new PayExplanationService(storage);
+  
+  // Import AI engines
+  const { overtimePreventionEngine } = await import("./overtimePreventionEngineSimple");
+  const { exceptionAutoResolutionEngine } = await import("./exceptionAutoResolutionEngineSimple");
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -3180,6 +3184,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Payroll preview error:", error);
       res.status(500).json({ error: "Failed to generate payroll preview" });
+    }
+  });
+
+  // AI Engine Routes - Overtime Prevention
+  app.get("/api/ai/overtime-analysis/:propertyId", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const { weekStarting } = req.query;
+      
+      if (!weekStarting) {
+        return res.status(400).json({ error: "weekStarting parameter is required" });
+      }
+      
+      const analysis = await overtimePreventionEngine.analyzeOvertimeRisks(
+        propertyId,
+        weekStarting as string
+      );
+      
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error analyzing overtime risks:", error);
+      res.status(500).json({ error: "Failed to analyze overtime risks" });
+    }
+  });
+
+  app.get("/api/ai/overtime-recommendations/:propertyId", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const { weekStarting, maxRecommendations } = req.query;
+      
+      if (!weekStarting) {
+        return res.status(400).json({ error: "weekStarting parameter is required" });
+      }
+      
+      const recommendations = await overtimePreventionEngine.generateOptimizationRecommendations(
+        propertyId,
+        weekStarting as string,
+        maxRecommendations ? parseInt(maxRecommendations as string) : undefined
+      );
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error generating overtime recommendations:", error);
+      res.status(500).json({ error: "Failed to generate recommendations" });
+    }
+  });
+
+  app.post("/api/ai/apply-overtime-recommendation", isAuthenticated, async (req, res) => {
+    try {
+      const { recommendationId, notes } = req.body;
+      const userId = req.user?.claims?.sub;
+      
+      if (!recommendationId) {
+        return res.status(400).json({ error: "recommendationId is required" });
+      }
+      
+      const result = await overtimePreventionEngine.applyRecommendation(
+        recommendationId,
+        userId,
+        notes
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error applying overtime recommendation:", error);
+      res.status(500).json({ error: "Failed to apply recommendation" });
+    }
+  });
+
+  // AI Engine Routes - Exception Auto-Resolution
+  app.get("/api/ai/exception-analysis/:propertyId", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const { date } = req.query;
+      
+      if (!date) {
+        return res.status(400).json({ error: "date parameter is required" });
+      }
+      
+      const analysis = await exceptionAutoResolutionEngine.analyzeDailyExceptions(
+        propertyId,
+        date as string
+      );
+      
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error analyzing exceptions:", error);
+      res.status(500).json({ error: "Failed to analyze exceptions" });
+    }
+  });
+
+  app.post("/api/ai/process-exceptions/:propertyId", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const { date } = req.body;
+      
+      if (!date) {
+        return res.status(400).json({ error: "date is required" });
+      }
+      
+      const result = await exceptionAutoResolutionEngine.processResolutionActions(
+        propertyId,
+        date
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error processing exception resolutions:", error);
+      res.status(500).json({ error: "Failed to process exception resolutions" });
     }
   });
 
