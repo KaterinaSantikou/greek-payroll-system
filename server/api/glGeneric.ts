@@ -24,7 +24,9 @@ import {
 } from "@shared/schema";
 import { GLExportCanonical } from "../services/glExportCanonical";
 import { WebhookService } from "../services/webhookService";
+import { RoundingService, type RoundingConfig } from '../services/roundingService';
 import { z } from "zod";
+import { nanoid } from 'nanoid';
 
 // Helper function to format journal lines for API response
 function formatJournalLine(line: any) {
@@ -496,6 +498,20 @@ export function glGenericRoutes(app: Express) {
         });
       }
 
+      // GUARDRAIL: Validate mapping completeness
+      const requiredMappings = ['REG', 'EFKA_EMPLOYEE', 'AADE_FMY', 'NET_PAY_CLEARING'];
+      const missingMappings = requiredMappings.filter(code => 
+        !ruleSet.rules.some((rule: any) => rule.code === code)
+      );
+      
+      if (missingMappings.length > 0) {
+        return res.status(400).json({
+          error: 'INCOMPLETE_MAPPINGS',
+          detail: `Missing required account mappings: ${missingMappings.join(', ')}`,
+          hint: 'Complete the guided setup to configure all required account mappings'
+        });
+      }
+
       // Mock payroll run data for demo - in real implementation, fetch from database
       const mockPayrollRun = {
         runId: run_id,
@@ -643,17 +659,17 @@ export function glGenericRoutes(app: Express) {
 
       if (journal.header.status === 'posted') {
         return res.status(400).json({
-          success: false,
-          error: 'already_posted',
-          message: 'Journal is already posted',
+          error: 'ALREADY_POSTED',
+          detail: 'Journal is already posted and locked',
+          hint: 'Posted journals cannot be modified. Create a reversal if corrections are needed'
         });
       }
 
       if (journal.header.status === 'reversed') {
         return res.status(400).json({
-          success: false,
-          error: 'reversed_journal',
-          message: 'Cannot post a reversed journal',
+          error: 'REVERSED_JOURNAL',
+          detail: 'Cannot post a reversed journal',
+          hint: 'Reversed journals cannot be posted'
         });
       }
 

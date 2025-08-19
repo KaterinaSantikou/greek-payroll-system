@@ -52,6 +52,8 @@ import { registerCsrdRoutes } from "./api/csrd";
 import { embeddedPayrollRoutes } from "./api/embedded";
 import { glGenericRoutes } from "./api/glGeneric";
 import { nativeConnectorRoutes } from "./api/nativeConnectors";
+import { guidedSetupRoutes } from "./api/guidedSetup";
+import { reconciliationRoutes } from "./api/reconciliation";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -3320,6 +3322,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Native Connectors (Xero, QuickBooks Online)
   nativeConnectorRoutes(app);
+  
+  // Guided Setup Wizard
+  guidedSetupRoutes(app);
+  
+  // Reconciliation & Rounding
+  reconciliationRoutes(app);
 
   // Register notification routes
   try {
