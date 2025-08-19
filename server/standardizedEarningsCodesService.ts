@@ -169,21 +169,7 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
     }
   },
 
-  // Allowances (Tax treatment varies)
-  MEAL_VOUCHER: {
-    code: 'MEAL_VOUCHER',
-    name: 'Meal Vouchers',
-    description: 'Tax-free meal allowance up to €6.00 per work day',
-    calculation: 'fixed_amount',
-    taxable: false, // Tax-free up to €6/day
-    contributoryEFKA: false,
-    includedAPD: false,
-    stackable: true,
-    baseWage: false,
-    constraints: {
-      maxHoursPerMonth: 22 // Approximately 22 work days per month
-    }
-  },
+
 
   TRANSPORT: {
     code: 'TRANSPORT',
@@ -223,11 +209,11 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
     dependsOn: ['REG']
   },
 
-  // Greek Mandatory Bonuses
-  EASTER_BONUS: {
-    code: 'EASTER_BONUS',
+  // Greek Mandatory Bonuses (Updated with tenure-based calculations)
+  BONUS_EASTER: {
+    code: 'BONUS_EASTER',
     name: 'Easter Bonus (Δώρο Πάσχα)',
-    description: 'Mandatory Easter bonus equal to half monthly salary',
+    description: 'Calculated based on tenure and earnings, prorated for partial service. Taxable, contributory, and reported in APD.',
     calculation: 'fixed_amount',
     taxable: true,
     contributoryEFKA: true,
@@ -236,10 +222,10 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
     baseWage: false
   },
 
-  CHRISTMAS_BONUS: {
-    code: 'CHRISTMAS_BONUS',
+  BONUS_CHRISTMAS: {
+    code: 'BONUS_CHRISTMAS',
     name: 'Christmas Bonus (Δώρο Χριστουγέννων)',
-    description: 'Mandatory Christmas bonus equal to one monthly salary',
+    description: 'Similar to Easter bonus, based on tenure and prorated. Fully taxable, contributory, and included in APD.',
     calculation: 'fixed_amount',
     taxable: true,
     contributoryEFKA: true,
@@ -248,53 +234,100 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
     baseWage: false
   },
 
-  VACATION_PAY: {
-    code: 'VACATION_PAY',
-    name: 'Vacation Pay (Επίδομα Άδειας)',
-    description: 'Mandatory vacation allowance equal to half monthly salary',
+  ALLOWANCE_LEAVE: {
+    code: 'ALLOWANCE_LEAVE',
+    name: 'Leave Allowance (Επίδομα Άδειας)',
+    description: 'Calculated per tenure and earnings, prorated if leave is partial. Taxable, contributory, included in APD, and not stackable.',
     calculation: 'fixed_amount',
     taxable: true,
     contributoryEFKA: true,
     includedAPD: true,
+    stackable: false, // Not stackable as specified
+    baseWage: false
+  },
+
+  // Tips (Updated with Greek compliance rules)
+  TIPS_DISTRIBUTED: {
+    code: 'TIPS_DISTRIBUTED',
+    name: 'Tips Distributed',
+    description: 'Tips allocated through employer pooling rules. Always taxable, but EFKA contribution may be set as true/false depending on role or arrangement. Reported in APD and not stackable.',
+    calculation: 'fixed_amount',
+    taxable: true,
+    contributoryEFKA: true, // May be configurable per arrangement
+    includedAPD: true,
+    stackable: false, // Not stackable as specified
+    baseWage: false
+  },
+
+  // Allowances (Updated with Greek tax limits)
+  MEAL_VOUCHER: {
+    code: 'MEAL_VOUCHER',
+    name: 'Meal Vouchers',
+    description: 'Non-taxable and non-contributory up to €6 per workday; any excess is taxable and contributory. System automatically splits exempt and taxable amounts. Partially included in APD.',
+    calculation: 'fixed_amount',
+    taxable: false, // Up to €6/day limit, excess is taxable
+    contributoryEFKA: false, // Up to limit, excess is contributory
+    includedAPD: true, // Partially included
+    stackable: true,
+    baseWage: false,
+    constraints: {
+      maxHoursPerMonth: 22 // ~22 work days per month, €6 per day limit
+    }
+  },
+
+  TRAVEL_PER_DIEM: {
+    code: 'TRAVEL_PER_DIEM',
+    name: 'Travel Per Diem',
+    description: 'Domestic and foreign per diems are non-taxable and non-contributory within statutory limits. Excess amounts are reclassified as taxable wages.',
+    calculation: 'fixed_amount',
+    taxable: false, // Within statutory limits, excess is taxable
+    contributoryEFKA: false, // Within limits, excess is contributory
+    includedAPD: false, // Generally not included unless excess
     stackable: true,
     baseWage: false
   },
 
-  // Tips (Special handling for hotel industry)
-  CASH_TIPS: {
-    code: 'CASH_TIPS',
-    name: 'Cash Tips',
-    description: 'Direct cash tips received from customers',
-    calculation: 'fixed_amount',
+  // Sick Pay and Benefits
+  SICK_EMP_50: {
+    code: 'SICK_EMP_50',
+    name: 'Employer Sick Pay (50%)',
+    description: 'Employer sick pay covers the first three days at 50%. Taxable, contributory, and included in APD. EFKA offsets beyond day three are recorded separately.',
+    calculation: 'premium_percentage',
+    premiumRate: 0.50, // 50% of regular pay
     taxable: true,
     contributoryEFKA: true,
     includedAPD: true,
-    stackable: true,
+    stackable: false, // Standalone sick pay
+    baseWage: false,
+    constraints: {
+      maxHoursPerWeek: 24 // 3 days × 8 hours
+    },
+    dependsOn: ['REG']
+  },
+
+  SICK_EFKA: {
+    code: 'SICK_EFKA',
+    name: 'EFKA Sick Benefits',
+    description: 'Benefits paid directly by EFKA. Not considered wages, hence non-taxable, non-contributory, and not included in APD (informational only).',
+    calculation: 'fixed_amount',
+    taxable: false,
+    contributoryEFKA: false,
+    includedAPD: false,
+    stackable: false,
     baseWage: false
   },
 
-  CARD_TIPS: {
-    code: 'CARD_TIPS',
-    name: 'Card Tips',
-    description: 'Tips received through card payments',
-    calculation: 'fixed_amount',
+  HOLIDAY_NOT_WORKED: {
+    code: 'HOLIDAY_NOT_WORKED',
+    name: 'Public Holiday Pay (Not Worked)',
+    description: 'Salaried employees are entitled to paid public holidays at their daily wage. Taxable, contributory, and reported in APD.',
+    calculation: 'hours_times_rate',
     taxable: true,
     contributoryEFKA: true,
     includedAPD: true,
-    stackable: true,
-    baseWage: false
-  },
-
-  TIP_POOL_DIST: {
-    code: 'TIP_POOL_DIST',
-    name: 'Tip Pool Distribution',
-    description: 'Share of pooled tips based on role and performance',
-    calculation: 'fixed_amount',
-    taxable: true,
-    contributoryEFKA: true,
-    includedAPD: true,
-    stackable: true,
-    baseWage: false
+    stackable: false, // Standalone holiday pay
+    baseWage: false,
+    dependsOn: ['REG']
   }
 };
 

@@ -61,6 +61,8 @@ export default function EarningsCodesDemoPage() {
     { code: "NIGHT_25", hours: 8, hourlyRate: 15.50, fixedAmount: undefined },
     { code: "SUNDAY_75", hours: 6, hourlyRate: 15.50, fixedAmount: undefined },
     { code: "OT_TIER1_40", hours: 5, hourlyRate: 15.50, fixedAmount: undefined },
+    { code: "BONUS_EASTER", hours: 0, hourlyRate: 0, fixedAmount: 650 },
+    { code: "TIPS_DISTRIBUTED", hours: 0, hourlyRate: 0, fixedAmount: 85 },
     { code: "MEAL_VOUCHER", hours: 0, hourlyRate: 0, fixedAmount: 120 }
   ]);
   const { toast } = useToast();
@@ -259,8 +261,8 @@ export default function EarningsCodesDemoPage() {
                       </div>
                     ))}
                     
-                    {/* New Premium Codes Showcase */}
-                    {earningsCodesData.premiums.filter(code => ['SUNDAY_75', 'OT_TIER1_40', 'OT_TIER2_60', 'OT_EXCEPTIONAL_80'].includes(code.code)).map((rule) => (
+                    {/* Greek Premium Codes Showcase */}
+                    {earningsCodesData.premiums.filter(code => ['SUNDAY_75', 'HOLIDAY_75', 'OT_TIER1_40', 'OT_TIER2_60'].includes(code.code)).map((rule) => (
                       <div key={rule.code} className="bg-white p-4 rounded-lg border">
                         <div className="flex items-center justify-between mb-2">
                           <Badge variant="default" className="font-mono text-xs">{rule.code}</Badge>
@@ -276,9 +278,83 @@ export default function EarningsCodesDemoPage() {
                         <p className="text-xs text-blue-600">
                           <strong>Premium:</strong> {rule.premiumRate && (rule.premiumRate * 100)}%
                         </p>
-                        {rule.code === 'OT_EXCEPTIONAL_80' && (
+                        {rule.code === 'SUNDAY_75' && (
+                          <p className="text-xs text-green-600 mt-1">
+                            ✓ Requires relevant work permit
+                          </p>
+                        )}
+                        {rule.code === 'HOLIDAY_75' && (
+                          <p className="text-xs text-green-600 mt-1">
+                            ✓ Public holiday hours premium
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Greek Bonuses & Allowances */}
+              <Card className="border-green-200 bg-green-50">
+                <CardHeader>
+                  <CardTitle className="text-green-900">Greek Bonuses & Allowances</CardTitle>
+                  <CardDescription className="text-green-800">
+                    Mandatory Greek bonuses with tenure-based calculations and special allowances
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    {earningsCodesData.bonuses && earningsCodesData.bonuses.filter(code => 
+                      ['BONUS_EASTER', 'BONUS_CHRISTMAS', 'ALLOWANCE_LEAVE'].includes(code.code)
+                    ).map((rule) => (
+                      <div key={rule.code} className="bg-white p-4 rounded-lg border">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="default" className="font-mono text-xs">{rule.code}</Badge>
+                          <div className="flex gap-1">
+                            {rule.taxable && <Badge variant="destructive" className="text-xs">Tax</Badge>}
+                            {rule.contributoryEFKA && <Badge variant="secondary" className="text-xs">EFKA</Badge>}
+                            {rule.includedAPD && <Badge variant="outline" className="text-xs">APD</Badge>}
+                            {!rule.stackable && <Badge variant="outline" className="text-xs bg-red-50">No Stack</Badge>}
+                          </div>
+                        </div>
+                        <h4 className="font-semibold text-sm mb-1">{rule.name}</h4>
+                        <p className="text-xs text-gray-600 mb-2">{rule.description}</p>
+                        {rule.code === 'BONUS_EASTER' && (
+                          <p className="text-xs text-green-600 mt-1">
+                            ✓ Δώρο Πάσχα - Based on tenure, prorated
+                          </p>
+                        )}
+                        {rule.code === 'ALLOWANCE_LEAVE' && (
                           <p className="text-xs text-orange-600 mt-1">
-                            ⚠️ Triggers compliance alert - exceptional use only
+                            ⚠️ Not stackable per Greek payroll law
+                          </p>
+                        )}
+                      </div>
+                    ))}
+
+                    {/* Special Allowances */}
+                    {earningsCodesData.allowances && earningsCodesData.allowances.filter(code => 
+                      ['TIPS_DISTRIBUTED', 'MEAL_VOUCHER', 'SICK_EMP_50'].includes(code.code)
+                    ).map((rule) => (
+                      <div key={rule.code} className="bg-white p-4 rounded-lg border">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="outline" className="font-mono text-xs">{rule.code}</Badge>
+                          <div className="flex gap-1">
+                            {rule.taxable && <Badge variant="destructive" className="text-xs">Tax</Badge>}
+                            {rule.contributoryEFKA && <Badge variant="secondary" className="text-xs">EFKA</Badge>}
+                            {rule.includedAPD && <Badge variant="outline" className="text-xs">APD</Badge>}
+                          </div>
+                        </div>
+                        <h4 className="font-semibold text-sm mb-1">{rule.name}</h4>
+                        <p className="text-xs text-gray-600 mb-2">{rule.description}</p>
+                        {rule.code === 'MEAL_VOUCHER' && (
+                          <p className="text-xs text-blue-600 mt-1">
+                            ✓ €6/day tax-free, excess taxable
+                          </p>
+                        )}
+                        {rule.code === 'TIPS_DISTRIBUTED' && (
+                          <p className="text-xs text-purple-600 mt-1">
+                            ✓ Employer pooling rules apply
                           </p>
                         )}
                       </div>
