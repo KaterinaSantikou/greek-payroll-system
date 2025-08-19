@@ -19,7 +19,7 @@ Preferred communication style: Simple, everyday language.
   - **Time**: Time tracking and schedule management with Punches (Today/Exceptions/Corrections) and Schedules (Publish/Change Log/ERGANI Actions)
   - **Live Compliance**: Real-time monitoring with Digital Card Status, ERGANI Queue, APD & ΦΜΥ deadlines
   - **Cost Insights**: Predictive analytics with Labor Forecast, OT Heatmap, Variance vs Budget
-  - **Payroll & Finance**: Core financial processing and modern payroll platform
+  - **Payroll & Finance**: Comprehensive Greek payroll processing with Runs (Draft/Validate/Finalize/Post-Run Audit), Components (Earnings/Deductions/Rates/Benefits in Kind), and Bonuses (Δώρο Πάσχα/Χριστουγέννων/Επίδομα Άδειας)
   - **Hotel Operations**: Multi-property management and deployment tools
   - **Platform**: Vision & strategy with product roadmap and UX architecture documentation
 - **Implementation Features**: Intelligent state management, accessibility, mobile-first responsive design, and performance optimizations.

@@ -19,7 +19,10 @@ import {
   User,
   UserCheck,
   Gift,
-  Rocket
+  Rocket,
+  Play,
+  Calculator,
+  Settings
 } from "lucide-react";
 
 const uxExample = {
@@ -165,6 +168,46 @@ const uxExample = {
           level3: [
             { name: "Payroll Engine", path: "/payroll", description: "Core calculations" },
             { name: "Modern Payroll", path: "/modern-payroll", description: "Next-gen platform" }
+          ]
+        }
+      ]
+    },
+    {
+      name: "Payroll & Finance",
+      icon: Calculator,
+      color: "bg-emerald-500",
+      description: "Comprehensive Greek payroll processing",
+      level2: [
+        {
+          name: "Runs",
+          icon: Play,
+          description: "End-to-end payroll execution workflow",
+          level3: [
+            { name: "Draft", path: "/payroll", description: "Initial payroll calculations" },
+            { name: "Validate", path: "/modern-payroll", description: "Compliance & accuracy checks" },
+            { name: "Finalize", path: "/payments", description: "Lock & distribute payroll" },
+            { name: "Post-Run Audit", path: "/analytics", description: "Reconciliation & reporting" }
+          ]
+        },
+        {
+          name: "Components",
+          icon: Settings,
+          description: "Payroll calculation elements",
+          level3: [
+            { name: "Earnings", path: "/allowances", description: "Basic pay & overtime" },
+            { name: "Deductions", path: "/compliance", description: "Taxes & insurance" },
+            { name: "Rates", path: "/overtime", description: "Hourly & premium rates" },
+            { name: "Benefits in Kind", path: "/hotel-operations", description: "Non-cash benefits" }
+          ]
+        },
+        {
+          name: "Bonuses",
+          icon: Gift,
+          description: "Greek mandatory bonuses & allowances",
+          level3: [
+            { name: "Δώρο Πάσχα", path: "/payroll-integration", description: "Easter bonus calculation" },
+            { name: "Χριστουγέννων", path: "/manager-workflows", description: "Christmas bonus calculation" },
+            { name: "Επίδομα Άδειας", path: "/leave", description: "Vacation allowance calculation" }
           ]
         }
       ]

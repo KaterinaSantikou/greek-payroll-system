@@ -25,7 +25,8 @@ import {
   Plane,
   Scale,
   Smartphone,
-  Rocket
+  Rocket,
+  Play
 } from "lucide-react";
 
 interface MenuLevel3Item {
@@ -183,12 +184,32 @@ const menuStructure: MenuLevel1Item[] = [
     color: "bg-emerald-500",
     items: [
       {
-        name: "Payroll Processing",
-        icon: Calculator,
+        name: "Runs",
+        icon: Play,
         items: [
-          { name: "Payroll Engine", href: "/payroll", description: "Core calculations" },
-          { name: "Modern Payroll", href: "/modern-payroll", description: "Next-gen platform" },
-          { name: "Payments & Accounting", href: "/payments", description: "Financial processing" },
+          { name: "Draft", href: "/payroll", description: "Initial payroll calculations" },
+          { name: "Validate", href: "/modern-payroll", description: "Compliance & accuracy checks" },
+          { name: "Finalize", href: "/payments", description: "Lock & distribute payroll" },
+          { name: "Post-Run Audit", href: "/analytics", description: "Reconciliation & reporting" },
+        ]
+      },
+      {
+        name: "Components",
+        icon: Settings,
+        items: [
+          { name: "Earnings", href: "/allowances", description: "Basic pay & overtime" },
+          { name: "Deductions", href: "/compliance", description: "Taxes & insurance" },
+          { name: "Rates", href: "/overtime", description: "Hourly & premium rates" },
+          { name: "Benefits in Kind", href: "/hotel-operations", description: "Non-cash benefits" },
+        ]
+      },
+      {
+        name: "Bonuses",
+        icon: Gift,
+        items: [
+          { name: "Δώρο Πάσχα", href: "/payroll-integration", description: "Easter bonus calculation" },
+          { name: "Χριστουγέννων", href: "/manager-workflows", description: "Christmas bonus calculation" },
+          { name: "Επίδομα Άδειας", href: "/leave", description: "Vacation allowance calculation" },
         ]
       }
     ]
