@@ -310,6 +310,58 @@ const uxExample = {
           ]
         }
       ]
+    },
+    {
+      name: "Settings",
+      icon: Settings,
+      color: "bg-slate-500",
+      description: "System configuration and administration",
+      level2: [
+        {
+          name: "Policies",
+          icon: Scale,
+          description: "Workplace policy configuration",
+          level3: [
+            { name: "Overtime", path: "/overtime", description: "Overtime policy configuration" },
+            { name: "Night", path: "/schedules", description: "Night shift premium rules" },
+            { name: "Sunday/Holiday", path: "/leave", description: "Weekend & holiday rates" },
+            { name: "Breaks", path: "/advanced-time-capture", description: "Break time policies" },
+            { name: "Tips", path: "/hotel-operations", description: "Tip pooling & distribution" }
+          ]
+        },
+        {
+          name: "Compliance",
+          icon: Shield,
+          description: "Legal compliance configuration",
+          level3: [
+            { name: "Minimum Wage Tables", path: "/compliance", description: "Greek minimum wage rates" },
+            { name: "Effective-Date Rules", path: "/legal", description: "Policy effective date management" }
+          ]
+        },
+        {
+          name: "Integrations",
+          icon: Zap,
+          description: "External system connections",
+          level3: [
+            { name: "ERGANI", path: "/ergani-compliance", description: "Ministry of Labor connection" },
+            { name: "EFKA", path: "/payroll-integration", description: "Social security integration" },
+            { name: "AADE", path: "/payments", description: "Tax authority connection" },
+            { name: "Banks", path: "/analytics", description: "Banking system integrations" },
+            { name: "ERP", path: "/modern-payroll", description: "Enterprise system connectors" },
+            { name: "SSO", path: "/manager-workflows", description: "Single sign-on configuration" }
+          ]
+        },
+        {
+          name: "Security",
+          icon: UserCheck,
+          description: "Security and access control",
+          level3: [
+            { name: "Roles", path: "/employees", description: "Role-based access control" },
+            { name: "Data Retention", path: "/employee-master", description: "Data retention policies" },
+            { name: "Audit Log", path: "/payroll", description: "System audit logging" }
+          ]
+        }
+      ]
     }
   ]
 };
@@ -547,6 +599,7 @@ export default function UXArchitecture() {
                 <Badge variant="outline">Accounting</Badge>
                 <Badge variant="outline">Filings</Badge>
                 <Badge variant="outline">Hotel Operations</Badge>
+                <Badge variant="outline">Settings</Badge>
                 <Badge variant="outline">Platform</Badge>
               </div>
             </div>

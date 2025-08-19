@@ -24,6 +24,7 @@ Preferred communication style: Simple, everyday language.
   - **Accounting**: Financial reconciliation and GL integration with Journal Export (Map/Preview/Post) and Reconciliation (Payroll vs GL/Variances)
   - **Filings**: Greek government compliance submissions with ERGANI II (Hires/Schedules/OT/Terminations/Receipts), e-EFKA/APD (Build/Validate/Submit/Receipts), and AADE/ΦΜΥ (Build File/Merge/Submit/Payment)
   - **Hotel Operations**: Multi-property management and deployment tools
+  - **Settings**: System configuration with Policies (Overtime/Night/Sunday/Holiday/Breaks/Tips), Compliance (Minimum Wage Tables/Effective-Date Rules), Integrations (ERGANI/EFKA/AADE/Banks/ERP/SSO), and Security (Roles/Data Retention/Audit Log)
   - **Platform**: Vision & strategy with product roadmap and UX architecture documentation
 - **Implementation Features**: Intelligent state management, accessibility, mobile-first responsive design, and performance optimizations.
 

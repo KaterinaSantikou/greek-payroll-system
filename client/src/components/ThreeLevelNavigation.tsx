@@ -325,6 +325,53 @@ const menuStructure: MenuLevel1Item[] = [
     ]
   },
   {
+    name: "Settings",
+    icon: Settings,
+    color: "bg-slate-500",
+    items: [
+      {
+        name: "Policies",
+        icon: Scale,
+        items: [
+          { name: "Overtime", href: "/overtime", description: "Overtime policy configuration" },
+          { name: "Night", href: "/schedules", description: "Night shift premium rules" },
+          { name: "Sunday/Holiday", href: "/leave", description: "Weekend & holiday rates" },
+          { name: "Breaks", href: "/advanced-time-capture", description: "Break time policies" },
+          { name: "Tips", href: "/hotel-operations", description: "Tip pooling & distribution" },
+        ]
+      },
+      {
+        name: "Compliance",
+        icon: Shield,
+        items: [
+          { name: "Minimum Wage Tables", href: "/compliance", description: "Greek minimum wage rates" },
+          { name: "Effective-Date Rules", href: "/legal", description: "Policy effective date management" },
+        ]
+      },
+      {
+        name: "Integrations",
+        icon: Zap,
+        items: [
+          { name: "ERGANI", href: "/ergani-compliance", description: "Ministry of Labor connection" },
+          { name: "EFKA", href: "/payroll-integration", description: "Social security integration" },
+          { name: "AADE", href: "/payments", description: "Tax authority connection" },
+          { name: "Banks", href: "/analytics", description: "Banking system integrations" },
+          { name: "ERP", href: "/modern-payroll", description: "Enterprise system connectors" },
+          { name: "SSO", href: "/manager-workflows", description: "Single sign-on configuration" },
+        ]
+      },
+      {
+        name: "Security",
+        icon: UserCheck,
+        items: [
+          { name: "Roles", href: "/employees", description: "Role-based access control" },
+          { name: "Data Retention", href: "/employee-master", description: "Data retention policies" },
+          { name: "Audit Log", href: "/payroll", description: "System audit logging" },
+        ]
+      }
+    ]
+  },
+  {
     name: "Platform",
     icon: Sparkles,
     color: "bg-indigo-500",
