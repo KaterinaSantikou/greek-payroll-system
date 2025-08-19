@@ -250,7 +250,7 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   TIPS_DISTRIBUTED: {
     code: 'TIPS_DISTRIBUTED',
     name: 'Tips Distributed',
-    description: 'Tips allocated through employer pooling rules. Always taxable, but EFKA contribution may be set as true/false depending on role or arrangement. Reported in APD and not stackable.',
+    description: 'Tips allocated through employer pooling mechanisms. Always taxable; EFKA contribution may vary based on role or arrangement. Reported in APD and not stackable.',
     calculation: 'fixed_amount',
     taxable: true,
     contributoryEFKA: true, // May be configurable per arrangement
@@ -262,8 +262,8 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   // Allowances (Updated with Greek tax limits)
   MEAL_VOUCHER: {
     code: 'MEAL_VOUCHER',
-    name: 'Meal Vouchers',
-    description: 'Non-taxable and non-contributory up to €6 per workday; any excess is taxable and contributory. System automatically splits exempt and taxable amounts. Partially included in APD.',
+    name: 'Meal Voucher',
+    description: 'Meal vouchers or allowances up to €6 per workday are exempt from tax and EFKA contributions. Any excess is taxable and contributory. The payroll engine automatically splits exempt and taxable amounts.',
     calculation: 'fixed_amount',
     taxable: false, // Up to €6/day limit, excess is taxable
     contributoryEFKA: false, // Up to limit, excess is contributory
@@ -278,7 +278,7 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
   TRAVEL_PER_DIEM: {
     code: 'TRAVEL_PER_DIEM',
     name: 'Travel Per Diem',
-    description: 'Domestic and foreign per diems are non-taxable and non-contributory within statutory limits. Excess amounts are reclassified as taxable wages.',
+    description: 'Domestic and foreign per diems are non-taxable and non-contributory within statutory limits. Excess amounts are automatically reclassified as taxable wages.',
     calculation: 'fixed_amount',
     taxable: false, // Within statutory limits, excess is taxable
     contributoryEFKA: false, // Within limits, excess is contributory

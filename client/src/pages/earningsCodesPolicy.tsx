@@ -68,12 +68,12 @@ const POLICY_SECTIONS: PolicySection[] = [
   {
     id: "allowances-tips",
     title: "Allowances & Tip Distribution",
-    content: "Allowances receive special tax treatment up to statutory limits. Meal vouchers are tax-free up to €6 per workday with automatic excess splitting. Tips distributed through employer pooling are always taxable, with EFKA treatment configurable by role. Travel per diems follow domestic/foreign statutory limits with excess reclassification.",
-    compliance: ["€6/day meal voucher tax-free limit", "Automatic tax splitting for excess amounts", "Tip pooling documentation requirements"],
+    content: "Other compensations receive special tax treatment based on type and statutory limits. Tips distributed through employer pooling mechanisms are always taxable with variable EFKA treatment. Meal vouchers are exempt up to €6 per workday with automatic excess splitting. Travel per diems are non-taxable within statutory limits with automatic reclassification of excess amounts.",
+    compliance: ["€6/day meal voucher exemption limit", "Automatic payroll engine splitting", "Tip pooling mechanism documentation", "Statutory per diem limits compliance"],
     examples: [
-      "MEAL_VOUCHER: €6/day tax-free, excess taxable",
-      "TIPS_DISTRIBUTED: Always taxable, EFKA per arrangement",
-      "TRAVEL_PER_DIEM: Within limits tax-free, excess taxable"
+      "TIPS_DISTRIBUTED: Always taxable, EFKA varies by arrangement",
+      "MEAL_VOUCHER: €6/day exempt, automatic excess splitting",
+      "TRAVEL_PER_DIEM: Statutory limits exempt, automatic reclassification"
     ]
   },
   {
