@@ -50,6 +50,7 @@ interface NavigationItem {
   href?: string;
   badge?: string | number;
   urgent?: boolean;
+  badgeType?: 'info' | 'warning' | 'danger' | 'success';
   children?: NavigationItem[];
   roles?: string[];
 }
@@ -106,7 +107,8 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: UserPlus,
           href: '/onboarding',
           badge: '5',
-          urgent: true
+          urgent: true,
+          badgeType: 'warning'
         },
         {
           id: 'exits',
@@ -142,7 +144,8 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: AlertTriangle,
           href: '/exceptions',
           badge: '7',
-          urgent: true
+          urgent: true,
+          badgeType: 'danger'
         },
         {
           id: 'schedules',
@@ -211,20 +214,26 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: Shield,
           href: '/filings/ergani',
           badge: '2',
-          urgent: true
+          urgent: true,
+          badgeType: 'danger'
         },
         {
           id: 'efka-apd',
           label: t('nav.efka-apd'),
           icon: Receipt,
           href: '/filings/efka',
-          badge: '1'
+          badge: '1',
+          urgent: true,
+          badgeType: 'warning'
         },
         {
           id: 'aade-fmy',
           label: t('nav.aade-fmy'),
           icon: FileText,
-          href: '/filings/aade'
+          href: '/filings/aade',
+          badge: '3',
+          urgent: false,
+          badgeType: 'warning'
         },
         {
           id: 'inspector-pack',
@@ -256,7 +265,10 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           id: 'reconciliation',
           label: t('nav.reconciliation'),
           icon: BookOpen,
-          href: '/payments'
+          href: '/payments',
+          badge: '4',
+          urgent: true,
+          badgeType: 'danger'
         }
       ]
     },
@@ -518,7 +530,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     }
   }, [focusedIndex, flatItems]);
 
-  const renderBadge = (badge?: string | number, urgent?: boolean, label?: string) => {
+  const renderBadge = (badge?: string | number, urgent?: boolean, label?: string, badgeType?: 'info' | 'warning' | 'danger' | 'success') => {
     if (!badge) return null;
     
     // Create ARIA label in Greek
@@ -528,12 +540,13 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       return `${badge} στοιχεία`;
     };
     
-    // Determine badge type based on context
+    // Determine badge type based on context and explicit badgeType
     const getBadgeClass = () => {
-      if (urgent) return "bg-red-500 text-white"; // Danger for failures
-      const numValue = typeof badge === 'string' ? parseInt(badge) : badge;
-      if (numValue > 0 && numValue < 10) return "bg-amber-500 text-white"; // Warning for due items
-      return "bg-blue-500 text-white"; // Info for counts
+      if (badgeType === 'danger') return "bg-red-500 text-white"; // Critical failures/rejects
+      if (badgeType === 'warning') return "bg-amber-500 text-white"; // Due items/pending tasks
+      if (badgeType === 'success') return "bg-green-500 text-white"; // Completed items
+      if (urgent) return "bg-red-500 text-white"; // Legacy urgent fallback
+      return "bg-blue-500 text-white"; // Info for general counts
     };
     
     return (
@@ -631,7 +644,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
                   ) : labelSpan;
                 })()}
                 <div className="flex items-center gap-2 ml-auto">
-                  {renderBadge(item.badge, item.urgent, item.label)}
+                  {renderBadge(item.badge, item.urgent, item.label, item.badgeType)}
                   {isExpanded ? (
                     <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 motion-reduce:transition-none motion-reduce:duration-0" />
                   ) : (
@@ -724,7 +737,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
                 ) : labelSpan;
               })()}
               <div className="ml-auto">
-                {renderBadge(item.badge, item.urgent, item.label)}
+                {renderBadge(item.badge, item.urgent, item.label, item.badgeType)}
               </div>
             </>
           )}
