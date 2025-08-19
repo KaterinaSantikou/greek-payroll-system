@@ -46,6 +46,7 @@ import { registerUserProfileRoutes } from "./api/userProfile";
 import { registerAICopilotRoutes } from "./api/aiCopilot";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
+import { PayExplanationService } from "./payExplanationService";
 import { 
   insertPaymentInstructionsSchema, 
   insertGlExportsSchema 
@@ -65,6 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const selfServiceManager = new SelfServiceManager();
   const advancedAnalyticsService = new AdvancedAnalyticsService();
   const hotelEnhancementsService = new HotelEnhancementsService();
+  const payExplanationService = new PayExplanationService(storage);
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
@@ -814,6 +816,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching exception validations:", error);
       res.status(500).json({ error: "Failed to fetch exception validations" });
+    }
+  });
+
+  // Pay Explanation API endpoint
+  app.get("/api/paycheck/:paycheckId/explanation", isAuthenticated, async (req, res) => {
+    try {
+      const { paycheckId } = req.params;
+      const { language = 'el', includePolicy = 'true' } = req.query;
+      
+      // Configure explanation service
+      const explanationConfig = {
+        language: language as 'el' | 'en',
+        threshold: 10.0,
+        includePolicy: includePolicy === 'true',
+        verbosity: 'detailed' as const
+      };
+      
+      // Generate explanation using the service
+      const explanation = await payExplanationService.generateExplanation(
+        paycheckId,
+        explanationConfig
+      );
+      
+      res.json({
+        paycheckId,
+        explanation,
+        metadata: {
+          hasComparison: false, // Will be determined by the service
+          hasDetailedBreakdown: true,
+          language: explanationConfig.language,
+          generatedAt: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      console.error("Error generating pay explanation:", error);
+      res.status(500).json({ error: "Failed to generate pay explanation" });
     }
   });
 

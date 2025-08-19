@@ -8,6 +8,8 @@ import {
   timesheets,
   wageComponents,
   departments,
+  paycheckHistory,
+  payrollLines,
   type User,
   type UpsertUser,
   type Property,
@@ -27,6 +29,10 @@ import {
   type Department,
   type InsertDepartment,
 } from "@shared/schema";
+
+// Additional payroll-related types
+type PaycheckHistory = typeof paycheckHistory.$inferSelect;
+type PayrollLine = typeof payrollLines.$inferSelect;
 import { db } from "./db";
 import { eq, like, and, desc, or, gte, lte, between, sql } from "drizzle-orm";
 
@@ -96,6 +102,13 @@ export interface IStorage {
   createDepartment(department: InsertDepartment): Promise<Department>;
   updateDepartment(departmentId: string, department: Partial<InsertDepartment>): Promise<Department>;
   deleteDepartment(departmentId: string): Promise<void>;
+
+  // Paycheck history operations
+  getPaycheckHistory(paycheckId: string): Promise<PaycheckHistory | undefined>;
+  getPaycheckHistoryByEmployee(employeeId: string): Promise<PaycheckHistory[]>;
+  
+  // Payroll lines operations  
+  getPayrollLinesByPaycheck(paycheckId: string): Promise<PayrollLine[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -549,6 +562,26 @@ export class DatabaseStorage implements IStorage {
 
   async deleteDepartment(departmentId: string): Promise<void> {
     await db.delete(departments).where(eq(departments.departmentId, departmentId));
+  }
+
+  // Paycheck history operations
+  async getPaycheckHistory(paycheckId: string): Promise<PaycheckHistory | undefined> {
+    const [paycheck] = await db.select().from(paycheckHistory).where(eq(paycheckHistory.paycheckId, paycheckId));
+    return paycheck;
+  }
+
+  async getPaycheckHistoryByEmployee(employeeId: string): Promise<PaycheckHistory[]> {
+    return await db.select().from(paycheckHistory)
+      .where(eq(paycheckHistory.employeeId, employeeId))
+      .orderBy(desc(paycheckHistory.payPeriodEnd));
+  }
+  
+  // Payroll lines operations  
+  async getPayrollLinesByPaycheck(paycheckId: string): Promise<PayrollLine[]> {
+    // Note: This assumes payroll lines are linked to paycheck via runId in payslipData or similar
+    // For now, return empty array as we need to establish the relationship
+    // In a real implementation, you'd join on the appropriate foreign key
+    return [];
   }
 }
 

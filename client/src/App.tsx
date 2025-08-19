@@ -56,6 +56,7 @@ import RoleBasedDashboard from "@/components/RoleBasedDashboard";
 import { AICopilot } from "@/components/AICopilot";
 import MobilePunch from "@/pages/mobilePunch";
 import PayrollPreview from "@/pages/payrollPreview";
+import PayExplanationDemo from "@/pages/payExplanationDemo";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -122,6 +123,7 @@ function Router() {
             <Route path="/mobile-approvals" component={lazy(() => import("./components/MobileManagerApproval"))} />
             <Route path="/mobile-punch" component={MobilePunch} />
             <Route path="/payroll-preview" component={PayrollPreview} />
+            <Route path="/pay-explanation-demo" component={PayExplanationDemo} />
         <Route path="/ai-copilot" component={AICopilot} />
         <Route component={NotFound} />
       </Switch>
