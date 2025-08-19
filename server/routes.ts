@@ -3310,6 +3310,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.warn("Notification routes not available:", error);
   }
 
+  // Smart Notifications and Approval endpoints
+  app.post('/api/approvals/:approvalId/approve', isAuthenticated, async (req, res) => {
+    try {
+      const { approvalId } = req.params;
+      const userId = req.user?.claims?.sub;
+      const { reason } = req.body;
+
+      const { smartNotifications } = await import('./smartNotificationsService');
+      const result = await smartNotifications.handleApprovalResponse(
+        approvalId, 
+        'approve', 
+        userId, 
+        reason
+      );
+
+      res.json({ 
+        success: true, 
+        message: 'Approval processed successfully',
+        context: result 
+      });
+    } catch (error) {
+      console.error('Error processing approval:', error);
+      res.status(500).json({ error: 'Failed to process approval' });
+    }
+  });
+
+  app.post('/api/approvals/:approvalId/reject', isAuthenticated, async (req, res) => {
+    try {
+      const { approvalId } = req.params;
+      const userId = req.user?.claims?.sub;
+      const { reason } = req.body;
+
+      const { smartNotifications } = await import('./smartNotificationsService');
+      const result = await smartNotifications.handleApprovalResponse(
+        approvalId, 
+        'reject', 
+        userId, 
+        reason
+      );
+
+      res.json({ 
+        success: true, 
+        message: 'Rejection processed successfully',
+        context: result 
+      });
+    } catch (error) {
+      console.error('Error processing rejection:', error);
+      res.status(500).json({ error: 'Failed to process rejection' });
+    }
+  });
+
+  // Demo endpoints for testing smart notifications
+  app.post('/api/demo/send-failure-alert', isAuthenticated, async (req, res) => {
+    try {
+      const { smartNotifications } = await import('./smartNotificationsService');
+      
+      await smartNotifications.sendFailureAlert({
+        system: 'ERGANI',
+        errorCode: 'ERG-4001',
+        errorMessage: 'Connection timeout while submitting employee punches',
+        affectedEmployees: ['emp-001', 'emp-002', 'emp-003'],
+        propertyId: 'property-demo-01',
+        managerId: req.user?.claims?.sub || 'manager-demo',
+        retryAttempt: 2,
+        maxRetries: 3
+      });
+
+      res.json({ success: true, message: 'Failure alert sent to Slack and Teams' });
+    } catch (error) {
+      console.error('Error sending failure alert:', error);
+      res.status(500).json({ error: 'Failed to send failure alert' });
+    }
+  });
+
+  app.post('/api/demo/send-approval-request', isAuthenticated, async (req, res) => {
+    try {
+      const { smartNotifications } = await import('./smartNotificationsService');
+      const approvalId = `approval-${Date.now()}`;
+      
+      await smartNotifications.sendApprovalRequest({
+        type: 'approval_required',
+        approvalId,
+        title: 'Overtime Request Approval',
+        description: 'Maria Papadopoulos is requesting approval for 4.5 hours of overtime on Saturday night shift',
+        urgency: 'medium',
+        propertyId: 'property-demo-01',
+        employeeId: 'emp-001',
+        managerId: req.user?.claims?.sub || 'manager-demo',
+        amount: 67.50,
+        currency: 'EUR',
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+        metadata: {
+          shiftDate: '2025-01-18',
+          department: 'Housekeeping',
+          hourlyRate: 15.00,
+          overtimeHours: 4.5
+        }
+      });
+
+      res.json({ success: true, message: 'Approval request sent', approvalId });
+    } catch (error) {
+      console.error('Error sending approval request:', error);
+      res.status(500).json({ error: 'Failed to send approval request' });
+    }
+  });
+
+  app.post('/api/demo/send-payroll-ready', isAuthenticated, async (req, res) => {
+    try {
+      const { smartNotifications } = await import('./smartNotificationsService');
+      
+      await smartNotifications.sendPayrollReadyNotification({
+        propertyId: 'property-demo-01',
+        managerId: req.user?.claims?.sub || 'manager-demo',
+        periodEnd: new Date('2025-01-31'),
+        employeeCount: 47,
+        totalGrossPay: 125840.50,
+        totalNetPay: 89330.25,
+        currency: 'EUR',
+        complianceIssues: 2,
+        pendingApprovals: 1
+      });
+
+      res.json({ success: true, message: 'Payroll ready notification sent' });
+    } catch (error) {
+      console.error('Error sending payroll notification:', error);
+      res.status(500).json({ error: 'Failed to send payroll notification' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

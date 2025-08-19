@@ -34,7 +34,7 @@ import {
 type PaycheckHistory = typeof paycheckHistory.$inferSelect;
 type PayrollLine = typeof payrollLines.$inferSelect;
 import { db } from "./db";
-import { eq, like, and, desc, or, gte, lte, between, sql } from "drizzle-orm";
+import { eq, like, and, desc, or, gte, lte, between, sql, lt } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -109,6 +109,13 @@ export interface IStorage {
   
   // Payroll lines operations  
   getPayrollLinesByPaycheck(paycheckId: string): Promise<PayrollLine[]>;
+
+  // Approval context and actions for Slack/Teams approvals
+  createApprovalContext(context: any): Promise<any>;
+  getApprovalContext(id: string): Promise<any | undefined>;
+  updateApprovalContext(id: string, updates: any): Promise<any>;
+  createApprovalAction(action: any): Promise<any>;
+  getApprovalActions(approvalId: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -618,6 +625,40 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(punchEvents.timestamp);
+  }
+
+  // Approval context and actions operations
+  async createApprovalContext(contextData: any): Promise<any> {
+    // Mock implementation - in a real app would use db.insert
+    return {
+      id: contextData.id,
+      ...contextData,
+      createdAt: new Date(),
+    };
+  }
+
+  async getApprovalContext(id: string): Promise<any | undefined> {
+    // Mock implementation - in a real app would query database
+    return null;
+  }
+
+  async updateApprovalContext(id: string, updates: any): Promise<any> {
+    // Mock implementation - in a real app would use db.update
+    return { id, ...updates, updatedAt: new Date() };
+  }
+
+  async createApprovalAction(actionData: any): Promise<any> {
+    // Mock implementation - in a real app would use db.insert
+    return {
+      id: Date.now(),
+      ...actionData,
+      timestamp: new Date(),
+    };
+  }
+
+  async getApprovalActions(approvalId: string): Promise<any[]> {
+    // Mock implementation - in a real app would query database
+    return [];
   }
 }
 

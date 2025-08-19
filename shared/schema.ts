@@ -1778,3 +1778,42 @@ export type ErganiSubmission = typeof erganiSubmissions.$inferSelect;
 export type InsertErganiSubmission = z.infer<typeof insertErganiSubmissionsSchema>;
 export type DigitalWorkCardEvent = typeof digitalWorkCardEvents.$inferSelect;
 export type InsertDigitalWorkCardEvent = z.infer<typeof insertDigitalWorkCardEventsSchema>;
+
+// Approval Context and Actions tables for Slack/Teams approvals
+export const approvalContexts = pgTable("approval_contexts", {
+  id: varchar("id").primaryKey(),
+  type: varchar("type", { length: 50 }).notNull(), // overtime, exception, filing
+  propertyId: varchar("property_id").references(() => properties.propertyId),
+  employeeId: varchar("employee_id").references(() => employees.employeeId),
+  managerId: varchar("manager_id").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }),
+  currency: varchar("currency", { length: 3 }).default("EUR"),
+  urgency: varchar("urgency", { length: 20 }).notNull(), // low, medium, high, critical
+  metadata: jsonb("metadata").default('{}'),
+  status: varchar("status", { length: 20 }).default("pending"), // 'pending', 'approved', 'rejected', 'expired'
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const approvalActions = pgTable("approval_actions", {
+  id: serial("id").primaryKey(),
+  approvalId: varchar("approval_id").references(() => approvalContexts.id).notNull(),
+  action: varchar("action", { length: 20 }).notNull(), // 'approve', 'reject', 'view'
+  userId: varchar("user_id").notNull(),
+  reason: text("reason"),
+  source: varchar("source", { length: 20 }).notNull(), // 'slack', 'teams', 'web'
+  timestamp: timestamp("timestamp").defaultNow(),
+  auditTrail: jsonb("audit_trail").default('[]'),
+});
+
+export type ApprovalContext = typeof approvalContexts.$inferSelect;
+export type InsertApprovalContext = typeof approvalContexts.$inferInsert;
+export type ApprovalAction = typeof approvalActions.$inferSelect;
+export type InsertApprovalAction = typeof approvalActions.$inferInsert;
+
+export const insertApprovalContextSchema = createInsertSchema(approvalContexts);
+export const insertApprovalActionSchema = createInsertSchema(approvalActions);
+
