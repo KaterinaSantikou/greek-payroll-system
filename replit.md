@@ -11,6 +11,7 @@ PayrollSync is a comprehensive Greek HR & Payroll Management System designed to 
 - **Bilingual Greek-English System**: Implemented comprehensive localization with authentic Greek translations, role-based personalized dashboards, and employee self-service portal with language switching functionality
 - **Role-Based Default Views**: Created contextual experiences for Payroll Admin, HR, Manager, Compliance/Auditor, and Employee roles with tailored dashboards, quick actions, and access restrictions
 - **Advanced Responsive Sidebar Navigation**: Complete responsive sidebar with desktop (280px/72px), tablet hover-expansion, mobile modal drawer, state persistence, and comprehensive interaction patterns including Ctrl+Click new tabs, right-click context menus, keyboard focus rings, and tooltips in collapsed mode
+- **Enhanced ESRS S1 Module Design**: Comprehensive module with enhanced data model (person_id, gender, birth_year, fte_pct, annual_total_compensation, hours_worked_period), versioned calculation engine with runtime switching between esrs_s1.v2023 and esrs_s1.v2025_quickfix, country/entity-based calculations with roll-up aggregation, and materiality assessment system per S1 topic with ESRS 1 Appendix E compliance
 
 # User Preferences
 
@@ -42,6 +43,7 @@ Preferred communication style: Simple, everyday language.
 - **Primary Database**: PostgreSQL via Neon serverless.
 - **Schema Management**: Drizzle Kit for migrations.
 - **Core Data Model**: Complete Greek payroll system with primary entities for Employee, Contract, Shift, Punch, Timesheet, PayrollLine, and Filing.
+- **Enhanced ESRS S1 Schema**: Additional tables for s1CompensationTracking, s1LeaveEligibility, s1MaterialityAssessment, s1CalculationRulesets, s1HSFatalities with comprehensive sustainability reporting support.
 - **Validation**: Greek-specific validations for AFM and AMKA.
 
 ## System Design & Business Logic
@@ -54,6 +56,7 @@ Preferred communication style: Simple, everyday language.
 - **Digital Work Card System**: Mobile and kiosk solution for real-time time tracking with automated ERGANI II synchronization, supporting hotel industry work patterns and offline functionality.
 - **Advanced Time Capture & Compliance Core**: Supports various clock methods (Mobile QR/NFC, Kiosk/Tablet, Web, BLE/geofenced) with real-time validation against schedules, break rules, and CBA compliance.
 - **Enterprise Architecture**: Separation of concerns with Mobile App/Kiosk App, Time Service API, Compliance Connector (ERGANI II), Payroll Connector, Policy Engine, and Data Lake & BI.
+- **ESRS S1 Calculation Engine**: Versioned calculation system with precise formulas - Gender Pay Gap: (Avg male gross hourly – Avg female gross hourly) ÷ Avg male gross hourly, Top-to-median ratio: Highest paid total comp ÷ median employee comp, Work-life balance usage rates: leave takers ÷ eligible population, Health & safety: incidents/100 FTE with fatality tracking.
 
 # External Dependencies
 

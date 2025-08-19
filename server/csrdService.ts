@@ -1,5 +1,6 @@
 import { db } from "./db";
 import { eq, sql, and, gte, lte, isNull, desc, asc } from "drizzle-orm";
+import { ESRSCalculationEngine } from "./esrsCalculationEngine";
 import {
   employees,
   contracts,
@@ -13,6 +14,7 @@ import {
   s1CollectiveBargaining,
   s1WorkLifeBalance,
   s1HealthSafetyIncidents,
+  s1MaterialityAssessment,
   csrdAuditTrail,
   csrdExportLog,
   type CsrdReportingPeriod,
@@ -28,6 +30,106 @@ import {
 } from "@shared/schema";
 
 export class CsrdService {
+  private calculationEngine: ESRSCalculationEngine;
+  
+  constructor() {
+    this.calculationEngine = new ESRSCalculationEngine();
+  }
+  
+  /**
+   * Switch ESRS calculation version (runtime configurable)
+   */
+  async switchESRSVersion(version: string): Promise<void> {
+    await this.calculationEngine.switchRulesetVersion(version);
+  }
+  
+  /**
+   * Create or update materiality assessment for S1 topics
+   */
+  async assessMateriality(data: {
+    reportingPeriodId: string;
+    topicArea: string;
+    topicCode: string;
+    topicDescription: string;
+    isMaterial: boolean;
+    materialityRationale: string;
+    assessedBy: string;
+    impactMagnitude?: string;
+    impactLikelihood?: string;
+    stakeholderInterest?: string;
+  }): Promise<any> {
+    const [assessment] = await db
+      .insert(s1MaterialityAssessment)
+      .values({
+        ...data,
+        assessmentDate: new Date().toISOString().split('T')[0],
+      })
+      .returning();
+
+    // Create audit trail
+    await this.createAuditEntry({
+      reportingPeriodId: data.reportingPeriodId,
+      auditType: "assessment",
+      tableName: "s1_materiality_assessment",
+      recordId: assessment.id,
+      dataSource: "manual_assessment",
+      calculationMethod: "ESRS 1 Appendix E materiality determination",
+      inputParameters: {
+        topicCode: data.topicCode,
+        impactMagnitude: data.impactMagnitude,
+        impactLikelihood: data.impactLikelihood,
+        stakeholderInterest: data.stakeholderInterest,
+      },
+      newValue: assessment,
+      userId: data.assessedBy,
+      systemVersion: "1.0",
+      esrsVersion: "1.0",
+    });
+
+    return assessment;
+  }
+
+  /**
+   * Enhanced country/entity-based calculations using versioned engine
+   */
+  async calculateEnhancedS1Metrics(
+    reportingPeriodId: string,
+    entity?: string,
+    country: string = "GRC"
+  ): Promise<{
+    genderPayGap: any;
+    topToMedianRatio: any;
+    workLifeUsage: any;
+    healthSafetyRates: any;
+    calculationMetadata: {
+      engine: string;
+      version: string;
+      timestamp: string;
+    };
+  }> {
+    const year = new Date().getFullYear().toString();
+    
+    // Run all calculations with country/entity segmentation
+    const [genderPayGap, topToMedianRatio, workLifeUsage, healthSafetyRates] = await Promise.all([
+      this.calculationEngine.genderPayGap(reportingPeriodId, entity, country),
+      this.calculationEngine.highestToMedianRatio(year, entity, country),
+      this.calculationEngine.worklifeUsage(reportingPeriodId, entity, country),
+      this.calculationEngine.hnsIncidenceRates(reportingPeriodId, entity, country),
+    ]);
+
+    return {
+      genderPayGap,
+      topToMedianRatio,
+      workLifeUsage,
+      healthSafetyRates,
+      calculationMetadata: {
+        engine: "ESRSCalculationEngine",
+        version: "esrs_s1.v2025_quickfix",
+        timestamp: new Date().toISOString(),
+      },
+    };
+  }
+
   /**
    * Create a new CSRD reporting period with ESRS version tracking
    */

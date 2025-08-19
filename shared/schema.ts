@@ -55,16 +55,24 @@ export const employees = pgTable("employees", {
   employeeNumber: varchar("employee_number", { length: 50 }).unique().notNull(), // Internal employee number
   
   // Personal Data
+  personId: varchar("person_id", { length: 50 }).unique().notNull(), // Unique person identifier for ESRS S1
   name: varchar("name", { length: 200 }).notNull(), // Full name
   afm: varchar("afm", { length: 9 }).unique(), // Greek Tax ID
   amka: varchar("amka", { length: 11 }).unique(), // Social Security Number
   paaypa: varchar("paaypa", { length: 20 }), // Unified Social Security Registry
   bankIban: varchar("bank_iban", { length: 34 }), // Bank account for salary
   dateOfBirth: date("date_of_birth"),
+  birthYear: integer("birth_year"), // Year of birth for ESRS S1 age segmentation
+  gender: varchar("gender", { length: 20 }), // M, F, Non-binary, Not disclosed - for pay gap analysis
   nationalityCode: varchar("nationality_code", { length: 3 }).default("GRC"),
+  country: varchar("country", { length: 3 }).default("GRC"), // Country for ESRS S1 segmentation
   
-  // Employment Contract Data
+  // Employment Contract Data & ESRS S1 Classification
+  employeeFlag: boolean("employee_flag").default(true), // True for employees, false for non-employees
+  nonEmployeeFlag: boolean("non_employee_flag").default(false), // Contractors, consultants
   employmentType: varchar("employment_type", { length: 50 }).notNull(), // indefinite, fixed-term, seasonal
+  contractType: varchar("contract_type", { length: 50 }).notNull(), // ESRS S1 contract type classification
+  ftePct: decimal("fte_pct", { precision: 5, scale: 2 }).default("100.00"), // FTE percentage (e.g., 100.00, 50.00)
   grade: varchar("grade", { length: 50 }), // Job grade/level
   unionCbaRef: varchar("union_cba_ref", { length: 100 }), // Collective Bargaining Agreement reference
   hireDate: date("hire_date").notNull(),
@@ -80,6 +88,9 @@ export const employees = pgTable("employees", {
   maritalStatus: varchar("marital_status", { length: 20 }), // single, married, divorced, widowed
   dependents: integer("dependents").default(0), // Number of dependent children
   disabilityPercentage: integer("disability_percentage").default(0), // For special tax/insurance treatment
+  
+  // Health & Safety Coverage for ESRS S1
+  hsCoverageFlag: boolean("hs_coverage_flag").default(true), // Covered by H&S management system
   
   // Emergency Contact
   emergencyContactName: varchar("emergency_contact_name", { length: 255 }),
@@ -2320,6 +2331,138 @@ export const csrdExportLog = pgTable("csrd_export_log", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Enhanced Compensation Tracking for ESRS S1 (annual total compensation, gross pay period)
+export const s1CompensationTracking = pgTable("s1_compensation_tracking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").notNull().references(() => csrdReportingPeriods.id),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId),
+  
+  // Annual and periodic compensation data for S1 calculations
+  annualTotalCompensation: decimal("annual_total_compensation", { precision: 12, scale: 2 }), // Full year compensation
+  grossPayPeriod: decimal("gross_pay_period", { precision: 10, scale: 2 }), // Gross pay for reporting period
+  hoursWorkedPeriod: decimal("hours_worked_period", { precision: 8, scale: 2 }), // Total hours from Digital Work Card
+  
+  // Pay equity analysis fields
+  calculationDate: date("calculation_date").notNull(),
+  country: varchar("country", { length: 3 }).notNull(),
+  entity: varchar("entity", { length: 100 }), // Entity/property for segmentation
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Enhanced Leave Eligibility & Usage Tracking for ESRS S1 Work-Life Balance
+export const s1LeaveEligibility = pgTable("s1_leave_eligibility", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").notNull().references(() => csrdReportingPeriods.id),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId),
+  
+  // Leave type and eligibility
+  leaveType: varchar("leave_type", { length: 50 }).notNull(), // maternity, paternity, parental, carer, force-majeure
+  eligibleFlag: boolean("eligible_flag").notNull(), // Eligible for this leave type
+  takenMinutes: integer("taken_minutes").default(0), // Minutes of leave taken (precise tracking)
+  entitlementMinutes: integer("entitlement_minutes"), // Total entitlement in minutes
+  
+  // Usage rate calculation fields
+  periodStart: date("period_start").notNull(),
+  periodEnd: date("period_end").notNull(),
+  country: varchar("country", { length: 3 }).notNull(),
+  entity: varchar("entity", { length: 100 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Materiality Assessment per S1 Topic (ESRS 1 Appendix E)
+export const s1MaterialityAssessment = pgTable("s1_materiality_assessment", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").notNull().references(() => csrdReportingPeriods.id),
+  
+  // S1 Topic areas
+  topicArea: varchar("topic_area", { length: 50 }).notNull(), // policies, actions, metrics
+  topicCode: varchar("topic_code", { length: 20 }).notNull(), // S1-1, S1-6, S1-16, etc.
+  topicDescription: text("topic_description").notNull(),
+  
+  // Materiality determination
+  isMaterial: boolean("is_material").notNull(),
+  materialityRationale: text("materiality_rationale").notNull(), // Required justification
+  flowchartArtefact: jsonb("flowchart_artefact"), // ESRS 1 Appendix E flowchart evidence
+  
+  // Assessment metadata
+  assessmentDate: date("assessment_date").notNull(),
+  assessedBy: varchar("assessed_by").notNull(),
+  reviewedBy: varchar("reviewed_by"),
+  approvedBy: varchar("approved_by"),
+  
+  // Impact and stakeholder analysis
+  impactMagnitude: varchar("impact_magnitude", { length: 20 }), // low, medium, high
+  impactLikelihood: varchar("impact_likelihood", { length: 20 }), // low, medium, high
+  stakeholderInterest: varchar("stakeholder_interest", { length: 20 }), // low, medium, high
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Versioned ESRS S1 Calculation Rulesets (runtime switchable)
+export const s1CalculationRulesets = pgTable("s1_calculation_rulesets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Ruleset versioning
+  rulesetName: varchar("ruleset_name", { length: 50 }).notNull(), // esrs_s1.v2023, esrs_s1.v2025_quickfix
+  version: varchar("version", { length: 20 }).notNull(),
+  effectiveDate: date("effective_date").notNull(),
+  expiryDate: date("expiry_date"),
+  
+  // Calculation function definitions
+  functionName: varchar("function_name", { length: 100 }).notNull(), // gender_pay_gap, highest_to_median_ratio, etc.
+  functionCode: text("function_code").notNull(), // JavaScript/SQL function body
+  parameters: jsonb("parameters").default('{}'), // Function parameter definitions
+  
+  // Segmentation requirements
+  requiresCountrySegmentation: boolean("requires_country_segmentation").default(true),
+  requiresEntitySegmentation: boolean("requires_entity_segmentation").default(true),
+  supportsRollup: boolean("supports_rollup").default(true),
+  
+  // Metadata
+  description: text("description"),
+  esrsReference: varchar("esrs_reference", { length: 20 }), // S1-16, S1-17, etc.
+  isActive: boolean("is_active").default(true),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Enhanced H&S Fatalities Tracking (own workforce + other workers on sites)
+export const s1HSFatalities = pgTable("s1_hs_fatalities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  reportingPeriodId: varchar("reporting_period_id").notNull().references(() => csrdReportingPeriods.id),
+  
+  // Fatality classification
+  workerType: varchar("worker_type", { length: 20 }).notNull(), // own_workforce, other_on_site
+  fatalityDate: date("fatality_date").notNull(),
+  location: varchar("location", { length: 255 }).notNull(),
+  
+  // Person details (if applicable)
+  employeeId: varchar("employee_id").references(() => employees.employeeId), // Only for own workforce
+  externalWorkerDetails: jsonb("external_worker_details"), // For other workers on site
+  
+  // Incident details
+  incidentDescription: text("incident_description"),
+  rootCause: text("root_cause"),
+  preventiveMeasures: text("preventive_measures"),
+  
+  // Regulatory reporting
+  reportedToAuthorities: boolean("reported_to_authorities").default(false),
+  authorityReference: varchar("authority_reference", { length: 100 }),
+  
+  // ESRS S1 categorization
+  country: varchar("country", { length: 3 }).notNull(),
+  entity: varchar("entity", { length: 100 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Type exports for CSRD/ESRS S1
 export type CsrdReportingPeriod = typeof csrdReportingPeriods.$inferSelect;
 export type InsertCsrdReportingPeriod = z.infer<typeof insertCsrdReportingPeriodSchema>;
@@ -2341,6 +2484,16 @@ export type CsrdAuditTrail = typeof csrdAuditTrail.$inferSelect;
 export type InsertCsrdAuditTrail = z.infer<typeof insertCsrdAuditTrailSchema>;
 export type CsrdExportLog = typeof csrdExportLog.$inferSelect;
 export type InsertCsrdExportLog = z.infer<typeof insertCsrdExportLogSchema>;
+export type S1CompensationTracking = typeof s1CompensationTracking.$inferSelect;
+export type InsertS1CompensationTracking = z.infer<typeof insertS1CompensationTrackingSchema>;
+export type S1LeaveEligibility = typeof s1LeaveEligibility.$inferSelect;
+export type InsertS1LeaveEligibility = z.infer<typeof insertS1LeaveEligibilitySchema>;
+export type S1MaterialityAssessment = typeof s1MaterialityAssessment.$inferSelect;
+export type InsertS1MaterialityAssessment = z.infer<typeof insertS1MaterialityAssessmentSchema>;
+export type S1CalculationRulesets = typeof s1CalculationRulesets.$inferSelect;
+export type InsertS1CalculationRulesets = z.infer<typeof insertS1CalculationRulesetsSchema>;
+export type S1HSFatalities = typeof s1HSFatalities.$inferSelect;
+export type InsertS1HSFatalities = z.infer<typeof insertS1HSFatalitiesSchema>;
 
 // Insert schemas for CSRD/ESRS S1
 export const insertCsrdReportingPeriodSchema = createInsertSchema(csrdReportingPeriods);
@@ -2353,4 +2506,9 @@ export const insertS1WorkLifeBalanceSchema = createInsertSchema(s1WorkLifeBalanc
 export const insertS1PayMetricsSchema = createInsertSchema(s1PayMetrics);
 export const insertCsrdAuditTrailSchema = createInsertSchema(csrdAuditTrail);
 export const insertCsrdExportLogSchema = createInsertSchema(csrdExportLog);
+export const insertS1CompensationTrackingSchema = createInsertSchema(s1CompensationTracking);
+export const insertS1LeaveEligibilitySchema = createInsertSchema(s1LeaveEligibility);
+export const insertS1MaterialityAssessmentSchema = createInsertSchema(s1MaterialityAssessment);
+export const insertS1CalculationRulesetsSchema = createInsertSchema(s1CalculationRulesets);
+export const insertS1HSFatalitiesSchema = createInsertSchema(s1HSFatalities);
 

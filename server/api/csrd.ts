@@ -275,6 +275,87 @@ export function registerCsrdRoutes(app: Router) {
     }
   });
 
+  // Enhanced S1 metrics with country/entity segmentation
+  app.post('/api/csrd/calculate/enhanced-s1/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      const { entity, country = 'GRC' } = req.body;
+
+      const enhancedMetrics = await csrdService.calculateEnhancedS1Metrics(
+        reportingPeriodId,
+        entity,
+        country
+      );
+
+      res.json({ success: true, metrics: enhancedMetrics });
+    } catch (error) {
+      console.error('Calculate enhanced S1 metrics error:', error);
+      res.status(500).json({ error: 'Failed to calculate enhanced S1 metrics' });
+    }
+  });
+
+  // Switch ESRS calculation version
+  app.post('/api/csrd/switch-version', async (req, res) => {
+    try {
+      const { version } = req.body;
+
+      if (!version) {
+        return res.status(400).json({ error: 'version is required' });
+      }
+
+      await csrdService.switchESRSVersion(version);
+
+      res.json({ success: true, message: `Switched to ESRS version: ${version}` });
+    } catch (error) {
+      console.error('Switch ESRS version error:', error);
+      res.status(500).json({ error: 'Failed to switch ESRS version' });
+    }
+  });
+
+  // Materiality assessment endpoints
+  app.post('/api/csrd/materiality-assessment', async (req, res) => {
+    try {
+      const schema = z.object({
+        reportingPeriodId: z.string(),
+        topicArea: z.enum(['policies', 'actions', 'metrics']),
+        topicCode: z.string(),
+        topicDescription: z.string(),
+        isMaterial: z.boolean(),
+        materialityRationale: z.string(),
+        assessedBy: z.string(),
+        impactMagnitude: z.enum(['low', 'medium', 'high']).optional(),
+        impactLikelihood: z.enum(['low', 'medium', 'high']).optional(),
+        stakeholderInterest: z.enum(['low', 'medium', 'high']).optional(),
+      });
+
+      const data = schema.parse(req.body);
+      
+      const assessment = await csrdService.assessMateriality(data);
+      
+      res.json({ success: true, assessment });
+    } catch (error) {
+      console.error('Create materiality assessment error:', error);
+      res.status(500).json({ error: 'Failed to create materiality assessment' });
+    }
+  });
+
+  app.get('/api/csrd/materiality-assessment/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      const { topicCode } = req.query;
+      
+      const assessments = await csrdService.getMaterialityAssessment(
+        reportingPeriodId,
+        topicCode as string
+      );
+      
+      res.json({ success: true, assessments });
+    } catch (error) {
+      console.error('Get materiality assessment error:', error);
+      res.status(500).json({ error: 'Failed to get materiality assessment' });
+    }
+  });
+
   // One-click CSRD export
   app.get('/api/csrd/export/:reportingPeriodId', async (req, res) => {
     try {
