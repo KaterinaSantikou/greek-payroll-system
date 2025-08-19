@@ -10,7 +10,8 @@ import {
   LogOut,
   Home,
   Clock,
-  Gift
+  Gift,
+  Plane
 } from "lucide-react";
 
 const navigationItems = [
@@ -20,6 +21,7 @@ const navigationItems = [
   { name: "Ωράρια", href: "/schedules", icon: Clock },
   { name: "Επιδόματα", href: "/allowances", icon: Gift },
   { name: "Υπερωρίες", href: "/overtime", icon: Clock },
+  { name: "Άδειες", href: "/leave", icon: Plane },
   { name: "Αναφορές", href: "/reports", icon: BarChart },
   { name: "Συμμόρφωση", href: "/compliance", icon: Shield },
 ];

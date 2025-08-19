@@ -85,6 +85,18 @@ Preferred communication style: Simple, everyday language.
 - **Greek Holidays 2025**: Complete calendar with Orthodox Easter dates and premium rates
 - **EU Working Time Directive**: 48-hour weekly limits, rest period requirements, and consecutive work day monitoring
 
+### Leave Management System (August 2025)
+- **Annual Leave Calculations**: 20-25 days based on tenure with automatic entitlement calculations per Greek labor law
+- **Sick Leave Tracking**: 15 days paid sick leave, extended sick leave (50% pay), chronic illness provisions (75% pay)
+- **Parental Leave Entitlements**: 119 days maternity leave, 14 days paternity leave, 4 months unpaid parental leave
+- **Special Leave Types**: Marriage (6 days), bereavement (1-5 days), military service, blood donation, education leave
+- **Unpaid Leave Management**: Personal leave (30 days), sabbatical leave (12 months), study leave (2 years)
+- **Leave Balance Calculations**: Real-time balance tracking with carry-over limits and mandatory usage requirements
+- **Validation System**: Comprehensive leave request validation with conflict detection and compliance monitoring
+- **Interactive Interface**: 5-tab management system for balance, requests, entitlements, calendar, and reports
+- **Greek Compliance**: Full compliance with Greek labor law including special categories (young workers, mothers, disabled)
+- **Tenure-Based Entitlements**: Automatic calculation of leave days based on years of service and employee category
+
 ### Recent Legal Updates (August 2025)
 - Updated minimum wage to €760/month
 - Enhanced EFKA rates: 16% employee, 24.78% employer
