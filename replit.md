@@ -9,6 +9,7 @@ PayrollSync is a comprehensive Greek HR & Payroll Management System designed for
 - **Advanced Middleware**: Added idempotency protection, audit logging, and performance monitoring for enterprise-grade reliability
 - **Security, Privacy & Audit Framework**: Complete implementation of GDPR-native compliance, RBAC with separation of duties, immutable hash-chained audit logs, and EU data residency controls with AES-256 encryption and configurable PIT restore
 - **Document AI & E-Signature Pipeline**: Complete OCR processing system for Greek employment contracts and IDs using Google Cloud Document AI, plus comprehensive e-signature workflows with Greek legal compliance (Law 4070/2012), ERGANI notification triggers, and multi-party signing sequences
+- **Hotel Tip Pooling System**: Comprehensive tip pool management with POS revenue integration, role-based point allocation, service multipliers, employer top-up rules, Greek tax mapping (TIP_POOL_DIST earnings code), and automated payslip breakdown generation
 
 # User Preferences
 

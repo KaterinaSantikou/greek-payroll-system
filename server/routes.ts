@@ -2275,6 +2275,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Document AI API routes
   registerDocumentAIRoutes(app);
 
+  // Register Hotel Tip Pooling API routes
+  const { registerHotelTipPoolingRoutes } = await import("./api/hotelTipPooling");
+  registerHotelTipPoolingRoutes(app);
+
   const httpServer = createServer(app);
   return httpServer;
 }

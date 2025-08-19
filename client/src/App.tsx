@@ -23,6 +23,7 @@ import PayrollIntegration from "@/pages/payrollIntegration";
 import ManagerWorkflows from "@/pages/managerWorkflows";
 import HotelOperations from "@/pages/hotelOperations";
 import HotelEnhancements from "@/pages/hotelEnhancements";
+import HotelTipPooling from "@/pages/hotelTipPooling";
 import UXArchitecture from "@/pages/uxArchitecture";
 import Compliance from "@/pages/compliance";
 import Analytics from "@/pages/analytics";
@@ -65,6 +66,7 @@ function Router() {
           <Route path="/manager-workflows" component={ManagerWorkflows} />
           <Route path="/hotel-operations" component={HotelOperations} />
           <Route path="/hotel-enhancements" component={HotelEnhancements} />
+          <Route path="/hotel-tip-pooling" component={HotelTipPooling} />
           <Route path="/ux-architecture" component={UXArchitecture} />
           <Route path="/compliance" component={Compliance} />
           <Route path="/analytics" component={Analytics} />

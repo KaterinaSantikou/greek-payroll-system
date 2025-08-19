@@ -312,6 +312,7 @@ const menuStructure: MenuLevel1Item[] = [
         items: [
           { name: "Hotel Operations", href: "/hotel-operations", description: "Multi-property tools" },
           { name: "Hotel Enhancements", href: "/hotel-enhancements", description: "Advanced features" },
+          { name: "Tip Pooling", href: "/hotel-tip-pooling", description: "POS revenue allocation & distribution" },
         ]
       },
       {
