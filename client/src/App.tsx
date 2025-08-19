@@ -53,6 +53,7 @@ import SmartNotifications from "@/pages/smartNotifications";
 import VisualAnalytics from "@/pages/visualAnalytics";
 import PropertyDashboard from "@/pages/propertyDashboard";
 import RoleBasedDashboard from "@/components/RoleBasedDashboard";
+import Dashboard from "@/pages/dashboard";
 import { AICopilot } from "@/components/AICopilot";
 import MobilePunch from "@/pages/mobilePunch";
 import PayrollPreview from "@/pages/payrollPreview";
@@ -80,7 +81,7 @@ function Router() {
     <Layout>
       <CommandPalette open={open} onOpenChange={setOpen} />
       <Switch>
-        <Route path="/" component={lazy(() => import("./pages/dashboard"))} />
+        <Route path="/" component={Dashboard} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
             <Route path="/employees" component={Employees} />
             <Route path="/employee-master" component={EmployeeMaster} />

@@ -218,6 +218,44 @@ export default function Dashboard() {
     return minutes < 1 ? 'Just now' : `${minutes}m ago`;
   };
 
+  // KPI Calculation Functions
+  const calculateDigitalCardCoverage = (covered: number, scheduled: number) => {
+    return ((covered / scheduled) * 100).toFixed(1);
+  };
+
+  const calculateErganiSuccessRate = (success: number, failed: number) => {
+    const total = success + failed;
+    return total > 0 ? ((success / total) * 100).toFixed(1) : '0.0';
+  };
+
+  const calculateOtCapRemaining = (legalCap: number, ytdOtHours: number) => {
+    return Math.max(0, legalCap - ytdOtHours);
+  };
+
+  const calculateLaborVsBudget = (actual: number, budget: number) => {
+    return (((actual - budget) / budget) * 100).toFixed(1);
+  };
+
+  const calculateLCPerOccupiedRoom = (totalLabor: number, occupiedRooms: number) => {
+    return occupiedRooms > 0 ? (totalLabor / occupiedRooms).toFixed(2) : '0.00';
+  };
+
+  // Enhanced loading states
+  const [loadingStates, setLoadingStates] = useState({
+    compliance: false,
+    payroll: false,
+    attendance: false,
+    forecast: false
+  });
+
+  const triggerRefresh = (section: string) => {
+    setLoadingStates(prev => ({ ...prev, [section]: true }));
+    setTimeout(() => {
+      setLoadingStates(prev => ({ ...prev, [section]: false }));
+      setLastUpdated(new Date());
+    }, 1000);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-6 py-4">
@@ -278,11 +316,35 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Right Side - Data Freshness */}
-            <div className="flex items-center gap-3">
-              <div className="text-sm text-gray-600 dark:text-gray-400">
+            {/* Right Side - Data Freshness & Mini Compliance */}
+            <div className="flex items-center gap-6">
+              {/* Mini Compliance Strip */}
+              <div className="flex items-center gap-4 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-neutral-200 dark:text-neutral-300">
+                    Digital Card {calculateDigitalCardCoverage(complianceData.digitalWorkCard.covered, complianceData.digitalWorkCard.scheduled)}%
+                  </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="text-neutral-200 dark:text-neutral-300">
+                    ERGANI {calculateErganiSuccessRate(complianceData.erganiQueue.success, complianceData.erganiQueue.failed)}%
+                  </span>
+                </div>
+                {(actionInboxData.filings.filter(f => f.ddays <= 2).length > 0) && (
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="text-red-400">
+                      {actionInboxData.filings.filter(f => f.ddays <= 2).length} filings due
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="text-sm text-neutral-200 dark:text-neutral-300">
                 Updated {formatTimeAgo(lastUpdated)} • 
-                <span className="text-green-600 font-medium"> ERGANI in sync</span>
+                <span className="text-green-400 font-medium"> ERGANI in sync</span>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setLastUpdated(new Date())}>
                 <RefreshCw className="h-4 w-4" />
@@ -299,20 +361,46 @@ export default function Dashboard() {
             
             {/* Action Inbox (2/3 width) */}
             <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="h-5 w-5" />
-                    Action Inbox
-                  </CardTitle>
-                  <CardDescription>1-click to clear blockers • Sorted by urgency & impact</CardDescription>
+              <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-base font-medium">
+                        <Bell className="h-5 w-5 text-blue-600" />
+                        Action Inbox
+                      </CardTitle>
+                      <CardDescription className="text-neutral-200 dark:text-neutral-300 text-sm mt-1">
+                        1-click to clear blockers • Sorted by urgency & impact
+                      </CardDescription>
+                    </div>
+                    <div className="text-xs text-neutral-200 dark:text-neutral-300">
+                      Updated {formatTimeAgo(lastUpdated)}
+                    </div>
+                  </div>
+                  
+                  {/* Exception Summary Bar */}
+                  <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-1">
+                        <AlertTriangle className="h-4 w-4 text-orange-600" />
+                        <span className="font-medium text-orange-800 dark:text-orange-200">
+                          {actionInboxData.exceptions.reduce((sum, e) => sum + e.count, 0)} exceptions:
+                        </span>
+                      </div>
+                      <span className="text-orange-700 dark:text-orange-300">
+                        {actionInboxData.exceptions.find(e => e.type === 'missed_punches')?.count || 0} missed punches • 
+                        {actionInboxData.exceptions.find(e => e.type === 'duplicate_punches')?.count || 0} duplicates • 
+                        {actionInboxData.exceptions.find(e => e.type === 'wrong_site')?.count || 0} wrong site
+                      </span>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
+                <CardContent className="py-3">
+                  <div className="space-y-3">
                     
                     {/* Approvals Pending */}
-                    <div className="p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20">
-                      <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    <div className="p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
+                      <h4 className="font-medium text-sm mb-2 flex items-center gap-2 text-orange-800 dark:text-orange-200">
                         <Clock className="h-4 w-4" />
                         Approvals Pending
                       </h4>
@@ -343,8 +431,8 @@ export default function Dashboard() {
                     </div>
 
                     {/* Exceptions to Resolve */}
-                    <div className="p-3 border rounded-lg bg-red-50 dark:bg-red-950/20">
-                      <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                    <div className="p-3 border rounded-lg bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
+                      <h4 className="font-medium text-sm mb-2 flex items-center gap-2 text-red-800 dark:text-red-200">
                         <AlertTriangle className="h-4 w-4" />
                         Exceptions to Resolve
                       </h4>
@@ -445,20 +533,23 @@ export default function Dashboard() {
                 <CardContent>
                   <div className="space-y-4">
                     
-                    <div className="p-3 border rounded-lg">
+                    <div className="p-3 border rounded-lg bg-green-50 dark:bg-green-950/20">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium">Digital Work Card</span>
-                        <Badge variant="default">
-                          {Math.round((complianceData.digitalWorkCard.covered / complianceData.digitalWorkCard.scheduled) * 100)}%
+                        <span className="text-sm font-medium text-green-800 dark:text-green-200">Digital Work Card</span>
+                        <Badge variant="default" className="bg-green-600">
+                          {calculateDigitalCardCoverage(complianceData.digitalWorkCard.covered, complianceData.digitalWorkCard.scheduled)}%
                         </Badge>
                       </div>
-                      <div className="text-xs text-gray-600 mb-1">
+                      <div className="text-xs text-neutral-200 dark:text-neutral-300 mb-2">
                         {complianceData.digitalWorkCard.covered}/{complianceData.digitalWorkCard.scheduled} scheduled clocked in
                       </div>
                       <Progress 
                         value={(complianceData.digitalWorkCard.covered / complianceData.digitalWorkCard.scheduled) * 100} 
                         className="h-2"
                       />
+                      <div className="text-xs text-green-700 dark:text-green-300 mt-2">
+                        Formula: (# scheduled who clocked in ÷ # scheduled) × 100
+                      </div>
                     </div>
 
                     <div className="p-3 border rounded-lg">
@@ -475,9 +566,12 @@ export default function Dashboard() {
                           )}
                         </div>
                       </div>
-                      <div className="text-xs text-gray-600">
-                        Success rate: {Math.round((complianceData.erganiQueue.success / (complianceData.erganiQueue.success + complianceData.erganiQueue.failed)) * 100)}%
+                      <div className="text-xs text-neutral-200 dark:text-neutral-300">
+                        Success rate: {calculateErganiSuccessRate(complianceData.erganiQueue.success, complianceData.erganiQueue.failed)}%
                         {complianceData.erganiQueue.retries > 0 && ` • ${complianceData.erganiQueue.retries} retrying`}
+                      </div>
+                      <div className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                        Formula: successful events ÷ total events
                       </div>
                     </div>
 
@@ -488,7 +582,7 @@ export default function Dashboard() {
                           {complianceData.minWageAlerts}
                         </Badge>
                       </div>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-neutral-200 dark:text-neutral-300">
                         {complianceData.minWageAlerts === 0 ? 'All employees above floor' : `${complianceData.minWageAlerts} below minimum`}
                       </div>
                     </div>
@@ -500,7 +594,7 @@ export default function Dashboard() {
                           {complianceData.restCapAlerts}
                         </Badge>
                       </div>
-                      <div className="text-xs text-gray-600">
+                      <div className="text-xs text-neutral-200 dark:text-neutral-300">
                         {complianceData.restCapAlerts === 0 ? 'All within limits' : `${complianceData.restCapAlerts} breaches/at-risk`}
                       </div>
                     </div>
@@ -592,89 +686,144 @@ export default function Dashboard() {
           </Card>
 
           {/* Third Row - Hours & Cost KPIs */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Hours & Cost KPIs
-              </CardTitle>
+          <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-base font-medium">
+                    <Activity className="h-5 w-5 text-blue-600" />
+                    Hours & Cost KPIs
+                  </CardTitle>
+                  <CardDescription className="text-neutral-200 dark:text-neutral-300 text-sm mt-1">
+                    Night Hours: 22:00–06:00 • Sunday/Holiday: Calendar flags
+                  </CardDescription>
+                </div>
+                <div className="text-xs text-neutral-200 dark:text-neutral-300">
+                  Updated {formatTimeAgo(lastUpdated)}
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="py-3">
               <div className="grid lg:grid-cols-4 gap-6">
                 
                 <div className="lg:col-span-2">
-                  <h4 className="font-semibold mb-3">Hours Breakdown</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-sm">Hours Breakdown</h4>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleActionClick('view', 'timesheet')}
+                      className="h-7 px-3 text-xs"
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      View Timesheet
+                    </Button>
+                  </div>
                   <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">{kpiData.hours.regular.toLocaleString()}</div>
-                      <div className="text-sm text-gray-600">Regular</div>
+                    <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                      <div className="text-2xl font-semibold text-blue-600">{kpiData.hours.regular.toLocaleString()}</div>
+                      <div className="text-xs text-neutral-200 dark:text-neutral-300 mt-1">Regular</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-orange-600">{kpiData.hours.overtimeTier1}</div>
-                      <div className="text-sm text-gray-600">OT Tier 1</div>
+                    <div className="text-center p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
+                      <div className="text-2xl font-semibold text-orange-600">{kpiData.hours.overtimeTier1}</div>
+                      <div className="text-xs text-neutral-200 dark:text-neutral-300 mt-1">OT Tier 1</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-red-600">{kpiData.hours.overtimeTier2}</div>
-                      <div className="text-sm text-gray-600">OT Tier 2</div>
+                    <div className="text-center p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
+                      <div className="text-2xl font-semibold text-red-600">{kpiData.hours.overtimeTier2}</div>
+                      <div className="text-xs text-neutral-200 dark:text-neutral-300 mt-1">OT Tier 2</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-600">{kpiData.hours.night}</div>
-                      <div className="text-sm text-gray-600">Night</div>
+                    <div className="text-center p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
+                      <div className="text-2xl font-semibold text-purple-600">{kpiData.hours.night}</div>
+                      <div className="text-xs text-neutral-200 dark:text-neutral-300 mt-1">Night (22:00-06:00)</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">{kpiData.hours.sunday}</div>
-                      <div className="text-sm text-gray-600">Sunday</div>
+                    <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                      <div className="text-2xl font-semibold text-green-600">{kpiData.hours.sunday}</div>
+                      <div className="text-xs text-neutral-200 dark:text-neutral-300 mt-1">Sunday</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-yellow-600">{kpiData.hours.holiday}</div>
-                      <div className="text-sm text-gray-600">Holiday</div>
+                    <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
+                      <div className="text-2xl font-semibold text-yellow-600">{kpiData.hours.holiday}</div>
+                      <div className="text-xs text-neutral-200 dark:text-neutral-300 mt-1">Holiday</div>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold mb-3">Labor Cost vs Budget</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-sm">Labor Cost vs Budget</h4>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleActionClick('request', 'leave')}
+                      className="h-7 px-3 text-xs"
+                    >
+                      Request Leave
+                    </Button>
+                  </div>
                   <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span>Budget:</span>
-                      <span className="font-mono">{formatCurrency(kpiData.costs.laborBudget)}</span>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-neutral-200 dark:text-neutral-300">Budget:</span>
+                      <span className="font-mono font-medium">{formatCurrency(kpiData.costs.laborBudget)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Actual:</span>
-                      <span className="font-mono">{formatCurrency(kpiData.costs.actualLabor)}</span>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-neutral-200 dark:text-neutral-300">Actual:</span>
+                      <span className="font-mono font-medium">{formatCurrency(kpiData.costs.actualLabor)}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span>Variance:</span>
+                      <span className="text-neutral-200 dark:text-neutral-300 text-sm">Variance:</span>
                       <div className="flex items-center gap-1">
-                        <span className="font-mono text-green-600">
+                        <span className="font-mono font-semibold text-green-600">
                           {formatCurrency(kpiData.costs.laborBudget - kpiData.costs.actualLabor)}
                         </span>
-                        <Badge variant="outline" className="text-green-600">
-                          -{((1 - kpiData.costs.actualLabor / kpiData.costs.laborBudget) * 100).toFixed(1)}%
+                        <Badge variant="outline" className="text-green-600 text-xs">
+                          {calculateLaborVsBudget(kpiData.costs.actualLabor, kpiData.costs.laborBudget)}%
                         </Badge>
                       </div>
                     </div>
                   </div>
+                  <div className="mt-3 pt-2 border-t text-xs text-neutral-200 dark:text-neutral-300">
+                    Formula: (actual € - budget €) / budget €
+                  </div>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold mb-3">Efficiency Metrics</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-sm">Efficiency Metrics</h4>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleActionClick('preview', 'payslip')}
+                      className="h-7 px-3 text-xs"
+                      disabled={payrollStatus.stage !== 'finalized'}
+                    >
+                      Preview Payslip
+                    </Button>
+                  </div>
                   <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span>Cost per Room:</span>
-                      <span className="font-mono">€{kpiData.costs.costPerRoom}</span>
+                    <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-neutral-200 dark:text-neutral-300">LC per Occ. Room:</span>
+                        <span className="font-mono font-semibold">€{kpiData.costs.costPerRoom}</span>
+                      </div>
+                      <div className="text-xs text-neutral-200 dark:text-neutral-300 mt-1">
+                        Formula: total labor € ÷ occupied rooms
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Cost per Cover:</span>
-                      <span className="font-mono">€{kpiData.costs.costPerCover}</span>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-neutral-200 dark:text-neutral-300">Cost per Cover:</span>
+                      <span className="font-mono font-medium">€{kpiData.costs.costPerCover}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Tip Pool:</span>
-                      <span className="font-mono">{formatCurrency(kpiData.costs.tipPool)}</span>
+                    <div className="p-2 border rounded bg-green-50 dark:bg-green-950/20">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-green-800 dark:text-green-200">Tip Pool:</span>
+                        <span className="font-mono font-semibold text-green-600">{formatCurrency(kpiData.costs.tipPool)}</span>
+                      </div>
+                      <div className="text-xs text-green-700 dark:text-green-300 mt-1">
+                        Configured % of eligible revenue + manual top-ups
+                      </div>
+                      <Badge variant="outline" className="w-full justify-center mt-2 text-xs">
+                        Distribution Pending
+                      </Badge>
                     </div>
-                    <Badge variant="outline" className="w-full justify-center">
-                      Distribution Pending
-                    </Badge>
                   </div>
                 </div>
               </div>
