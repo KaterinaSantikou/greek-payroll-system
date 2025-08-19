@@ -58,9 +58,13 @@ import MobilePunch from "@/pages/mobilePunch";
 import PayrollPreview from "@/pages/payrollPreview";
 import PayExplanationDemo from "@/pages/payExplanationDemo";
 import AIEnginesDemo from "@/pages/aiEnginesDemo";
+import CommandPaletteDemo from "@/pages/commandPaletteDemo";
+import { CommandPalette } from "@/components/CommandPalette";
+import { useCommandPalette } from "@/hooks/useCommandPalette";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  const { open, setOpen } = useCommandPalette();
 
   if (isLoading || !isAuthenticated) {
     return (
@@ -74,6 +78,7 @@ function Router() {
 
   return (
     <Layout>
+      <CommandPalette open={open} onOpenChange={setOpen} />
       <Switch>
         <Route path="/" component={RoleBasedDashboard} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
@@ -126,6 +131,7 @@ function Router() {
             <Route path="/payroll-preview" component={PayrollPreview} />
             <Route path="/pay-explanation-demo" component={PayExplanationDemo} />
             <Route path="/ai-engines-demo" component={AIEnginesDemo} />
+            <Route path="/command-palette-demo" component={CommandPaletteDemo} />
         <Route path="/ai-copilot" component={AICopilot} />
         <Route component={NotFound} />
       </Switch>

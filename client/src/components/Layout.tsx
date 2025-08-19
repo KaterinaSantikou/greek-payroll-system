@@ -2,6 +2,8 @@ import { ImprovedSidebar } from "./ImprovedSidebar";
 import { ContextAwareBanner } from "./ContextAwareBanner";
 import { PropertySwitcher } from "./PropertySwitcher";
 import { ThemeToggle } from "./ThemeToggle";
+import { CommandPaletteButton } from "./CommandPaletteButton";
+import { useCommandPalette } from "@/hooks/useCommandPalette";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useAppContext } from "@/contexts/AppContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +16,7 @@ interface LayoutProps {
 function LayoutContent({ children }: LayoutProps) {
   const { selectedPropertyId, setSelectedPropertyId, toggleGroupView, isGroupView } = useProperty();
   const { user } = useAuth();
+  const { setOpen } = useCommandPalette();
   
   // Try to use app context, but provide fallback
   let currentProperty, contextBanner;
@@ -56,6 +59,7 @@ function LayoutContent({ children }: LayoutProps) {
               </motion.h1>
             </div>
             <div className="flex items-center space-x-3">
+              <CommandPaletteButton onClick={() => setOpen(true)} />
               <PropertySwitcher />
               <ThemeToggle />
             </div>
