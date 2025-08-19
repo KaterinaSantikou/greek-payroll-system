@@ -108,6 +108,9 @@ function Router() {
         
         {/* Analytics Section */}
         <Route path="/analytics/cost-ot" component={lazy(() => import("./pages/costOtAnalytics"))} />
+        
+        {/* Employee Portal */}
+        <Route path="/employee-portal" component={lazy(() => import("./pages/employeePortal"))} />
             <Route path="/payroll" component={Payroll} />
             <Route path="/payments" component={Payments} />
             <Route path="/sepa-payments" component={SepaPayments} />

@@ -1,514 +1,286 @@
-import { useUserRole } from "@/contexts/UserRoleContext";
-import { useProperty } from "@/contexts/PropertyContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { getUserRole, getRoleConfiguration, getRoleDisplayName } from "@/lib/roleBasedRouting";
 import { 
-  Users, FileText, Clock, TrendingUp, AlertCircle, 
-  Calendar, Euro, CheckCircle, Settings, BarChart3 
+  PlayCircle, 
+  FileText, 
+  Euro,
+  Users,
+  Clock,
+  AlertTriangle,
+  CheckCircle,
+  BarChart3,
+  Calendar,
+  Shield
 } from "lucide-react";
-import { Link } from "wouter";
-import { motion } from "framer-motion";
-import { CardEntrance, PageTransition, ButtonMotion } from "@/components/MotionWrapper";
-import { celebratePayrollSuccess } from "@/lib/confetti";
 
-export default function RoleBasedDashboard() {
-  const { userProfile, userRole, hasPermission } = useUserRole();
-  const { selectedProperty, isGroupView } = useProperty();
+interface DashboardWidgetProps {
+  widgetId: string;
+  role: string;
+}
 
-  if (!userProfile) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-center justify-center h-64"
-      >
-        <div className="animate-pulse text-muted-foreground">Loading user profile...</div>
-      </motion.div>
-    );
-  }
+const DashboardWidget: React.FC<DashboardWidgetProps> = ({ widgetId, role }) => {
+  const renderWidget = () => {
+    switch (widgetId) {
+      case 'payroll-runs-status':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PlayCircle className="h-5 w-5 text-blue-600" />
+                Payroll Runs Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded">
+                  <p className="text-lg font-bold text-green-700">3</p>
+                  <p className="text-xs text-green-600">Completed</p>
+                </div>
+                <div className="p-3 bg-orange-50 dark:bg-orange-950/20 rounded">
+                  <p className="text-lg font-bold text-orange-700">1</p>
+                  <p className="text-xs text-orange-600">In Progress</p>
+                </div>
+                <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded">
+                  <p className="text-lg font-bold text-blue-700">2</p>
+                  <p className="text-xs text-blue-600">Scheduled</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
 
-  const handlePayrollCelebration = () => {
-    celebratePayrollSuccess();
+      case 'pending-filings':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-orange-600" />
+                Pending Filings
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">ERGANI II</span>
+                  <Badge variant="secondary">8 pending</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">e-EFKA</span>
+                  <Badge variant="default">2 ready</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">AADE</span>
+                  <Badge variant="outline">0 pending</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'employee-overview':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-purple-600" />
+                Employee Overview
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <p className="text-2xl font-bold text-purple-700">152</p>
+                  <p className="text-xs text-gray-500">Active Employees</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-green-700">8</p>
+                  <p className="text-xs text-gray-500">New This Month</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'team-attendance':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-blue-600" />
+                Team Attendance
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Present Today</span>
+                  <span className="font-medium">24/28</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">On Time</span>
+                  <span className="font-medium text-green-600">96%</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Exceptions</span>
+                  <Badge variant="destructive">3</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'compliance-score':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-green-600" />
+                Compliance Score
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-green-700">98.7%</p>
+                <p className="text-xs text-gray-500 mb-3">Overall Compliance</p>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>ERGANI II</span>
+                    <span className="text-green-600">100%</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>e-EFKA</span>
+                    <span className="text-green-600">99%</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span>AADE</span>
+                    <span className="text-orange-600">96%</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'my-payslip':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Euro className="h-5 w-5 text-green-600" />
+                Latest Payslip
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm">Period</span>
+                  <span className="font-medium">December 2024</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Gross Pay</span>
+                  <span className="font-medium">€2,850</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Net Pay</span>
+                  <span className="font-bold text-green-600">€2,284</span>
+                </div>
+                <Button size="sm" className="w-full mt-2">
+                  View Full Payslip
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 'pending-exceptions':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                Pending Exceptions
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">High Priority</span>
+                  <Badge variant="destructive">5</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Medium Priority</span>
+                  <Badge variant="secondary">12</Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Auto-Resolved</span>
+                  <Badge variant="default">8</Badge>
+                </div>
+                <Button size="sm" className="w-full mt-2">
+                  Review Exceptions
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      default:
+        return (
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm text-gray-500">Widget: {widgetId}</p>
+            </CardContent>
+          </Card>
+        );
+    }
   };
 
-  // HR Dashboard - Filings & Payroll modules first
-  if (userRole === 'hr') {
-    return (
-      <PageTransition className="space-y-6">
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="flex items-center justify-between"
-        >
-          <div>
-            <motion.h2 
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-3xl font-bold tracking-tight bg-gradient-to-r from-brand-blue to-brand-purple bg-clip-text text-transparent"
-            >
-              HR Dashboard
-            </motion.h2>
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-muted-foreground"
-            >
-              Payroll processing and compliance management
-            </motion.p>
-          </div>
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-          >
-            <Badge variant="outline" className="bg-brand-blue/10 text-brand-blue border-brand-blue/20">
-              HR Manager
-            </Badge>
-          </motion.div>
-        </motion.div>
+  return renderWidget();
+};
 
-        {/* HR Priority Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <CardEntrance delay={0.1}>
-            <Card className="border-l-4 border-l-brand-blue bg-gradient-to-br from-background to-brand-blue/5 dark:to-brand-blue/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Pending Payroll</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
-                  className="text-2xl font-bold text-brand-blue"
-                >
-                  3
-                </motion.div>
-                <p className="text-xs text-muted-foreground">Properties ready</p>
-              </CardContent>
-            </Card>
-          </CardEntrance>
+export default function RoleBasedDashboard() {
+  const { user } = useAuth();
+  const userRole = getUserRole(user);
+  const roleConfig = getRoleConfiguration(userRole);
 
-          <CardEntrance delay={0.2}>
-            <Card className="border-l-4 border-l-brand-orange bg-gradient-to-br from-background to-brand-orange/5 dark:to-brand-orange/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">ERGANI Filings</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
-                  className="text-2xl font-bold text-brand-orange"
-                >
-                  12
-                </motion.div>
-                <p className="text-xs text-muted-foreground">Due this week</p>
-              </CardContent>
-            </Card>
-          </CardEntrance>
-
-          <CardEntrance delay={0.3}>
-            <Card className="border-l-4 border-l-brand-green bg-gradient-to-br from-background to-brand-green/5 dark:to-brand-green/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Compliance Score</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
-                  className="text-2xl font-bold text-brand-green"
-                >
-                  98%
-                </motion.div>
-                <p className="text-xs text-muted-foreground">All properties</p>
-              </CardContent>
-            </Card>
-          </CardEntrance>
-
-          <CardEntrance delay={0.4}>
-            <Card className="border-l-4 border-l-brand-purple bg-gradient-to-br from-background to-brand-purple/5 dark:to-brand-purple/10">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Monthly Cost</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <motion.div 
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.9, type: "spring", stiffness: 200 }}
-                  className="text-2xl font-bold text-brand-purple"
-                >
-                  €847K
-                </motion.div>
-                <p className="text-xs text-muted-foreground">Labor costs</p>
-              </CardContent>
-            </Card>
-          </CardEntrance>
-        </div>
-
-        {/* HR Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <CardEntrance delay={0.5}>
-            <Card className="bg-gradient-to-br from-background to-muted/30">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <FileText className="w-5 h-5 text-brand-blue" />
-                  <span>Payroll Quick Actions</span>
-                </CardTitle>
-                <CardDescription>Process payroll and manage filings</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <ButtonMotion>
-                  <Button 
-                    className="w-full justify-start bg-brand-blue hover:bg-brand-blue/90"
-                    onClick={handlePayrollCelebration}
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Run Payroll (December) 🎉
-                  </Button>
-                </ButtonMotion>
-                <ButtonMotion>
-                  <Link href="/ergani-compliance">
-                    <Button variant="outline" className="w-full justify-start border-brand-green/20 text-brand-green hover:bg-brand-green/5">
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      ERGANI Submissions
-                    </Button>
-                  </Link>
-                </ButtonMotion>
-                <ButtonMotion>
-                  <Link href="/compliance">
-                    <Button variant="outline" className="w-full justify-start border-brand-orange/20 text-brand-orange hover:bg-brand-orange/5">
-                      <AlertCircle className="w-4 h-4 mr-2" />
-                      Compliance Dashboard
-                    </Button>
-                  </Link>
-                </ButtonMotion>
-              </CardContent>
-            </Card>
-          </CardEntrance>
-
-          <CardEntrance delay={0.6}>
-            <Card className="bg-gradient-to-br from-background to-muted/30">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Users className="w-5 h-5 text-brand-purple" />
-                  <span>Employee Management</span>
-                </CardTitle>
-                <CardDescription>Onboarding and employee records</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <ButtonMotion>
-                  <Link href="/employees">
-                    <Button variant="outline" className="w-full justify-start border-brand-purple/20 text-brand-purple hover:bg-brand-purple/5">
-                      <Users className="w-4 h-4 mr-2" />
-                      Employee Directory
-                    </Button>
-                  </Link>
-                </ButtonMotion>
-                <ButtonMotion>
-                  <Link href="/employee-master">
-                    <Button variant="outline" className="w-full justify-start border-brand-blue/20 text-brand-blue hover:bg-brand-blue/5">
-                      <FileText className="w-4 h-4 mr-2" />
-                      Master Data Management
-                    </Button>
-                  </Link>
-                </ButtonMotion>
-              </CardContent>
-            </Card>
-          </CardEntrance>
-        </div>
-      </PageTransition>
-    );
-  }
-
-  // Manager Dashboard - Schedules & Approvals
-  if (userRole === 'manager') {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Manager Dashboard</h2>
-            <p className="text-muted-foreground">
-              Team schedules and approval workflows
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="bg-green-50 text-green-700">
-              {userProfile.department} Manager
-            </Badge>
-            {selectedProperty && (
-              <Badge variant="outline">{selectedProperty.name}</Badge>
-            )}
-          </div>
-        </div>
-
-        {/* Manager Priority Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-l-4 border-l-orange-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">7</div>
-              <p className="text-xs text-muted-foreground">Overtime requests</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Team Size</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">24</div>
-              <p className="text-xs text-muted-foreground">Direct reports</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">This Week OT</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">47h</div>
-              <p className="text-xs text-muted-foreground">Team overtime</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Attendance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">96%</div>
-              <p className="text-xs text-muted-foreground">On-time rate</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Manager Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Schedule Management</CardTitle>
-              <CardDescription>Team scheduling and time management</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/schedules">
-                <Button className="w-full justify-start">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Manage Schedules
-                </Button>
-              </Link>
-              <Link href="/overtime">
-                <Button variant="outline" className="w-full justify-start">
-                  <Clock className="w-4 h-4 mr-2" />
-                  Overtime Approvals
-                </Button>
-              </Link>
-              <Link href="/manager-workflows">
-                <Button variant="outline" className="w-full justify-start">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Approval Workflows
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Team Analytics</CardTitle>
-              <CardDescription>Performance and insights</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/visual-analytics">
-                <Button variant="outline" className="w-full justify-start">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Team Performance
-                </Button>
-              </Link>
-              <Link href="/forecasting">
-                <Button variant="outline" className="w-full justify-start">
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  Workforce Planning
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  // Employee Dashboard - Payslips & Time Logs
-  if (userRole === 'employee') {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">My Dashboard</h2>
-            <p className="text-muted-foreground">
-              Your payslips, time logs, and personal information
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="bg-blue-50 text-blue-700">
-              Employee
-            </Badge>
-            {userProfile.department && (
-              <Badge variant="outline">{userProfile.department}</Badge>
-            )}
-          </div>
-        </div>
-
-        {/* Employee Priority Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">This Month Pay</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">€2,847</div>
-              <p className="text-xs text-muted-foreground">Net salary</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Hours This Week</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">38.5h</div>
-              <p className="text-xs text-muted-foreground">Regular hours</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-orange-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Leave Balance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">15</div>
-              <p className="text-xs text-muted-foreground">Days remaining</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Next Payday</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Dec 30</div>
-              <p className="text-xs text-muted-foreground">4 days away</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Employee Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>My Payroll</CardTitle>
-              <CardDescription>Payslips and pay information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/employee-self-service">
-                <Button className="w-full justify-start">
-                  <FileText className="w-4 h-4 mr-2" />
-                  View Payslips
-                </Button>
-              </Link>
-              <Button variant="outline" className="w-full justify-start">
-                <Euro className="w-4 h-4 mr-2" />
-                Explain My Pay
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>My Time</CardTitle>
-              <CardDescription>Time tracking and leave management</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/digital-work-card">
-                <Button variant="outline" className="w-full justify-start">
-                  <Clock className="w-4 h-4 mr-2" />
-                  Digital Work Card
-                </Button>
-              </Link>
-              <Link href="/leave">
-                <Button variant="outline" className="w-full justify-start">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  Request Leave
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  // Admin Dashboard - Full Property Dashboard (default)
   return (
     <div className="space-y-6">
+      {/* Role Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
-          <p className="text-muted-foreground">
-            System administration and full access
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            {getRoleDisplayName(userRole)} Dashboard
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Customized view for your role
           </p>
         </div>
-        <Badge variant="outline" className="bg-red-50 text-red-700">
-          System Admin
+        <Badge variant="outline">
+          {getRoleDisplayName(userRole)}
         </Badge>
       </div>
 
-      {/* Admin Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Property Management</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full" asChild>
-              <Link href="/property-dashboard">
-                <Settings className="w-4 h-4 mr-2" />
-                Manage Properties
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        {roleConfig.quickActions.map((action, index) => (
+          <Button key={index} variant="outline" size="sm">
+            {action.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+          </Button>
+        ))}
+      </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>System Settings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full">
-              <Settings className="w-4 h-4 mr-2" />
-              System Configuration
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Analytics</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button variant="outline" className="w-full" asChild>
-              <Link href="/visual-analytics">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                System Analytics
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+      {/* Dashboard Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {roleConfig.defaultDashboardWidgets.map((widgetId, index) => (
+          <DashboardWidget 
+            key={index} 
+            widgetId={widgetId} 
+            role={userRole}
+          />
+        ))}
       </div>
     </div>
   );
