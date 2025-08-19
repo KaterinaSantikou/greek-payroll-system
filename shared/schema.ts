@@ -2687,6 +2687,209 @@ export const s1ReportSections = pgTable("s1_report_sections", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// =====================================================
+// EMBEDDED PAYROLL + GL API SCHEMA
+// =====================================================
+
+// Partners/API Keys Management
+export const partners = pgTable("partners", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  companyName: varchar("company_name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  clientId: varchar("client_id", { length: 255 }).notNull().unique(),
+  clientSecret: varchar("client_secret", { length: 255 }).notNull(),
+  allowedOrigins: jsonb("allowed_origins").default('[]'), // Array of allowed origins
+  scopes: jsonb("scopes").default('[]'), // Array of allowed scopes
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, suspended, inactive
+  webhookUrl: varchar("webhook_url", { length: 500 }),
+  webhookSecret: varchar("webhook_secret", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// OAuth2 Access Tokens
+export const accessTokens = pgTable("access_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerId: varchar("partner_id", { length: 255 }).notNull().references(() => partners.id, { onDelete: "cascade" }),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token"),
+  tokenType: varchar("token_type", { length: 20 }).notNull().default("Bearer"),
+  scopes: jsonb("scopes").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Idempotency Keys
+export const idempotencyKeys = pgTable("idempotency_keys", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  idempotencyKey: varchar("idempotency_key", { length: 255 }).notNull(),
+  partnerId: varchar("partner_id", { length: 255 }).notNull().references(() => partners.id, { onDelete: "cascade" }),
+  endpoint: varchar("endpoint", { length: 255 }).notNull(),
+  method: varchar("method", { length: 10 }).notNull(),
+  payloadHash: varchar("payload_hash", { length: 64 }).notNull(),
+  responseData: jsonb("response_data"),
+  responseStatus: integer("response_status"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  uniqueKey: index("idempotency_unique").on(table.idempotencyKey, table.partnerId, table.endpoint),
+}));
+
+// Hash-Chained Audit Logs
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerId: varchar("partner_id", { length: 255 }).references(() => partners.id, { onDelete: "cascade" }),
+  sequenceNumber: integer("sequence_number").notNull(),
+  previousHash: varchar("previous_hash", { length: 64 }),
+  currentHash: varchar("current_hash", { length: 64 }).notNull(),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  resourceId: varchar("resource_id", { length: 255 }),
+  action: varchar("action", { length: 50 }).notNull(),
+  payload: jsonb("payload"),
+  userAgent: text("user_agent"),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  timestamp: timestamp("timestamp").defaultNow(),
+});
+
+// GL Connections (Xero, QBO, Generic)
+export const glConnections = pgTable("gl_connections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerId: varchar("partner_id", { length: 255 }).notNull().references(() => partners.id, { onDelete: "cascade" }),
+  glProvider: varchar("gl_provider", { length: 20 }).notNull(), // xero, quickbooks, generic
+  connectionName: varchar("connection_name", { length: 255 }).notNull(),
+  tenantId: varchar("tenant_id", { length: 255 }),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  expiresAt: timestamp("expires_at"),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active, expired, error, disconnected
+  lastSyncAt: timestamp("last_sync_at"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// GL Account Mappings
+export const glMappings = pgTable("gl_mappings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  connectionId: varchar("connection_id", { length: 255 }).notNull().references(() => glConnections.id, { onDelete: "cascade" }),
+  payrollComponent: varchar("payroll_component", { length: 100 }).notNull(),
+  componentType: varchar("component_type", { length: 20 }).notNull(), // earning, deduction, tax, benefit
+  glAccountCode: varchar("gl_account_code", { length: 50 }).notNull(),
+  glAccountName: varchar("gl_account_name", { length: 255 }),
+  debitAccount: varchar("debit_account", { length: 50 }),
+  creditAccount: varchar("credit_account", { length: 50 }),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// GL Journal Entries
+export const glJournals = pgTable("gl_journals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  connectionId: varchar("connection_id", { length: 255 }).notNull().references(() => glConnections.id, { onDelete: "cascade" }),
+  payrollRunId: varchar("payroll_run_id", { length: 255 }),
+  journalReference: varchar("journal_reference", { length: 100 }).notNull(),
+  journalDate: date("journal_date").notNull(),
+  description: text("description").notNull(),
+  totalDebit: decimal("total_debit", { precision: 15, scale: 2 }).notNull().default("0.00"),
+  totalCredit: decimal("total_credit", { precision: 15, scale: 2 }).notNull().default("0.00"),
+  externalId: varchar("external_id", { length: 255 }),
+  status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, posted, error, reversed
+  errorMessage: text("error_message"),
+  journalData: jsonb("journal_data"),
+  createdAt: timestamp("created_at").defaultNow(),
+  postedAt: timestamp("posted_at"),
+});
+
+// GL Journal Lines
+export const glJournalLines = pgTable("gl_journal_lines", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  journalId: varchar("journal_id", { length: 255 }).notNull().references(() => glJournals.id, { onDelete: "cascade" }),
+  lineNumber: integer("line_number").notNull(),
+  accountCode: varchar("account_code", { length: 50 }).notNull(),
+  accountName: varchar("account_name", { length: 255 }),
+  description: text("description").notNull(),
+  debitAmount: decimal("debit_amount", { precision: 15, scale: 2 }).default("0.00"),
+  creditAmount: decimal("credit_amount", { precision: 15, scale: 2 }).default("0.00"),
+  reference: varchar("reference", { length: 100 }),
+  employeeId: varchar("employee_id", { length: 255 }),
+  departmentCode: varchar("department_code", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Webhook Events
+export const webhookEvents = pgTable("webhook_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerId: varchar("partner_id", { length: 255 }).notNull().references(() => partners.id, { onDelete: "cascade" }),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  resourceId: varchar("resource_id", { length: 255 }).notNull(),
+  payload: jsonb("payload").notNull(),
+  deliveryAttempts: integer("delivery_attempts").notNull().default(0),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, delivered, failed, cancelled
+  lastAttemptAt: timestamp("last_attempt_at"),
+  deliveredAt: timestamp("delivered_at"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Embedded Sessions (JWT)
+export const embeddedSessions = pgTable("embedded_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerId: varchar("partner_id", { length: 255 }).notNull().references(() => partners.id, { onDelete: "cascade" }),
+  sessionToken: text("session_token").notNull(),
+  employeeId: varchar("employee_id", { length: 255 }),
+  allowedRoutes: jsonb("allowed_routes").notNull(),
+  originDomain: varchar("origin_domain", { length: 255 }).notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Relations for embedded payroll system
+export const partnerRelations = relations(partners, ({ many }) => ({
+  accessTokens: many(accessTokens),
+  auditLogs: many(auditLogs),
+  glConnections: many(glConnections),
+  webhookEvents: many(webhookEvents),
+  embeddedSessions: many(embeddedSessions),
+}));
+
+export const accessTokenRelations = relations(accessTokens, ({ one }) => ({
+  partner: one(partners, {
+    fields: [accessTokens.partnerId],
+    references: [partners.id],
+  }),
+}));
+
+export const glConnectionRelations = relations(glConnections, ({ one, many }) => ({
+  partner: one(partners, {
+    fields: [glConnections.partnerId],
+    references: [partners.id],
+  }),
+  mappings: many(glMappings),
+  journals: many(glJournals),
+}));
+
+export const glMappingRelations = relations(glMappings, ({ one }) => ({
+  connection: one(glConnections, {
+    fields: [glMappings.connectionId],
+    references: [glConnections.id],
+  }),
+}));
+
+export const glJournalRelations = relations(glJournals, ({ one, many }) => ({
+  connection: one(glConnections, {
+    fields: [glJournals.connectionId],
+    references: [glConnections.id],
+  }),
+  lines: many(glJournalLines),
+}));
+
+export const glJournalLineRelations = relations(glJournalLines, ({ one }) => ({
+  journal: one(glJournals, {
+    fields: [glJournalLines.journalId],
+    references: [glJournals.id],
+  }),
+}));
 
 // Insert schemas for audit & XBRL system (placed after all table definitions)
 export const insertS1DataLineageSchema = createInsertSchema(s1DataLineage);
@@ -2694,3 +2897,31 @@ export const insertS1EvidencePacksSchema = createInsertSchema(s1EvidencePacks);
 export const insertEsrsTaxonomySchema = createInsertSchema(esrsTaxonomy);
 export const insertS1XbrlInstancesSchema = createInsertSchema(s1XbrlInstances);
 export const insertS1ReportSectionsSchema = createInsertSchema(s1ReportSections);
+
+// Insert schemas for embedded payroll + GL API
+export const insertPartnerSchema = createInsertSchema(partners).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertAccessTokenSchema = createInsertSchema(accessTokens).omit({ id: true, createdAt: true });
+export const insertGLConnectionSchema = createInsertSchema(glConnections).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertGLMappingSchema = createInsertSchema(glMappings).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertGLJournalSchema = createInsertSchema(glJournals).omit({ id: true, createdAt: true, postedAt: true });
+export const insertGLJournalLineSchema = createInsertSchema(glJournalLines).omit({ id: true, createdAt: true });
+export const insertEmbeddedSessionSchema = createInsertSchema(embeddedSessions).omit({ id: true, createdAt: true });
+export const insertWebhookEventSchema = createInsertSchema(webhookEvents).omit({ id: true, createdAt: true });
+
+// Types for embedded payroll + GL API
+export type Partner = typeof partners.$inferSelect;
+export type InsertPartner = z.infer<typeof insertPartnerSchema>;
+export type AccessToken = typeof accessTokens.$inferSelect;
+export type InsertAccessToken = z.infer<typeof insertAccessTokenSchema>;
+export type GLConnection = typeof glConnections.$inferSelect;
+export type InsertGLConnection = z.infer<typeof insertGLConnectionSchema>;
+export type GLMapping = typeof glMappings.$inferSelect;
+export type InsertGLMapping = z.infer<typeof insertGLMappingSchema>;
+export type GLJournal = typeof glJournals.$inferSelect;
+export type InsertGLJournal = z.infer<typeof insertGLJournalSchema>;
+export type GLJournalLine = typeof glJournalLines.$inferSelect;
+export type InsertGLJournalLine = z.infer<typeof insertGLJournalLineSchema>;
+export type EmbeddedSession = typeof embeddedSessions.$inferSelect;
+export type InsertEmbeddedSession = z.infer<typeof insertEmbeddedSessionSchema>;
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type InsertWebhookEvent = z.infer<typeof insertWebhookEventSchema>;
