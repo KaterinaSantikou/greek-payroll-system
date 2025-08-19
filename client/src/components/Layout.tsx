@@ -22,12 +22,7 @@ function LayoutContent({ children }: LayoutProps) {
                 {isGroupView ? "Group Dashboard" : "Property Dashboard"}
               </h1>
             </div>
-            <PropertySwitcher
-              selectedPropertyId={selectedPropertyId}
-              onPropertyChange={setSelectedPropertyId}
-              showGroupView={true}
-              onToggleGroupView={toggleGroupView}
-            />
+            <PropertySwitcher />
           </div>
         </div>
         

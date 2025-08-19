@@ -42,6 +42,8 @@ import { FilingComplianceService } from "./filingComplianceService";
 import { SelfServiceManager } from "./selfServiceManager";
 import { registerSelfServiceRoutes } from "./api/selfService";
 import { registerPropertiesRoutes } from "./api/properties";
+import { registerUserProfileRoutes } from "./api/userProfile";
+import { registerAICopilotRoutes } from "./api/aiCopilot";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { 
@@ -2991,6 +2993,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register self-service routes
   registerSelfServiceRoutes(app);
   registerPropertiesRoutes(app);
+  registerUserProfileRoutes(app);
+  registerAICopilotRoutes(app);
 
   // Register notification routes
   try {

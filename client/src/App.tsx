@@ -46,9 +46,12 @@ import ChangeLogLegalWatch from "@/pages/changeLogLegalWatch";
 import { Navigation } from "@/components/Navigation";
 import Layout from "@/components/Layout";
 import { PropertyProvider } from "@/contexts/PropertyContext";
+import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import SmartNotifications from "@/pages/smartNotifications";
 import VisualAnalytics from "@/pages/visualAnalytics";
 import PropertyDashboard from "@/pages/propertyDashboard";
+import RoleBasedDashboard from "@/components/RoleBasedDashboard";
+import { AICopilot } from "@/components/AICopilot";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -64,12 +67,10 @@ function Router() {
   }
 
   return (
-    <div className="flex h-screen">
-      <Navigation />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <div className="flex-1 overflow-y-auto">
-          <Switch>
-            <Route path="/" component={PropertyDashboard} />
+    <Layout>
+      <Switch>
+        <Route path="/" component={RoleBasedDashboard} />
+        <Route path="/property-dashboard" component={PropertyDashboard} />
             <Route path="/employees" component={Employees} />
             <Route path="/employee-master" component={EmployeeMaster} />
             <Route path="/payroll" component={Payroll} />
@@ -115,23 +116,24 @@ function Router() {
             <Route path="/smart-notifications" component={SmartNotifications} />
             <Route path="/visual-analytics" component={VisualAnalytics} />
             <Route path="/mobile-approvals" component={lazy(() => import("./components/MobileManagerApproval"))} />
-            <Route component={NotFound} />
-          </Switch>
-        </div>
-      </div>
-    </div>
+        <Route path="/ai-copilot" component={AICopilot} />
+        <Route component={NotFound} />
+      </Switch>
+    </Layout>
   );
 }
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <PropertyProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </PropertyProvider>
+      <UserRoleProvider>
+        <PropertyProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </PropertyProvider>
+      </UserRoleProvider>
     </QueryClientProvider>
   );
 }
