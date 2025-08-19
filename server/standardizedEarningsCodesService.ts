@@ -319,8 +319,8 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
 
   HOLIDAY_NOT_WORKED: {
     code: 'HOLIDAY_NOT_WORKED',
-    name: 'Public Holiday Pay (Not Worked)',
-    description: 'Salaried employees are entitled to paid public holidays at their daily wage. Taxable, contributory, and reported in APD.',
+    name: 'Paid Holiday (Not Worked)',
+    description: 'Salaried employees receive their regular daily wage on public holidays not worked. This is taxable, contributory, and included in APD.',
     calculation: 'hours_times_rate',
     taxable: true,
     contributoryEFKA: true,

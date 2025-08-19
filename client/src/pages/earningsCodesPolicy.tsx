@@ -87,6 +87,17 @@ const POLICY_SECTIONS: PolicySection[] = [
     ]
   },
   {
+    id: "paid-holidays",
+    title: "Paid Public Holidays",
+    content: "Greek employment law mandates paid public holidays for salaried employees. When employees do not work on public holidays, they receive their regular daily wage. This holiday pay is fully taxable, contributory to EFKA, and included in APD reporting requirements.",
+    compliance: ["Salaried employee entitlement", "Regular daily wage calculation", "Full tax and EFKA treatment", "APD reporting inclusion"],
+    examples: [
+      "HOLIDAY_NOT_WORKED: Regular daily wage for unworked holidays",
+      "Fully taxable and contributory treatment",
+      "Applies to all Greek public holidays"
+    ]
+  },
+  {
     id: "compliance-rules",
     title: "Compliance & Stacking Rules",
     content: "Earnings codes follow specific stacking rules to ensure legal compliance. REG (Regular Hours) does not stack with any other earnings type and must be recorded as separate payroll lines. Premiums can stack with each other but reference REG for calculations. Certain codes like ALLOWANCE_LEAVE and TIPS_DISTRIBUTED are non-stackable. Exceptional overtime triggers mandatory compliance alerts.",
