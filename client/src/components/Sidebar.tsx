@@ -13,7 +13,8 @@ import {
   Gift,
   Plane,
   Scale,
-  Smartphone
+  Smartphone,
+  Building2
 } from "lucide-react";
 
 const navigationItems = [
@@ -27,6 +28,7 @@ const navigationItems = [
   { name: "ERGANI II Compliance", href: "/ergani-compliance", icon: Shield },
   { name: "Payroll Integration", href: "/payroll-integration", icon: Calculator },
   { name: "Manager Workflows", href: "/manager-workflows", icon: Users },
+  { name: "Hotel Operations", href: "/hotel-operations", icon: Building2 },
   { name: "Επιδόματα", href: "/allowances", icon: Gift },
   { name: "Υπερωρίες", href: "/overtime", icon: Clock },
   { name: "Άδειες", href: "/leave", icon: Plane },

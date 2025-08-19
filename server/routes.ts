@@ -15,6 +15,7 @@ import { fromZodError } from "zod-validation-error";
 import { erganiConnector } from "./erganiConnector";
 import { payrollConnector } from "./payrollConnector";
 import { workflowManager } from "./workflowManager";
+import { hotelOperationsManager } from "./hotelOperations";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -759,6 +760,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching audit packs:", error);
       res.status(500).json({ error: "Failed to fetch audit packs" });
+    }
+  });
+
+  // Hotel Operations routes
+  app.get("/api/hotel/properties", isAuthenticated, async (req, res) => {
+    try {
+      const properties = hotelOperationsManager.getProperties();
+      res.json(properties);
+    } catch (error) {
+      console.error("Error fetching properties:", error);
+      res.status(500).json({ error: "Failed to fetch properties" });
+    }
+  });
+
+  app.get("/api/hotel/properties/:propertyId/departments", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.params;
+      const departments = hotelOperationsManager.getDepartments(propertyId);
+      res.json(departments);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      res.status(500).json({ error: "Failed to fetch departments" });
+    }
+  });
+
+  app.get("/api/hotel/kiosk/:departmentId/config", isAuthenticated, async (req, res) => {
+    try {
+      const { departmentId } = req.params;
+      const { language = 'EN' } = req.query;
+      const config = hotelOperationsManager.getKioskConfig(departmentId, language as any);
+      
+      if (!config) {
+        return res.status(404).json({ error: "Kiosk configuration not found" });
+      }
+      
+      res.json(config);
+    } catch (error) {
+      console.error("Error fetching kiosk config:", error);
+      res.status(500).json({ error: "Failed to fetch kiosk configuration" });
+    }
+  });
+
+  app.post("/api/hotel/kiosk/:departmentId/action", isAuthenticated, async (req, res) => {
+    try {
+      const { departmentId } = req.params;
+      const { actionId, employeeId, metadata } = req.body;
+      
+      const result = await hotelOperationsManager.executeKioskAction(
+        departmentId, actionId, employeeId, metadata
+      );
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error executing kiosk action:", error);
+      res.status(500).json({ error: "Failed to execute kiosk action" });
+    }
+  });
+
+  app.post("/api/hotel/multi-property-assignment", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, primaryPropertyId, secondaryAssignments } = req.body;
+      
+      const assignment = await hotelOperationsManager.assignEmployeeToMultipleProperties(
+        employeeId, primaryPropertyId, secondaryAssignments
+      );
+      
+      res.json(assignment);
+    } catch (error) {
+      console.error("Error creating multi-property assignment:", error);
+      res.status(500).json({ error: "Failed to create multi-property assignment" });
+    }
+  });
+
+  app.post("/api/hotel/rotation-schedule", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, propertySequence, pattern } = req.body;
+      
+      await hotelOperationsManager.createRotationSchedule(employeeId, propertySequence, pattern);
+      res.json({ success: true, message: "Rotation schedule created" });
+    } catch (error) {
+      console.error("Error creating rotation schedule:", error);
+      res.status(500).json({ error: "Failed to create rotation schedule" });
+    }
+  });
+
+  app.post("/api/hotel/seasonal-onboarding", isAuthenticated, async (req, res) => {
+    try {
+      const { seasonalPeriodId, batchEmployees } = req.body;
+      
+      const session = await hotelOperationsManager.startSeasonalOnboarding(
+        seasonalPeriodId, batchEmployees
+      );
+      
+      res.json(session);
+    } catch (error) {
+      console.error("Error starting seasonal onboarding:", error);
+      res.status(500).json({ error: "Failed to start seasonal onboarding" });
+    }
+  });
+
+  app.post("/api/hotel/split-shift", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, date, segments } = req.body;
+      
+      const splitShift = await hotelOperationsManager.createSplitShift(
+        employeeId, date, segments
+      );
+      
+      res.json(splitShift);
+    } catch (error) {
+      console.error("Error creating split shift:", error);
+      res.status(500).json({ error: "Failed to create split shift" });
+    }
+  });
+
+  app.post("/api/hotel/validate-cross-department", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, fromDepartment, toDepartment, date } = req.body;
+      
+      const validation = await hotelOperationsManager.validateCrossDepartmentCoverage(
+        employeeId, fromDepartment, toDepartment, date
+      );
+      
+      res.json(validation);
+    } catch (error) {
+      console.error("Error validating cross-department coverage:", error);
+      res.status(500).json({ error: "Failed to validate cross-department coverage" });
+    }
+  });
+
+  app.get("/api/hotel/multi-property-assignments", isAuthenticated, async (req, res) => {
+    try {
+      const assignments = hotelOperationsManager.getMultiPropertyAssignments();
+      res.json(assignments);
+    } catch (error) {
+      console.error("Error fetching multi-property assignments:", error);
+      res.status(500).json({ error: "Failed to fetch multi-property assignments" });
+    }
+  });
+
+  app.get("/api/hotel/split-shifts", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, date } = req.query;
+      const shifts = hotelOperationsManager.getSplitShifts(employeeId as string, date as string);
+      res.json(shifts);
+    } catch (error) {
+      console.error("Error fetching split shifts:", error);
+      res.status(500).json({ error: "Failed to fetch split shifts" });
+    }
+  });
+
+  app.get("/api/hotel/geofence-templates", isAuthenticated, async (req, res) => {
+    try {
+      const templates = hotelOperationsManager.getGeofenceTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching geofence templates:", error);
+      res.status(500).json({ error: "Failed to fetch geofence templates" });
+    }
+  });
+
+  app.get("/api/hotel/onboarding-templates", isAuthenticated, async (req, res) => {
+    try {
+      const templates = hotelOperationsManager.getOnboardingTemplates();
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching onboarding templates:", error);
+      res.status(500).json({ error: "Failed to fetch onboarding templates" });
     }
   });
 
