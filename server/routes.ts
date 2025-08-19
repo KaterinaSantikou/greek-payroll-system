@@ -943,6 +943,144 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Compliance Guardrails API Routes
+  
+  // Get compliance dashboard
+  app.get("/api/compliance/dashboard", isAuthenticated, async (req, res) => {
+    try {
+      const { complianceGuardrails } = await import("./complianceGuardrails");
+      const dashboard = await complianceGuardrails.getComplianceDashboard();
+      res.json(dashboard);
+    } catch (error) {
+      console.error("Error fetching compliance dashboard:", error);
+      res.status(500).json({ error: "Failed to fetch compliance dashboard" });
+    }
+  });
+
+  // Process punch event with compliance checking
+  app.post("/api/compliance/punch-event", isAuthenticated, async (req, res) => {
+    try {
+      const { complianceGuardrails } = await import("./complianceGuardrails");
+      const result = await complianceGuardrails.processPunchEvent(req.body);
+      res.json(result);
+    } catch (error) {
+      console.error("Error processing punch event:", error);
+      res.status(500).json({ error: "Failed to process punch event" });
+    }
+  });
+
+  // Get compliance alerts
+  app.get("/api/compliance/alerts", isAuthenticated, async (req, res) => {
+    try {
+      const { complianceGuardrails } = await import("./complianceGuardrails");
+      const dashboard = await complianceGuardrails.getComplianceDashboard();
+      res.json(dashboard.alerts);
+    } catch (error) {
+      console.error("Error fetching compliance alerts:", error);
+      res.status(500).json({ error: "Failed to fetch compliance alerts" });
+    }
+  });
+
+  // Resolve compliance alert
+  app.put("/api/compliance/alerts/:alertId/resolve", isAuthenticated, async (req, res) => {
+    try {
+      const { alertId } = req.params;
+      const { resolution } = req.body;
+      const userId = req.user?.claims?.sub;
+      
+      const { complianceGuardrails } = await import("./complianceGuardrails");
+      const resolved = complianceGuardrails.resolveAlert(alertId, userId, resolution);
+      
+      if (resolved) {
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "Alert not found or already resolved" });
+      }
+    } catch (error) {
+      console.error("Error resolving compliance alert:", error);
+      res.status(500).json({ error: "Failed to resolve alert" });
+    }
+  });
+
+  // Check digital card policy
+  app.post("/api/compliance/digital-card-policy", isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId, issueType } = req.body;
+      
+      const { complianceGuardrails } = await import("./complianceGuardrails");
+      const policyResult = complianceGuardrails.enforceDigitalCardPolicy(employeeId, issueType);
+      
+      res.json(policyResult);
+    } catch (error) {
+      console.error("Error checking digital card policy:", error);
+      res.status(500).json({ error: "Failed to check digital card policy" });
+    }
+  });
+
+  // Get ERGANI submission status
+  app.get("/api/compliance/ergani/status", isAuthenticated, async (req, res) => {
+    try {
+      const { erganiConnector } = await import("./erganiConnector");
+      const health = erganiConnector.getHealthMetrics();
+      res.json(health);
+    } catch (error) {
+      console.error("Error fetching ERGANI status:", error);
+      res.status(500).json({ error: "Failed to fetch ERGANI status" });
+    }
+  });
+
+  // Get ERGANI mirror logs
+  app.get("/api/compliance/ergani/logs", isAuthenticated, async (req, res) => {
+    try {
+      const { eventId, format } = req.query;
+      const { erganiConnector } = await import("./erganiConnector");
+      
+      if (format === 'csv') {
+        const csvData = erganiConnector.exportMirrorLogs('csv');
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=ergani-logs.csv');
+        res.send(csvData);
+      } else {
+        const logs = erganiConnector.getMirrorLogs(eventId as string);
+        res.json(logs);
+      }
+    } catch (error) {
+      console.error("Error fetching ERGANI logs:", error);
+      res.status(500).json({ error: "Failed to fetch ERGANI logs" });
+    }
+  });
+
+  // Retry quarantined ERGANI event
+  app.post("/api/compliance/ergani/retry/:eventId", isAuthenticated, async (req, res) => {
+    try {
+      const { eventId } = req.params;
+      const { erganiConnector } = await import("./erganiConnector");
+      
+      const result = await erganiConnector.retryQuarantinedEvent(eventId);
+      
+      if (result) {
+        res.json(result);
+      } else {
+        res.status(404).json({ error: "Event not found in quarantine" });
+      }
+    } catch (error) {
+      console.error("Error retrying ERGANI event:", error);
+      res.status(500).json({ error: "Failed to retry ERGANI event" });
+    }
+  });
+
+  // Check data retention compliance
+  app.get("/api/compliance/data-retention", isAuthenticated, async (req, res) => {
+    try {
+      const { complianceGuardrails } = await import("./complianceGuardrails");
+      const compliance = complianceGuardrails.checkDataRetentionCompliance();
+      res.json(compliance);
+    } catch (error) {
+      console.error("Error checking data retention compliance:", error);
+      res.status(500).json({ error: "Failed to check data retention compliance" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

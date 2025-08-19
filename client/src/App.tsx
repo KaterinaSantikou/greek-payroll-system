@@ -21,6 +21,7 @@ import ErganiCompliance from "@/pages/erganiCompliance";
 import PayrollIntegration from "@/pages/payrollIntegration";
 import ManagerWorkflows from "@/pages/managerWorkflows";
 import HotelOperations from "@/pages/hotelOperations";
+import Compliance from "@/pages/compliance";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -47,6 +48,7 @@ function Router() {
           <Route path="/payroll-integration" component={PayrollIntegration} />
           <Route path="/manager-workflows" component={ManagerWorkflows} />
           <Route path="/hotel-operations" component={HotelOperations} />
+          <Route path="/compliance" component={Compliance} />
         </Layout>
       )}
       <Route component={NotFound} />

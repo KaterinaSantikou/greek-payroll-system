@@ -138,6 +138,85 @@ export const timesheets = pgTable("timesheets", {
   index("idx_timesheets_payroll_status").on(table.payrollStatus),
 ]);
 
+// Compliance Alerts table
+export const complianceAlerts = pgTable("compliance_alerts", {
+  alertId: varchar("alert_id").primaryKey().default(sql`gen_random_uuid()`),
+  type: varchar("type", { length: 50 }).notNull(), // MAX_HOURS_APPROACHING, REST_PERIOD_VIOLATION, etc.
+  severity: varchar("severity", { length: 20 }).notNull(), // LOW, MEDIUM, HIGH, CRITICAL
+  employeeId: varchar("employee_id").references(() => employees.employeeId),
+  propertyId: varchar("property_id").references(() => properties.propertyId),
+  message: text("message").notNull(),
+  details: jsonb("details").default('{}'),
+  createdAt: timestamp("created_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: varchar("resolved_by").references(() => users.id),
+  resolutionNotes: text("resolution_notes"),
+}, (table) => [
+  index("idx_compliance_alerts_employee").on(table.employeeId),
+  index("idx_compliance_alerts_severity").on(table.severity),
+  index("idx_compliance_alerts_created").on(table.createdAt),
+  index("idx_compliance_alerts_unresolved").on(table.resolvedAt),
+]);
+
+// Immutable Audit Log table
+export const auditLog = pgTable("audit_log", {
+  logId: varchar("log_id").primaryKey().default(sql`gen_random_uuid()`),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  entityType: varchar("entity_type", { length: 50 }).notNull(),
+  entityId: varchar("entity_id", { length: 255 }).notNull(),
+  userId: varchar("user_id").references(() => users.id),
+  changes: jsonb("changes").notNull(),
+  ipAddress: varchar("ip_address", { length: 45 }),
+  userAgent: text("user_agent"),
+  hashChain: varchar("hash_chain", { length: 255 }).notNull(), // Hash of previous entry
+  signature: varchar("signature", { length: 255 }).notNull(), // Digital signature
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_audit_log_timestamp").on(table.timestamp),
+  index("idx_audit_log_entity").on(table.entityType, table.entityId),
+  index("idx_audit_log_user").on(table.userId),
+  index("idx_audit_log_event_type").on(table.eventType),
+]);
+
+// ERGANI Submission Log table
+export const erganiSubmissionLog = pgTable("ergani_submission_log", {
+  submissionId: varchar("submission_id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").references(() => punchEvents.eventId).notNull(),
+  submissionOrder: integer("submission_order").notNull(),
+  idempotencyKey: varchar("idempotency_key", { length: 255 }).notNull().unique(),
+  status: varchar("status", { length: 20 }).notNull(), // SUCCESS, PENDING, FAILED, QUARANTINED
+  erganiId: varchar("ergani_id", { length: 255 }),
+  errorCode: varchar("error_code", { length: 100 }),
+  errorMessage: text("error_message"),
+  retryCount: integer("retry_count").default(0),
+  requestPayload: jsonb("request_payload").notNull(),
+  responsePayload: jsonb("response_payload"),
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  lastAttemptAt: timestamp("last_attempt_at").defaultNow(),
+  receiptStored: boolean("receipt_stored").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_ergani_submission_event").on(table.eventId),
+  index("idx_ergani_submission_status").on(table.status),
+  index("idx_ergani_submission_order").on(table.submissionOrder),
+  index("idx_ergani_submission_timestamp").on(table.submittedAt),
+]);
+
+// Data Retention Policy table
+export const dataRetentionPolicy = pgTable("data_retention_policy", {
+  policyId: varchar("policy_id").primaryKey().default(sql`gen_random_uuid()`),
+  tableName: varchar("table_name", { length: 100 }).notNull(),
+  retentionYears: integer("retention_years").notNull(),
+  description: text("description"),
+  legalBasis: text("legal_basis"), // Greek law reference
+  lastPurgeDate: timestamp("last_purge_date"),
+  nextPurgeDate: timestamp("next_purge_date"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const propertiesRelations = relations(properties, ({ many }) => ({
   employees: many(employees),
@@ -203,6 +282,35 @@ export const timesheetsRelations = relations(timesheets, ({ one }) => ({
   employee: one(employees, {
     fields: [timesheets.employeeId],
     references: [employees.employeeId],
+  }),
+}));
+
+export const complianceAlertsRelations = relations(complianceAlerts, ({ one }) => ({
+  employee: one(employees, {
+    fields: [complianceAlerts.employeeId],
+    references: [employees.employeeId],
+  }),
+  property: one(properties, {
+    fields: [complianceAlerts.propertyId],
+    references: [properties.propertyId],
+  }),
+  resolvedByUser: one(users, {
+    fields: [complianceAlerts.resolvedBy],
+    references: [users.id],
+  }),
+}));
+
+export const auditLogRelations = relations(auditLog, ({ one }) => ({
+  user: one(users, {
+    fields: [auditLog.userId],
+    references: [users.id],
+  }),
+}));
+
+export const erganiSubmissionLogRelations = relations(erganiSubmissionLog, ({ one }) => ({
+  punchEvent: one(punchEvents, {
+    fields: [erganiSubmissionLog.eventId],
+    references: [punchEvents.eventId],
   }),
 }));
 
@@ -274,3 +382,40 @@ export type InsertException = z.infer<typeof insertExceptionSchema>;
 
 export type Timesheet = typeof timesheets.$inferSelect;
 export type InsertTimesheet = z.infer<typeof insertTimesheetSchema>;
+
+// Add missing schemas for compliance tables
+export const insertComplianceAlertSchema = createInsertSchema(complianceAlerts).omit({
+  alertId: true,
+  createdAt: true,
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLog).omit({
+  logId: true,
+  timestamp: true,
+  createdAt: true,
+});
+
+export const insertErganiSubmissionLogSchema = createInsertSchema(erganiSubmissionLog).omit({
+  submissionId: true,
+  submittedAt: true,
+  lastAttemptAt: true,
+  createdAt: true,
+});
+
+export const insertDataRetentionPolicySchema = createInsertSchema(dataRetentionPolicy).omit({
+  policyId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type ComplianceAlert = typeof complianceAlerts.$inferSelect;
+export type InsertComplianceAlert = z.infer<typeof insertComplianceAlertSchema>;
+
+export type AuditLog = typeof auditLog.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+
+export type ErganiSubmissionLog = typeof erganiSubmissionLog.$inferSelect;
+export type InsertErganiSubmissionLog = z.infer<typeof insertErganiSubmissionLogSchema>;
+
+export type DataRetentionPolicy = typeof dataRetentionPolicy.$inferSelect;
+export type InsertDataRetentionPolicy = z.infer<typeof insertDataRetentionPolicySchema>;
