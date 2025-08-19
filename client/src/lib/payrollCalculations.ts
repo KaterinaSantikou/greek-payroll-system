@@ -49,8 +49,35 @@ export const TAX_FREE_ALLOWANCES = {
   disability: 1400       // Disability allowance €1,400
 };
 
-// Minimum Wage 2025
-export const MINIMUM_WAGE_2025 = 760; // €760/month
+// Greek Minimum Wage 2025 (Updated April 1, 2025)
+export const MINIMUM_WAGE_2025 = {
+  MONTHLY: {
+    WHITE_COLLAR: {
+      amount: 880, // €880 per month for white-collar workers (effective April 1, 2025)
+      description: 'Κατώτατος μισθός υπαλλήλων 2025',
+      effectiveDate: '2025-04-01',
+      previousAmount: 760, // Previous amount from January 2025
+      increasePercentage: 15.8
+    },
+    BLUE_COLLAR: {
+      amount: 880, // €880 per month equivalent for blue-collar workers
+      description: 'Κατώτατος μισθός εργατών 2025 (μηνιαίος)',
+      effectiveDate: '2025-04-01',
+      previousAmount: 760,
+      increasePercentage: 15.8
+    }
+  },
+  DAILY: {
+    BLUE_COLLAR: {
+      amount: 39.30, // €39.30 per day for blue-collar workers (effective April 1, 2025)
+      description: 'Κατώτατος ημερομίσθιο εργατών 2025',
+      effectiveDate: '2025-04-01',
+      previousAmount: 34.10, // Previous daily amount
+      increasePercentage: 15.2,
+      workingDaysPerMonth: 22.4 // Average working days
+    }
+  }
+};
 
 // Sunday Work Premium
 export const SUNDAY_WORK_PREMIUM = 0.75; // 75% premium
