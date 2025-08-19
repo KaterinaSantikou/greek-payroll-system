@@ -24,6 +24,7 @@ const navigationItems = [
   { name: "Ψηφιακή Κάρτα", href: "/digital-work-card", icon: Smartphone },
   { name: "Προηγμένη Καταγραφή", href: "/advanced-time-capture", icon: Clock },
   { name: "Enterprise Architecture", href: "/enterprise-architecture", icon: BarChart },
+  { name: "ERGANI II Compliance", href: "/ergani-compliance", icon: Shield },
   { name: "Επιδόματα", href: "/allowances", icon: Gift },
   { name: "Υπερωρίες", href: "/overtime", icon: Clock },
   { name: "Άδειες", href: "/leave", icon: Plane },

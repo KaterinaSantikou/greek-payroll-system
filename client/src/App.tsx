@@ -17,6 +17,7 @@ import Legal from "@/pages/legal";
 import DigitalWorkCard from "@/pages/digitalWorkCard";
 import AdvancedTimeCapture from "@/pages/advancedTimeCapture";
 import EnterpriseArchitecture from "@/pages/enterpriseArchitecture";
+import ErganiCompliance from "@/pages/erganiCompliance";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -39,6 +40,7 @@ function Router() {
           <Route path="/digital-work-card" component={DigitalWorkCard} />
           <Route path="/advanced-time-capture" component={AdvancedTimeCapture} />
           <Route path="/enterprise-architecture" component={EnterpriseArchitecture} />
+          <Route path="/ergani-compliance" component={ErganiCompliance} />
         </Layout>
       )}
       <Route component={NotFound} />

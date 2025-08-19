@@ -259,40 +259,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Compliance Recommendations API
-  app.get("/api/compliance/recommendations", async (req, res) => {
+  // ERGANI II Connector API
+  app.post("/api/ergani/events", isAuthenticated, async (req, res) => {
     try {
-      const { ComplianceRecommendationEngine } = await import("./complianceEngine");
-      const engine = new ComplianceRecommendationEngine();
+      const { erganiConnector } = await import("./erganiConnector");
+      const eventData = req.body;
       
-      const employeeId = req.query.employeeId as string;
-      
-      const recommendations = employeeId
-        ? await engine.generateRecommendations(employeeId)
-        : await engine.generateOrganizationRecommendations();
-      
-      res.json(recommendations);
+      const result = await erganiConnector.submitEvent(eventData);
+      res.status(201).json(result);
     } catch (error) {
-      console.error("Error generating compliance recommendations:", error);
-      res.status(500).json({ error: "Failed to generate recommendations" });
+      console.error("Error submitting ERGANI event:", error);
+      res.status(500).json({ error: "Failed to submit event to ERGANI" });
     }
   });
 
-  app.post("/api/compliance/recommendations", async (req, res) => {
+  app.post("/api/ergani/bulk", isAuthenticated, async (req, res) => {
     try {
-      const { ComplianceRecommendationEngine } = await import("./complianceEngine");
-      const engine = new ComplianceRecommendationEngine();
+      const { erganiConnector } = await import("./erganiConnector");
+      const eventsData = req.body.events;
       
-      const employeeId = req.query.employeeId as string;
+      if (!Array.isArray(eventsData)) {
+        return res.status(400).json({ error: "Events must be an array" });
+      }
       
-      const recommendations = employeeId
-        ? await engine.generateRecommendations(employeeId)
-        : await engine.generateOrganizationRecommendations();
-      
-      res.json(recommendations);
+      const results = await erganiConnector.submitBulk(eventsData);
+      res.status(201).json({ results });
     } catch (error) {
-      console.error("Error refreshing compliance recommendations:", error);
-      res.status(500).json({ error: "Failed to refresh recommendations" });
+      console.error("Error submitting ERGANI bulk events:", error);
+      res.status(500).json({ error: "Failed to submit bulk events to ERGANI" });
+    }
+  });
+
+  app.get("/api/ergani/status/:eventId", isAuthenticated, async (req, res) => {
+    try {
+      const { erganiConnector } = await import("./erganiConnector");
+      const eventId = req.params.eventId;
+      
+      const status = erganiConnector.getEventStatus(eventId);
+      if (!status) {
+        return res.status(404).json({ error: "Event not found" });
+      }
+      
+      res.json(status);
+    } catch (error) {
+      console.error("Error getting ERGANI event status:", error);
+      res.status(500).json({ error: "Failed to get event status" });
+    }
+  });
+
+  app.get("/api/ergani/health", isAuthenticated, async (req, res) => {
+    try {
+      const { erganiConnector } = await import("./erganiConnector");
+      const metrics = erganiConnector.getHealthMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error("Error getting ERGANI health metrics:", error);
+      res.status(500).json({ error: "Failed to get health metrics" });
+    }
+  });
+
+  app.get("/api/ergani/logs", isAuthenticated, async (req, res) => {
+    try {
+      const { erganiConnector } = await import("./erganiConnector");
+      const { eventId, format } = req.query;
+      
+      if (format === 'export') {
+        const exportFormat = req.query.exportFormat as 'json' | 'csv' || 'json';
+        const exportData = erganiConnector.exportMirrorLogs(exportFormat);
+        
+        const contentType = exportFormat === 'csv' ? 'text/csv' : 'application/json';
+        const filename = `ergani_logs_${new Date().toISOString().split('T')[0]}.${exportFormat}`;
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.send(exportData);
+      } else {
+        const logs = erganiConnector.getMirrorLogs(eventId as string);
+        res.json(logs);
+      }
+    } catch (error) {
+      console.error("Error getting ERGANI logs:", error);
+      res.status(500).json({ error: "Failed to get logs" });
+    }
+  });
+
+  app.get("/api/ergani/quarantine", isAuthenticated, async (req, res) => {
+    try {
+      const { erganiConnector } = await import("./erganiConnector");
+      const quarantinedEvents = erganiConnector.getQuarantinedEvents();
+      res.json(quarantinedEvents);
+    } catch (error) {
+      console.error("Error getting quarantined events:", error);
+      res.status(500).json({ error: "Failed to get quarantined events" });
+    }
+  });
+
+  app.post("/api/ergani/quarantine/:eventId/retry", isAuthenticated, async (req, res) => {
+    try {
+      const { erganiConnector } = await import("./erganiConnector");
+      const eventId = req.params.eventId;
+      
+      const result = await erganiConnector.retryQuarantinedEvent(eventId);
+      if (!result) {
+        return res.status(404).json({ error: "Quarantined event not found" });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error retrying quarantined event:", error);
+      res.status(500).json({ error: "Failed to retry quarantined event" });
     }
   });
 
