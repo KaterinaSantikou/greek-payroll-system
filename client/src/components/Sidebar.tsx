@@ -17,7 +17,8 @@ import {
   Building2,
   Rocket,
   Target,
-  Sparkles
+  Sparkles,
+  CreditCard
 } from "lucide-react";
 
 const navigationItems = [
@@ -25,6 +26,7 @@ const navigationItems = [
   { name: "Employee Master", href: "/employee-master", icon: Users },
   { name: "Εργαζόμενοι", href: "/employees", icon: Users },
   { name: "Μισθοδοσία", href: "/payroll", icon: Calculator },
+  { name: "Πληρωμές & Λογιστική", href: "/payments", icon: CreditCard },
   { name: "Ωράρια", href: "/schedules", icon: Clock },
   { name: "Ψηφιακή Κάρτα", href: "/digital-work-card", icon: Smartphone },
   { name: "Προηγμένη Καταγραφή", href: "/advanced-time-capture", icon: Clock },

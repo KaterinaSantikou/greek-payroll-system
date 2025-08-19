@@ -29,6 +29,7 @@ import SuccessMetrics from "@/pages/successMetrics";
 import ModernPayrollEngine from "@/pages/modernPayrollEngine";
 import ProductVision from "@/pages/productVision";
 import ERGANICompliance from "@/pages/erganiCompliance";
+import Payments from "@/pages/payments";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -44,6 +45,7 @@ function Router() {
           <Route path="/employees" component={Employees} />
           <Route path="/employee-master" component={EmployeeMaster} />
           <Route path="/payroll" component={Payroll} />
+          <Route path="/payments" component={Payments} />
           <Route path="/schedules" component={Schedules} />
           <Route path="/allowances" component={Allowances} />
           <Route path="/overtime" component={Overtime} />

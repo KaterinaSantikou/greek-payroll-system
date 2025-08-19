@@ -1071,3 +1071,227 @@ export type TipsPool = typeof tipsPools.$inferSelect;
 export type InsertTipsPool = z.infer<typeof insertTipsPoolsSchema>;
 export type TipsDistribution = typeof tipsDistributions.$inferSelect;
 export type InsertTipsDistribution = z.infer<typeof insertTipsDistributionsSchema>;
+
+// ==================== PAYMENTS & ACCOUNTING INFRASTRUCTURE ====================
+
+// Payment Instructions table for SEPA pain.001 generation
+export const paymentInstructions = pgTable("payment_instructions", {
+  paymentId: varchar("payment_id").primaryKey().default(sql`gen_random_uuid()`),
+  payrollPeriodId: varchar("payroll_period_id").references(() => payrollPeriods.periodId).notNull(),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  
+  // Payment Details
+  netPayAmount: decimal("net_pay_amount", { precision: 10, scale: 2 }).notNull(),
+  paymentType: varchar("payment_type", { length: 20 }).default("salary"), // salary, bonus, expenses, off_cycle
+  urgentPayment: boolean("urgent_payment").default(false), // For SEPA Instant
+  
+  // IBAN Split (support for multiple accounts)
+  primaryIban: varchar("primary_iban", { length: 34 }).notNull(),
+  primaryAmount: decimal("primary_amount", { precision: 10, scale: 2 }).notNull(),
+  secondaryIban: varchar("secondary_iban", { length: 34 }),
+  secondaryAmount: decimal("secondary_amount", { precision: 10, scale: 2 }).default("0"),
+  tertiaryIban: varchar("tertiary_iban", { length: 34 }),
+  tertiaryAmount: decimal("tertiary_amount", { precision: 10, scale: 2 }).default("0"),
+  
+  // Bank Details
+  bankCode: varchar("bank_code", { length: 10 }), // Greek bank codes (Alpha, Eurobank, NBG, Piraeus)
+  bankName: varchar("bank_name", { length: 100 }),
+  beneficiaryName: varchar("beneficiary_name", { length: 140 }).notNull(),
+  
+  // Payment Reference
+  remittanceInfo: varchar("remittance_info", { length: 140 }), // Payment reference
+  endToEndId: varchar("end_to_end_id", { length: 35 }).notNull(), // Unique payment ID
+  
+  // SEPA pain.001 Details
+  pain001Generated: boolean("pain001_generated").default(false),
+  pain001FilePath: varchar("pain001_file_path", { length: 500 }),
+  pain001GeneratedAt: timestamp("pain001_generated_at"),
+  
+  // Status Tracking
+  status: varchar("status", { length: 20 }).default("pending"), // pending, queued, sent, confirmed, failed
+  sentToBank: timestamp("sent_to_bank"),
+  confirmationReceived: timestamp("confirmation_received"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_payment_instructions_period").on(table.payrollPeriodId),
+  index("idx_payment_instructions_employee").on(table.employeeId),
+  index("idx_payment_instructions_status").on(table.status),
+]);
+
+// SEPA Payment Files table
+export const sepaPaymentFiles = pgTable("sepa_payment_files", {
+  fileId: varchar("file_id").primaryKey().default(sql`gen_random_uuid()`),
+  payrollPeriodId: varchar("payroll_period_id").references(() => payrollPeriods.periodId).notNull(),
+  
+  // File Details
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  fileSize: integer("file_size"),
+  messageId: varchar("message_id", { length: 35 }).notNull(), // SEPA message ID
+  
+  // Payment Summary
+  totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
+  totalTransactions: integer("total_transactions").notNull(),
+  urgentTransactions: integer("urgent_transactions").default(0),
+  
+  // Bank Details
+  debitAccount: varchar("debit_account", { length: 34 }).notNull(), // Company IBAN
+  creditorId: varchar("creditor_id", { length: 35 }), // SEPA Direct Debit Identifier
+  
+  // Request Details
+  requestedExecutionDate: date("requested_execution_date").notNull(),
+  paymentMethod: varchar("payment_method", { length: 10 }).default("TRF"), // TRF or INST
+  
+  // Status
+  status: varchar("status", { length: 20 }).default("generated"), // generated, submitted, processed, failed
+  bankResponse: jsonb("bank_response"),
+  submittedAt: timestamp("submitted_at"),
+  processedAt: timestamp("processed_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// General Ledger Export table
+export const glExports = pgTable("gl_exports", {
+  exportId: varchar("export_id").primaryKey().default(sql`gen_random_uuid()`),
+  payrollPeriodId: varchar("payroll_period_id").references(() => payrollPeriods.periodId).notNull(),
+  propertyId: varchar("property_id").references(() => properties.propertyId),
+  
+  // Export Configuration
+  exportType: varchar("export_type", { length: 20 }).notNull(), // journal, summary, detailed
+  format: varchar("format", { length: 20 }).notNull(), // csv, xml, json, excel
+  erpSystem: varchar("erp_system", { length: 50 }), // SoftOne, Epsilon, SAP, Navision, Custom
+  
+  // File Details
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  filePath: varchar("file_path", { length: 500 }).notNull(),
+  fileSize: integer("file_size"),
+  
+  // GL Summary
+  totalDebits: decimal("total_debits", { precision: 12, scale: 2 }).notNull(),
+  totalCredits: decimal("total_credits", { precision: 12, scale: 2 }).notNull(),
+  totalEntries: integer("total_entries").notNull(),
+  
+  // Mapping Configuration
+  accountMappings: jsonb("account_mappings"), // GL account mapping rules
+  costCenterMappings: jsonb("cost_center_mappings"),
+  departmentMappings: jsonb("department_mappings"),
+  
+  // Status
+  status: varchar("status", { length: 20 }).default("generated"), // generated, exported, imported, failed
+  exportedAt: timestamp("exported_at"),
+  importedAt: timestamp("imported_at"),
+  errorDetails: text("error_details"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Journal Entries table (detailed GL transactions)
+export const journalEntries = pgTable("journal_entries", {
+  entryId: varchar("entry_id").primaryKey().default(sql`gen_random_uuid()`),
+  glExportId: varchar("gl_export_id").references(() => glExports.exportId).notNull(),
+  payrollPeriodId: varchar("payroll_period_id").references(() => payrollPeriods.periodId).notNull(),
+  
+  // Entry Details
+  lineNumber: integer("line_number").notNull(),
+  accountCode: varchar("account_code", { length: 20 }).notNull(),
+  accountName: varchar("account_name", { length: 100 }).notNull(),
+  
+  // Transaction Details
+  debitAmount: decimal("debit_amount", { precision: 12, scale: 2 }).default("0"),
+  creditAmount: decimal("credit_amount", { precision: 12, scale: 2 }).default("0"),
+  description: varchar("description", { length: 255 }).notNull(),
+  reference: varchar("reference", { length: 50 }),
+  
+  // Dimensions
+  propertyId: varchar("property_id").references(() => properties.propertyId),
+  costCenter: varchar("cost_center", { length: 20 }),
+  department: varchar("department", { length: 50 }),
+  project: varchar("project", { length: 50 }),
+  
+  // Source Details
+  sourceType: varchar("source_type", { length: 20 }).notNull(), // salary, tax, insurance, benefits
+  sourceEmployeeId: varchar("source_employee_id").references(() => employees.employeeId),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_journal_entries_export").on(table.glExportId),
+  index("idx_journal_entries_period").on(table.payrollPeriodId),
+  index("idx_journal_entries_account").on(table.accountCode),
+]);
+
+// Bank Registry (Greek banks configuration)
+export const bankRegistry = pgTable("bank_registry", {
+  bankId: varchar("bank_id").primaryKey().default(sql`gen_random_uuid()`),
+  bankCode: varchar("bank_code", { length: 10 }).unique().notNull(),
+  bankName: varchar("bank_name", { length: 100 }).notNull(),
+  bic: varchar("bic", { length: 11 }).notNull(), // SWIFT BIC code
+  
+  // SEPA Configuration
+  supportsSepaInstant: boolean("supports_sepa_instant").default(false),
+  maxInstantAmount: decimal("max_instant_amount", { precision: 10, scale: 2 }),
+  sepaEndpoint: varchar("sepa_endpoint", { length: 500 }), // Bank API endpoint
+  
+  // File Format Preferences
+  pain001Version: varchar("pain001_version", { length: 20 }).default("pain.001.001.03"),
+  characterEncoding: varchar("character_encoding", { length: 20 }).default("UTF-8"),
+  fileNamingPattern: varchar("file_naming_pattern", { length: 100 }),
+  
+  // Processing Times
+  standardProcessingHours: integer("standard_processing_hours").default(24),
+  instantProcessingSeconds: integer("instant_processing_seconds").default(10),
+  cutoffTime: varchar("cutoff_time", { length: 8 }), // HH:MM:SS format
+  
+  // Status
+  isActive: boolean("is_active").default(true),
+  lastTestedAt: timestamp("last_tested_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schemas for payment tables
+export const insertPaymentInstructionsSchema = createInsertSchema(paymentInstructions).omit({
+  paymentId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSepaPaymentFilesSchema = createInsertSchema(sepaPaymentFiles).omit({
+  fileId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertGlExportsSchema = createInsertSchema(glExports).omit({
+  exportId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertJournalEntriesSchema = createInsertSchema(journalEntries).omit({
+  entryId: true,
+  createdAt: true,
+});
+
+export const insertBankRegistrySchema = createInsertSchema(bankRegistry).omit({
+  bankId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Payment type exports
+export type PaymentInstruction = typeof paymentInstructions.$inferSelect;
+export type InsertPaymentInstruction = z.infer<typeof insertPaymentInstructionsSchema>;
+export type SepaPaymentFile = typeof sepaPaymentFiles.$inferSelect;
+export type InsertSepaPaymentFile = z.infer<typeof insertSepaPaymentFilesSchema>;
+export type GlExport = typeof glExports.$inferSelect;
+export type InsertGlExport = z.infer<typeof insertGlExportsSchema>;
+export type JournalEntry = typeof journalEntries.$inferSelect;
+export type InsertJournalEntry = z.infer<typeof insertJournalEntriesSchema>;
+export type BankRegistry = typeof bankRegistry.$inferSelect;
+export type InsertBankRegistry = z.infer<typeof insertBankRegistrySchema>;

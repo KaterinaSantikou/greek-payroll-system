@@ -21,6 +21,12 @@ import { erganiConnector } from "./erganiConnector";
 import { payrollConnector } from "./payrollConnector";
 import { workflowManager } from "./workflowManager";
 import { hotelOperationsManager } from "./hotelOperations";
+import { SepaPaymentService } from "./sepaPaymentService";
+import { GLExportService } from "./glExportService";
+import { 
+  insertPaymentInstructionsSchema, 
+  insertGlExportsSchema 
+} from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -1597,6 +1603,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error submitting government flow:", error);
       res.status(500).json({ message: "Failed to submit government flow" });
+    }
+  });
+
+  // Payment Services Routes
+  const sepaPaymentService = new SepaPaymentService();
+  const glExportService = new GLExportService();
+
+  // Generate SEPA payment file
+  app.post('/api/payments/sepa/generate', isAuthenticated, async (req, res) => {
+    try {
+      const payrollPeriodId = req.body.payrollPeriodId;
+      const propertyId = req.body.propertyId;
+      
+      if (!payrollPeriodId) {
+        return res.status(400).json({ error: "Payroll period ID is required" });
+      }
+      
+      const result = await sepaPaymentService.generateSepaFile(payrollPeriodId, propertyId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error generating SEPA file:", error);
+      res.status(500).json({ error: "Failed to generate SEPA file" });
+    }
+  });
+
+  // Download SEPA payment file
+  app.get('/api/payments/sepa/:fileId/download', isAuthenticated, async (req, res) => {
+    try {
+      const fileId = req.params.fileId;
+      const sepaFile = await sepaPaymentService.downloadSepaFile(fileId);
+      
+      if (!sepaFile) {
+        return res.status(404).json({ error: "SEPA file not found" });
+      }
+      
+      res.setHeader('Content-Type', 'application/xml');
+      res.setHeader('Content-Disposition', `attachment; filename=${sepaFile.fileName}`);
+      res.send(sepaFile.content);
+    } catch (error) {
+      console.error("Error downloading SEPA file:", error);
+      res.status(500).json({ error: "Failed to download SEPA file" });
+    }
+  });
+
+  // Get payment history
+  app.get('/api/payments/history', isAuthenticated, async (req, res) => {
+    try {
+      const propertyId = req.query.propertyId as string;
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+      
+      const history = await sepaPaymentService.getPaymentHistory(propertyId, startDate, endDate);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching payment history:", error);
+      res.status(500).json({ error: "Failed to fetch payment history" });
+    }
+  });
+
+  // Generate GL export
+  app.post('/api/gl-export/generate', isAuthenticated, async (req, res) => {
+    try {
+      const request = req.body;
+      
+      if (!request.payrollPeriodId || !request.exportType || !request.format || !request.erpSystem) {
+        return res.status(400).json({ 
+          error: "Missing required fields: payrollPeriodId, exportType, format, erpSystem" 
+        });
+      }
+      
+      const result = await glExportService.generateGLExport(request);
+      res.json(result);
+    } catch (error) {
+      console.error("Error generating GL export:", error);
+      res.status(500).json({ error: "Failed to generate GL export" });
+    }
+  });
+
+  // Download GL export file
+  app.get('/api/gl-export/:exportId/download', isAuthenticated, async (req, res) => {
+    try {
+      const exportId = req.params.exportId;
+      const glExport = await glExportService.downloadGLExport(exportId);
+      
+      if (!glExport) {
+        return res.status(404).json({ error: "GL export not found" });
+      }
+      
+      const contentType = glExport.format === 'csv' ? 'text/csv' : 
+                          glExport.format === 'xml' ? 'application/xml' : 
+                          'application/json';
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename=${glExport.fileName}`);
+      res.send(glExport.content);
+    } catch (error) {
+      console.error("Error downloading GL export:", error);
+      res.status(500).json({ error: "Failed to download GL export" });
+    }
+  });
+
+  // Get GL export history
+  app.get('/api/gl-export/history', isAuthenticated, async (req, res) => {
+    try {
+      const propertyId = req.query.propertyId as string;
+      const erpSystem = req.query.erpSystem as string;
+      
+      const history = await glExportService.getGLExportHistory(propertyId, erpSystem);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching GL export history:", error);
+      res.status(500).json({ error: "Failed to fetch GL export history" });
     }
   });
 
