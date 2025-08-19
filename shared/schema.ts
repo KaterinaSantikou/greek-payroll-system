@@ -3253,3 +3253,17 @@ export type {
   RoundingConfig,
   PayrollSyncSDK
 } from './sdk-types';
+
+// Re-export payments schema types
+export type {
+  PaymentBatch,
+  PaymentTransaction,
+  BankProfile,
+  BankMessage,
+  PaymentException,
+  InsertPaymentBatch,
+  InsertPaymentTransaction,
+  InsertBankProfile,
+  InsertBankMessage,
+  InsertPaymentException
+} from './payments-schema';

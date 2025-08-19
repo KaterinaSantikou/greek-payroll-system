@@ -56,6 +56,7 @@ import { guidedSetupRoutes } from "./api/guidedSetup";
 import { reconciliationRoutes } from "./api/reconciliation";
 import { edgeCaseRoutes } from "./api/edgeCases";
 import { acceptanceCriteriaRoutes } from "./api/acceptanceCriteria";
+import { paymentsOpsRoutes } from "./api/paymentsOps";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -3336,6 +3337,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Acceptance Criteria & Performance Testing
   acceptanceCriteriaRoutes(app);
+  
+  // Payments Operations Cockpit
+  paymentsOpsRoutes(app);
 
   // Register notification routes
   try {
