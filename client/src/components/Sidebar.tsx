@@ -11,7 +11,8 @@ import {
   Home,
   Clock,
   Gift,
-  Plane
+  Plane,
+  Scale
 } from "lucide-react";
 
 const navigationItems = [
@@ -22,6 +23,7 @@ const navigationItems = [
   { name: "Επιδόματα", href: "/allowances", icon: Gift },
   { name: "Υπερωρίες", href: "/overtime", icon: Clock },
   { name: "Άδειες", href: "/leave", icon: Plane },
+  { name: "Νομικά", href: "/legal", icon: Scale },
   { name: "Αναφορές", href: "/reports", icon: BarChart },
   { name: "Συμμόρφωση", href: "/compliance", icon: Shield },
 ];

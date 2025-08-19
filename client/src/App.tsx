@@ -13,6 +13,7 @@ import Schedules from "@/pages/schedules";
 import Allowances from "@/pages/allowances";
 import Overtime from "@/pages/overtime";
 import Leave from "@/pages/leave";
+import Legal from "@/pages/legal";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -31,6 +32,7 @@ function Router() {
           <Route path="/allowances" component={Allowances} />
           <Route path="/overtime" component={Overtime} />
           <Route path="/leave" component={Leave} />
+          <Route path="/legal" component={Legal} />
         </Layout>
       )}
       <Route component={NotFound} />
