@@ -47,6 +47,7 @@ import { Navigation } from "@/components/Navigation";
 import Layout from "@/components/Layout";
 import { PropertyProvider } from "@/contexts/PropertyContext";
 import { UserRoleProvider } from "@/contexts/UserRoleContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import SmartNotifications from "@/pages/smartNotifications";
 import VisualAnalytics from "@/pages/visualAnalytics";
 import PropertyDashboard from "@/pages/propertyDashboard";
@@ -126,14 +127,16 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <UserRoleProvider>
-        <PropertyProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
-        </PropertyProvider>
-      </UserRoleProvider>
+      <ThemeProvider>
+        <UserRoleProvider>
+          <PropertyProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </PropertyProvider>
+        </UserRoleProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

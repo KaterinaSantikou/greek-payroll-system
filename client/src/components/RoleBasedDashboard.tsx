@@ -8,125 +8,220 @@ import {
   Calendar, Euro, CheckCircle, Settings, BarChart3 
 } from "lucide-react";
 import { Link } from "wouter";
+import { motion } from "framer-motion";
+import { CardEntrance, PageTransition, ButtonMotion } from "@/components/MotionWrapper";
+import { celebratePayrollSuccess } from "@/lib/confetti";
 
 export default function RoleBasedDashboard() {
   const { userProfile, userRole, hasPermission } = useUserRole();
   const { selectedProperty, isGroupView } = useProperty();
 
   if (!userProfile) {
-    return <div>Loading user profile...</div>;
+    return (
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex items-center justify-center h-64"
+      >
+        <div className="animate-pulse text-muted-foreground">Loading user profile...</div>
+      </motion.div>
+    );
   }
+
+  const handlePayrollCelebration = () => {
+    celebratePayrollSuccess();
+  };
 
   // HR Dashboard - Filings & Payroll modules first
   if (userRole === 'hr') {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      <PageTransition className="space-y-6">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex items-center justify-between"
+        >
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">HR Dashboard</h2>
-            <p className="text-muted-foreground">
+            <motion.h2 
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-3xl font-bold tracking-tight bg-gradient-to-r from-brand-blue to-brand-purple bg-clip-text text-transparent"
+            >
+              HR Dashboard
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-muted-foreground"
+            >
               Payroll processing and compliance management
-            </p>
+            </motion.p>
           </div>
-          <Badge variant="outline" className="bg-blue-50 text-blue-700">
-            HR Manager
-          </Badge>
-        </div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+          >
+            <Badge variant="outline" className="bg-brand-blue/10 text-brand-blue border-brand-blue/20">
+              HR Manager
+            </Badge>
+          </motion.div>
+        </motion.div>
 
         {/* HR Priority Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Pending Payroll</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">3</div>
-              <p className="text-xs text-muted-foreground">Properties ready</p>
-            </CardContent>
-          </Card>
+          <CardEntrance delay={0.1}>
+            <Card className="border-l-4 border-l-brand-blue bg-gradient-to-br from-background to-brand-blue/5 dark:to-brand-blue/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Pending Payroll</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+                  className="text-2xl font-bold text-brand-blue"
+                >
+                  3
+                </motion.div>
+                <p className="text-xs text-muted-foreground">Properties ready</p>
+              </CardContent>
+            </Card>
+          </CardEntrance>
 
-          <Card className="border-l-4 border-l-orange-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">ERGANI Filings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">12</div>
-              <p className="text-xs text-muted-foreground">Due this week</p>
-            </CardContent>
-          </Card>
+          <CardEntrance delay={0.2}>
+            <Card className="border-l-4 border-l-brand-orange bg-gradient-to-br from-background to-brand-orange/5 dark:to-brand-orange/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">ERGANI Filings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.7, type: "spring", stiffness: 200 }}
+                  className="text-2xl font-bold text-brand-orange"
+                >
+                  12
+                </motion.div>
+                <p className="text-xs text-muted-foreground">Due this week</p>
+              </CardContent>
+            </Card>
+          </CardEntrance>
 
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Compliance Score</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">98%</div>
-              <p className="text-xs text-muted-foreground">All properties</p>
-            </CardContent>
-          </Card>
+          <CardEntrance delay={0.3}>
+            <Card className="border-l-4 border-l-brand-green bg-gradient-to-br from-background to-brand-green/5 dark:to-brand-green/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Compliance Score</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                  className="text-2xl font-bold text-brand-green"
+                >
+                  98%
+                </motion.div>
+                <p className="text-xs text-muted-foreground">All properties</p>
+              </CardContent>
+            </Card>
+          </CardEntrance>
 
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Cost</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">€847K</div>
-              <p className="text-xs text-muted-foreground">Labor costs</p>
-            </CardContent>
-          </Card>
+          <CardEntrance delay={0.4}>
+            <Card className="border-l-4 border-l-brand-purple bg-gradient-to-br from-background to-brand-purple/5 dark:to-brand-purple/10">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Monthly Cost</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.9, type: "spring", stiffness: 200 }}
+                  className="text-2xl font-bold text-brand-purple"
+                >
+                  €847K
+                </motion.div>
+                <p className="text-xs text-muted-foreground">Labor costs</p>
+              </CardContent>
+            </Card>
+          </CardEntrance>
         </div>
 
         {/* HR Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payroll Quick Actions</CardTitle>
-              <CardDescription>Process payroll and manage filings</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/payroll-run-wizard">
-                <Button className="w-full justify-start">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Run Payroll (December)
-                </Button>
-              </Link>
-              <Link href="/ergani-compliance">
-                <Button variant="outline" className="w-full justify-start">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  ERGANI Submissions
-                </Button>
-              </Link>
-              <Link href="/compliance">
-                <Button variant="outline" className="w-full justify-start">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  Compliance Dashboard
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <CardEntrance delay={0.5}>
+            <Card className="bg-gradient-to-br from-background to-muted/30">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="w-5 h-5 text-brand-blue" />
+                  <span>Payroll Quick Actions</span>
+                </CardTitle>
+                <CardDescription>Process payroll and manage filings</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <ButtonMotion>
+                  <Button 
+                    className="w-full justify-start bg-brand-blue hover:bg-brand-blue/90"
+                    onClick={handlePayrollCelebration}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Run Payroll (December) 🎉
+                  </Button>
+                </ButtonMotion>
+                <ButtonMotion>
+                  <Link href="/ergani-compliance">
+                    <Button variant="outline" className="w-full justify-start border-brand-green/20 text-brand-green hover:bg-brand-green/5">
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      ERGANI Submissions
+                    </Button>
+                  </Link>
+                </ButtonMotion>
+                <ButtonMotion>
+                  <Link href="/compliance">
+                    <Button variant="outline" className="w-full justify-start border-brand-orange/20 text-brand-orange hover:bg-brand-orange/5">
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      Compliance Dashboard
+                    </Button>
+                  </Link>
+                </ButtonMotion>
+              </CardContent>
+            </Card>
+          </CardEntrance>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Employee Management</CardTitle>
-              <CardDescription>Onboarding and employee records</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/employees">
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="w-4 h-4 mr-2" />
-                  Employee Directory
-                </Button>
-              </Link>
-              <Link href="/employee-master">
-                <Button variant="outline" className="w-full justify-start">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Master Data Management
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <CardEntrance delay={0.6}>
+            <Card className="bg-gradient-to-br from-background to-muted/30">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Users className="w-5 h-5 text-brand-purple" />
+                  <span>Employee Management</span>
+                </CardTitle>
+                <CardDescription>Onboarding and employee records</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <ButtonMotion>
+                  <Link href="/employees">
+                    <Button variant="outline" className="w-full justify-start border-brand-purple/20 text-brand-purple hover:bg-brand-purple/5">
+                      <Users className="w-4 h-4 mr-2" />
+                      Employee Directory
+                    </Button>
+                  </Link>
+                </ButtonMotion>
+                <ButtonMotion>
+                  <Link href="/employee-master">
+                    <Button variant="outline" className="w-full justify-start border-brand-blue/20 text-brand-blue hover:bg-brand-blue/5">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Master Data Management
+                    </Button>
+                  </Link>
+                </ButtonMotion>
+              </CardContent>
+            </Card>
+          </CardEntrance>
         </div>
-      </div>
+      </PageTransition>
     );
   }
 
