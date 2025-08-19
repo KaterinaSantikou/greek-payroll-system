@@ -64,6 +64,8 @@ import CommandPaletteDemo from "@/pages/commandPaletteDemo";
 import Onboarding from "@/pages/onboarding";
 import Exits from "@/pages/exits";
 import TeamsRoles from "@/pages/teamsRoles";
+import S1Dashboard from "@/pages/S1Dashboard";
+import S1MetricsPage from "@/pages/S1MetricsPage";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 
@@ -161,6 +163,8 @@ function Router() {
             <Route path="/ai-engines-demo" component={AIEnginesDemo} />
             <Route path="/command-palette-demo" component={CommandPaletteDemo} />
             <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
+        <Route path="/s1-dashboard" component={S1Dashboard} />
+        <Route path="/s1-metrics" component={S1MetricsPage} />
         <Route path="/ai-copilot" component={AICopilot} />
         <Route component={NotFound} />
       </Switch>

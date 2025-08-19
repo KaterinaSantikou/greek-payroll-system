@@ -540,6 +540,91 @@ export function registerCsrdRoutes(app: Router) {
   });
 
   // =====================================================
+  // S1 READINESS & UI SUPPORT ENDPOINTS
+  // =====================================================
+
+  // S1 Readiness Status by Entity
+  app.get('/api/csrd/s1-readiness/:entityId', async (req, res) => {
+    try {
+      const { entityId } = req.params;
+      
+      // Mock readiness data - replace with actual calculations
+      const readinessData = {
+        completenessPercent: Math.floor(Math.random() * 100),
+        lastCalculationDate: new Date().toISOString(),
+        pendingFields: ['Gender Pay Gap', 'H&S Coverage', 'Work-Life Balance'].slice(0, Math.floor(Math.random() * 3)),
+        status: ['ready', 'pending', 'incomplete'][Math.floor(Math.random() * 3)],
+        totalMetrics: 8,
+        completedMetrics: Math.floor(Math.random() * 8),
+      };
+      
+      res.json(readinessData);
+    } catch (error) {
+      console.error('S1 readiness error:', error);
+      res.status(500).json({ error: 'Failed to get S1 readiness status' });
+    }
+  });
+
+  // S1 Metrics Data with Filters
+  app.get('/api/csrd/metrics', async (req, res) => {
+    try {
+      const { entity, country, period } = req.query;
+      
+      // Mock metrics data - replace with actual calculations
+      const metricsData = {
+        genderPayGap: {
+          value: 8.2 + (Math.random() - 0.5) * 4,
+          trend: (Math.random() - 0.5) * 10,
+          lastCalculated: new Date().toISOString(),
+        },
+        topToMedianRatio: {
+          value: 25.6 + (Math.random() - 0.5) * 10,
+          trend: (Math.random() - 0.5) * 15,
+          lastCalculated: new Date().toISOString(),
+        },
+        healthSafetyCoverage: {
+          value: 95 + Math.random() * 5,
+          trend: (Math.random() - 0.5) * 5,
+          lastCalculated: new Date().toISOString(),
+        },
+        incidentsRate: {
+          value: 2.1 + (Math.random() - 0.5) * 1.5,
+          trend: (Math.random() - 0.5) * 20,
+          lastCalculated: new Date().toISOString(),
+        },
+        workLifeUsage: {
+          value: 78 + (Math.random() - 0.5) * 20,
+          trend: (Math.random() - 0.5) * 12,
+          lastCalculated: new Date().toISOString(),
+        },
+      };
+      
+      res.json(metricsData);
+    } catch (error) {
+      console.error('Get metrics data error:', error);
+      res.status(500).json({ error: 'Failed to get metrics data' });
+    }
+  });
+
+  // Get Available Entities for Filtering
+  app.get('/api/entities', async (req, res) => {
+    try {
+      const entities = [
+        { id: 'hq-athens', name: 'HQ Athens' },
+        { id: 'hotel-mykonos', name: 'Mykonos Resort' },
+        { id: 'hotel-santorini', name: 'Santorini Hotel' },
+        { id: 'office-berlin', name: 'Berlin Office' },
+        { id: 'office-paris', name: 'Paris Office' },
+      ];
+      
+      res.json(entities);
+    } catch (error) {
+      console.error('Get entities error:', error);
+      res.status(500).json({ error: 'Failed to get entities' });
+    }
+  });
+
+  // =====================================================
   // EVIDENCE PACK & AUDIT ASSURANCE ENDPOINTS
   // =====================================================
 

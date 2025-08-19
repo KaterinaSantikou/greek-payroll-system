@@ -260,7 +260,7 @@ export class XBRLTaggingService {
       reportSections.push({
         reportingPeriodId,
         sectionCode: 'S1-6',
-        sectionTitle: language === 'en' ? 'Characteristics of the undertaking's employees' : 'Χαρακτηριστικά των εργαζομένων της επιχείρησης',
+        sectionTitle: language === 'en' ? 'Characteristics of the undertaking employees' : 'Χαρακτηριστικά των εργαζομένων της επιχείρησης',
         sectionType: 'metrics',
         sortOrder: 1,
         humanReadableText: workforceText,
