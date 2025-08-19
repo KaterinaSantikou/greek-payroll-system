@@ -53,6 +53,14 @@ Preferred communication style: Simple, everyday language.
 - Sunday work premiums (75% increase)
 - Dangerous work rates (20-35% increase depending on industry)
 
+### EFKA Insurance System Integration (August 2025)
+- **Comprehensive Insurance Categories**: IKA, OAEE, ETAA, and OTHER classifications
+- **Insurance Package Types**: Full, Basic, Reduced, and Special coverage options
+- **Special Professional Categories**: Heavy/Unhealthy, Hazardous, Maritime, Military, Police, Firefighter, Journalist, Artist, Athlete
+- **Fund Affiliations**: Main Fund, Auxiliary Fund, Health Fund, Unemployment Fund, Family Benefits
+- **Additional Registrations**: ERGANI (Labor Inspection System), TEKA (Engineers/Technicians Fund)
+- **Automated Contribution Calculations**: Based on employee category and special profession requirements
+
 # External Dependencies
 
 ## Core Infrastructure

@@ -225,6 +225,57 @@ export function formatAmkaInput(value: string): string {
 }
 
 /**
+ * EFKA Insurance Categories
+ * Main social insurance categories in Greece
+ */
+export const EFKA_INSURANCE_CATEGORIES = [
+  "IKA", // Ίδρυμα Κοινωνικών Ασφαλίσεων (General Social Security)
+  "OAEE", // Οργανισμός Ασφάλισης Ελευθέρων Επαγγελματιών (Freelancers)
+  "ETAA", // Ενιαίο Ταμείο Ανεξάρτητα Απασχολουμένων (Independent Workers)
+  "OTHER", // Άλλο
+];
+
+/**
+ * EFKA Insurance Packages
+ * Specific coverage types within each category
+ */
+export const EFKA_INSURANCE_PACKAGES = [
+  "FULL_COVERAGE", // Πλήρης Κάλυψη
+  "BASIC_COVERAGE", // Βασική Κάλυψη
+  "REDUCED_COVERAGE", // Μειωμένη Κάλυψη
+  "SPECIAL_COVERAGE", // Ειδική Κάλυψη
+];
+
+/**
+ * Special Insurance Categories
+ * For special cases and professions
+ */
+export const SPECIAL_INSURANCE_CATEGORIES = [
+  "HEAVY_UNHEALTHY", // Βαρέα & Ανθυγιεινά
+  "HAZARDOUS", // Επικίνδυνα
+  "MARITIME", // Ναυτιλιακά
+  "MILITARY", // Στρατιωτικά
+  "POLICE", // Αστυνομικά
+  "FIREFIGHTER", // Πυροσβεστικά
+  "JOURNALIST", // Δημοσιογραφικά
+  "ARTIST", // Καλλιτεχνικά
+  "ATHLETE", // Αθλητικά
+  "NONE", // Καμία
+];
+
+/**
+ * EFKA Fund Affiliations
+ * Specific fund assignments within EFKA
+ */
+export const EFKA_FUND_AFFILIATIONS = [
+  "MAIN_FUND", // Κύριο Ταμείο
+  "AUXILIARY_FUND", // Επικουρικό Ταμείο
+  "HEALTH_FUND", // Ταμείο Υγείας
+  "UNEMPLOYMENT_FUND", // Ταμείο Ανεργίας
+  "FAMILY_BENEFITS", // Οικογενειακές Παροχές
+];
+
+/**
  * Greek tax office (ΔΟΥ) list
  * Common Greek tax offices for dropdown selection
  */

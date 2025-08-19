@@ -11,7 +11,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { validateAfm, validateAmka, GREEK_TAX_OFFICES } from "@/lib/greekValidations";
+import { 
+  validateAfm, 
+  validateAmka, 
+  GREEK_TAX_OFFICES,
+  EFKA_INSURANCE_CATEGORIES,
+  EFKA_INSURANCE_PACKAGES,
+  SPECIAL_INSURANCE_CATEGORIES,
+  EFKA_FUND_AFFILIATIONS
+} from "@/lib/greekValidations";
 import { insertEmployeeSchema, type Employee, type InsertEmployee } from "@shared/schema";
 import { ChevronLeft, ChevronRight, Save } from "lucide-react";
 
@@ -539,45 +547,158 @@ export default function EmployeeForm({ employee, onSuccess, onCancel }: Employee
               </div>
             )}
 
-            {/* Step 3: Legal Documents */}
+            {/* Step 3: Legal Documents & EFKA Insurance */}
             {currentStep === 3 && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="efkaRegistry">Αρ. Μητρώου ΕΦΚΑ</Label>
-                    <Input
-                      id="efkaRegistry"
-                      {...register("efkaRegistry")}
-                      placeholder="Αριθμός μητρώου ΕΦΚΑ"
-                    />
+              <div className="space-y-8">
+                {/* Basic Legal Documents */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Βασικά Νομικά Έγγραφα</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="efkaRegistry">Αρ. Μητρώου ΕΦΚΑ *</Label>
+                      <Input
+                        id="efkaRegistry"
+                        {...register("efkaRegistry")}
+                        placeholder="Αριθμός μητρώου ΕΦΚΑ"
+                      />
+                      {errors.efkaRegistry && (
+                        <p className="text-red-500 text-sm mt-1">{errors.efkaRegistry.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="taxOffice">ΔΟΥ *</Label>
+                      <Select onValueChange={(value) => setValue("taxOffice", value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Επιλέξτε ΔΟΥ" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {GREEK_TAX_OFFICES.map((office) => (
+                            <SelectItem key={office} value={office}>
+                              {office}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.taxOffice && (
+                        <p className="text-red-500 text-sm mt-1">{errors.taxOffice.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="workPermit">Άδεια Εργασίας</Label>
+                      <Input
+                        id="workPermit"
+                        {...register("workPermit")}
+                        placeholder="Αριθμός άδειας (για αλλοδαπούς)"
+                      />
+                    </div>
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="taxOffice">ΔΟΥ *</Label>
-                    <Select onValueChange={(value) => setValue("taxOffice", value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Επιλέξτε ΔΟΥ" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {GREEK_TAX_OFFICES.map((office) => (
-                          <SelectItem key={office} value={office}>
-                            {office}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {errors.taxOffice && (
-                      <p className="text-red-500 text-sm mt-1">{errors.taxOffice.message}</p>
-                    )}
+                </div>
+
+                {/* EFKA Insurance System */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Σύστημα Ασφάλισης ΕΦΚΑ</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="efkaInsuranceCategory">Κατηγορία Ασφάλισης *</Label>
+                      <Select onValueChange={(value) => setValue("efkaInsuranceCategory", value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Επιλέξτε κατηγορία" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="IKA">ΙΚΑ - Ίδρυμα Κοινωνικών Ασφαλίσεων</SelectItem>
+                          <SelectItem value="OAEE">ΟΑΕΕ - Οργανισμός Ασφάλισης Ελευθέρων Επαγγελματιών</SelectItem>
+                          <SelectItem value="ETAA">ΕΤΑΑ - Ενιαίο Ταμείο Ανεξάρτητα Απασχολουμένων</SelectItem>
+                          <SelectItem value="OTHER">Άλλο</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.efkaInsuranceCategory && (
+                        <p className="text-red-500 text-sm mt-1">{errors.efkaInsuranceCategory.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="efkaInsurancePackage">Πακέτο Κάλυψης</Label>
+                      <Select onValueChange={(value) => setValue("efkaInsurancePackage", value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Επιλέξτε πακέτο" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="FULL_COVERAGE">Πλήρης Κάλυψη</SelectItem>
+                          <SelectItem value="BASIC_COVERAGE">Βασική Κάλυψη</SelectItem>
+                          <SelectItem value="REDUCED_COVERAGE">Μειωμένη Κάλυψη</SelectItem>
+                          <SelectItem value="SPECIAL_COVERAGE">Ειδική Κάλυψη</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="specialInsuranceCategory">Ειδική Κατηγορία Ασφάλισης</Label>
+                      <Select onValueChange={(value) => setValue("specialInsuranceCategory", value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Επιλέξτε ειδική κατηγορία" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="NONE">Καμία</SelectItem>
+                          <SelectItem value="HEAVY_UNHEALTHY">Βαρέα & Ανθυγιεινά</SelectItem>
+                          <SelectItem value="HAZARDOUS">Επικίνδυνα</SelectItem>
+                          <SelectItem value="MARITIME">Ναυτιλιακά</SelectItem>
+                          <SelectItem value="MILITARY">Στρατιωτικά</SelectItem>
+                          <SelectItem value="POLICE">Αστυνομικά</SelectItem>
+                          <SelectItem value="FIREFIGHTER">Πυροσβεστικά</SelectItem>
+                          <SelectItem value="JOURNALIST">Δημοσιογραφικά</SelectItem>
+                          <SelectItem value="ARTIST">Καλλιτεχνικά</SelectItem>
+                          <SelectItem value="ATHLETE">Αθλητικά</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="efkaFundAffiliation">Ταμειακή Ένταξη ΕΦΚΑ</Label>
+                      <Select onValueChange={(value) => setValue("efkaFundAffiliation", value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Επιλέξτε ταμείο" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="MAIN_FUND">Κύριο Ταμείο</SelectItem>
+                          <SelectItem value="AUXILIARY_FUND">Επικουρικό Ταμείο</SelectItem>
+                          <SelectItem value="HEALTH_FUND">Ταμείο Υγείας</SelectItem>
+                          <SelectItem value="UNEMPLOYMENT_FUND">Ταμείο Ανεργίας</SelectItem>
+                          <SelectItem value="FAMILY_BENEFITS">Οικογενειακές Παροχές</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  
-                  <div>
-                    <Label htmlFor="workPermit">Άδεια Εργασίας</Label>
-                    <Input
-                      id="workPermit"
-                      {...register("workPermit")}
-                      placeholder="Αριθμός άδειας (για αλλοδαπούς)"
-                    />
+                </div>
+
+                {/* Additional Registrations */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Επιπλέον Καταχωρήσεις</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="erganiRegistration">Καταχώρηση ΕΡΓΑΝΗ</Label>
+                      <Input
+                        id="erganiRegistration"
+                        {...register("erganiRegistration")}
+                        placeholder="Αριθμός καταχώρησης στο σύστημα ΕΡΓΑΝΗ"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Σύστημα επιθεώρησης εργασίας
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="tekaEnrollment">Εγγραφή ΤΕΚΑ</Label>
+                      <Input
+                        id="tekaEnrollment"
+                        {...register("tekaEnrollment")}
+                        placeholder="Αριθμός εγγραφής στο ΤΕΚΑ"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Ταμείο Επαγγελματιών Κατασκευαστών Αττικής (Μηχανικοί/Τεχνικοί)
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

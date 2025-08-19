@@ -172,6 +172,113 @@ export default function GreekComplianceInfo() {
           </div>
         </CardContent>
       </Card>
+
+      {/* EFKA Insurance System */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Σύστημα Ασφάλισης ΕΦΚΑ
+          </CardTitle>
+          <CardDescription>
+            Ολοκληρωμένη διαχείριση ασφαλιστικών κατηγοριών και ταμειακών εντάξεων
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <h4 className="font-medium text-blue-700">Κατηγορίες Ασφάλισης</h4>
+              <div className="space-y-1 text-sm">
+                <p>• <span className="font-semibold">ΙΚΑ</span> - Ίδρυμα Κοινωνικών Ασφαλίσεων</p>
+                <p>• <span className="font-semibold">ΟΑΕΕ</span> - Ελεύθεροι Επαγγελματίες</p>
+                <p>• <span className="font-semibold">ΕΤΑΑ</span> - Ανεξάρτητα Απασχολούμενοι</p>
+                <p>• <span className="font-semibold">Άλλες</span> - Ειδικές κατηγορίες</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="font-medium text-green-700">Πακέτα Κάλυψης</h4>
+              <div className="space-y-1 text-sm">
+                <p>• Πλήρης Κάλυψη</p>
+                <p>• Βασική Κάλυψη</p>
+                <p>• Μειωμένη Κάλυψη</p>
+                <p>• Ειδική Κάλυψη</p>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <h4 className="font-medium text-purple-700">Ταμειακές Εντάξεις</h4>
+              <div className="space-y-1 text-sm">
+                <p>• Κύριο Ταμείο</p>
+                <p>• Επικουρικό Ταμείο</p>
+                <p>• Ταμείο Υγείας</p>
+                <p>• Ταμείο Ανεργίας</p>
+                <p>• Οικογενειακές Παροχές</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="font-medium mb-3">Ειδικές Κατηγορίες Επαγγελμάτων</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Βαρέα & Ανθυγιεινά</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Επικίνδυνα</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Ναυτιλιακά</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Στρατιωτικά</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Αστυνομικά</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Πυροσβεστικά</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Δημοσιογραφικά</div>
+                <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded">Καλλιτεχνικά</div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="font-medium mb-3">Επιπλέον Καταχωρήσεις</h4>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <div>
+                    <p className="font-medium text-sm">ΕΡΓΑΝΗ</p>
+                    <p className="text-xs text-muted-foreground">Σύστημα επιθεώρησης εργασίας</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <div>
+                    <p className="font-medium text-sm">ΤΕΚΑ</p>
+                    <p className="text-xs text-muted-foreground">Ταμείο Μηχανικών/Τεχνικών</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
+            <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">
+              Αυτοματοποιημένος Υπολογισμός Εισφορών 2025
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <p className="font-semibold">Εργαζόμενος</p>
+                <p>ΕΦΚΑ: 16%</p>
+                <p>Ανεργία: 0.5%</p>
+              </div>
+              <div>
+                <p className="font-semibold">Εργοδότης</p>
+                <p>ΕΦΚΑ: 24.78%</p>
+                <p>Ανεργία: 2.55%</p>
+              </div>
+              <div>
+                <p className="font-semibold">Ειδικές Προσαυξήσεις</p>
+                <p>Βαρέα: +20-35%</p>
+                <p>Επικίνδυνα: +15-25%</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

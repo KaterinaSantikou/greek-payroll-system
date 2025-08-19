@@ -82,6 +82,14 @@ export const employees = pgTable("employees", {
   disabilityCertificate: boolean("disability_certificate").default(false),
   collectiveAgreementId: varchar("collective_agreement_id").references(() => collectiveAgreements.id),
   
+  // EFKA Insurance System (Comprehensive Coverage)
+  efkaInsuranceCategory: varchar("efka_insurance_category"), // IKA, OAEE, ETAA, OTHER
+  efkaInsurancePackage: varchar("efka_insurance_package"), // FULL_COVERAGE, BASIC_COVERAGE, etc.
+  specialInsuranceCategory: varchar("special_insurance_category"), // HEAVY_UNHEALTHY, HAZARDOUS, etc.
+  efkaFundAffiliation: varchar("efka_fund_affiliation"), // MAIN_FUND, AUXILIARY_FUND, etc.
+  erganiRegistration: varchar("ergani_registration"), // Labor inspection system
+  tekaEnrollment: varchar("teka_enrollment"), // Engineers/technicians fund
+  
   // Employment Contract (Law 4808/2021 amendments)
   contractType: varchar("contract_type").notNull(), // indefinite, fixed-term, apprenticeship, internship
   workingHours: integer("working_hours").default(40),
