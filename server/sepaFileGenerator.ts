@@ -60,7 +60,7 @@ interface SEPAFileMetadata {
  * - Cut‑offs: same‑day typically by early afternoon; engine enforces per‑bank cut‑offs per profile
  * - Reconciliation: ingest pain.002 status and camt.054 credit notifications where available
  */
-export class SEPAFileGenerator {
+export class SepaFileGenerator {
   // ISO 20022 pain.001 Customer Credit Transfer (SCT) 
   // Default pain.001.001.03 for widest compatibility; optional .001.09 where supported
   private readonly PAIN_VERSION = "pain.001.001.03";
