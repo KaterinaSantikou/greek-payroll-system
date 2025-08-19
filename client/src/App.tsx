@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import Employees from "@/pages/employees";
+import EmployeeMaster from "@/pages/employeeMaster";
 import Payroll from "@/pages/payroll";
 import Schedules from "@/pages/schedules";
 import Allowances from "@/pages/allowances";
@@ -41,6 +42,7 @@ function Router() {
         <Layout>
           <Route path="/" component={Home} />
           <Route path="/employees" component={Employees} />
+          <Route path="/employee-master" component={EmployeeMaster} />
           <Route path="/payroll" component={Payroll} />
           <Route path="/schedules" component={Schedules} />
           <Route path="/allowances" component={Allowances} />

@@ -49,31 +49,236 @@ export const properties = pgTable("properties", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Employees table - Essential fields only
+// Employee Master Data - Complete personal and employment details
 export const employees = pgTable("employees", {
   employeeId: varchar("employee_id").primaryKey().default(sql`gen_random_uuid()`),
-  afm: varchar("afm", { length: 9 }), // Optional as specified
-  name: varchar("name", { length: 255 }).notNull(),
-  role: varchar("role", { length: 100 }).notNull(),
-  employmentType: varchar("employment_type", { length: 50 }).notNull(), // full-time, part-time, contract, seasonal
+  employeeNumber: varchar("employee_number", { length: 50 }).unique().notNull(), // Internal employee number
+  
+  // Personal Data
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
+  afm: varchar("afm", { length: 9 }).unique(), // Greek Tax ID
+  amka: varchar("amka", { length: 11 }).unique(), // Social Security Number
+  paaypa: varchar("paaypa", { length: 20 }), // Unified Social Security Registry
+  bankIban: varchar("bank_iban", { length: 34 }), // Bank account for salary
+  dateOfBirth: date("date_of_birth"),
+  nationalityCode: varchar("nationality_code", { length: 3 }).default("GRC"),
+  
+  // Employment Contract Data
+  employmentType: varchar("employment_type", { length: 50 }).notNull(), // indefinite, fixed-term, seasonal
+  grade: varchar("grade", { length: 50 }), // Job grade/level
+  unionCbaRef: varchar("union_cba_ref", { length: 100 }), // Collective Bargaining Agreement reference
   hireDate: date("hire_date").notNull(),
   termDate: date("term_date"), // Termination date, null if active
+  probationEndDate: date("probation_end_date"), // End of probation period
+  
+  // Multi-entity/Property Assignment
   defaultPropertyId: varchar("default_property_id").references(() => properties.propertyId),
-  unionCbaRef: varchar("union_cba_ref", { length: 100 }), // Union/CBA reference
+  multiPropertyAccess: jsonb("multi_property_access").default('[]'), // Array of property IDs
+  costCenterAllocations: jsonb("cost_center_allocations").default('[]'), // Default cost center splits
+  
+  // Personal Circumstances (affects allowances/taxes)
+  maritalStatus: varchar("marital_status", { length: 20 }), // single, married, divorced, widowed
+  dependents: integer("dependents").default(0), // Number of dependent children
+  disabilityPercentage: integer("disability_percentage").default(0), // For special tax/insurance treatment
+  
+  // Emergency Contact
+  emergencyContactName: varchar("emergency_contact_name", { length: 255 }),
+  emergencyContactPhone: varchar("emergency_contact_phone", { length: 20 }),
+  
+  // System fields
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Shifts table
+// Wage Components table - Base salary and allowances per employee
+export const wageComponents = pgTable("wage_components", {
+  componentId: varchar("component_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  
+  // Base Wage
+  baseSalary: decimal("base_salary", { precision: 10, scale: 2 }).notNull(), // Monthly base salary
+  hourlyRate: decimal("hourly_rate", { precision: 8, scale: 2 }), // For hourly workers
+  
+  // Fixed Allowances (monthly amounts)
+  foodAllowance: decimal("food_allowance", { precision: 8, scale: 2 }).default("0"),
+  housingAllowance: decimal("housing_allowance", { precision: 8, scale: 2 }).default("0"),
+  transportAllowance: decimal("transport_allowance", { precision: 8, scale: 2 }).default("0"),
+  marriageAllowance: decimal("marriage_allowance", { precision: 8, scale: 2 }).default("0"),
+  familyAllowance: decimal("family_allowance", { precision: 8, scale: 2 }).default("0"),
+  educationAllowance: decimal("education_allowance", { precision: 8, scale: 2 }).default("0"),
+  experienceAllowance: decimal("experience_allowance", { precision: 8, scale: 2 }).default("0"),
+  positionAllowance: decimal("position_allowance", { precision: 8, scale: 2 }).default("0"),
+  uniformAllowance: decimal("uniform_allowance", { precision: 8, scale: 2 }).default("0"),
+  
+  // Variable Pay Configuration
+  tipsEligible: boolean("tips_eligible").default(false),
+  tipsPoolPercentage: decimal("tips_pool_percentage", { precision: 5, scale: 2 }).default("0"), // % of tips pool
+  perDiemRate: decimal("per_diem_rate", { precision: 8, scale: 2 }).default("0"), // Daily per diem amount
+  
+  // Overtime Configuration
+  overtimeEligible: boolean("overtime_eligible").default(true),
+  overtimeTier1Rate: decimal("overtime_tier1_rate", { precision: 5, scale: 2 }).default("1.25"), // 25% premium
+  overtimeTier2Rate: decimal("overtime_tier2_rate", { precision: 5, scale: 2 }).default("1.50"), // 50% premium
+  overtimeTier3Rate: decimal("overtime_tier3_rate", { precision: 5, scale: 2 }).default("1.75"), // 75% premium
+  
+  // Premium Rates
+  nightPremiumRate: decimal("night_premium_rate", { precision: 5, scale: 2 }).default("0.25"), // 25% night premium
+  sundayPremiumRate: decimal("sunday_premium_rate", { precision: 5, scale: 2 }).default("0.75"), // 75% Sunday premium
+  holidayPremiumRate: decimal("holiday_premium_rate", { precision: 5, scale: 2 }).default("1.00"), // 100% holiday premium
+  
+  // Effective dates
+  effectiveFrom: date("effective_from").notNull(),
+  effectiveTo: date("effective_to"), // null means current
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Department Templates for hotel operations  
+export const departments = pgTable("departments", {
+  departmentId: varchar("department_id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
+  code: varchar("code", { length: 20 }).notNull(), // FO, HK, FB, MAINT, SPA
+  name: varchar("name", { length: 100 }).notNull(), // Front Office, Housekeeping, F&B, etc.
+  parentDepartmentId: varchar("parent_department_id", { length: 36 }), // Will reference departmentId
+  costCenterCode: varchar("cost_center_code", { length: 50 }),
+  
+  // Schedule Templates
+  defaultShiftPatterns: jsonb("default_shift_patterns").default('[]'), // Common shift templates
+  breakPolicies: jsonb("break_policies").default('{}'), // Default break rules
+  overtimePolicies: jsonb("overtime_policies").default('{}'), // OT approval rules
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Shift Templates and Rota Builder
+export const shiftTemplates = pgTable("shift_templates", {
+  templateId: varchar("template_id").primaryKey().default(sql`gen_random_uuid()`),
+  departmentId: varchar("department_id").references(() => departments.departmentId).notNull(),
+  name: varchar("name", { length: 100 }).notNull(), // "Morning Housekeeping", "Night Audit"
+  
+  // Time Configuration
+  startTime: varchar("start_time", { length: 5 }).notNull(), // HH:MM format
+  endTime: varchar("end_time", { length: 5 }).notNull(), // HH:MM format
+  duration: integer("duration_minutes").notNull(), // Total minutes
+  
+  // Break Configuration
+  paidBreakMinutes: integer("paid_break_minutes").default(0),
+  unpaidBreakMinutes: integer("unpaid_break_minutes").default(0),
+  maxBreaks: integer("max_breaks").default(2),
+  
+  // Staffing
+  minStaff: integer("min_staff").default(1),
+  maxStaff: integer("max_staff").default(10),
+  preferredStaff: integer("preferred_staff").default(1),
+  
+  // Tags for classification
+  tags: jsonb("tags").default('[]'), // night, split, overtime, weekend
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Shifts table - Enhanced for scheduling and overtime management
 export const shifts = pgTable("shifts", {
   shiftId: varchar("shift_id").primaryKey().default(sql`gen_random_uuid()`),
   employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
-  startPlanned: timestamp("start_planned").notNull(), // Planned start time
-  endPlanned: timestamp("end_planned").notNull(), // Planned end time
+  departmentId: varchar("department_id", { length: 36 }),
+  templateId: varchar("template_id", { length: 36 }),
+  
+  // Scheduled Time
+  startPlanned: timestamp("start_planned").notNull(),
+  endPlanned: timestamp("end_planned").notNull(),
+  
+  // Actual Time (populated from punch events)
+  startActual: timestamp("start_actual"),
+  endActual: timestamp("end_actual"),
+  
+  // Assignment Details
   role: varchar("role", { length: 100 }).notNull(),
   propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
-  mealBreakPolicy: jsonb("meal_break_policy"), // Break policy configuration
-  tags: jsonb("tags").default('[]'), // night, split, overtime, etc.
+  costCenterCode: varchar("cost_center_code", { length: 50 }),
+  
+  // Break Configuration
+  mealBreakPolicy: jsonb("meal_break_policy"), // {paidMinutes: 15, unpaidMinutes: 30, maxBreaks: 2}
+  
+  // Overtime and Premium Configuration
+  overtimePreApproved: boolean("overtime_pre_approved").default(false),
+  overtimeRequestedMinutes: integer("overtime_requested_minutes").default(0),
+  overtimeApprovedMinutes: integer("overtime_approved_minutes").default(0),
+  nightShiftPremium: boolean("night_shift_premium").default(false),
+  sundayPremium: boolean("sunday_premium").default(false),
+  holidayPremium: boolean("holiday_premium").default(false),
+  
+  // Status and Classification
+  status: varchar("status", { length: 20 }).default("scheduled"), // scheduled, in_progress, completed, cancelled
+  tags: jsonb("tags").default('[]'), // night, split, overtime, weekend
+  notes: text("notes"),
+  
+  // Publishing (for staff visibility)
+  publishedAt: timestamp("published_at"),
+  publishedBy: varchar("published_by", { length: 36 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Device Registry for anti-fraud and binding
+export const deviceRegistry = pgTable("device_registry", {
+  deviceId: varchar("device_id").primaryKey().default(sql`gen_random_uuid()`),
+  deviceType: varchar("device_type", { length: 20 }).notNull(), // mobile, kiosk, tablet
+  deviceIdentifier: varchar("device_identifier", { length: 255 }).notNull().unique(), // IMEI, MAC, etc.
+  deviceName: varchar("device_name", { length: 100 }).notNull(),
+  propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
+  departmentId: varchar("department_id", { length: 36 }),
+  
+  // Geofencing Configuration
+  allowedGeofences: jsonb("allowed_geofences").default('[]'), // Array of geofence IDs
+  strictGeofencing: boolean("strict_geofencing").default(true),
+  
+  // Device Binding (for kiosks/dedicated devices)
+  boundEmployees: jsonb("bound_employees").default('[]'), // Array of employee IDs for dedicated devices
+  
+  // Security
+  lastSeenAt: timestamp("last_seen_at"),
+  lastSeenLocation: jsonb("last_seen_location"), // {lat, lng}
+  deviceFingerprint: varchar("device_fingerprint", { length: 255 }),
+  
+  // Status
+  isActive: boolean("is_active").default(true),
+  isBlocked: boolean("is_blocked").default(false),
+  blockReason: text("block_reason"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Overtime Requests and Approvals
+export const overtimeRequests = pgTable("overtime_requests", {
+  requestId: varchar("request_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  shiftId: varchar("shift_id", { length: 36 }),
+  
+  // Request Details
+  requestedMinutes: integer("requested_minutes").notNull(),
+  reason: text("reason").notNull(),
+  justification: text("justification"), // Business justification
+  
+  // Approval Workflow
+  status: varchar("status", { length: 20 }).default("pending"), // pending, approved, rejected, auto_approved
+  approvedBy: varchar("approved_by", { length: 36 }),
+  approvedAt: timestamp("approved_at"),
+  approvalComments: text("approval_comments"),
+  
+  // Auto-approval rules
+  withinPolicyLimits: boolean("within_policy_limits").default(false),
+  autoApprovalRule: varchar("auto_approval_rule", { length: 100 }),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -408,6 +613,37 @@ export const insertDataRetentionPolicySchema = createInsertSchema(dataRetentionP
   updatedAt: true,
 });
 
+// New table insert schemas
+export const insertWageComponentSchema = createInsertSchema(wageComponents).omit({
+  componentId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDepartmentSchema = createInsertSchema(departments).omit({
+  departmentId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertShiftTemplateSchema = createInsertSchema(shiftTemplates).omit({
+  templateId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDeviceRegistrySchema = createInsertSchema(deviceRegistry).omit({
+  deviceId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertOvertimeRequestSchema = createInsertSchema(overtimeRequests).omit({
+  requestId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type ComplianceAlert = typeof complianceAlerts.$inferSelect;
 export type InsertComplianceAlert = z.infer<typeof insertComplianceAlertSchema>;
 
@@ -419,6 +655,22 @@ export type InsertErganiSubmissionLog = z.infer<typeof insertErganiSubmissionLog
 
 export type DataRetentionPolicy = typeof dataRetentionPolicy.$inferSelect;
 export type InsertDataRetentionPolicy = z.infer<typeof insertDataRetentionPolicySchema>;
+
+// New table types
+export type WageComponent = typeof wageComponents.$inferSelect;
+export type InsertWageComponent = z.infer<typeof insertWageComponentSchema>;
+
+export type Department = typeof departments.$inferSelect;
+export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
+
+export type ShiftTemplate = typeof shiftTemplates.$inferSelect;
+export type InsertShiftTemplate = z.infer<typeof insertShiftTemplateSchema>;
+
+export type DeviceRegistry = typeof deviceRegistry.$inferSelect;
+export type InsertDeviceRegistry = z.infer<typeof insertDeviceRegistrySchema>;
+
+export type OvertimeRequest = typeof overtimeRequests.$inferSelect;
+export type InsertOvertimeRequest = z.infer<typeof insertOvertimeRequestSchema>;
 
 // Analytics views for live tracking and reporting
 export const liveOccupancy = pgTable("live_occupancy", {

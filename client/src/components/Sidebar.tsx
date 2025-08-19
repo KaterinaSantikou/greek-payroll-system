@@ -22,6 +22,7 @@ import {
 
 const navigationItems = [
   { name: "Πίνακας Ελέγχου", href: "/", icon: Home },
+  { name: "Employee Master", href: "/employee-master", icon: Users },
   { name: "Εργαζόμενοι", href: "/employees", icon: Users },
   { name: "Μισθοδοσία", href: "/payroll", icon: Calculator },
   { name: "Ωράρια", href: "/schedules", icon: Clock },
@@ -120,7 +121,7 @@ export default function Sidebar() {
             <div className="flex items-center">
               <div className="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">
                 <span className="text-sm font-semibold">
-                  {getInitials(user?.firstName, user?.lastName)}
+                  {getInitials(user?.firstName || undefined, user?.lastName || undefined)}
                 </span>
               </div>
               <div>

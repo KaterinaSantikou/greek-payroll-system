@@ -8,7 +8,12 @@ import {
   insertShiftSchema, 
   insertPunchEventSchema, 
   insertExceptionSchema, 
-  insertTimesheetSchema 
+  insertTimesheetSchema,
+  insertWageComponentSchema,
+  insertDepartmentSchema,
+  insertShiftTemplateSchema,
+  insertDeviceRegistrySchema,
+  insertOvertimeRequestSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
@@ -107,6 +112,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting employee:", error);
       res.status(500).json({ message: "Failed to delete employee" });
+    }
+  });
+
+  // Wage Components routes
+  app.get("/api/wage-components/:employeeId", isAuthenticated, async (req, res) => {
+    try {
+      const wageComponents = await storage.getWageComponents(req.params.employeeId);
+      res.json(wageComponents);
+    } catch (error) {
+      console.error("Error fetching wage components:", error);
+      res.status(500).json({ message: "Failed to fetch wage components" });
+    }
+  });
+
+  app.post("/api/wage-components", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertWageComponentSchema.parse(req.body);
+      const wageComponent = await storage.createWageComponent(validatedData);
+      res.status(201).json(wageComponent);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error creating wage component:", error);
+      res.status(500).json({ message: "Failed to create wage component" });
+    }
+  });
+
+  // Departments routes
+  app.get("/api/departments", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.query;
+      const departments = await storage.getDepartments(propertyId as string);
+      res.json(departments);
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      res.status(500).json({ message: "Failed to fetch departments" });
+    }
+  });
+
+  app.post("/api/departments", isAuthenticated, async (req, res) => {
+    try {
+      const validatedData = insertDepartmentSchema.parse(req.body);
+      const department = await storage.createDepartment(validatedData);
+      res.status(201).json(department);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: fromZodError(error).message });
+      }
+      console.error("Error creating department:", error);
+      res.status(500).json({ message: "Failed to create department" });
     }
   });
 

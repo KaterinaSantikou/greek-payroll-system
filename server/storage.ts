@@ -6,6 +6,8 @@ import {
   punchEvents,
   exceptions,
   timesheets,
+  wageComponents,
+  departments,
   type User,
   type UpsertUser,
   type Property,
@@ -20,6 +22,10 @@ import {
   type InsertException,
   type Timesheet,
   type InsertTimesheet,
+  type WageComponent,
+  type InsertWageComponent,
+  type Department,
+  type InsertDepartment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, and, desc, or, gte, lte, between, sql } from "drizzle-orm";
@@ -70,6 +76,18 @@ export interface IStorage {
   createTimesheet(timesheet: InsertTimesheet): Promise<Timesheet>;
   updateTimesheet(timesheetId: string, timesheet: Partial<InsertTimesheet>): Promise<Timesheet>;
   updateTimesheetPayrollStatus(timesheetId: string, status: string): Promise<Timesheet>;
+
+  // Wage component operations
+  getWageComponents(employeeId: string): Promise<WageComponent[]>;
+  createWageComponent(wageComponent: InsertWageComponent): Promise<WageComponent>;
+  updateWageComponent(componentId: string, wageComponent: Partial<InsertWageComponent>): Promise<WageComponent>;
+
+  // Department operations
+  getDepartments(propertyId?: string): Promise<Department[]>;
+  getDepartment(departmentId: string): Promise<Department | undefined>;
+  createDepartment(department: InsertDepartment): Promise<Department>;
+  updateDepartment(departmentId: string, department: Partial<InsertDepartment>): Promise<Department>;
+  deleteDepartment(departmentId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -399,6 +417,76 @@ export class DatabaseStorage implements IStorage {
       .where(eq(timesheets.timesheetId, timesheetId))
       .returning();
     return timesheet;
+  }
+
+  // Wage component operations
+  async getWageComponents(employeeId: string): Promise<WageComponent[]> {
+    return await db.select().from(wageComponents)
+      .where(eq(wageComponents.employeeId, employeeId))
+      .orderBy(desc(wageComponents.effectiveFrom));
+  }
+
+  async createWageComponent(wageComponentData: InsertWageComponent): Promise<WageComponent> {
+    // End current wage component if creating a new one
+    const currentComponents = await this.getWageComponents(wageComponentData.employeeId);
+    const activeCurrent = currentComponents.find(c => c.effectiveTo === null);
+    
+    if (activeCurrent) {
+      await db.update(wageComponents)
+        .set({ effectiveTo: wageComponentData.effectiveFrom })
+        .where(eq(wageComponents.componentId, activeCurrent.componentId));
+    }
+
+    const [wageComponent] = await db.insert(wageComponents).values(wageComponentData).returning();
+    return wageComponent;
+  }
+
+  async updateWageComponent(componentId: string, wageComponentData: Partial<InsertWageComponent>): Promise<WageComponent> {
+    const [wageComponent] = await db
+      .update(wageComponents)
+      .set({
+        ...wageComponentData,
+        updatedAt: new Date(),
+      })
+      .where(eq(wageComponents.componentId, componentId))
+      .returning();
+    return wageComponent;
+  }
+
+  // Department operations
+  async getDepartments(propertyId?: string): Promise<Department[]> {
+    if (propertyId) {
+      return await db.select().from(departments)
+        .where(eq(departments.propertyId, propertyId))
+        .orderBy(departments.name);
+    }
+    return await db.select().from(departments).orderBy(departments.name);
+  }
+
+  async getDepartment(departmentId: string): Promise<Department | undefined> {
+    const [department] = await db.select().from(departments).where(eq(departments.departmentId, departmentId));
+    return department;
+  }
+
+  async createDepartment(departmentData: InsertDepartment): Promise<Department> {
+    const [department] = await db.insert(departments).values(departmentData).returning();
+    return department;
+  }
+
+  async updateDepartment(departmentId: string, departmentData: Partial<InsertDepartment>): Promise<Department> {
+    const [department] = await db
+      .update(departments)
+      .set({
+        ...departmentData,
+        updatedAt: new Date(),
+      })
+      .where(eq(departments.departmentId, departmentId))
+      .returning();
+    return department;
+  }
+
+  async deleteDepartment(departmentId: string): Promise<void> {
+    await db.delete(departments).where(eq(departments.departmentId, departmentId));
   }
 }
 
