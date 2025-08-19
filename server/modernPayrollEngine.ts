@@ -1,4 +1,17 @@
 import { randomUUID } from "crypto";
+import type { 
+  PayrollPeriod, 
+  InsertPayrollPeriod,
+  PayrollCalculation as DbPayrollCalculation,
+  InsertPayrollCalculation,
+  Employee,
+  WageComponent,
+  EmployeeContract,
+  LeaveRecord,
+  TipsPool,
+  TipsDistribution 
+} from "@shared/schema";
+import { greekPayrollCalculator, type PayrollCalculationInput } from "./greekPayrollCalculator";
 
 export interface PayrollEngine {
   engineId: string;
@@ -68,12 +81,259 @@ export interface ModernPayrollFeatures {
 
 export class ModernPayrollEngine {
   private engines: Map<string, PayrollEngine> = new Map();
-  private calculations: Map<string, PayrollCalculation[]> = new Map();
+  private calculations: Map<string, DbPayrollCalculation[]> = new Map();
+  private periods: Map<string, PayrollPeriod[]> = new Map();
   private features: ModernPayrollFeatures;
 
   constructor() {
     this.initializeEngines();
     this.initializeFeatures();
+  }
+
+  // Create new payroll period
+  createPayrollPeriod(period: InsertPayrollPeriod): PayrollPeriod {
+    const newPeriod: PayrollPeriod = {
+      periodId: randomUUID(),
+      propertyId: period.propertyId || null,
+      periodType: period.periodType,
+      periodName: period.periodName,
+      startDate: period.startDate,
+      endDate: period.endDate,
+      payDate: period.payDate,
+      status: 'draft',
+      cutoffDate: period.cutoffDate || null,
+      approvedBy: period.approvedBy || null,
+      approvedAt: period.approvedAt || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const propertyPeriods = this.periods.get(period.propertyId || 'default') || [];
+    propertyPeriods.push(newPeriod);
+    this.periods.set(period.propertyId || 'default', propertyPeriods);
+
+    return newPeriod;
+  }
+
+  // Get payroll periods for a property
+  getPayrollPeriods(propertyId?: string): PayrollPeriod[] {
+    return this.periods.get(propertyId || 'default') || [];
+  }
+
+  // Run payroll calculation for a period
+  async calculatePayrollPeriod(
+    periodId: string,
+    employees: Employee[],
+    wageComponents: WageComponent[],
+    timesheetData: any[] = []
+  ): Promise<{
+    success: boolean;
+    calculations: DbPayrollCalculation[];
+    summary: {
+      totalEmployees: number;
+      totalGrossPay: number;
+      totalNetPay: number;
+      totalEmployerCost: number;
+      averageCalculationTime: number;
+    };
+  }> {
+    const startTime = Date.now();
+    const calculations: DbPayrollCalculation[] = [];
+
+    try {
+      for (const employee of employees) {
+        const employeeWageComponent = wageComponents.find(
+          wc => wc.employeeId === employee.employeeId
+        );
+        
+        if (!employeeWageComponent) {
+          console.warn(`No wage component found for employee ${employee.employeeId}`);
+          continue;
+        }
+
+        // Get timesheet data for this employee
+        const timesheet = timesheetData.find(
+          ts => ts.employeeId === employee.employeeId
+        );
+
+        const calculationInput: PayrollCalculationInput = {
+          employee,
+          wageComponents: employeeWageComponent,
+          periodStartDate: new Date(),
+          periodEndDate: new Date(),
+          regularHours: timesheet?.regularHours || 173.33, // Standard monthly hours
+          overtimeHours: timesheet?.overtimeHours || 0,
+          nightHours: timesheet?.nightHours || 0,
+          sundayHours: timesheet?.sundayHours || 0,
+          holidayHours: timesheet?.holidayHours || 0,
+          leaveHours: timesheet?.leaveHours || {},
+          tips: timesheet?.tips || 0,
+          benefitsInKind: timesheet?.benefitsInKind || {},
+          contractType: employee.employmentType as 'indefinite' | 'fixed-term' | 'seasonal',
+          isFullTime: true
+        };
+
+        const calculation = greekPayrollCalculator.calculatePayroll(calculationInput);
+        calculation.periodId = periodId;
+        calculation.calculationId = randomUUID();
+        
+        calculations.push(calculation);
+      }
+
+      const endTime = Date.now();
+      const totalCalculationTime = endTime - startTime;
+      const averageCalculationTime = totalCalculationTime / employees.length;
+
+      // Update engine performance metrics
+      const engine = this.engines.get('greece-2025');
+      if (engine && averageCalculationTime < engine.performance.calculationSpeed) {
+        engine.performance.calculationSpeed = Math.round(averageCalculationTime);
+      }
+
+      // Store calculations
+      this.calculations.set(periodId, calculations);
+
+      // Calculate summary
+      const summary = {
+        totalEmployees: employees.length,
+        totalGrossPay: calculations.reduce((sum, calc) => sum + parseFloat(calc.grossPay || '0'), 0),
+        totalNetPay: calculations.reduce((sum, calc) => sum + parseFloat(calc.netPay || '0'), 0),
+        totalEmployerCost: calculations.reduce((sum, calc) => sum + parseFloat(calc.totalEmployerCost || '0'), 0),
+        averageCalculationTime: Math.round(averageCalculationTime)
+      };
+
+      return {
+        success: true,
+        calculations,
+        summary
+      };
+
+    } catch (error) {
+      console.error('Payroll calculation failed:', error);
+      return {
+        success: false,
+        calculations: [],
+        summary: {
+          totalEmployees: 0,
+          totalGrossPay: 0,
+          totalNetPay: 0,
+          totalEmployerCost: 0,
+          averageCalculationTime: 0
+        }
+      };
+    }
+  }
+
+  // Get payroll calculations for a period
+  getPayrollCalculations(periodId: string): DbPayrollCalculation[] {
+    return this.calculations.get(periodId) || [];
+  }
+
+  // Generate payroll export (for integration with external payroll systems)
+  generatePayrollExport(
+    periodId: string,
+    format: 'csv' | 'xml' | 'json' = 'json'
+  ): {
+    format: string;
+    data: any;
+    filename: string;
+  } {
+    const calculations = this.calculations.get(periodId) || [];
+    const timestamp = new Date().toISOString().split('T')[0];
+
+    switch (format) {
+      case 'csv':
+        const csvHeaders = [
+          'Employee ID', 'Employee Number', 'Gross Pay', 'Net Pay',
+          'Income Tax', 'EFKA Main', 'EFKA Aux', 'Solidarity Tax',
+          'Christmas Bonus', 'Easter Bonus', 'Vacation Bonus'
+        ];
+        
+        const csvRows = calculations.map(calc => [
+          calc.employeeId,
+          '', // Employee number would come from join
+          calc.grossPay || '0',
+          calc.netPay || '0',
+          calc.incomeTax || '0',
+          calc.employeeEfkaMain || '0',
+          calc.employeeEfkaAux || '0',
+          calc.solidarityTax || '0',
+          calc.christmasBonus || '0',
+          calc.easterBonus || '0',
+          calc.vacationBonus || '0'
+        ]);
+
+        const csvContent = [csvHeaders, ...csvRows]
+          .map(row => row.join(','))
+          .join('\n');
+
+        return {
+          format: 'csv',
+          data: csvContent,
+          filename: `payroll_${periodId}_${timestamp}.csv`
+        };
+
+      case 'xml':
+        const xmlData = `<?xml version="1.0" encoding="UTF-8"?>
+<payroll period="${periodId}" date="${timestamp}">
+  <calculations>
+    ${calculations.map(calc => `
+    <calculation employeeId="${calc.employeeId}">
+      <gross>${calc.grossPay || '0'}</gross>
+      <net>${calc.netPay || '0'}</net>
+      <deductions>
+        <incomeTax>${calc.incomeTax || '0'}</incomeTax>
+        <efkaMain>${calc.employeeEfkaMain || '0'}</efkaMain>
+        <efkaAux>${calc.employeeEfkaAux || '0'}</efkaAux>
+        <solidarityTax>${calc.solidarityTax || '0'}</solidarityTax>
+      </deductions>
+    </calculation>`).join('')}
+  </calculations>
+</payroll>`;
+
+        return {
+          format: 'xml',
+          data: xmlData,
+          filename: `payroll_${periodId}_${timestamp}.xml`
+        };
+
+      default:
+        return {
+          format: 'json',
+          data: {
+            periodId,
+            generatedAt: new Date().toISOString(),
+            calculations: calculations.map(calc => ({
+              employeeId: calc.employeeId,
+              grossPay: parseFloat(calc.grossPay || '0'),
+              netPay: parseFloat(calc.netPay || '0'),
+              totalDeductions: parseFloat(calc.totalDeductions || '0'),
+              employerCost: parseFloat(calc.totalEmployerCost || '0'),
+              breakdown: {
+                baseSalary: parseFloat(calc.baseSalary || '0'),
+                allowances: {
+                  food: parseFloat(calc.foodAllowance || '0'),
+                  transport: parseFloat(calc.transportAllowance || '0'),
+                  housing: parseFloat(calc.housingAllowance || '0')
+                },
+                bonuses: {
+                  christmas: parseFloat(calc.christmasBonus || '0'),
+                  easter: parseFloat(calc.easterBonus || '0'),
+                  vacation: parseFloat(calc.vacationBonus || '0')
+                },
+                deductions: {
+                  incomeTax: parseFloat(calc.incomeTax || '0'),
+                  efkaMain: parseFloat(calc.employeeEfkaMain || '0'),
+                  efkaAux: parseFloat(calc.employeeEfkaAux || '0'),
+                  unemployment: parseFloat(calc.employeeUnemployment || '0'),
+                  solidarityTax: parseFloat(calc.solidarityTax || '0')
+                }
+              }
+            }))
+          },
+          filename: `payroll_${periodId}_${timestamp}.json`
+        };
+    }
   }
 
   private initializeEngines(): void {
@@ -140,6 +400,38 @@ export class ModernPayrollEngine {
   }
 
   private initializeFeatures(): void {
+    this.features = {
+      uxVelocity: {
+        gustoLevelUX: true,
+        responsiveDesign: true,
+        oneClickActions: true,
+        dragDropInterface: true,
+        realTimeUpdates: true,
+      },
+      complianceDepth: {
+        adpLevelCompliance: true,
+        greekLawFull: true,
+        erganiII: true,
+        efkaAPD: true,
+        aadeFMY: true,
+        digitalWorkCard: true,
+        collectiveAgreements: true,
+        euDirectives: true,
+      },
+      automation: {
+        modernGlobalPayroll: true,
+        aiPoweredCalculations: true,
+        autoTaxCalculations: true,
+        autoInsuranceDeductions: true,
+        smartAllowances: true,
+        predictiveAnalytics: true,
+        anomalyDetection: true,
+        autoCompliance: true,
+      },
+    };
+  }
+
+  private initializeFeatures_old(): void {
     this.features = {
       uxVelocity: {
         gustoLevelUX: true,

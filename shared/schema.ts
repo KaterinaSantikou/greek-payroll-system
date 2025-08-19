@@ -813,6 +813,237 @@ export const insertSuccessMetricAlertsSchema = createInsertSchema(successMetricA
   createdAt: true,
 });
 
+// Payroll Periods Table
+export const payrollPeriods = pgTable("payroll_periods", {
+  periodId: varchar("period_id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").references(() => properties.propertyId),
+  periodType: varchar("period_type", { length: 20 }).notNull(), // monthly, semi-monthly, off-cycle
+  periodName: varchar("period_name", { length: 100 }).notNull(), // "January 2025", "Mid-January 2025"
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  payDate: date("pay_date").notNull(),
+  status: varchar("status", { length: 20 }).default("draft"), // draft, calculating, calculated, paid, closed
+  cutoffDate: date("cutoff_date"), // Timesheet cutoff date
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Payroll Calculations Table - Core payroll results
+export const payrollCalculations = pgTable("payroll_calculations", {
+  calculationId: varchar("calculation_id").primaryKey().default(sql`gen_random_uuid()`),
+  periodId: varchar("period_id").notNull().references(() => payrollPeriods.periodId),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId),
+  
+  // Gross Pay Components
+  baseSalary: decimal("base_salary", { precision: 10, scale: 2 }).default("0.00"),
+  regularHours: decimal("regular_hours", { precision: 8, scale: 2 }).default("0.00"),
+  overtimeHours: decimal("overtime_hours", { precision: 8, scale: 2 }).default("0.00"),
+  overtimeAmount: decimal("overtime_amount", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Greek Premiums
+  nightPremium: decimal("night_premium", { precision: 10, scale: 2 }).default("0.00"),
+  sundayPremium: decimal("sunday_premium", { precision: 10, scale: 2 }).default("0.00"),
+  holidayPremium: decimal("holiday_premium", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Greek Allowances
+  foodAllowance: decimal("food_allowance", { precision: 10, scale: 2 }).default("0.00"),
+  transportAllowance: decimal("transport_allowance", { precision: 10, scale: 2 }).default("0.00"),
+  housingAllowance: decimal("housing_allowance", { precision: 10, scale: 2 }).default("0.00"),
+  marriageAllowance: decimal("marriage_allowance", { precision: 10, scale: 2 }).default("0.00"),
+  familyAllowance: decimal("family_allowance", { precision: 10, scale: 2 }).default("0.00"),
+  educationAllowance: decimal("education_allowance", { precision: 10, scale: 2 }).default("0.00"),
+  experienceAllowance: decimal("experience_allowance", { precision: 10, scale: 2 }).default("0.00"),
+  positionAllowance: decimal("position_allowance", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Greek Bonuses (Δώρα)
+  christmasBonus: decimal("christmas_bonus", { precision: 10, scale: 2 }).default("0.00"),
+  easterBonus: decimal("easter_bonus", { precision: 10, scale: 2 }).default("0.00"),
+  vacationBonus: decimal("vacation_bonus", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Leave Pay
+  paidLeave: decimal("paid_leave", { precision: 10, scale: 2 }).default("0.00"),
+  sickPay: decimal("sick_pay", { precision: 10, scale: 2 }).default("0.00"),
+  maternityPay: decimal("maternity_pay", { precision: 10, scale: 2 }).default("0.00"),
+  paternityPay: decimal("paternity_pay", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Benefits in Kind
+  mealVouchers: decimal("meal_vouchers", { precision: 10, scale: 2 }).default("0.00"),
+  companyCarBenefit: decimal("company_car_benefit", { precision: 10, scale: 2 }).default("0.00"),
+  imputedIncome: decimal("imputed_income", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Tips and Commissions
+  tips: decimal("tips", { precision: 10, scale: 2 }).default("0.00"),
+  tipsPoolShare: decimal("tips_pool_share", { precision: 10, scale: 2 }).default("0.00"),
+  employerTipTopUp: decimal("employer_tip_top_up", { precision: 10, scale: 2 }).default("0.00"),
+  commissions: decimal("commissions", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Totals
+  grossPay: decimal("gross_pay", { precision: 10, scale: 2 }).notNull(),
+  taxableIncome: decimal("taxable_income", { precision: 10, scale: 2 }).notNull(),
+  
+  // Tax Deductions (Greek Tax System)
+  incomeTax: decimal("income_tax", { precision: 10, scale: 2 }).default("0.00"),
+  solidarityTax: decimal("solidarity_tax", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Social Insurance (EFKA)
+  employeeEfkaMain: decimal("employee_efka_main", { precision: 10, scale: 2 }).default("0.00"),
+  employeeEfkaAux: decimal("employee_efka_aux", { precision: 10, scale: 2 }).default("0.00"),
+  employeeUnemployment: decimal("employee_unemployment", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Employer Contributions
+  employerEfkaMain: decimal("employer_efka_main", { precision: 10, scale: 2 }).default("0.00"),
+  employerEfkaAux: decimal("employer_efka_aux", { precision: 10, scale: 2 }).default("0.00"),
+  employerUnemployment: decimal("employer_unemployment", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Final Amounts
+  totalDeductions: decimal("total_deductions", { precision: 10, scale: 2 }).notNull(),
+  netPay: decimal("net_pay", { precision: 10, scale: 2 }).notNull(),
+  totalEmployerCost: decimal("total_employer_cost", { precision: 10, scale: 2 }).notNull(),
+  
+  // Calculation Metadata
+  calculatedAt: timestamp("calculated_at").defaultNow(),
+  calculatedBy: varchar("calculated_by").references(() => users.id),
+  calculationVersion: varchar("calculation_version", { length: 20 }).default("2025.1"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Employee Contracts Table - Multi-contract support
+export const employeeContracts = pgTable("employee_contracts", {
+  contractId: varchar("contract_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId),
+  propertyId: varchar("property_id").references(() => properties.propertyId),
+  departmentId: varchar("department_id").references(() => departments.departmentId),
+  
+  contractType: varchar("contract_type", { length: 50 }).notNull(), // primary, secondary, seasonal
+  jobTitle: varchar("job_title", { length: 255 }).notNull(),
+  costCenterCode: varchar("cost_center_code", { length: 20 }),
+  
+  // Contract Terms
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date"), // null for indefinite
+  hoursPerWeek: decimal("hours_per_week", { precision: 5, scale: 2 }).default("40.00"),
+  workSchedule: jsonb("work_schedule"), // Flexible schedule definition
+  
+  // Compensation
+  baseSalary: decimal("base_salary", { precision: 10, scale: 2 }).notNull(),
+  hourlyRate: decimal("hourly_rate", { precision: 8, scale: 2 }),
+  salaryFrequency: varchar("salary_frequency", { length: 20 }).default("monthly"), // monthly, bi-weekly, weekly
+  
+  // Status
+  isActive: boolean("is_active").default(true),
+  isPrimary: boolean("is_primary").default(false), // Primary contract for employee
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Leave Records Table
+export const leaveRecords = pgTable("leave_records", {
+  leaveId: varchar("leave_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId),
+  
+  leaveType: varchar("leave_type", { length: 50 }).notNull(), // annual, sick, maternity, paternity, parental, unpaid
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  totalDays: decimal("total_days", { precision: 5, scale: 2 }).notNull(),
+  
+  // Pay Details
+  isPaid: boolean("is_paid").default(true),
+  payRate: decimal("pay_rate", { precision: 5, scale: 4 }).default("1.0000"), // 100% of salary
+  totalPay: decimal("total_pay", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Approval
+  status: varchar("status", { length: 20 }).default("pending"), // pending, approved, rejected
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  
+  // Greek Specific
+  erganiSubmitted: boolean("ergani_submitted").default(false),
+  erganiReferenceId: varchar("ergani_reference_id", { length: 100 }),
+  
+  reason: text("reason"),
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Tips Pool Table
+export const tipsPools = pgTable("tips_pools", {
+  poolId: varchar("pool_id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").notNull().references(() => properties.propertyId),
+  periodId: varchar("period_id").notNull().references(() => payrollPeriods.periodId),
+  
+  poolName: varchar("pool_name", { length: 255 }).notNull(), // "Restaurant Tips", "Hotel Service Tips"
+  totalTipsCollected: decimal("total_tips_collected", { precision: 12, scale: 2 }).notNull(),
+  employerTopUp: decimal("employer_top_up", { precision: 12, scale: 2 }).default("0.00"),
+  totalDistribution: decimal("total_distribution", { precision: 12, scale: 2 }).notNull(),
+  
+  distributionMethod: varchar("distribution_method", { length: 50 }).default("points"), // points, hours, equal
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Tips Distribution Table
+export const tipsDistributions = pgTable("tips_distributions", {
+  distributionId: varchar("distribution_id").primaryKey().default(sql`gen_random_uuid()`),
+  poolId: varchar("pool_id").notNull().references(() => tipsPools.poolId),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId),
+  
+  points: decimal("points", { precision: 8, scale: 2 }).default("0.00"), // Service points earned
+  hoursWorked: decimal("hours_worked", { precision: 8, scale: 2 }).default("0.00"),
+  distributionAmount: decimal("distribution_amount", { precision: 10, scale: 2 }).notNull(),
+  
+  // Tax Treatment
+  isTaxable: boolean("is_taxable").default(true),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 4 }).default("0.1500"), // 15% tips tax rate
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertPayrollPeriodsSchema = createInsertSchema(payrollPeriods).omit({
+  periodId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPayrollCalculationsSchema = createInsertSchema(payrollCalculations).omit({
+  calculationId: true,
+  calculatedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertEmployeeContractsSchema = createInsertSchema(employeeContracts).omit({
+  contractId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLeaveRecordsSchema = createInsertSchema(leaveRecords).omit({
+  leaveId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTipsPoolsSchema = createInsertSchema(tipsPools).omit({
+  poolId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTipsDistributionsSchema = createInsertSchema(tipsDistributions).omit({
+  distributionId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Analytics type exports
 export type LiveOccupancy = typeof liveOccupancy.$inferSelect;
 export type InsertLiveOccupancy = z.infer<typeof insertLiveOccupancySchema>;
@@ -826,3 +1057,17 @@ export type SuccessMetrics = typeof successMetrics.$inferSelect;
 export type InsertSuccessMetrics = z.infer<typeof insertSuccessMetricsSchema>;
 export type SuccessMetricAlerts = typeof successMetricAlerts.$inferSelect;
 export type InsertSuccessMetricAlerts = z.infer<typeof insertSuccessMetricAlertsSchema>;
+
+// Payroll type exports
+export type PayrollPeriod = typeof payrollPeriods.$inferSelect;
+export type InsertPayrollPeriod = z.infer<typeof insertPayrollPeriodsSchema>;
+export type PayrollCalculation = typeof payrollCalculations.$inferSelect;
+export type InsertPayrollCalculation = z.infer<typeof insertPayrollCalculationsSchema>;
+export type EmployeeContract = typeof employeeContracts.$inferSelect;
+export type InsertEmployeeContract = z.infer<typeof insertEmployeeContractsSchema>;
+export type LeaveRecord = typeof leaveRecords.$inferSelect;
+export type InsertLeaveRecord = z.infer<typeof insertLeaveRecordsSchema>;
+export type TipsPool = typeof tipsPools.$inferSelect;
+export type InsertTipsPool = z.infer<typeof insertTipsPoolsSchema>;
+export type TipsDistribution = typeof tipsDistributions.$inferSelect;
+export type InsertTipsDistribution = z.infer<typeof insertTipsDistributionsSchema>;

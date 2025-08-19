@@ -27,13 +27,18 @@ import {
   Settings,
   Download,
   Upload,
-  Play
+  Play,
+  Calendar,
+  DollarSign,
+  PieChart,
+  RefreshCw
 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import type { PayrollPeriod, PayrollCalculation } from "@shared/schema";
 
 interface PayrollEngine {
   engineId: string;
@@ -54,21 +59,24 @@ interface PayrollEngine {
   status: 'active' | 'updating' | 'maintenance';
 }
 
-interface PayrollCalculation {
-  employeeId: string;
-  period: string;
-  grossSalary: number;
-  netSalary: number;
-  taxDeductions: number;
-  socialInsurance: number;
-  overtime: number;
-  allowances: number;
-  calculationTime: number;
-  compliance: {
-    erganiSubmitted: boolean;
-    efkaSubmitted: boolean;
-    aadeReported: boolean;
-  };
+interface PayrollSummary {
+  totalEmployees: number;
+  totalGrossPay: number;
+  totalNetPay: number;
+  totalEmployerCost: number;
+  averageCalculationTime: number;
+}
+
+interface PayrollRunRequest {
+  periodId: string;
+  employeeIds: string[];
+  includeTimesheets: boolean;
+}
+
+interface PayrollExport {
+  format: string;
+  data: any;
+  filename: string;
 }
 
 export default function ModernPayrollEnginePage() {
@@ -85,26 +93,67 @@ export default function ModernPayrollEnginePage() {
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
+  // Payroll Periods Query
+  const { data: periods, isLoading: periodsLoading } = useQuery<PayrollPeriod[]>({
+    queryKey: ["/api/payroll/periods"],
+    enabled: isAuthenticated,
+  });
+
   // Payroll Calculations Query
   const { data: calculations, isLoading: calculationsLoading } = useQuery<PayrollCalculation[]>({
-    queryKey: ["/api/payroll-engine/calculations", selectedPeriod],
+    queryKey: ["/api/payroll/calculations", selectedPeriod],
     enabled: isAuthenticated && !!selectedPeriod,
+  });
+
+  // Payroll Summary Query
+  const { data: payrollSummary, isLoading: summaryLoading } = useQuery<PayrollSummary>({
+    queryKey: ["/api/payroll/summary", selectedPeriod],
+    enabled: isAuthenticated && !!selectedPeriod,
+  });
+
+  // Create Payroll Period Mutation
+  const createPeriodMutation = useMutation({
+    mutationFn: async (data: { periodType: string; periodName: string; startDate: string; endDate: string; payDate: string }) => {
+      return await apiRequest("/api/payroll/periods", "POST", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Payroll Period Created",
+        description: "New payroll period has been created successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/payroll/periods"] });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Error",
+        description: "Failed to create payroll period. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   // Run Payroll Calculation Mutation
   const runPayrollMutation = useMutation({
-    mutationFn: async (data: { engineId: string; period: string; employees: string[] }) => {
-      await apiRequest("/api/payroll-engine/calculate", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+    mutationFn: async (data: PayrollRunRequest) => {
+      return await apiRequest("/api/payroll/calculate", "POST", data);
     },
     onSuccess: () => {
       toast({
         title: "Payroll Calculation Started",
-        description: "Modern payroll engine is processing calculations with Greek law compliance.",
+        description: "Greek payroll engine is processing calculations with full compliance.",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/payroll-engine"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/payroll"] });
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
@@ -121,6 +170,50 @@ export default function ModernPayrollEnginePage() {
       toast({
         title: "Error",
         description: "Failed to start payroll calculation. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Export Payroll Mutation
+  const exportPayrollMutation = useMutation({
+    mutationFn: async (data: { periodId: string; format: 'csv' | 'xml' | 'json' }): Promise<PayrollExport> => {
+      return await apiRequest("/api/payroll/export", "POST", data);
+    },
+    onSuccess: (data: PayrollExport) => {
+      // Create download link
+      const blob = new Blob([typeof data.data === 'string' ? data.data : JSON.stringify(data.data, null, 2)], {
+        type: data.format === 'csv' ? 'text/csv' : data.format === 'xml' ? 'text/xml' : 'application/json'
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = data.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export Complete",
+        description: `Payroll data exported as ${data.format.toUpperCase()}`,
+      });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Export Failed",
+        description: "Failed to export payroll data. Please try again.",
         variant: "destructive",
       });
     },
