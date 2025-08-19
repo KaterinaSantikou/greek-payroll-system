@@ -1081,6 +1081,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Analytics & Reporting API Routes
+
+  // Live Occupancy
+  app.get("/api/analytics/live-occupancy", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId } = req.query;
+      const { analyticsService } = await import("./analyticsService");
+      const occupancy = await analyticsService.getLiveOccupancy(propertyId as string);
+      res.json(occupancy);
+    } catch (error) {
+      console.error("Error fetching live occupancy:", error);
+      res.status(500).json({ error: "Failed to fetch live occupancy data" });
+    }
+  });
+
+  // Labor Cost Forecast
+  app.get("/api/analytics/labor-cost-forecast", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId, date } = req.query;
+      if (!propertyId || !date) {
+        return res.status(400).json({ error: "Property ID and date are required" });
+      }
+      
+      const { analyticsService } = await import("./analyticsService");
+      const forecast = await analyticsService.generateLaborCostForecast(
+        propertyId as string, 
+        new Date(date as string)
+      );
+      res.json(forecast);
+    } catch (error) {
+      console.error("Error generating labor cost forecast:", error);
+      res.status(500).json({ error: "Failed to generate labor cost forecast" });
+    }
+  });
+
+  // Overtime Heatmap
+  app.get("/api/analytics/overtime-heatmap", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId, startDate, endDate } = req.query;
+      if (!propertyId || !startDate || !endDate) {
+        return res.status(400).json({ error: "Property ID, start date, and end date are required" });
+      }
+      
+      const { analyticsService } = await import("./analyticsService");
+      const heatmap = await analyticsService.generateOvertimeHeatmap(
+        propertyId as string,
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+      res.json(heatmap);
+    } catch (error) {
+      console.error("Error generating overtime heatmap:", error);
+      res.status(500).json({ error: "Failed to generate overtime heatmap" });
+    }
+  });
+
+  // Compliance KPIs
+  app.get("/api/analytics/compliance-kpis", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId, startDate, endDate } = req.query;
+      if (!propertyId || !startDate || !endDate) {
+        return res.status(400).json({ error: "Property ID, start date, and end date are required" });
+      }
+      
+      const { analyticsService } = await import("./analyticsService");
+      const kpis = await analyticsService.getComplianceKpis(
+        propertyId as string,
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+      res.json(kpis);
+    } catch (error) {
+      console.error("Error fetching compliance KPIs:", error);
+      res.status(500).json({ error: "Failed to fetch compliance KPIs" });
+    }
+  });
+
+  // Variance Analysis
+  app.get("/api/analytics/variance-analysis", isAuthenticated, async (req, res) => {
+    try {
+      const { propertyId, startDate, endDate } = req.query;
+      if (!propertyId || !startDate || !endDate) {
+        return res.status(400).json({ error: "Property ID, start date, and end date are required" });
+      }
+      
+      const { analyticsService } = await import("./analyticsService");
+      const analysis = await analyticsService.getVarianceAnalysis(
+        propertyId as string,
+        new Date(startDate as string),
+        new Date(endDate as string)
+      );
+      res.json(analysis);
+    } catch (error) {
+      console.error("Error performing variance analysis:", error);
+      res.status(500).json({ error: "Failed to perform variance analysis" });
+    }
+  });
+
+  // Generate demo analytics data
+  app.post("/api/analytics/generate-demo-data", isAuthenticated, async (req, res) => {
+    try {
+      const { analyticsService } = await import("./analyticsService");
+      await analyticsService.generateDemoAnalyticsData();
+      res.json({ success: true, message: "Demo analytics data generated successfully" });
+    } catch (error) {
+      console.error("Error generating demo analytics data:", error);
+      res.status(500).json({ error: "Failed to generate demo analytics data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

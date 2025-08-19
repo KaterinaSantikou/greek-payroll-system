@@ -419,3 +419,88 @@ export type InsertErganiSubmissionLog = z.infer<typeof insertErganiSubmissionLog
 
 export type DataRetentionPolicy = typeof dataRetentionPolicy.$inferSelect;
 export type InsertDataRetentionPolicy = z.infer<typeof insertDataRetentionPolicySchema>;
+
+// Analytics views for live tracking and reporting
+export const liveOccupancy = pgTable("live_occupancy", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").notNull(),
+  propertyId: varchar("property_id").notNull(),
+  department: varchar("department").notNull(),
+  status: varchar("status").notNull(), // "on_site", "off_site", "break", "lunch"
+  lastPunchTime: timestamp("last_punch_time").notNull(),
+  shiftStart: timestamp("shift_start"),
+  expectedShiftEnd: timestamp("expected_shift_end"),
+  location: varchar("location"), // GPS coords or zone
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const laborCostForecast = pgTable("labor_cost_forecast", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").notNull(),
+  department: varchar("department").notNull(),
+  forecastDate: timestamp("forecast_date").notNull(),
+  scheduledHours: decimal("scheduled_hours").notNull(),
+  projectedHours: decimal("projected_hours").notNull(),
+  baseLaborCost: decimal("base_labor_cost").notNull(),
+  overtimeCost: decimal("overtime_cost").notNull(),
+  totalCost: decimal("total_cost").notNull(),
+  variancePercentage: decimal("variance_percentage").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const analyticsMetrics = pgTable("analytics_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  metricType: varchar("metric_type").notNull(), // "overtime", "absence", "compliance", "variance"
+  employeeId: varchar("employee_id"),
+  propertyId: varchar("property_id").notNull(),
+  department: varchar("department"),
+  metricDate: timestamp("metric_date").notNull(),
+  value: decimal("value").notNull(),
+  metadata: jsonb("metadata"), // Additional context data
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const complianceKpis = pgTable("compliance_kpis", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").notNull(),
+  kpiDate: timestamp("kpi_date").notNull(),
+  erganiSubmissionSuccess: decimal("ergani_submission_success").notNull(),
+  erganiExceptionRate: decimal("ergani_exception_rate").notNull(),
+  maxHoursViolations: integer("max_hours_violations").notNull(),
+  restPeriodViolations: integer("rest_period_violations").notNull(),
+  digitalCardCompliance: decimal("digital_card_compliance").notNull(),
+  dataRetentionCompliance: decimal("data_retention_compliance").notNull(),
+  overallScore: decimal("overall_score").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Analytics insert schemas
+export const insertLiveOccupancySchema = createInsertSchema(liveOccupancy).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export const insertLaborCostForecastSchema = createInsertSchema(laborCostForecast).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAnalyticsMetricsSchema = createInsertSchema(analyticsMetrics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertComplianceKpisSchema = createInsertSchema(complianceKpis).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Analytics type exports
+export type LiveOccupancy = typeof liveOccupancy.$inferSelect;
+export type InsertLiveOccupancy = z.infer<typeof insertLiveOccupancySchema>;
+export type LaborCostForecast = typeof laborCostForecast.$inferSelect;
+export type InsertLaborCostForecast = z.infer<typeof insertLaborCostForecastSchema>;
+export type AnalyticsMetrics = typeof analyticsMetrics.$inferSelect;
+export type InsertAnalyticsMetrics = z.infer<typeof insertAnalyticsMetricsSchema>;
+export type ComplianceKpis = typeof complianceKpis.$inferSelect;
+export type InsertComplianceKpis = z.infer<typeof insertComplianceKpisSchema>;
