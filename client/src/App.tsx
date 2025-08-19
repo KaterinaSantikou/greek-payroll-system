@@ -45,6 +45,7 @@ import DocumentAI from "@/pages/documentAI";
 import ChangeLogLegalWatch from "@/pages/changeLogLegalWatch";
 import { Navigation } from "@/components/Navigation";
 import Layout from "@/components/Layout";
+import { PropertyProvider } from "@/contexts/PropertyContext";
 import SmartNotifications from "@/pages/smartNotifications";
 import VisualAnalytics from "@/pages/visualAnalytics";
 import PropertyDashboard from "@/pages/propertyDashboard";
@@ -125,10 +126,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <PropertyProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </PropertyProvider>
     </QueryClientProvider>
   );
 }

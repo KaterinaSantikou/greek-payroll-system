@@ -41,9 +41,5 @@ function LayoutContent({ children }: LayoutProps) {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  return (
-    <PropertyProvider>
-      <LayoutContent>{children}</LayoutContent>
-    </PropertyProvider>
-  );
+  return <LayoutContent>{children}</LayoutContent>;
 }
