@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,9 +62,12 @@ interface StructuredNavigationProps {
 export function StructuredNavigation({ collapsed = false, isMobile = false, isTablet = false }: StructuredNavigationProps) {
   const [location] = useLocation();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['dashboard', 'people']));
+  const [focusedIndex, setFocusedIndex] = useState(-1);
   const { user } = useAuth();
   const { t } = useLocale();
   const userRole = user?.role || 'Employee';
+  const navRef = useRef<HTMLElement>(null);
+  const itemRefs = useRef<Map<string, HTMLElement>>(new Map());
 
   // Create structured navigation data
   const navigationGroups: NavigationItem[] = [
@@ -420,8 +423,101 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     return location.startsWith(href);
   };
 
-  const renderBadge = (badge?: string | number, urgent?: boolean) => {
+  // Flatten navigation items for keyboard navigation
+  const flattenItems = useCallback((items: NavigationItem[], level = 0): Array<{ item: NavigationItem, level: number, id: string }> => {
+    const flattened: Array<{ item: NavigationItem, level: number, id: string }> = [];
+    
+    items.forEach(item => {
+      // Check role-based access
+      const hasAccess = (sectionId: string, role: string) => {
+        const restrictedSections = {
+          'Employee': ['payroll', 'filings', 'payments', 'accounting'],
+          'Manager': ['filings', 'payments', 'accounting'],
+          'HR': ['payroll', 'payments', 'accounting'],
+        };
+        return !restrictedSections[role]?.includes(sectionId);
+      };
+
+      if (hasAccess(item.id, userRole)) {
+        flattened.push({ item, level, id: item.id });
+        
+        // Add children if expanded
+        if (item.children && expandedSections.has(item.id)) {
+          flattened.push(...flattenItems(item.children, level + 1));
+        }
+      }
+    });
+    
+    return flattened;
+  }, [userRole, expandedSections]);
+
+  const flatItems = flattenItems(navigationGroups);
+
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const currentItem = flatItems[focusedIndex];
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setFocusedIndex(prev => Math.min(prev + 1, flatItems.length - 1));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setFocusedIndex(prev => Math.max(prev - 1, 0));
+        break;
+      case 'ArrowRight':
+        if (currentItem?.item.children && !expandedSections.has(currentItem.item.id)) {
+          e.preventDefault();
+          toggleSection(currentItem.item.id);
+        }
+        break;
+      case 'ArrowLeft':
+        if (currentItem?.item.children && expandedSections.has(currentItem.item.id)) {
+          e.preventDefault();
+          toggleSection(currentItem.item.id);
+        }
+        break;
+      case 'Home':
+        e.preventDefault();
+        setFocusedIndex(0);
+        break;
+      case 'End':
+        e.preventDefault();
+        setFocusedIndex(flatItems.length - 1);
+        break;
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        if (currentItem?.item.href) {
+          window.location.href = currentItem.item.href;
+        } else if (currentItem?.item.children) {
+          toggleSection(currentItem.item.id);
+        }
+        break;
+    }
+  }, [focusedIndex, flatItems, expandedSections, toggleSection]);
+
+  // Focus management
+  useEffect(() => {
+    if (focusedIndex >= 0 && focusedIndex < flatItems.length) {
+      const itemId = flatItems[focusedIndex].id;
+      const element = itemRefs.current.get(itemId);
+      if (element) {
+        element.focus();
+      }
+    }
+  }, [focusedIndex, flatItems]);
+
+  const renderBadge = (badge?: string | number, urgent?: boolean, label?: string) => {
     if (!badge) return null;
+    
+    // Create ARIA label in Greek
+    const getAriaLabel = () => {
+      if (urgent) return `${badge} επείγοντα στοιχεία`;
+      if (typeof badge === 'number' && badge === 1) return `1 στοιχείο`;
+      return `${badge} στοιχεία`;
+    };
     
     // Determine badge type based on context
     const getBadgeClass = () => {
@@ -437,6 +533,8 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           "px-2 py-0.5 rounded-full text-xs font-medium min-w-[18px] h-[18px] flex items-center justify-center",
           getBadgeClass()
         )}
+        aria-label={getAriaLabel()}
+        role="status"
       >
         {badge}
       </div>
@@ -463,16 +561,17 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     const active = item.href ? isActive(item.href) : false;
     const disabled = false; // Can be dynamic based on user permissions or system state
 
-    // Base button classes with all states
+    // Base button classes with all states and reduced motion support
     const getButtonClasses = (isLeaf: boolean = false) => cn(
       // Base styles
-      "w-full justify-start px-4 text-gray-700 dark:text-gray-200 transition-all duration-200 relative group",
+      "w-full justify-start px-4 text-gray-700 dark:text-gray-200 relative group",
       // Size based on level
       level === 0 ? "h-10 text-[15px] font-medium" : "h-9 text-[14px] ml-6",
       // Connector lines for children
       level > 0 && "before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
-      // Default state
+      // Default state with motion preferences
       "hover:bg-gray-50 dark:hover:bg-gray-800/50",
+      "transition-all motion-reduce:transition-none duration-200 motion-reduce:duration-0",
       // Active state with accent bar
       active && "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 before:!absolute before:!left-0 before:!top-2 before:!bottom-2 before:!w-[3px] before:!bg-blue-600 before:!rounded-r-sm before:!z-10",
       // Focus ring for keyboard navigation
@@ -494,6 +593,13 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
             e.preventDefault();
             if (!disabled) toggleSection(item.id);
           }}
+          ref={(el) => {
+            if (el) itemRefs.current.set(item.id, el);
+          }}
+          role="treeitem"
+          aria-expanded={isExpanded}
+          aria-current={active ? "page" : undefined}
+          tabIndex={-1}
         >
           <div className="flex items-center flex-1 min-w-0">
             <item.icon className="h-6 w-6 flex-shrink-0" />
@@ -501,11 +607,11 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
               <>
                 <span className="truncate ml-3">{item.label}</span>
                 <div className="flex items-center gap-2 ml-auto">
-                  {renderBadge(item.badge, item.urgent)}
+                  {renderBadge(item.badge, item.urgent, item.label)}
                   {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200" />
+                    <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 motion-reduce:transition-none motion-reduce:duration-0" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-gray-400 transition-transform duration-200" />
+                    <ChevronRight className="h-4 w-4 text-gray-400 transition-transform duration-200 motion-reduce:transition-none motion-reduce:duration-0" />
                   )}
                 </div>
               </>
@@ -546,7 +652,11 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
                 )}
               </div>
             </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-0.5 pt-1">
+            <CollapsibleContent 
+              className="space-y-0.5 pt-1"
+              role="group"
+              aria-label={`${item.label} υποστοιχεία`}
+            >
               {item.children?.map((child) => renderNavigationItem(child, level + 1))}
             </CollapsibleContent>
           </Collapsible>
@@ -562,6 +672,12 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         className={getButtonClasses(true)}
         onClick={(e) => item.href && handleItemClick(e, item.href, item.label)}
         onContextMenu={(e) => handleContextMenu(e, item.href, item.label)}
+        ref={(el) => {
+          if (el) itemRefs.current.set(item.id, el);
+        }}
+        role="treeitem"
+        aria-current={active ? "page" : undefined}
+        tabIndex={-1}
       >
         <div className="flex items-center flex-1 min-w-0">
           <item.icon className="h-6 w-6 flex-shrink-0" />
@@ -569,7 +685,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
             <>
               <span className="truncate ml-3">{item.label}</span>
               <div className="ml-auto">
-                {renderBadge(item.badge, item.urgent)}
+                {renderBadge(item.badge, item.urgent, item.label)}
               </div>
             </>
           )}
@@ -680,7 +796,19 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
   };
 
   return (
-    <div className="flex flex-col h-full font-sans">
+    <nav 
+      ref={navRef}
+      className="flex flex-col h-full font-sans" 
+      aria-label="Κύριο Μενού"
+      role="tree"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onFocus={() => {
+        if (focusedIndex === -1) {
+          setFocusedIndex(0);
+        }
+      }}
+    >
       {/* Optional Header */}
       {!collapsed && (
         <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -701,7 +829,12 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
                 </Badge>
               </div>
             </div>
-            <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="h-8 w-8 p-0"
+              aria-label="Γρήγορες ενέργειες"
+            >
               <Plus className="h-4 w-4" />
             </Button>
           </div>
@@ -709,16 +842,20 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       )}
 
       {/* Navigation Groups */}
-      <div className="flex-1 overflow-y-auto py-2">
+      <div className="flex-1 overflow-y-auto py-2" role="none">
         {navigationGroups.map((group, index) => (
-          <div key={group.id}>
+          <div key={group.id} role="none">
             {index > 0 && (
-              <div className="h-px bg-gray-200 dark:bg-gray-700 mx-4 my-2" />
+              <div 
+                className="h-px bg-gray-200 dark:bg-gray-700 mx-4 my-2" 
+                role="separator"
+                aria-hidden="true"
+              />
             )}
             {renderNavigationItem(group)}
           </div>
         ))}
       </div>
-    </div>
+    </nav>
   );
 }

@@ -4,6 +4,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Navigation focus styles for better accessibility */
+.nav-item:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Smooth animations with motion preference respect */
+.motion-reduce\\:transition-none {
+  transition: none !important;
+}
+
+.motion-reduce\\:duration-0 {
+  transition-duration: 0s !important;
+}
+
 @layer base {
   :root {
     /* Light theme colors */
