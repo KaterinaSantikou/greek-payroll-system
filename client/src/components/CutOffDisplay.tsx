@@ -129,8 +129,8 @@ export function CutOffDisplay({
                 </CardTitle>
                 <div className="flex items-center space-x-2 mt-1">
                   <Badge 
-                    variant={countdown_display.status === 'ACTIVE' ? 'success' : 
-                            countdown_display.status === 'APPROACHING' ? 'warning' : 'destructive'}
+                    variant={countdown_display.status === 'ACTIVE' ? 'default' : 
+                            countdown_display.status === 'NON_BUSINESS_DAY' ? 'secondary' : 'destructive'}
                   >
                     {countdown_display.status.replace('_', ' ')}
                   </Badge>
@@ -287,8 +287,8 @@ export function AllBanksCutOffDisplay({ allBanksData }: AllBanksCutOffProps) {
                     <CardTitle className="text-base">{bank.bank_name}</CardTitle>
                   </div>
                   <Badge 
-                    variant={bank.status === 'ACTIVE' ? 'success' : 
-                            bank.status === 'APPROACHING' ? 'warning' : 'destructive'}
+                    variant={bank.status === 'ACTIVE' ? 'default' : 
+                            bank.status === 'APPROACHING' ? 'secondary' : 'destructive'}
                     className="text-xs"
                   >
                     {bank.status}

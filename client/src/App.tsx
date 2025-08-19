@@ -50,6 +50,7 @@ import { PropertyProvider } from "@/contexts/PropertyContext";
 import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppProvider } from "@/contexts/AppContext";
+import { PaymentsCockpitDemo } from './pages/PaymentsCockpitDemo';
 import SmartNotifications from "@/pages/smartNotifications";
 import VisualAnalytics from "@/pages/visualAnalytics";
 import PropertyDashboard from "@/pages/propertyDashboard";
@@ -120,6 +121,7 @@ function Router() {
             <Route path="/payroll" component={Payroll} />
             <Route path="/payments" component={Payments} />
             <Route path="/sepa-payments" component={SepaPayments} />
+            <Route path="/payments-cockpit" component={PaymentsCockpitDemo} />
             <Route path="/sepa-engine-demo" component={SepaEngineDemo} />
             <Route path="/payment-ops-checklist" component={PaymentOpsChecklist} />
             <Route path="/schedules" component={Schedules} />
