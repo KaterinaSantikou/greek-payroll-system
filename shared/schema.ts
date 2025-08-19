@@ -1871,3 +1871,160 @@ export const insertLaborNewsfeedItemSchema = createInsertSchema(laborNewsfeedIte
 export const insertLaborNewsfeedCitationSchema = createInsertSchema(laborNewsfeedCitations);
 export const insertLaborNewsfeedConfigSchema = createInsertSchema(laborNewsfeedConfig);
 
+// Pay Transparency & Equity Module (EU Directive 2023/970)
+// Job posting salary ranges and transparency requirements
+export const jobPostingSalaryRanges = pgTable("job_posting_salary_ranges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
+  jobTitle: varchar("job_title", { length: 255 }).notNull(),
+  departmentId: varchar("department_id").references(() => departments.departmentId),
+  minSalary: decimal("min_salary", { precision: 10, scale: 2 }).notNull(),
+  maxSalary: decimal("max_salary", { precision: 10, scale: 2 }).notNull(),
+  salaryBasis: varchar("salary_basis", { length: 20 }).notNull(), // monthly, annual, hourly
+  currency: varchar("currency", { length: 3 }).default("EUR"),
+  benefitsDescription: text("benefits_description"),
+  payFactors: jsonb("pay_factors").default('[]'), // factors affecting pay (experience, education, etc.)
+  isActive: boolean("is_active").default(true),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  createdBy: varchar("created_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Employee pay equity analysis and gender pay gap tracking
+export const payEquityAnalysis = pgTable("pay_equity_analysis", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
+  analysisDate: date("analysis_date").notNull(),
+  analysisType: varchar("analysis_type", { length: 50 }).notNull(), // gender_gap, equal_work, category
+  jobCategory: varchar("job_category", { length: 100 }),
+  departmentId: varchar("department_id").references(() => departments.departmentId),
+  
+  // Gender pay gap metrics
+  maleEmployees: integer("male_employees").default(0),
+  femaleEmployees: integer("female_employees").default(0),
+  otherGenderEmployees: integer("other_gender_employees").default(0),
+  maleAvgSalary: decimal("male_avg_salary", { precision: 10, scale: 2 }),
+  femaleAvgSalary: decimal("female_avg_salary", { precision: 10, scale: 2 }),
+  otherAvgSalary: decimal("other_avg_salary", { precision: 10, scale: 2 }),
+  genderPayGapPercent: decimal("gender_pay_gap_percent", { precision: 5, scale: 2 }),
+  
+  // Additional metrics
+  medianMaleSalary: decimal("median_male_salary", { precision: 10, scale: 2 }),
+  medianFemaleSalary: decimal("median_female_salary", { precision: 10, scale: 2 }),
+  adjustedPayGap: decimal("adjusted_pay_gap", { precision: 5, scale: 2 }), // after controlling for factors
+  
+  // Analysis metadata
+  analysisMethodology: text("analysis_methodology"),
+  controlFactors: jsonb("control_factors").default('[]'), // factors controlled for in analysis
+  complianceStatus: varchar("compliance_status", { length: 20 }).default("pending"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Employee right-to-information requests (Article 8 EU 2023/970)
+export const payTransparencyRequests = pgTable("pay_transparency_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  requestType: varchar("request_type", { length: 50 }).notNull(), // pay_criteria, pay_levels, progression
+  requestDate: timestamp("request_date").defaultNow(),
+  requestDetails: text("request_details").notNull(),
+  
+  // Response tracking
+  status: varchar("status", { length: 20 }).default("pending"), // pending, in_progress, completed, rejected
+  responseDeadline: timestamp("response_deadline").notNull(), // 2 months from request
+  responseDate: timestamp("response_date"),
+  responseDetails: text("response_details"),
+  responseDocuments: jsonb("response_documents").default('[]'),
+  
+  // Compliance tracking
+  handledBy: varchar("handled_by"),
+  rejectionReason: text("rejection_reason"),
+  followUpRequired: boolean("follow_up_required").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Pay decision explanations and justifications
+export const payDecisionExplanations = pgTable("pay_decision_explanations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  decisionType: varchar("decision_type", { length: 50 }).notNull(), // hire, promotion, raise, review
+  decisionDate: date("decision_date").notNull(),
+  oldSalary: decimal("old_salary", { precision: 10, scale: 2 }),
+  newSalary: decimal("new_salary", { precision: 10, scale: 2 }).notNull(),
+  salaryChange: decimal("salary_change", { precision: 10, scale: 2 }),
+  
+  // Justification factors
+  performanceRating: varchar("performance_rating", { length: 20 }),
+  experienceYears: decimal("experience_years", { precision: 4, scale: 1 }),
+  educationLevel: varchar("education_level", { length: 50 }),
+  skillsAssessment: jsonb("skills_assessment").default('{}'),
+  marketComparison: decimal("market_comparison", { precision: 10, scale: 2 }),
+  
+  // Decision explanation
+  explanation: text("explanation").notNull(),
+  contributingFactors: jsonb("contributing_factors").default('[]'),
+  comparisonGroup: varchar("comparison_group", { length: 100 }),
+  
+  // Approval and audit
+  approvedBy: varchar("approved_by").notNull(),
+  hrReviewed: boolean("hr_reviewed").default(false),
+  auditTrail: jsonb("audit_trail").default('[]'),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// EU 2023/970 compliance tracking per entity
+export const payEquityCompliance = pgTable("pay_equity_compliance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
+  
+  // Compliance deadlines
+  transpositionDeadline: date("transposition_deadline").notNull().default('2026-06-07'),
+  nextReportingDeadline: date("next_reporting_deadline"),
+  
+  // Readiness scoring
+  readinessScore: decimal("readiness_score", { precision: 5, scale: 2 }).default('0'),
+  lastAssessmentDate: timestamp("last_assessment_date"),
+  
+  // Compliance components
+  salaryRangesPublished: boolean("salary_ranges_published").default(false),
+  genderPayGapReported: boolean("gender_pay_gap_reported").default(false),
+  payTransparencyPolicyActive: boolean("pay_transparency_policy_active").default(false),
+  rightToInfoProcessActive: boolean("right_to_info_process_active").default(false),
+  payDecisionsCriteriaPublished: boolean("pay_decisions_criteria_published").default(false),
+  
+  // Reporting metrics
+  lastGenderPayGapReport: date("last_gender_pay_gap_report"),
+  employeeCount: integer("employee_count").default(0),
+  reportingThresholdMet: boolean("reporting_threshold_met").default(false), // 250+ employees
+  
+  // Action items and notes
+  outstandingActions: jsonb("outstanding_actions").default('[]'),
+  complianceNotes: text("compliance_notes"),
+  riskLevel: varchar("risk_level", { length: 20 }).default("medium"), // low, medium, high
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type JobPostingSalaryRange = typeof jobPostingSalaryRanges.$inferSelect;
+export type InsertJobPostingSalaryRange = z.infer<typeof insertJobPostingSalaryRangeSchema>;
+export type PayEquityAnalysis = typeof payEquityAnalysis.$inferSelect;
+export type InsertPayEquityAnalysis = z.infer<typeof insertPayEquityAnalysisSchema>;
+export type PayTransparencyRequest = typeof payTransparencyRequests.$inferSelect;
+export type InsertPayTransparencyRequest = z.infer<typeof insertPayTransparencyRequestSchema>;
+export type PayDecisionExplanation = typeof payDecisionExplanations.$inferSelect;
+export type InsertPayDecisionExplanation = z.infer<typeof insertPayDecisionExplanationSchema>;
+export type PayEquityCompliance = typeof payEquityCompliance.$inferSelect;
+export type InsertPayEquityCompliance = z.infer<typeof insertPayEquityComplianceSchema>;
+
+export const insertJobPostingSalaryRangeSchema = createInsertSchema(jobPostingSalaryRanges);
+export const insertPayEquityAnalysisSchema = createInsertSchema(payEquityAnalysis);
+export const insertPayTransparencyRequestSchema = createInsertSchema(payTransparencyRequests);
+export const insertPayDecisionExplanationSchema = createInsertSchema(payDecisionExplanations);
+export const insertPayEquityComplianceSchema = createInsertSchema(payEquityCompliance);
+
