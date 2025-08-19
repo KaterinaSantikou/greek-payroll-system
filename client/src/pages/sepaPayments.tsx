@@ -85,11 +85,11 @@ export default function SepaPayments() {
       key: "nbg",
       bic: "ETHNGRAA", 
       cutoff: "14:00", 
-      painVersions: ["pain.001.001.03"],
+      painVersions: ["pain.001.001.03", "pain.001.001.09"],
       statusReporting: ["pain.002.001.03"],
       reconciliation: ["camt.054"],
-      features: ["Standard SEPA implementation"],
-      status: "active"
+      features: ["Bulk file management", "SEPA Instant (SCT Inst)", "Off-cycle support"],
+      status: "recommended"
     },
     { 
       name: "Piraeus Bank", 
@@ -547,6 +547,80 @@ export default function SepaPayments() {
                 Eurobank's Corporate XML Guide provides comprehensive specifications for payroll and bulk SCT 
                 processing. The extended 15:00 cut-off time allows for flexible payroll processing schedules, 
                 while maintaining full compliance with ISO 20022 standards and Greek banking regulations.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* NBG Bulk File Management & SEPA Instant */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-purple-600" />
+              NBG Bulk File Management & SEPA Instant
+            </CardTitle>
+            <CardDescription>
+              Advanced bulk file management over ISO 20022 with SEPA Instant support for urgent off-cycle corrections
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">Bulk File Management</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">ISO 20022 bulk processing</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">pain.001.001.03/.09 support</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">pain.002.001.03 status reporting</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">14:00 standard cut-off</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-medium mb-2">SEPA Instant (SCT Inst)</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-orange-600" />
+                      <span className="text-sm">Off-cycle urgent corrections</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-orange-600" />
+                      <span className="text-sm">Real-time processing</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Euro className="w-4 h-4 text-orange-600" />
+                      <span className="text-sm">Instant credit transfers</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-orange-600" />
+                      <span className="text-sm">Recommended for corrections</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+              <h5 className="font-medium mb-2">Off-Cycle Processing</h5>
+              <p className="text-sm text-purple-700 dark:text-purple-300">
+                NBG's SEPA Instant (SCT Inst) capability is particularly recommended for urgent payroll corrections 
+                and off-cycle payments. This real-time processing ensures immediate credit to employee accounts, 
+                perfect for handling urgent salary adjustments or bonus payments outside regular payroll cycles.
               </p>
             </div>
           </CardContent>

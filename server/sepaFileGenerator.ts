@@ -261,17 +261,21 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
       'nbg': {
         name: 'National Bank of Greece',
         bic: 'ETHNGRAA',
-        supportedPainVersions: ['pain.001.001.03'],
+        supportedPainVersions: ['pain.001.001.03', 'pain.001.001.09'],
         statusReporting: ['pain.002.001.03'],
         reconciliation: ['camt.054'],
         features: {
           ibanOnly: true,
           separateDebitEntries: true,
           maxRemittanceChars: 140,
-          batchBookingSupported: false
+          batchBookingSupported: false,
+          bulkFileManagement: true,
+          sepaInstant: true,
+          offCycleSupport: true,
+          urgentCorrections: true
         },
         cutoffTime: { hour: 14, minute: 0 },
-        notes: 'Standard SEPA implementation'
+        notes: 'Bulk file management over ISO 20022; supports SEPA Instant (SCT Inst) for off-cycle runs'
       },
       'piraeus': {
         name: 'Piraeus Bank',
@@ -393,6 +397,23 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
       payrollCategory: "SALA",
       processingMode: "BULK_PAYROLL_SCT",
       cutoffTime: "15:00"
+    };
+  }
+
+  // Get NBG bulk file management specifications with SEPA Instant support
+  getNBGBulkFileSpecs(payrollRunId: string, isOffCycle: boolean = false): {
+    bulkFileManagement: string;
+    sepaInstantSupport: string;
+    offCycleMode: string;
+    urgentCorrections: boolean;
+    processingMode: string;
+  } {
+    return {
+      bulkFileManagement: "ISO 20022 bulk file management",
+      sepaInstantSupport: isOffCycle ? "SEPA Instant (SCT Inst)" : "Standard SCT",
+      offCycleMode: isOffCycle ? "URGENT_CORRECTIONS" : "STANDARD_PAYROLL",
+      urgentCorrections: isOffCycle,
+      processingMode: isOffCycle ? "SCT_INST" : "BULK_SCT"
     };
   }
 

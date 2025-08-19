@@ -1996,6 +1996,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // NBG SEPA Instant file generation (off-cycle urgent corrections)
+  app.post('/api/payments/sepa/generate-instant', isAuthenticated, async (req, res) => {
+    try {
+      const { payrollRunId, isOffCycle = true, urgentCorrections = true } = req.body;
+      
+      if (!payrollRunId) {
+        return res.status(400).json({ error: 'payrollRunId is required' });
+      }
+
+      const { SEPAFileGenerator } = await import("./sepaFileGenerator");
+      const sepaFileGenerator = new SEPAFileGenerator();
+      
+      // Validate NBG capabilities for SEPA Instant
+      const validation = sepaFileGenerator.validateBankCapabilities('nbg', {
+        painVersion: 'pain.001.001.03',
+        statusReporting: true,
+        reconciliation: true
+      });
+      
+      if (!validation.valid) {
+        return res.status(400).json({ 
+          error: "NBG SEPA Instant validation failed", 
+          issues: validation.issues 
+        });
+      }
+
+      const sepaFile = await sepaFileGenerator.generateSEPAFile(payrollRunId, 'nbg');
+      const specs = sepaFileGenerator.getNBGBulkFileSpecs(payrollRunId, isOffCycle);
+      const bankProfile = sepaFileGenerator.getBankProfileInfo('nbg');
+      
+      res.json({
+        success: true,
+        sepaFile,
+        bankProfile: 'nbg',
+        processingMode: specs.processingMode,
+        sepaInstantSupport: specs.sepaInstantSupport,
+        urgentCorrections: specs.urgentCorrections,
+        bulkFileManagement: specs.bulkFileManagement,
+        cutoffTime: "14:00",
+        validation,
+        message: isOffCycle 
+          ? 'SEPA Instant (SCT Inst) file generated for urgent off-cycle corrections'
+          : 'Standard bulk SEPA file generated for NBG'
+      });
+    } catch (error) {
+      console.error('Error generating NBG SEPA Instant file:', error);
+      res.status(500).json({ error: 'Failed to generate SEPA Instant file' });
+    }
+  });
+
   // Get payment history
   app.get('/api/payments/history', isAuthenticated, async (req, res) => {
     try {
