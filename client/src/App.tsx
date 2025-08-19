@@ -132,7 +132,6 @@ function Router() {
             <Route path="/pay-explanation-demo" component={PayExplanationDemo} />
             <Route path="/ai-engines-demo" component={AIEnginesDemo} />
             <Route path="/command-palette-demo" component={CommandPaletteDemo} />
-        <Route path="/smart-notifications" component={SmartNotifications} />
         <Route path="/ai-copilot" component={AICopilot} />
         <Route component={NotFound} />
       </Switch>

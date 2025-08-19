@@ -3439,6 +3439,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Visual Analytics API endpoints
+  app.get('/api/analytics/overtime-heatmap', isAuthenticated, async (req, res) => {
+    try {
+      const { visualAnalyticsService } = await import('./visualAnalyticsService');
+      const { propertyId, startDate, endDate, departmentId, employeeId } = req.query;
+
+      if (!propertyId) {
+        return res.status(400).json({ error: 'Property ID is required' });
+      }
+
+      const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const end = endDate ? new Date(endDate as string) : new Date();
+
+      const data = await visualAnalyticsService.getOvertimeHeatmap(
+        propertyId as string,
+        start,
+        end,
+        departmentId as string,
+        employeeId as string
+      );
+
+      res.json(data);
+    } catch (error) {
+      console.error('Error fetching overtime heatmap:', error);
+      res.status(500).json({ error: 'Failed to fetch overtime heatmap' });
+    }
+  });
+
+  app.get('/api/analytics/labor-occupancy', isAuthenticated, async (req, res) => {
+    try {
+      const { visualAnalyticsService } = await import('./visualAnalyticsService');
+      const { propertyId, startDate, endDate } = req.query;
+
+      if (!propertyId) {
+        return res.status(400).json({ error: 'Property ID is required' });
+      }
+
+      const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const end = endDate ? new Date(endDate as string) : new Date();
+
+      const data = await visualAnalyticsService.getLaborOccupancyAnalysis(
+        propertyId as string,
+        start,
+        end
+      );
+
+      res.json(data);
+    } catch (error) {
+      console.error('Error fetching labor occupancy analysis:', error);
+      res.status(500).json({ error: 'Failed to fetch labor occupancy analysis' });
+    }
+  });
+
+  app.get('/api/analytics/kpis', isAuthenticated, async (req, res) => {
+    try {
+      const { visualAnalyticsService } = await import('./visualAnalyticsService');
+      const { propertyId, startDate, endDate } = req.query;
+
+      if (!propertyId) {
+        return res.status(400).json({ error: 'Property ID is required' });
+      }
+
+      const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const end = endDate ? new Date(endDate as string) : new Date();
+
+      const data = await visualAnalyticsService.getAnalyticsKPIs(
+        propertyId as string,
+        start,
+        end
+      );
+
+      res.json(data);
+    } catch (error) {
+      console.error('Error fetching analytics KPIs:', error);
+      res.status(500).json({ error: 'Failed to fetch analytics KPIs' });
+    }
+  });
+
+  app.get('/api/analytics/drill-down', isAuthenticated, async (req, res) => {
+    try {
+      const { visualAnalyticsService } = await import('./visualAnalyticsService');
+      const { propertyId, level, entityId, startDate, endDate } = req.query;
+
+      if (!propertyId || !level || !entityId) {
+        return res.status(400).json({ error: 'Property ID, level, and entity ID are required' });
+      }
+
+      const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const end = endDate ? new Date(endDate as string) : new Date();
+
+      const data = await visualAnalyticsService.getDrillDownData(
+        propertyId as string,
+        level as 'property' | 'department' | 'employee',
+        entityId as string,
+        start,
+        end
+      );
+
+      res.json(data);
+    } catch (error) {
+      console.error('Error fetching drill-down data:', error);
+      res.status(500).json({ error: 'Failed to fetch drill-down data' });
+    }
+  });
+
+  app.get('/api/analytics/export/:type', isAuthenticated, async (req, res) => {
+    try {
+      const { visualAnalyticsService } = await import('./visualAnalyticsService');
+      const { type } = req.params;
+      const { propertyId, startDate, endDate } = req.query;
+
+      if (!propertyId) {
+        return res.status(400).json({ error: 'Property ID is required' });
+      }
+
+      const start = startDate ? new Date(startDate as string) : new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const end = endDate ? new Date(endDate as string) : new Date();
+
+      const csvData = await visualAnalyticsService.exportToCSV(
+        type as 'overtime' | 'labor' | 'kpis',
+        propertyId as string,
+        start,
+        end
+      );
+
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="${type}_analytics_${propertyId}_${start.toISOString().split('T')[0]}.csv"`);
+      res.send(csvData);
+    } catch (error) {
+      console.error('Error exporting analytics data:', error);
+      res.status(500).json({ error: 'Failed to export analytics data' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

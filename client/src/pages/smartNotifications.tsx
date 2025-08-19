@@ -328,17 +328,10 @@ export default function SmartNotifications() {
                 <div className="space-y-4">
                   <h4 className="font-semibold text-gray-800 dark:text-gray-200">Slack Integration</h4>
                   <div className="flex items-center gap-2">
-                    {process.env.SLACK_CHANNEL_ID ? (
-                      <Badge variant="default" className="bg-green-100 text-green-800">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Configured
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">
-                        <XCircle className="h-3 w-3 mr-1" />
-                        Not Configured
-                      </Badge>
-                    )}
+                    <Badge variant="secondary">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      Mock Implementation
+                    </Badge>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Adaptive cards with action buttons for immediate approval/rejection without leaving Slack.
