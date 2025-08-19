@@ -1,611 +1,538 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
-  Home,
-  Shield,
-  BarChart,
+  Zap, 
+  Target, 
+  Sparkles, 
+  Smartphone, 
+  Shield, 
+  Clock, 
+  Eye, 
+  Palette, 
+  Navigation,
+  CheckCircle,
+  ArrowRight,
   Users,
-  Building2,
-  Sparkles,
-  ChevronRight,
-  Smartphone,
-  AlertTriangle,
-  Clock,
-  TrendingUp,
-  Zap,
-  Target,
-  Activity,
-  User,
-  UserCheck,
-  Gift,
-  Rocket,
-  Play,
-  Calculator,
-  Settings,
-  Scale,
-  CreditCard
+  Gauge,
+  Heart
 } from "lucide-react";
 
-const uxExample = {
-  level1: [
-    {
-      name: "Dashboard",
-      icon: Home,
-      color: "bg-blue-500",
-      description: "Central control hub with overview and management access",
-      level2: [
-        {
-          name: "Overview",
-          icon: Activity,
-          description: "Main operational dashboards",
-          level3: [
-            { name: "Main Dashboard", path: "/", description: "Central control hub" },
-            { name: "Manager Dashboard", path: "/manager-dashboard", description: "Management overview" },
-            { name: "Employee Self-Service", path: "/employee-self-service", description: "Employee portal" }
-          ]
-        }
-      ]
-    },
-    {
-      name: "People",
-      icon: Users,
-      color: "bg-purple-500",
-      description: "Employee management and workforce organization",
-      level2: [
-        {
-          name: "Employees",
-          icon: User,
-          description: "Individual employee management",
-          level3: [
-            { name: "Profiles", path: "/employee-master", description: "Complete employee profiles" },
-            { name: "Contracts", path: "/employees", description: "Employment contracts & terms" },
-            { name: "Documents", path: "/legal", description: "Employee documentation" },
-            { name: "Assignments", path: "/allowances", description: "Role & department assignments" }
-          ]
-        },
-        {
-          name: "Teams & Rotas",
-          icon: Clock,
-          description: "Schedule and team management",
-          level3: [
-            { name: "Builder", path: "/schedules", description: "Schedule creation tools" },
-            { name: "Templates", path: "/leave", description: "Reusable schedule patterns" },
-            { name: "Approvals", path: "/manager-workflows", description: "Schedule approval workflows" }
-          ]
-        }
-      ]
-    },
-    {
-      name: "Time",
-      icon: Clock,
-      color: "bg-cyan-500",
-      description: "Time tracking and schedule management",
-      level2: [
-        {
-          name: "Punches",
-          icon: Smartphone,
-          description: "Real-time punch tracking and corrections",
-          level3: [
-            { name: "Today", path: "/digital-work-card", description: "Real-time punch tracking" },
-            { name: "Exceptions", path: "/advanced-time-capture", description: "Missing & invalid punches" },
-            { name: "Corrections", path: "/manager-workflows", description: "Time correction approvals" }
-          ]
-        },
-        {
-          name: "Schedules",
-          icon: Clock,
-          description: "Schedule management and compliance",
-          level3: [
-            { name: "Publish", path: "/schedules", description: "Schedule publication & distribution" },
-            { name: "Change Log", path: "/analytics", description: "Schedule modification history" },
-            { name: "ERGANI Actions", path: "/ergani-compliance", description: "Ministry notification queue" }
-          ]
-        }
-      ]
-    },
-    {
-      name: "Live Compliance",
-      icon: Shield,
-      color: "bg-red-500",
-      description: "Real-time compliance monitoring and government reporting",
-      level2: [
-        {
-          name: "Digital Card Status",
-          icon: Smartphone,
-          description: "Real-time work card monitoring",
-          level3: [
-            { name: "Digital Work Card", path: "/digital-work-card", description: "Real-time tracking system" },
-            { name: "Advanced Time Capture", path: "/advanced-time-capture", description: "Multi-method clock-in" }
-          ]
-        },
-        {
-          name: "ERGANI Queue",
-          icon: AlertTriangle,
-          description: "Ministry reporting queue",
-          level3: [
-            { name: "ERGANI II Compliance", path: "/ergani-compliance", description: "Ministry reporting" },
-            { name: "Compliance Monitoring", path: "/compliance", description: "Regulatory oversight" }
-          ]
-        },
-        {
-          name: "APD & ΦΜΥ Deadlines",
-          icon: Clock,
-          description: "Tax and social security deadlines",
-          level3: [
-            { name: "Payroll Integration", path: "/payroll-integration", description: "System connectors" },
-            { name: "Legal Documentation", path: "/legal", description: "Compliance documents" }
-          ]
-        }
-      ]
-    },
-    {
-      name: "Cost Insights",
-      icon: BarChart,
-      color: "bg-green-500",
-      description: "Predictive analytics and cost optimization",
-      level2: [
-        {
-          name: "Labor Forecast",
-          icon: TrendingUp,
-          description: "Predictive workforce analytics",
-          level3: [
-            { name: "Analytics Dashboard", path: "/analytics", description: "Predictive analytics" },
-            { name: "Success Metrics", path: "/success-metrics", description: "KPI monitoring" }
-          ]
-        },
-        {
-          name: "OT Heatmap",
-          icon: Zap,
-          description: "Overtime pattern analysis",
-          level3: [
-            { name: "Overtime Management", path: "/overtime", description: "Premium calculations" },
-            { name: "Manager Workflows", path: "/manager-workflows", description: "Approval processes" }
-          ]
-        },
-        {
-          name: "Variance vs Budget",
-          icon: Target,
-          description: "Budget comparison and variance analysis",
-          level3: [
-            { name: "Payroll Engine", path: "/payroll", description: "Core calculations" },
-            { name: "Modern Payroll", path: "/modern-payroll", description: "Next-gen platform" }
-          ]
-        }
-      ]
-    },
-    {
-      name: "Payroll & Finance",
-      icon: Calculator,
-      color: "bg-emerald-500",
-      description: "Comprehensive Greek payroll processing",
-      level2: [
-        {
-          name: "Runs",
-          icon: Play,
-          description: "End-to-end payroll execution workflow",
-          level3: [
-            { name: "Draft", path: "/payroll", description: "Initial payroll calculations" },
-            { name: "Validate", path: "/modern-payroll", description: "Compliance & accuracy checks" },
-            { name: "Finalize", path: "/payments", description: "Lock & distribute payroll" },
-            { name: "Post-Run Audit", path: "/analytics", description: "Reconciliation & reporting" }
-          ]
-        },
-        {
-          name: "Components",
-          icon: Settings,
-          description: "Payroll calculation elements",
-          level3: [
-            { name: "Earnings", path: "/allowances", description: "Basic pay & overtime" },
-            { name: "Deductions", path: "/compliance", description: "Taxes & insurance" },
-            { name: "Rates", path: "/overtime", description: "Hourly & premium rates" },
-            { name: "Benefits in Kind", path: "/hotel-operations", description: "Non-cash benefits" }
-          ]
-        },
-        {
-          name: "Bonuses",
-          icon: Gift,
-          description: "Greek mandatory bonuses & allowances",
-          level3: [
-            { name: "Δώρο Πάσχα", path: "/payroll-integration", description: "Easter bonus calculation" },
-            { name: "Χριστουγέννων", path: "/manager-workflows", description: "Christmas bonus calculation" },
-            { name: "Επίδομα Άδειας", path: "/leave", description: "Vacation allowance calculation" }
-          ]
-        }
-      ]
-    },
-    {
-      name: "Payments",
-      icon: CreditCard,
-      color: "bg-teal-500",
-      description: "Salary payment processing and management",
-      level2: [
-        {
-          name: "Salary Files",
-          icon: CreditCard,
-          description: "SEPA and bank file generation",
-          level3: [
-            { name: "Create SEPA", path: "/payments", description: "SEPA Direct Debit file generation" },
-            { name: "Approvals", path: "/manager-workflows", description: "Payment approval workflow" },
-            { name: "Bank Receipts", path: "/analytics", description: "Bank confirmation processing" }
-          ]
-        },
-        {
-          name: "Off-Cycle",
-          icon: Zap,
-          description: "Emergency and correction payments",
-          level3: [
-            { name: "Urgent", path: "/overtime", description: "Emergency payment processing" },
-            { name: "Corrections", path: "/compliance", description: "Payroll error corrections" },
-            { name: "Reversals", path: "/payroll-integration", description: "Payment reversal processing" }
-          ]
-        }
-      ]
-    },
-    {
-      name: "Accounting",
-      icon: BarChart,
-      color: "bg-purple-600",
-      description: "Financial reconciliation and GL integration",
-      level2: [
-        {
-          name: "Journal Export",
-          icon: Settings,
-          description: "General ledger integration workflows",
-          level3: [
-            { name: "Map", path: "/payroll", description: "Chart of accounts mapping" },
-            { name: "Preview", path: "/analytics", description: "Journal entry preview" },
-            { name: "Post", path: "/payments", description: "GL posting execution" }
-          ]
-        },
-        {
-          name: "Reconciliation",
-          icon: Target,
-          description: "Payroll to accounting reconciliation",
-          level3: [
-            { name: "Payroll vs GL", path: "/modern-payroll", description: "Payroll to GL reconciliation" },
-            { name: "Variances", path: "/compliance", description: "Variance analysis & resolution" }
-          ]
-        }
-      ]
-    },
-    {
-      name: "Filings",
-      icon: Scale,
-      color: "bg-indigo-500",
-      description: "Greek government compliance and submissions",
-      level2: [
-        {
-          name: "ERGANI II",
-          icon: UserCheck,
-          description: "Ministry of Labor submissions",
-          level3: [
-            { name: "Hires", path: "/employee-master", description: "New employee notifications" },
-            { name: "Schedules", path: "/schedules", description: "Work schedule submissions" },
-            { name: "OT", path: "/overtime", description: "Overtime notifications" },
-            { name: "Terminations", path: "/employees", description: "Employee departure forms" },
-            { name: "Receipts", path: "/ergani-compliance", description: "Submission confirmations" }
-          ]
-        },
-        {
-          name: "e-EFKA/APD",
-          icon: Shield,
-          description: "Social security submissions",
-          level3: [
-            { name: "Build", path: "/payroll", description: "Insurance contribution files" },
-            { name: "Validate", path: "/compliance", description: "Data validation & checks" },
-            { name: "Submit", path: "/payroll-integration", description: "Electronic submission" },
-            { name: "Receipts", path: "/analytics", description: "Confirmation receipts" }
-          ]
-        },
-        {
-          name: "AADE/ΦΜΥ",
-          icon: CreditCard,
-          description: "Tax authority submissions",
-          level3: [
-            { name: "Build File", path: "/payments", description: "Payroll tax file generation" },
-            { name: "Merge", path: "/modern-payroll", description: "Multi-entity consolidation" },
-            { name: "Submit", path: "/legal", description: "Tax authority submission" },
-            { name: "Payment", path: "/manager-workflows", description: "Tax payment processing" }
-          ]
-        }
-      ]
-    },
-    {
-      name: "Settings",
-      icon: Settings,
-      color: "bg-slate-500",
-      description: "System configuration and administration",
-      level2: [
-        {
-          name: "Policies",
-          icon: Scale,
-          description: "Workplace policy configuration",
-          level3: [
-            { name: "Overtime", path: "/overtime", description: "Overtime policy configuration" },
-            { name: "Night", path: "/schedules", description: "Night shift premium rules" },
-            { name: "Sunday/Holiday", path: "/leave", description: "Weekend & holiday rates" },
-            { name: "Breaks", path: "/advanced-time-capture", description: "Break time policies" },
-            { name: "Tips", path: "/hotel-operations", description: "Tip pooling & distribution" }
-          ]
-        },
-        {
-          name: "Compliance",
-          icon: Shield,
-          description: "Legal compliance configuration",
-          level3: [
-            { name: "Minimum Wage Tables", path: "/compliance", description: "Greek minimum wage rates" },
-            { name: "Effective-Date Rules", path: "/legal", description: "Policy effective date management" }
-          ]
-        },
-        {
-          name: "Integrations",
-          icon: Zap,
-          description: "External system connections",
-          level3: [
-            { name: "ERGANI", path: "/ergani-compliance", description: "Ministry of Labor connection" },
-            { name: "EFKA", path: "/payroll-integration", description: "Social security integration" },
-            { name: "AADE", path: "/payments", description: "Tax authority connection" },
-            { name: "Banks", path: "/analytics", description: "Banking system integrations" },
-            { name: "ERP", path: "/modern-payroll", description: "Enterprise system connectors" },
-            { name: "SSO", path: "/manager-workflows", description: "Single sign-on configuration" }
-          ]
-        },
-        {
-          name: "Security",
-          icon: UserCheck,
-          description: "Security and access control",
-          level3: [
-            { name: "Roles", path: "/employees", description: "Role-based access control" },
-            { name: "Data Retention", path: "/employee-master", description: "Data retention policies" },
-            { name: "Audit Log", path: "/payroll", description: "System audit logging" }
-          ]
-        }
-      ]
-    }
-  ]
-};
+interface RoadmapItem {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'critical' | 'high' | 'medium';
+  timeline: '2025 Q1' | '2025 Q2' | '2025 Q3' | '2025 Q4' | '2026 Q1' | '2026 Q2';
+  status: 'planning' | 'in-progress' | 'completed';
+  category: 'speed' | 'guidance' | 'design' | 'mobile' | 'compliance';
+  impact: string;
+}
 
-const uxPrinciples = [
+const guidingPrinciples = [
   {
-    title: "Contextual Organization",
-    description: "Information is grouped by operational context rather than technical boundaries",
-    icon: "🎯"
+    icon: <Zap className="w-6 h-6 text-yellow-500" />,
+    title: "90-second payroll run",
+    description: "No clutter, no hidden steps",
+    details: "Streamlined workflow that completes full payroll processing in under 90 seconds with zero cognitive overhead"
   },
   {
-    title: "Progressive Disclosure",
-    description: "Complex functionality is revealed in manageable layers",
-    icon: "📊"
+    icon: <Target className="w-6 h-6 text-blue-500" />,
+    title: "Contextual guidance",
+    description: "Users never wonder 'what do I click next?'",
+    details: "Intelligent UI that anticipates user needs and provides clear next steps at every interaction point"
   },
   {
-    title: "Task-Oriented Flow",
-    description: "Navigation follows natural workflow patterns",
-    icon: "🔄"
+    icon: <Sparkles className="w-6 h-6 text-purple-500" />,
+    title: "Beautiful by default",
+    description: "Modern typography, whitespace, iconography",
+    details: "Aesthetic excellence that matches global design standards while maintaining functional clarity"
   },
   {
-    title: "Visual Hierarchy",
-    description: "Color coding and icons provide instant recognition",
-    icon: "🎨"
+    icon: <Gauge className="w-6 h-6 text-green-500" />,
+    title: "Speed",
+    description: "Snappy transitions, instant search, mobile parity",
+    details: "Sub-100ms interactions with seamless cross-platform performance optimization"
+  },
+  {
+    icon: <Shield className="w-6 h-6 text-red-500" />,
+    title: "Trust through transparency",
+    description: "Compliance warnings are clear, visual, not buried",
+    details: "Critical compliance information surfaced prominently with actionable guidance and visual hierarchy"
+  }
+];
+
+const roadmapItems: RoadmapItem[] = [
+  // 2025 Q1 - Critical Speed & Foundation
+  {
+    id: 'speed-core',
+    title: 'Lightning Payroll Engine',
+    description: 'Sub-90-second full payroll processing with real-time feedback',
+    priority: 'critical',
+    timeline: '2025 Q1',
+    status: 'in-progress',
+    category: 'speed',
+    impact: 'Reduces payroll processing time from 30+ minutes to under 90 seconds'
+  },
+  {
+    id: 'guidance-contextual',
+    title: 'Smart Navigation System',
+    description: 'AI-powered contextual guidance with progressive disclosure',
+    priority: 'critical',
+    timeline: '2025 Q1',
+    status: 'planning',
+    category: 'guidance',
+    impact: 'Eliminates user confusion and reduces training time by 75%'
+  },
+  {
+    id: 'design-foundation',
+    title: 'Design System 2.0',
+    description: 'Comprehensive design language with Greek compliance aesthetics',
+    priority: 'high',
+    timeline: '2025 Q1',
+    status: 'planning',
+    category: 'design',
+    impact: 'Establishes visual consistency and premium feel across platform'
+  },
+
+  // 2025 Q2 - Mobile & Interaction Excellence
+  {
+    id: 'mobile-parity',
+    title: 'Mobile-First Architecture',
+    description: 'Native-quality mobile experience with offline capabilities',
+    priority: 'high',
+    timeline: '2025 Q2',
+    status: 'planning',
+    category: 'mobile',
+    impact: 'Enables on-the-go payroll management for hotel managers'
+  },
+  {
+    id: 'speed-search',
+    title: 'Instant Everything Search',
+    description: 'Sub-50ms search across employees, policies, and compliance',
+    priority: 'high',
+    timeline: '2025 Q2',
+    status: 'planning',
+    category: 'speed',
+    impact: 'Reduces information discovery time from minutes to seconds'
+  },
+  {
+    id: 'compliance-visual',
+    title: 'Visual Compliance Dashboard',
+    description: 'Real-time compliance status with clear visual indicators',
+    priority: 'critical',
+    timeline: '2025 Q2',
+    status: 'planning',
+    category: 'compliance',
+    impact: 'Prevents compliance violations through proactive visual alerts'
+  },
+
+  // 2025 Q3 - Advanced UX & Automation
+  {
+    id: 'guidance-smart-flows',
+    title: 'Intelligent Workflow Engine',
+    description: 'Adaptive UI that learns user patterns and optimizes flows',
+    priority: 'medium',
+    timeline: '2025 Q3',
+    status: 'planning',
+    category: 'guidance',
+    impact: 'Personalizes experience and reduces clicks by 40%'
+  },
+  {
+    id: 'design-animations',
+    title: 'Micro-Interaction Library',
+    description: 'Delightful animations and transitions for premium feel',
+    priority: 'medium',
+    timeline: '2025 Q3',
+    status: 'planning',
+    category: 'design',
+    impact: 'Enhances perceived performance and user satisfaction'
+  },
+  {
+    id: 'speed-caching',
+    title: 'Intelligent Caching System',
+    description: 'Predictive data loading and smart background sync',
+    priority: 'high',
+    timeline: '2025 Q3',
+    status: 'planning',
+    category: 'speed',
+    impact: 'Achieves instant page loads and zero-latency interactions'
+  },
+
+  // 2025 Q4 - AI & Predictive UX
+  {
+    id: 'guidance-ai-assistant',
+    title: 'AI Payroll Assistant',
+    description: 'Natural language interface for complex payroll operations',
+    priority: 'medium',
+    timeline: '2025 Q4',
+    status: 'planning',
+    category: 'guidance',
+    impact: 'Enables natural conversation-based payroll management'
+  },
+  {
+    id: 'compliance-predictive',
+    title: 'Predictive Compliance Engine',
+    description: 'AI-powered early warning system for compliance risks',
+    priority: 'high',
+    timeline: '2025 Q4',
+    status: 'planning',
+    category: 'compliance',
+    impact: 'Prevents compliance issues before they occur'
+  },
+
+  // 2026 Q1-Q2 - Next-Gen Experience
+  {
+    id: 'design-accessibility',
+    title: 'Universal Accessibility',
+    description: 'WCAG 2.2 AA compliance with inclusive design patterns',
+    priority: 'high',
+    timeline: '2026 Q1',
+    status: 'planning',
+    category: 'design',
+    impact: 'Ensures platform accessibility for all users'
+  },
+  {
+    id: 'mobile-ar',
+    title: 'AR Time Tracking',
+    description: 'Augmented reality features for hotel shift management',
+    priority: 'medium',
+    timeline: '2026 Q2',
+    status: 'planning',
+    category: 'mobile',
+    impact: 'Revolutionary shift management experience for hospitality'
   }
 ];
 
 export default function UXArchitecture() {
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedTimeline, setSelectedTimeline] = useState<string>('all');
+
+  const categories = [
+    { key: 'all', name: 'All Categories', icon: <Eye className="w-4 h-4" /> },
+    { key: 'speed', name: 'Speed', icon: <Zap className="w-4 h-4" /> },
+    { key: 'guidance', name: 'Guidance', icon: <Target className="w-4 h-4" /> },
+    { key: 'design', name: 'Design', icon: <Palette className="w-4 h-4" /> },
+    { key: 'mobile', name: 'Mobile', icon: <Smartphone className="w-4 h-4" /> },
+    { key: 'compliance', name: 'Compliance', icon: <Shield className="w-4 h-4" /> }
+  ];
+
+  const timelines = [
+    { key: 'all', name: 'All Timelines' },
+    { key: '2025 Q1', name: '2025 Q1' },
+    { key: '2025 Q2', name: '2025 Q2' },
+    { key: '2025 Q3', name: '2025 Q3' },
+    { key: '2025 Q4', name: '2025 Q4' },
+    { key: '2026 Q1', name: '2026 Q1' },
+    { key: '2026 Q2', name: '2026 Q2' }
+  ];
+
+  const filteredItems = roadmapItems.filter(item => 
+    (selectedCategory === 'all' || item.category === selectedCategory) &&
+    (selectedTimeline === 'all' || item.timeline === selectedTimeline)
+  );
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
+      case 'in-progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'critical': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100';
+      case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100';
+      default: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100';
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'speed': return <Zap className="w-4 h-4" />;
+      case 'guidance': return <Target className="w-4 h-4" />;
+      case 'design': return <Palette className="w-4 h-4" />;
+      case 'mobile': return <Smartphone className="w-4 h-4" />;
+      case 'compliance': return <Shield className="w-4 h-4" />;
+      default: return <Eye className="w-4 h-4" />;
+    }
+  };
+
+  const completedItems = roadmapItems.filter(item => item.status === 'completed').length;
+  const progressPercentage = (completedItems / roadmapItems.length) * 100;
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-neutral-900 mb-2">
-          UX Architecture — 3-Level Menu System
-        </h1>
-        <p className="text-lg text-neutral-600">
-          Hierarchical navigation designed for operational efficiency and user comprehension
-        </p>
+    <div className="container mx-auto p-6 space-y-8">
+      <div className="flex items-center gap-3 mb-8">
+        <Navigation className="w-8 h-8 text-indigo-600" />
+        <div>
+          <h1 className="text-4xl font-bold">Payroll System UI/UX Roadmap</h1>
+          <p className="text-xl text-muted-foreground">2025–2026 Strategic Design Evolution</p>
+        </div>
       </div>
 
-      {/* Architecture Overview */}
-      <Card>
+      {/* Guiding Principles */}
+      <Card className="border-2 border-indigo-200 dark:border-indigo-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary-600" />
-            Navigation Philosophy
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Heart className="w-6 h-6 text-red-500" />
+            Guiding Principles
           </CardTitle>
-          <CardDescription>
-            From broad operational areas to specific functionality
+          <CardDescription className="text-lg">
+            Core philosophy driving every design decision
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {uxPrinciples.map((principle, index) => (
-              <div key={index} className="text-center p-4 border border-neutral-200 rounded-lg">
-                <div className="text-2xl mb-2">{principle.icon}</div>
-                <h3 className="font-semibold text-neutral-900 mb-2">{principle.title}</h3>
-                <p className="text-sm text-neutral-600">{principle.description}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {guidingPrinciples.map((principle, index) => (
+              <div key={index} className="p-6 border rounded-lg hover:shadow-lg transition-shadow">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    {principle.icon}
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg">{principle.title}</h3>
+                    <p className="text-sm text-muted-foreground font-medium">{principle.description}</p>
+                    <p className="text-xs text-muted-foreground">{principle.details}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Example Structure */}
+      {/* Progress Overview */}
       <Card>
         <CardHeader>
-          <CardTitle>Example Navigation Structure</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <span>Roadmap Progress</span>
+            <Badge variant="outline" className="text-lg px-3 py-1">
+              {completedItems}/{roadmapItems.length} Complete
+            </Badge>
+          </CardTitle>
           <CardDescription>
-            Level 1 → Level 2 → Level 3 hierarchy in action
+            Overall progress toward next-generation payroll UX
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-6">
-            {uxExample.level1.map((level1, l1Index) => {
-              const Level1Icon = level1.icon;
-              
-              return (
-                <div key={l1Index} className="border border-neutral-200 rounded-lg p-6">
-                  {/* Level 1 */}
-                  <div className="flex items-center mb-4">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center mr-4 ${level1.color}`}>
-                      <Level1Icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-neutral-900">{level1.name}</h3>
-                      <p className="text-sm text-neutral-600">{level1.description}</p>
-                    </div>
-                    <Badge variant="outline">Level 1</Badge>
-                  </div>
-
-                  {/* Level 2 & 3 */}
-                  <div className="ml-6 space-y-4">
-                    {level1.level2.map((level2, l2Index) => {
-                      const Level2Icon = level2.icon;
-                      
-                      return (
-                        <div key={l2Index} className="border-l-2 border-neutral-200 pl-6">
-                          {/* Level 2 */}
-                          <div className="flex items-center mb-3">
-                            <Level2Icon className="w-5 h-5 text-neutral-600 mr-3" />
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-neutral-800">{level2.name}</h4>
-                              <p className="text-xs text-neutral-500">{level2.description}</p>
-                            </div>
-                            <Badge variant="secondary" className="text-xs">Level 2</Badge>
-                          </div>
-
-                          {/* Level 3 */}
-                          <div className="ml-8 space-y-2">
-                            {level2.level3.map((level3, l3Index) => (
-                              <div key={l3Index} className="flex items-center text-sm">
-                                <ChevronRight className="w-3 h-3 text-neutral-400 mr-2" />
-                                <div className="flex-1">
-                                  <span className="font-medium text-neutral-700">{level3.name}</span>
-                                  <span className="text-neutral-500 ml-2">— {level3.description}</span>
-                                </div>
-                                <Badge variant="outline" className="text-xs ml-2">Level 3</Badge>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <Progress value={progressPercentage} className="w-full h-3" />
+          <p className="text-sm text-muted-foreground mt-3">
+            {progressPercentage.toFixed(1)}% of roadmap items completed
+          </p>
         </CardContent>
       </Card>
 
-      {/* Implementation Benefits */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-              User Benefits
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <span className="font-medium">Faster Navigation:</span> Logical grouping reduces search time
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <span className="font-medium">Context Awareness:</span> Users understand where they are in the system
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <span className="font-medium">Reduced Cognitive Load:</span> Progressive disclosure prevents overwhelm
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <span className="font-medium">Task Efficiency:</span> Workflow-oriented organization
-                </div>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
+      {/* Roadmap Tabs */}
+      <Tabs defaultValue="roadmap" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="roadmap">Interactive Roadmap</TabsTrigger>
+          <TabsTrigger value="timeline">Timeline View</TabsTrigger>
+          <TabsTrigger value="metrics">Success Metrics</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-blue-600" />
-              Technical Implementation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <span className="font-medium">State Management:</span> Intelligent expansion based on current route
+        <TabsContent value="roadmap" className="space-y-6">
+          {/* Filters */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Filter Roadmap</CardTitle>
+              <CardDescription>Focus on specific categories and timelines</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <label className="text-sm font-medium">Category</label>
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map((category) => (
+                      <Button
+                        key={category.key}
+                        variant={selectedCategory === category.key ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedCategory(category.key)}
+                        className="flex items-center gap-1"
+                      >
+                        {category.icon}
+                        {category.name}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <span className="font-medium">Performance:</span> Lazy loading and efficient rendering
+                <div className="space-y-3">
+                  <label className="text-sm font-medium">Timeline</label>
+                  <div className="flex flex-wrap gap-2">
+                    {timelines.map((timeline) => (
+                      <Button
+                        key={timeline.key}
+                        variant={selectedTimeline === timeline.key ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedTimeline(timeline.key)}
+                      >
+                        {timeline.name}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <span className="font-medium">Accessibility:</span> Proper ARIA labels and keyboard navigation
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                <div>
-                  <span className="font-medium">Responsiveness:</span> Mobile-first collapsible design
-                </div>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Current Navigation Preview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Live Implementation</CardTitle>
-          <CardDescription>
-            The new 3-level navigation is now active in the sidebar
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-neutral-50 rounded-lg p-6 border-2 border-dashed border-neutral-300">
-            <div className="text-center">
-              <Sparkles className="w-12 h-12 text-primary-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-neutral-900 mb-2">
-                Navigation System Active
-              </h3>
-              <p className="text-neutral-600 mb-4">
-                The hierarchical navigation is now implemented and can be experienced in the left sidebar.
-              </p>
-              <div className="flex flex-wrap justify-center gap-2 text-sm">
-                <Badge variant="outline">Dashboard</Badge>
-                <Badge variant="outline">People</Badge>
-                <Badge variant="outline">Time</Badge>
-                <Badge variant="outline">Live Compliance</Badge>
-                <Badge variant="outline">Cost Insights</Badge>
-                <Badge variant="outline">Payroll & Finance</Badge>
-                <Badge variant="outline">Payments</Badge>
-                <Badge variant="outline">Accounting</Badge>
-                <Badge variant="outline">Filings</Badge>
-                <Badge variant="outline">Hotel Operations</Badge>
-                <Badge variant="outline">Settings</Badge>
-                <Badge variant="outline">Platform</Badge>
               </div>
-            </div>
+            </CardContent>
+          </Card>
+
+          {/* Roadmap Items */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredItems.map((item) => (
+              <Card key={item.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      {getCategoryIcon(item.category)}
+                      <div>
+                        <CardTitle className="text-lg">{item.title}</CardTitle>
+                        <CardDescription className="mt-1">{item.description}</CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Badge className={getStatusColor(item.status)}>
+                        {item.status}
+                      </Badge>
+                      <Badge className={getPriorityColor(item.priority)}>
+                        {item.priority}
+                      </Badge>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">Timeline</span>
+                      <Badge variant="outline">{item.timeline}</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      <span className="text-sm font-medium">Impact</span>
+                      <p className="text-sm text-muted-foreground">{item.impact}</p>
+                    </div>
+                    {item.status === 'completed' && (
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle className="w-4 h-4" />
+                        <span className="text-sm font-medium">Delivered</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </TabsContent>
+
+        <TabsContent value="timeline" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Development Timeline</CardTitle>
+              <CardDescription>Chronological view of UX evolution</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-8">
+                {timelines.slice(1).map((timeline) => {
+                  const timelineItems = roadmapItems.filter(item => item.timeline === timeline.key);
+                  if (timelineItems.length === 0) return null;
+
+                  return (
+                    <div key={timeline.key} className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <Clock className="w-5 h-5 text-blue-600" />
+                        <h3 className="text-xl font-semibold">{timeline.name}</h3>
+                        <Badge variant="outline">
+                          {timelineItems.length} items
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-8">
+                        {timelineItems.map((item) => (
+                          <div key={item.id} className="p-4 border rounded-lg">
+                            <div className="flex items-center gap-2 mb-2">
+                              {getCategoryIcon(item.category)}
+                              <span className="font-medium">{item.title}</span>
+                              <Badge className={getStatusColor(item.status)}>
+                                {item.status}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{item.description}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="metrics" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-yellow-500" />
+                  Speed Metrics
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-3xl font-bold">90s</div>
+                <div className="text-sm text-muted-foreground">Target payroll completion time</div>
+                <div className="text-sm">
+                  <strong>Current:</strong> 8-12 minutes<br />
+                  <strong>Improvement:</strong> 95% reduction
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-500" />
+                  User Experience
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-3xl font-bold">75%</div>
+                <div className="text-sm text-muted-foreground">Training time reduction</div>
+                <div className="text-sm">
+                  <strong>Target:</strong> Zero cognitive overhead<br />
+                  <strong>Method:</strong> Contextual guidance
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-green-500" />
+                  Compliance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-3xl font-bold">100%</div>
+                <div className="text-sm text-muted-foreground">Proactive compliance coverage</div>
+                <div className="text-sm">
+                  <strong>Target:</strong> Zero compliance surprises<br />
+                  <strong>Method:</strong> Visual transparency
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Alert>
+            <Target className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Success Definition:</strong> When hotel managers can complete full payroll processing 
+              in under 90 seconds without consulting documentation, training materials, or asking for help.
+            </AlertDescription>
+          </Alert>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
