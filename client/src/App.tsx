@@ -36,6 +36,7 @@ import ProductVision from "@/pages/productVision";
 import Payments from "@/pages/payments";
 import SepaPayments from "@/pages/sepaPayments";
 import SepaEngineDemo from "@/pages/sepaEngineDemo";
+import PaymentOpsChecklist from "@/pages/paymentOpsChecklist";
 import EmployeeSelfService from "@/pages/employeeSelfService";
 import RulesEngine from "@/pages/rulesEngine";
 import ManagerDashboard from "@/pages/managerDashboard";
@@ -60,6 +61,7 @@ function Router() {
           <Route path="/payments" component={Payments} />
           <Route path="/sepa-payments" component={SepaPayments} />
           <Route path="/sepa-engine-demo" component={SepaEngineDemo} />
+          <Route path="/payment-ops-checklist" component={PaymentOpsChecklist} />
           <Route path="/schedules" component={Schedules} />
           <Route path="/allowances" component={Allowances} />
           <Route path="/overtime" component={Overtime} />

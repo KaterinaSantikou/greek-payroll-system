@@ -2102,6 +2102,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Payment operations workflow endpoints
+  app.post('/api/payments/ops/upload-bank-channel', isAuthenticated, async (req, res) => {
+    try {
+      const { sepaFile, bankProfile, uploadChannel, entityId } = req.body;
+      
+      if (!sepaFile || !bankProfile || !uploadChannel) {
+        return res.status(400).json({ error: 'sepaFile, bankProfile, and uploadChannel are required' });
+      }
+
+      // Simulate bank channel upload
+      const submissionId = `SUB-${Date.now()}-${bankProfile.toUpperCase()}`;
+      
+      res.json({
+        success: true,
+        submissionId,
+        uploadChannel,
+        bankProfile,
+        status: 'SUBMITTED',
+        submittedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error uploading to bank channel:', error);
+      res.status(500).json({ error: 'Failed to upload to bank channel' });
+    }
+  });
+
+  app.get('/api/payments/ops/poll-status/:submissionId', isAuthenticated, async (req, res) => {
+    try {
+      const { submissionId } = req.params;
+      
+      // Simulate status polling
+      const mockStatuses = ['SUBMITTED', 'PROCESSING', 'ACCEPTED', 'COMPLETED'];
+      const randomStatus = mockStatuses[Math.floor(Math.random() * mockStatuses.length)];
+      
+      res.json({
+        submissionId,
+        status: randomStatus,
+        pain002Received: randomStatus !== 'SUBMITTED',
+        acceptedPayments: randomStatus === 'COMPLETED' ? 40 : 0,
+        rejectedPayments: randomStatus === 'COMPLETED' ? 5 : 0,
+        lastUpdated: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error polling status:', error);
+      res.status(500).json({ error: 'Failed to poll status' });
+    }
+  });
+
+  app.get('/api/payments/ops/download-camt054/:submissionId', isAuthenticated, async (req, res) => {
+    try {
+      const { submissionId } = req.params;
+      
+      // Simulate camt.054 download
+      const mockCamt054 = {
+        documentId: `CAMT054-${submissionId}`,
+        downloadUrl: `/api/files/camt054/${submissionId}.xml`,
+        reconciliationData: {
+          totalCredits: 40,
+          totalAmount: 122850.00,
+          currency: 'EUR',
+          executionDate: new Date().toISOString()
+        }
+      };
+      
+      res.json({
+        success: true,
+        camt054: mockCamt054,
+        reconciliationComplete: true,
+        downloadedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error downloading camt.054:', error);
+      res.status(500).json({ error: 'Failed to download camt.054' });
+    }
+  });
+
   // Get payment history
   app.get('/api/payments/history', isAuthenticated, async (req, res) => {
     try {
