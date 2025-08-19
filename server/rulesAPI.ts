@@ -34,7 +34,9 @@ router.get('/api/rules', isAuthenticated, async (req, res) => {
         "insurance_calculation",
         "allowances",
         "deductions",
-        "compliance_check"
+        "compliance_check",
+        "time_bands",
+        "ergani_routing"
       ],
       effectiveDate: effectiveDate.toISOString().split('T')[0]
     });
@@ -265,6 +267,57 @@ router.post('/api/rules/test', isAuthenticated, async (req, res) => {
   }
 });
 
+// Validate time bands for shifts
+router.post('/api/rules/validate/time-bands', isAuthenticated, async (req, res) => {
+  try {
+    const { shiftData } = req.body;
+    
+    if (!shiftData) {
+      return res.status(400).json({ error: 'shiftData is required' });
+    }
+
+    const results = await rulesEngine.validateTimeBands(shiftData);
+    
+    res.json({
+      shiftData,
+      validationResults: results,
+      calculations: results.filter(r => r.type === 'calculation'),
+      premiums: results.filter(r => r.premium).map(r => ({
+        rule: r.rule,
+        premium: r.premium,
+        timeBand: r.timeBand,
+        calculatedValue: r.calculatedValue
+      }))
+    });
+  } catch (error) {
+    console.error('Error validating time bands:', error);
+    res.status(500).json({ error: 'Failed to validate time bands' });
+  }
+});
+
+// Determine ERGANI routing
+router.post('/api/rules/validate/ergani-routing', isAuthenticated, async (req, res) => {
+  try {
+    const { entityData, submissionType } = req.body;
+    
+    if (!entityData || !submissionType) {
+      return res.status(400).json({ error: 'entityData and submissionType are required' });
+    }
+
+    const results = await rulesEngine.determineErganiRouting(entityData, submissionType);
+    
+    res.json({
+      entityData,
+      submissionType,
+      routingResults: results,
+      recommendedMode: results.find(r => r.type === 'ergani_routing')?.routing?.mode || 'reporting'
+    });
+  } catch (error) {
+    console.error('Error determining ERGANI routing:', error);
+    res.status(500).json({ error: 'Failed to determine ERGANI routing' });
+  }
+});
+
 // Export example rule templates
 router.get('/api/rules/templates', isAuthenticated, async (req, res) => {
   try {
@@ -284,6 +337,40 @@ action_on_violation:
   - type: "alert"
     to: "payroll_admin"
     message: "Custom minimum wage violation detected"
+`,
+      time_bands: `
+rule: "CustomNightShift"
+version: "2025.01"
+description: "Custom night shift premium with time bands"
+category: "time_bands"
+applies_to: ["nightPremium"]
+priority: 15
+effective_from: "2025-01-01"
+condition: "shift.overlaps_night_band = true"
+premium: 0.30
+band:
+  start: "21:00"
+  end: "07:00"
+  crossesMidnight: true
+action_on_violation:
+  - type: "calculate"
+`,
+      ergani_routing: `
+rule: "CustomErganiRouting"
+version: "2025.01"
+description: "Custom ERGANI routing per entity"
+category: "ergani_routing"
+applies_to: ["ergani_submission"]
+priority: 5
+effective_from: "2025-01-01"
+condition: "entity.type = 'hotel'"
+ergani_mode:
+  mode: "pre_announcement"
+  auto_routing: true
+  entity_routing:
+    CUSTOM_ENTITY_001: "reporting"
+action_on_violation:
+  - type: "route_ergani"
 `,
       overtime: `
 rule: "CustomOvertime"
@@ -324,6 +411,8 @@ action_on_violation:
         "night_premium", 
         "sunday_premium",
         "holiday_premium",
+        "time_bands",
+        "ergani_routing",
         "allowances",
         "deductions",
         "tax_calculation",
@@ -336,7 +425,7 @@ action_on_violation:
       ],
       actions: [
         "block_finalize", "alert", "auto_correct", 
-        "flag_review", "calculate"
+        "flag_review", "calculate", "route_ergani"
       ]
     });
   } catch (error) {

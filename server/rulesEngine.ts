@@ -10,11 +10,24 @@ export const RuleConditionSchema = z.object({
   value: z.union([z.string(), z.number(), z.boolean(), z.array(z.union([z.string(), z.number()]))]),
 });
 
+export const TimeBandSchema = z.object({
+  start: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/), // HH:MM format
+  end: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  crossesMidnight: z.boolean().optional().default(false),
+});
+
+export const ErganiModeSchema = z.object({
+  mode: z.enum(["pre_announcement", "reporting"]),
+  entity_routing: z.record(z.string()).optional(), // entity_id -> mode mapping
+  auto_routing: z.boolean().default(true),
+});
+
 export const RuleActionSchema = z.object({
-  type: z.enum(["block_finalize", "alert", "auto_correct", "flag_review", "calculate"]),
+  type: z.enum(["block_finalize", "alert", "auto_correct", "flag_review", "calculate", "route_ergani"]),
   params: z.record(z.any()).optional(),
   to: z.string().optional(), // For alerts
   message: z.string().optional(),
+  ergani_config: ErganiModeSchema.optional(),
 });
 
 export const PayrollRuleSchema = z.object({
@@ -31,7 +44,9 @@ export const PayrollRuleSchema = z.object({
     "insurance_calculation",
     "allowances",
     "deductions",
-    "compliance_check"
+    "compliance_check",
+    "time_bands",
+    "ergani_routing"
   ]),
   applies_to: z.array(z.string()), // Fields or calculation types
   priority: z.number().default(100), // Lower = higher priority
@@ -41,13 +56,18 @@ export const PayrollRuleSchema = z.object({
   actions: z.array(RuleActionSchema),
   threshold: z.number().optional(),
   rate: z.number().optional(),
+  premium: z.number().optional(), // Premium rate for time bands
   formula: z.string().optional(), // Mathematical expression
+  band: TimeBandSchema.optional(), // Time band definition
+  ergani_mode: ErganiModeSchema.optional(), // ERGANI routing configuration
   metadata: z.record(z.any()).default({}),
 });
 
 export type PayrollRule = z.infer<typeof PayrollRuleSchema>;
 export type RuleCondition = z.infer<typeof RuleConditionSchema>;
 export type RuleAction = z.infer<typeof RuleActionSchema>;
+export type TimeBand = z.infer<typeof TimeBandSchema>;
+export type ErganiMode = z.infer<typeof ErganiModeSchema>;
 
 // Rules Storage Table Schema
 export const rulesRegistry = `
@@ -173,6 +193,75 @@ export class PayrollRulesEngine {
     return path.split('.').reduce((current, key) => current?.[key], obj);
   }
 
+  // Check if time falls within band (handles midnight crossing)
+  private isTimeInBand(time: string, band: TimeBand): boolean {
+    const timeMinutes = this.timeToMinutes(time);
+    const startMinutes = this.timeToMinutes(band.start);
+    const endMinutes = this.timeToMinutes(band.end);
+    
+    if (startMinutes <= endMinutes) {
+      // Normal case: 09:00-17:00
+      return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
+    } else {
+      // Midnight crossing: 22:00-06:00
+      return timeMinutes >= startMinutes || timeMinutes <= endMinutes;
+    }
+  }
+  
+  private timeToMinutes(time: string): number {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+  }
+  
+  // Calculate time-based premium
+  private calculateTimeBandPremium(rule: PayrollRule, context: any): number {
+    if (!rule.band || !rule.premium) return 0;
+    
+    const workStart = this.getNestedValue(context, 'shift.start_time');
+    const workEnd = this.getNestedValue(context, 'shift.end_time');
+    const totalHours = this.getNestedValue(context, 'shift.total_hours') || 8;
+    
+    if (!workStart || !workEnd) return 0;
+    
+    // Calculate overlapping hours with premium band
+    const overlapHours = this.calculateTimeOverlap(workStart, workEnd, rule.band);
+    const baseHourlyRate = this.getNestedValue(context, 'employee.hourly_rate') || 0;
+    
+    return overlapHours * baseHourlyRate * rule.premium;
+  }
+  
+  private calculateTimeOverlap(workStart: string, workEnd: string, band: TimeBand): number {
+    const workStartMinutes = this.timeToMinutes(workStart);
+    const workEndMinutes = this.timeToMinutes(workEnd);
+    const bandStartMinutes = this.timeToMinutes(band.start);
+    const bandEndMinutes = this.timeToMinutes(band.end);
+    
+    let overlapMinutes = 0;
+    
+    if (bandStartMinutes <= bandEndMinutes) {
+      // Normal band (no midnight crossing)
+      const overlapStart = Math.max(workStartMinutes, bandStartMinutes);
+      const overlapEnd = Math.min(workEndMinutes, bandEndMinutes);
+      overlapMinutes = Math.max(0, overlapEnd - overlapStart);
+    } else {
+      // Midnight crossing band
+      // Check overlap with evening portion (band start to midnight)
+      if (workStartMinutes >= bandStartMinutes || workEndMinutes >= bandStartMinutes) {
+        const eveningStart = Math.max(workStartMinutes, bandStartMinutes);
+        const eveningEnd = Math.min(workEndMinutes, 24 * 60); // Midnight
+        overlapMinutes += Math.max(0, eveningEnd - eveningStart);
+      }
+      // Check overlap with morning portion (midnight to band end)
+      if (workStartMinutes <= bandEndMinutes || workEndMinutes <= bandEndMinutes) {
+        const morningStart = Math.max(workStartMinutes, 0); // Midnight
+        const morningEnd = Math.min(workEndMinutes, bandEndMinutes);
+        overlapMinutes += Math.max(0, morningEnd - morningStart);
+      }
+    }
+    
+    return overlapMinutes / 60; // Convert to hours
+  }
+
   // Execute rule actions
   private async executeActions(actions: RuleAction[], context: any, rule: PayrollRule): Promise<any[]> {
     const results = [];
@@ -225,20 +314,63 @@ export class PayrollRulesEngine {
           break;
           
         case "calculate":
-          const calculatedValue = this.evaluateFormula(rule.formula || "", context);
+          let calculatedValue;
+          if (rule.band && rule.premium) {
+            calculatedValue = this.calculateTimeBandPremium(rule, context);
+          } else {
+            calculatedValue = this.evaluateFormula(rule.formula || "", context);
+          }
           results.push({
             type: "calculation",
             rule: rule.rule,
             version: rule.version,
             field: rule.applies_to[0],
             calculatedValue,
-            formula: rule.formula
+            formula: rule.formula,
+            timeBand: rule.band,
+            premium: rule.premium
+          });
+          break;
+          
+        case "route_ergani":
+          const erganiRouting = this.determineErganiRouting(action.ergani_config, context);
+          results.push({
+            type: "ergani_routing",
+            rule: rule.rule,
+            version: rule.version,
+            routing: erganiRouting,
+            message: `ERGANI routing determined: ${erganiRouting.mode}`
           });
           break;
       }
     }
     
     return results;
+  }
+  
+  // Determine ERGANI routing mode based on entity and configuration
+  private determineErganiRouting(config: ErganiMode | undefined, context: any): any {
+    if (!config) {
+      return { mode: "reporting", auto_routing: false };
+    }
+    
+    const entityId = this.getNestedValue(context, 'entity.id') || 'default';
+    
+    // Check for entity-specific routing
+    if (config.entity_routing && config.entity_routing[entityId]) {
+      return {
+        mode: config.entity_routing[entityId],
+        entity_id: entityId,
+        auto_routing: config.auto_routing
+      };
+    }
+    
+    // Use default mode
+    return {
+      mode: config.mode,
+      entity_id: entityId,
+      auto_routing: config.auto_routing
+    };
   }
 
   private calculateCorrection(rule: PayrollRule, context: any): number {
@@ -296,6 +428,28 @@ export class PayrollRulesEngine {
     }
     
     return results;
+  }
+
+  // Time band validation for shift schedules
+  async validateTimeBands(shiftData: any): Promise<any[]> {
+    const context = {
+      shift: shiftData,
+      employee: shiftData.employee,
+      entity: shiftData.entity
+    };
+
+    return this.evaluateRules("time_bands", context);
+  }
+
+  // ERGANI routing determination
+  async determineErganiRouting(entityData: any, submissionType: string): Promise<any[]> {
+    const context = {
+      entity: entityData,
+      submission_type: submissionType,
+      timestamp: new Date().toISOString()
+    };
+
+    return this.evaluateRules("ergani_routing", context);
   }
 
   // Specific payroll validation methods
@@ -384,6 +538,70 @@ export const GREEK_PAYROLL_RULES: PayrollRule[] = [
     metadata: {
       legal_reference: "Greek Labor Law Article 103",
       last_updated: "2025-01-01"
+    }
+  },
+  {
+    rule: "NightHours",
+    version: "2025.01",
+    description: "25% premium for night work hours (22:00-06:00)",
+    category: "time_bands",
+    applies_to: ["nightPremium"],
+    priority: 15,
+    effective_from: "2025-01-01",
+    conditions: [
+      {
+        field: "shift.overlaps_night_band",
+        operator: "eq",
+        value: true
+      }
+    ],
+    actions: [
+      {
+        type: "calculate"
+      }
+    ],
+    premium: 0.25,
+    band: {
+      start: "22:00",
+      end: "06:00",
+      crossesMidnight: true
+    },
+    metadata: {
+      calculation_method: "hourly overlap with 25% premium",
+      legal_reference: "Greek Labor Law - Night Work Premium"
+    }
+  },
+  {
+    rule: "ErganiPreAnnouncement",
+    version: "2025.01",
+    description: "ERGANI pre-announcement routing for large entities",
+    category: "ergani_routing",
+    applies_to: ["ergani_submission"],
+    priority: 5,
+    effective_from: "2025-01-01",
+    conditions: [
+      {
+        field: "entity.employee_count",
+        operator: "gte",
+        value: 50
+      }
+    ],
+    actions: [
+      {
+        type: "route_ergani",
+        ergani_config: {
+          mode: "pre_announcement",
+          auto_routing: true,
+          entity_routing: {
+            "HOTEL_CHAIN_001": "pre_announcement",
+            "HOTEL_BOUTIQUE_002": "reporting"
+          }
+        }
+      }
+    ],
+    metadata: {
+      routing_logic: "Large entities use pre-announcement mode",
+      compliance_requirement: "ERGANI II Article 15"
     }
   },
   {

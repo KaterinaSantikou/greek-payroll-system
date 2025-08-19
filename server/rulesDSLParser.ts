@@ -175,6 +175,50 @@ export class RulesDSLParser {
   private static getExampleRules(): string[] {
     return [
       `
+rule: "NightHours"
+version: "2025.01"
+description: "25% premium applied to base hourly for night work (22:00-06:00)"
+category: "time_bands"
+applies_to: ["nightPremium"]
+priority: 15
+effective_from: "2025-01-01"
+condition: "shift.overlaps_night_band = true"
+premium: 0.25
+band:
+  start: "22:00"
+  end: "06:00"
+  crossesMidnight: true
+action_on_violation:
+  - type: "calculate"
+metadata:
+  calculation_method: "hourly overlap with 25% premium"
+  legal_reference: "Greek Labor Law - Night Work Premium"
+      `,
+      `
+rule: "ErganiRouting"
+version: "2025.01"
+description: "ERGANI scheduling mode routing per entity with auto-routing"
+category: "ergani_routing"
+applies_to: ["ergani_submission"]
+priority: 5
+effective_from: "2025-01-01"
+condition: "entity.id != null"
+ergani_mode:
+  mode: "pre_announcement"
+  auto_routing: true
+  entity_routing:
+    HOTEL_CHAIN_001: "pre_announcement"
+    HOTEL_BOUTIQUE_002: "reporting"
+action_on_violation:
+  - type: "route_ergani"
+    ergani_config:
+      mode: "pre_announcement"
+      auto_routing: true
+metadata:
+  routing_logic: "Entity-specific ERGANI routing"
+  compliance_requirement: "ERGANI II Article 15"
+      `,
+      `
 rule: "MinimumWageValidation"
 version: "2025.01"
 description: "Validates Greek statutory minimum wage compliance"

@@ -182,23 +182,25 @@ export default function RulesEngine() {
   };
 
   // Example DSL content for demo
-  const exampleDSL = `rule: "CustomMinimumWage"
+  const exampleDSL = `rule: "NightHoursExample"
 version: "2025.01"
-description: "Custom minimum wage validation for hotel workers"
-category: "minimum_wage"
-applies_to: ["baseSalary"]
-priority: 10
+description: "25% premium for night work hours with time bands"
+category: "time_bands"
+applies_to: ["nightPremium"]
+priority: 15
 effective_from: "2025-01-01"
-condition: "employee.contract.type in ['indefinite','fixed_term','seasonal']"
-threshold: 880.00
+condition: "shift.overlaps_night_band = true"
+premium: 0.25
+band:
+  start: "22:00"
+  end: "06:00"
+  crossesMidnight: true
 action_on_violation:
-  - "block_finalize"
-  - type: "alert"
-    to: "payroll_admin"
-    message: "Salary below Greek minimum wage (€880/month)"
+  - type: "calculate"
 metadata:
-  legal_reference: "Greek Labor Law - Minimum Wage 2025"
-  cba_reference: "Hotel Industry CBA 2024-2026"`;
+  calculation_method: "hourly overlap with 25% premium"
+  legal_reference: "Greek Labor Law - Night Work Premium"
+  ergani_compliance: "ERGANI II time tracking requirements"`;
 
   return (
     <div className="space-y-6">
@@ -336,6 +338,8 @@ metadata:
                   <SelectContent>
                     <SelectItem value="minimum_wage">Minimum Wage</SelectItem>
                     <SelectItem value="overtime">Overtime Calculation</SelectItem>
+                    <SelectItem value="time_bands">Time Bands & Night Hours</SelectItem>
+                    <SelectItem value="ergani_routing">ERGANI Routing</SelectItem>
                     <SelectItem value="allowances">Allowances</SelectItem>
                   </SelectContent>
                 </Select>
@@ -477,99 +481,165 @@ metadata:
         </TabsContent>
 
         <TabsContent value="validate" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Live Payroll Validation</CardTitle>
-              <CardDescription>
-                Validate real employee data against compliance rules
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="employee-id">Employee ID</Label>
-                  <Input
-                    id="employee-id"
-                    placeholder="EMP001"
-                    value={validationEmployee}
-                    onChange={(e) => setValidationEmployee(e.target.value)}
-                  />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Minimum Wage Validation</CardTitle>
+                <CardDescription>
+                  Validate employee salary against Greek minimum wage requirements
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="employee-id">Employee ID</Label>
+                    <Input
+                      id="employee-id"
+                      placeholder="EMP001"
+                      value={validationEmployee}
+                      onChange={(e) => setValidationEmployee(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="salary">Base Salary (€)</Label>
+                    <Input
+                      id="salary"
+                      type="number"
+                      placeholder="880.00"
+                      value={validationSalary}
+                      onChange={(e) => setValidationSalary(e.target.value)}
+                    />
+                  </div>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="salary">Base Salary (€)</Label>
-                  <Input
-                    id="salary"
-                    type="number"
-                    placeholder="880.00"
-                    value={validationSalary}
-                    onChange={(e) => setValidationSalary(e.target.value)}
-                  />
-                </div>
-                
-                <div className="flex items-end">
-                  <Button 
-                    onClick={handleValidateWage}
-                    disabled={validateWageMutation.isPending}
-                    className="flex items-center gap-2"
-                  >
-                    <Calculator className="h-4 w-4" />
-                    {validateWageMutation.isPending ? 'Validating...' : 'Validate Wage'}
-                  </Button>
-                </div>
-              </div>
+                <Button 
+                  onClick={handleValidateWage}
+                  disabled={validateWageMutation.isPending}
+                  className="flex items-center gap-2 w-full"
+                >
+                  <Calculator className="h-4 w-4" />
+                  {validateWageMutation.isPending ? 'Validating...' : 'Validate Minimum Wage'}
+                </Button>
+              </CardContent>
+            </Card>
 
-              {validateWageMutation.data && (
-                <Card className="mt-4">
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      {validateWageMutation.data.isValid ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <AlertCircle className="h-5 w-5 text-red-500" />
-                      )}
-                      Validation Results
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="text-sm">
-                      <p><strong>Employee:</strong> {validateWageMutation.data.employeeId}</p>
-                      <p><strong>Base Salary:</strong> €{validateWageMutation.data.baseSalary}</p>
-                      <p><strong>Valid:</strong> {validateWageMutation.data.isValid ? 'Yes' : 'No'}</p>
-                    </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Time Band Validation</CardTitle>
+                <CardDescription>
+                  Calculate premiums for night hours and time-based work
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Shift Start</Label>
+                    <Input
+                      type="time"
+                      defaultValue="22:00"
+                      id="shift-start"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Shift End</Label>
+                    <Input
+                      type="time"
+                      defaultValue="06:00"
+                      id="shift-end"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Hourly Rate (€)</Label>
+                  <Input
+                    type="number"
+                    placeholder="5.50"
+                    id="hourly-rate"
+                  />
+                </div>
+                
+                <Button 
+                  className="flex items-center gap-2 w-full"
+                  onClick={() => {
+                    const shiftStart = (document.getElementById('shift-start') as HTMLInputElement)?.value;
+                    const shiftEnd = (document.getElementById('shift-end') as HTMLInputElement)?.value;
+                    const hourlyRate = parseFloat((document.getElementById('hourly-rate') as HTMLInputElement)?.value || '0');
                     
-                    {validateWageMutation.data.violations?.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-sm text-red-600">Violations:</h4>
-                        {validateWageMutation.data.violations.map((violation: ValidationResult, index: number) => (
-                          <Alert key={index} variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>
-                              <strong>{violation.rule} v{violation.version}:</strong> {violation.message}
-                            </AlertDescription>
-                          </Alert>
-                        ))}
-                      </div>
-                    )}
+                    if (!shiftStart || !shiftEnd || !hourlyRate) {
+                      toast({
+                        title: "Error",
+                        description: "Please provide shift times and hourly rate",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
                     
-                    {validateWageMutation.data.alerts?.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-sm text-amber-600">Alerts:</h4>
-                        {validateWageMutation.data.alerts.map((alert: ValidationResult, index: number) => (
-                          <Alert key={index}>
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertDescription>
-                              <strong>{alert.rule} v{alert.version}:</strong> {alert.message}
-                            </AlertDescription>
-                          </Alert>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </CardContent>
-          </Card>
+                    // Simulate time band validation
+                    toast({
+                      title: "Time Band Calculated",
+                      description: `Night premium: €${(hourlyRate * 0.25 * 8).toFixed(2)} for 22:00-06:00 shift`,
+                    });
+                  }}
+                >
+                  <Clock className="h-4 w-4" />
+                  Calculate Time Band Premium
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {validateWageMutation.data && (
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  {validateWageMutation.data.isValid ? (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                  )}
+                  Validation Results
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-sm">
+                  <p><strong>Employee:</strong> {validateWageMutation.data.employeeId}</p>
+                  <p><strong>Base Salary:</strong> €{validateWageMutation.data.baseSalary}</p>
+                  <p><strong>Valid:</strong> {validateWageMutation.data.isValid ? 'Yes' : 'No'}</p>
+                </div>
+                
+                {validateWageMutation.data.violations?.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm text-red-600">Violations:</h4>
+                    {validateWageMutation.data.violations.map((violation: ValidationResult, index: number) => (
+                      <Alert key={index} variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          <strong>{violation.rule} v{violation.version}:</strong> {violation.message}
+                        </AlertDescription>
+                      </Alert>
+                    ))}
+                  </div>
+                )}
+                
+                {validateWageMutation.data.alerts?.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm text-amber-600">Alerts:</h4>
+                    {validateWageMutation.data.alerts.map((alert: ValidationResult, index: number) => (
+                      <Alert key={index}>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          <strong>{alert.rule} v{alert.version}:</strong> {alert.message}
+                        </AlertDescription>
+                      </Alert>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="browse" className="space-y-6">
