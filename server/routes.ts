@@ -59,6 +59,7 @@ import { acceptanceCriteriaRoutes } from "./api/acceptanceCriteria";
 import { paymentsOpsRoutes } from "./api/paymentsOps";
 import { paymentBatchRoutes } from "./api/paymentBatch";
 import { canonicalPaymentsRoutes } from "./api/canonicalPayments";
+import { paymentStateMachineRoutes } from "./api/paymentStateMachine";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -3348,6 +3349,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Canonical Payments API
   canonicalPaymentsRoutes(app);
+  
+  // Payment State Machine
+  paymentStateMachineRoutes(app);
 
   // Register notification routes
   try {

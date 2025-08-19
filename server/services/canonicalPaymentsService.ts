@@ -6,6 +6,7 @@ import { db } from '../db';
 import { bankProfiles, paymentBatches, paymentInstructions } from '@shared/payments-canonical-schema';
 import { payrollLines, employees } from '@shared/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { PaymentStateMachine } from './paymentStateMachine';
 import { nanoid } from 'nanoid';
 import crypto from 'crypto';
 
@@ -230,6 +231,9 @@ export class CanonicalPaymentsService {
     // Save to database
     await db.insert(paymentBatches).values(batch);
     await db.insert(paymentInstructions).values(instructions);
+    
+    // Initialize state machine tracking
+    await PaymentStateMachine.transitionBatchStatus(batchId, "prepared", "Initial batch creation");
 
     return {
       batchId,
