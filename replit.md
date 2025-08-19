@@ -3,6 +3,7 @@
 PayrollSync is a comprehensive Greek HR & Payroll Management System designed for Greek businesses. Its primary purpose is to manage employee data, perform Greek-compliant payroll calculations, and ensure adherence to Greek HR compliance requirements, including tax calculations, EFKA insurance, collective agreements, and multi-step employee onboarding. The system aims to automate complex labor law processes and ensure accuracy for Greek businesses. The business vision is to provide a cutting-edge platform matching global UX velocity and compliance depth, with market potential in the Greek HR and payroll sector.
 
 ## Recent Updates (January 2025)
+- **Complete Greek Earnings Codes Policy System**: Implemented comprehensive official policy documentation for Greek payroll operations with 8 detailed policy sections, compliance requirements, tax treatment guides, quick reference materials, and mandatory compliance checklists for managers and payroll administrators
 - **Comprehensive REST API Integration**: Completed full API architecture with 8 major endpoint categories including Auth (OIDC/SAML SSO), Employees, Time tracking, Payroll processing, Government filings, SEPA payments, and Webhooks
 - **Enhanced Security & Compliance**: Implemented idempotency keys for all write operations, signed payloads for audit compliance, and comprehensive audit logging middleware
 - **Greek Compliance Features**: Full integration with ERGANI II, e-EFKA/APD, and AADE/ΦΜΥ government systems with real-time synchronization
