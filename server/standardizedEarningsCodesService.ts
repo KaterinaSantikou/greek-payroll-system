@@ -70,54 +70,63 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
     }
   },
 
-  // Overtime Tiers (Building on night premium concept)
-  OT_T1_25PCT: {
-    code: 'OT_T1_25PCT',
-    name: 'Overtime Tier 1 (25%)',
-    description: 'First overtime tier: 41-45 hours per week at 25% premium',
+  // Overtime Tiers (Updated rates per Greek law)
+  OT_TIER1_40: {
+    code: 'OT_TIER1_40',
+    name: 'Legal Overtime Within Cap (40%)',
+    description: 'Overtime hours up to the legal cap are paid at a 40% premium. Taxable, contributory, included in APD, and stackable.',
     calculation: 'premium_percentage',
-    premiumRate: 0.25,
+    premiumRate: 0.40,
     taxable: true,
     contributoryEFKA: true,
     includedAPD: true,
     stackable: true,
     baseWage: false,
     constraints: {
-      maxHoursPerWeek: 5, // Hours 41-45
-      maxHoursPerYear: 150 // Annual OT cap
+      maxHoursPerYear: 150 // Legal annual overtime cap
     },
     dependsOn: ['REG']
   },
 
-  OT_T2_50PCT: {
-    code: 'OT_T2_50PCT',
-    name: 'Overtime Tier 2 (50%)',
-    description: 'Second overtime tier: 46+ hours per week at 50% premium',
+  OT_TIER2_60: {
+    code: 'OT_TIER2_60',
+    name: 'Overtime Above Cap (60%)',
+    description: 'Overtime beyond the cap, with the appropriate permit, is paid at a 60% premium. Taxable, contributory, reported in APD, and stackable.',
     calculation: 'premium_percentage',
-    premiumRate: 0.50,
+    premiumRate: 0.60,
     taxable: true,
     contributoryEFKA: true,
     includedAPD: true,
     stackable: true,
     baseWage: false,
-    constraints: {
-      maxHoursPerWeek: 5, // Hours 46-50 (legal max)
-      maxHoursPerYear: 150 // Annual OT cap
-    },
+    dependsOn: ['REG']
+  },
+
+  OT_EXCEPTIONAL_80: {
+    code: 'OT_EXCEPTIONAL_80',
+    name: 'Non-Authorised Overtime (80%)',
+    description: 'Paid at an 80% premium, but only used in exceptional cases through compliance workflows. Triggers a compliance alert.',
+    calculation: 'premium_percentage',
+    premiumRate: 0.80,
+    taxable: true,
+    contributoryEFKA: true,
+    includedAPD: true,
+    stackable: true,
+    baseWage: false,
     dependsOn: ['REG']
   },
 
   // Sunday and Holiday Premiums (Stackable with night work)
-  SUNDAY_75PCT: {
-    code: 'SUNDAY_75PCT',
-    name: 'Sunday Work Premium (75%)',
-    description: 'Premium for Sunday work at 75% over hourly rate',
+  SUNDAY_75: {
+    code: 'SUNDAY_75',
+    name: 'Sunday Premium (75%)',
+    description: 'Hours worked on Sundays are paid with a 75% premium. Requires relevant work permit.',
     calculation: 'premium_percentage',
     premiumRate: 0.75,
     taxable: true,
     contributoryEFKA: true,
     includedAPD: true,
-    stackable: true, // Can stack with night premium
+    stackable: true, // Can stack with Night or OT premiums
     baseWage: false,
     applicableHours: {
       weekends: true
@@ -125,12 +134,12 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
     dependsOn: ['REG']
   },
 
-  HOLIDAY_PREMIUM: {
-    code: 'HOLIDAY_PREMIUM',
-    name: 'Public Holiday Premium',
-    description: 'Premium for work on public holidays',
+  HOLIDAY_75: {
+    code: 'HOLIDAY_75',
+    name: 'Public Holiday Premium (75%)',
+    description: 'Public holiday hours attract a 75% premium. Taxable, contributory, stackable, and included in APD.',
     calculation: 'premium_percentage',
-    premiumRate: 0.75, // Same as Sunday rate
+    premiumRate: 0.75,
     taxable: true,
     contributoryEFKA: true,
     includedAPD: true,
@@ -140,6 +149,24 @@ export const STANDARDIZED_EARNINGS_CODES: Record<string, EarningsCodeRule> = {
       holidays: true
     },
     dependsOn: ['REG']
+  },
+
+  // Sixth Working Day Premium
+  SIXTH_DAY_40: {
+    code: 'SIXTH_DAY_40',
+    name: 'Sixth Working Day Premium (40%)',
+    description: 'Eligible sixth-day hours are paid with a 40% premium. By default, disabled for hospitality and tourism, but entities may enable if eligible.',
+    calculation: 'premium_percentage',
+    premiumRate: 0.40,
+    taxable: true,
+    contributoryEFKA: true,
+    includedAPD: true,
+    stackable: true,
+    baseWage: false,
+    dependsOn: ['REG'],
+    constraints: {
+      maxHoursPerWeek: 8 // Typical sixth day limit
+    }
   },
 
   // Allowances (Tax treatment varies)
@@ -313,13 +340,18 @@ export class StandardizedEarningsCodesService {
       
       // Special case: NIGHT_25 can stack with Sunday, holiday, or overtime
       if (stackedCode === 'NIGHT_25') {
-        const validStackingCodes = ['SUNDAY_75PCT', 'HOLIDAY_PREMIUM', 'OT_T1_25PCT', 'OT_T2_50PCT'];
+        const validStackingCodes = ['SUNDAY_75', 'HOLIDAY_75', 'SIXTH_DAY_40', 'OT_TIER1_40', 'OT_TIER2_60', 'OT_EXCEPTIONAL_80'];
         const otherStackedCodes = stackedCodes.filter(c => c !== 'NIGHT_25');
         const invalidStacking = otherStackedCodes.filter(c => !validStackingCodes.includes(c));
         
         if (invalidStacking.length > 0) {
-          errors.push(`NIGHT_25 can only be stacked with overtime, Sunday, or holiday premiums, not with: ${invalidStacking.join(', ')}`);
+          errors.push(`NIGHT_25 can only be stacked with overtime, Sunday, holiday, or sixth day premiums, not with: ${invalidStacking.join(', ')}`);
         }
+      }
+
+      // Special case: OT_EXCEPTIONAL_80 triggers compliance alert
+      if (stackedCode === 'OT_EXCEPTIONAL_80' || primaryCode === 'OT_EXCEPTIONAL_80') {
+        errors.push(`WARNING: OT_EXCEPTIONAL_80 triggers a compliance alert and should only be used in exceptional cases through compliance workflows`);
       }
     }
     

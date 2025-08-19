@@ -55,10 +55,12 @@ interface EarningsCodesResponse {
 
 export default function EarningsCodesDemoPage() {
   const [primaryCode, setPrimaryCode] = useState("REG");
-  const [stackedCodes, setStackedCodes] = useState("NIGHT_25,SUNDAY_75PCT");
+  const [stackedCodes, setStackedCodes] = useState("NIGHT_25,SUNDAY_75");
   const [earningsInput, setEarningsInput] = useState([
     { code: "REG", hours: 40, hourlyRate: 15.50, fixedAmount: undefined },
     { code: "NIGHT_25", hours: 8, hourlyRate: 15.50, fixedAmount: undefined },
+    { code: "SUNDAY_75", hours: 6, hourlyRate: 15.50, fixedAmount: undefined },
+    { code: "OT_TIER1_40", hours: 5, hourlyRate: 15.50, fixedAmount: undefined },
     { code: "MEAL_VOUCHER", hours: 0, hourlyRate: 0, fixedAmount: 120 }
   ]);
   const { toast } = useToast();
@@ -207,16 +209,16 @@ export default function EarningsCodesDemoPage() {
         <TabsContent value="codes" className="space-y-6">
           {earningsCodesData && (
             <div className="space-y-6">
-              {/* REG and NIGHT_25 Highlight */}
+              {/* Featured Greek Premium Codes */}
               <Card className="border-blue-200 bg-blue-50">
                 <CardHeader>
-                  <CardTitle className="text-blue-900">Featured: REG & NIGHT_25</CardTitle>
+                  <CardTitle className="text-blue-900">Featured: Greek Premium System</CardTitle>
                   <CardDescription className="text-blue-800">
-                    Core earnings codes as specified in your requirements
+                    Complete Greek payroll premium structure with correct 2025 rates
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     {earningsCodesData.baseWages.filter(code => code.code === 'REG').map((rule) => (
                       <div key={rule.code} className="bg-white p-4 rounded-lg border">
                         <div className="flex items-center justify-between mb-2">
@@ -254,6 +256,31 @@ export default function EarningsCodesDemoPage() {
                         <p className="text-xs text-green-600 mt-1">
                           ✓ Stackable with Sunday, holiday, or overtime premiums
                         </p>
+                      </div>
+                    ))}
+                    
+                    {/* New Premium Codes Showcase */}
+                    {earningsCodesData.premiums.filter(code => ['SUNDAY_75', 'OT_TIER1_40', 'OT_TIER2_60', 'OT_EXCEPTIONAL_80'].includes(code.code)).map((rule) => (
+                      <div key={rule.code} className="bg-white p-4 rounded-lg border">
+                        <div className="flex items-center justify-between mb-2">
+                          <Badge variant="default" className="font-mono text-xs">{rule.code}</Badge>
+                          <div className="flex gap-1">
+                            {rule.taxable && <Badge variant="destructive" className="text-xs">Tax</Badge>}
+                            {rule.contributoryEFKA && <Badge variant="secondary" className="text-xs">EFKA</Badge>}
+                            {rule.includedAPD && <Badge variant="outline" className="text-xs">APD</Badge>}
+                            {rule.stackable && <Badge variant="default" className="text-xs">Stack</Badge>}
+                          </div>
+                        </div>
+                        <h4 className="font-semibold text-sm mb-1">{rule.name}</h4>
+                        <p className="text-xs text-gray-600 mb-2">{rule.description}</p>
+                        <p className="text-xs text-blue-600">
+                          <strong>Premium:</strong> {rule.premiumRate && (rule.premiumRate * 100)}%
+                        </p>
+                        {rule.code === 'OT_EXCEPTIONAL_80' && (
+                          <p className="text-xs text-orange-600 mt-1">
+                            ⚠️ Triggers compliance alert - exceptional use only
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -329,7 +356,7 @@ export default function EarningsCodesDemoPage() {
                     id="stackedCodes"
                     value={stackedCodes}
                     onChange={(e) => setStackedCodes(e.target.value)}
-                    placeholder="NIGHT_25,SUNDAY_75PCT"
+                    placeholder="NIGHT_25,SUNDAY_75,OT_TIER1_40"
                   />
                 </div>
               </div>
