@@ -34,11 +34,19 @@ export function reconciliationRoutes(app: Express) {
         });
       }
 
+      // Transform journal lines to reconciliation format
+      const reconciliationLines = journal.lines.map(line => ({
+        accountCode: line.accountCode,
+        debit: line.debit || '0',
+        credit: line.credit || '0',
+        description: line.description,
+      }));
+
       // Generate reconciliation report
       const reconciliation = RoundingService.generateReconciliationReport(
         payroll_summary,
-        journal.lines,
-        { currency, rounding_method }
+        reconciliationLines,
+        { currency, roundingMethod: rounding_method }
       );
 
       res.json({
@@ -207,7 +215,7 @@ export function reconciliationRoutes(app: Express) {
 
       res.json({
         original_count: originalCount,
-        collapsed_count: collapsedLines.lines.length,
+        collapsed_count: collapsedLines.length,
         removed_count: removedCount,
         collapsed_lines: collapsedLines,
         optimization: removedCount > 0 ? `Removed ${removedCount} zero-value lines` : 'No zero lines found',

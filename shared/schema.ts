@@ -3240,3 +3240,16 @@ export const mappingRuleSetSchema = z.object({
 
 export type MappingRule = z.infer<typeof mappingRuleSchema>;
 export type MappingRuleSet = z.infer<typeof mappingRuleSetSchema>;
+
+// Re-export SDK types for convenience
+export type {
+  BuildJournalRequest,
+  JournalLine,
+  Journal,
+  ConnectorStatus,
+  SetupStatus,
+  ReconciliationReport,
+  PayrollSummary,
+  RoundingConfig,
+  PayrollSyncSDK
+} from './sdk-types';
