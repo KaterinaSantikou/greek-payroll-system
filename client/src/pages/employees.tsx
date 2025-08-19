@@ -22,8 +22,8 @@ export default function Employees() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch employees
-  const { data: employees = [], isLoading } = useQuery({
+  // Fetch employees with proper typing
+  const { data: employees = [], isLoading, error } = useQuery<Employee[]>({
     queryKey: ["/api/employees", searchTerm, selectedDepartment, selectedPosition],
     queryFn: async ({ queryKey }) => {
       const [url, search, department, position] = queryKey;
@@ -52,12 +52,16 @@ export default function Employees() {
         throw new Error(`${response.status}: ${response.statusText}`);
       }
 
-      return await response.json();
+      return await response.json() as Employee[];
     },
-    onError: (error: any) => {
-      if (isUnauthorizedError(error)) {
+  });
+
+  // Handle query errors
+  useEffect(() => {
+    if (error) {
+      if (isUnauthorizedError(error as Error)) {
         toast({
-          title: "Unauthorized",
+          title: "Unauthorized", 
           description: "You are logged out. Logging in again...",
           variant: "destructive",
         });
@@ -71,8 +75,8 @@ export default function Employees() {
         description: "Αποτυχία φόρτωσης εργαζομένων",
         variant: "destructive",
       });
-    },
-  });
+    }
+  }, [error, toast]);
 
   // Delete employee mutation
   const deleteEmployeeMutation = useMutation({

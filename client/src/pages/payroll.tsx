@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import PayrollCalculator from "@/components/PayrollCalculator";
 import { Calculator, FileText, TrendingUp, Users } from "lucide-react";
+import type { Employee, PayrollRecord } from "@shared/schema";
 
 export default function Payroll() {
   const [selectedMonth, setSelectedMonth] = useState(
@@ -10,22 +11,22 @@ export default function Payroll() {
   );
 
   // Fetch employees for payroll calculations
-  const { data: employees = [] } = useQuery({
+  const { data: employees = [] } = useQuery<Employee[]>({
     queryKey: ["/api/employees"],
   });
 
   // Fetch payroll records for selected month
-  const { data: payrollRecords = [] } = useQuery({
+  const { data: payrollRecords = [] } = useQuery<PayrollRecord[]>({
     queryKey: ["/api/payroll", selectedMonth],
   });
 
   const totalMonthlyPayroll = payrollRecords.reduce(
-    (sum: number, record: any) => sum + parseFloat(record.netPay || 0),
+    (sum: number, record: PayrollRecord) => sum + parseFloat(record.netPay || "0"),
     0
   );
 
   const totalEmployerCost = payrollRecords.reduce(
-    (sum: number, record: any) => sum + parseFloat(record.totalCost || 0),
+    (sum: number, record: PayrollRecord) => sum + parseFloat(record.totalCost || "0"),
     0
   );
 

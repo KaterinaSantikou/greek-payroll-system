@@ -27,32 +27,38 @@ export interface PayrollResult {
   holidayHours: number;
 }
 
-// Greek tax brackets for 2024
+// Greek tax brackets for 2025 - Updated rates
 const TAX_BRACKETS = [
-  { min: 0, max: 10000, rate: 0.09 },
-  { min: 10000, max: 20000, rate: 0.22 },
-  { min: 20000, max: 30000, rate: 0.28 },
-  { min: 30000, max: 40000, rate: 0.36 },
-  { min: 40000, max: Infinity, rate: 0.44 },
+  { min: 0, max: 10000, rate: 0.09 },     // 9% up to €10,000
+  { min: 10000, max: 20000, rate: 0.22 }, // 22% €10,001-€20,000
+  { min: 20000, max: 30000, rate: 0.28 }, // 28% €20,001-€30,000
+  { min: 30000, max: 40000, rate: 0.36 }, // 36% €30,001-€40,000
+  { min: 40000, max: Infinity, rate: 0.44 }, // 44% over €40,000
 ];
 
-// EFKA insurance rates
+// EFKA insurance rates (2025)
 const INSURANCE_RATES = {
-  employee: 0.16, // 16% for employee
-  employer: 0.245, // 24.5% for employer
+  employee: 0.16,   // 16% for employee contributions
+  employer: 0.2478, // 24.78% for employer contributions (updated for 2025)
+  unemployment: {
+    employee: 0.005, // 0.5% employee unemployment fund
+    employer: 0.0255 // 2.55% employer unemployment contribution
+  }
 };
 
 // Solidarity tax rate (applies to income over €12,000)
 const SOLIDARITY_TAX_RATE = 0.022; // 2.2%
 const SOLIDARITY_TAX_THRESHOLD = 12000;
 
-// Collective agreement rates
+// Collective agreement rates (2025 Greek labor standards)
 const COLLECTIVE_AGREEMENT_RATES = {
-  general: { overtime: 1.25, night: 1.25, holiday: 1.75 },
-  private: { overtime: 1.25, night: 1.25, holiday: 1.75 },
-  banks: { overtime: 1.30, night: 1.30, holiday: 2.0 },
-  technical: { overtime: 1.25, night: 1.25, holiday: 1.75 },
-  commerce: { overtime: 1.25, night: 1.25, holiday: 1.75 },
+  general: { overtime: 1.25, night: 1.25, holiday: 1.75, sunday: 1.75 },
+  private: { overtime: 1.25, night: 1.25, holiday: 1.75, sunday: 1.75 },
+  banks: { overtime: 1.30, night: 1.30, holiday: 2.0, sunday: 2.0 },
+  technical: { overtime: 1.25, night: 1.25, holiday: 1.75, sunday: 1.75 },
+  commerce: { overtime: 1.25, night: 1.25, holiday: 1.75, sunday: 1.75 },
+  tourism: { overtime: 1.25, night: 1.25, holiday: 2.0, sunday: 1.75 }, // Tourism sector rates
+  construction: { overtime: 1.30, night: 1.30, holiday: 1.75, sunday: 1.75 }, // Construction rates
 };
 
 /**

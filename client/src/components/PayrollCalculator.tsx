@@ -55,7 +55,7 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
   const employeeId = watch("employeeId");
 
   // Update form when employee is selected
-  useState(() => {
+  useEffect(() => {
     if (employeeId) {
       const employee = employees.find(emp => emp.id === employeeId);
       if (employee) {

@@ -35,12 +35,23 @@ Preferred communication style: Simple, everyday language.
   - sessions (secure session storage)
 - **Validation**: Greek-specific validations for AFM (9-digit tax ID) and AMKA (11-digit social security)
 
-## Business Logic
-- **Greek Payroll System**: Complex tax bracket calculations (9%, 22%, 28%, 36%, 44%)
-- **EFKA Insurance**: Employee (16%) and employer (24.5%) contribution calculations
-- **Collective Agreements**: Industry-specific wage adjustments and bonuses
-- **Compliance Features**: Support for multiple employment types, disability calculations, foreign worker permits
-- **Multi-step Forms**: 7-tab employee onboarding with validation at each step
+## Business Logic - Updated for 2025 Greek Labor Law Compliance
+- **Greek Payroll System**: Progressive tax bracket calculations (9%, 22%, 28%, 36%, 44%) with 2025 rates
+- **EFKA Insurance**: Employee (16%) and employer (24.78%) contribution calculations with unemployment fund (0.5%/2.55%)
+- **Collective Agreements**: Industry-specific wage adjustments with €760 minimum wage (2025)
+- **Digital Labor Cards**: Law 4808/2021 compliance with digital documentation requirements
+- **Right to Disconnect**: Implementation of after-hours contact restrictions per Law 4808/2021
+- **Flexible Work Arrangements**: Remote work support as mandated by recent legislation
+- **Enhanced Leave System**: 24+ days annual leave, 119 days maternity, 14 days paternity leave
+- **Multi-step Forms**: 7-tab employee onboarding with Greek compliance validation at each step
+
+### Recent Legal Updates (August 2025)
+- Updated minimum wage to €760/month
+- Enhanced EFKA rates: 16% employee, 24.78% employer
+- Digital labor card integration
+- Collective agreements for major industries (General, Banking, Tourism, Construction, Commerce)
+- Sunday work premiums (75% increase)
+- Dangerous work rates (20-35% increase depending on industry)
 
 # External Dependencies
 

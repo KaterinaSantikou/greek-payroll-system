@@ -1,15 +1,14 @@
-import { ReactNode } from "react";
 import Sidebar from "./Sidebar";
 
 interface LayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
   return (
-    <div className="min-h-screen flex bg-neutral-50">
+    <div className="flex h-screen bg-neutral-50">
       <Sidebar />
-      <main className="flex-1 ml-64">
+      <main className="flex-1 overflow-auto">
         <div className="p-8">
           {children}
         </div>

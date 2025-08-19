@@ -36,7 +36,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Employees table
+// Employees table - Updated for 2025 Greek Labor Law Compliance
 export const employees = pgTable("employees", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   // Personal Information
@@ -50,10 +50,11 @@ export const employees = pgTable("employees", {
   nationality: varchar("nationality", { length: 5 }).default("GR"),
   maritalStatus: varchar("marital_status", { length: 20 }),
   
-  // Greek Compliance Fields
+  // Greek Compliance Fields (Law 4808/2021 - Digital Labor Cards)
   afm: varchar("afm", { length: 9 }).notNull().unique(), // Tax ID
   amka: varchar("amka", { length: 11 }).notNull().unique(), // Social Security Number
   idNumber: varchar("id_number", { length: 20 }).notNull(),
+  digitalLaborCard: varchar("digital_labor_card"), // New requirement for 2025
   
   // Contact Information
   email: varchar("email").notNull(),
@@ -71,19 +72,25 @@ export const employees = pgTable("employees", {
   employmentType: varchar("employment_type").notNull(), // full-time, part-time, contract
   status: varchar("status").default("active"), // active, inactive, terminated
   
-  // Compensation
+  // Compensation (Updated minimum wage €760 as of 2025)
   basicSalary: decimal("basic_salary", { precision: 10, scale: 2 }).notNull(),
   
-  // Legal Documents
+  // Legal Documents & Compliance
   efkaRegistry: varchar("efka_registry"),
   taxOffice: text("tax_office"),
   workPermit: varchar("work_permit"),
   disabilityCertificate: boolean("disability_certificate").default(false),
+  collectiveAgreementId: varchar("collective_agreement_id").references(() => collectiveAgreements.id),
   
-  // Employment Contract
-  contractType: varchar("contract_type").notNull(),
+  // Employment Contract (Law 4808/2021 amendments)
+  contractType: varchar("contract_type").notNull(), // indefinite, fixed-term, apprenticeship, internship
   workingHours: integer("working_hours").default(40),
-  probationPeriod: integer("probation_period"),
+  probationPeriod: integer("probation_period"), // Max 12 months for indefinite contracts
+  flexibleWorkArrangement: boolean("flexible_work_arrangement").default(false), // Remote work law
+  
+  // Right to Disconnect (Law 4808/2021)
+  rightToDisconnect: boolean("right_to_disconnect").default(true),
+  afterHoursContact: boolean("after_hours_contact").default(false),
   
   // Experience & Education
   previousExperience: text("previous_experience"),
@@ -98,7 +105,7 @@ export const employees = pgTable("employees", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Payroll records table
+// Payroll records table - Updated for 2025 Greek Tax Rates
 export const payrollRecords = pgTable("payroll_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   employeeId: varchar("employee_id").references(() => employees.id).notNull(),
@@ -111,41 +118,61 @@ export const payrollRecords = pgTable("payroll_records", {
   holidayPay: decimal("holiday_pay", { precision: 10, scale: 2 }).default("0"),
   allowances: decimal("allowances", { precision: 10, scale: 2 }).default("0"),
   bonuses: decimal("bonuses", { precision: 10, scale: 2 }).default("0"),
+  thirteenthSalary: decimal("thirteenth_salary", { precision: 10, scale: 2 }).default("0"), // Greek bonus
+  fourteenthSalary: decimal("fourteenth_salary", { precision: 10, scale: 2 }).default("0"), // Holiday bonus
   grossTotal: decimal("gross_total", { precision: 10, scale: 2 }).notNull(),
   
-  // Deductions
+  // Deductions (2025 rates)
   incomeTax: decimal("income_tax", { precision: 10, scale: 2 }).notNull(),
-  employeeInsurance: decimal("employee_insurance", { precision: 10, scale: 2 }).notNull(),
-  solidarityTax: decimal("solidarity_tax", { precision: 10, scale: 2 }).default("0"),
+  employeeInsurance: decimal("employee_insurance", { precision: 10, scale: 2 }).notNull(), // 16%
+  solidarityTax: decimal("solidarity_tax", { precision: 10, scale: 2 }).default("0"), // 2.2% for income >12,000
+  unemploymentFund: decimal("unemployment_fund", { precision: 10, scale: 2 }).default("0"), // 0.5%
   totalDeductions: decimal("total_deductions", { precision: 10, scale: 2 }).notNull(),
   
   // Net pay
   netPay: decimal("net_pay", { precision: 10, scale: 2 }).notNull(),
   
-  // Employer costs
-  employerInsurance: decimal("employer_insurance", { precision: 10, scale: 2 }).notNull(),
+  // Employer costs (2025 rates)
+  employerInsurance: decimal("employer_insurance", { precision: 10, scale: 2 }).notNull(), // 24.78%
+  employerUnemployment: decimal("employer_unemployment", { precision: 10, scale: 2 }).default("0"), // 2.55%
   totalCost: decimal("total_cost", { precision: 10, scale: 2 }).notNull(),
   
-  // Additional fields
+  // Working hours tracking
   overtimeHours: decimal("overtime_hours", { precision: 5, scale: 2 }).default("0"),
   nightHours: decimal("night_hours", { precision: 5, scale: 2 }).default("0"),
   holidayHours: decimal("holiday_hours", { precision: 5, scale: 2 }).default("0"),
+  regularHours: decimal("regular_hours", { precision: 5, scale: 2 }).default("168"), // Monthly standard
+  
+  // Tax calculation breakdown
+  taxBracket1: decimal("tax_bracket_1", { precision: 10, scale: 2 }).default("0"), // 9% up to €10,000
+  taxBracket2: decimal("tax_bracket_2", { precision: 10, scale: 2 }).default("0"), // 22% €10,001-€20,000
+  taxBracket3: decimal("tax_bracket_3", { precision: 10, scale: 2 }).default("0"), // 28% €20,001-€30,000
+  taxBracket4: decimal("tax_bracket_4", { precision: 10, scale: 2 }).default("0"), // 36% €30,001-€40,000
+  taxBracket5: decimal("tax_bracket_5", { precision: 10, scale: 2 }).default("0"), // 44% over €40,000
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Collective agreements table
+// Collective agreements table - Updated for 2025 Greek Labor Standards
 export const collectiveAgreements = pgTable("collective_agreements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   industry: text("industry").notNull(),
   validFrom: date("valid_from").notNull(),
   validTo: date("valid_to"),
-  minimumWage: decimal("minimum_wage", { precision: 10, scale: 2 }).notNull(),
-  overtimeRate: decimal("overtime_rate", { precision: 5, scale: 2 }).default("1.25"),
-  nightRate: decimal("night_rate", { precision: 5, scale: 2 }).default("1.25"),
-  holidayRate: decimal("holiday_rate", { precision: 5, scale: 2 }).default("1.75"),
+  minimumWage: decimal("minimum_wage", { precision: 10, scale: 2 }).notNull(), // €760 minimum for 2025
+  overtimeRate: decimal("overtime_rate", { precision: 5, scale: 2 }).default("1.25"), // 25% increase
+  nightRate: decimal("night_rate", { precision: 5, scale: 2 }).default("1.25"), // 25% night shift
+  holidayRate: decimal("holiday_rate", { precision: 5, scale: 2 }).default("1.75"), // 75% holiday premium
+  sundayRate: decimal("sunday_rate", { precision: 5, scale: 2 }).default("1.75"), // Sunday work premium
+  dangerousWorkRate: decimal("dangerous_work_rate", { precision: 5, scale: 2 }).default("1.20"), // Hazardous work
+  maxWeeklyHours: integer("max_weekly_hours").default(40), // EU working time directive
+  maxDailyHours: integer("max_daily_hours").default(8),
+  annualLeave: integer("annual_leave").default(24), // Minimum 24 days in Greece
+  sickLeave: integer("sick_leave").default(30), // Days per year
+  maternityLeave: integer("maternity_leave").default(119), // 17 weeks
+  paternityLeave: integer("paternity_leave").default(14), // 2 weeks
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -161,7 +188,7 @@ export const payrollRecordsRelations = relations(payrollRecords, ({ one }) => ({
   }),
 }));
 
-// Schemas for validation
+// Schemas for validation - Updated for 2025 Greek Labor Law Compliance
 export const insertEmployeeSchema = createInsertSchema(employees).omit({
   id: true,
   createdAt: true,
@@ -170,7 +197,15 @@ export const insertEmployeeSchema = createInsertSchema(employees).omit({
   afm: z.string().length(9, "ΑΦΜ πρέπει να έχει ακριβώς 9 ψηφία"),
   amka: z.string().length(11, "ΑΜΚΑ πρέπει να έχει ακριβώς 11 ψηφία"),
   email: z.string().email("Μη έγκυρη διεύθυνση email"),
-  basicSalary: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Ο μισθός πρέπει να είναι θετικός αριθμός"),
+  basicSalary: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 760, "Ο μισθός πρέπει να είναι τουλάχιστον €760 (κατώτατος μισθός 2025)"),
+  digitalLaborCard: z.string().optional(),
+  contractType: z.enum(["indefinite", "fixed-term", "apprenticeship", "internship"], {
+    errorMap: () => ({ message: "Μη έγκυρος τύπος σύμβασης" })
+  }),
+  employmentType: z.enum(["full-time", "part-time", "contract"], {
+    errorMap: () => ({ message: "Μη έγκυρος τύπος απασχόλησης" })
+  }),
+  probationPeriod: z.number().max(12, "Η περίοδος δοκιμασίας δεν μπορεί να υπερβαίνει τους 12 μήνες").optional(),
 });
 
 export const insertPayrollRecordSchema = createInsertSchema(payrollRecords).omit({

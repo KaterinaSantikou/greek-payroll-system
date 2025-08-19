@@ -12,7 +12,7 @@ import {
   type UpsertUser,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, like, and, desc } from "drizzle-orm";
+import { eq, like, and, desc, or } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (required for Replit Auth)
@@ -69,9 +69,11 @@ export class DatabaseStorage implements IStorage {
     
     if (search) {
       conditions.push(
-        like(employees.firstName, `%${search}%`),
-        like(employees.lastName, `%${search}%`),
-        like(employees.afm, `%${search}%`)
+        or(
+          like(employees.firstName, `%${search}%`),
+          like(employees.lastName, `%${search}%`),
+          like(employees.afm, `%${search}%`)
+        )
       );
     }
     
