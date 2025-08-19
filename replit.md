@@ -50,6 +50,7 @@ Preferred communication style: Simple, everyday language.
 - **AI-Powered Compliance Recommendation Engine**: Intelligent analysis of employee data for compliance gaps, multi-category recommendations with priority, real-time validation, auto-fix capabilities, organization-wide monitoring, deadline tracking, and a compliance dashboard.
 - **EU Directive Compliance Engine**: Automated checking of contract compliance with EU Directive 2019/1152, probation period validation, written terms verification, and transparency obligation monitoring.
 - **Labor Relations Analytics**: Strike impact assessment tools, union participation analysis, sectoral negotiation tracking, and business continuity risk evaluation for the 2025 labor relations environment.
+- **Digital Work Card System (ERGANI II Integration)**: Complete mobile and kiosk solution for real-time time tracking per Greek Digital Work Card standards. Features automated ERGANI II synchronization, hotel industry-specific work patterns, offline functionality with sync queue, biometric verification support, automatic payroll calculations, labor law violation detection, and comprehensive compliance reporting. Supports multi-property hotel operations with seasonal staff management.
 
 # External Dependencies
 

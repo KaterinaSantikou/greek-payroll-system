@@ -14,6 +14,7 @@ import Allowances from "@/pages/allowances";
 import Overtime from "@/pages/overtime";
 import Leave from "@/pages/leave";
 import Legal from "@/pages/legal";
+import DigitalWorkCard from "@/pages/digitalWorkCard";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -33,6 +34,7 @@ function Router() {
           <Route path="/overtime" component={Overtime} />
           <Route path="/leave" component={Leave} />
           <Route path="/legal" component={Legal} />
+          <Route path="/digital-work-card" component={DigitalWorkCard} />
         </Layout>
       )}
       <Route component={NotFound} />
