@@ -417,6 +417,177 @@ ${payments.map(payment => this.generateCreditTransferTxInfo(payment)).join('\n')
     };
   }
 
+  // Comprehensive engine behavior validation per bank profile
+  validatePain001Schema(bankProfile: string, sepaData: any): {
+    valid: boolean;
+    schemaErrors: string[];
+    bankSpecificErrors: string[];
+  } {
+    const profile = this.getBankProfile(bankProfile);
+    const schemaErrors: string[] = [];
+    const bankSpecificErrors: string[] = [];
+
+    // Pain.001 schema validation
+    if (!sepaData.Document?.CstmrCdtTrfInitn) {
+      schemaErrors.push("Missing required Document.CstmrCdtTrfInitn structure");
+    }
+
+    // Bank-specific IBAN validation
+    if (profile.features.ibanOnly && sepaData.payments) {
+      sepaData.payments.forEach((payment: any, index: number) => {
+        if (!payment.iban || !this.validateIBAN(payment.iban)) {
+          bankSpecificErrors.push(`Invalid IBAN at payment index ${index}: ${payment.iban}`);
+        }
+      });
+    }
+
+    // BIC validation based on bank requirements
+    if (bankProfile === 'alpha' && sepaData.payments) {
+      sepaData.payments.forEach((payment: any, index: number) => {
+        if (payment.bic && !this.validateBIC(payment.bic)) {
+          bankSpecificErrors.push(`Invalid BIC at payment index ${index}: ${payment.bic}`);
+        }
+      });
+    }
+
+    // Remittance info length limits
+    if (sepaData.payments) {
+      sepaData.payments.forEach((payment: any, index: number) => {
+        if (payment.remittanceInfo && payment.remittanceInfo.length > profile.features.maxRemittanceChars) {
+          bankSpecificErrors.push(`Remittance info exceeds ${profile.features.maxRemittanceChars} chars at index ${index}`);
+        }
+      });
+    }
+
+    return {
+      valid: schemaErrors.length === 0 && bankSpecificErrors.length === 0,
+      schemaErrors,
+      bankSpecificErrors
+    };
+  }
+
+  // Enforce cut-off windows and schedule ReqdExctnDt accordingly
+  enforceCutoffWindows(bankProfile: string, requestedDate?: Date): {
+    executionDate: Date;
+    withinCutoff: boolean;
+    cutoffTime: string;
+    processingMode: 'SAME_DAY' | 'NEXT_DAY' | 'SCT_INST';
+  } {
+    const profile = this.getBankProfile(bankProfile);
+    const now = requestedDate || new Date();
+    const cutoffTime = new Date(now);
+    cutoffTime.setHours(profile.cutoffTime.hour, profile.cutoffTime.minute, 0, 0);
+
+    const withinCutoff = now <= cutoffTime;
+    let executionDate = new Date(now);
+    let processingMode: 'SAME_DAY' | 'NEXT_DAY' | 'SCT_INST' = 'SAME_DAY';
+
+    if (!withinCutoff) {
+      // Schedule for next business day
+      executionDate = this.getNextBusinessDay();
+      processingMode = 'NEXT_DAY';
+    }
+
+    // Check for SCT Instant availability (NBG specific)
+    if (bankProfile === 'nbg' && !withinCutoff && profile.features.sepaInstant) {
+      processingMode = 'SCT_INST';
+      executionDate = now; // Immediate for SCT Instant
+    }
+
+    return {
+      executionDate,
+      withinCutoff,
+      cutoffTime: `${profile.cutoffTime.hour.toString().padStart(2, '0')}:${profile.cutoffTime.minute.toString().padStart(2, '0')}`,
+      processingMode
+    };
+  }
+
+  // Generate pain.002 correlation and auto-retry logic
+  generatePain002Correlation(originalMessageId: string, bankProfile: string): {
+    correlationId: string;
+    statusReportFormat: string;
+    retryPolicy: {
+      maxRetries: number;
+      backoffStrategy: string;
+      transientErrorCodes: string[];
+    };
+  } {
+    const profile = this.getBankProfile(bankProfile);
+    const correlationId = `${originalMessageId}-${Date.now()}`;
+
+    const retryPolicy = {
+      maxRetries: 3,
+      backoffStrategy: 'exponential',
+      transientErrorCodes: ['NARR', 'RJCT_TECH', 'TIMEOUT', 'CONN_ERR']
+    };
+
+    return {
+      correlationId,
+      statusReportFormat: profile.statusReporting[0] || 'pain.002.001.03',
+      retryPolicy
+    };
+  }
+
+  // SCT Instant switch for urgent off-cycle payments
+  evaluateSCTInstantSwitch(bankProfile: string, paymentType: 'URGENT' | 'CORRECTION' | 'REGULAR', amount?: number): {
+    sctInstantEnabled: boolean;
+    reason: string;
+    recommendedMode: string;
+    feeImpact?: string;
+  } {
+    const profile = this.getBankProfile(bankProfile);
+
+    // NBG specific SCT Instant logic
+    if (bankProfile === 'nbg' && profile.features.sepaInstant) {
+      if (paymentType === 'URGENT' || paymentType === 'CORRECTION') {
+        return {
+          sctInstantEnabled: true,
+          reason: 'Urgent/correction payment qualifies for SCT Instant',
+          recommendedMode: 'SCT_INST',
+          feeImpact: 'Higher processing fee applies for instant transfers'
+        };
+      }
+    }
+
+    // Alpha Bank - no SCT Instant but enhanced processing
+    if (bankProfile === 'alpha') {
+      return {
+        sctInstantEnabled: false,
+        reason: 'Alpha Bank uses enhanced same-day processing',
+        recommendedMode: 'ENHANCED_SCT',
+        feeImpact: 'Standard SEPA fees apply'
+      };
+    }
+
+    // Piraeus Bank - e-PPS for urgent payments
+    if (bankProfile === 'piraeus' && paymentType === 'URGENT') {
+      return {
+        sctInstantEnabled: false,
+        reason: 'Use e-PPS Mass Payments for urgent processing',
+        recommendedMode: 'ePPS_MASS',
+        feeImpact: 'e-PPS processing fees apply'
+      };
+    }
+
+    return {
+      sctInstantEnabled: false,
+      reason: 'Regular SEPA processing recommended',
+      recommendedMode: 'STANDARD_SCT',
+      feeImpact: 'Standard SEPA fees apply'
+    };
+  }
+
+  // Helper methods for validation
+  private validateIBAN(iban: string): boolean {
+    // Basic IBAN validation (Greek IBAN starts with GR and is 27 chars)
+    return /^GR[0-9]{25}$/.test(iban.replace(/\s/g, ''));
+  }
+
+  private validateBIC(bic: string): boolean {
+    // Basic BIC validation (8 or 11 characters)
+    return /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic);
+  }
+
   // Generate encrypted SEPA file for Piraeus Bank host-to-host
   async generateEncryptedSEPAFile(payrollRunId: string, encryptionKey?: string): Promise<{ 
     sepaFile: string; 

@@ -2046,6 +2046,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comprehensive engine validation endpoint
+  app.post('/api/payments/sepa/validate-engine', isAuthenticated, async (req, res) => {
+    try {
+      const { bankProfile, payments, requestedExecutionDate } = req.body;
+      
+      if (!bankProfile || !payments) {
+        return res.status(400).json({ error: 'bankProfile and payments are required' });
+      }
+
+      const { SepaEngineValidator } = await import("./sepaEngineValidator");
+      const validator = new SepaEngineValidator();
+      
+      const validationResult = await validator.validateEngineExecution(
+        bankProfile,
+        payments,
+        requestedExecutionDate ? new Date(requestedExecutionDate) : undefined
+      );
+      
+      res.json({
+        success: true,
+        validation: validationResult,
+        bankProfile,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error validating engine execution:', error);
+      res.status(500).json({ error: 'Failed to validate engine execution' });
+    }
+  });
+
+  // pain.002 status processing and reject surfacing
+  app.post('/api/payments/sepa/process-status', isAuthenticated, async (req, res) => {
+    try {
+      const { pain002Response, correlationId } = req.body;
+      
+      if (!pain002Response) {
+        return res.status(400).json({ error: 'pain002Response is required' });
+      }
+
+      const { SepaEngineValidator } = await import("./sepaEngineValidator");
+      const validator = new SepaEngineValidator();
+      
+      const rejectAnalysis = validator.surfaceRejects(pain002Response);
+      
+      res.json({
+        success: true,
+        correlationId,
+        rejectAnalysis,
+        processedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error processing pain.002 status:', error);
+      res.status(500).json({ error: 'Failed to process status report' });
+    }
+  });
+
   // Get payment history
   app.get('/api/payments/history', isAuthenticated, async (req, res) => {
     try {
