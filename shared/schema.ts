@@ -612,3 +612,11 @@ export type InsertPayrollRecord = z.infer<typeof insertPayrollRecordSchema>;
 export type CollectiveAgreement = typeof collectiveAgreements.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
+
+// Employee Allowances Types
+export type EmployeeAllowance = typeof employeeAllowances.$inferSelect;
+export type InsertEmployeeAllowance = typeof employeeAllowances.$inferInsert;
+
+// Holiday Bonuses Types
+export type HolidayBonus = typeof holidayBonuses.$inferSelect;
+export type InsertHolidayBonus = typeof holidayBonuses.$inferInsert;
