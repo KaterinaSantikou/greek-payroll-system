@@ -1,0 +1,81 @@
+Personal Identification & Documentation
+Required Greek IDs
+AFM (Αριθμός Φορολογικού Μητρώου) - 9-digit tax identification number
+AMKA (Αριθμός Μητρώου Κοινωνικής Ασφάλισης) - 11-digit social security number
+ID Number - Greek national ID or passport number
+Tax Office (ΔΟΥ) - Tax office assignment
+EFKA Insurance System
+EFKA Registry Number - Social insurance registry
+Insurance Category (IKA, OAEE, ETAA, OTHER)
+Insurance Package - Specific coverage type
+Special Insurance Category - For special cases
+EFKA Fund Affiliation - Specific fund assignment
+ERGANI Registration - Labor inspection system
+TEKA Enrollment - Engineers/technicians fund
+Employment Compliance
+Worker Classifications
+Young Worker status (under 25)
+Seasonal Worker designation
+Independent Contractor classification
+Disability Percentage (0-100%)
+Disability Certificate with details
+Foreign Worker Requirements
+Nationality specification
+Residency Status
+Passport Number
+Visa Information
+Work Permit Number + expiry date
+Residence Permit Number + expiry date
+Military Service
+Military Service Status
+Military Service Completion Date
+Payroll & Tax Compliance
+Tax Calculations
+Greek income tax brackets (9%, 22%, 28%, 36%, 44%)
+Special Solidarity Tax calculation
+Tax-free threshold applications
+Employer Tax calculations
+Insurance Contributions
+Main EFKA rates (~16% employee, ~24.5% employer)
+Health Insurance contributions
+Unemployment Insurance
+Heavy & Hazardous Work Insurance
+Supplementary Fund contributions
+Collective Agreements
+Industry Sector classification
+Collective Agreement Type selection
+Position Code mapping
+Experience-based wage adjustments
+Education-level bonuses
+Marriage & Children allowances
+Working Time Arrangements
+Predictable/Unpredictable schedules
+Standard Weekly Hours (40h standard)
+Trial Period tracking
+Contract Types (full-time, part-time, temporary, seasonal, freelance)
+Special Allowances & Bonuses
+Holiday Bonus (Δώρο Χριστουγέννων)
+Easter Bonus (Δώρο Πάσχα)
+Vacation Bonus (Επίδομα Αδείας)
+Transport Allowance
+Food Allowance
+Uniform Allowance
+Education Allowance
+Position Allowance
+Industry-specific allowances
+Overtime & Special Hours
+Overtime Multiplier (typically 1.25x)
+Sunday Multiplier (typically 1.75x)
+Night Shift Multiplier (typically 1.25x)
+Holiday Multiplier (typically 2.0x)
+Leave Management
+Annual Leave (20-25 days based on tenure)
+Sick Leave tracking
+Parental Leave entitlements
+Unpaid Leave records
+Leave Balance calculations
+Legal Documentation
+Required Legal Documents checklist
+Legal Restrictions tracking
+Layoff Notice Period (based on tenure)
+Contract Termination procedures
