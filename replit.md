@@ -21,6 +21,7 @@ Preferred communication style: Simple, everyday language.
   - **Cost Insights**: Predictive analytics with Labor Forecast, OT Heatmap, Variance vs Budget
   - **Payroll & Finance**: Comprehensive Greek payroll processing with Runs (Draft/Validate/Finalize/Post-Run Audit), Components (Earnings/Deductions/Rates/Benefits in Kind), and Bonuses (Δώρο Πάσχα/Χριστουγέννων/Επίδομα Άδειας)
   - **Payments**: Salary payment processing with Salary Files (Create SEPA/Approvals/Bank Receipts) and Off-Cycle (Urgent/Corrections/Reversals)
+  - **Accounting**: Financial reconciliation and GL integration with Journal Export (Map/Preview/Post) and Reconciliation (Payroll vs GL/Variances)
   - **Filings**: Greek government compliance submissions with ERGANI II (Hires/Schedules/OT/Terminations/Receipts), e-EFKA/APD (Build/Validate/Submit/Receipts), and AADE/ΦΜΥ (Build File/Merge/Submit/Payment)
   - **Hotel Operations**: Multi-property management and deployment tools
   - **Platform**: Vision & strategy with product roadmap and UX architecture documentation

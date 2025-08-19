@@ -243,6 +243,33 @@ const uxExample = {
       ]
     },
     {
+      name: "Accounting",
+      icon: BarChart,
+      color: "bg-purple-600",
+      description: "Financial reconciliation and GL integration",
+      level2: [
+        {
+          name: "Journal Export",
+          icon: Settings,
+          description: "General ledger integration workflows",
+          level3: [
+            { name: "Map", path: "/payroll", description: "Chart of accounts mapping" },
+            { name: "Preview", path: "/analytics", description: "Journal entry preview" },
+            { name: "Post", path: "/payments", description: "GL posting execution" }
+          ]
+        },
+        {
+          name: "Reconciliation",
+          icon: Target,
+          description: "Payroll to accounting reconciliation",
+          level3: [
+            { name: "Payroll vs GL", path: "/modern-payroll", description: "Payroll to GL reconciliation" },
+            { name: "Variances", path: "/compliance", description: "Variance analysis & resolution" }
+          ]
+        }
+      ]
+    },
+    {
       name: "Filings",
       icon: Scale,
       color: "bg-indigo-500",
@@ -517,6 +544,7 @@ export default function UXArchitecture() {
                 <Badge variant="outline">Cost Insights</Badge>
                 <Badge variant="outline">Payroll & Finance</Badge>
                 <Badge variant="outline">Payments</Badge>
+                <Badge variant="outline">Accounting</Badge>
                 <Badge variant="outline">Filings</Badge>
                 <Badge variant="outline">Hotel Operations</Badge>
                 <Badge variant="outline">Platform</Badge>

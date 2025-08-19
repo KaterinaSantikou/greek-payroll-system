@@ -240,6 +240,30 @@ const menuStructure: MenuLevel1Item[] = [
     ]
   },
   {
+    name: "Accounting",
+    icon: BarChart,
+    color: "bg-purple-600",
+    items: [
+      {
+        name: "Journal Export",
+        icon: Settings,
+        items: [
+          { name: "Map", href: "/payroll", description: "Chart of accounts mapping" },
+          { name: "Preview", href: "/analytics", description: "Journal entry preview" },
+          { name: "Post", href: "/payments", description: "GL posting execution" },
+        ]
+      },
+      {
+        name: "Reconciliation",
+        icon: Target,
+        items: [
+          { name: "Payroll vs GL", href: "/modern-payroll", description: "Payroll to GL reconciliation" },
+          { name: "Variances", href: "/compliance", description: "Variance analysis & resolution" },
+        ]
+      }
+    ]
+  },
+  {
     name: "Filings",
     icon: Scale,
     color: "bg-indigo-500",
