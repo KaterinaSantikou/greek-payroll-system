@@ -1191,6 +1191,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Success Metrics routes
+  app.get('/api/success-metrics/summary', isAuthenticated, async (req, res) => {
+    try {
+      const { successMetricsService } = await import('./successMetricsService');
+      const propertyId = req.query.propertyId as string;
+      const summary = await successMetricsService.getSuccessMetricsSummary(propertyId);
+      res.json(summary);
+    } catch (error) {
+      console.error("Error fetching success metrics summary:", error);
+      res.status(500).json({ message: "Failed to fetch success metrics summary" });
+    }
+  });
+
+  app.get('/api/success-metrics', isAuthenticated, async (req, res) => {
+    try {
+      const { successMetricsService } = await import('./successMetricsService');
+      const propertyId = req.query.propertyId as string;
+      const startDate = new Date(req.query.startDate as string);
+      const endDate = new Date(req.query.endDate as string);
+      
+      if (propertyId === 'all') {
+        const metrics = await successMetricsService.getLatestSuccessMetrics();
+        res.json(metrics);
+      } else {
+        const metrics = await successMetricsService.getSuccessMetrics(propertyId, startDate, endDate);
+        res.json(metrics);
+      }
+    } catch (error) {
+      console.error("Error fetching success metrics:", error);
+      res.status(500).json({ message: "Failed to fetch success metrics" });
+    }
+  });
+
+  app.get('/api/success-metrics/alerts', isAuthenticated, async (req, res) => {
+    try {
+      const { successMetricsService } = await import('./successMetricsService');
+      const propertyId = req.query.propertyId as string;
+      const alerts = await successMetricsService.getSuccessMetricAlerts(
+        propertyId === 'all' ? undefined : propertyId,
+        false // Only unresolved alerts
+      );
+      res.json(alerts);
+    } catch (error) {
+      console.error("Error fetching success metric alerts:", error);
+      res.status(500).json({ message: "Failed to fetch success metric alerts" });
+    }
+  });
+
+  app.post('/api/success-metrics/generate-demo', isAuthenticated, async (req, res) => {
+    try {
+      const { successMetricsService } = await import('./successMetricsService');
+      await successMetricsService.generateDemoSuccessMetrics();
+      res.json({ success: true, message: 'Demo success metrics generated' });
+    } catch (error) {
+      console.error("Error generating demo success metrics:", error);
+      res.status(500).json({ message: "Failed to generate demo success metrics" });
+    }
+  });
+
+  app.patch('/api/success-metrics/alerts/:alertId/resolve', isAuthenticated, async (req, res) => {
+    try {
+      const { successMetricsService } = await import('./successMetricsService');
+      const alertId = req.params.alertId;
+      const userId = req.user?.claims?.sub || 'system';
+      await successMetricsService.resolveAlert(alertId, userId);
+      res.json({ success: true, message: 'Alert resolved' });
+    } catch (error) {
+      console.error("Error resolving alert:", error);
+      res.status(500).json({ message: "Failed to resolve alert" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

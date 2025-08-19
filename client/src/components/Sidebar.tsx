@@ -15,7 +15,8 @@ import {
   Scale,
   Smartphone,
   Building2,
-  Rocket
+  Rocket,
+  Target
 } from "lucide-react";
 
 const navigationItems = [
@@ -37,6 +38,7 @@ const navigationItems = [
   { name: "Αναφορές", href: "/analytics", icon: BarChart },
   { name: "Συμμόρφωση", href: "/compliance", icon: Shield },
   { name: "Site Deployment", href: "/deployment", icon: Rocket },
+  { name: "Success Metrics", href: "/success-metrics", icon: Target },
 ];
 
 export default function Sidebar() {

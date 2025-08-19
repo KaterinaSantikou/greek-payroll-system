@@ -24,6 +24,7 @@ import HotelOperations from "@/pages/hotelOperations";
 import Compliance from "@/pages/compliance";
 import Analytics from "@/pages/analytics";
 import Deployment from "@/pages/deployment";
+import SuccessMetrics from "@/pages/successMetrics";
 import Layout from "@/components/Layout";
 
 function Router() {
@@ -53,6 +54,7 @@ function Router() {
           <Route path="/compliance" component={Compliance} />
           <Route path="/analytics" component={Analytics} />
           <Route path="/deployment" component={Deployment} />
+          <Route path="/success-metrics" component={SuccessMetrics} />
         </Layout>
       )}
       <Route component={NotFound} />
