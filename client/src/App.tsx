@@ -60,6 +60,9 @@ import PayrollPreview from "@/pages/payrollPreview";
 import PayExplanationDemo from "@/pages/payExplanationDemo";
 import AIEnginesDemo from "@/pages/aiEnginesDemo";
 import CommandPaletteDemo from "@/pages/commandPaletteDemo";
+import Onboarding from "@/pages/onboarding";
+import Exits from "@/pages/exits";
+import TeamsRoles from "@/pages/teamsRoles";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 
@@ -83,8 +86,17 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
-            <Route path="/employees" component={Employees} />
-            <Route path="/employee-master" component={EmployeeMaster} />
+        
+        {/* People Section */}
+        <Route path="/employees" component={Employees} />
+        <Route path="/employee-master" component={EmployeeMaster} />
+        <Route path="/onboarding" component={Onboarding} />
+        <Route path="/exits" component={Exits} />
+        <Route path="/teams-roles" component={TeamsRoles} />
+        
+        {/* Time Section */}
+        <Route path="/punches" component={lazy(() => import("./pages/punches"))} />
+        <Route path="/exceptions" component={lazy(() => import("./pages/exceptions"))} />
             <Route path="/payroll" component={Payroll} />
             <Route path="/payments" component={Payments} />
             <Route path="/sepa-payments" component={SepaPayments} />
