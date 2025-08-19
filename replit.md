@@ -8,6 +8,8 @@ PayrollSync is a comprehensive Greek HR & Payroll Management System designed to 
 - **Evaluation Metrics Framework**: Pay calculation accuracy (99.7%), exception classifier F1 score (97.0%), schedule recommendation win-rate (87.3%), explanation comprehension (91.3%)
 - **Operational Dashboard**: Complete management dashboard with property switcher, action inbox, compliance strip, payroll run status, KPIs, live attendance, forecast & risk, and filings tracking
 - **Role-Based Permission Matrix**: Defined granular permissions for employee, manager, HR, payroll, and auditor roles with proper data filtering and access controls
+- **Bilingual Greek-English System**: Implemented comprehensive localization with authentic Greek translations, role-based personalized dashboards, and employee self-service portal with language switching functionality
+- **Role-Based Default Views**: Created contextual experiences for Payroll Admin, HR, Manager, Compliance/Auditor, and Employee roles with tailored dashboards, quick actions, and access restrictions
 
 # User Preferences
 

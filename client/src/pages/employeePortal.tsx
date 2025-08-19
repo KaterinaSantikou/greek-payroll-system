@@ -19,8 +19,10 @@ import {
   CheckCircle,
   AlertCircle
 } from "lucide-react";
+import { useLocale, formatCurrency } from "@/hooks/useLocale";
 
 export default function EmployeePortal() {
+  const { t, locale } = useLocale();
   const employee = {
     name: "Katerina Santikos",
     id: "EMP-001234",
@@ -87,7 +89,7 @@ export default function EmployeePortal() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Welcome back, {employee.name}
+              {t('portal.welcome')}, {employee.name}
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
               {employee.position} • {employee.department}
@@ -109,8 +111,8 @@ export default function EmployeePortal() {
                 <Euro className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium">Net Pay</p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-400">€{payslipData.netPay}</p>
+                <p className="text-sm font-medium">{t('portal.net-pay')}</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-400">{formatCurrency(payslipData.netPay, locale)}</p>
                 <p className="text-xs text-gray-500">{payslipData.period}</p>
               </div>
             </div>
@@ -124,7 +126,7 @@ export default function EmployeePortal() {
                 <Clock className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium">This Week</p>
+                <p className="text-sm font-medium">{t('portal.hours-week')}</p>
                 <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{timeData.weekHours}h</p>
                 <p className="text-xs text-gray-500">+{timeData.overtimeWeek}h OT</p>
               </div>

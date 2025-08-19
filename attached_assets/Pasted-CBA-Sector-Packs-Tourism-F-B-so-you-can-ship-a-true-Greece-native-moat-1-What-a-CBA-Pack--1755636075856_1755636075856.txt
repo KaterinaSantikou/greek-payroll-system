@@ -1,0 +1,274 @@
+CBA & Sector Packs (Tourism / F&B) so you can ship a true Greece-native moat.
+
+1) What a “CBA Pack” is
+
+A versioned, installable ruleset that preloads sector-specific wage tables, premiums, allowances, scheduling constraints, and ERGANI actions for a property. Packs live alongside statutory rules; precedence is:
+Statutory floor → Sector CBA → Company policy → Individual contract (never below floors).
+
+Examples to ship first
+
+Tourism: Hotels (seasonal heavy, accommodation/meal allowances, split shifts).
+
+Food & Beverage (restaurants/bars; tip pooling, Sunday/holiday intensity).
+
+2) Data model (additions)
+
+CbaPack
+
+id, name, sector ("tourism_hotels" | "fnb_restaurants"), authority_ref,
+effective_from, effective_to?, version, doc_hash, status (draft/published).
+
+WageTable
+
+pack_id, category (role family), grade (A/B/C…), seniority_step (0,1,2…),
+base_monthly (or base_daily), unit (monthly|daily|hourly), notes.
+
+PremiumRule
+
+code (NIGHT_25, SUNDAY_75, …), rate_type (percent|fixed), value,
+bands (e.g., night 22:00–06:00), stackable (bool), applies_to (hours_worked|holidays|ot).
+
+AllowanceRule
+
+code (MEAL_ALLOW, ACCOM_ALLOW, UNIFORM_ALLOW), calc (per_day|per_shift|fixed_monthly|percent_base),
+cap?, tax_treatment (exempt|taxable|split), contributory (yes|no|split).
+
+SchedulingConstraint
+
+max_hours_day, max_hours_week_avg, rest_min_hours (daily), weekly_rest (hours),
+split_shift (allowed|disallowed), break_min_minutes, sixth_day (allowed|disallowed|sector_exemption).
+
+ErganiProfile
+
+event_map for hires, schedule pre-announcement, overtime declarations, terminations;
+required_lead_times, reason_codes, document_templates.
+
+TipPolicy (F&B)
+
+pool_source (POS rev %, service charge), distribution (points by role/shift/hour),
+employer_topup?, tax/contrib mapping.
+
+Overrides
+
+company_overrides (GL account, custom allowances), property_overrides (cost center splits).
+
+3) Rules DSL (example)
+pack: tourism_hotels
+version: 2025.08.1
+effective_from: 2025-05-01
+
+wage_table:
+  - category: "Front Office"
+    grade: "B"
+    seniority_step: 0
+    base_monthly: 980.00
+  - category: "Housekeeping"
+    grade: "C"
+    seniority_step: 0
+    base_monthly: 920.00
+
+premiums:
+  - code: NIGHT_25
+    rate_type: percent
+    value: 0.25
+    band: { start: "22:00", end: "06:00" }
+    stackable: true
+  - code: SUNDAY_75
+    rate_type: percent
+    value: 0.75
+    stackable: true
+  - code: HOLIDAY_75
+    rate_type: percent
+    value: 0.75
+    stackable: true
+  - code: SIXTH_DAY_40
+    rate_type: percent
+    value: 0.40
+    enabled: false            # tourism default: disabled unless entity override
+    stackable: true
+
+allowances:
+  - code: MEAL_ALLOW
+    calc: per_day
+    value: 6.00
+    tax_treatment: split      # up to 6€/day exempt; engine splits overage
+  - code: ACCOM_ALLOW
+    calc: per_day
+    value: 10.00
+    tax_treatment: taxable
+    contributory: yes
+  - code: UNIFORM_ALLOW
+    calc: fixed_monthly
+    value: 20.00
+    tax_treatment: taxable
+    contributory: yes
+
+scheduling:
+  max_hours_day: 10           # with lawful OT
+  max_hours_week_avg: 48      # 4-month ref
+  rest_min_hours: 11
+  weekly_rest: 24
+  split_shift: allowed
+  break_min_minutes: 15
+  sixth_day: sector_exemption # default off; per-entity switch only if legally eligible
+
+ergani_profile:
+  schedule_mode: pre_announce
+  overtime_event: required
+  lead_times:
+    schedule_change: "before_shift_start"
+    overtime: "same_day_before_start"
+
+tips:
+  pool_source: "pos_revenue_percent"
+  percent: 5
+  distribution:
+    by: "points"
+    points:
+      "Waiter": 2
+      "Bartender": 2
+      "Host": 1
+      "Runner": 1
+
+
+Note: Numeric values above are illustrative placeholders. In production, you’ll import the exact amounts/steps from the CBA document and lock them behind doc_hash.
+
+4) Engine behaviour
+
+Assignment
+
+Each contract has cba_pack_id, category, grade, seniority_step.
+
+On hire/anniversary, engine can auto-advance seniority_step and record a CBA step change event.
+
+Calculation
+
+Base pay from WageTable (prorate by FTE and partial months).
+
+Add allowances by rule and attendance (per day/shift).
+
+Apply premiums by hour splits (Night/Sunday/Holiday/OT tiers); premiums are separate lines.
+
+Enforce constraints (rest, weekly caps) → flag violations & propose fix (reschedule or OT declaration).
+
+Respect stacking: split the same hour across multiple premium lines with clear audit.
+
+ERGANI
+
+When a schedule or OT requires declaration, pre-generate the specific ERGANI payload with the CBA reason codes from the pack.
+
+5) Onboarding & UX
+
+Company setup wizard
+
+Step: “Select Sector Pack” → Tourism (Hotels) or F&B (Restaurants/Bars).
+
+Step: “Configure Roles & Grades” → map your roles to CBA category/grade.
+
+Step: “Allowances” → confirm meal/accommodation/uniform rules; toggle Sixth day (locked off unless allowed).
+
+Step: “Tips” (F&B) → choose pool source and distribution.
+
+Admin views
+
+CBA Matrix (read-only): table of category × grade × step → base pay.
+
+Effective-date banner: “Pack v2025.08.1 active since 01 May 2025”.
+
+Overrides tray: per-entity/property override with diff vs pack.
+
+Employee profile
+
+Shows current CBA attributes (pack, category, grade, step) with next step date.
+
+6) Integrations & files
+
+ERGANI II: event templates and validators bundled per pack.
+
+APD/ΦΜΥ: earnings codes from the pack map to the right APD categories; no manual mapping required.
+
+GL export: default mapping for hotel/F&B cost centers (FO, HK, F&B, Spa, Maintenance).
+
+7) Governance & updates
+
+New CBA doc → ingest tool (admin/legal only) to encode tables and rules.
+
+Versioned publish with sandbox diff: “+€20 to Housekeeping C grade; enable new allowance COLD_MEAL”.
+
+Rollout strategy: sandbox → pilot property → all; with auto-generated impact report (Δ monthly cost, affected employees).
+
+8) Edge cases to cover
+
+Seasonal contracts (fixed term): proration of δώρα/άδειας; mass re-hire & mass termination flows.
+
+Split shifts: ensure intra-day hour splitting doesn’t double count premiums; enforce break min minutes.
+
+Sixth day: default off for tourism/F&B (where law disallows); allow per-entity override only if documented.
+
+Min wage floor: if CBA table below statutory floor, engine tops up to floor and flags “CBA under floor”.
+
+Multi-property: employee working across outlets on same day → split premiums & allowances by outlet.
+
+Apprentices/minors: special constraints (hours, night work) → pack sub-rules deny forbidden combinations.
+
+9) Acceptance tests (golden set)
+
+T-01 Night + Sunday stacking
+
+Input: 4h Sunday night (22:00–02:00), base hourly €x.
+
+Expect: REG 4h + NIGHT_25 (4h×25%) + SUNDAY_75 (4h×75%); APD flags set; GL codes mapped; audit shows split & stack.
+
+T-02 Split shift with allowance
+
+Input: 2 shifts same day (10:00–14:00, 18:00–22:00).
+
+Expect: break ≥ 4h recognized; MEAL_ALLOW applied once (per company policy); no daily max breach.
+
+T-03 Sixth day blocked
+
+Input: Assign 6th consecutive day in tourism property (default off).
+
+Expect: scheduler blocks with “Sixth day disallowed by pack”; override path requires admin & legal reason.
+
+T-04 Seasonal termination batch
+
+Input: 200 contracts end 30 Sep; compute final pay.
+
+Expect: pro-rata δώρα/άδειας; ERGANI term files; run time < 5 minutes.
+
+T-05 Min wage guardrail
+
+Input: CBA base < statutory min;
+
+Expect: auto-top-up + alert; payslip shows “Statutory floor adjustment”.
+
+T-06 Tips distribution (F&B)
+
+Input: POS revenue €20k; pool 5%; roles/points set;
+
+Expect: distribution ledger; payroll lines per employee; tax/contribution mapping as configured.
+
+10) APIs
+# Packs
+GET  /v1/cba/packs                       # list published packs
+GET  /v1/cba/packs/{pack_id}             # details incl. tables and rules
+POST /v1/cba/packs/{pack_id}/publish     # legal/admin only
+POST /v1/cba/assignments                 # assign pack/category/grade/step to contracts (bulk)
+
+# Calculations & previews
+POST /v1/cba/preview/basepay             # returns base pay after CBA + seniority + min wage floor
+POST /v1/cba/preview/allowances          # per-employee allowance calc for a period
+POST /v1/cba/validate/schedule           # returns violations vs pack constraints
+
+# Ergani helpers
+POST /v1/cba/ergani/schedule-event       # build schedule pre-announcement payload
+POST /v1/cba/ergani/overtime-event       # build overtime payload
+
+11) Security & audit
+
+Immutable record of which pack/version calculated each payslip (calc_provenance).
+
+All pack changes gated by maker-checker (legal + payroll admin).
+
+Doc trail: store the underlying CBA PDF hash and the encoding diff.

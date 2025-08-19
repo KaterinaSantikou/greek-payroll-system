@@ -6,6 +6,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { getUserRole, canAccessSection } from "@/lib/roleBasedRouting";
+import { useLocale } from "@/hooks/useLocale";
 import { 
   LayoutDashboard,
   Users,
@@ -42,16 +43,17 @@ interface NavigationItem {
   urgent?: boolean;
 }
 
-const navigationData: NavigationItem[] = [
+// Create navigation data function that uses translations
+const createNavigationData = (t: (key: string) => string): NavigationItem[] => [
   {
     id: 'dashboard',
-    label: 'Dashboard',
+    label: t('nav.dashboard'),
     icon: LayoutDashboard,
     href: '/'
   },
   {
     id: 'people',
-    label: 'People',
+    label: t('nav.people'),
     icon: Users,
     children: [
       {
@@ -343,6 +345,11 @@ interface MainNavigationProps {
 export function MainNavigation({ collapsed = false }: MainNavigationProps) {
   const [location] = useLocation();
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['dashboard']));
+  const { user } = useAuth();
+  const userRole = getUserRole(user);
+  const { t } = useLocale();
+  
+  const navigationData = createNavigationData(t);
 
   const toggleSection = (sectionId: string) => {
     const newExpanded = new Set(expandedSections);

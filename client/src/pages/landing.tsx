@@ -3,6 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Users, Calculator, Shield, BarChart } from "lucide-react";
 
 export default function Landing() {
+  const handleSignIn = () => {
+    window.location.href = '/api/login';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-white">
       <div className="container mx-auto px-4 py-16">
@@ -20,6 +24,13 @@ export default function Landing() {
           <p className="text-lg text-neutral-500 mt-2">
             Ολοκληρωμένη λύση για τη διαχείριση εργαζομένων και υπολογισμό μισθοδοσίας σύμφωνα με την ελληνική νομοθεσία
           </p>
+          
+          {/* Sign In Button */}
+          <div className="mt-8">
+            <Button onClick={handleSignIn} size="lg" className="text-lg px-8 py-3">
+              Σύνδεση / Sign In
+            </Button>
+          </div>
         </div>
 
         {/* Features Grid */}

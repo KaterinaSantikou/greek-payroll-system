@@ -1,5 +1,6 @@
 import { MainNavigation } from "./MainNavigation";
 import { PropertySwitcher } from "./PropertySwitcher";
+import LanguageSwitcher from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { CommandPaletteButton } from "./CommandPaletteButton";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
@@ -80,6 +81,7 @@ function LayoutContent({ children }: LayoutProps) {
             </div>
             <div className="flex items-center space-x-3">
               <CommandPaletteButton onClick={() => setOpen(true)} />
+              <LanguageSwitcher />
               <PropertySwitcher />
               <ThemeToggle />
             </div>
