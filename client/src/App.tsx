@@ -66,6 +66,7 @@ import Exits from "@/pages/exits";
 import TeamsRoles from "@/pages/teamsRoles";
 import S1Dashboard from "@/pages/S1Dashboard";
 import S1MetricsPage from "@/pages/S1MetricsPage";
+import S1AcceptanceTesting from "@/pages/S1AcceptanceTesting";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 
@@ -165,6 +166,7 @@ function Router() {
             <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
         <Route path="/s1-dashboard" component={S1Dashboard} />
         <Route path="/s1-metrics" component={S1MetricsPage} />
+        <Route path="/s1-acceptance-testing" component={S1AcceptanceTesting} />
         <Route path="/ai-copilot" component={AICopilot} />
         <Route component={NotFound} />
       </Switch>

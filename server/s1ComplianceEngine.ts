@@ -17,9 +17,19 @@ import {
  */
 export class S1ComplianceEngine {
   private activeRulesetVersion: string = "esrs_s1.v2025_quickfix";
+  private featureFlags: { useQuickFix2025: boolean } = { useQuickFix2025: false };
 
   /**
-   * EFRAG-compliant Gender Pay Gap calculation with guardrails
+   * Toggle 2025 quick-fix ruleset (acceptance criteria: Finance)
+   */
+  setQuickFix2025Enabled(enabled: boolean): void {
+    this.featureFlags.useQuickFix2025 = enabled;
+    this.activeRulesetVersion = enabled ? "esrs_s1.v2025_quickfix" : "esrs_s1.v2023";
+  }
+
+  /**
+   * EFRAG-compliant S1-16 Gender Pay Gap calculation (acceptance criteria: EFRAG)
+   * Calculates by entity and country for closed fiscal years
    * Implements: Non-employee exclusion, hourly derivation methodology, PPP adjustments
    */
   async calculateGenderPayGap(

@@ -27,7 +27,8 @@ import {
   Smartphone,
   Rocket,
   Play,
-  ScrollText
+  ScrollText,
+  TestTube
 } from "lucide-react";
 
 interface MenuLevel3Item {
@@ -403,6 +404,15 @@ const menuStructure: MenuLevel1Item[] = [
           { name: "Change Log & Legal Watch", href: "/changelog-legal-watch", description: "Versioned rule packs & legal monitoring" },
           { name: "Document AI", href: "/document-ai", description: "AI-powered document processing" },
           { name: "Forecasting", href: "/forecasting", description: "AI-driven workforce planning" },
+        ]
+      },
+      {
+        name: "ESRS S1 Compliance",
+        icon: TestTube,
+        items: [
+          { name: "S1 Dashboard", href: "/s1-dashboard", description: "ESRS S1 sustainability metrics overview" },
+          { name: "S1 Metrics", href: "/s1-metrics", description: "Detailed S1 calculations and reporting" },
+          { name: "S1 Acceptance Testing", href: "/s1-acceptance-testing", description: "Validate dev ticket acceptance criteria" },
         ]
       }
     ]

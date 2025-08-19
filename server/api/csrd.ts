@@ -705,6 +705,114 @@ export function registerCsrdRoutes(app: Router) {
   });
 
   // =====================================================
+  // ACCEPTANCE CRITERIA ENDPOINTS
+  // =====================================================
+
+  // AC1: S1-16 calculations by entity/country with method notes and population counts
+  app.get('/api/csrd/s1-16-metrics/:fiscalYear', async (req, res) => {
+    try {
+      const { fiscalYear } = req.params;
+      const { entity, country } = req.query;
+      
+      const { S1AcceptanceCriteria } = await import('../s1AcceptanceCriteria');
+      const s1AC = new S1AcceptanceCriteria();
+      
+      const result = await s1AC.calculateS116Metrics(
+        fiscalYear,
+        entity as string,
+        country as string
+      );
+      
+      res.json({
+        fiscalYear,
+        entity,
+        country,
+        timestamp: new Date().toISOString(),
+        ...result
+      });
+    } catch (error) {
+      console.error('S1-16 calculation error:', error);
+      res.status(500).json({ error: 'Failed to calculate S1-16 metrics' });
+    }
+  });
+
+  // AC2: ESRS S1 XBRL export with Set-1 taxonomy validation
+  app.get('/api/csrd/xbrl-export/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      const { entity, taxonomyVersion = 'ESRS_Set1_2023' } = req.query;
+      
+      const { S1AcceptanceCriteria } = await import('../s1AcceptanceCriteria');
+      const s1AC = new S1AcceptanceCriteria();
+      
+      const result = await s1AC.exportESRSS1XBRL(
+        reportingPeriodId,
+        entity as string,
+        taxonomyVersion as string
+      );
+      
+      res.set({
+        'Content-Type': 'application/xml',
+        'Content-Disposition': `attachment; filename="esrs-s1-${reportingPeriodId}.xbrl"`,
+      });
+      
+      res.json({
+        xbrlSnippet: result.xbrlSnippet,
+        validation: result.taxonomyValidation,
+        generatedAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('XBRL export error:', error);
+      res.status(500).json({ error: 'Failed to export XBRL' });
+    }
+  });
+
+  // AC3: Ruleset switching with 2025 quick-fix feature flag
+  app.post('/api/csrd/toggle-quickfix-2025', async (req, res) => {
+    try {
+      const { enabled } = req.body;
+      
+      const { S1AcceptanceCriteria } = await import('../s1AcceptanceCriteria');
+      const s1AC = new S1AcceptanceCriteria();
+      
+      const result = await s1AC.toggleQuickFix2025(enabled === true);
+      
+      res.json({
+        message: `2025 Quick-fix ${enabled ? 'enabled' : 'disabled'}`,
+        ...result
+      });
+    } catch (error) {
+      console.error('Ruleset toggle error:', error);
+      res.status(500).json({ error: 'Failed to toggle ruleset' });
+    }
+  });
+
+  // AC4: Evidence Pack generation for assurance
+  app.get('/api/csrd/evidence-pack/:reportingPeriodId', async (req, res) => {
+    try {
+      const { reportingPeriodId } = req.params;
+      const { entity, country } = req.query;
+      
+      const { S1AcceptanceCriteria } = await import('../s1AcceptanceCriteria');
+      const s1AC = new S1AcceptanceCriteria();
+      
+      const result = await s1AC.generateEvidencePack(
+        reportingPeriodId,
+        entity as string,
+        country as string
+      );
+      
+      res.json({
+        reportingPeriod: reportingPeriodId,
+        ...result
+      });
+    } catch (error) {
+      console.error('Evidence pack generation error:', error);
+      res.status(500).json({ error: 'Failed to generate evidence pack' });
+    }
+  });
+
+  // =====================================================
   // EVIDENCE PACK & AUDIT ASSURANCE ENDPOINTS
   // =====================================================
 
