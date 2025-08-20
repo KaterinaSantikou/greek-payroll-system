@@ -6566,6 +6566,58 @@ export type InsertIncidentRoleAssignment = typeof incidentRoleAssignments.$infer
 export type EscalationMatrix = typeof escalationMatrix.$inferSelect;
 export type InsertEscalationMatrix = typeof escalationMatrix.$inferInsert;
 
+// Performance Budget Enforcement Tables
+
+// Performance Budgets - Target performance metrics with enforcement
+export const performanceBudgets = pgTable("performance_budgets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  category: varchar("category", { length: 100 }).notNull(), // user_experience, dashboard_performance, build_performance, load_testing
+  targetValue: decimal("target_value"), // Target performance value
+  currentValue: decimal("current_value"), // Current measured value
+  unit: varchar("unit", { length: 50 }).notNull(), // milliseconds, seconds, multiplier, percentage
+  threshold: varchar("threshold", { length: 20 }).notNull(), // under, over (whether target should be under or over)
+  description: text("description"),
+  severity: varchar("severity", { length: 20 }).default("medium"), // critical, high, medium, low
+  isActive: boolean("is_active").default(true),
+  lastMeasured: timestamp("last_measured"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Performance Metrics - Historical measurements
+export const performanceMetrics = pgTable("performance_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  budgetId: varchar("budget_id").notNull().references(() => performanceBudgets.id),
+  measuredValue: decimal("measured_value").notNull(),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  context: jsonb("context"), // Additional context about the measurement
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Budget Violations - When budgets are exceeded
+export const budgetViolations = pgTable("budget_violations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  budgetId: varchar("budget_id").notNull().references(() => performanceBudgets.id),
+  measuredValue: decimal("measured_value").notNull(),
+  targetValue: decimal("target_value").notNull(),
+  violationAmount: decimal("violation_amount").notNull(),
+  severity: varchar("severity", { length: 20 }).default("medium"),
+  isResolved: boolean("is_resolved").default(false),
+  resolvedAt: timestamp("resolved_at"),
+  detectedAt: timestamp("detected_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type PerformanceBudget = typeof performanceBudgets.$inferSelect;
+export type InsertPerformanceBudget = typeof performanceBudgets.$inferInsert;
+
+export type PerformanceMetric = typeof performanceMetrics.$inferSelect;
+export type InsertPerformanceMetric = typeof performanceMetrics.$inferInsert;
+
+export type BudgetViolation = typeof budgetViolations.$inferSelect;
+export type InsertBudgetViolation = typeof budgetViolations.$inferInsert;
+
 // Automated Runbooks System Schema
 
 // Runbook definitions and templates
