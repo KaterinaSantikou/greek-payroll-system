@@ -76,6 +76,8 @@ import GarnishmentPage from "@/pages/GarnishmentPage";
 import IbanTestPage from "@/pages/IbanTestPage";
 import SimpleIbanTest from "@/pages/SimpleIbanTest";
 import PartnerConsole from "@/pages/PartnerConsole";
+import Partner from "@/pages/Partner";
+import { OboProvider } from "@/contexts/OboContext";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 
@@ -109,9 +111,10 @@ function Router() {
   }
 
   return (
-    <Layout>
-      <CommandPalette open={open} onOpenChange={setOpen} />
-      <Switch>
+    <OboProvider>
+      <Layout>
+        <CommandPalette open={open} onOpenChange={setOpen} />
+        <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
         
@@ -200,9 +203,13 @@ function Router() {
         <Route path="/embed" component={EmbedPage} />
         <Route path="/ai-copilot" component={AICopilot} />
         <Route path="/partner-console" component={PartnerConsole} />
+        <Route path="/partner" nest>
+          <Partner />
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </Layout>
+    </OboProvider>
   );
 }
 

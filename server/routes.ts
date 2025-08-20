@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { oboMiddleware } from "./middleware/oboMiddleware";
 import { registerIbanValidationRoutes } from "./api/ibanValidation";
 import authRoutes from "./routes/auth";
 import authAPIRoutes from "./routes/auth";
@@ -90,6 +91,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize rules engine
   await initializeRulesEngine();
+
+  // Add OBO middleware for tenant context injection
+  app.use(oboMiddleware);
 
   // Comprehensive Authentication Routes
   app.use('/api/auth/v2', authRoutes);
