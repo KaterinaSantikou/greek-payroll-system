@@ -69,6 +69,7 @@ export class StatusPageService extends EventEmitter {
   private cacheRefreshInterval = 30000; // 30 seconds
   private monitoringInterval?: NodeJS.Timeout;
   private communicationTemplates: IncidentCommunicationTemplates;
+  private rcaService: any; // Will be imported dynamically
 
   constructor() {
     super();
@@ -85,6 +86,10 @@ export class StatusPageService extends EventEmitter {
 
   private async initializeService(): Promise<void> {
     try {
+      // Import RCA service dynamically to avoid circular dependency
+      const { RootCauseAnalysisService } = await import('./RootCauseAnalysisService');
+      this.rcaService = RootCauseAnalysisService.getInstance();
+      
       await this.createDefaultComponents();
       await this.startStatusMonitoring();
       console.log('📊 Status page service initialized');
@@ -584,6 +589,24 @@ export class StatusPageService extends EventEmitter {
 
       // Emit event for real-time updates
       this.emit('incident_created', { incident, communication });
+
+      // Auto-initiate RCA for major/critical incidents
+      if ((severity === 'major' || severity === 'critical') && this.rcaService) {
+        try {
+          await this.rcaService.createRCAAnalysis({
+            incidentId: incident.id,
+            methodology: severity === 'critical' ? 'timeline_analysis' : 'five_whys',
+            facilitator: 'system',
+            participants: ['incident_commander', 'technical_lead'],
+            severity: severity === 'critical' ? 'high' : 'medium',
+            title: `RCA for ${incident.title}`,
+            description: `Root cause analysis for incident: ${incident.description}`
+          });
+          console.log(`🔍 Auto-initiated RCA for ${severity} incident: ${incident.id}`);
+        } catch (error) {
+          console.error('Failed to auto-initiate RCA:', error);
+        }
+      }
 
       return { incident, communication };
     } catch (error) {

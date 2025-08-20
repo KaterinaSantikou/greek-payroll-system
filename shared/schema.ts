@@ -6328,6 +6328,94 @@ export type InsertStatusPageMaintenance = typeof statusPageMaintenances.$inferIn
 export type StatusPageSubscription = typeof statusPageSubscriptions.$inferSelect;
 export type InsertStatusPageSubscription = typeof statusPageSubscriptions.$inferInsert;
 
+// Root Cause Analysis (RCA) Tables
+
+// RCA Analyses - Main table for RCA processes
+export const rcaAnalyses = pgTable("rca_analyses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentId: varchar("incident_id").references(() => statusPageIncidents.id),
+  methodology: varchar("methodology", { length: 50 }).notNull(), // five_whys, fishbone_ishikawa, timeline_analysis, etc.
+  status: varchar("status", { length: 20 }).notNull().default("initiated"), // initiated, in_progress, review, approved, completed, archived
+  facilitator: varchar("facilitator").notNull(),
+  participants: varchar("participants").array().default([]),
+  severity: varchar("severity", { length: 20 }).notNull(), // low, medium, high, critical
+  title: varchar("title").notNull(),
+  description: text("description"),
+  analysisData: jsonb("analysis_data"), // Store methodology-specific data
+  estimatedDuration: integer("estimated_duration"), // in minutes
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  reviewedBy: varchar("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  approvedBy: varchar("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  createdBy: varchar("created_by"),
+  updatedBy: varchar("updated_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// RCA Findings - Individual findings from analysis
+export const rcaFindings = pgTable("rca_findings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  analysisId: varchar("analysis_id").notNull().references(() => rcaAnalyses.id),
+  category: varchar("category", { length: 100 }), // people, process, technology, environment, etc.
+  finding: text("finding").notNull(),
+  evidence: text("evidence"), // Supporting evidence for the finding
+  severity: varchar("severity", { length: 20 }).notNull(), // low, medium, high, critical
+  isRootCause: boolean("is_root_cause").default(false),
+  contributingFactors: text("contributing_factors"),
+  addedBy: varchar("added_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// RCA Action Items - Corrective and preventive actions
+export const rcaActionItems = pgTable("rca_action_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  analysisId: varchar("analysis_id").notNull().references(() => rcaAnalyses.id),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  actionType: varchar("action_type", { length: 50 }).default("corrective"), // corrective, preventive, detective
+  assignee: varchar("assignee").notNull(),
+  priority: varchar("priority", { length: 20 }).notNull(), // low, medium, high, critical
+  status: varchar("status", { length: 20 }).notNull().default("open"), // open, in_progress, completed, verified, cancelled
+  dueDate: timestamp("due_date"),
+  completedAt: timestamp("completed_at"),
+  verifiedAt: timestamp("verified_at"),
+  verifiedBy: varchar("verified_by"),
+  notes: text("notes"),
+  createdBy: varchar("created_by").notNull(),
+  updatedBy: varchar("updated_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// RCA Timeline - For timeline-based analysis
+export const rcaTimelines = pgTable("rca_timelines", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  analysisId: varchar("analysis_id").notNull().references(() => rcaAnalyses.id),
+  eventTime: timestamp("event_time").notNull(),
+  eventType: varchar("event_type", { length: 50 }), // normal_operation, warning, error, intervention, recovery
+  eventDescription: text("event_description").notNull(),
+  eventSource: varchar("event_source"), // system, human, external
+  impactLevel: varchar("impact_level", { length: 20 }), // none, low, medium, high, critical
+  evidence: text("evidence"),
+  addedBy: varchar("added_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type RCAAnalysis = typeof rcaAnalyses.$inferSelect;
+export type InsertRCAAnalysis = typeof rcaAnalyses.$inferInsert;
+
+export type RCAFinding = typeof rcaFindings.$inferSelect;
+export type InsertRCAFinding = typeof rcaFindings.$inferInsert;
+
+export type RCAActionItem = typeof rcaActionItems.$inferSelect;
+export type InsertRCAActionItem = typeof rcaActionItems.$inferInsert;
+
+export type RCATimeline = typeof rcaTimelines.$inferSelect;
+export type InsertRCATimeline = typeof rcaTimelines.$inferInsert;
+
 // Automated Runbooks System Schema
 
 // Runbook definitions and templates

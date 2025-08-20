@@ -330,6 +330,7 @@ function Router() {
             <Route path="/command-palette-demo" component={CommandPaletteDemo} />
             <Route path="/system-status" component={lazy(() => import("@/components/InAppStatusPage"))} />
             <Route path="/incident-communications" component={lazy(() => import("@/components/IncidentCommunicationManager"))} />
+            <Route path="/root-cause-analysis" component={lazy(() => import("@/components/RootCauseAnalysisManager"))} />
             <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
             <Route path="/data-import" component={DataImport} />
             <Route path="/zero-trust-security" component={ZeroTrustSecurityPage} />

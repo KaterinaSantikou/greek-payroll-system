@@ -2920,6 +2920,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.error('Failed to register incident templates routes:', error);
   }
+
+  // Register root cause analysis routes
+  try {
+    const rcaRoutes = (await import('./api/rca')).default;
+    app.use('/api/rca', rcaRoutes);
+  } catch (error) {
+    console.error('Failed to register RCA routes:', error);
+  }
   
   // Register forecasting API routes
   registerForecastingRoutes(app);
