@@ -14,6 +14,7 @@ import {
 } from "../../shared/schema";
 import { CalcProvenanceService } from "./CalcProvenanceService";
 import { SeveranceRulesService } from "./SeveranceRulesService";
+import { ExplanationTemplateService } from "./ExplanationTemplateService";
 import { eq, desc } from "drizzle-orm";
 
 /**
@@ -267,35 +268,51 @@ export class SeveranceFinalPayService {
       // 10. EXPLAINABILITY - BUILD GR/EN NARRATIVE
       // ========================================================================
       
-      const explanationGr = this.buildGreekExplanation(inputs, {
-        severanceAmount,
-        unpaidWages,
-        unusedLeaveAmount,
-        holidayAllowanceAmount,
-        proRataEasterBonus,
-        proRataChristmasBonus,
-        otherBalances,
-        grossTotal,
-        taxAmount,
-        socialSecurityAmount,
-        netTotal: roundedNetTotal,
-        finalPayLines
-      }, calculationSteps);
+      const explanationGr = ExplanationTemplateService.generateExplanationFromResult(
+        {
+          severanceAmount,
+          unpaidWages,
+          unusedLeaveAmount,
+          holidayAllowanceAmount,
+          proRataEasterBonus,
+          proRataChristmasBonus,
+          otherBalances,
+          grossTotal,
+          taxAmount,
+          socialSecurityAmount,
+          netTotal: roundedNetTotal,
+          refMonthly,
+          lastMonthlyWage: inputs.lastMonthlyWage
+        },
+        'gr',
+        inputs.effectiveDate,
+        serviceYears,
+        inputs.unpaidRegularDays || 0,
+        inputs.unusedLeaveDays
+      );
 
-      const explanationEn = this.buildEnglishExplanation(inputs, {
-        severanceAmount,
-        unpaidWages,
-        unusedLeaveAmount,
-        holidayAllowanceAmount,
-        proRataEasterBonus,
-        proRataChristmasBonus,
-        otherBalances,
-        grossTotal,
-        taxAmount,
-        socialSecurityAmount,
-        netTotal: roundedNetTotal,
-        finalPayLines
-      }, calculationSteps);
+      const explanationEn = ExplanationTemplateService.generateExplanationFromResult(
+        {
+          severanceAmount,
+          unpaidWages,
+          unusedLeaveAmount,
+          holidayAllowanceAmount,
+          proRataEasterBonus,
+          proRataChristmasBonus,
+          otherBalances,
+          grossTotal,
+          taxAmount,
+          socialSecurityAmount,
+          netTotal: roundedNetTotal,
+          refMonthly,
+          lastMonthlyWage: inputs.lastMonthlyWage
+        },
+        'en',
+        inputs.effectiveDate,
+        serviceYears,
+        inputs.unpaidRegularDays || 0,
+        inputs.unusedLeaveDays
+      );
 
       return {
         severanceAmount,
