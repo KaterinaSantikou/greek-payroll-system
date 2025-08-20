@@ -118,6 +118,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { registerSeveranceRoutes } = await import("./api/severanceApi");
   registerSeveranceRoutes(app);
 
+  // Garnishments & Court Orders API
+  const { registerGarnishmentRoutes } = await import("./api/garnishmentApi");
+  registerGarnishmentRoutes(app);
+
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();
   const glExportService = new GLExportService();

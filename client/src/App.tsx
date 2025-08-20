@@ -72,6 +72,7 @@ import EmbeddedPayroll from "@/pages/EmbeddedPayroll";
 import EmbedPage from "@/pages/EmbedPage";
 import { SeverancePage } from "@/pages/SeverancePage";
 import SeveranceTestPage from "@/pages/SeveranceTestPage";
+import GarnishmentPage from "@/pages/GarnishmentPage";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 
@@ -118,6 +119,7 @@ function Router() {
         <Route path="/exits" component={Exits} />
         <Route path="/severance" component={SeverancePage} />
         <Route path="/severance/test" component={SeveranceTestPage} />
+        <Route path="/garnishments" component={GarnishmentPage} />
         <Route path="/teams-roles" component={TeamsRoles} />
         
         {/* Time Section */}

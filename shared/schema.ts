@@ -823,6 +823,156 @@ export const insertTimesheetSchema = createInsertSchema(timesheets).omit({
 export type User = typeof users.$inferSelect;
 export type UpsertUser = typeof users.$inferInsert;
 export type InsertUser = typeof users.$inferInsert;
+
+// =============================================================================
+// GARNISHMENTS & COURT ORDERS SCHEMA
+// =============================================================================
+
+// Garnishment orders for court-mandated deductions
+export const garnishmentOrders = pgTable("garnishment_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").notNull(),
+  orderNumber: varchar("order_number").notNull(), // Court order number
+  creditorName: varchar("creditor_name").notNull(),
+  creditorAccountCode: varchar("creditor_account_code"), // GL account for liability posting
+  orderType: varchar("order_type").notNull(), // 'child_support', 'tax_levy', 'wage_garnishment', 'student_loan'
+  priority: integer("priority").notNull().default(1), // 1 = highest priority
+  status: varchar("status").notNull().default('active'), // 'active', 'suspended', 'satisfied', 'terminated'
+  
+  // Deduction configuration
+  deductionType: varchar("deduction_type").notNull(), // 'fixed_amount', 'percentage', 'percentage_with_cap'
+  deductionAmount: decimal("deduction_amount", { precision: 10, scale: 2 }),
+  deductionPercentage: decimal("deduction_percentage", { precision: 5, scale: 4 }),
+  maximumAmount: decimal("maximum_amount", { precision: 10, scale: 2 }), // Per-pay-period cap
+  
+  // Balance tracking
+  totalOrderAmount: decimal("total_order_amount", { precision: 12, scale: 2 }), // Total owed (if known)
+  currentBalance: decimal("current_balance", { precision: 12, scale: 2 }).default('0.00'),
+  totalDeducted: decimal("total_deducted", { precision: 12, scale: 2 }).default('0.00'),
+  
+  // Net pay protection
+  protectedNetAmount: decimal("protected_net_amount", { precision: 10, scale: 2 }), // Minimum net pay to preserve
+  protectedPercentage: decimal("protected_percentage", { precision: 5, scale: 4 }), // % of gross to protect
+  
+  // Legal details
+  courtName: varchar("court_name"),
+  orderDate: date("order_date").notNull(),
+  effectiveDate: date("effective_date").notNull(),
+  expirationDate: date("expiration_date"),
+  
+  // Administrative
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by").notNull(),
+  notes: text("notes")
+});
+
+// Individual garnishment transactions per payroll run
+export const garnishmentTransactions = pgTable("garnishment_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  garnishmentOrderId: varchar("garnishment_order_id").notNull().references(() => garnishmentOrders.id),
+  employeeId: varchar("employee_id").notNull(),
+  payrollRunId: varchar("payroll_run_id"),
+  payPeriodStart: date("pay_period_start").notNull(),
+  payPeriodEnd: date("pay_period_end").notNull(),
+  
+  // Calculation details
+  grossPay: decimal("gross_pay", { precision: 10, scale: 2 }).notNull(),
+  disposableIncome: decimal("disposable_income", { precision: 10, scale: 2 }).notNull(), // After taxes/mandatory deductions
+  calculatedAmount: decimal("calculated_amount", { precision: 10, scale: 2 }).notNull(), // Before caps/protection
+  deductedAmount: decimal("deducted_amount", { precision: 10, scale: 2 }).notNull(), // Actual amount deducted
+  carriedForwardAmount: decimal("carried_forward_amount", { precision: 10, scale: 2 }).default('0.00'), // Amount that couldn't be deducted
+  
+  // Net pay protection details
+  netPayBeforeGarnishment: decimal("net_pay_before_garnishment", { precision: 10, scale: 2 }).notNull(),
+  protectedAmount: decimal("protected_amount", { precision: 10, scale: 2 }).notNull(), // Amount protected from garnishment
+  netPayAfterGarnishment: decimal("net_pay_after_garnishment", { precision: 10, scale: 2 }).notNull(),
+  
+  // GL posting reference
+  glTransactionId: varchar("gl_transaction_id"), // Reference to GL posting
+  
+  // Status and audit
+  status: varchar("status").notNull().default('processed'), // 'processed', 'reversed', 'adjusted'
+  processedAt: timestamp("processed_at").defaultNow(),
+  calculationLog: jsonb("calculation_log") // Detailed calculation breakdown
+});
+
+// Running balance and carry-forward tracking
+export const garnishmentBalances = pgTable("garnishment_balances", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  garnishmentOrderId: varchar("garnishment_order_id").notNull().references(() => garnishmentOrders.id),
+  employeeId: varchar("employee_id").notNull(),
+  
+  // Balance tracking
+  totalOrderAmount: decimal("total_order_amount", { precision: 12, scale: 2 }),
+  totalDeducted: decimal("total_deducted", { precision: 12, scale: 2 }).default('0.00'),
+  currentBalance: decimal("current_balance", { precision: 12, scale: 2 }).default('0.00'),
+  carriedForwardAmount: decimal("carried_forward_amount", { precision: 12, scale: 2 }).default('0.00'),
+  
+  // Status
+  status: varchar("status").notNull().default('active'), // 'active', 'satisfied', 'suspended'
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  lastTransactionId: varchar("last_transaction_id").references(() => garnishmentTransactions.id)
+});
+
+// Type definitions for garnishments
+export type GarnishmentOrder = typeof garnishmentOrders.$inferSelect;
+export type InsertGarnishmentOrder = typeof garnishmentOrders.$inferInsert;
+export type GarnishmentTransaction = typeof garnishmentTransactions.$inferSelect;
+export type InsertGarnishmentTransaction = typeof garnishmentTransactions.$inferInsert;
+export type GarnishmentBalance = typeof garnishmentBalances.$inferSelect;
+export type InsertGarnishmentBalance = typeof garnishmentBalances.$inferInsert;
+
+// Garnishment calculation input schema
+export const garnishmentCalculationInputsSchema = z.object({
+  employeeId: z.string(),
+  grossPay: z.number().min(0),
+  disposableIncome: z.number().min(0),
+  netPayBeforeGarnishments: z.number().min(0),
+  payPeriodStart: z.string(),
+  payPeriodEnd: z.string(),
+  payrollRunId: z.string().optional(),
+  activeGarnishments: z.array(z.object({
+    id: z.string(),
+    orderNumber: z.string(),
+    creditorName: z.string(),
+    orderType: z.string(),
+    priority: z.number(),
+    deductionType: z.string(),
+    deductionAmount: z.number().optional(),
+    deductionPercentage: z.number().optional(),
+    maximumAmount: z.number().optional(),
+    protectedNetAmount: z.number().optional(),
+    protectedPercentage: z.number().optional(),
+    currentBalance: z.number(),
+    carriedForwardAmount: z.number().default(0)
+  }))
+});
+
+export type GarnishmentCalculationInputs = z.infer<typeof garnishmentCalculationInputsSchema>;
+
+// Garnishment calculation output schema
+export interface GarnishmentCalculationResult {
+  totalGarnishmentAmount: number;
+  netPayAfterGarnishments: number;
+  garnishmentDetails: {
+    garnishmentId: string;
+    orderNumber: string;
+    creditorName: string;
+    calculatedAmount: number;
+    deductedAmount: number;
+    carriedForwardAmount: number;
+    protectedAmount: number;
+    calculationMethod: string;
+    glAccount: string;
+  }[];
+  protectionSummary: {
+    totalProtectedAmount: number;
+    netPayFloorApplied: boolean;
+    carriedForwardTotal: number;
+  };
+  calculationLog: string[];
+}
 export type UpdateUser = Partial<InsertUser>;
 
 // Authentication type exports
@@ -4039,4 +4189,45 @@ export const insertMakerCheckerApprovalSchema = createInsertSchema(makerCheckerA
 export const insertDocumentTrailSchema = createInsertSchema(documentTrail).omit({
   id: true,
   createdAt: true,
+});
+
+// Relations for garnishments
+export const garnishmentOrdersRelations = relations(garnishmentOrders, ({ many }) => ({
+  transactions: many(garnishmentTransactions),
+  balances: many(garnishmentBalances),
+}));
+
+export const garnishmentTransactionsRelations = relations(garnishmentTransactions, ({ one }) => ({
+  garnishmentOrder: one(garnishmentOrders, {
+    fields: [garnishmentTransactions.garnishmentOrderId],
+    references: [garnishmentOrders.id],
+  }),
+}));
+
+export const garnishmentBalancesRelations = relations(garnishmentBalances, ({ one }) => ({
+  garnishmentOrder: one(garnishmentOrders, {
+    fields: [garnishmentBalances.garnishmentOrderId],
+    references: [garnishmentOrders.id],
+  }),
+  lastTransaction: one(garnishmentTransactions, {
+    fields: [garnishmentBalances.lastTransactionId],
+    references: [garnishmentTransactions.id],
+  }),
+}));
+
+// Garnishment Zod schemas
+export const insertGarnishmentOrderSchema = createInsertSchema(garnishmentOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertGarnishmentTransactionSchema = createInsertSchema(garnishmentTransactions).omit({
+  id: true,
+  processedAt: true,
+});
+
+export const insertGarnishmentBalanceSchema = createInsertSchema(garnishmentBalances).omit({
+  id: true,
+  lastUpdated: true,
 });
