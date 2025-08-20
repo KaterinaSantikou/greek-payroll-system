@@ -595,12 +595,12 @@ export default function Dashboard() {
         </div>
 
         {/* Dashboard Content */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           
           {/* Primary CTA - Run Payroll Section */}
           <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-lg">
             <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6">
                 <div className="flex-1 space-y-4">
                   <div className="flex items-center gap-3">
                     <Zap className="h-6 w-6 flex-shrink-0" />
@@ -621,7 +621,7 @@ export default function Dashboard() {
                   </p>
                   
                   {/* Quick Stats */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-2">
                     <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
                       <div className="text-blue-200 text-xs font-medium mb-1">
                         {locale === 'el' ? 'Εργαζόμενοι' : 'Employees'}
@@ -650,11 +650,11 @@ export default function Dashboard() {
                   </div>
                 </div>
                 
-                <div className="flex flex-col gap-3 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row lg:flex-col gap-3 flex-shrink-0 w-full lg:w-auto">
                   <Button 
                     size="lg" 
                     variant="secondary" 
-                    className="text-blue-600 bg-white hover:bg-blue-50 px-8 py-3 text-lg font-medium whitespace-nowrap"
+                    className="text-blue-600 bg-white hover:bg-blue-50 px-6 sm:px-8 py-3 text-base sm:text-lg font-medium whitespace-nowrap w-full sm:w-auto touch-manipulation min-h-[48px]"
                     onClick={payrollStatus.stage === 'draft' ? handleResumePayroll : handleRunPayroll}
                     disabled={isRunningPayroll}
                   >
@@ -694,34 +694,34 @@ export default function Dashboard() {
 
           {/* Critical Today Strip */}
           <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-orange-800 dark:text-orange-200 flex items-center gap-2">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-3">
+                <h3 className="font-semibold text-orange-800 dark:text-orange-200 flex items-center gap-2 text-base sm:text-lg">
                   <AlertCircle className="h-5 w-5" />
                   {t('dashboard.critical_today')}
                 </h3>
-                <span className="text-xs text-orange-600 dark:text-orange-400">
+                <span className="text-xs sm:text-sm text-orange-600 dark:text-orange-400">
                   {t('dashboard.updated')} {formatTimeAgo(lastUpdated)}
                 </span>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                 {/* Next Pay Date */}
-                <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800/50 rounded-lg border">
-                  <CalendarIcon className="h-8 w-8 text-blue-600" />
-                  <div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.next_payday')}</div>
-                    <div className="font-semibold text-sm">31 Ιαν 2025</div>
-                    <div className="text-xs text-green-600">{t('dashboard.on_track')}</div>
+                <div className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800/50 rounded-lg border min-h-[80px] touch-manipulation">
+                  <CalendarIcon className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{t('dashboard.next_payday')}</div>
+                    <div className="font-semibold text-sm sm:text-base truncate">31 Ιαν 2025</div>
+                    <div className="text-xs text-green-600 truncate">{t('dashboard.on_track')}</div>
                   </div>
                 </div>
 
                 {/* Items to Approve */}
-                <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800/50 rounded-lg border">
-                  <CheckSquare className="h-8 w-8 text-orange-600" />
-                  <div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.to_approve')}</div>
-                    <div className="font-semibold text-sm">{actionInboxData.approvals.reduce((sum, a) => sum + a.count, 0)} {t('dashboard.items')}</div>
+                <div className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800/50 rounded-lg border min-h-[80px] touch-manipulation">
+                  <CheckSquare className="h-8 w-8 sm:h-10 sm:w-10 text-orange-600 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{t('dashboard.to_approve')}</div>
+                    <div className="font-semibold text-sm sm:text-base truncate">{actionInboxData.approvals.reduce((sum, a) => sum + a.count, 0)} {t('dashboard.items')}</div>
                     <div className="text-xs text-orange-600">
                       {locale === 'el' ? 'Χρειάζεται Προσοχή' : 'Needs Attention'}
                     </div>
@@ -752,7 +752,7 @@ export default function Dashboard() {
           </Card>
 
           {/* Greek Market Essentials & Main Dashboard Grid */}
-          <div className="grid lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
             
             {/* Greek Market Essentials (1/4 width) */}
             <div className="space-y-4">
@@ -830,7 +830,7 @@ export default function Dashboard() {
             </div>
 
             {/* Action Inbox & Performance (3/4 width) */}
-            <div className="lg:col-span-3 space-y-6">
+            <div className="lg:col-span-3 space-y-4 sm:space-y-6">
               <Collapsible open={expandedSections.actionInbox} onOpenChange={() => toggleSection('actionInbox')}>
                 <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
                   <CollapsibleTrigger asChild>
@@ -889,7 +889,7 @@ export default function Dashboard() {
                           {actionInboxData.approvals.reduce((sum, item) => sum + item.count, 0)}
                         </Badge>
                       </h4>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {actionInboxData.approvals.map((item, idx) => (
                           <Button 
                             key={idx} 
@@ -1156,7 +1156,7 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
                 
                 <div className="lg:col-span-2">
                   <h4 className="font-semibold mb-3">Run Progress</h4>
@@ -1247,7 +1247,7 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent className="py-3">
-              <div className="grid lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
                 
                 <div className="lg:col-span-2">
                   <div className="flex items-center justify-between mb-3">
@@ -1538,7 +1538,7 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
                 
                 <div>
                   <h4 className="font-semibold mb-3 flex items-center gap-2">
