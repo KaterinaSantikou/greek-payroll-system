@@ -6272,6 +6272,62 @@ export const insertOnCallMetricsSchema = createInsertSchema(onCallMetrics).omit(
   createdAt: true,
 });
 
+// Status Page System Schema
+export const statusPageComponents = pgTable("status_page_components", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  status: varchar("status", { length: 50 }).notNull().default("operational"), // operational, degraded_performance, partial_outage, major_outage, under_maintenance
+  category: varchar("category", { length: 100 }).notNull(), // core, government, infrastructure, payments, communications
+  lastStatusMessage: text("last_status_message"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const statusPageIncidents = pgTable("status_page_incidents", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  severity: varchar("severity", { length: 50 }).notNull(), // minor, major, critical
+  status: varchar("status", { length: 50 }).notNull().default("investigating"), // investigating, identified, monitoring, resolved
+  affectedComponents: jsonb("affected_components").$type<string[]>().notNull().default([]),
+  updates: text("updates"),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const statusPageMaintenances = pgTable("status_page_maintenances", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  status: varchar("status", { length: 50 }).notNull().default("scheduled"), // scheduled, in_progress, completed, cancelled
+  scheduledStart: timestamp("scheduled_start").notNull(),
+  scheduledEnd: timestamp("scheduled_end").notNull(),
+  actualStart: timestamp("actual_start"),
+  actualEnd: timestamp("actual_end"),
+  affectedComponents: jsonb("affected_components").$type<string[]>().notNull().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const statusPageSubscriptions = pgTable("status_page_subscriptions", {
+  id: varchar("id", { length: 255 }).primaryKey(),
+  email: varchar("email", { length: 255 }).notNull(),
+  subscribedComponents: jsonb("subscribed_components").$type<string[]>().notNull().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+  isActive: boolean("is_active").notNull().default(true),
+});
+
+export type StatusPageComponent = typeof statusPageComponents.$inferSelect;
+export type InsertStatusPageComponent = typeof statusPageComponents.$inferInsert;
+export type StatusPageIncident = typeof statusPageIncidents.$inferSelect;
+export type InsertStatusPageIncident = typeof statusPageIncidents.$inferInsert;
+export type StatusPageMaintenance = typeof statusPageMaintenances.$inferSelect;
+export type InsertStatusPageMaintenance = typeof statusPageMaintenances.$inferInsert;
+export type StatusPageSubscription = typeof statusPageSubscriptions.$inferSelect;
+export type InsertStatusPageSubscription = typeof statusPageSubscriptions.$inferInsert;
+
 // Automated Runbooks System Schema
 
 // Runbook definitions and templates

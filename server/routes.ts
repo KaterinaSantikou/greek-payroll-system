@@ -2904,6 +2904,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.error('Failed to register automated runbooks routes:', error);
   }
+
+  // Register status page routes
+  try {
+    const statusPageRoutes = (await import('./api/statusPage')).default;
+    app.use('/api/status', statusPageRoutes);
+  } catch (error) {
+    console.error('Failed to register status page routes:', error);
+  }
   
   // Register forecasting API routes
   registerForecastingRoutes(app);

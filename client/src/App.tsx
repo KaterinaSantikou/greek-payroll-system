@@ -41,6 +41,9 @@ const HotelTipPooling = lazy(() => import("@/pages/hotelTipPooling"));
 const UXArchitecture = lazy(() => import("@/pages/uxArchitecture"));
 const Compliance = lazy(() => import("@/pages/compliance"));
 
+// Status page components
+const PublicStatus = lazy(() => import("@/pages/public-status"));
+
 // Analytics and reporting - lazy load with chunking
 const Analytics = lazy(() => import("@/pages/analytics"));
 const Deployment = lazy(() => import("@/pages/deployment"));
@@ -195,6 +198,10 @@ function Router() {
             <Route path="/auth/forgot-password" component={ForgotPassword} />
             <Route path="/auth/reset-password" component={ResetPassword} />
             <Route path="/auth/sso" component={SSO} />
+            
+            {/* Public status page - accessible without authentication */}
+            <Route path="/status" component={PublicStatus} />
+            
             {/* Demo pages accessible without authentication */}
             <Route path="/onboarding-chatbot" component={lazy(() => import("@/pages/OnboardingChatbotDemo"))} />
             <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo"))} />
@@ -321,6 +328,7 @@ function Router() {
             <Route path="/explanation-demo" component={ExplanationDemo} />
             <Route path="/ai-engines-demo" component={AIEnginesDemo} />
             <Route path="/command-palette-demo" component={CommandPaletteDemo} />
+            <Route path="/system-status" component={lazy(() => import("@/components/InAppStatusPage"))} />
             <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
             <Route path="/data-import" component={DataImport} />
             <Route path="/zero-trust-security" component={ZeroTrustSecurityPage} />
