@@ -114,6 +114,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // Initialize GDPR compliance framework
+  try {
+    const { GDPRComplianceInitializer } = await import('./services/GDPRComplianceInitializer');
+    await GDPRComplianceInitializer.initialize();
+    console.log('🛡️  GDPR compliance framework initialized');
+  } catch (error) {
+    console.error('❌ GDPR compliance initialization failed:', error);
+    // Continue with reduced compliance in development
+    if (process.env.NODE_ENV === 'production') {
+      throw error; // Fail hard in production
+    }
+  }
+
   // Apply global MFA enforcement middleware (after auth but before other routes)
   app.use(mfaEnforcement.enforce());
 
@@ -2863,6 +2876,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // High-security operations require fresh MFA
   app.use('/api/admin', MfaEnforcementMiddleware.requireFreshMfa());
   app.use('/api/security', MfaEnforcementMiddleware.requireFreshMfa());
+
+  // GDPR Compliance API routes
+  app.get('/api/gdpr/status', async (req, res) => {
+    try {
+      const { GDPRComplianceInitializer } = await import('./services/GDPRComplianceInitializer');
+      const status = GDPRComplianceInitializer.getComplianceStatus();
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get GDPR compliance status' });
+    }
+  });
+
+  app.get('/api/gdpr/dashboard', async (req, res) => {
+    try {
+      const { GDPRComplianceInitializer } = await import('./services/GDPRComplianceInitializer');
+      const dashboard = await GDPRComplianceInitializer.getComplianceDashboard();
+      res.json(dashboard);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get GDPR compliance dashboard' });
+    }
+  });
+
+  app.get('/api/gdpr/health-check', async (req, res) => {
+    try {
+      const { GDPRComplianceInitializer } = await import('./services/GDPRComplianceInitializer');
+      const healthCheck = await GDPRComplianceInitializer.runComplianceHealthCheck();
+      res.json(healthCheck);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to run GDPR compliance health check' });
+    }
+  });
+
+  app.get('/api/gdpr/report', async (req, res) => {
+    try {
+      const language = (req.query.language as 'el' | 'en') || 'en';
+      const { GDPRComplianceInitializer } = await import('./services/GDPRComplianceInitializer');
+      const report = await GDPRComplianceInitializer.generateComplianceReport(language);
+      res.json(report);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to generate GDPR compliance report' });
+    }
+  });
+
+  // Cookie Consent API routes
+  app.get('/api/cookies/banner/:language', async (req, res) => {
+    try {
+      const language = req.params.language as 'el' | 'en';
+      const { CookieConsentService } = await import('./services/CookieConsentService');
+      const banner = CookieConsentService.getConsentBanner(language);
+      res.json(banner);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get consent banner' });
+    }
+  });
+
+  app.post('/api/cookies/consent', async (req, res) => {
+    try {
+      const { CookieConsentService } = await import('./services/CookieConsentService');
+      const consent = await CookieConsentService.recordConsent(req.body);
+      res.json(consent);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to record consent' });
+    }
+  });
+
+  app.get('/api/cookies/policy/:language', async (req, res) => {
+    try {
+      const language = req.params.language as 'el' | 'en';
+      const { CookieConsentService } = await import('./services/CookieConsentService');
+      const policy = CookieConsentService.getCookiePolicy(language);
+      res.json(policy);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get cookie policy' });
+    }
+  });
+
+  // RTBF (Right to be Forgotten) API routes
+  app.post('/api/rtbf/request', async (req, res) => {
+    try {
+      const { RTBFService } = await import('./services/RTBFService');
+      const request = await RTBFService.submitErasureRequest(req.body);
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to submit erasure request' });
+    }
+  });
+
+  app.get('/api/rtbf/request/:id', async (req, res) => {
+    try {
+      const { RTBFService } = await import('./services/RTBFService');
+      const request = RTBFService.getErasureRequest(req.params.id);
+      if (!request) {
+        return res.status(404).json({ error: 'Erasure request not found' });
+      }
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get erasure request' });
+    }
+  });
 
   // Register Hotel Tip Pooling API routes
   const { registerHotelTipPoolingRoutes } = await import("./api/hotelTipPooling");
