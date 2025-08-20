@@ -29,137 +29,159 @@ import { eq, desc, and, sql } from "drizzle-orm";
 export class GarnishmentService {
   
   /**
-   * Calculate garnishments for a payroll period with net pay protection
-   * Implements proper stacking order and legal protection limits
+   * Calc Hook (Engine Internal)
+   * 
+   * Input: employee_id, run_context (period, run_type), pre_tax, taxes, contribs, net_before_garnishments.
+   * Output: garnishment_lines[], net_after_garnishments.
+   * 
+   * Calculation Logic (per employee, per run)
    */
-  static async calculateGarnishments(inputs: GarnishmentCalculationInputs): Promise<GarnishmentCalculationResult> {
+  static async calculateGarnishments(inputs: {
+    employeeId: string;
+    runContext: { period: string; runType: string; };
+    preTax: number;
+    taxes: number;
+    contribs: number;
+    netBeforeGarnishments: number;
+    activeGarnishments?: any[];
+  }): Promise<{
+    garnishmentLines: Array<{
+      type: string;
+      creditor: string;
+      orderRef: string;
+      amount: number;
+      remainingBalance: number;
+      glAccount: string;
+      description: string;
+    }>;
+    netAfterGarnishments: number;
+    calculationLog: string[];
+  }> {
     const calculationLog: string[] = [];
-    const garnishmentDetails: any[] = [];
+    const garnishmentLines: Array<{
+      type: string;
+      creditor: string;
+      orderRef: string;
+      amount: number;
+      remainingBalance: number;
+      glAccount: string;
+      description: string;
+    }> = [];
     
     calculationLog.push(`Starting garnishment calculation for employee ${inputs.employeeId}`);
-    calculationLog.push(`Gross Pay: $${inputs.grossPay.toFixed(2)}, Disposable Income: $${inputs.disposableIncome.toFixed(2)}`);
-    calculationLog.push(`Net Pay Before Garnishments: $${inputs.netPayBeforeGarnishments.toFixed(2)}`);
+    calculationLog.push(`Pre-tax: €${inputs.preTax.toFixed(2)}, Taxes: €${inputs.taxes.toFixed(2)}, Contribs: €${inputs.contribs.toFixed(2)}`);
+    calculationLog.push(`Net Before Garnishments: €${inputs.netBeforeGarnishments.toFixed(2)}`);
     
-    // Sort garnishments by priority (1 = highest priority)
-    const sortedGarnishments = [...inputs.activeGarnishments].sort((a, b) => a.priority - b.priority);
-    calculationLog.push(`Processing ${sortedGarnishments.length} garnishments in priority order`);
+    // Definitions: DisposableNet = Net after taxes & statutory contributions, before any garnishments.
+    let disposableNet = inputs.netBeforeGarnishments;
+    calculationLog.push(`DisposableNet: €${disposableNet.toFixed(2)}`);
     
-    let remainingNetPay = inputs.netPayBeforeGarnishments;
-    let totalGarnishmentAmount = 0;
-    let totalCarriedForward = 0;
-    let totalProtectedAmount = 0;
+    // Get active garnishments for this employee
+    const activeGarnishments = inputs.activeGarnishments || 
+      await this.getActiveGarnishments(inputs.employeeId);
     
-    // Apply federal/state minimum protection (typically 30x federal minimum wage per week)
-    const FEDERAL_MIN_WAGE = 7.25;
-    const WEEKLY_PROTECTION_MULTIPLIER = 30;
-    const federalProtectionFloor = FEDERAL_MIN_WAGE * WEEKLY_PROTECTION_MULTIPLIER; // $217.50/week
+    // Orders processed by ascending priority, then by created_at.
+    const sortedOrders = [...activeGarnishments].sort((a, b) => {
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
     
-    // Calculate per-pay-period protection (assuming bi-weekly)
-    const payPeriodProtectionFloor = federalProtectionFloor * 2; // $435 bi-weekly
-    calculationLog.push(`Federal protection floor: $${payPeriodProtectionFloor.toFixed(2)} per pay period`);
+    calculationLog.push(`Processing ${sortedOrders.length} orders by priority, then created_at`);
     
-    // Process each garnishment in priority order
-    for (const garnishment of sortedGarnishments) {
-      calculationLog.push(`--- Processing Garnishment: ${garnishment.orderNumber} (${garnishment.creditorName}) ---`);
+    let collectedYtd = 0; // Track year-to-date collections
+    
+    // For each active order
+    for (const order of sortedOrders) {
+      calculationLog.push(`--- Processing Order: ${order.orderRef} (${order.creditorName}) Priority ${order.priority} ---`);
       
-      // Calculate base deduction amount
-      let calculatedAmount = 0;
-      let calculationMethod = '';
+      // Skip if DisposableNet is at or below protected floor
+      const protectedNetFloor = order.protectedNetFloor || 0;
+      if (disposableNet <= protectedNetFloor) {
+        calculationLog.push(`Skipping - DisposableNet (€${disposableNet.toFixed(2)}) <= protected floor (€${protectedNetFloor.toFixed(2)})`);
+        continue;
+      }
       
-      if (garnishment.deductionType === 'fixed_amount' && garnishment.deductionAmount) {
-        calculatedAmount = garnishment.deductionAmount;
-        calculationMethod = `Fixed amount: $${garnishment.deductionAmount}`;
+      // Compute candidate
+      let candidate = 0;
+      
+      if (order.method === 'fixed_amount') {
+        candidate = Number(order.amount || 0);
+        calculationLog.push(`Fixed amount candidate: €${candidate.toFixed(2)}`);
         
-      } else if (garnishment.deductionType === 'percentage' && garnishment.deductionPercentage) {
-        calculatedAmount = inputs.disposableIncome * (garnishment.deductionPercentage / 100);
-        calculationMethod = `${garnishment.deductionPercentage}% of disposable income ($${inputs.disposableIncome.toFixed(2)})`;
+      } else if (order.method === 'percent_of_disposable_net') {
+        const basePercent = Number(order.percent || 0) / 100;
+        const maxPercentCap = order.maxPercentCap ? Number(order.maxPercentCap) / 100 : 1.0;
         
-      } else if (garnishment.deductionType === 'percentage_with_cap' && garnishment.deductionPercentage) {
-        calculatedAmount = inputs.disposableIncome * (garnishment.deductionPercentage / 100);
-        if (garnishment.maximumAmount && calculatedAmount > garnishment.maximumAmount) {
-          calculatedAmount = garnishment.maximumAmount;
-          calculationMethod = `${garnishment.deductionPercentage}% of disposable income, capped at $${garnishment.maximumAmount}`;
-        } else {
-          calculationMethod = `${garnishment.deductionPercentage}% of disposable income ($${inputs.disposableIncome.toFixed(2)})`;
+        candidate = Math.min(
+          disposableNet * basePercent,
+          disposableNet * maxPercentCap
+        );
+        
+        calculationLog.push(`Percent candidate: min(€${disposableNet.toFixed(2)} * ${(basePercent*100).toFixed(2)}%, €${disposableNet.toFixed(2)} * ${(maxPercentCap*100).toFixed(2)}%) = €${candidate.toFixed(2)}`);
+      }
+      
+      // Apply per-run cap if set
+      if (order.perRunCap && candidate > Number(order.perRunCap)) {
+        candidate = Number(order.perRunCap);
+        calculationLog.push(`Applied per-run cap: €${candidate.toFixed(2)}`);
+      }
+      
+      // Ensure protected net floor: deduction = min(candidate, max(0, DisposableNet - protected_net_floor))
+      const maxDeductible = Math.max(0, disposableNet - protectedNetFloor);
+      let deduction = Math.min(candidate, maxDeductible);
+      
+      calculationLog.push(`Protected floor enforcement: min(€${candidate.toFixed(2)}, max(0, €${disposableNet.toFixed(2)} - €${protectedNetFloor.toFixed(2)})) = €${deduction.toFixed(2)}`);
+      
+      // If total_balance present: deduction = min(deduction, total_balance - collected_ytd)
+      if (order.totalBalance && deduction > 0) {
+        const remainingBalance = Number(order.totalBalance) - collectedYtd;
+        if (deduction > remainingBalance) {
+          deduction = Math.max(0, remainingBalance);
+          calculationLog.push(`Limited by remaining balance: €${deduction.toFixed(2)} (€${order.totalBalance} - €${collectedYtd.toFixed(2)} collected YTD)`);
         }
       }
       
-      calculationLog.push(`Calculated amount: $${calculatedAmount.toFixed(2)} (${calculationMethod})`);
-      
-      // Apply per-period maximum if set
-      if (garnishment.maximumAmount && calculatedAmount > garnishment.maximumAmount) {
-        calculatedAmount = garnishment.maximumAmount;
-        calculationLog.push(`Applied per-period cap: $${calculatedAmount.toFixed(2)}`);
-      }
-      
-      // Add any carried forward amount from previous periods
-      const totalOwedThisPeriod = calculatedAmount + (garnishment.carriedForwardAmount || 0);
-      calculationLog.push(`Total owed (including carry-forward $${(garnishment.carriedForwardAmount || 0).toFixed(2)}): $${totalOwedThisPeriod.toFixed(2)}`);
-      
-      // Determine protected amount for this employee's specific garnishment
-      let specificProtectedAmount = payPeriodProtectionFloor;
-      
-      if (garnishment.protectedNetAmount) {
-        specificProtectedAmount = Math.max(specificProtectedAmount, garnishment.protectedNetAmount);
-        calculationLog.push(`Using order-specific protection amount: $${garnishment.protectedNetAmount.toFixed(2)}`);
-      } else if (garnishment.protectedPercentage) {
-        const percentageProtection = inputs.grossPay * (garnishment.protectedPercentage / 100);
-        specificProtectedAmount = Math.max(specificProtectedAmount, percentageProtection);
-        calculationLog.push(`Using order-specific protection percentage: ${garnishment.protectedPercentage}% of gross ($${percentageProtection.toFixed(2)})`);
-      }
-      
-      // Calculate maximum deductible without violating net pay protection
-      const maxDeductible = Math.max(0, remainingNetPay - specificProtectedAmount);
-      calculationLog.push(`Remaining net pay: $${remainingNetPay.toFixed(2)}, Protected amount: $${specificProtectedAmount.toFixed(2)}`);
-      calculationLog.push(`Maximum deductible: $${maxDeductible.toFixed(2)}`);
-      
-      // Determine actual deduction amount
-      let actualDeduction = Math.min(totalOwedThisPeriod, maxDeductible);
-      let carriedForwardAmount = Math.max(0, totalOwedThisPeriod - actualDeduction);
-      
-      // Handle balance limits (don't deduct more than remaining balance)
-      if (garnishment.currentBalance > 0 && actualDeduction > garnishment.currentBalance) {
-        carriedForwardAmount = 0; // No carry forward if balance is fully satisfied
-        actualDeduction = garnishment.currentBalance;
-        calculationLog.push(`Limited deduction to remaining balance: $${actualDeduction.toFixed(2)}`);
-      }
-      
-      calculationLog.push(`Actual deduction: $${actualDeduction.toFixed(2)}, Carried forward: $${carriedForwardAmount.toFixed(2)}`);
-      
       // Update running totals
-      totalGarnishmentAmount += actualDeduction;
-      totalCarriedForward += carriedForwardAmount;
-      totalProtectedAmount += (totalOwedThisPeriod - actualDeduction); // Amount protected from deduction
-      remainingNetPay -= actualDeduction;
+      if (deduction > 0) {
+        disposableNet -= deduction;
+        collectedYtd += deduction;
+        
+        const remainingBalance = order.totalBalance ? 
+          Math.max(0, Number(order.totalBalance) - collectedYtd) : 0;
+        
+        // Emit payslip line: GARN_{type} with creditor + ref, amount, and remaining balance
+        garnishmentLines.push({
+          type: `GARN_${order.type.toUpperCase()}`,
+          creditor: order.creditorName,
+          orderRef: order.orderRef,
+          amount: deduction,
+          remainingBalance,
+          glAccount: order.creditorIban || `2200-GARN-${order.type.toUpperCase()}`,
+          description: `Garnishment - ${order.creditorName} - Ref ${order.orderRef}`
+        });
+        
+        calculationLog.push(`Deducted: €${deduction.toFixed(2)}, DisposableNet now: €${disposableNet.toFixed(2)}, Remaining balance: €${remainingBalance.toFixed(2)}`);
+      } else {
+        calculationLog.push(`No deduction this run - insufficient DisposableNet after protection`);
+      }
       
-      // Store garnishment details
-      garnishmentDetails.push({
-        garnishmentId: garnishment.id,
-        orderNumber: garnishment.orderNumber,
-        creditorName: garnishment.creditorName,
-        calculatedAmount,
-        deductedAmount: actualDeduction,
-        carriedForwardAmount,
-        protectedAmount: totalOwedThisPeriod - actualDeduction,
-        calculationMethod,
-        glAccount: garnishment.creditorAccountCode || `2200-${garnishment.orderType.toUpperCase()}` // Default GL liability account
-      });
+      // Guarantee: DisposableNet never < protected_net_floor and never negative
+      if (disposableNet < 0) {
+        calculationLog.push(`ERROR: DisposableNet went negative (€${disposableNet.toFixed(2)}) - this should not happen`);
+        disposableNet = Math.max(disposableNet, 0);
+      }
     }
     
-    calculationLog.push(`--- Final Totals ---`);
-    calculationLog.push(`Total Garnishment Amount: $${totalGarnishmentAmount.toFixed(2)}`);
-    calculationLog.push(`Net Pay After Garnishments: $${remainingNetPay.toFixed(2)}`);
-    calculationLog.push(`Total Carried Forward: $${totalCarriedForward.toFixed(2)}`);
+    const totalGarnishmentAmount = garnishmentLines.reduce((sum, line) => sum + line.amount, 0);
+    
+    calculationLog.push(`--- Final Results ---`);
+    calculationLog.push(`Total Garnishment Amount: €${totalGarnishmentAmount.toFixed(2)}`);
+    calculationLog.push(`Net After Garnishments: €${disposableNet.toFixed(2)}`);
+    calculationLog.push(`Generated ${garnishmentLines.length} payslip lines`);
     
     return {
-      totalGarnishmentAmount,
-      netPayAfterGarnishments: remainingNetPay,
-      garnishmentDetails,
-      protectionSummary: {
-        totalProtectedAmount,
-        netPayFloorApplied: totalProtectedAmount > 0,
-        carriedForwardTotal: totalCarriedForward
-      },
+      garnishmentLines,
+      netAfterGarnishments: disposableNet,
       calculationLog
     };
   }
@@ -340,43 +362,64 @@ export class GarnishmentService {
   }
   
   /**
-   * Generate GL posting entries for garnishment transactions
-   * Creates liability entries for each creditor
+   * GL Posting (journal builder)
+   * 
+   * Debit: Payroll Clearing / Wages (per mapping)
+   * Credit: Garnishment Payable — {Creditor} (liability)
+   * Dimensions: property/department if available.
+   * Reference: employee_id, order_ref.
    */
   static generateGLEntries(
-    transactions: GarnishmentTransaction[],
-    companyCode: string = '001'
-  ): any[] {
-    const glEntries: any[] = [];
+    garnishmentLines: Array<{
+      type: string;
+      creditor: string;
+      orderRef: string;
+      amount: number;
+      glAccount: string;
+      description: string;
+    }>,
+    employeeId: string,
+    property?: string,
+    department?: string
+  ): Array<{
+    account: string;
+    debit?: number;
+    credit?: number;
+    description: string;
+    reference: string;
+    dimensions?: any;
+  }> {
+    const glEntries: Array<{
+      account: string;
+      debit?: number;
+      credit?: number;
+      description: string;
+      reference: string;
+      dimensions?: any;
+    }> = [];
     
-    for (const transaction of transactions) {
-      if (transaction.deductedAmount && Number(transaction.deductedAmount) > 0) {
-        // Get garnishment details for GL account mapping
-        const garnishmentDetails = transaction.calculationLog as any;
-        const creditorGLAccount = garnishmentDetails?.glAccount || '2200-GARNISHMENT';
+    for (const line of garnishmentLines) {
+      if (line.amount > 0) {
+        const dimensions: any = {};
+        if (property) dimensions.property = property;
+        if (department) dimensions.department = department;
         
-        // Credit: Garnishment Liability (what we owe the creditor)
+        // Debit: Payroll Clearing / Wages (per mapping)
         glEntries.push({
-          accountCode: creditorGLAccount,
-          accountName: `Garnishment Liability - ${transaction.garnishmentOrderId}`,
-          debitAmount: 0,
-          creditAmount: Number(transaction.deductedAmount),
-          description: `Garnishment deduction - Employee ${transaction.employeeId}`,
-          referenceId: transaction.id,
-          transactionDate: transaction.processedAt,
-          companyCode
+          account: '33.50.210', // Payroll Clearing account
+          debit: line.amount,
+          description: `Garnishment - ${line.orderRef} - ${employeeId}`,
+          reference: `${employeeId}:${line.orderRef}`,
+          dimensions
         });
         
-        // Debit: Payroll Expense or Wages Payable (reducing net pay)
+        // Credit: Garnishment Payable — {Creditor} (liability)
         glEntries.push({
-          accountCode: '5100-WAGES',
-          accountName: 'Wages Expense',
-          debitAmount: Number(transaction.deductedAmount),
-          creditAmount: 0,
-          description: `Garnishment deduction - Employee ${transaction.employeeId}`,
-          referenceId: transaction.id,
-          transactionDate: transaction.processedAt,
-          companyCode
+          account: line.glAccount,
+          credit: line.amount,
+          description: `Garnishment - ${line.creditor} - Ref ${line.orderRef} - ${employeeId}`,
+          reference: `${employeeId}:${line.orderRef}`,
+          dimensions
         });
       }
     }
@@ -385,48 +428,108 @@ export class GarnishmentService {
   }
   
   /**
-   * Validate garnishment order data
+   * Edge Cases & Rules
    */
-  static validateGarnishmentOrder(orderData: InsertGarnishmentOrder): { valid: boolean; errors: string[] } {
-    const errors: string[] = [];
+  static handleEdgeCases({
+    disposableNet,
+    protectedFloor,
+    orders,
+    runContext,
+    employeeId
+  }: {
+    disposableNet: number;
+    protectedFloor: number;
+    orders: any[];
+    runContext: { runType: string; endDate?: string; };
+    employeeId: string;
+  }) {
+    const log: string[] = [];
     
-    // Required fields
-    if (!orderData.employeeId) errors.push('Employee ID is required');
-    if (!orderData.orderNumber) errors.push('Order number is required');
-    if (!orderData.creditorName) errors.push('Creditor name is required');
-    if (!orderData.orderType) errors.push('Order type is required');
-    if (!orderData.orderDate) errors.push('Order date is required');
-    if (!orderData.effectiveDate) errors.push('Effective date is required');
+    // If DisposableNet ≤ protected floor, skip deduction and log reason.
+    if (disposableNet <= protectedFloor) {
+      log.push(`EDGE CASE: DisposableNet (€${disposableNet.toFixed(2)}) <= protected floor (€${protectedFloor.toFixed(2)}) - no deductions this run`);
+      return { canProceed: false, log };
+    }
     
-    // Deduction configuration validation
-    if (!orderData.deductionType) {
-      errors.push('Deduction type is required');
-    } else {
-      if (orderData.deductionType === 'fixed_amount' && !orderData.deductionAmount) {
-        errors.push('Deduction amount is required for fixed amount type');
+    // Stop conditions: end_date passed OR total_balance reached → status completed.
+    const now = new Date();
+    for (const order of orders) {
+      if (order.endDate && new Date(order.endDate) < now) {
+        log.push(`EDGE CASE: Order ${order.orderRef} end date passed - marking completed`);
+        // Would update order status to 'completed' here
       }
-      if (['percentage', 'percentage_with_cap'].includes(orderData.deductionType) && !orderData.deductionPercentage) {
-        errors.push('Deduction percentage is required for percentage-based types');
+      
+      if (order.totalBalance && order.collectedYtd >= order.totalBalance) {
+        log.push(`EDGE CASE: Order ${order.orderRef} total balance reached - marking completed`);
+        // Would update order status to 'completed' here
       }
     }
     
-    // Validate percentage ranges
-    if (orderData.deductionPercentage && (orderData.deductionPercentage <= 0 || orderData.deductionPercentage > 100)) {
-      errors.push('Deduction percentage must be between 0 and 100');
+    // Off-cycle: respect apply_scope (e.g., only regular).
+    if (runContext.runType !== 'regular') {
+      const applicableOrders = orders.filter(order => {
+        if (order.applyTo === 'regular_only' && runContext.runType !== 'regular') {
+          log.push(`EDGE CASE: Order ${order.orderRef} applies to regular runs only - skipping ${runContext.runType} run`);
+          return false;
+        }
+        return true;
+      });
+      return { canProceed: true, log, filteredOrders: applicableOrders };
     }
     
-    // Validate amounts
-    if (orderData.deductionAmount && orderData.deductionAmount <= 0) {
-      errors.push('Deduction amount must be greater than 0');
+    // Name/IBAN missing: allow creation (for liability), block payment file generation until provided.
+    for (const order of orders) {
+      if (!order.creditorIban || !order.creditorName) {
+        log.push(`EDGE CASE: Order ${order.orderRef} missing creditor details - liability OK, payment blocked`);
+      }
     }
     
-    if (orderData.totalOrderAmount && orderData.totalOrderAmount <= 0) {
-      errors.push('Total order amount must be greater than 0');
+    return { canProceed: true, log, filteredOrders: orders };
+  }
+  
+  /**
+   * Reversal: if payroll run reversed, restore collected_ytd and reopen balance.
+   */
+  static async reversePayrollRun(payrollRunId: string, employeeId: string): Promise<void> {
+    // Find all garnishment transactions for this payroll run
+    const transactions = await db
+      .select()
+      .from(garnishmentTransactions)
+      .where(
+        and(
+          eq(garnishmentTransactions.payrollRunId, payrollRunId),
+          eq(garnishmentTransactions.employeeId, employeeId)
+        )
+      );
+    
+    // Reverse each transaction
+    for (const transaction of transactions) {
+      if (transaction.deductedAmount) {
+        // Restore collected_ytd and reopen balance
+        await db
+          .update(garnishmentOrders)
+          .set({
+            totalDeducted: sql`total_deducted - ${transaction.deductedAmount}`,
+            currentBalance: sql`current_balance + ${transaction.deductedAmount}`,
+            status: 'active', // Reopen if it was completed
+            updatedAt: new Date()
+          })
+          .where(eq(garnishmentOrders.id, transaction.garnishmentOrderId));
+      }
     }
     
-    return {
-      valid: errors.length === 0,
-      errors
-    };
+    // Mark transactions as reversed
+    await db
+      .update(garnishmentTransactions)
+      .set({ 
+        status: 'reversed',
+        reversedAt: new Date()
+      })
+      .where(
+        and(
+          eq(garnishmentTransactions.payrollRunId, payrollRunId),
+          eq(garnishmentTransactions.employeeId, employeeId)
+        )
+      );
   }
 }
