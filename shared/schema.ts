@@ -822,7 +822,6 @@ export const insertTimesheetSchema = createInsertSchema(timesheets).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type UpsertUser = typeof users.$inferInsert;
-export type InsertUser = typeof users.$inferInsert;
 
 // =============================================================================
 // GARNISHMENTS & COURT ORDERS SCHEMA
@@ -958,7 +957,7 @@ export type GarnishmentCalculationInputs = z.infer<typeof garnishmentCalculation
 // Secure IBAN Vault for sensitive banking data
 export const secureIbanVault = pgTable("secure_iban_vault", {
   vaultId: varchar("vault_id").primaryKey().default(sql`gen_random_uuid()`),
-  employeeId: varchar("employee_id").notNull().references(() => employees.id, { onDelete: 'cascade' }),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId, { onDelete: 'cascade' }),
   
   // Full IBAN (encrypted at rest)
   fullIban: varchar("full_iban", { length: 34 }).notNull(),
@@ -993,7 +992,7 @@ export const secureIbanVault = pgTable("secure_iban_vault", {
 export const ibanValidationHistory = pgTable("iban_validation_history", {
   validationId: varchar("validation_id").primaryKey().default(sql`gen_random_uuid()`),
   vaultId: varchar("vault_id").references(() => secureIbanVault.vaultId),
-  employeeId: varchar("employee_id").references(() => employees.id),
+  employeeId: varchar("employee_id").references(() => employees.employeeId),
   
   // Validation details
   maskedIban: varchar("masked_iban", { length: 50 }), // For logging (GR** **** **** **34)
@@ -1023,7 +1022,7 @@ export const ibanValidationHistory = pgTable("iban_validation_history", {
 export const secureIbanVaultRelations = relations(secureIbanVault, ({ one, many }) => ({
   employee: one(employees, {
     fields: [secureIbanVault.employeeId],
-    references: [employees.id],
+    references: [employees.employeeId],
   }),
   validationHistory: many(ibanValidationHistory),
 }));
@@ -1035,7 +1034,7 @@ export const ibanValidationHistoryRelations = relations(ibanValidationHistory, (
   }),
   employee: one(employees, {
     fields: [ibanValidationHistory.employeeId],
-    references: [employees.id],
+    references: [employees.employeeId],
   }),
 }));
 
@@ -2057,8 +2056,6 @@ export type PayrollPeriod = typeof payrollPeriods.$inferSelect;
 export type InsertPayrollPeriod = z.infer<typeof insertPayrollPeriodsSchema>;
 export type PayrollCalculation = typeof payrollCalculations.$inferSelect;
 export type InsertPayrollCalculation = z.infer<typeof insertPayrollCalculationsSchema>;
-export type EmployeeContract = typeof employeeContracts.$inferSelect;
-export type InsertEmployeeContract = z.infer<typeof insertEmployeeContractsSchema>;
 export type LeaveRecord = typeof leaveRecords.$inferSelect;
 export type InsertLeaveRecord = z.infer<typeof insertLeaveRecordsSchema>;
 export type TipsPool = typeof tipsPools.$inferSelect;
@@ -3549,7 +3546,7 @@ export const glAccounts = pgTable("gl_accounts", {
   accountCode: varchar("account_code", { length: 50 }).notNull().unique(),
   accountName: varchar("account_name", { length: 255 }).notNull(),
   accountType: varchar("account_type", { length: 50 }).notNull(), // Asset, Liability, Equity, Revenue, Expense
-  parentAccountId: varchar("parent_account_id").references(() => glAccounts.accountId),
+  parentAccountId: varchar("parent_account_id").references((): any => glAccounts.accountId),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
 });

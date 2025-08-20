@@ -30,6 +30,30 @@ export interface LocalizedMessages {
   GENERIC_ERROR: string;
   RATE_LIMITED: string;
   ACCESS_DENIED: string;
+  
+  // Additional error messages for auth routes
+  INTERNAL_SERVER_ERROR: string;
+  EMAIL_PASSWORD_REQUIRED: string;
+  INVALID_EMAIL_PASSWORD: string;
+  ACCOUNT_DEACTIVATED: string;
+  EMAIL_NOT_VERIFIED: string;
+  ACCOUNT_TEMPORARILY_LOCKED: string;
+  CODE_EMAIL_REQUIRED: string;
+  INVALID_MFA_CODE: string;
+  EMAIL_WEBAUTHN_REQUIRED: string;
+  WEBAUTHN_VERIFICATION_FAILED: string;
+  EMAIL_REQUIRED: string;
+  INVALID_MAGIC_LINK_TOKEN: string;
+  MAGIC_LINK_TOKEN_EXPIRED: string;
+  TOKEN_NEW_PASSWORD_REQUIRED: string;
+  RESET_TOKEN_EXPIRED: string;
+  SSO_LOGIN_FAILED: string;
+  INVALID_STATE_PARAMETER: string;
+  MISSING_PKCE_DATA: string;
+  SSO_AUTHENTICATION_FAILED: string;
+  NO_ACTIVE_SESSION: string;
+  INVALID_SESSION: string;
+  USER_NOT_FOUND: string;
 }
 
 const EN_MESSAGES: LocalizedMessages = {
@@ -58,6 +82,30 @@ const EN_MESSAGES: LocalizedMessages = {
   GENERIC_ERROR: "An error occurred. Please try again later.",
   RATE_LIMITED: "Too many requests. Please wait before trying again.",
   ACCESS_DENIED: "Access denied. Please check your permissions.",
+  
+  // Additional error messages
+  INTERNAL_SERVER_ERROR: "Internal server error. Please try again later.",
+  EMAIL_PASSWORD_REQUIRED: "Email and password are required.",
+  INVALID_EMAIL_PASSWORD: "Invalid email or password.",
+  ACCOUNT_DEACTIVATED: "Account is deactivated.",
+  EMAIL_NOT_VERIFIED: "Email address not verified.",
+  ACCOUNT_TEMPORARILY_LOCKED: "Account is temporarily locked.",
+  CODE_EMAIL_REQUIRED: "Code and email are required.",
+  INVALID_MFA_CODE: "Invalid MFA code.",
+  EMAIL_WEBAUTHN_REQUIRED: "Email and WebAuthn response are required.",
+  WEBAUTHN_VERIFICATION_FAILED: "WebAuthn verification failed.",
+  EMAIL_REQUIRED: "Email is required.",
+  INVALID_MAGIC_LINK_TOKEN: "Invalid magic link token.",
+  MAGIC_LINK_TOKEN_EXPIRED: "Magic link token expired or invalid.",
+  TOKEN_NEW_PASSWORD_REQUIRED: "Token and new password are required.",
+  RESET_TOKEN_EXPIRED: "Reset token expired or invalid.",
+  SSO_LOGIN_FAILED: "SSO login failed.",
+  INVALID_STATE_PARAMETER: "Invalid state parameter.",
+  MISSING_PKCE_DATA: "Missing PKCE data.",
+  SSO_AUTHENTICATION_FAILED: "SSO authentication failed.",
+  NO_ACTIVE_SESSION: "No active session.",
+  INVALID_SESSION: "Invalid session.",
+  USER_NOT_FOUND: "User not found.",
 };
 
 const EL_MESSAGES: LocalizedMessages = {
@@ -86,6 +134,30 @@ const EL_MESSAGES: LocalizedMessages = {
   GENERIC_ERROR: "Προέκυψε σφάλμα. Παρακαλώ δοκιμάστε αργότερα.",
   RATE_LIMITED: "Πάρα πολλές αιτήσεις. Παρακαλώ περιμένετε πριν δοκιμάσετε ξανά.",
   ACCESS_DENIED: "Δεν επιτρέπεται η πρόσβαση. Παρακαλώ ελέγξτε τα δικαιώματά σας.",
+  
+  // Additional error messages
+  INTERNAL_SERVER_ERROR: "Εσωτερικό σφάλμα διακομιστή. Παρακαλώ δοκιμάστε αργότερα.",
+  EMAIL_PASSWORD_REQUIRED: "Απαιτείται email και κωδικός πρόσβασης.",
+  INVALID_EMAIL_PASSWORD: "Λανθασμένο email ή κωδικός πρόσβασης.",
+  ACCOUNT_DEACTIVATED: "Ο λογαριασμός έχει απενεργοποιηθεί.",
+  EMAIL_NOT_VERIFIED: "Το email δεν έχει επιβεβαιωθεί.",
+  ACCOUNT_TEMPORARILY_LOCKED: "Ο λογαριασμός είναι προσωρινά κλειδωμένος.",
+  CODE_EMAIL_REQUIRED: "Απαιτείται κωδικός και email.",
+  INVALID_MFA_CODE: "Λανθασμένος κωδικός MFA.",
+  EMAIL_WEBAUTHN_REQUIRED: "Απαιτείται email και WebAuthn απόκριση.",
+  WEBAUTHN_VERIFICATION_FAILED: "Η επαλήθευση WebAuthn απέτυχε.",
+  EMAIL_REQUIRED: "Απαιτείται email.",
+  INVALID_MAGIC_LINK_TOKEN: "Λανθασμένο magic link token.",
+  MAGIC_LINK_TOKEN_EXPIRED: "Το magic link token έχει λήξει ή είναι άκυρο.",
+  TOKEN_NEW_PASSWORD_REQUIRED: "Απαιτείται token και νέος κωδικός πρόσβασης.",
+  RESET_TOKEN_EXPIRED: "Το token επαναφοράς έχει λήξει ή είναι άκυρο.",
+  SSO_LOGIN_FAILED: "Η σύνδεση SSO απέτυχε.",
+  INVALID_STATE_PARAMETER: "Λανθασμένη παράμετρος state.",
+  MISSING_PKCE_DATA: "Λείπουν δεδομένα PKCE.",
+  SSO_AUTHENTICATION_FAILED: "Η επαλήθευση SSO απέτυχε.",
+  NO_ACTIVE_SESSION: "Δεν υπάρχει ενεργή συνεδρία.",
+  INVALID_SESSION: "Λανθασμένη συνεδρία.",
+  USER_NOT_FOUND: "Ο χρήστης δεν βρέθηκε.",
 };
 
 const MESSAGES = {

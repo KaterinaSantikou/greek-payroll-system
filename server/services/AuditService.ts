@@ -31,6 +31,10 @@ export interface GeneralAuditEvent {
   userAgent?: string;
   sessionId?: string;
   requestId?: string;
+  email?: string;
+  result?: string;
+  reason?: string;
+  metadata?: Record<string, any>;
 }
 
 export class AuditService {
@@ -311,5 +315,28 @@ export class AuditService {
    */
   static generateCorrelationId(): string {
     return crypto.randomUUID();
+  }
+
+  /**
+   * Log method for backward compatibility
+   */
+  static async log(event: AuditEvent): Promise<void> {
+    // Convert AuditEvent to GeneralAuditEvent format
+    const generalEvent: GeneralAuditEvent = {
+      eventType: event.eventType,
+      eventCategory: 'authentication',
+      eventAction: event.eventType,
+      tenantId: 'default',
+      userId: event.userId || 'anonymous',
+      eventData: event.metadata || {},
+      ipAddress: event.ipAddress,
+      userAgent: event.userAgent,
+      sessionId: event.sessionId,
+      email: event.email,
+      result: event.result,
+      reason: event.reason
+    };
+
+    return this.logEvent(generalEvent);
   }
 }

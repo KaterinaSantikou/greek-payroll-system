@@ -12,6 +12,10 @@ export interface SessionData {
   userAgent: string;
   deviceFingerprint: string;
   mfaLevel: number;
+  expiresAt?: Date;
+  authLevel?: string;
+  pkce?: any;
+  ssoState?: any;
 }
 
 export interface TokenPair {
@@ -19,6 +23,7 @@ export interface TokenPair {
   refreshToken: string;
   expiresAt: Date;
   refreshExpiresAt: Date;
+  sessionId: string;
 }
 
 export class SessionService {

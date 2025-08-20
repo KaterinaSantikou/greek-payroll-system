@@ -98,7 +98,7 @@ export class PaymentBatchService {
     const [bankProfile] = await db
       .select()
       .from(bankProfiles)
-      .where(eq(bankProfiles.profileId, request.bankProfile))
+      .where(eq(bankProfiles.bankId, request.bankProfile))
       .limit(1);
 
     if (!bankProfile) {
@@ -108,13 +108,13 @@ export class PaymentBatchService {
     // Determine payment methods based on cut-offs and amounts
     const transactions: any[] = [];
     let sctCount = 0, sctAmount = 0, sctInstCount = 0, sctInstAmount = 0;
-    const cutOffTime = this.calculateTodaysCutOff(bankProfile.sctCutOffTime || '16:00', bankProfile.timezone || 'Europe/Athens');
+    const cutOffTime = this.calculateTodaysCutOff(bankProfile.cutoffTime || '16:00', 'Europe/Athens');
     const now = new Date();
     const pastCutOff = now > cutOffTime;
 
     for (const payrollLine of payrollData) {
       const employee = employeeLookup.get(payrollLine.employeeId);
-      if (!employee || !employee.bankAccount) {
+      if (!employee || !employee.bankIban) {
         console.warn(`Employee ${payrollLine.employeeId} missing bank details`);
         continue;
       }
@@ -127,8 +127,8 @@ export class PaymentBatchService {
       let urgency = 'NORM';
 
       // Auto-switch to instant if past cut-off or high amount
-      if (request.paymentMethod === 'AUTO' && bankProfile.supportsSctInst) {
-        const maxInstant = parseFloat(bankProfile.maxSctInstAmount || '100000');
+      if (request.paymentMethod === 'AUTO' && bankProfile.supportsSepaInstant) {
+        const maxInstant = parseFloat(bankProfile.maxInstantAmount || '100000');
         if ((pastCutOff || amount > 5000) && amount <= maxInstant) {
           paymentMethod = 'SCT_INST';
           urgency = 'HIGH';
