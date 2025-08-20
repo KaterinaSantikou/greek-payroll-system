@@ -66,7 +66,7 @@ export class InvoicePDFService {
   }
 
   /**
-   * Generate HTML template for invoice
+   * Generate HTML template for invoice with proper Greek/English layout
    */
   private async generateInvoiceHTML(templateData: InvoiceTemplateData): Promise<string> {
     const { invoice, subscription, plan, organizationDetails } = templateData;
@@ -76,43 +76,48 @@ export class InvoicePDFService {
     
     const labels = {
       invoice: isGreek ? 'ΤΙΜΟΛΟΓΙΟ' : 'INVOICE',
-      creditNote: isGreek ? 'ΠΙΣΤΩΤΙΚΟ ΣΗΜΕΙΩΜΑ' : 'CREDIT NOTE',
-      invoiceNumber: isGreek ? 'Αριθμός Τιμολογίου' : 'Invoice Number',
+      creditNote: isGreek ? 'ΠΙΣΤΩΤΙΚΟ ΤΙΜΟΛΟΓΙΟ' : 'CREDIT NOTE',
+      invoiceNumber: isGreek ? 'Αριθμός' : 'Number',
       series: isGreek ? 'Σειρά' : 'Series',
-      issueDate: isGreek ? 'Ημερομηνία Έκδοσης' : 'Issue Date',
-      issueTime: isGreek ? 'Ώρα Έκδοσης' : 'Issue Time',
-      dueDate: isGreek ? 'Ημερομηνία Λήξης' : 'Due Date',
-      period: isGreek ? 'Περίοδος Χρέωσης' : 'Billing Period',
-      billTo: isGreek ? 'Στοιχεία Πελάτη' : 'Bill To',
-      billFrom: isGreek ? 'Στοιχεία Προμηθευτή' : 'Bill From',
+      issueDate: isGreek ? 'Ημερομηνία' : 'Date',
+      issueTime: isGreek ? 'Ώρα' : 'Time',
+      dueDate: isGreek ? 'Λήξη' : 'Due Date',
+      period: isGreek ? 'Περίοδος' : 'Period',
+      billTo: isGreek ? 'Στοιχεία Αγοραστή' : 'Bill To',
+      billFrom: isGreek ? 'Στοιχεία Προμηθευτή' : 'Supplier',
       description: isGreek ? 'Περιγραφή' : 'Description',
       quantity: isGreek ? 'Ποσότητα' : 'Quantity',
-      unitPrice: isGreek ? 'Τιμή Μονάδας' : 'Unit Price',
+      unitPrice: isGreek ? 'Τιμή' : 'Price',
       netAmount: isGreek ? 'Καθαρή Αξία' : 'Net Amount',
-      amount: isGreek ? 'Ποσό' : 'Amount',
-      subtotal: isGreek ? 'Υποσύνολο' : 'Subtotal',
-      vat: isGreek ? 'Φ.Π.Α.' : 'VAT',
+      vat24: isGreek ? 'ΦΠΑ 24%' : 'VAT 24%',
       total: isGreek ? 'Σύνολο' : 'Total',
-      vatNumber: isGreek ? 'Α.Φ.Μ.' : 'VAT Number',
+      subtotal: isGreek ? 'Καθαρή' : 'Subtotal',
+      vat: isGreek ? 'ΦΠΑ' : 'VAT',
+      payable: isGreek ? 'Πληρωτέο' : 'Payable',
+      vatNumber: isGreek ? 'Α.Φ.Μ.' : 'VAT No',
       taxOffice: isGreek ? 'Δ.Ο.Υ.' : 'Tax Office',
       address: isGreek ? 'Διεύθυνση' : 'Address',
       paymentTerms: isGreek ? 'Όροι Πληρωμής' : 'Payment Terms',
       notes: isGreek ? 'Σημειώσεις' : 'Notes',
-      currency: 'EUR',
+      currency: invoice.originalCurrency,
       originalInvoice: isGreek ? 'Αρχικό Τιμολόγιο' : 'Original Invoice',
       creditReason: isGreek ? 'Λόγος Πίστωσης' : 'Credit Reason',
-      noVat: 'ΧΩΡΙΣ ΑΦΜ'
+      reverseChargeLegend: isGreek ? 'Αντίστροφη επιβάρυνση - Ο πελάτης οφείλει το ΦΠΑ' : 'Reverse charge - Customer liable for VAT',
+      mydataNote: isGreek ? 'Μοναδικός Κωδικός Παραλαβής myDATA ΑΑΔΕ:' : 'myDATA AADE Unique Receipt Code:'
     };
 
     const invoiceTitle = invoice.type === 'credit_note' ? labels.creditNote : labels.invoice;
     
-    // Parse invoice number for series and sequential number
-    const [series, year, sequentialNumber] = invoice.invoiceNumber.split('-');
+    // Parse invoice number for series and sequential number display
+    const invoiceNumberParts = invoice.invoiceNumber.split('-');
+    const seriesDisplay = `${invoiceNumberParts[0]}-${invoiceNumberParts[1]}`;
+    const sequentialDisplay = invoiceNumberParts[2];
     
-    // Format issue date and time
-    const issueDateTime = new Date(invoice.issueDate);
+    // Format issue date and time with Greek formatting
+    const issueDateTime = new Date(invoice.issueDate + 'T00:00:00');
+    const currentTime = new Date();
     const formattedDate = this.formatDate(issueDateTime, invoice.language as 'el' | 'en');
-    const formattedTime = issueDateTime.toLocaleTimeString(isGreek ? 'el-GR' : 'en-US', { 
+    const formattedTime = currentTime.toLocaleTimeString(isGreek ? 'el-GR' : 'en-US', { 
       hour: '2-digit', 
       minute: '2-digit',
       hour12: false 

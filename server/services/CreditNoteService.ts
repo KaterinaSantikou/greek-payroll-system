@@ -162,10 +162,11 @@ export class CreditNoteService {
       notes: `${subscription.invoiceLanguage === 'el' ? 'Πιστωτικό Τιμολόγιο' : 'Credit Note'} - ${creditNoteTypeEl}\n\n${request.reasonNotes || ''}`
     };
 
-    const [creditNote] = await db.insert(invoices)
+    const creditNoteResult = await db.insert(invoices)
       .values(creditNoteInvoice)
       .returning();
 
+    const creditNote = creditNoteResult[0];
     console.log(`Created credit note ${creditNote.invoiceNumber} for invoice ${originalInvoice.invoiceNumber} (${request.reason})`);
 
     return creditNote;
@@ -203,21 +204,23 @@ export class CreditNoteService {
    * Get credit notes for a subscription
    */
   async getCreditNotes(subscriptionId: string): Promise<Invoice[]> {
-    return db.select()
+    const result = await db.select()
       .from(invoices)
       .where(and(
         eq(invoices.subscriptionId, subscriptionId),
         eq(invoices.type, 'credit_note')
       ));
+    return result;
   }
 
   /**
    * Get credit notes for a specific original invoice
    */
   async getCreditNotesForInvoice(originalInvoiceId: string): Promise<Invoice[]> {
-    return db.select()
+    const result = await db.select()
       .from(invoices)
       .where(eq(invoices.originalInvoiceId, originalInvoiceId));
+    return result;
   }
 
   /**
