@@ -3,8 +3,25 @@ import { isAuthenticated } from "../replitAuth";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { db } from "../db";
-import { payrollRuns, payrollLines } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { 
+  payrollRuns, 
+  payrollLines, 
+  payrollScopes,
+  employeePeriodState,
+  periodLedgers,
+  payrollScopeLines,
+  paymentBatches,
+  employees,
+  properties,
+  contracts,
+  timesheets,
+  insertPayrollScopeSchema,
+  insertEmployeePeriodStateSchema,
+  insertPeriodLedgerSchema,
+  insertPayrollScopeLineSchema,
+  insertPaymentBatchSchema
+} from "@shared/schema";
+import { eq, and, like, inArray, sql, desc, asc } from "drizzle-orm";
 import { GarnishmentService } from "../services/GarnishmentService";
 import { GLExportService } from "../glExportService";
 
@@ -516,6 +533,419 @@ router.post('/api/payroll/approvals/:id', isAuthenticated, async (req, res) => {
   } catch (error) {
     console.error("Error processing payroll approval:", error);
     res.status(500).json({ error: "Failed to process approval" });
+  }
+});
+
+// === SELECTIVE PAYROLL RUNS ENDPOINTS ===
+
+// GET /api/payroll/employees - Get filtered employees for selection
+router.get('/api/payroll/employees', isAuthenticated, async (req, res) => {
+  try {
+    const {
+      period,
+      search,
+      property,
+      team,
+      status = 'active',
+      contractType,
+      payCalendar,
+      showOnlyApproved = 'true'
+    } = req.query;
+
+    // Build the query
+    let query = db
+      .select({
+        employeeId: employees.employeeId,
+        employeeNumber: employees.employeeNumber,
+        name: employees.name,
+        afm: employees.afm,
+        isActive: employees.isActive,
+        propertyId: employees.defaultPropertyId,
+        propertyName: properties.name,
+        contractType: employees.contractType,
+        ftePct: employees.ftePct,
+        payCalendar: sql<string>`'monthly'`, // Default pay calendar
+        hasApprovedTimesheet: sql<boolean>`CASE WHEN ${timesheets.payrollStatus} = 'approved' THEN true ELSE false END`,
+        missingIban: sql<boolean>`CASE WHEN ${employees.bankIban} IS NULL OR ${employees.bankIban} = '' THEN true ELSE false END`,
+        missingAfm: sql<boolean>`CASE WHEN ${employees.afm} IS NULL OR ${employees.afm} = '' THEN true ELSE false END`,
+        capsWarning: sql<string | null>`NULL` // Placeholder for caps warnings
+      })
+      .from(employees)
+      .leftJoin(properties, eq(employees.defaultPropertyId, properties.propertyId))
+      .leftJoin(timesheets, and(
+        eq(timesheets.employeeId, employees.employeeId),
+        eq(timesheets.periodStart, sql`${period}-01`)
+      ));
+
+    // Apply filters
+    const conditions = [];
+    
+    if (search) {
+      const searchTerm = `%${search}%`;
+      conditions.push(
+        sql`${employees.name} ILIKE ${searchTerm}
+         OR ${employees.employeeNumber} ILIKE ${searchTerm}
+         OR ${employees.afm} ILIKE ${searchTerm}`
+      );
+    }
+    
+    if (property && property !== 'all') {
+      conditions.push(eq(employees.defaultPropertyId, property as string));
+    }
+    
+    if (status && status !== 'all') {
+      if (status === 'active') {
+        conditions.push(eq(employees.isActive, true));
+      } else if (status === 'inactive') {
+        conditions.push(eq(employees.isActive, false));
+      }
+    }
+    
+    if (contractType && contractType !== 'all') {
+      conditions.push(eq(employees.contractType, contractType as string));
+    }
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+
+    // Execute query
+    let result = await query.orderBy(asc(employees.name));
+
+    // Post-filter for approved timesheets if requested
+    if (showOnlyApproved === 'true') {
+      result = result.filter(emp => emp.hasApprovedTimesheet);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching employees for selection:", error);
+    res.status(500).json({ error: "Failed to fetch employees" });
+  }
+});
+
+// GET /api/payroll/filter-options - Get filter dropdown options
+router.get('/api/payroll/filter-options', isAuthenticated, async (req, res) => {
+  try {
+    // Get all properties
+    const propertiesResult = await db
+      .select({
+        id: properties.propertyId,
+        name: properties.name
+      })
+      .from(properties);
+
+    // Get all contract types from the database
+    const contractTypesResult = await db
+      .selectDistinct({
+        contractType: employees.contractType
+      })
+      .from(employees)
+      .where(and(
+        sql`${employees.contractType} IS NOT NULL`,
+        sql`${employees.contractType} != ''`
+      ));
+
+    const contractTypes = contractTypesResult.map(r => r.contractType).filter(Boolean);
+
+    res.json({
+      properties: propertiesResult,
+      teams: [], // Teams functionality to be implemented later
+      contractTypes: contractTypes.length > 0 ? contractTypes : ['indefinite', 'fixed_term', 'seasonal', 'trial'],
+      payCalendars: ['monthly', 'semi_monthly'],
+      statuses: ['active', 'inactive']
+    });
+  } catch (error) {
+    console.error("Error fetching filter options:", error);
+    res.status(500).json({ error: "Failed to fetch filter options" });
+  }
+});
+
+// GET /api/payroll/scopes - Get existing payroll scopes
+router.get('/api/payroll/scopes', isAuthenticated, async (req, res) => {
+  try {
+    const { period } = req.query;
+
+    if (!period) {
+      return res.status(400).json({ error: 'Period parameter is required' });
+    }
+
+    const result = await db
+      .select({
+        scopeId: payrollScopes.scopeId,
+        period: payrollScopes.period,
+        type: payrollScopes.type,
+        status: payrollScopes.status,
+        selectedEmployees: payrollScopes.selectedEmployees,
+        totalEmployees: payrollScopes.totalEmployees,
+        totalGrossPay: payrollScopes.totalGrossPay,
+        totalTaxes: payrollScopes.totalTaxes,
+        totalInsurance: payrollScopes.totalInsurance,
+        totalNetPay: payrollScopes.totalNetPay,
+        description: payrollScopes.description,
+        createdAt: payrollScopes.createdAt,
+        computedAt: payrollScopes.computedAt,
+        finalizedAt: payrollScopes.finalizedAt
+      })
+      .from(payrollScopes)
+      .where(eq(payrollScopes.period, period as string))
+      .orderBy(desc(payrollScopes.createdAt));
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching payroll scopes:", error);
+    res.status(500).json({ error: "Failed to fetch payroll scopes" });
+  }
+});
+
+// POST /api/payroll/scopes - Create new payroll scope
+router.post('/api/payroll/scopes', isAuthenticated, idempotencyMiddleware, async (req, res) => {
+  try {
+    const validatedData = insertPayrollScopeSchema.parse(req.body);
+    const userId = (req.user as any)?.claims?.sub;
+
+    // Get next sequence number for this period
+    const sequenceResult = await db
+      .select({
+        maxSequence: sql<number>`COALESCE(MAX(${payrollScopes.sequence}), 0)`
+      })
+      .from(payrollScopes)
+      .where(eq(payrollScopes.period, validatedData.period));
+
+    const nextSequence = (sequenceResult[0]?.maxSequence || 0) + 1;
+
+    // Create new scope
+    const [newScope] = await db
+      .insert(payrollScopes)
+      .values({
+        ...validatedData,
+        sequence: nextSequence,
+        status: 'draft',
+        createdBy: userId
+      })
+      .returning();
+
+    // Initialize employee period state for selected employees
+    const employeePeriodStates = validatedData.selectedEmployees.map(employeeId => ({
+      employeeId: employeeId as string,
+      period: validatedData.period,
+      status: 'unprocessed' as const,
+      processedInScopeId: newScope.scopeId
+    }));
+
+    if (employeePeriodStates.length > 0) {
+      await db
+        .insert(employeePeriodState)
+        .values(employeePeriodStates)
+        .onConflictDoUpdate({
+          target: [employeePeriodState.employeeId, employeePeriodState.period],
+          set: {
+            status: sql`CASE WHEN ${employeePeriodState.status} = 'unprocessed' THEN 'unprocessed' ELSE 'adjusted' END`,
+            adjustedInScopeId: newScope.scopeId,
+            updatedAt: sql`NOW()`
+          }
+        });
+    }
+
+    res.status(201).json(newScope);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        error: "Validation failed", 
+        details: error.errors 
+      });
+    }
+    console.error("Error creating payroll scope:", error);
+    res.status(500).json({ error: "Failed to create payroll scope" });
+  }
+});
+
+// GET /api/payroll/scopes/:scopeId - Get scope details
+router.get('/api/payroll/scopes/:scopeId', isAuthenticated, async (req, res) => {
+  try {
+    const { scopeId } = req.params;
+
+    const [scope] = await db
+      .select()
+      .from(payrollScopes)
+      .where(eq(payrollScopes.scopeId, scopeId));
+
+    if (!scope) {
+      return res.status(404).json({ error: 'Scope not found' });
+    }
+
+    // Get scope lines if computed
+    let scopeLines = [];
+    if (scope.status !== 'draft') {
+      scopeLines = await db
+        .select()
+        .from(payrollScopeLines)
+        .where(eq(payrollScopeLines.scopeId, scopeId))
+        .orderBy(asc(payrollScopeLines.employeeId), asc(payrollScopeLines.code));
+    }
+
+    res.json({
+      ...scope,
+      scopeLines
+    });
+  } catch (error) {
+    console.error("Error fetching scope details:", error);
+    res.status(500).json({ error: "Failed to fetch scope details" });
+  }
+});
+
+// PUT /api/payroll/scopes/:scopeId/status - Update scope status
+router.put('/api/payroll/scopes/:scopeId/status', isAuthenticated, async (req, res) => {
+  try {
+    const { scopeId } = req.params;
+    const { status, notes } = req.body;
+    const userId = (req.user as any)?.claims?.sub;
+
+    if (!['draft', 'computing', 'computed', 'reviewed', 'finalized'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const updateData: any = {
+      status,
+      updatedAt: sql`NOW()`
+    };
+
+    if (status === 'computed') {
+      updateData.computedAt = sql`NOW()`;
+    } else if (status === 'reviewed') {
+      updateData.reviewedAt = sql`NOW()`;
+      updateData.reviewedBy = userId;
+    } else if (status === 'finalized') {
+      updateData.finalizedAt = sql`NOW()`;
+      updateData.finalizedBy = userId;
+    }
+
+    const [updatedScope] = await db
+      .update(payrollScopes)
+      .set(updateData)
+      .where(eq(payrollScopes.scopeId, scopeId))
+      .returning();
+
+    if (!updatedScope) {
+      return res.status(404).json({ error: 'Scope not found' });
+    }
+
+    // If finalizing, update employee period state
+    if (status === 'finalized') {
+      await db
+        .update(employeePeriodState)
+        .set({
+          status: 'finalized',
+          finalizedAt: sql`NOW()`,
+          updatedAt: sql`NOW()`
+        })
+        .where(and(
+          eq(employeePeriodState.processedInScopeId, scopeId),
+          eq(employeePeriodState.status, 'processed')
+        ));
+    }
+
+    res.json(updatedScope);
+  } catch (error) {
+    console.error("Error updating scope status:", error);
+    res.status(500).json({ error: "Failed to update scope status" });
+  }
+});
+
+// GET /api/payroll/period-ledgers/:period - Get period consolidation status  
+router.get('/api/payroll/period-ledgers/:period', isAuthenticated, async (req, res) => {
+  try {
+    const { period } = req.params;
+    const { type = 'filings' } = req.query;
+
+    const [ledger] = await db
+      .select()
+      .from(periodLedgers)
+      .where(and(
+        eq(periodLedgers.period, period),
+        eq(periodLedgers.type, type as string)
+      ));
+
+    if (!ledger) {
+      // Return empty state if no ledger exists
+      return res.json({
+        period,
+        type,
+        status: 'open',
+        totalEmployees: 0,
+        totalGrossPay: '0',
+        includedScopeIds: []
+      });
+    }
+
+    res.json(ledger);
+  } catch (error) {
+    console.error("Error fetching period ledger:", error);
+    res.status(500).json({ error: "Failed to fetch period ledger" });
+  }
+});
+
+// POST /api/payroll/period-ledgers/:period/consolidate - Consolidate period  
+router.post('/api/payroll/period-ledgers/:period/consolidate', isAuthenticated, async (req, res) => {
+  try {
+    const { period } = req.params;
+    const { type = 'filings' } = req.body;
+    const userId = (req.user as any)?.claims?.sub;
+
+    // Get all finalized scopes for the period
+    const finalizedScopes = await db
+      .select()
+      .from(payrollScopes)
+      .where(and(
+        eq(payrollScopes.period, period),
+        eq(payrollScopes.status, 'finalized')
+      ));
+
+    if (finalizedScopes.length === 0) {
+      return res.status(400).json({ error: 'No finalized scopes found for period' });
+    }
+
+    // Calculate totals
+    const totalEmployees = finalizedScopes.reduce((sum, scope) => sum + scope.totalEmployees, 0);
+    const totalGrossPay = finalizedScopes.reduce((sum, scope) => sum + parseFloat(scope.totalGrossPay), 0);
+    const totalTaxes = finalizedScopes.reduce((sum, scope) => sum + parseFloat(scope.totalTaxes), 0);
+    const totalInsurance = finalizedScopes.reduce((sum, scope) => sum + parseFloat(scope.totalInsurance), 0);
+    const totalNetPay = finalizedScopes.reduce((sum, scope) => sum + parseFloat(scope.totalNetPay), 0);
+
+    // Upsert period ledger
+    const [ledger] = await db
+      .insert(periodLedgers)
+      .values({
+        period,
+        type: type as string,
+        status: 'open',
+        totalEmployees,
+        totalGrossPay: totalGrossPay.toString(),
+        totalTaxes: totalTaxes.toString(),
+        totalInsurance: totalInsurance.toString(),
+        totalNetPay: totalNetPay.toString(),
+        includedScopeIds: finalizedScopes.map(s => s.scopeId),
+        lastConsolidatedAt: sql`NOW()`
+      })
+      .onConflictDoUpdate({
+        target: [periodLedgers.period, periodLedgers.type],
+        set: {
+          totalEmployees,
+          totalGrossPay: totalGrossPay.toString(),
+          totalTaxes: totalTaxes.toString(),
+          totalInsurance: totalInsurance.toString(),
+          totalNetPay: totalNetPay.toString(),
+          includedScopeIds: finalizedScopes.map(s => s.scopeId),
+          lastConsolidatedAt: sql`NOW()`,
+          updatedAt: sql`NOW()`
+        }
+      })
+      .returning();
+
+    res.json(ledger);
+  } catch (error) {
+    console.error("Error consolidating period:", error);
+    res.status(500).json({ error: "Failed to consolidate period" });
   }
 });
 

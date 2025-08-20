@@ -651,6 +651,166 @@ export const payrollLines = pgTable("payroll_lines", {
   index("idx_payroll_lines_code").on(table.code),
 ]);
 
+// Payroll Scopes table - Sub-runs within a payroll period for selective processing
+export const payrollScopes = pgTable("payroll_scopes", {
+  scopeId: varchar("scope_id").primaryKey().default(sql`gen_random_uuid()`),
+  runId: varchar("run_id").references(() => payrollRuns.runId).notNull(),
+  period: varchar("period", { length: 7 }).notNull(), // YYYY-MM format
+  type: varchar("type", { length: 20 }).notNull(), // regular, off_cycle, termination, correction, bonus
+  sequence: integer("sequence").notNull(), // Increasing per period for reproducibility
+  status: varchar("status", { length: 20 }).default("draft"), // draft, computing, computed, reviewed, finalized
+  selectorType: varchar("selector_type", { length: 20 }).notNull(), // static_list, saved_filter
+  selectorConfig: jsonb("selector_config").notNull(), // Employee IDs or filter configuration
+  selectedEmployees: jsonb("selected_employees").notNull().default('[]'), // Resolved employee IDs
+  includeApprovedOnly: boolean("include_approved_only").default(true),
+  description: varchar("description", { length: 200 }),
+  totalEmployees: integer("total_employees").default(0),
+  totalGrossPay: decimal("total_gross_pay", { precision: 12, scale: 2 }).default("0"),
+  totalTaxes: decimal("total_taxes", { precision: 12, scale: 2 }).default("0"),
+  totalInsurance: decimal("total_insurance", { precision: 12, scale: 2 }).default("0"),
+  totalNetPay: decimal("total_net_pay", { precision: 12, scale: 2 }).default("0"),
+  computedAt: timestamp("computed_at"),
+  reviewedAt: timestamp("reviewed_at"),
+  finalizedAt: timestamp("finalized_at"),
+  createdBy: varchar("created_by").references(() => users.id),
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  finalizedBy: varchar("finalized_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_payroll_scopes_run").on(table.runId),
+  index("idx_payroll_scopes_period").on(table.period),
+  index("idx_payroll_scopes_status").on(table.status),
+  index("idx_payroll_scopes_sequence").on(table.period, table.sequence),
+]);
+
+// Employee Period State table - Per-employee processing state and caps tracking
+export const employeePeriodState = pgTable("employee_period_state", {
+  stateId: varchar("state_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  period: varchar("period", { length: 7 }).notNull(), // YYYY-MM format
+  status: varchar("status", { length: 20 }).default("unprocessed"), // unprocessed, processed, adjusted, finalized
+  processedInScopeId: varchar("processed_in_scope_id").references(() => payrollScopes.scopeId),
+  adjustedInScopeId: varchar("adjusted_in_scope_id").references(() => payrollScopes.scopeId),
+  finalizedAt: timestamp("finalized_at"),
+  
+  // Monthly caps tracking (remaining amounts)
+  efkaCapRemaining: decimal("efka_cap_remaining", { precision: 10, scale: 2 }).default("0"),
+  taxCapRemaining: decimal("tax_cap_remaining", { precision: 10, scale: 2 }).default("0"),
+  overtimeCapRemaining: decimal("overtime_cap_remaining", { precision: 8, scale: 2 }).default("0"), // hours
+  
+  // Cap consumption this period
+  efkaCapUsed: decimal("efka_cap_used", { precision: 10, scale: 2 }).default("0"),
+  taxCapUsed: decimal("tax_cap_used", { precision: 10, scale: 2 }).default("0"),
+  overtimeCapUsed: decimal("overtime_cap_used", { precision: 8, scale: 2 }).default("0"), // hours
+  
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_employee_period_state_employee").on(table.employeeId),
+  index("idx_employee_period_state_period").on(table.period),
+  index("idx_employee_period_state_status").on(table.status),
+  index("idx_employee_period_state_unique").on(table.employeeId, table.period),
+]);
+
+// Period Ledgers table - Consolidation layer for filings and GL
+export const periodLedgers = pgTable("period_ledgers", {
+  ledgerId: varchar("ledger_id").primaryKey().default(sql`gen_random_uuid()`),
+  period: varchar("period", { length: 7 }).notNull(), // YYYY-MM format
+  type: varchar("type", { length: 20 }).notNull(), // filings, gl, analytics
+  status: varchar("status", { length: 20 }).default("open"), // open, closed
+  
+  // Aggregated totals from all scopes
+  totalEmployees: integer("total_employees").default(0),
+  totalGrossPay: decimal("total_gross_pay", { precision: 12, scale: 2 }).default("0"),
+  totalTaxes: decimal("total_taxes", { precision: 12, scale: 2 }).default("0"),
+  totalInsurance: decimal("total_insurance", { precision: 12, scale: 2 }).default("0"),
+  totalNetPay: decimal("total_net_pay", { precision: 12, scale: 2 }).default("0"),
+  
+  // Filing references
+  apdFilingId: varchar("apd_filing_id").references(() => filings.filingId),
+  fmyFilingId: varchar("fmy_filing_id").references(() => filings.filingId),
+  
+  // GL journal references
+  glJournalIds: jsonb("gl_journal_ids").default('[]'), // Array of journal IDs
+  
+  // Scope tracking
+  includedScopeIds: jsonb("included_scope_ids").notNull().default('[]'), // All scopes consolidated
+  lastConsolidatedAt: timestamp("last_consolidated_at"),
+  closedAt: timestamp("closed_at"),
+  closedBy: varchar("closed_by").references(() => users.id),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_period_ledgers_period").on(table.period),
+  index("idx_period_ledgers_type").on(table.type),
+  index("idx_period_ledgers_status").on(table.status),
+  index("idx_period_ledgers_unique").on(table.period, table.type),
+]);
+
+// Payroll Scope Lines table - Individual employee calculations within a scope
+export const payrollScopeLines = pgTable("payroll_scope_lines", {
+  lineId: varchar("line_id").primaryKey().default(sql`gen_random_uuid()`),
+  scopeId: varchar("scope_id").references(() => payrollScopes.scopeId).notNull(),
+  runId: varchar("run_id").references(() => payrollRuns.runId).notNull(),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  code: varchar("code", { length: 20 }).notNull(), // BASIC, OT1, NIGHT, FOOD_ALL, TAX, INS_EMP
+  description: varchar("description", { length: 200 }).notNull(),
+  hours: decimal("hours", { precision: 8, scale: 2 }).default("0"),
+  units: decimal("units", { precision: 8, scale: 2 }).default("0"),
+  rate: decimal("rate", { precision: 10, scale: 4 }).default("0"),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  costCenter: varchar("cost_center", { length: 50 }),
+  notes: text("notes"),
+  isDeduction: boolean("is_deduction").default(false),
+  isTaxable: boolean("is_taxable").default(true),
+  isInsurable: boolean("is_insurable").default(true),
+  
+  // Cap consumption tracking
+  efkaCapConsumed: decimal("efka_cap_consumed", { precision: 10, scale: 2 }).default("0"),
+  taxCapConsumed: decimal("tax_cap_consumed", { precision: 10, scale: 2 }).default("0"),
+  overtimeCapConsumed: decimal("overtime_cap_consumed", { precision: 8, scale: 2 }).default("0"), // hours
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_payroll_scope_lines_scope").on(table.scopeId),
+  index("idx_payroll_scope_lines_run").on(table.runId),
+  index("idx_payroll_scope_lines_employee").on(table.employeeId),
+  index("idx_payroll_scope_lines_code").on(table.code),
+]);
+
+// Payment Batches table - Groups scopes for payment processing
+export const paymentBatches = pgTable("payment_batches", {
+  batchId: varchar("batch_id").primaryKey().default(sql`gen_random_uuid()`),
+  period: varchar("period", { length: 7 }).notNull(), // YYYY-MM format
+  batchNumber: varchar("batch_number", { length: 50 }).notNull(),
+  status: varchar("status", { length: 20 }).default("draft"), // draft, ready, sent, processed, failed
+  paymentDate: date("payment_date").notNull(),
+  paymentMethod: varchar("payment_method", { length: 20 }).notNull(), // sepa_dd, bank_transfer, cash
+  
+  // Included scopes
+  scopeIds: jsonb("scope_ids").notNull().default('[]'), // Array of scope IDs
+  totalEmployees: integer("total_employees").default(0),
+  totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).default("0"),
+  
+  // Banking details
+  sepaFileId: varchar("sepa_file_id"), // Reference to generated SEPA file
+  bankReference: varchar("bank_reference", { length: 100 }),
+  processedAt: timestamp("processed_at"),
+  failedAt: timestamp("failed_at"),
+  failureReason: text("failure_reason"),
+  
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_payment_batches_period").on(table.period),
+  index("idx_payment_batches_status").on(table.status),
+  index("idx_payment_batches_number").on(table.batchNumber),
+]);
+
 // Filings table - Government compliance submissions
 export const filings = pgTable("filings", {
   filingId: varchar("filing_id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1343,6 +1503,126 @@ export const filingsRelations = relations(filings, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+// Relations for selective payroll runs
+export const payrollScopesRelations = relations(payrollScopes, ({ one, many }) => ({
+  run: one(payrollRuns, {
+    fields: [payrollScopes.runId],
+    references: [payrollRuns.runId],
+  }),
+  createdByUser: one(users, {
+    fields: [payrollScopes.createdBy],
+    references: [users.id],
+  }),
+  reviewedByUser: one(users, {
+    fields: [payrollScopes.reviewedBy],
+    references: [users.id],
+  }),
+  finalizedByUser: one(users, {
+    fields: [payrollScopes.finalizedBy],
+    references: [users.id],
+  }),
+  scopeLines: many(payrollScopeLines),
+  employeeStates: many(employeePeriodState),
+}));
+
+export const employeePeriodStateRelations = relations(employeePeriodState, ({ one }) => ({
+  employee: one(employees, {
+    fields: [employeePeriodState.employeeId],
+    references: [employees.employeeId],
+  }),
+  processedInScope: one(payrollScopes, {
+    fields: [employeePeriodState.processedInScopeId],
+    references: [payrollScopes.scopeId],
+  }),
+  adjustedInScope: one(payrollScopes, {
+    fields: [employeePeriodState.adjustedInScopeId],
+    references: [payrollScopes.scopeId],
+  }),
+}));
+
+export const periodLedgersRelations = relations(periodLedgers, ({ one }) => ({
+  closedByUser: one(users, {
+    fields: [periodLedgers.closedBy],
+    references: [users.id],
+  }),
+  apdFiling: one(filings, {
+    fields: [periodLedgers.apdFilingId],
+    references: [filings.filingId],
+  }),
+  fmyFiling: one(filings, {
+    fields: [periodLedgers.fmyFilingId],
+    references: [filings.filingId],
+  }),
+}));
+
+export const payrollScopeLinesRelations = relations(payrollScopeLines, ({ one }) => ({
+  scope: one(payrollScopes, {
+    fields: [payrollScopeLines.scopeId],
+    references: [payrollScopes.scopeId],
+  }),
+  run: one(payrollRuns, {
+    fields: [payrollScopeLines.runId],
+    references: [payrollRuns.runId],
+  }),
+  employee: one(employees, {
+    fields: [payrollScopeLines.employeeId],
+    references: [employees.employeeId],
+  }),
+}));
+
+export const paymentBatchesRelations = relations(paymentBatches, ({ one }) => ({
+  createdByUser: one(users, {
+    fields: [paymentBatches.createdBy],
+    references: [users.id],
+  }),
+}));
+
+// Insert schemas for selective payroll runs
+export const insertPayrollScopeSchema = createInsertSchema(payrollScopes).omit({
+  scopeId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertEmployeePeriodStateSchema = createInsertSchema(employeePeriodState).omit({
+  stateId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPeriodLedgerSchema = createInsertSchema(periodLedgers).omit({
+  ledgerId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPayrollScopeLineSchema = createInsertSchema(payrollScopeLines).omit({
+  lineId: true,
+  createdAt: true,
+});
+
+export const insertPaymentBatchSchema = createInsertSchema(paymentBatches).omit({
+  batchId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+// Types for selective payroll runs
+export type PayrollScope = typeof payrollScopes.$inferSelect;
+export type InsertPayrollScope = z.infer<typeof insertPayrollScopeSchema>;
+
+export type EmployeePeriodState = typeof employeePeriodState.$inferSelect;
+export type InsertEmployeePeriodState = z.infer<typeof insertEmployeePeriodStateSchema>;
+
+export type PeriodLedger = typeof periodLedgers.$inferSelect;
+export type InsertPeriodLedger = z.infer<typeof insertPeriodLedgerSchema>;
+
+export type PayrollScopeLine = typeof payrollScopeLines.$inferSelect;
+export type InsertPayrollScopeLine = z.infer<typeof insertPayrollScopeLineSchema>;
+
+export type PaymentBatch = typeof paymentBatches.$inferSelect;
+export type InsertPaymentBatch = z.infer<typeof insertPaymentBatchSchema>;
 
 // Additional type definitions for new data model
 export type Contract = typeof contracts.$inferSelect;
