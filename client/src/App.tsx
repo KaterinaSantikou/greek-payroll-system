@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { lazy, Suspense } from "react";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
+import LandingPage from "@/pages/LandingPage";
 // Lazy load major pages for better performance
 const Home = lazy(() => import("@/pages/home"));
 const Employees = lazy(() => import("@/pages/employees"));
@@ -100,6 +101,7 @@ function Router() {
     return (
       <Switch>
         <Route path="/" component={Landing} />
+        <Route path="/marketing" component={LandingPage} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
         {/* Authentication Routes */}
         <Route path="/auth/login" component={Login} />
