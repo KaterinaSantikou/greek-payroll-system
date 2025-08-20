@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import EmployeeCard from "@/components/EmployeeCard";
-import EmployeeForm from "@/components/EmployeeForm";
+import SimpleEmployeeForm from "@/components/SimpleEmployeeForm";
 import { Plus, Download, Search } from "lucide-react";
 import type { Employee } from "@shared/schema";
 
@@ -306,8 +306,17 @@ export default function Employees() {
               {editingEmployee ? "Επεξεργασία Εργαζομένου" : "Προσθήκη Νέου Εργαζομένου"}
             </DialogTitle>
           </DialogHeader>
-          <EmployeeForm
-            employee={editingEmployee}
+          <SimpleEmployeeForm
+            employee={editingEmployee ? {
+              employeeId: editingEmployee.employeeId,
+              name: editingEmployee.name,
+              employeeNumber: editingEmployee.employeeNumber,
+              role: editingEmployee.role || "",
+              employmentType: editingEmployee.employmentType,
+              hireDate: editingEmployee.hireDate,
+              afm: editingEmployee.afm || "",
+              defaultPropertyId: editingEmployee.defaultPropertyId || "prop-princess"
+            } : null}
             onSuccess={handleFormSuccess}
             onCancel={() => setIsFormOpen(false)}
           />
