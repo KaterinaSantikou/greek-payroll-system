@@ -5,22 +5,28 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { AccessibleInput } from '@/components/ui/accessible-input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, Mail, ArrowLeft } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
+import { validateEmail } from '@/utils/validation';
+import { addCSRFHeader } from '@/utils/validation';
 
-const forgotPasswordSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+const createForgotPasswordSchema = (t: (key: string) => string) => z.object({
+  email: z.string()
+    .min(1, t('auth.error.required'))
+    .refine(validateEmail, t('auth.error.email')),
 });
 
-type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
-
 export default function ForgotPassword() {
+  const { t, locale } = useTranslation();
   const [, setLocation] = useLocation();
   const [emailSent, setEmailSent] = useState(false);
   const [sentEmail, setSentEmail] = useState('');
+
+  const forgotPasswordSchema = createForgotPasswordSchema(t);
+  type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
   const form = useForm<ForgotPasswordFormData>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -31,17 +37,19 @@ export default function ForgotPassword() {
 
   const forgotPasswordMutation = useMutation({
     mutationFn: async (data: ForgotPasswordFormData) => {
+      const headers = addCSRFHeader({
+        'Content-Type': 'application/json',
+      });
+
       const response = await fetch('/api/auth/v2/forgot-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        headers,
+        body: JSON.stringify({ ...data, locale }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to send reset email');
+        // Always show generic success message for security
+        return { success: true };
       }
 
       return response.json();
@@ -58,42 +66,49 @@ export default function ForgotPassword() {
 
   if (emailSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <Card className="w-full max-w-md">
+      <div 
+        className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8"
+        style={{ 
+          animation: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : undefined 
+        }}
+      >
+        <Card className="w-full max-w-md min-w-[480px] max-w-[560px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardHeader className="text-center">
-            <Mail className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-            <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
-            <CardDescription>
+            <Mail className="h-12 w-12 text-blue-500 dark:text-blue-400 mx-auto mb-4" aria-hidden="true" />
+            <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              {t('auth.verify.title')}
+            </CardTitle>
+            <CardDescription className="text-gray-600 dark:text-gray-400">
               We've sent a password reset link to <strong>{sentEmail}</strong>
             </CardDescription>
           </CardHeader>
           
-          <CardContent className="space-y-4">
-            <div className="text-sm text-gray-600 text-center space-y-2">
+          <CardContent className="space-y-6">
+            <div className="text-sm text-gray-600 dark:text-gray-400 text-center space-y-2">
               <p>Click the link in the email to reset your password.</p>
               <p>The link will expire in 15 minutes for security.</p>
               <p>Didn't receive the email? Check your spam folder.</p>
             </div>
 
-            <Alert className="border-blue-200 bg-blue-50">
-              <AlertCircle className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800">
+            <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+              <AlertCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <AlertDescription className="text-blue-800 dark:text-blue-300">
                 For security reasons, we'll always show this message regardless of whether the email address exists in our system.
               </AlertDescription>
             </Alert>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 onClick={() => forgotPasswordMutation.mutate({ email: sentEmail })}
                 disabled={forgotPasswordMutation.isPending}
               >
                 {forgotPasswordMutation.isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Resending...
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+                    {t('auth.loading.sending')}
                   </>
                 ) : (
                   'Resend reset email'
@@ -103,7 +118,7 @@ export default function ForgotPassword() {
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full"
+                className="w-full text-gray-600 dark:text-gray-400"
                 onClick={() => {
                   setEmailSent(false);
                   setSentEmail('');
@@ -117,8 +132,11 @@ export default function ForgotPassword() {
 
           <CardFooter className="text-center">
             <div className="text-sm">
-              <Link href="/auth/login" className="text-blue-600 hover:text-blue-500 inline-flex items-center">
-                <ArrowLeft className="h-4 w-4 mr-1" />
+              <Link 
+                href="/auth/login" 
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 inline-flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" aria-hidden="true" />
                 Back to sign in
               </Link>
             </div>
@@ -129,19 +147,26 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+    <div 
+      className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8"
+      style={{ 
+        animation: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : undefined 
+      }}
+    >
+      <Card className="w-full max-w-md min-w-[480px] max-w-[560px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Forgot your password?</CardTitle>
-          <CardDescription>
-            Enter your email address and we'll send you a link to reset your password
+          <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t('auth.forgot.title')}
+          </CardTitle>
+          <CardDescription className="text-gray-600 dark:text-gray-400">
+            {t('auth.forgot.description')}
           </CardDescription>
         </CardHeader>
         
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+          <CardContent className="space-y-6">
             {forgotPasswordMutation.error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   {forgotPasswordMutation.error instanceof Error 
@@ -151,44 +176,42 @@ export default function ForgotPassword() {
               </Alert>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@company.com"
-                {...form.register('email')}
-                className={form.formState.errors.email ? 'border-red-500' : ''}
-                autoFocus
-              />
-              {form.formState.errors.email && (
-                <p className="text-sm text-red-500">
-                  {form.formState.errors.email.message}
-                </p>
-              )}
-            </div>
+            <AccessibleInput
+              label={t('auth.email')}
+              id="forgot-email"
+              type="email"
+              placeholder="name@company.com"
+              required
+              autoComplete="email"
+              autoFocus
+              {...form.register('email')}
+              error={form.formState.errors.email?.message}
+            />
 
             <Button
               type="submit"
-              className="w-full"
-              disabled={forgotPasswordMutation.isPending}
+              className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-white font-medium py-2 px-4 rounded-md transition-colors"
+              disabled={forgotPasswordMutation.isPending || !form.formState.isValid}
             >
               {forgotPasswordMutation.isPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Sending reset link...
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+                  {t('auth.loading.sending')}
                 </>
               ) : (
-                'Send reset link'
+                t('auth.forgot.send')
               )}
             </Button>
           </CardContent>
 
           <CardFooter className="text-center">
-            <div className="text-sm">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
               Remember your password?{' '}
-              <Link href="/auth/login" className="text-blue-600 hover:text-blue-500">
-                Sign in
+              <Link 
+                href="/auth/login" 
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+              >
+                {t('auth.signIn')}
               </Link>
             </div>
           </CardFooter>
