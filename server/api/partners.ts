@@ -7,20 +7,24 @@ import { db } from '../db';
 import { 
   partnerFirms, 
   partnerMembers, 
-  clientAccessGrants, 
+  clientAccessGrants,
+  clientAccessInvitations,
   oboTokens,
   users,
   type PartnerFirm,
   type PartnerMember,
   type ClientAccessGrant,
+  type ClientAccessInvitation,
   insertPartnerFirmSchema,
   insertPartnerMemberSchema,
-  insertClientAccessGrantSchema
+  insertClientAccessGrantSchema,
+  insertClientAccessInvitationSchema
 } from '@shared/schema';
 import { eq, and, or } from 'drizzle-orm';
 import { isAuthenticated } from '../replitAuth';
 import { OboService } from '../services/OboService';
 import { AuditService } from '../services/AuditService';
+import { ClientAccessService, PermissionScopes } from '../services/ClientAccessService';
 
 export function registerPartnerRoutes(app: Express) {
   
@@ -371,6 +375,182 @@ export function registerPartnerRoutes(app: Express) {
     } catch (error) {
       console.error('Error getting current context:', error);
       res.status(500).json({ error: 'Failed to get current context' });
+    }
+  });
+
+  // CLIENT ACCESS INVITATION ENDPOINTS
+
+  const clientAccessService = new ClientAccessService();
+
+  // Send invitation to client for partner access
+  app.post('/api/partners/invitations/send', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const validatedData = insertClientAccessInvitationSchema.parse(req.body);
+
+      // Validate partner firm access
+      const partnerMember = await db.select()
+        .from(partnerMembers)
+        .where(and(
+          eq(partnerMembers.partnerFirmId, validatedData.partnerFirmId),
+          eq(partnerMembers.userId, userId),
+          eq(partnerMembers.isActive, true)
+        ))
+        .limit(1);
+
+      if (!partnerMember.length) {
+        return res.status(403).json({ error: 'Not authorized for this partner firm' });
+      }
+
+      // Check if user has permission to send invitations
+      if (!partnerMember[0].canManageClients) {
+        return res.status(403).json({ error: 'Not authorized to send client invitations' });
+      }
+
+      const invitation = await clientAccessService.sendInvitation({
+        partnerFirmId: validatedData.partnerFirmId,
+        clientTenantId: validatedData.clientTenantId,
+        clientAdminEmail: validatedData.clientAdminEmail,
+        requestedScopes: Array.isArray(validatedData.requestedScopes) 
+          ? validatedData.requestedScopes 
+          : ['filings:prepare', 'runs:view', 'audit:download'],
+        suggestedMakerCheckerMode: validatedData.suggestedMakerCheckerMode,
+        message: validatedData.message,
+        serviceType: validatedData.serviceType,
+      }, userId);
+
+      res.json(invitation);
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      res.status(500).json({ error: 'Failed to send invitation' });
+    }
+  });
+
+  // Get invitations sent by partner firm
+  app.get('/api/partners/invitations', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const partnerFirmId = req.query.partnerFirmId as string;
+
+      if (!partnerFirmId) {
+        return res.status(400).json({ error: 'Partner firm ID required' });
+      }
+
+      // Validate partner firm access
+      const partnerMember = await db.select()
+        .from(partnerMembers)
+        .where(and(
+          eq(partnerMembers.partnerFirmId, partnerFirmId),
+          eq(partnerMembers.userId, userId),
+          eq(partnerMembers.isActive, true)
+        ))
+        .limit(1);
+
+      if (!partnerMember.length) {
+        return res.status(403).json({ error: 'Not authorized for this partner firm' });
+      }
+
+      const invitations = await db.select()
+        .from(clientAccessInvitations)
+        .where(eq(clientAccessInvitations.partnerFirmId, partnerFirmId));
+
+      res.json(invitations);
+    } catch (error) {
+      console.error('Error fetching invitations:', error);
+      res.status(500).json({ error: 'Failed to fetch invitations' });
+    }
+  });
+
+  // Get available permission scopes
+  app.get('/api/partners/permission-scopes', isAuthenticated, async (req: any, res) => {
+    try {
+      res.json({
+        scopes: PermissionScopes,
+        defaultScopes: ['filings:prepare', 'runs:view', 'audit:download'],
+        makerCheckerModes: [
+          { value: 'client_checker', label: 'Client approves partner actions', description: 'Partner prepares; client approves/submits.' },
+          { value: 'partner_checker', label: 'Partner internal approval', description: 'Partner staff prepares; partner reviewer approves/submits.' },
+          { value: 'dual', label: 'Dual approval required', description: 'Partner prepares; client approves; partner submits (or vice-versa).' },
+        ]
+      });
+    } catch (error) {
+      console.error('Error fetching permission scopes:', error);
+      res.status(500).json({ error: 'Failed to fetch permission scopes' });
+    }
+  });
+
+  // Get access grants for partner firm
+  app.get('/api/partners/grants', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const partnerFirmId = req.query.partnerFirmId as string;
+
+      if (!partnerFirmId) {
+        return res.status(400).json({ error: 'Partner firm ID required' });
+      }
+
+      // Validate partner firm access
+      const partnerMember = await db.select()
+        .from(partnerMembers)
+        .where(and(
+          eq(partnerMembers.partnerFirmId, partnerFirmId),
+          eq(partnerMembers.userId, userId),
+          eq(partnerMembers.isActive, true)
+        ))
+        .limit(1);
+
+      if (!partnerMember.length) {
+        return res.status(403).json({ error: 'Not authorized for this partner firm' });
+      }
+
+      const grants = await clientAccessService.getPartnerGrants(partnerFirmId);
+      res.json(grants);
+    } catch (error) {
+      console.error('Error fetching access grants:', error);
+      res.status(500).json({ error: 'Failed to fetch access grants' });
+    }
+  });
+
+  // Revoke access grant
+  app.delete('/api/partners/grants/:grantId', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { grantId } = req.params;
+
+      // Get the grant to check partner firm access
+      const [grant] = await db.select()
+        .from(clientAccessGrants)
+        .where(eq(clientAccessGrants.id, grantId))
+        .limit(1);
+
+      if (!grant) {
+        return res.status(404).json({ error: 'Grant not found' });
+      }
+
+      // Validate partner firm access
+      const partnerMember = await db.select()
+        .from(partnerMembers)
+        .where(and(
+          eq(partnerMembers.partnerFirmId, grant.partnerFirmId),
+          eq(partnerMembers.userId, userId),
+          eq(partnerMembers.isActive, true)
+        ))
+        .limit(1);
+
+      if (!partnerMember.length) {
+        return res.status(403).json({ error: 'Not authorized for this partner firm' });
+      }
+
+      // Check if user has permission to manage clients
+      if (!partnerMember[0].canManageClients) {
+        return res.status(403).json({ error: 'Not authorized to revoke client access' });
+      }
+
+      await clientAccessService.revokeGrant(grantId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error revoking grant:', error);
+      res.status(500).json({ error: 'Failed to revoke grant' });
     }
   });
 }

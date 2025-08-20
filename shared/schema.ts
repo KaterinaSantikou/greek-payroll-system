@@ -4669,16 +4669,47 @@ export const partnerMembers = pgTable("partner_members", {
   joinedAt: timestamp("joined_at"),
 });
 
+// Client access invitations - sent to clients for approval before granting access
+export const clientAccessInvitations = pgTable("client_access_invitations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerFirmId: varchar("partner_firm_id").notNull().references(() => partnerFirms.id, { onDelete: 'cascade' }),
+  clientTenantId: varchar("client_tenant_id").notNull(),
+  clientAdminEmail: varchar("client_admin_email").notNull(),
+  
+  // Requested permissions
+  requestedScopes: jsonb("requested_scopes").notNull().default(sql`'["filings:prepare", "runs:view", "audit:download"]'::jsonb`), // Default least privilege
+  suggestedMakerCheckerMode: varchar("suggested_maker_checker_mode").notNull().default('client_checker'), // client_checker, partner_checker, dual
+  
+  // Invitation details
+  invitationToken: varchar("invitation_token").notNull().unique(),
+  message: text("message"), // Optional message from partner
+  serviceType: varchar("service_type").notNull().default('payroll'), // 'payroll', 'filings', 'compliance', 'all'
+  
+  // Status and lifecycle
+  status: varchar("status").notNull().default('pending'), // 'pending', 'approved', 'rejected', 'expired'
+  expiresAt: timestamp("expires_at").notNull(),
+  sentAt: timestamp("sent_at").defaultNow(),
+  respondedAt: timestamp("responded_at"),
+  
+  // Audit
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: varchar("created_by").notNull(), // Partner user who sent invitation
+  approvedBy: varchar("approved_by"), // Client user who approved
+});
+
 // Client tenant access grants - manages which partner firms can access which client tenants
 export const clientAccessGrants = pgTable("client_access_grants", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invitationId: varchar("invitation_id"), // Reference to invitation that created this grant
   clientTenantId: varchar("client_tenant_id").notNull(), // References client's tenant/property ID
   partnerFirmId: varchar("partner_firm_id").notNull().references(() => partnerFirms.id, { onDelete: 'cascade' }),
   
-  // Access scope and permissions
-  accessLevel: varchar("access_level").notNull().default("read_write"), // 'read_only', 'read_write', 'full_admin'
-  grantedScopes: jsonb("granted_scopes").notNull(), // Array of scope strings
-  restrictedActions: jsonb("restricted_actions"), // Actions that require client approval
+  // Granular permission scopes with least privilege defaults
+  grantedScopes: jsonb("granted_scopes").notNull().default(sql`'["filings:prepare", "runs:view", "audit:download"]'::jsonb`), // Granular scopes
+  restrictedActions: jsonb("restricted_actions").default(sql`'[]'::jsonb`), // Actions that require client approval
+  
+  // Maker-checker configuration
+  makerCheckerMode: varchar("maker_checker_mode").notNull().default('client_checker'), // client_checker, partner_checker, dual
   
   // Service configuration
   serviceType: varchar("service_type").notNull(), // 'payroll', 'filings', 'compliance', 'all'
@@ -4963,6 +4994,9 @@ export type InsertPartnerFirm = typeof partnerFirms.$inferInsert;
 export type PartnerMember = typeof partnerMembers.$inferSelect;
 export type InsertPartnerMember = typeof partnerMembers.$inferInsert;
 
+export type ClientAccessInvitation = typeof clientAccessInvitations.$inferSelect;
+export type InsertClientAccessInvitation = typeof clientAccessInvitations.$inferInsert;
+
 export type ClientAccessGrant = typeof clientAccessGrants.$inferSelect;
 export type InsertClientAccessGrant = typeof clientAccessGrants.$inferInsert;
 
@@ -4993,6 +5027,14 @@ export const insertPartnerMemberSchema = createInsertSchema(partnerMembers).omit
   createdAt: true,
   updatedAt: true,
   lastActiveAt: true,
+});
+
+export const insertClientAccessInvitationSchema = createInsertSchema(clientAccessInvitations).omit({
+  id: true,
+  createdAt: true,
+  sentAt: true,
+  respondedAt: true,
+  invitationToken: true,
 });
 
 export const insertClientAccessGrantSchema = createInsertSchema(clientAccessGrants).omit({
