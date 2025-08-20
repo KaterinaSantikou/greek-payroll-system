@@ -1,0 +1,103 @@
+here’s a tight, developer-ready analysis + spec for the Employee Dashboard (employee portal/home). It balances clarity, trust, and “one-tap” actions, tuned to Greece (ERGANI II, Ψηφιακή Κάρτα).
+
+1) Objectives (employee view)
+
+Answer fast: “When do I get paid? how much? what changed?”
+
+One-tap actions: punch in/out, request leave, fix timesheet, view/download payslip.
+
+Trust & self-service: explain every amount; let employees update bank/tax details (with maker-checker if you require).
+
+Success signals: ≤2 clicks to any task, CSAT ≥4.5/5 for Explain-Your-Pay, drop in HR/payroll tickets.
+
+2) Information architecture (above the fold)
+
+Top row (cards)
+
+Next payday + net estimate (if run draft exists) → “View payslip preview”
+
+Hours this week + status (approved/pending/exceptions) → “Open timesheet”
+
+Leave balance (annual/remaining) → “Request leave”
+
+Second row
+
+Explain-Your-Pay highlights (2 bullets on deltas vs last period)
+
+Upcoming shift(s) (+ site) → “View schedule”
+
+Digital Work Card (coverage %, last sync time) → “Open timeline”
+
+Right rail (or bottom on mobile)
+
+To-dos: documents to sign, bank/IBAN missing, tax ID missing
+
+Recent payslips (last 6 months) with quick download
+
+Announcements (policy, holiday)
+
+3) Widgets (what they do & rules)
+A) Next payday (Πληρωμή)
+
+Shows date, run status (planned/processing/paid), net estimate if run is in draft/finalized.
+
+If payment is late → red badge “Running late” with link to support.
+
+If split payouts (tips/allowances) → show badges.
+
+Click: opens the current period payslip (or preview).
+Data: /v1/portal/payday?period=YYYY-MM
+
+B) Hours this week (Ώρες εβδομάδας)
+
+worked / scheduled + badge for exceptions (missed/duplicate punches, break issues).
+
+CTA: Open timesheet (the week view with punch corrections).
+
+Toggle for EL/EN numbers (38,5 ώρες).
+Data: /v1/portal/timesheets/summary?week=ISO
+
+C) Leave balance (Άδεια)
+
+Annual entitlement, used, remaining; next holiday; request leave button.
+
+If an open leave request exists → show status (pending/approved/rejected).
+Data: /v1/portal/leave/balance, /v1/portal/leave/requests?status=pending
+
+D) Explain-Your-Pay (Εξήγηση αποδοχών)
+
+Two bullets: top drivers of change vs last month (e.g., “+4h OT, −2 days”).
+
+Link: “See full explanation” (narrative with code-level citations).
+Data: /v1/explain/{payslip_id}?lang=el-GR
+
+E) Upcoming shifts (Βάρδιες)
+
+Next 3 shifts: date, time, site; warnings for split shift/short rest.
+
+Link: View schedule.
+Data: /v1/portal/schedule/upcoming?limit=3
+
+F) Digital Work Card (Ψηφιακή Κάρτα)
+
+Coverage % today, last sync timestamp, discrepancies (timeline drift).
+
+CTA: “Open timeline” (day view 22:00–06:00 band shading).
+Data: /v1/portal/dwc/coverage?date=YYYY-MM-DD
+
+G) To-dos (Εκκρεμότητες)
+
+Items: “Sign document”, “Add/verify IBAN”, “Add AFM”, “Upload document”, “Acknowledge policy”.
+
+Each item is a single deep link into the exact form; show counts.
+Data: /v1/portal/tasks?limit=5
+
+H) Recent payslips (Εκκαθαριστικά)
+
+6 tiles (month, net), with download PDF; show watermarked preview if not final.
+Data: /v1/portal/payslips?limit=6
+
+I) Announcements (Ανακοινώσεις)
+
+Short feed (HR notes, holiday schedule).
+Data: /v1/portal/announcements?limit=3

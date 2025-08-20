@@ -5807,5 +5807,180 @@ export const insertLogPatternSchema = createInsertSchema(logPatterns).omit({
   updatedAt: true,
 });
 
+// Government System Monitoring Schema
+
+// Government systems status tracking
+export const governmentSystems = pgTable("government_systems", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  systemCode: varchar("system_code").notNull().unique(), // 'ergani_ii', 'e_efka', 'aade_fmy', etc.
+  displayName: varchar("display_name").notNull(), // Human-readable name
+  description: text("description"),
+  baseUrl: varchar("base_url").notNull(), // Base URL for health checks
+  healthCheckEndpoint: varchar("health_check_endpoint").default('/health'), // Specific endpoint to check
+  systemType: varchar("system_type").notNull(), // 'labor_reporting', 'social_security', 'tax_authority'
+  isActive: boolean("is_active").default(true),
+  priority: varchar("priority").default('high'), // 'critical', 'high', 'medium', 'low'
+  timeout: integer("timeout_ms").default(30000), // Request timeout in milliseconds
+  retryAttempts: integer("retry_attempts").default(3),
+  checkInterval: integer("check_interval_minutes").default(5), // How often to check
+  maintenanceWindows: jsonb("maintenance_windows"), // Known maintenance periods
+  contactInfo: jsonb("contact_info"), // Support contacts and escalation
+  documentation: jsonb("documentation"), // Links to system documentation
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Real-time status monitoring
+export const systemStatusChecks = pgTable("system_status_checks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  systemId: varchar("system_id").references(() => governmentSystems.id).notNull(),
+  checkTime: timestamp("check_time").notNull().defaultNow(),
+  status: varchar("status").notNull(), // 'online', 'offline', 'degraded', 'maintenance'
+  responseTime: integer("response_time_ms"), // Response time in milliseconds
+  httpStatusCode: integer("http_status_code"),
+  errorMessage: text("error_message"),
+  errorDetails: jsonb("error_details"), // Stack trace, connection details, etc.
+  checkMethod: varchar("check_method").default('http'), // 'http', 'ping', 'custom'
+  checkedBy: varchar("checked_by").default('automated'), // 'automated', 'manual', user_id
+  isSuccessful: boolean("is_successful").notNull(),
+  retryCount: integer("retry_count").default(0),
+  nextRetryAt: timestamp("next_retry_at"),
+  metadata: jsonb("metadata"), // Additional check-specific data
+});
+
+// Outage incidents and tracking
+export const systemOutages = pgTable("system_outages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  systemId: varchar("system_id").references(() => governmentSystems.id).notNull(),
+  incidentId: varchar("incident_id").notNull(), // External incident ID if available
+  title: varchar("title").notNull(),
+  description: text("description"),
+  severity: varchar("severity").notNull(), // 'critical', 'major', 'minor', 'maintenance'
+  status: varchar("status").default('active'), // 'active', 'resolved', 'investigating', 'monitoring'
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  duration: integer("duration_minutes"),
+  affectedServices: jsonb("affected_services"), // List of affected functionality
+  rootCause: text("root_cause"),
+  resolution: text("resolution"),
+  impact: varchar("impact"), // 'total_outage', 'partial_outage', 'performance_degradation'
+  estimatedResolution: timestamp("estimated_resolution"),
+  communicationStatus: varchar("communication_status").default('pending'), // 'pending', 'communicated', 'escalated'
+  reportedBy: varchar("reported_by"), // 'system', 'user', 'external'
+  assignedTo: varchar("assigned_to"), // Support team member
+  priority: integer("priority").default(1), // 1 = highest
+  tags: jsonb("tags"),
+  externalReferences: jsonb("external_references"), // Links to government announcements
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Alert subscriptions and notifications
+export const systemAlertSubscriptions = pgTable("system_alert_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  systemId: varchar("system_id").references(() => governmentSystems.id),
+  alertType: varchar("alert_type").notNull(), // 'outage', 'degradation', 'maintenance', 'recovery'
+  severity: jsonb("severity"), // Array of severities to alert on
+  notificationChannels: jsonb("notification_channels"), // 'email', 'sms', 'slack', 'webhook'
+  isActive: boolean("is_active").default(true),
+  quietHours: jsonb("quiet_hours"), // Time periods to suppress notifications
+  escalationDelay: integer("escalation_delay_minutes").default(15),
+  lastTriggered: timestamp("last_triggered"),
+  triggerCount: integer("trigger_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Historical metrics and SLA tracking
+export const systemAvailabilityMetrics = pgTable("system_availability_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  systemId: varchar("system_id").references(() => governmentSystems.id).notNull(),
+  metricDate: timestamp("metric_date").notNull(), // Date for this metric period
+  periodType: varchar("period_type").notNull(), // 'hourly', 'daily', 'weekly', 'monthly'
+  totalChecks: integer("total_checks").notNull().default(0),
+  successfulChecks: integer("successful_checks").notNull().default(0),
+  failedChecks: integer("failed_checks").notNull().default(0),
+  avgResponseTime: decimal("avg_response_time_ms", { precision: 10, scale: 2 }),
+  maxResponseTime: integer("max_response_time_ms"),
+  minResponseTime: integer("min_response_time_ms"),
+  uptime: decimal("uptime_percentage", { precision: 5, scale: 2 }), // 0-100%
+  slaTarget: decimal("sla_target", { precision: 5, scale: 2 }).default('99.9'), // SLA target %
+  slaStatus: varchar("sla_status"), // 'met', 'missed', 'at_risk'
+  outageCount: integer("outage_count").default(0),
+  totalOutageMinutes: integer("total_outage_minutes").default(0),
+  incidentCount: integer("incident_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// System integration points and dependencies
+export const systemIntegrations = pgTable("system_integrations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  systemId: varchar("system_id").references(() => governmentSystems.id).notNull(),
+  integrationType: varchar("integration_type").notNull(), // 'api', 'file_transfer', 'web_service', 'manual'
+  endpoint: varchar("endpoint"),
+  authMethod: varchar("auth_method"), // 'certificate', 'api_key', 'oauth', 'basic_auth'
+  dataFormat: varchar("data_format"), // 'xml', 'json', 'csv', 'fixed_width'
+  frequency: varchar("frequency"), // 'real_time', 'hourly', 'daily', 'weekly', 'monthly', 'on_demand'
+  businessFunction: varchar("business_function").notNull(), // 'payroll_submission', 'employee_registration', 'tax_filing'
+  isEnabled: boolean("is_enabled").default(true),
+  lastSuccessfulSync: timestamp("last_successful_sync"),
+  lastSyncAttempt: timestamp("last_sync_attempt"),
+  syncStatus: varchar("sync_status"), // 'success', 'failed', 'in_progress', 'pending'
+  errorCount: integer("error_count").default(0),
+  configuration: jsonb("configuration"), // Integration-specific settings
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Type exports for government system monitoring
+export type GovernmentSystem = typeof governmentSystems.$inferSelect;
+export type InsertGovernmentSystem = typeof governmentSystems.$inferInsert;
+export type SystemStatusCheck = typeof systemStatusChecks.$inferSelect;
+export type InsertSystemStatusCheck = typeof systemStatusChecks.$inferInsert;
+export type SystemOutage = typeof systemOutages.$inferSelect;
+export type InsertSystemOutage = typeof systemOutages.$inferInsert;
+export type SystemAlertSubscription = typeof systemAlertSubscriptions.$inferSelect;
+export type InsertSystemAlertSubscription = typeof systemAlertSubscriptions.$inferInsert;
+export type SystemAvailabilityMetrics = typeof systemAvailabilityMetrics.$inferSelect;
+export type InsertSystemAvailabilityMetrics = typeof systemAvailabilityMetrics.$inferInsert;
+export type SystemIntegration = typeof systemIntegrations.$inferSelect;
+export type InsertSystemIntegration = typeof systemIntegrations.$inferInsert;
+
+// Insert schemas for government system monitoring
+export const insertGovernmentSystemSchema = createInsertSchema(governmentSystems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSystemStatusCheckSchema = createInsertSchema(systemStatusChecks).omit({
+  id: true,
+  checkTime: true,
+});
+
+export const insertSystemOutageSchema = createInsertSchema(systemOutages).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSystemAlertSubscriptionSchema = createInsertSchema(systemAlertSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSystemAvailabilityMetricsSchema = createInsertSchema(systemAvailabilityMetrics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSystemIntegrationSchema = createInsertSchema(systemIntegrations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Import canonical payment schema tables
 export * from './payments-canonical-schema';

@@ -146,6 +146,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // Initialize Government System Monitoring
+  try {
+    const { GovernmentSystemMonitoringService } = await import('./services/GovernmentSystemMonitoringService');
+    const monitoringService = GovernmentSystemMonitoringService.getInstance();
+    await monitoringService.initializeMonitoring();
+    console.log('🏛️  Government system monitoring initialized');
+  } catch (error) {
+    console.error('❌ Government system monitoring initialization failed:', error);
+    // Continue with reduced monitoring in development
+    if (process.env.NODE_ENV === 'production') {
+      throw error; // Fail hard in production
+    }
+  }
+
   // Apply global MFA enforcement middleware (after auth but before other routes)
   app.use(mfaEnforcement.enforce());
 
@@ -2860,6 +2874,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Central Log Management API
   const logsAPI = (await import("./api/logs")).default;
   app.use("/api/logs", logsAPI);
+  
+  // Government System Monitoring API
+  const governmentMonitoringAPI = (await import("./api/governmentSystemMonitoring")).default;
+  app.use("/api/government-monitoring", governmentMonitoringAPI);
   
   // Register forecasting API routes
   registerForecastingRoutes(app);

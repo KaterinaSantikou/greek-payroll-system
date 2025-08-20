@@ -1,0 +1,101 @@
+8) Payments & disbursement keys
+
+disbursement_key = SHA256(tenant|employee|period|net|currency|scope_id)
+
+Guardrails: cannot issue a second payment for the same key unless previous is explicitly canceled/superseded.
+
+Payment batches can be created:
+
+Per scope (immediate payouts), or
+
+Merged (later batching) by selecting finalized scope lines.
+
+9) GL & reporting
+
+Per-scope journal: date = scope.finalized_at, dimensions include scope_id and sequence.
+
+Consolidated journal: optional at period close; sums per natural account/cost center.
+
+Reports: show Coverage (processed employees / total eligible), list unprocessed.
+
+10) Edge cases & guards
+
+Mixed calendars/entities: block scope creation; show which employees conflict.
+
+Pending approvals: show count; allow proceed (unapproved hours treated as zero) or require approval first (tenant setting).
+
+Missing bank/AFM: allow payroll calc but hold payments; badge in scope summary.
+
+Cap overflow: if remaining cap = 0, amounts over cap routed to uncapped buckets (per Greek rules); narrative explains.
+
+Recalc after ruleset change: scopes already finalized remain immutable; new scope uses new version and shows delta.
+
+Terminated re-hires same month: treat as separate contract; ensure caps/reset behavior per law (configurable).
+
+Zero-net slips: create payslip, no payment line.
+
+11) Performance targets
+
+Compute 50 employees scope: p95 ≤ 1.2s.
+
+Finalize (PDFs + ledger write): p95 ≤ 2.0s.
+
+Consolidate APD/ΦΜΥ for 300 employees: p95 ≤ 1.5s.
+
+12) Acceptance tests (BDD)
+
+Create & compute a small scope
+
+Given period 2025-08 with 150 eligible employees
+When I create a scope with 7 selected employees and compute
+Then 7 ledger rows are created and caps remaining are reduced accordingly
+
+
+Multiple scopes respect caps
+
+Given EMP-001 has EFKA cap 1,000 and first scope consumes base 700
+When a second scope runs with base 500
+Then only 300 counts to capped base and the remainder is uncapped per rules
+
+
+Payments guard
+
+Given a finalized scope created a payment line with disbursement_key K
+When I attempt to pay EMP-001 again in another scope without change
+Then the system blocks the second payment due to existing key K
+
+
+Consolidation equals sum
+
+Given 3 scopes finalized in August
+When I close the period
+Then APD/ΦΜΥ totals equal the sum of the 3 scopes' period ledger totals
+
+
+Terminations off-cycle
+
+Given EMP-009 terminates mid-month
+When I run a termination scope
+Then final pay includes severance/unused leave and ERGANI packet is generated
+
+
+Mixed calendars blocked
+
+When I select employees from weekly and monthly calendars together
+Then scope creation fails with a clear list of conflicts
+
+13) Definition of Done
+
+UI supports multi-select and saved filters to create scopes.
+
+Engine respects caps across scopes and logs per-employee cap consumption.
+
+Period Ledger & Cap Tracker persisted; APD/ΦΜΥ build from their sum.
+
+Payments use disbursement keys; no duplicates across scopes.
+
+Maker-checker wired for finalize and close.
+
+Full audit: who selected whom, filters used, hashes for reproducibility.
+
+Unit + E2E tests for the BDD cases above pass.

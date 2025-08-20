@@ -1,0 +1,80 @@
+1) Goal & outcomes
+
+Let operators run payroll for any subset of eligible employees in a period (e.g., “only terminations”, “site A”, “these 7 people”), without breaking:
+
+Monthly caps/ceilings (EFKA, taxes),
+
+Filings (APD/ΦΜΥ consolidate across micro-runs),
+
+Payments (no double pay),
+
+GL (journals remain balanced and auditable).
+
+KPIs: zero double pay, consolidated filings = sum of micro-runs, per-employee monthly caps respected.
+
+2) Core concepts
+2.1 Run Scope
+
+A Run now has one or more Scopes (sub-runs). Each scope is a set of employees for the same period + pay calendar.
+
+scope.type: regular | off_cycle | termination | correction | bonus
+
+scope.selector: static list of employee IDs or saved filter (property/team/tag/status).
+
+scope.sequence: increasing integer per period (for reproducibility and caps).
+
+2.2 Per-employee Period State
+
+For each employee & period, maintain state:
+
+unprocessed → processed(scope_id) → adjusted(scope_id) (retro) → finalized
+
+Keep cap trackers (monthly EFKA, tax, OT caps) with remaining amounts after each scope.
+
+2.3 Consolidation Layer (period ledger)
+
+A Period Ledger aggregates all scopes’ results for:
+
+Filings (APD/ΦΜΥ monthly)
+
+GL (journal totals)
+
+Analytics (headcount/costs)
+
+3) UX (operators)
+
+Select employees
+
+People table with filters (property, team, role, tag, status, pay group) + checkboxes.
+
+Bulk actions: Run payroll for selected / Run for filter (N employees).
+
+Guardrail: show incompatibles (different pay calendars/entities).
+
+Scope review drawer
+
+Summary: period, pay calendar, N selected, type (default regular).
+
+Toggle: Include only approved timesheets (default ON).
+
+Warnings: missing IBAN/AFM, pending approvals, exceeded caps (info).
+
+Compute → Review
+
+Show per-employee diff (gross, taxes, EFKA, net), notes on caps consumption, garnishments.
+
+Errors listed; fix inline or exclude affected employee.
+
+Finalize scope
+
+Maker-checker (optional).
+
+Produces payslips (PDF), lines to Period Ledger, payment lines (optionally hold).
+
+Payments (optional step now / later)
+
+Create batch from this scope or merge with other scopes in same period.
+
+Period close (end of month)
+
+“Close August 2025”: compile APD/ΦΜΥ from all scopes, validations, receipts.
