@@ -2896,6 +2896,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // On-Call Rota API
   const onCallRotaAPI = (await import("./api/onCallRota")).default;
   app.use("/api/on-call", onCallRotaAPI);
+  
+  // Employee Portal API
+  const portalAPI = (await import("./api/portal")).default;
+  app.use("/api/portal", portalAPI);
 
   // Register automated runbooks routes
   try {

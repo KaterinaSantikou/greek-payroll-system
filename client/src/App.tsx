@@ -63,6 +63,7 @@ const PaymentOpsChecklist = lazy(() => import("@/pages/paymentOpsChecklist"));
 
 // Employee and management features
 const EmployeeSelfService = lazy(() => import("@/pages/employeeSelfService"));
+const EmployeeDashboard = lazy(() => import("@/pages/EmployeeDashboard"));
 const RulesEngine = lazy(() => import("@/pages/rulesEngine"));
 const ManagerDashboard = lazy(() => import("@/pages/managerDashboard"));
 const Forecasting = lazy(() => import("@/pages/forecasting"));
@@ -277,6 +278,7 @@ function Router() {
         
         {/* Employee Portal */}
         <Route path="/employee-portal" component={lazy(() => import("./pages/employeePortal"))} />
+        <Route path="/employee-dashboard" component={EmployeeDashboard} />
             <Route path="/payroll" component={Payroll} />
             <Route path="/payments" component={Payments} />
             <Route path="/sepa-payments" component={SepaPayments} />
