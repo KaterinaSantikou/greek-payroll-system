@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import InteractiveDemo from '@/components/InteractiveDemo';
 import { 
   Clock, 
   FileCheck, 
@@ -34,6 +35,7 @@ interface LandingPageProps {
 export default function MarketingLanding(props: any) {
   const [locale, setLocale] = useState<'en' | 'el'>('en');
   const [stickyVisible, setStickyVisible] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
 
   // Sticky CTA visibility on scroll
   useEffect(() => {
@@ -47,6 +49,11 @@ export default function MarketingLanding(props: any) {
 
   const t = locale === 'el' ? translations.el : translations.en;
 
+  // Show interactive demo if requested
+  if (showDemo) {
+    return <InteractiveDemo onClose={() => setShowDemo(false)} />;
+  }
+
   const handleCTAClick = (type: 'start_free' | 'demo') => {
     // Analytics tracking
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -59,8 +66,8 @@ export default function MarketingLanding(props: any) {
     if (type === 'start_free') {
       window.location.href = '/signup';
     } else {
-      // Open demo modal or redirect to demo page
-      window.location.href = '/demo';
+      // Open interactive demo
+      setShowDemo(true);
     }
   };
 
