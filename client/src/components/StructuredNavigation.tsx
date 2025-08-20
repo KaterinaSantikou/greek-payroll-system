@@ -585,6 +585,15 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     );
   };
 
+  // Check if any child of a parent item is active
+  const hasActiveChild = (item: NavigationItem): boolean => {
+    if (!item.children) return false;
+    return item.children.some(child => {
+      if (child.href && isActive(child.href)) return true;
+      return hasActiveChild(child);
+    });
+  };
+
   const renderNavigationItem = (item: NavigationItem, level: number = 0) => {
     // Check role-based access - simplified for demo
     const hasAccess = (sectionId: string, role: string) => {
@@ -603,6 +612,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedSections.has(item.id);
     const active = item.href ? isActive(item.href) : false;
+    const parentHasActiveChild = hasChildren && hasActiveChild(item);
     const disabled = false; // Can be dynamic based on user permissions or system state
 
     // Base button classes with all states and reduced motion support
@@ -610,14 +620,16 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       // Base styles
       "w-full justify-start px-4 text-gray-700 dark:text-gray-200 relative group",
       // Size and typography hierarchy
-      level === 0 ? "h-12 text-base font-semibold uppercase tracking-wide text-xs" : "h-10 text-sm font-medium",
-      // Child indentation (16px)
-      level > 0 && "ml-4 before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-0.5 before:bg-gray-300 dark:before:bg-gray-600",
+      level === 0 ? "h-11 text-sm font-medium" : "h-10 text-sm font-medium",
+      // Child indentation (18px for better hierarchy)
+      level > 0 && "ml-[18px] before:absolute before:left-[-18px] before:top-0 before:bottom-0 before:w-0.5 before:bg-gray-300 dark:before:bg-gray-600",
       // Default state with motion preferences
       "hover:bg-gray-50 dark:hover:bg-gray-800/50",
       "transition-all motion-reduce:transition-none duration-200 motion-reduce:duration-0",
       // Stronger active state with accent bar
-      active && "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-semibold before:!absolute before:!left-0 before:!top-1 before:!bottom-1 before:!w-1 before:!bg-blue-600 before:!rounded-r-md before:!z-10 shadow-sm",
+      active && "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-semibold before:!absolute before:!left-0 before:!top-1 before:!bottom-1 before:!w-[3px] before:!bg-blue-600 before:!rounded-r-md before:!z-10 shadow-sm",
+      // Parent becomes bold when child is active
+      parentHasActiveChild && level === 0 && "font-semibold text-gray-900 dark:text-gray-100",
       // Focus ring for keyboard navigation
       "focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none",
       // Disabled state
@@ -646,7 +658,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           tabIndex={-1}
         >
           <div className="flex items-center flex-1 min-w-0">
-            <item.icon className={cn("flex-shrink-0", level === 0 ? "h-5 w-5" : "h-4 w-4")} />
+            <item.icon className={cn("flex-shrink-0", level === 0 ? "h-[22px] w-[22px]" : "h-[18px] w-[18px]")} />
             {!collapsed && (
               <>
                 {(() => {
@@ -666,7 +678,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
                   ) : labelSpan;
                 })()}
                 <div className="flex items-center gap-2 ml-auto">
-                  {renderBadge(item.badge, item.urgent, item.label, item.badgeType)}
+                  {/* Parent rows are label-only - no badges */}
                   <ChevronDown 
                     className={cn(
                       "h-5 w-5 text-gray-500 transition-transform duration-200 motion-reduce:transition-none motion-reduce:duration-0",
@@ -681,7 +693,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       );
 
       return (
-        <div key={item.id} className="mb-1">
+        <div key={item.id} className="mb-2">
           <Collapsible open={isExpanded} onOpenChange={() => !disabled && toggleSection(item.id)}>
             <CollapsibleTrigger asChild>
               <div 
@@ -740,7 +752,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         tabIndex={-1}
       >
         <div className="flex items-center flex-1 min-w-0">
-          <item.icon className="h-6 w-6 flex-shrink-0" />
+          <item.icon className={cn("flex-shrink-0", level === 0 ? "h-[22px] w-[22px]" : "h-[18px] w-[18px]")} />
           {!collapsed && (
             <>
               {(() => {
@@ -821,7 +833,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     // Leaf item
     if (item.href) {
       return (
-        <Link key={item.id} to={item.href} className="block mb-1">
+        <Link key={item.id} to={item.href} className="block mb-2">
           <Button
           variant="ghost"
           className={cn(
@@ -831,7 +843,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           )}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <item.icon className={cn("flex-shrink-0", level === 0 ? "h-5 w-5" : "h-4 w-4")} />
+            <item.icon className={cn("flex-shrink-0", level === 0 ? "h-[22px] w-[22px]" : "h-[18px] w-[18px]")} />
             {!collapsed && (
               <>
                 <span className="truncate">{item.label}</span>
@@ -854,7 +866,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
             )}
           >
             <div className="flex items-center flex-1 min-w-0">
-              <item.icon className={cn("flex-shrink-0", level === 0 ? "h-5 w-5" : "h-4 w-4")} />
+              <item.icon className={cn("flex-shrink-0", level === 0 ? "h-[22px] w-[22px]" : "h-[18px] w-[18px]")} />
               {!collapsed && (
                 <>
                   <span className="truncate ml-3">{item.label}</span>
