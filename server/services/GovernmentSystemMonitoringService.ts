@@ -428,6 +428,51 @@ export class GovernmentSystemMonitoringService extends EventEmitter {
             console.error('Failed to trigger on-call incident:', error);
           }
         }
+
+        // Trigger automated runbooks for incident response
+        try {
+          const { AutomatedRunbooksService } = await import('./AutomatedRunbooksService');
+          const runbooksService = AutomatedRunbooksService.getInstance();
+          
+          // Create alert data for runbook triggering
+          const alertData = {
+            systemId,
+            status: currentStatus,
+            message: errorMessage || `${systemId} system outage detected`,
+            title: `${systemId} System Alert`,
+            severity: this.determineSeverity(currentStatus, system),
+            source: 'government_monitoring',
+            timestamp: new Date(),
+            systemCode: system?.systemCode || systemId,
+          };
+
+          // Check for matching runbooks and trigger them
+          const matchingRunbooks = await runbooksService.checkTriggerConditions(alertData);
+          
+          for (const runbookId of matchingRunbooks) {
+            try {
+              await runbooksService.executeRunbook(runbookId, {
+                systemId,
+                alertId: `alert_${systemId}_${Date.now()}`,
+                variables: { 
+                  systemId, 
+                  status: currentStatus, 
+                  errorMessage,
+                  alertData 
+                },
+                environment: process.env.NODE_ENV as any || 'development',
+                triggeredBy: 'system',
+                priority: this.determineSeverity(currentStatus, system) as any,
+              });
+
+              console.log(`📚 Triggered automated runbook ${runbookId} for ${systemId} outage`);
+            } catch (runbookError) {
+              console.error(`Failed to trigger runbook ${runbookId}:`, runbookError);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to trigger automated runbooks:', error);
+        }
       }
       // System recovered
       else if (wasDown && !isDown) {

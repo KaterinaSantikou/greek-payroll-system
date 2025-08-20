@@ -6272,5 +6272,339 @@ export const insertOnCallMetricsSchema = createInsertSchema(onCallMetrics).omit(
   createdAt: true,
 });
 
+// Automated Runbooks System Schema
+
+// Runbook definitions and templates
+export const runbooks = pgTable("runbooks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  category: varchar("category").notNull(), // 'incident_response', 'maintenance', 'deployment', 'recovery'
+  version: varchar("version").notNull().default('1.0.0'),
+  isActive: boolean("is_active").default(true),
+  isTemplate: boolean("is_template").default(false),
+  parentRunbookId: varchar("parent_runbook_id").references(() => runbooks.id), // For versioning
+  
+  // Trigger conditions
+  triggerConditions: jsonb("trigger_conditions"), // Alert patterns, system states, incident types
+  autoTrigger: boolean("auto_trigger").default(false),
+  triggerPriority: integer("trigger_priority").default(5), // 1-10, higher = more priority
+  cooldownPeriod: integer("cooldown_period_minutes").default(30), // Prevent repeated triggers
+  
+  // Execution settings
+  timeoutMinutes: integer("timeout_minutes").default(60),
+  requiresApproval: boolean("requires_approval").default(false),
+  approverRoles: jsonb("approver_roles"), // Roles that can approve
+  parallelExecution: boolean("parallel_execution").default(true),
+  rollbackOnFailure: boolean("rollback_on_failure").default(false),
+  
+  // Steps and actions
+  steps: jsonb("steps"), // Array of runbook steps
+  variables: jsonb("variables"), // Input variables and defaults
+  outputs: jsonb("outputs"), // Expected outputs
+  
+  // Metadata
+  tags: jsonb("tags"),
+  estimatedDuration: integer("estimated_duration_minutes"),
+  successCriteria: jsonb("success_criteria"),
+  failureCriteria: jsonb("failure_criteria"),
+  dependencies: jsonb("dependencies"), // System/service dependencies
+  
+  // Audit
+  createdBy: varchar("created_by").references(() => users.id),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Runbook executions and instances
+export const runbookExecutions = pgTable("runbook_executions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  runbookId: varchar("runbook_id").references(() => runbooks.id).notNull(),
+  incidentId: varchar("incident_id").references(() => onCallIncidents.id), // Optional link to incident
+  alertId: varchar("alert_id"), // Link to triggering alert
+  
+  // Execution context
+  triggerType: varchar("trigger_type").notNull(), // 'manual', 'automatic', 'scheduled', 'api'
+  triggeredBy: varchar("triggered_by").references(() => users.id),
+  triggerReason: text("trigger_reason"),
+  executionContext: jsonb("execution_context"), // Environment, parameters, etc.
+  
+  // Status and timing
+  status: varchar("status").default('pending'), // 'pending', 'running', 'completed', 'failed', 'cancelled', 'timeout'
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  actualDuration: integer("actual_duration_minutes"),
+  
+  // Results
+  result: varchar("result"), // 'success', 'partial_success', 'failure', 'cancelled'
+  resultSummary: text("result_summary"),
+  errorMessage: text("error_message"),
+  exitCode: integer("exit_code"),
+  
+  // Step tracking
+  currentStepIndex: integer("current_step_index").default(0),
+  completedSteps: integer("completed_steps").default(0),
+  failedSteps: integer("failed_steps").default(0),
+  skippedSteps: integer("skipped_steps").default(0),
+  
+  // Logs and outputs
+  executionLogs: jsonb("execution_logs"), // Detailed execution logs
+  stepResults: jsonb("step_results"), // Results for each step
+  variables: jsonb("variables"), // Runtime variables
+  outputs: jsonb("outputs"), // Final outputs
+  
+  // Approval workflow
+  approvalStatus: varchar("approval_status").default('not_required'), // 'not_required', 'pending', 'approved', 'rejected'
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  approvalNotes: text("approval_notes"),
+  
+  // Metrics
+  resourcesUsed: jsonb("resources_used"), // CPU, memory, network usage
+  costEstimate: decimal("cost_estimate", { precision: 10, scale: 2 }),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Individual step executions within runbooks
+export const runbookStepExecutions = pgTable("runbook_step_executions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  executionId: varchar("execution_id").references(() => runbookExecutions.id).notNull(),
+  stepIndex: integer("step_index").notNull(),
+  stepName: varchar("step_name").notNull(),
+  stepType: varchar("step_type").notNull(), // 'command', 'api_call', 'notification', 'approval', 'condition', 'loop'
+  
+  // Step configuration
+  stepConfig: jsonb("step_config"), // Step-specific configuration
+  inputData: jsonb("input_data"), // Input data for the step
+  
+  // Execution details
+  status: varchar("status").default('pending'), // 'pending', 'running', 'completed', 'failed', 'skipped'
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  duration: integer("duration_seconds"),
+  retryCount: integer("retry_count").default(0),
+  maxRetries: integer("max_retries").default(3),
+  
+  // Results
+  result: varchar("result"), // 'success', 'failure', 'skipped', 'timeout'
+  outputData: jsonb("output_data"), // Step output data
+  errorMessage: text("error_message"),
+  exitCode: integer("exit_code"),
+  
+  // Logs
+  executionLogs: text("execution_logs"),
+  debugInfo: jsonb("debug_info"),
+  
+  // Dependencies
+  dependsOn: jsonb("depends_on"), // Step dependencies
+  blockedBy: jsonb("blocked_by"), // What's blocking this step
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Alert patterns and conditions for automatic runbook triggering
+export const runbookTriggers = pgTable("runbook_triggers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  runbookId: varchar("runbook_id").references(() => runbooks.id).notNull(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  
+  // Trigger conditions
+  triggerType: varchar("trigger_type").notNull(), // 'alert', 'incident', 'metric', 'time', 'webhook'
+  conditions: jsonb("conditions"), // Complex trigger conditions
+  
+  // Alert-based triggers
+  alertSources: jsonb("alert_sources"), // Which systems/sources to monitor
+  alertSeverity: jsonb("alert_severity"), // Required severity levels
+  alertPatterns: jsonb("alert_patterns"), // Text/regex patterns in alerts
+  
+  // System-based triggers
+  systemIds: jsonb("system_ids"), // Government systems to monitor
+  systemStates: jsonb("system_states"), // Required system states
+  metricThresholds: jsonb("metric_thresholds"), // Metric-based triggers
+  
+  // Time-based triggers
+  schedule: varchar("schedule"), // Cron expression for scheduled runs
+  timezone: varchar("timezone").default('Europe/Athens'),
+  
+  // Execution control
+  cooldownPeriod: integer("cooldown_period_minutes").default(30),
+  maxExecutionsPerHour: integer("max_executions_per_hour").default(10),
+  requiresConfirmation: boolean("requires_confirmation").default(false),
+  
+  // Last execution tracking
+  lastTriggeredAt: timestamp("last_triggered_at"),
+  lastExecutionId: varchar("last_execution_id").references(() => runbookExecutions.id),
+  triggerCount: integer("trigger_count").default(0),
+  successCount: integer("success_count").default(0),
+  failureCount: integer("failure_count").default(0),
+  
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Runbook templates and library
+export const runbookTemplates = pgTable("runbook_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  category: varchar("category").notNull(),
+  subcategory: varchar("subcategory"),
+  
+  // Template metadata
+  version: varchar("version").notNull().default('1.0.0'),
+  isPublic: boolean("is_public").default(false),
+  isOfficial: boolean("is_official").default(false), // PayrollSync official templates
+  difficulty: varchar("difficulty").default('intermediate'), // 'beginner', 'intermediate', 'advanced'
+  
+  // Template content
+  templateData: jsonb("template_data"), // Full runbook template
+  parameters: jsonb("parameters"), // Configurable parameters
+  requirements: jsonb("requirements"), // System requirements
+  
+  // Usage tracking
+  downloadCount: integer("download_count").default(0),
+  successRate: decimal("success_rate", { precision: 5, scale: 2 }),
+  averageExecutionTime: integer("average_execution_time_minutes"),
+  
+  // Ratings and feedback
+  rating: decimal("rating", { precision: 3, scale: 2 }),
+  ratingCount: integer("rating_count").default(0),
+  
+  // Tags and search
+  tags: jsonb("tags"),
+  searchKeywords: text("search_keywords"),
+  
+  // Ownership
+  createdBy: varchar("created_by").references(() => users.id),
+  maintainedBy: varchar("maintained_by").references(() => users.id),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Runbook execution logs and audit trail
+export const runbookExecutionLogs = pgTable("runbook_execution_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  executionId: varchar("execution_id").references(() => runbookExecutions.id).notNull(),
+  stepExecutionId: varchar("step_execution_id").references(() => runbookStepExecutions.id),
+  
+  // Log entry details
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  level: varchar("level").notNull(), // 'debug', 'info', 'warn', 'error', 'fatal'
+  source: varchar("source").notNull(), // 'system', 'step', 'user', 'external'
+  message: text("message").notNull(),
+  
+  // Structured data
+  data: jsonb("data"), // Additional structured log data
+  context: jsonb("context"), // Execution context
+  
+  // Correlation
+  correlationId: varchar("correlation_id"), // For tracing across systems
+  requestId: varchar("request_id"), // Request tracking
+  
+  // Performance
+  duration: integer("duration_milliseconds"),
+  resourceUsage: jsonb("resource_usage"),
+});
+
+// Runbook approval workflows
+export const runbookApprovals = pgTable("runbook_approvals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  executionId: varchar("execution_id").references(() => runbookExecutions.id).notNull(),
+  
+  // Approval request
+  requestedBy: varchar("requested_by").references(() => users.id).notNull(),
+  requestedAt: timestamp("requested_at").notNull().defaultNow(),
+  reason: text("reason"),
+  urgency: varchar("urgency").default('medium'), // 'low', 'medium', 'high', 'critical'
+  
+  // Approval details
+  status: varchar("status").default('pending'), // 'pending', 'approved', 'rejected', 'expired'
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  approvalNotes: text("approval_notes"),
+  
+  // Workflow
+  approvalWorkflow: jsonb("approval_workflow"), // Multi-step approval process
+  currentApprovers: jsonb("current_approvers"), // Current pending approvers
+  completedApprovals: jsonb("completed_approvals"), // Completed approval steps
+  
+  // Timeouts
+  expiresAt: timestamp("expires_at"),
+  remindersSent: integer("reminders_sent").default(0),
+  
+  // Context
+  riskLevel: varchar("risk_level").default('medium'), // 'low', 'medium', 'high', 'critical'
+  businessImpact: text("business_impact"),
+  technicalRationale: text("technical_rationale"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Type exports for runbooks system
+export type Runbook = typeof runbooks.$inferSelect;
+export type InsertRunbook = typeof runbooks.$inferInsert;
+export type RunbookExecution = typeof runbookExecutions.$inferSelect;
+export type InsertRunbookExecution = typeof runbookExecutions.$inferInsert;
+export type RunbookStepExecution = typeof runbookStepExecutions.$inferSelect;
+export type InsertRunbookStepExecution = typeof runbookStepExecutions.$inferInsert;
+export type RunbookTrigger = typeof runbookTriggers.$inferSelect;
+export type InsertRunbookTrigger = typeof runbookTriggers.$inferInsert;
+export type RunbookTemplate = typeof runbookTemplates.$inferSelect;
+export type InsertRunbookTemplate = typeof runbookTemplates.$inferInsert;
+export type RunbookExecutionLog = typeof runbookExecutionLogs.$inferSelect;
+export type InsertRunbookExecutionLog = typeof runbookExecutionLogs.$inferInsert;
+export type RunbookApproval = typeof runbookApprovals.$inferSelect;
+export type InsertRunbookApproval = typeof runbookApprovals.$inferInsert;
+
+// Insert schemas for runbooks system
+export const insertRunbookSchema = createInsertSchema(runbooks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRunbookExecutionSchema = createInsertSchema(runbookExecutions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRunbookStepExecutionSchema = createInsertSchema(runbookStepExecutions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRunbookTriggerSchema = createInsertSchema(runbookTriggers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRunbookTemplateSchema = createInsertSchema(runbookTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRunbookExecutionLogSchema = createInsertSchema(runbookExecutionLogs).omit({
+  id: true,
+});
+
+export const insertRunbookApprovalSchema = createInsertSchema(runbookApprovals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Import canonical payment schema tables
 export * from './payments-canonical-schema';

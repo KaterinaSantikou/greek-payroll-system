@@ -2896,6 +2896,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // On-Call Rota API
   const onCallRotaAPI = (await import("./api/onCallRota")).default;
   app.use("/api/on-call", onCallRotaAPI);
+
+  // Register automated runbooks routes
+  try {
+    const automatedRunbooksRoutes = (await import('./api/automatedRunbooks')).default;
+    app.use('/api/automated-runbooks', automatedRunbooksRoutes);
+  } catch (error) {
+    console.error('Failed to register automated runbooks routes:', error);
+  }
   
   // Register forecasting API routes
   registerForecastingRoutes(app);
