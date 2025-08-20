@@ -696,7 +696,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent 
-              className="space-y-0.5 pt-1"
+              className="space-y-2 pt-2"
               role="group"
               aria-label={`${item.label} υποστοιχεία`}
             >
@@ -781,7 +781,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         <Link 
           key={item.id} 
           to={item.href} 
-          className="block mb-1"
+          className="block mb-2"
           onClick={(e) => {
             // Handle modifier keys before Link navigation
             if (e.ctrlKey || e.metaKey) {
@@ -795,7 +795,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       );
     } else {
       return (
-        <div key={item.id} className="block mb-1">
+        <div key={item.id} className="block mb-2">
           {buttonWithTooltip}
         </div>
       );
@@ -870,7 +870,11 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       {/* Navigation Groups */}
       <div className="flex-1 overflow-y-auto py-4 px-2" role="none">
         {navigationGroups.map((group, index) => (
-          <div key={group.id} role="none" className={index > 0 ? 'mt-6' : ''}>
+          <div key={group.id} role="none" className={index > 0 ? 'mt-4' : ''}>
+            {/* Add divider only before Settings */}
+            {group.id === 'settings' && (
+              <div className="h-px bg-gray-200 dark:bg-gray-700 mx-4 mb-4" role="separator" aria-hidden="true" />
+            )}
             {renderNavigationItem(group)}
           </div>
         ))}
