@@ -53,6 +53,9 @@ import { PropertyProvider } from "@/contexts/PropertyContext";
 import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppProvider } from "@/contexts/AppContext";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+const MobilePayroll = lazy(() => import("@/pages/MobilePayroll"));
+import { usePWA } from "@/hooks/usePWA";
 import { PaymentsCockpitDemo } from './pages/PaymentsCockpitDemo';
 import SmartNotifications from "@/pages/smartNotifications";
 import VisualAnalytics from "@/pages/visualAnalytics";
@@ -125,6 +128,7 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/marketing" component={MarketingLanding} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
+        <Route path="/mobile-payroll" component={MobilePayroll} />
         
         {/* People Section */}
         <Route path="/employees" component={Employees} />
@@ -225,6 +229,8 @@ function Router() {
 }
 
 function App() {
+  const [pwaState] = usePWA();
+  
   return (
     <QueryClientProvider client={queryClient}>
       <LocaleProvider>
@@ -235,6 +241,11 @@ function App() {
                 <TooltipProvider>
                   <Toaster />
                   <Router />
+                  
+                  {/* PWA Install Prompt */}
+                  {pwaState.canInstall && (
+                    <PWAInstallPrompt variant="banner" />
+                  )}
                 </TooltipProvider>
               </AppProvider>
             </PropertyProvider>

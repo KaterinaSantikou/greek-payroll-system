@@ -3804,6 +3804,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/one-click-flow/reconcile/:freezeId', isAuthenticated, oneClickFlowRoutes.uploadReconciliation);
   app.get('/api/one-click-flow/pre-checks/:runId', isAuthenticated, oneClickFlowRoutes.performPreChecks);
 
+  // PWA notification subscription endpoint
+  app.post('/api/notifications/subscribe', (req, res) => {
+    const { subscription, topics } = req.body;
+    console.log('PWA: Subscription received for topics:', topics);
+    
+    // In a real app, store subscription in database
+    res.json({
+      success: true,
+      message: 'Successfully subscribed to Greek payroll notifications'
+    });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
