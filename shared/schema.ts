@@ -6618,6 +6618,77 @@ export type InsertPerformanceMetric = typeof performanceMetrics.$inferInsert;
 export type BudgetViolation = typeof budgetViolations.$inferSelect;
 export type InsertBudgetViolation = typeof budgetViolations.$inferInsert;
 
+// Disaster Recovery Testing Tables
+
+// DR Testing Procedures - Test scenarios and procedures
+export const drTestingProcedures = pgTable("dr_testing_procedures", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  category: varchar("category", { length: 50 }).notNull(), // database_backup, system_failover, data_recovery, infrastructure, application
+  description: text("description"),
+  severity: varchar("severity", { length: 20 }).default("medium"), // critical, high, medium, low
+  estimatedDurationMinutes: integer("estimated_duration_minutes").default(30),
+  requiredResources: jsonb("required_resources").$type<string[]>().default([]),
+  prerequisites: jsonb("prerequisites").$type<string[]>().default([]),
+  testSteps: jsonb("test_steps").$type<{
+    stepNumber: number;
+    description: string;
+    expectedOutcome: string;
+    timeoutMinutes: number;
+    isAutomated: boolean;
+    command?: string;
+    validationQuery?: string;
+  }[]>().default([]),
+  successCriteria: jsonb("success_criteria").$type<string[]>().default([]),
+  rollbackSteps: jsonb("rollback_steps").$type<string[]>().default([]),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// DR Testing Results - Results of executed tests
+export const drTestingResults = pgTable("dr_testing_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  procedureId: varchar("procedure_id").notNull().references(() => drTestingProcedures.id),
+  status: varchar("status", { length: 20 }).notNull(), // passed, failed, partial, cancelled
+  triggeredBy: varchar("triggered_by").default("manual"), // manual, scheduled, automated
+  startedAt: timestamp("started_at").notNull(),
+  completedAt: timestamp("completed_at"),
+  durationMinutes: integer("duration_minutes").default(0),
+  stepResults: jsonb("step_results").$type<{
+    stepNumber: number;
+    status: 'passed' | 'failed' | 'skipped';
+    actualOutcome: string;
+    durationMinutes: number;
+    errorDetails?: string;
+  }[]>().default([]),
+  issues: jsonb("issues").$type<string[]>().default([]),
+  recommendations: jsonb("recommendations").$type<string[]>().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// DR Testing Schedule - Automated testing schedule
+export const drTestingSchedule = pgTable("dr_testing_schedule", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  procedureId: varchar("procedure_id").notNull().references(() => drTestingProcedures.id),
+  frequency: varchar("frequency", { length: 20 }).notNull(), // daily, weekly, monthly, quarterly
+  scheduledTime: varchar("scheduled_time", { length: 10 }).default("02:00"), // HH:MM format
+  lastExecuted: timestamp("last_executed"),
+  nextExecution: timestamp("next_execution"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type DrTestingProcedure = typeof drTestingProcedures.$inferSelect;
+export type InsertDrTestingProcedure = typeof drTestingProcedures.$inferInsert;
+
+export type DrTestingResult = typeof drTestingResults.$inferSelect;
+export type InsertDrTestingResult = typeof drTestingResults.$inferInsert;
+
+export type DrTestingSchedule = typeof drTestingSchedule.$inferSelect;
+export type InsertDrTestingSchedule = typeof drTestingSchedule.$inferInsert;
+
 // Automated Runbooks System Schema
 
 // Runbook definitions and templates
