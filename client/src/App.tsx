@@ -143,6 +143,7 @@ function Router() {
         <Route path="/auth/sso" component={SSO} />
         <Route path="/onboarding-chatbot" component={lazy(() => import("@/pages/OnboardingChatbotDemo"))} />
         <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo"))} />
+        <Route path="/churn-prevention" component={lazy(() => import("@/pages/ChurnPreventionDemo"))} />
         <Route component={NotFound} />
       </Switch>
     );
@@ -244,6 +245,7 @@ function Router() {
             <Route path="/zero-trust-security" component={ZeroTrustSecurityPage} />
             <Route path="/error-tracking" component={lazy(() => import("@/pages/ErrorTrackingPage"))} />
             <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo"))} />
+            <Route path="/churn-prevention" component={lazy(() => import("@/pages/ChurnPreventionDemo"))} />
         <Route path="/s1-dashboard" component={S1Dashboard} />
         <Route path="/s1-metrics" component={S1MetricsPage} />
         <Route path="/s1-acceptance-testing" component={S1AcceptanceTesting} />
