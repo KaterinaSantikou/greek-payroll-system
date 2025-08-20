@@ -5982,5 +5982,295 @@ export const insertSystemIntegrationSchema = createInsertSchema(systemIntegratio
   updatedAt: true,
 });
 
+// On-Call Rota System Schema
+
+// On-call teams and groups
+export const onCallTeams = pgTable("on_call_teams", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  teamType: varchar("team_type").notNull(), // 'primary', 'escalation', 'specialist', 'backup'
+  isActive: boolean("is_active").default(true),
+  timezone: varchar("timezone").default('Europe/Athens'),
+  notificationChannels: jsonb("notification_channels"), // email, sms, slack, phone
+  escalationTimeout: integer("escalation_timeout_minutes").default(15),
+  maxEscalationLevel: integer("max_escalation_level").default(3),
+  teamLead: varchar("team_lead").references(() => users.id),
+  contactInfo: jsonb("contact_info"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Team membership and roles
+export const onCallTeamMembers = pgTable("on_call_team_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  teamId: varchar("team_id").references(() => onCallTeams.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  role: varchar("role").notNull(), // 'primary', 'secondary', 'backup', 'escalation'
+  escalationLevel: integer("escalation_level").default(1), // 1 = first contact, 2 = second, etc.
+  isActive: boolean("is_active").default(true),
+  skillSet: jsonb("skill_set"), // Areas of expertise
+  availability: jsonb("availability"), // Working hours, time zones
+  contactMethods: jsonb("contact_methods"), // Phone, email, slack preferences
+  joinedAt: timestamp("joined_at").defaultNow(),
+  leftAt: timestamp("left_at"),
+});
+
+// On-call rotation schedules
+export const onCallSchedules = pgTable("on_call_schedules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  teamId: varchar("team_id").references(() => onCallTeams.id).notNull(),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  scheduleType: varchar("schedule_type").notNull(), // 'weekly', 'daily', 'custom', 'follow_the_sun'
+  rotationType: varchar("rotation_type").notNull(), // 'sequential', 'round_robin', 'manual'
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date"),
+  rotationLength: integer("rotation_length_hours").default(168), // Default 1 week
+  timezone: varchar("timezone").default('Europe/Athens'),
+  isActive: boolean("is_active").default(true),
+  handoverTime: varchar("handover_time").default('09:00'), // Time for handovers
+  weekendCoverage: boolean("weekend_coverage").default(true),
+  holidayHandling: varchar("holiday_handling").default('maintain'), // 'maintain', 'skip', 'extend'
+  autoAdvance: boolean("auto_advance").default(true),
+  notifyBeforeRotation: integer("notify_before_rotation_hours").default(24),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Current and historical on-call assignments
+export const onCallAssignments = pgTable("on_call_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  scheduleId: varchar("schedule_id").references(() => onCallSchedules.id).notNull(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  status: varchar("status").default('scheduled'), // 'scheduled', 'active', 'completed', 'cancelled'
+  assignmentType: varchar("assignment_type").default('regular'), // 'regular', 'override', 'swap', 'emergency'
+  isOverride: boolean("is_override").default(false),
+  overrideReason: text("override_reason"),
+  originalUserId: varchar("original_user_id").references(() => users.id), // If this is a swap/override
+  handoverNotes: text("handover_notes"),
+  incidentCount: integer("incident_count").default(0),
+  responseTime: jsonb("response_time"), // Average response times during this assignment
+  effectiveness: jsonb("effectiveness"), // Performance metrics
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Escalation rules and policies
+export const escalationPolicies = pgTable("escalation_policies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description"),
+  teamId: varchar("team_id").references(() => onCallTeams.id),
+  systemId: varchar("system_id").references(() => governmentSystems.id), // Can be specific to systems
+  severity: jsonb("severity"), // Which severities trigger this policy
+  triggerConditions: jsonb("trigger_conditions"), // Conditions that activate escalation
+  isActive: boolean("is_active").default(true),
+  escalationSteps: jsonb("escalation_steps"), // Detailed escalation flow
+  maxEscalationTime: integer("max_escalation_time_minutes").default(60),
+  businessHoursOnly: boolean("business_hours_only").default(false),
+  weekendEscalation: boolean("weekend_escalation").default(true),
+  holidayEscalation: boolean("holiday_escalation").default(true),
+  autoResolve: boolean("auto_resolve").default(false),
+  autoResolveTime: integer("auto_resolve_time_minutes"),
+  notificationTemplate: jsonb("notification_template"),
+  createdBy: varchar("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Individual escalation rules within policies
+export const escalationRules = pgTable("escalation_rules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  policyId: varchar("policy_id").references(() => escalationPolicies.id).notNull(),
+  stepNumber: integer("step_number").notNull(),
+  delayMinutes: integer("delay_minutes").notNull(),
+  escalationType: varchar("escalation_type").notNull(), // 'individual', 'team', 'broadcast', 'external'
+  targetType: varchar("target_type").notNull(), // 'user', 'team', 'external_contact', 'webhook'
+  targetId: varchar("target_id"), // User ID, team ID, etc.
+  notificationMethods: jsonb("notification_methods"), // SMS, email, voice, push
+  requiresAcknowledgment: boolean("requires_acknowledgment").default(true),
+  acknowledgmentTimeout: integer("acknowledgment_timeout_minutes").default(5),
+  retryAttempts: integer("retry_attempts").default(2),
+  retryInterval: integer("retry_interval_minutes").default(2),
+  isActive: boolean("is_active").default(true),
+  conditions: jsonb("conditions"), // Additional conditions for this step
+});
+
+// On-call incidents and responses
+export const onCallIncidents = pgTable("on_call_incidents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  externalIncidentId: varchar("external_incident_id"), // Link to system outages, alerts, etc.
+  title: varchar("title").notNull(),
+  description: text("description"),
+  severity: varchar("severity").notNull(), // 'critical', 'high', 'medium', 'low'
+  status: varchar("status").default('triggered'), // 'triggered', 'acknowledged', 'escalated', 'resolved', 'false_alarm'
+  source: varchar("source").notNull(), // 'government_monitoring', 'manual', 'external_system', 'user_report'
+  triggeredAt: timestamp("triggered_at").notNull().defaultNow(),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  resolvedAt: timestamp("resolved_at"),
+  escalatedAt: timestamp("escalated_at"),
+  assignedTeamId: varchar("assigned_team_id").references(() => onCallTeams.id),
+  currentAssigneeId: varchar("current_assignee_id").references(() => users.id),
+  escalationPolicyId: varchar("escalation_policy_id").references(() => escalationPolicies.id),
+  currentEscalationLevel: integer("current_escalation_level").default(0),
+  totalResponseTime: integer("total_response_time_minutes"),
+  resolutionTime: integer("resolution_time_minutes"),
+  impact: jsonb("impact"), // Business impact assessment
+  affectedSystems: jsonb("affected_systems"),
+  notificationsSent: integer("notifications_sent").default(0),
+  acknowledgments: integer("acknowledgments").default(0),
+  falseAlarm: boolean("false_alarm").default(false),
+  postMortemRequired: boolean("post_mortem_required").default(false),
+  tags: jsonb("tags"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Individual incident responses and actions
+export const incidentResponses = pgTable("incident_responses", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentId: varchar("incident_id").references(() => onCallIncidents.id).notNull(),
+  responderId: varchar("responder_id").references(() => users.id).notNull(),
+  responseType: varchar("response_type").notNull(), // 'acknowledged', 'escalated', 'resolved', 'comment', 'action_taken'
+  responseTime: timestamp("response_time").notNull().defaultNow(),
+  responseMethod: varchar("response_method"), // 'phone', 'email', 'sms', 'app', 'web'
+  message: text("message"),
+  actionTaken: text("action_taken"),
+  nextSteps: text("next_steps"),
+  escalationLevel: integer("escalation_level"),
+  isAutomatic: boolean("is_automatic").default(false),
+  notificationId: varchar("notification_id"), // Track which notification this responds to
+  responseDelay: integer("response_delay_minutes"), // Time from notification to response
+  metadata: jsonb("metadata"),
+});
+
+// Availability overrides and time-off requests
+export const onCallAvailability = pgTable("on_call_availability", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  availabilityType: varchar("availability_type").notNull(), // 'override', 'time_off', 'emergency_available', 'unavailable'
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+  reason: text("reason"),
+  status: varchar("status").default('pending'), // 'pending', 'approved', 'rejected', 'cancelled'
+  isEmergency: boolean("is_emergency").default(false),
+  replacementUserId: varchar("replacement_user_id").references(() => users.id),
+  approvedBy: varchar("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  impactedAssignments: jsonb("impacted_assignments"), // List of assignments affected
+  autoFindReplacement: boolean("auto_find_replacement").default(true),
+  priority: integer("priority").default(0), // Higher priority overrides win conflicts
+  recurring: jsonb("recurring"), // For recurring availability patterns
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// On-call performance metrics and analytics
+export const onCallMetrics = pgTable("on_call_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id),
+  teamId: varchar("team_id").references(() => onCallTeams.id),
+  metricDate: timestamp("metric_date").notNull(),
+  periodType: varchar("period_type").notNull(), // 'daily', 'weekly', 'monthly', 'quarterly'
+  incidentsHandled: integer("incidents_handled").default(0),
+  averageResponseTime: decimal("average_response_time_minutes", { precision: 10, scale: 2 }),
+  averageResolutionTime: decimal("average_resolution_time_minutes", { precision: 10, scale: 2 }),
+  acknowledgmentRate: decimal("acknowledgment_rate", { precision: 5, scale: 2 }), // Percentage
+  escalationRate: decimal("escalation_rate", { precision: 5, scale: 2 }), // Percentage
+  falseAlarmRate: decimal("false_alarm_rate", { precision: 5, scale: 2 }), // Percentage
+  hoursOnCall: decimal("hours_on_call", { precision: 10, scale: 2 }),
+  afterHoursIncidents: integer("after_hours_incidents").default(0),
+  weekendIncidents: integer("weekend_incidents").default(0),
+  burnoutRisk: varchar("burnout_risk"), // 'low', 'medium', 'high', 'critical'
+  satisfactionScore: decimal("satisfaction_score", { precision: 3, scale: 2 }), // 1-10 rating
+  improvementAreas: jsonb("improvement_areas"),
+  strengths: jsonb("strengths"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Type exports for on-call system
+export type OnCallTeam = typeof onCallTeams.$inferSelect;
+export type InsertOnCallTeam = typeof onCallTeams.$inferInsert;
+export type OnCallTeamMember = typeof onCallTeamMembers.$inferSelect;
+export type InsertOnCallTeamMember = typeof onCallTeamMembers.$inferInsert;
+export type OnCallSchedule = typeof onCallSchedules.$inferSelect;
+export type InsertOnCallSchedule = typeof onCallSchedules.$inferInsert;
+export type OnCallAssignment = typeof onCallAssignments.$inferSelect;
+export type InsertOnCallAssignment = typeof onCallAssignments.$inferInsert;
+export type EscalationPolicy = typeof escalationPolicies.$inferSelect;
+export type InsertEscalationPolicy = typeof escalationPolicies.$inferInsert;
+export type EscalationRule = typeof escalationRules.$inferSelect;
+export type InsertEscalationRule = typeof escalationRules.$inferInsert;
+export type OnCallIncident = typeof onCallIncidents.$inferSelect;
+export type InsertOnCallIncident = typeof onCallIncidents.$inferInsert;
+export type IncidentResponse = typeof incidentResponses.$inferSelect;
+export type InsertIncidentResponse = typeof incidentResponses.$inferInsert;
+export type OnCallAvailability = typeof onCallAvailability.$inferSelect;
+export type InsertOnCallAvailability = typeof onCallAvailability.$inferInsert;
+export type OnCallMetrics = typeof onCallMetrics.$inferSelect;
+export type InsertOnCallMetrics = typeof onCallMetrics.$inferInsert;
+
+// Insert schemas for on-call system
+export const insertOnCallTeamSchema = createInsertSchema(onCallTeams).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertOnCallTeamMemberSchema = createInsertSchema(onCallTeamMembers).omit({
+  id: true,
+  joinedAt: true,
+});
+
+export const insertOnCallScheduleSchema = createInsertSchema(onCallSchedules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertOnCallAssignmentSchema = createInsertSchema(onCallAssignments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertEscalationPolicySchema = createInsertSchema(escalationPolicies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertEscalationRuleSchema = createInsertSchema(escalationRules).omit({
+  id: true,
+});
+
+export const insertOnCallIncidentSchema = createInsertSchema(onCallIncidents).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertIncidentResponseSchema = createInsertSchema(incidentResponses).omit({
+  id: true,
+});
+
+export const insertOnCallAvailabilitySchema = createInsertSchema(onCallAvailability).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertOnCallMetricsSchema = createInsertSchema(onCallMetrics).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Import canonical payment schema tables
 export * from './payments-canonical-schema';

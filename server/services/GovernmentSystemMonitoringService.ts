@@ -21,6 +21,14 @@ import {
 import { eq, desc, and, gte, lte, sql, count, avg, max, min } from 'drizzle-orm';
 import { EventEmitter } from 'events';
 
+// Import on-call system for incident creation
+let OnCallRotaService: any;
+try {
+  OnCallRotaService = require('./OnCallRotaService').OnCallRotaService;
+} catch (error) {
+  // OnCallRotaService not available during initialization
+}
+
 export interface SystemHealthCheck {
   systemId: string;
   status: 'online' | 'offline' | 'degraded' | 'maintenance';
@@ -292,7 +300,7 @@ export class GovernmentSystemMonitoringService extends EventEmitter {
     };
 
     // Store check result
-    await this.recordHealthCheck(healthCheck, retryCount);
+    await this.recordHealthCheckInDB(healthCheck, retryCount);
 
     // Emit events for status changes
     this.emit('healthCheck', healthCheck);
@@ -349,7 +357,7 @@ export class GovernmentSystemMonitoringService extends EventEmitter {
   /**
    * Record health check result in database
    */
-  private async recordHealthCheck(healthCheck: SystemHealthCheck, retryCount: number): Promise<void> {
+  private async recordHealthCheckInDB(healthCheck: SystemHealthCheck, retryCount: number): Promise<void> {
     try {
       const checkData: InsertSystemStatusCheck = {
         systemId: healthCheck.systemId,
@@ -399,6 +407,27 @@ export class GovernmentSystemMonitoringService extends EventEmitter {
       // System went down
       if (!wasDown && isDown) {
         await this.createOutageIncident(systemId, currentStatus as any, errorMessage);
+        
+        // Trigger on-call incident if OnCallRotaService is available
+        if (OnCallRotaService) {
+          try {
+            const system = this.systemsCache.get(systemId);
+            const onCallService = OnCallRotaService.getInstance();
+            
+            await onCallService.triggerIncident({
+              title: `${system?.displayName || systemId} System Outage`,
+              description: `${system?.displayName || systemId} is experiencing ${currentStatus} status. ${errorMessage || 'No additional details available.'}`,
+              severity: this.determineSeverity(currentStatus, system),
+              source: 'government_monitoring',
+              externalIncidentId: systemId,
+              affectedSystems: [systemId],
+            });
+            
+            console.log(`🚨 On-call incident triggered for ${system?.displayName || systemId} outage`);
+          } catch (error) {
+            console.error('Failed to trigger on-call incident:', error);
+          }
+        }
       }
       // System recovered
       else if (wasDown && !isDown) {
@@ -724,6 +753,29 @@ export class GovernmentSystemMonitoringService extends EventEmitter {
   /**
    * Stop all monitoring
    */
+  /**
+   * Determine incident severity based on system status and configuration
+   */
+  private determineSeverity(status: string, system?: any): 'critical' | 'high' | 'medium' | 'low' {
+    // Critical government systems (ERGANI II, e-EFKA) get critical priority
+    const criticalSystems = ['ergani_ii', 'e_efka'];
+    const systemCode = system?.systemCode || '';
+    
+    if (criticalSystems.includes(systemCode)) {
+      return status === 'offline' ? 'critical' : 'high';
+    }
+    
+    // Other systems based on status
+    switch (status) {
+      case 'offline':
+        return 'high';
+      case 'degraded':
+        return 'medium';
+      default:
+        return 'low';
+    }
+  }
+
   stopAllMonitoring(): void {
     for (const [systemId] of Array.from(this.monitoringIntervals.keys())) {
       this.stopSystemMonitoring(systemId);

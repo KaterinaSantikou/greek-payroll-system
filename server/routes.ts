@@ -160,6 +160,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // Initialize On-Call Rota System
+  try {
+    const { OnCallRotaService } = await import('./services/OnCallRotaService');
+    const onCallService = OnCallRotaService.getInstance();
+    await onCallService.initializeOnCallSystem();
+    console.log('🚨 On-call rota system initialized');
+  } catch (error) {
+    console.error('❌ On-call rota system initialization failed:', error);
+    // Continue with reduced on-call capabilities in development
+    if (process.env.NODE_ENV === 'production') {
+      throw error; // Fail hard in production
+    }
+  }
+
   // Apply global MFA enforcement middleware (after auth but before other routes)
   app.use(mfaEnforcement.enforce());
 
@@ -2878,6 +2892,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Government System Monitoring API
   const governmentMonitoringAPI = (await import("./api/governmentSystemMonitoring")).default;
   app.use("/api/government-monitoring", governmentMonitoringAPI);
+  
+  // On-Call Rota API
+  const onCallRotaAPI = (await import("./api/onCallRota")).default;
+  app.use("/api/on-call", onCallRotaAPI);
   
   // Register forecasting API routes
   registerForecastingRoutes(app);
