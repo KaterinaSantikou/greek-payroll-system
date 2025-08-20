@@ -94,33 +94,31 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'employees',
-          label: t('nav.employees'),
+          label: 'Employees',
           icon: User,
           href: '/employees',
           badge: '147',
-          badgeType: 'info'
+          badgeType: 'inventory'
         },
         {
           id: 'onboarding',
-          label: t('nav.onboarding'),
+          label: 'Onboarding',
           icon: UserPlus,
           href: '/onboarding',
           badge: '5',
-          urgent: true,
-          badgeType: 'warning'
+          badgeType: 'todo-medium'
         },
         {
           id: 'exits',
-          label: t('nav.exits'),
+          label: 'Exits',
           icon: UserMinus,
           href: '/exits',
           badge: '2',
-          urgent: true,
-          badgeType: 'warning'
+          badgeType: 'todo-low'
         },
         {
           id: 'teams-roles',
-          label: t('nav.teams-roles'),
+          label: 'Teams & roles',
           icon: UserCheck,
           href: '/teams-roles'
         }
@@ -133,38 +131,37 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'punches',
-          label: t('nav.punches'),
+          label: 'Punches',
           icon: Timer,
           href: '/punches',
           badge: '23',
-          badgeType: 'info'
+          badgeType: 'inventory'
         },
         {
           id: 'exceptions',
-          label: t('nav.exceptions'),
+          label: 'Exceptions',
           icon: AlertTriangle,
           href: '/exceptions',
           badge: '7',
-          urgent: true,
-          badgeType: 'danger'
+          badgeType: 'todo-high'
         },
         {
           id: 'schedules',
-          label: t('nav.schedules'),
+          label: 'Schedules',
           icon: CalendarDays,
           href: '/schedules'
         },
         {
           id: 'overtime',
-          label: t('nav.overtime'),
+          label: 'Overtime',
           icon: Clock,
           href: '/overtime',
           badge: '15',
-          badgeType: 'info'
+          badgeType: 'inventory'
         },
         {
           id: 'digital-work-card',
-          label: t('nav.digital-work-card'),
+          label: 'Digital work card',
           icon: Smartphone,
           href: '/digital-work-card'
         }
@@ -177,28 +174,27 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'runs',
-          label: t('nav.runs'),
+          label: 'Runs',
           icon: Zap,
           href: '/payroll',
           badge: '1',
-          urgent: true,
-          badgeType: 'warning'
+          badgeType: 'todo-high'
         },
         {
           id: 'components',
-          label: t('nav.components'),
+          label: 'Components',
           icon: Building2,
           href: '/earnings-codes'
         },
         {
           id: 'bonuses',
-          label: t('nav.bonuses'),
+          label: 'Bonuses',
           icon: Euro,
           href: '/allowances'
         },
         {
           id: 'simulations',
-          label: t('nav.simulations'),
+          label: 'Simulations',
           icon: BarChart3,
           href: '/payroll-preview'
         }
@@ -211,38 +207,35 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'ergani',
-          label: t('nav.ergani'),
+          label: 'ERGANI II',
           icon: Shield,
           href: '/filings/ergani',
           badge: '2',
-          urgent: true,
-          badgeType: 'danger'
+          badgeType: 'todo-high'
         },
         {
           id: 'efka-apd',
-          label: t('nav.efka-apd'),
+          label: 'e-EFKA/APD',
           icon: Receipt,
           href: '/filings/efka',
           badge: '1',
-          urgent: true,
-          badgeType: 'warning'
+          badgeType: 'todo-medium'
         },
         {
           id: 'aade-fmy',
-          label: t('nav.aade-fmy'),
+          label: 'AADE/ΦΜΥ',
           icon: FileText,
           href: '/filings/aade',
           badge: '3',
-          urgent: false,
-          badgeType: 'warning'
+          badgeType: 'todo-low'
         },
         {
           id: 'inspector-pack',
-          label: t('nav.inspector-pack'),
+          label: 'Inspector pack',
           icon: Briefcase,
           href: '/filings/inspector',
           badge: '1',
-          badgeType: 'info'
+          badgeType: 'inventory'
         }
       ]
     },
@@ -253,24 +246,23 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'sepa',
-          label: t('nav.sepa'),
+          label: 'SEPA files',
           icon: Euro,
           href: '/sepa-payments'
         },
         {
           id: 'off-cycle',
-          label: t('nav.off-cycle'),
+          label: 'Off-cycle payments',
           icon: DollarSign,
           href: '/payments'
         },
         {
           id: 'reconciliation',
-          label: t('nav.reconciliation'),
+          label: 'Reconciliation',
           icon: BookOpen,
           href: '/payments',
           badge: '4',
-          urgent: true,
-          badgeType: 'warning'
+          badgeType: 'todo-medium'
         }
       ]
     },
@@ -281,13 +273,13 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'gl-export',
-          label: t('nav.gl-export'),
+          label: 'GL export',
           icon: Database,
           href: '/accounting'
         },
         {
           id: 'postings',
-          label: t('nav.postings'),
+          label: 'Postings',
           icon: FileText,
           href: '/accounting'
         }
@@ -300,19 +292,19 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'cost-ot',
-          label: t('nav.cost-ot'),
+          label: 'Cost & OT analysis',
           icon: TrendingUp,
           href: '/analytics/cost-ot'
         },
         {
           id: 'absence-turnover',
-          label: t('nav.absence-turnover'),
+          label: 'Absence & turnover',
           icon: PieChart,
           href: '/analytics'
         },
         {
           id: 'custom-reports',
-          label: t('nav.custom-reports'),
+          label: 'Custom reports',
           icon: BarChart3,
           href: '/analytics'
         }
@@ -544,12 +536,22 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     
     // Determine badge type based on context and explicit badgeType
     const getBadgeClass = () => {
-      if (badgeType === 'danger') return "bg-red-500 text-white shadow-sm"; // Critical failures/rejects
-      if (badgeType === 'warning') return "bg-amber-500 text-white shadow-sm"; // Due items/pending tasks
-      if (badgeType === 'success') return "bg-green-500 text-white shadow-sm"; // Completed items
-      if (badgeType === 'info') return "bg-slate-500 text-white shadow-sm"; // Inventory/info counts
-      if (urgent) return "bg-red-500 text-white shadow-sm"; // Legacy urgent fallback
-      return "bg-blue-500 text-white shadow-sm"; // Default counts
+      // Inventory pills (neutral)
+      if (badgeType === 'inventory') return "bg-neutral-700 text-neutral-200";
+      
+      // To-do pills (status-based)
+      if (badgeType === 'todo-low') return "bg-amber-900/40 text-amber-300";
+      if (badgeType === 'todo-medium') return "bg-orange-900/40 text-orange-300";
+      if (badgeType === 'todo-high') return "bg-red-900/40 text-red-300";
+      
+      // Legacy support
+      if (badgeType === 'danger') return "bg-red-900/40 text-red-300";
+      if (badgeType === 'warning') return "bg-amber-900/40 text-amber-300";
+      if (badgeType === 'success') return "bg-green-900/40 text-green-300";
+      if (badgeType === 'info') return "bg-neutral-700 text-neutral-200";
+      
+      // Default to inventory style
+      return "bg-neutral-700 text-neutral-200";
     };
     
     return (
@@ -591,9 +593,9 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       // Base styles
       "w-full justify-start px-4 text-gray-700 dark:text-gray-200 relative group",
       // Size and typography hierarchy
-      level === 0 ? "h-12 text-base font-semibold" : "h-10 text-sm ml-8 font-medium",
-      // Stronger connector lines for children
-      level > 0 && "before:absolute before:left-[-20px] before:top-0 before:bottom-0 before:w-0.5 before:bg-gray-300 dark:before:bg-gray-600",
+      level === 0 ? "h-12 text-base font-semibold uppercase tracking-wide text-xs" : "h-10 text-sm font-medium",
+      // Child indentation (16px)
+      level > 0 && "ml-4 before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-0.5 before:bg-gray-300 dark:before:bg-gray-600",
       // Default state with motion preferences
       "hover:bg-gray-50 dark:hover:bg-gray-800/50",
       "transition-all motion-reduce:transition-none duration-200 motion-reduce:duration-0",
@@ -627,7 +629,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           tabIndex={-1}
         >
           <div className="flex items-center flex-1 min-w-0">
-            <item.icon className="h-6 w-6 flex-shrink-0" />
+            <item.icon className={cn("flex-shrink-0", level === 0 ? "h-5 w-5" : "h-4 w-4")} />
             {!collapsed && (
               <>
                 {(() => {
@@ -812,7 +814,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           )}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <item.icon className="h-6 w-6 flex-shrink-0" />
+            <item.icon className={cn("flex-shrink-0", level === 0 ? "h-5 w-5" : "h-4 w-4")} />
             {!collapsed && (
               <>
                 <span className="truncate">{item.label}</span>
@@ -835,7 +837,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
             )}
           >
             <div className="flex items-center flex-1 min-w-0">
-              <item.icon className="h-6 w-6 flex-shrink-0" />
+              <item.icon className={cn("flex-shrink-0", level === 0 ? "h-5 w-5" : "h-4 w-4")} />
               {!collapsed && (
                 <>
                   <span className="truncate ml-3">{item.label}</span>
