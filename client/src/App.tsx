@@ -113,6 +113,9 @@ const Partner = lazy(() => import("@/pages/Partner"));
 import { OboProvider } from "@/contexts/OboContext";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
+import { useExitIntent } from "@/hooks/useExitIntent";
+import { useLocation } from "wouter";
 
 // Authentication Pages
 import Login from "@/pages/auth/Login";
@@ -127,33 +130,84 @@ const GRCCompliance = lazy(() => import("./pages/GRCCompliance"));
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
   const { open, setOpen } = useCommandPalette();
+  const [location] = useLocation();
+  
+  // Configure exit intent popup based on current page
+  const getExitIntentConfig = () => {
+    if (location === '/' || location === '/landing' || location === '/marketing') {
+      return { variant: 'trial' as const, enabled: !isAuthenticated };
+    }
+    if (location.includes('/demo') || location.includes('/preview')) {
+      return { variant: 'demo' as const, enabled: true };
+    }
+    if (location.includes('/pricing') || location.includes('/plans')) {
+      return { variant: 'discount' as const, enabled: !isAuthenticated };
+    }
+    if (location.includes('/support') || location.includes('/help')) {
+      return { variant: 'support' as const, enabled: true };
+    }
+    // Default for authenticated users on internal pages
+    return { variant: 'newsletter' as const, enabled: isAuthenticated, delay: 30 };
+  };
 
-  if (isLoading || !isAuthenticated) {
+  const exitIntentConfig = getExitIntentConfig();
+  const exitIntent = useExitIntent({
+    ...exitIntentConfig,
+    excludePages: ['/auth/login', '/auth/signup', '/auth', '/api', '/embed'],
+    locale: 'en' // Could be dynamic based on user preference
+  });
+
+  if (isLoading) {
     return (
-      <Switch>
-        <Route path="/" component={Landing} />
-        <Route path="/marketing" component={LandingPage} />
-        <Route path="/property-dashboard" component={PropertyDashboard} />
-        {/* Authentication Routes */}
-        <Route path="/auth/login" component={Login} />
-        <Route path="/auth/signup" component={Signup} />
-        <Route path="/auth/verify-email" component={VerifyEmail} />
-        <Route path="/auth/forgot-password" component={ForgotPassword} />
-        <Route path="/auth/reset-password" component={ResetPassword} />
-        <Route path="/auth/sso" component={SSO} />
-        <Route path="/onboarding-chatbot" component={lazy(() => import("@/pages/OnboardingChatbotDemo"))} />
-        <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo"))} />
-        <Route path="/churn-prevention" component={lazy(() => import("@/pages/ChurnPreventionDemo"))} />
-        <Route path="/ergani-validation" component={lazy(() => import("@/pages/ERGANIValidationDemo"))} />
-        <Route path="/cba-updates" component={lazy(() => import("@/pages/CBAUpdatesDemo"))} />
-        <Route path="/tax-law-alerts" component={lazy(() => import("@/pages/TaxLawAlertsDemo"))} />
-        <Route path="/digital-inspector-portal" component={lazy(() => import("@/pages/DigitalInspectorPortalDemo"))} />
-        <Route path="/cost-benchmarking" component={lazy(() => import("@/pages/CostBenchmarkingDemo"))} />
-        <Route path="/predictive-labor-costs" component={lazy(() => import("@/pages/PredictiveLaborCostsDemo"))} />
-        <Route path="/compliance-risk-scoring" component={lazy(() => import("@/pages/ComplianceRiskScoringDemo"))} />
-        <Route path="/webhook-system" component={lazy(() => import("@/pages/WebhookSystemDemo"))} />
-        <Route component={NotFound} />
-      </Switch>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen">
+        {/* Exit Intent for unauthenticated users */}
+        <ExitIntentPopup 
+          enabled={exitIntent.shouldShow}
+          variant={exitIntent.variant}
+          locale={exitIntent.locale}
+          onCapture={exitIntent.onCapture}
+        />
+        
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+          <Switch>
+            <Route path="/" component={Landing} />
+            <Route path="/marketing" component={LandingPage} />
+            <Route path="/property-dashboard" component={PropertyDashboard} />
+            {/* Authentication Routes */}
+            <Route path="/auth/login" component={Login} />
+            <Route path="/auth/signup" component={Signup} />
+            <Route path="/auth/verify-email" component={VerifyEmail} />
+            <Route path="/auth/forgot-password" component={ForgotPassword} />
+            <Route path="/auth/reset-password" component={ResetPassword} />
+            <Route path="/auth/sso" component={SSO} />
+            {/* Demo pages accessible without authentication */}
+            <Route path="/onboarding-chatbot" component={lazy(() => import("@/pages/OnboardingChatbotDemo"))} />
+            <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo"))} />
+            <Route path="/churn-prevention" component={lazy(() => import("@/pages/ChurnPreventionDemo"))} />
+            <Route path="/ergani-validation" component={lazy(() => import("@/pages/ERGANIValidationDemo"))} />
+            <Route path="/cba-updates" component={lazy(() => import("@/pages/CBAUpdatesDemo"))} />
+            <Route path="/tax-law-alerts" component={lazy(() => import("@/pages/TaxLawAlertsDemo"))} />
+            <Route path="/digital-inspector-portal" component={lazy(() => import("@/pages/DigitalInspectorPortalDemo"))} />
+            <Route path="/cost-benchmarking" component={lazy(() => import("@/pages/CostBenchmarkingDemo"))} />
+            <Route path="/predictive-labor-costs" component={lazy(() => import("@/pages/PredictiveLaborCostsDemo"))} />
+            <Route path="/compliance-risk-scoring" component={lazy(() => import("@/pages/ComplianceRiskScoringDemo"))} />
+            <Route path="/webhook-system" component={lazy(() => import("@/pages/WebhookSystemDemo"))} />
+            <Route path="/exit-intent-demo" component={lazy(() => import("@/pages/ExitIntentDemo"))} />
+            <Route component={NotFound} />
+          </Switch>
+        </Suspense>
+      </div>
     );
   }
 
@@ -161,6 +215,15 @@ function Router() {
     <OboProvider>
       <Layout>
         <CommandPalette open={open} onOpenChange={setOpen} />
+        
+        {/* Exit Intent Popup */}
+        <ExitIntentPopup 
+          enabled={exitIntent.shouldShow}
+          variant={exitIntent.variant}
+          locale={exitIntent.locale}
+          onCapture={exitIntent.onCapture}
+        />
+        
         <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
         <Switch>
         <Route path="/" component={Dashboard} />
