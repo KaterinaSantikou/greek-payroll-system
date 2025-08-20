@@ -1221,4 +1221,438 @@ export function paymentsRoutes(app: Express) {
       });
     }
   });
+
+  // =============================================================================
+  // METRICS & SLOs ENDPOINTS
+  // =============================================================================
+
+  // Get comprehensive SLO dashboard
+  app.get('/v1/payments/metrics/slos', async (req, res) => {
+    try {
+      const { period_hours = '24' } = req.query;
+      const periodHours = parseInt(period_hours as string);
+      
+      const { MetricsService } = await import('../services/metricsService');
+      const dashboard = MetricsService.getSLODashboard(periodHours);
+
+      res.json(dashboard);
+    } catch (error) {
+      console.error('Error getting SLO dashboard:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve SLO dashboard'
+      });
+    }
+  });
+
+  // Get latency metrics
+  app.get('/v1/payments/metrics/latency', async (req, res) => {
+    try {
+      const { period_hours = '24' } = req.query;
+      const periodHours = parseInt(period_hours as string);
+      
+      const { MetricsService } = await import('../services/metricsService');
+      const metrics = MetricsService.getLatencyMetrics(periodHours);
+
+      res.json({
+        success: true,
+        period_hours: periodHours,
+        latency_metrics: metrics,
+        generated_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting latency metrics:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve latency metrics'
+      });
+    }
+  });
+
+  // Get reject rate metrics
+  app.get('/v1/payments/metrics/rejects', async (req, res) => {
+    try {
+      const { period_hours = '24' } = req.query;
+      const periodHours = parseInt(period_hours as string);
+      
+      const { MetricsService } = await import('../services/metricsService');
+      const metrics = MetricsService.getRejectMetrics(periodHours);
+
+      res.json({
+        success: true,
+        period_hours: periodHours,
+        reject_metrics: metrics,
+        generated_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting reject metrics:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve reject metrics'
+      });
+    }
+  });
+
+  // Get instant success metrics
+  app.get('/v1/payments/metrics/instant', async (req, res) => {
+    try {
+      const { period_hours = '24' } = req.query;
+      const periodHours = parseInt(period_hours as string);
+      
+      const { MetricsService } = await import('../services/metricsService');
+      const metrics = MetricsService.getInstantMetrics(periodHours);
+
+      res.json({
+        success: true,
+        period_hours: periodHours,
+        instant_metrics: metrics,
+        generated_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting instant metrics:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve instant metrics'
+      });
+    }
+  });
+
+  // Get reconciliation freshness
+  app.get('/v1/payments/metrics/reconciliation', async (req, res) => {
+    try {
+      const { MetricsService } = await import('../services/metricsService');
+      const freshness = MetricsService.getReconciliationFreshness();
+
+      res.json({
+        success: true,
+        reconciliation_freshness: freshness,
+        checked_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting reconciliation freshness:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve reconciliation freshness'
+      });
+    }
+  });
+
+  // Get cut-off compliance
+  app.get('/v1/payments/metrics/cutoff-compliance', async (req, res) => {
+    try {
+      const { period_hours = '24' } = req.query;
+      const periodHours = parseInt(period_hours as string);
+      
+      const { MetricsService } = await import('../services/metricsService');
+      const compliance = MetricsService.getCutoffCompliance(periodHours);
+
+      res.json({
+        success: true,
+        period_hours: periodHours,
+        cutoff_compliance: compliance,
+        generated_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting cutoff compliance:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve cutoff compliance'
+      });
+    }
+  });
+
+  // Record metrics events (for integration)
+  app.post('/v1/payments/metrics/record', async (req, res) => {
+    try {
+      const { event_type, batch_id, data } = req.body;
+      
+      if (!event_type || !batch_id) {
+        return res.status(400).json({
+          error: 'Missing required fields: event_type, batch_id'
+        });
+      }
+
+      const { MetricsService } = await import('../services/metricsService');
+      
+      switch (event_type) {
+        case 'batch_submitted':
+          MetricsService.recordBatchSubmission(batch_id);
+          break;
+        case 'batch_accepted':
+          MetricsService.recordBatchAcceptance(batch_id);
+          break;
+        case 'batch_settled':
+          MetricsService.recordBatchSettlement(batch_id);
+          break;
+        case 'line_rejected':
+          if (data?.line_id && data?.reason_code) {
+            MetricsService.recordRejection(data.line_id, data.reason_code);
+          }
+          break;
+        case 'instant_attempt':
+          if (data?.method && data?.success !== undefined) {
+            MetricsService.recordInstantAttempt(
+              batch_id,
+              data.method,
+              data.success,
+              data.fallback_reason
+            );
+          }
+          break;
+        case 'cutoff_compliance':
+          if (data?.bank_id && data?.cutoff_time) {
+            MetricsService.recordBatchCutoffCompliance(
+              batch_id,
+              data.bank_id,
+              data.cutoff_time,
+              data.submit_time ? new Date(data.submit_time) : new Date()
+            );
+          }
+          break;
+        case 'reconciliation_ingest':
+          if (data?.type && ['pain002', 'camt054', 'camt053'].includes(data.type)) {
+            MetricsService.updateReconciliationTime(data.type);
+          }
+          break;
+        default:
+          return res.status(400).json({
+            error: `Unsupported event type: ${event_type}`
+          });
+      }
+
+      res.json({
+        success: true,
+        event_type,
+        batch_id,
+        recorded_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error recording metrics event:', error);
+      res.status(500).json({
+        error: 'Failed to record metrics event'
+      });
+    }
+  });
+
+  // =============================================================================
+  // EDGE CASES ENDPOINTS
+  // =============================================================================
+
+  // Handle partial batch rejection
+  app.post('/v1/payments/edge-cases/partial-reject', async (req, res) => {
+    try {
+      const { batch_id, submitted_lines, accepted_line_ids, rejected_lines } = req.body;
+      
+      if (!batch_id || !submitted_lines || !accepted_line_ids || !rejected_lines) {
+        return res.status(400).json({
+          error: 'Missing required fields: batch_id, submitted_lines, accepted_line_ids, rejected_lines'
+        });
+      }
+
+      const { EdgeCaseHandler } = await import('../services/edgeCaseHandler');
+      const result = await EdgeCaseHandler.handlePartialReject(
+        batch_id,
+        submitted_lines,
+        accepted_line_ids,
+        rejected_lines
+      );
+
+      res.json({
+        success: true,
+        partial_reject_result: result,
+        processed_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error handling partial reject:', error);
+      res.status(500).json({
+        error: 'Failed to handle partial rejection'
+      });
+    }
+  });
+
+  // Get bank offline status
+  app.get('/v1/payments/edge-cases/bank-status', async (req, res) => {
+    try {
+      const { bank_id } = req.query;
+      const { EdgeCaseHandler } = await import('../services/edgeCaseHandler');
+      
+      if (bank_id) {
+        const status = EdgeCaseHandler.getBankOfflineStatus(bank_id as string);
+        res.json({
+          success: true,
+          bank_id,
+          status
+        });
+      } else {
+        const allStatuses = EdgeCaseHandler.getAllBankStatuses();
+        res.json({
+          success: true,
+          bank_statuses: allStatuses,
+          total_banks: allStatuses.length
+        });
+      }
+    } catch (error) {
+      console.error('Error getting bank status:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve bank status'
+      });
+    }
+  });
+
+  // Set bank offline status
+  app.post('/v1/payments/edge-cases/bank-status', async (req, res) => {
+    try {
+      const { bank_id, status } = req.body;
+      
+      if (!bank_id || !status || !['offline', 'degraded', 'online'].includes(status)) {
+        return res.status(400).json({
+          error: 'Missing or invalid fields. bank_id and status (offline|degraded|online) required'
+        });
+      }
+
+      const { EdgeCaseHandler } = await import('../services/edgeCaseHandler');
+      EdgeCaseHandler.setBankOfflineStatus(bank_id, status);
+      
+      const updatedStatus = EdgeCaseHandler.getBankOfflineStatus(bank_id);
+
+      res.json({
+        success: true,
+        bank_id,
+        updated_status: updatedStatus,
+        updated_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error setting bank status:', error);
+      res.status(500).json({
+        error: 'Failed to set bank status'
+      });
+    }
+  });
+
+  // Check instant limits
+  app.post('/v1/payments/edge-cases/instant-limit-check', async (req, res) => {
+    try {
+      const { amount, currency = 'EUR', bank_id } = req.body;
+      
+      if (amount === undefined || !bank_id) {
+        return res.status(400).json({
+          error: 'Missing required fields: amount, bank_id'
+        });
+      }
+
+      const { EdgeCaseHandler } = await import('../services/edgeCaseHandler');
+      const limitCheck = EdgeCaseHandler.checkInstantLimit(amount, currency, bank_id);
+      const reissueValidation = EdgeCaseHandler.validateInstantReissue(amount, bank_id);
+
+      res.json({
+        success: true,
+        limit_check: limitCheck,
+        reissue_validation: reissueValidation,
+        checked_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error checking instant limits:', error);
+      res.status(500).json({
+        error: 'Failed to check instant limits'
+      });
+    }
+  });
+
+  // Create IBAN correction workflow
+  app.post('/v1/payments/edge-cases/iban-correction', async (req, res) => {
+    try {
+      const { line_id, original_iban, reason_code } = req.body;
+      
+      if (!line_id || !original_iban || !reason_code || !['AC04', 'FF05'].includes(reason_code)) {
+        return res.status(400).json({
+          error: 'Missing or invalid fields. line_id, original_iban, and reason_code (AC04|FF05) required'
+        });
+      }
+
+      const { EdgeCaseHandler } = await import('../services/edgeCaseHandler');
+      const workflow = await EdgeCaseHandler.createIBANCorrectionWorkflow(
+        line_id,
+        original_iban,
+        reason_code
+      );
+
+      res.json({
+        success: true,
+        correction_workflow: workflow,
+        created_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error creating IBAN correction workflow:', error);
+      res.status(500).json({
+        error: 'Failed to create IBAN correction workflow'
+      });
+    }
+  });
+
+  // Get timezone and cutoff information
+  app.get('/v1/payments/edge-cases/timezone', async (req, res) => {
+    try {
+      const { cutoff_time = '16:00' } = req.query;
+      const { EdgeCaseHandler } = await import('../services/edgeCaseHandler');
+      
+      const tzInfo = EdgeCaseHandler.getTimeZoneInfo(cutoff_time as string);
+
+      res.json({
+        success: true,
+        timezone_info: tzInfo,
+        retrieved_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting timezone info:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve timezone information'
+      });
+    }
+  });
+
+  // Validate cutoff compliance
+  app.post('/v1/payments/edge-cases/cutoff-validation', async (req, res) => {
+    try {
+      const { submit_time, cutoff_time = '16:00', bank_id } = req.body;
+      
+      if (!bank_id) {
+        return res.status(400).json({
+          error: 'Missing required field: bank_id'
+        });
+      }
+
+      const { EdgeCaseHandler } = await import('../services/edgeCaseHandler');
+      const submitTime = submit_time ? new Date(submit_time) : new Date();
+      
+      const validation = EdgeCaseHandler.validateCutoffCompliance(
+        submitTime,
+        cutoff_time,
+        bank_id
+      );
+
+      res.json({
+        success: true,
+        cutoff_validation: validation,
+        validated_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error validating cutoff compliance:', error);
+      res.status(500).json({
+        error: 'Failed to validate cutoff compliance'
+      });
+    }
+  });
+
+  // Get comprehensive edge case status
+  app.get('/v1/payments/edge-cases/status', async (req, res) => {
+    try {
+      const { EdgeCaseHandler } = await import('../services/edgeCaseHandler');
+      const status = EdgeCaseHandler.getEdgeCaseStatus();
+
+      res.json({
+        success: true,
+        edge_case_status: status,
+        retrieved_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting edge case status:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve edge case status'
+      });
+    }
+  });
 }
