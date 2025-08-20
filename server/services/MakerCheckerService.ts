@@ -15,6 +15,7 @@ import {
 import { eq, and, inArray, or, isNull } from 'drizzle-orm';
 import { OboService } from './OboService';
 import { AuditService } from './AuditService';
+import { SecurityService } from './SecurityService';
 
 export interface MakerCheckerRequest {
   requestType: string;
@@ -82,6 +83,28 @@ export class MakerCheckerService {
 
     // Default to client tenant owner/payroll admin
     return { role: 'payroll_admin' };
+  }
+
+  /**
+   * Identity validation: approver cannot be same identity as preparer
+   */
+  private static validateMakerCheckerIdentity(makerId: string, checkerId: string): {
+    valid: boolean;
+    violation?: string;
+  } {
+    if (makerId === checkerId) {
+      return {
+        valid: false,
+        violation: 'Same identity cannot be both maker and checker - compliance violation',
+      };
+    }
+
+    // Additional identity checks could include:
+    // - Same person with different accounts
+    // - Related entities (manager/subordinate)
+    // - Shared credentials detection
+    
+    return { valid: true };
   }
 
   /**

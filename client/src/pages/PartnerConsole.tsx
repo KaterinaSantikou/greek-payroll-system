@@ -41,7 +41,10 @@ import {
   Edit,
   Trash2,
   MoreHorizontal,
-  RefreshCw
+  RefreshCw,
+  TestTube,
+  FileCheck,
+  Package
 } from 'lucide-react';
 
 interface PartnerFirm {
@@ -110,6 +113,7 @@ export default function PartnerConsole() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [selectedIndustry, setSelectedIndustry] = useState('');
+  const [isTestMode, setIsTestMode] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

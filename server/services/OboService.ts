@@ -50,8 +50,8 @@ export interface OboContext {
 
 export class OboService {
   private static readonly TOKEN_PREFIX = 'obo_';
-  private static readonly DEFAULT_EXPIRY_MINUTES = 30;
-  private static readonly MAX_EXPIRY_MINUTES = 480; // 8 hours
+  private static readonly DEFAULT_EXPIRY_MINUTES = 10;
+  private static readonly MAX_EXPIRY_MINUTES = 10; // Security: TTL ≤ 10 min
   private static readonly MIN_EXPIRY_MINUTES = 5;
 
   /**

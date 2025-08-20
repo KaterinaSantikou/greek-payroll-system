@@ -24,10 +24,34 @@ import { eq, and, or } from 'drizzle-orm';
 import { isAuthenticated } from '../replitAuth';
 import { OboService } from '../services/OboService';
 import { AuditService } from '../services/AuditService';
+import { SecurityService } from '../services/SecurityService';
+import { ConsentService } from '../services/ConsentService';
+import { MakerCheckerService } from '../services/MakerCheckerService';
 import { ClientAccessService, PermissionScopes } from '../services/ClientAccessService';
 
 export function registerPartnerRoutes(app: Express) {
   
+  // Security & Compliance monitoring endpoints
+  app.get('/api/partners/security/metrics', isAuthenticated, async (req: any, res) => {
+    try {
+      const metrics = await SecurityService.collectMetrics();
+      res.json(metrics);
+    } catch (error) {
+      console.error('Error fetching security metrics:', error);
+      res.status(500).json({ error: 'Failed to fetch security metrics' });
+    }
+  });
+
+  app.get('/api/partners/security/slos', isAuthenticated, async (req: any, res) => {
+    try {
+      const slos = await SecurityService.checkSLOs();
+      res.json(slos);
+    } catch (error) {
+      console.error('Error checking SLOs:', error);
+      res.status(500).json({ error: 'Failed to check SLOs' });
+    }
+  });
+
   // Get partner firms for current user
   app.get('/api/partners/firms', isAuthenticated, async (req: any, res) => {
     try {
@@ -199,15 +223,26 @@ export function registerPartnerRoutes(app: Express) {
     }
   });
 
-  // Create OBO token to act as a client tenant (legacy endpoint)
+  // Enhanced OBO token creation with security compliance (TTL ≤ 10min, rotation, audit attribution)
   app.post('/api/partners/obo-token', isAuthenticated, async (req: any, res) => {
+    const startTime = Date.now();
+    
     try {
       const userId = req.user?.claims?.sub;
-      const { partnerFirmId, asTenantId, scopes, expiresInMinutes } = req.body;
+      const { partnerFirmId, asTenantId, scopes, rotateExisting = false, expiresInMinutes } = req.body;
 
       if (!partnerFirmId || !asTenantId || !scopes) {
         return res.status(400).json({ 
           error: 'Missing required fields: partnerFirmId, asTenantId, scopes' 
+        });
+      }
+
+      // Security: Check consent is active
+      const consentActive = await ConsentService.isConsentActive(asTenantId, partnerFirmId);
+      if (!consentActive) {
+        return res.status(403).json({ 
+          error: 'Client consent not active or expired',
+          code: 'CONSENT_REQUIRED'
         });
       }
 
@@ -229,33 +264,56 @@ export function registerPartnerRoutes(app: Express) {
         });
       }
 
-      // Create OBO token
+      // Security: Enforce TTL ≤ 10 minutes
+      const effectiveExpiresInMinutes = Math.min(expiresInMinutes || 10, 10);
+
+      // Create OBO token with enhanced security
       const tokenResponse = await OboService.createOboToken({
         userId,
         partnerFirmId,
         asTenantId,
         scopes,
-        expiresInMinutes: expiresInMinutes || 30,
+        expiresInMinutes: effectiveExpiresInMinutes,
+        rotateExisting, // Token rotation on tab switch
         sessionId: req.sessionID,
         requestId: req.headers['x-request-id'] as string,
       });
 
-      // Log the token creation
-      await AuditService.logEvent({
-        eventType: 'user_action',
-        eventCategory: 'authorization',
-        eventAction: 'obo_token_created',
-        tenantId: asTenantId,
-        partnerFirmId,
+      const responseTime = Date.now() - startTime;
+      
+      // Enhanced audit logging with OBO attribution
+      await SecurityService.logOboOperation({
+        action: 'obo_token_created',
+        actorType: 'partner',
+        partnerId: partnerFirmId,
         userId,
-        eventData: {
+        asTenantId,
+        operationData: {
           tokenId: tokenResponse.tokenId,
           scopes,
           expiresAt: tokenResponse.expiresAt,
+          ttlEnforced: effectiveExpiresInMinutes,
+          rotatedTokens: tokenResponse.rotatedTokens || [],
+          responseTime,
         },
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
       });
 
-      res.json(tokenResponse);
+      res.json({
+        success: true,
+        token: tokenResponse.token,
+        tokenId: tokenResponse.tokenId,
+        expiresAt: tokenResponse.expiresAt,
+        scopes: tokenResponse.scopes,
+        asTenantId: tokenResponse.asTenantId,
+        securityMetadata: {
+          ttlEnforced: effectiveExpiresInMinutes <= 10,
+          rotatedTokens: tokenResponse.rotatedTokens?.length || 0,
+          responseTime,
+          consentVerified: true,
+        },
+      });
     } catch (error) {
       console.error('Error creating OBO token:', error);
       res.status(500).json({ 
