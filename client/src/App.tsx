@@ -9,6 +9,7 @@ import { lazy, Suspense } from "react";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import LandingPage from "@/pages/LandingPage";
+import MarketingLanding from "@/pages/MarketingLanding";
 // Lazy load major pages for better performance
 const Home = lazy(() => import("@/pages/home"));
 const Employees = lazy(() => import("@/pages/employees"));
@@ -122,6 +123,7 @@ function Router() {
         <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
         <Switch>
         <Route path="/" component={Dashboard} />
+        <Route path="/marketing" component={MarketingLanding} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
         
         {/* People Section */}
