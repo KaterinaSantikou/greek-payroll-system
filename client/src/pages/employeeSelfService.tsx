@@ -115,11 +115,7 @@ export default function EmployeeSelfServicePage() {
       requestedValue: string; 
       reason: string; 
       photoEvidence?: string;
-    }) => apiRequest('/api/self-service/time-correction', {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: { 'Content-Type': 'application/json' }
-    }),
+    }) => apiRequest('POST', '/api/self-service/time-correction', data),
     onSuccess: () => {
       toast({
         title: "Success",
@@ -140,13 +136,14 @@ export default function EmployeeSelfServicePage() {
 
   // File Upload for Photo Evidence
   const uploadMutation = useMutation({
-    mutationFn: (file: File) => {
+    mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('photo', file);
-      return apiRequest('/api/upload/photo-evidence', {
+      const response = await fetch('/api/upload/photo-evidence', {
         method: 'POST',
         body: formData
       });
+      return response.json();
     },
     onSuccess: (data: any) => {
       setCorrectionForm(prev => ({ ...prev, photoEvidence: data.url }));
@@ -206,7 +203,7 @@ export default function EmployeeSelfServicePage() {
 
         {/* Timeline Visualization */}
         <div className="space-y-4">
-          {paycheckTimeline.map((paycheck: PaycheckTimelineItem, index: number) => (
+          {(paycheckTimeline as any[] || []).map((paycheck: PaycheckTimelineItem, index: number) => (
             <Card key={paycheck.paycheckId} className="relative">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
@@ -287,7 +284,7 @@ export default function EmployeeSelfServicePage() {
               </CardContent>
               
               {/* Timeline connector */}
-              {index < paycheckTimeline.length - 1 && (
+              {index < (paycheckTimeline as any[] || []).length - 1 && (
                 <div className="absolute left-6 bottom-0 w-0.5 h-6 bg-gray-300 transform translate-y-full"></div>
               )}
             </Card>
@@ -337,7 +334,7 @@ export default function EmployeeSelfServicePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {workCardLogs.map((log: WorkCardLog) => (
+              {(workCardLogs as any[]).map((log: WorkCardLog) => (
                 <TableRow key={log.logId}>
                   <TableCell>{format(parseISO(log.workDate), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>
@@ -398,7 +395,7 @@ export default function EmployeeSelfServicePage() {
         <h3 className="text-lg font-semibold">Time Correction Requests</h3>
         
         <div className="space-y-4">
-          {correctionRequests.map((request: CorrectionRequest) => (
+          {(correctionRequests as any[]).map((request: CorrectionRequest) => (
             <Card key={request.requestId}>
               <CardHeader>
                 <div className="flex justify-between items-start">
@@ -461,7 +458,7 @@ export default function EmployeeSelfServicePage() {
         </div>
 
         {/* Dashboard Cards */}
-        {!dashboardLoading && dashboard && (
+        {!dashboardLoading && (dashboard as any) && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card>
               <CardContent className="p-6">
@@ -469,7 +466,7 @@ export default function EmployeeSelfServicePage() {
                   <Euro className="h-8 w-8 text-green-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Current Month Gross</p>
-                    <p className="text-2xl font-bold text-gray-900">€{dashboard.currentMonthGross || '0.00'}</p>
+                    <p className="text-2xl font-bold text-gray-900">€{(dashboard as any)?.currentMonthGross || '0.00'}</p>
                   </div>
                 </div>
               </CardContent>
@@ -481,7 +478,7 @@ export default function EmployeeSelfServicePage() {
                   <Clock className="h-8 w-8 text-blue-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Hours This Month</p>
-                    <p className="text-2xl font-bold text-gray-900">{dashboard.hoursThisMonth || '0'}h</p>
+                    <p className="text-2xl font-bold text-gray-900">{(dashboard as any)?.hoursThisMonth || '0'}h</p>
                   </div>
                 </div>
               </CardContent>
@@ -493,7 +490,7 @@ export default function EmployeeSelfServicePage() {
                   <Timer className="h-8 w-8 text-orange-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Overtime Hours</p>
-                    <p className="text-2xl font-bold text-gray-900">{dashboard.overtimeHours || '0'}h</p>
+                    <p className="text-2xl font-bold text-gray-900">{(dashboard as any)?.overtimeHours || '0'}h</p>
                   </div>
                 </div>
               </CardContent>
@@ -505,7 +502,7 @@ export default function EmployeeSelfServicePage() {
                   <AlertCircle className="h-8 w-8 text-red-600" />
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">Pending Requests</p>
-                    <p className="text-2xl font-bold text-gray-900">{dashboard.pendingRequests || '0'}</p>
+                    <p className="text-2xl font-bold text-gray-900">{(dashboard as any)?.pendingRequests || '0'}</p>
                   </div>
                 </div>
               </CardContent>

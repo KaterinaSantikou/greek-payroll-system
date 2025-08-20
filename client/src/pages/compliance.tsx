@@ -98,23 +98,18 @@ export default function Compliance() {
 
   // Fetch filing history
   const { data: filingHistory, isLoading: historyLoading } = useQuery({
-    queryKey: ["/api/filings/history", selectedProperty],
-    queryParams: { propertyId: selectedProperty }
+    queryKey: ["/api/filings/history", selectedProperty]
   });
 
   // Fetch Digital Work Card dashboard
   const { data: dwcDashboard, isLoading: dashboardLoading } = useQuery({
-    queryKey: ["/api/digital-work-card/dashboard", selectedProperty, selectedPeriod],
-    queryParams: { propertyId: selectedProperty, period: selectedPeriod }
+    queryKey: ["/api/digital-work-card/dashboard", selectedProperty, selectedPeriod]
   });
 
   // Generate APD filing mutation
   const generateAPDMutation = useMutation({
     mutationFn: async ({ propertyId, period }: { propertyId: string; period: string }) => {
-      return apiRequest("/api/filings/apd/generate", {
-        method: "POST",
-        body: { propertyId, period }
-      });
+      return apiRequest("POST", "/api/filings/apd/generate", { propertyId, period });
     },
     onSuccess: (data: APDFiling) => {
       toast({
@@ -135,10 +130,7 @@ export default function Compliance() {
   // Generate ΦΜΥ filing mutation
   const generateFMYMutation = useMutation({
     mutationFn: async ({ propertyId, period }: { propertyId: string; period: string }) => {
-      return apiRequest("/api/filings/fmy/generate", {
-        method: "POST",
-        body: { propertyId, period }
-      });
+      return apiRequest("POST", "/api/filings/fmy/generate", { propertyId, period });
     },
     onSuccess: (data: FMYFiling) => {
       toast({
@@ -159,11 +151,9 @@ export default function Compliance() {
   // Submit filing mutations
   const submitAPDMutation = useMutation({
     mutationFn: async (filingId: string) => {
-      return apiRequest(`/api/filings/apd/${filingId}/submit`, {
-        method: "POST"
-      });
+      return apiRequest("POST", `/api/filings/apd/${filingId}/submit`, {});
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "APD Filing Submitted",
         description: `Filing submitted successfully. Reference: ${data.submissionReference}`,
@@ -174,11 +164,9 @@ export default function Compliance() {
 
   const submitFMYMutation = useMutation({
     mutationFn: async (filingId: string) => {
-      return apiRequest(`/api/filings/fmy/${filingId}/submit`, {
-        method: "POST"
-      });
+      return apiRequest("POST", `/api/filings/fmy/${filingId}/submit`, {});
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       toast({
         title: "ΦΜΥ Filing Submitted",
         description: `Filing submitted successfully. Reference: ${data.submissionReference}`,
