@@ -6,8 +6,11 @@ import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useLocale } from "@/hooks/useLocale";
+import { formatNumber, formatCurrency as formatCurrencyLocale, formatRelativeTime } from "@/lib/i18n";
 import { 
   Building2, 
   Calendar, 
@@ -30,7 +33,16 @@ import {
   Eye,
   Download,
   RefreshCw,
-  Activity
+  Activity,
+  Zap,
+  ArrowRight,
+  Clock3,
+  CheckSquare,
+  AlertCircle,
+  TrendingUp as Trending,
+  PlayCircle,
+  PauseCircle,
+  CalendarDays as CalendarIcon
 } from "lucide-react";
 
 interface Property {
@@ -60,10 +72,12 @@ interface ComplianceData {
 
 export default function Dashboard() {
   const { toast } = useToast();
+  const { t, locale } = useLocale();
   const [selectedProperty, setSelectedProperty] = useState("prop-princess");
   const [selectedPeriod, setPeriod] = useState("this-month");
   const [searchQuery, setSearchQuery] = useState("");
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [isRunningPayroll, setIsRunningPayroll] = useState(false);
 
   // Properties data
   const properties: Property[] = [
@@ -211,11 +225,34 @@ export default function Dashboard() {
   };
 
   const formatCurrency = (amount: number) => 
-    new Intl.NumberFormat('el-GR', { style: 'currency', currency: 'EUR' }).format(amount);
+    formatCurrencyLocale(amount, locale);
 
   const formatTimeAgo = (date: Date) => {
-    const minutes = Math.floor((new Date().getTime() - date.getTime()) / 60000);
-    return minutes < 1 ? 'Just now' : `${minutes}m ago`;
+    return formatRelativeTime(date, locale);
+  };
+
+  // Enhanced payroll actions
+  const handleRunPayroll = () => {
+    setIsRunningPayroll(true);
+    toast({
+      title: t('dashboard.payroll_starting'),
+      description: t('dashboard.payroll_starting_desc'),
+    });
+    // Simulate payroll run
+    setTimeout(() => {
+      setIsRunningPayroll(false);
+      toast({
+        title: t('dashboard.payroll_ready'),
+        description: t('dashboard.payroll_ready_desc'),
+      });
+    }, 3000);
+  };
+
+  const handleResumePayroll = () => {
+    toast({
+      title: t('dashboard.resume_payroll'),
+      description: t('dashboard.resume_payroll_desc'),
+    });
   };
 
   // KPI Calculation Functions
@@ -356,11 +393,214 @@ export default function Dashboard() {
         {/* Dashboard Content */}
         <div className="space-y-6">
           
-          {/* First Row - Action Inbox & Compliance Strip */}
-          <div className="grid lg:grid-cols-3 gap-6">
+          {/* Primary CTA - Run Payroll Section */}
+          <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Zap className="h-6 w-6" />
+                    <h2 className="text-xl font-semibold">
+                      {payrollStatus.stage === 'draft' ? t('dashboard.resume_payroll_run') : t('dashboard.run_payroll')}
+                    </h2>
+                  </div>
+                  <p className="text-blue-100 mb-4">
+                    {payrollStatus.stage === 'draft' 
+                      ? t('dashboard.draft_in_progress') 
+                      : t('dashboard.ready_to_process')}
+                  </p>
+                  
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <div className="text-blue-200">{t('dashboard.employees')}</div>
+                      <div className="font-semibold text-lg">{formatNumber(payrollStatus.totals.headcount, locale)}</div>
+                    </div>
+                    <div>
+                      <div className="text-blue-200">{t('dashboard.gross_total')}</div>
+                      <div className="font-semibold text-lg">{formatCurrency(payrollStatus.totals.gross)}</div>
+                    </div>
+                    <div>
+                      <div className="text-blue-200">{t('dashboard.vs_last_month')}</div>
+                      <div className="font-semibold text-lg flex items-center gap-1">
+                        <Trending className="h-4 w-4" />
+                        +{formatNumber(payrollStatus.totals.deltaPercent, locale)}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                  <Button 
+                    size="lg" 
+                    variant="secondary" 
+                    className="text-blue-600 bg-white hover:bg-blue-50 px-8 py-3 text-lg font-medium"
+                    onClick={payrollStatus.stage === 'draft' ? handleResumePayroll : handleRunPayroll}
+                    disabled={isRunningPayroll}
+                  >
+                    {isRunningPayroll ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                        {t('dashboard.processing')}
+                      </>
+                    ) : (
+                      <>
+                        {payrollStatus.stage === 'draft' ? <PauseCircle className="h-5 w-5 mr-2" /> : <PlayCircle className="h-5 w-5 mr-2" />}
+                        {payrollStatus.stage === 'draft' ? t('dashboard.resume_draft') : t('dashboard.start_payroll')}
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </>
+                    )}
+                  </Button>
+                  
+                  {payrollStatus.stage === 'draft' && (
+                    <div className="text-center">
+                      <div className="text-xs text-blue-200 mb-1">{t('dashboard.progress')}</div>
+                      <Progress value={payrollStatus.progress} className="h-2 bg-blue-500/30" />
+                      <div className="text-xs text-blue-100 mt-1">{payrollStatus.progress}% {t('dashboard.complete')}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Critical Today Strip */}
+          <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-orange-800 dark:text-orange-200 flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5" />
+                  {t('dashboard.critical_today')}
+                </h3>
+                <span className="text-xs text-orange-600 dark:text-orange-400">
+                  {t('dashboard.updated')} {formatTimeAgo(lastUpdated)}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Next Pay Date */}
+                <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800/50 rounded-lg border">
+                  <CalendarIcon className="h-8 w-8 text-blue-600" />
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.next_payday')}</div>
+                    <div className="font-semibold text-sm">31 Ιαν 2025</div>
+                    <div className="text-xs text-green-600">{t('dashboard.on_track')}</div>
+                  </div>
+                </div>
+
+                {/* Items to Approve */}
+                <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800/50 rounded-lg border">
+                  <CheckSquare className="h-8 w-8 text-orange-600" />
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.to_approve')}</div>
+                    <div className="font-semibold text-sm">{actionInboxData.approvals.reduce((sum, a) => sum + a.count, 0)} {t('dashboard.items')}</div>
+                    <div className="text-xs text-orange-600">{t('dashboard.needs_attention')}</div>
+                  </div>
+                </div>
+
+                {/* ΕΡΓΑΝΗ Sync */}
+                <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800/50 rounded-lg border">
+                  <Wifi className="h-8 w-8 text-green-600" />
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">ΕΡΓΑΝΗ ΙΙ</div>
+                    <div className="font-semibold text-sm">{calculateErganiSuccessRate(complianceData.erganiQueue.success, complianceData.erganiQueue.failed)}% {t('dashboard.sync')}</div>
+                    <div className="text-xs text-green-600">{t('dashboard.healthy')}</div>
+                  </div>
+                </div>
+
+                {/* Bank Cutoff */}
+                <div className="flex items-center gap-3 p-3 bg-white dark:bg-gray-800/50 rounded-lg border">
+                  <Clock3 className="h-8 w-8 text-purple-600" />
+                  <div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.bank_cutoff')}</div>
+                    <div className="font-semibold text-sm">16:00 {t('dashboard.today')}</div>
+                    <div className="text-xs text-purple-600">3h {t('dashboard.remaining')}</div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Greek Market Essentials & Main Dashboard Grid */}
+          <div className="grid lg:grid-cols-4 gap-6">
             
-            {/* Action Inbox (2/3 width) */}
-            <div className="lg:col-span-2">
+            {/* Greek Market Essentials (1/4 width) */}
+            <div className="space-y-4">
+              <Card className="border-l-4 border-l-blue-600 bg-blue-50 dark:bg-blue-950/20">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    {t('dashboard.greek_compliance')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Digital Work Card */}
+                  <div className="flex items-center justify-between p-2 bg-white dark:bg-gray-800/50 rounded border">
+                    <div>
+                      <div className="text-xs font-medium">{t('dashboard.digital_card')}</div>
+                      <div className="text-xs text-gray-500">
+                        {complianceData.digitalWorkCard.covered}/{complianceData.digitalWorkCard.scheduled} {t('dashboard.covered')}
+                      </div>
+                    </div>
+                    <Badge variant="default" className="bg-green-600 text-xs">
+                      {calculateDigitalCardCoverage(complianceData.digitalWorkCard.covered, complianceData.digitalWorkCard.scheduled)}%
+                    </Badge>
+                  </div>
+
+                  {/* ΕΡΓΑΝΗ ΙΙ Status */}
+                  <div className="flex items-center justify-between p-2 bg-white dark:bg-gray-800/50 rounded border">
+                    <div>
+                      <div className="text-xs font-medium">ΕΡΓΑΝΗ ΙΙ</div>
+                      <div className="text-xs text-gray-500">{t('dashboard.sync_status')}</div>
+                    </div>
+                    <Badge variant="default" className="bg-green-600 text-xs">
+                      {calculateErganiSuccessRate(complianceData.erganiQueue.success, complianceData.erganiQueue.failed)}%
+                    </Badge>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="space-y-2 pt-2 border-t">
+                    <Button size="sm" variant="outline" className="w-full justify-start text-xs h-8" onClick={() => handleActionClick('ergani', 'sync')}>
+                      <Zap className="h-3 w-3 mr-2" />
+                      {t('dashboard.sync_ergani')}
+                    </Button>
+                    <Button size="sm" variant="outline" className="w-full justify-start text-xs h-8" onClick={() => handleActionClick('digital_card', 'coverage')}>
+                      <Eye className="h-3 w-3 mr-2" />
+                      {t('dashboard.view_coverage')}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Filing Status */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    {t('dashboard.filings_due')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {actionInboxData.filings.map((filing, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800/50 rounded">
+                      <div>
+                        <div className="text-xs font-medium">{filing.type}</div>
+                        <div className="text-xs text-gray-500">{filing.status}</div>
+                      </div>
+                      <Badge 
+                        variant={filing.urgency === 'critical' ? 'destructive' : filing.urgency === 'high' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {filing.ddays}D
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Action Inbox & Performance (3/4 width) */}
+            <div className="lg:col-span-3 space-y-6">
               <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">

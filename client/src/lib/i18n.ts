@@ -56,6 +56,44 @@ interface TranslationKeys {
   'dashboard.filings_due': string;
   'dashboard.updated_just_now': string;
   
+  // Enhanced dashboard content
+  'dashboard.run_payroll': string;
+  'dashboard.resume_payroll_run': string;
+  'dashboard.draft_in_progress': string;
+  'dashboard.ready_to_process': string;
+  'dashboard.employees': string;
+  'dashboard.gross_total': string;
+  'dashboard.vs_last_month': string;
+  'dashboard.processing': string;
+  'dashboard.resume_draft': string;
+  'dashboard.start_payroll': string;
+  'dashboard.progress': string;
+  'dashboard.complete': string;
+  'dashboard.critical_today': string;
+  'dashboard.updated': string;
+  'dashboard.next_payday': string;
+  'dashboard.on_track': string;
+  'dashboard.to_approve': string;
+  'dashboard.items': string;
+  'dashboard.needs_attention': string;
+  'dashboard.sync': string;
+  'dashboard.healthy': string;
+  'dashboard.bank_cutoff': string;
+  'dashboard.today': string;
+  'dashboard.remaining': string;
+  'dashboard.greek_compliance': string;
+  'dashboard.digital_card': string;
+  'dashboard.covered': string;
+  'dashboard.sync_status': string;
+  'dashboard.sync_ergani': string;
+  'dashboard.view_coverage': string;
+  'dashboard.payroll_starting': string;
+  'dashboard.payroll_starting_desc': string;
+  'dashboard.payroll_ready': string;
+  'dashboard.payroll_ready_desc': string;
+  'dashboard.resume_payroll': string;
+  'dashboard.resume_payroll_desc': string;
+  
   // Explanation system
   'explanation.title': string;
   'explanation.coverage': string;
@@ -283,6 +321,44 @@ const translations: Record<Locale, TranslationKeys> = {
     'dashboard.filings_due': '{count, plural, one {# filing due} other {# filings due}}',
     'dashboard.updated_just_now': 'Updated just now',
     
+    // Enhanced dashboard content
+    'dashboard.run_payroll': 'Run Payroll',
+    'dashboard.resume_payroll_run': 'Resume Payroll Run',
+    'dashboard.draft_in_progress': 'Draft payroll in progress - pick up where you left off',
+    'dashboard.ready_to_process': 'Ready to process payroll for this period',
+    'dashboard.employees': 'Employees',
+    'dashboard.gross_total': 'Gross Total',
+    'dashboard.vs_last_month': 'vs Last Month',
+    'dashboard.processing': 'Processing...',
+    'dashboard.resume_draft': 'Resume Draft',
+    'dashboard.start_payroll': 'Start Payroll',
+    'dashboard.progress': 'Progress',
+    'dashboard.complete': 'Complete',
+    'dashboard.critical_today': 'Critical Today',
+    'dashboard.updated': 'Updated',
+    'dashboard.next_payday': 'Next Payday',
+    'dashboard.on_track': 'On Track',
+    'dashboard.to_approve': 'To Approve',
+    'dashboard.items': 'items',
+    'dashboard.needs_attention': 'Needs Attention',
+    'dashboard.sync': 'Sync',
+    'dashboard.healthy': 'Healthy',
+    'dashboard.bank_cutoff': 'Bank Cutoff',
+    'dashboard.today': 'Today',
+    'dashboard.remaining': 'Remaining',
+    'dashboard.greek_compliance': 'Greek Compliance',
+    'dashboard.digital_card': 'Digital Card',
+    'dashboard.covered': 'Covered',
+    'dashboard.sync_status': 'Sync Status',
+    'dashboard.sync_ergani': 'Sync ΕΡΓΑΝΗ',
+    'dashboard.view_coverage': 'View Coverage',
+    'dashboard.payroll_starting': 'Starting Payroll Run',
+    'dashboard.payroll_starting_desc': 'Initializing payroll calculations...',
+    'dashboard.payroll_ready': 'Payroll Ready',
+    'dashboard.payroll_ready_desc': 'Payroll run is ready for review',
+    'dashboard.resume_payroll': 'Resuming Payroll',
+    'dashboard.resume_payroll_desc': 'Continuing from where you left off',
+    
     // Explanation system
     'explanation.title': 'Payslip Explanation',
     'explanation.coverage': 'coverage',
@@ -439,6 +515,44 @@ const translations: Record<Locale, TranslationKeys> = {
     'dashboard.ergani_sync': 'ΕΡΓΑΝΗ σε συγχρονισμό',
     'dashboard.filings_due': '{count, plural, one {# δήλωση σε εκκρεμότητα} other {# δηλώσεις σε εκκρεμότητα}}',
     'dashboard.updated_just_now': 'Μόλις ενημερώθηκε',
+    
+    // Enhanced dashboard content
+    'dashboard.run_payroll': 'Εκτέλεση Μισθοδοσίας',
+    'dashboard.resume_payroll_run': 'Συνέχεια Μισθοδοσίας',
+    'dashboard.draft_in_progress': 'Προσχέδιο μισθοδοσίας σε εξέλιξη - συνεχίστε από εκεί που σταματήσατε',
+    'dashboard.ready_to_process': 'Έτοιμο για επεξεργασία μισθοδοσίας για αυτή την περίοδο',
+    'dashboard.employees': 'Εργαζόμενοι',
+    'dashboard.gross_total': 'Συνολικά Μικτά',
+    'dashboard.vs_last_month': 'έναντι Προηγ. Μήνα',
+    'dashboard.processing': 'Επεξεργασία...',
+    'dashboard.resume_draft': 'Συνέχεια Προσχεδίου',
+    'dashboard.start_payroll': 'Έναρξη Μισθοδοσίας',
+    'dashboard.progress': 'Πρόοδος',
+    'dashboard.complete': 'Ολοκληρώθηκε',
+    'dashboard.critical_today': 'Κρίσιμα Σήμερα',
+    'dashboard.updated': 'Ενημερώθηκε',
+    'dashboard.next_payday': 'Επόμενη Πληρωμή',
+    'dashboard.on_track': 'Εντός Χρονοδιαγράμματος',
+    'dashboard.to_approve': 'Προς Έγκριση',
+    'dashboard.items': 'στοιχεία',
+    'dashboard.needs_attention': 'Χρειάζεται Προσοχή',
+    'dashboard.sync': 'Συγχρονισμός',
+    'dashboard.healthy': 'Υγιής',
+    'dashboard.bank_cutoff': 'Όριο Τράπεζας',
+    'dashboard.today': 'Σήμερα',
+    'dashboard.remaining': 'Απομένουν',
+    'dashboard.greek_compliance': 'Ελληνική Συμμόρφωση',
+    'dashboard.digital_card': 'Ψηφιακή Κάρτα',
+    'dashboard.covered': 'Καλύπτεται',
+    'dashboard.sync_status': 'Κατάσταση Συγχρονισμού',
+    'dashboard.sync_ergani': 'Συγχρονισμός ΕΡΓΑΝΗ',
+    'dashboard.view_coverage': 'Προβολή Κάλυψης',
+    'dashboard.payroll_starting': 'Έναρξη Μισθοδοσίας',
+    'dashboard.payroll_starting_desc': 'Αρχικοποίηση υπολογισμών μισθοδοσίας...',
+    'dashboard.payroll_ready': 'Μισθοδοσία Έτοιμη',
+    'dashboard.payroll_ready_desc': 'Η μισθοδοσία είναι έτοιμη για αναθεώρηση',
+    'dashboard.resume_payroll': 'Συνέχεια Μισθοδοσίας',
+    'dashboard.resume_payroll_desc': 'Συνέχεια από εκεί που σταματήσατε',
     
     // Explanation system
     'explanation.title': 'Εξήγηση Μισθοδοσίας',
