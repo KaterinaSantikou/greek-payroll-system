@@ -5,6 +5,8 @@ import { nanoid } from "nanoid";
 import { db } from "../db";
 import { payrollRuns, payrollLines } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
+import { GarnishmentService } from "../services/GarnishmentService";
+import { GLExportService } from "../glExportService";
 
 const router = Router();
 
@@ -97,12 +99,18 @@ router.get('/api/payroll/runs/:id', isAuthenticated, async (req, res) => {
       .where(eq(payrollLines.payrollRunId, req.params.id));
     
     // Calculate totals
+    // Calculate totals including garnishments
+    const garnishmentLines = lines.filter(line => line.lineType?.startsWith('GARN_'));
+    const totalGarnishments = garnishmentLines.reduce((sum, line) => sum + Math.abs(line.amount || 0), 0);
+    
     const totals = {
       totalGrossPay: lines.reduce((sum, line) => sum + (line.grossAmount || 0), 0),
       totalNetPay: lines.reduce((sum, line) => sum + (line.netAmount || 0), 0),
       totalTax: lines.reduce((sum, line) => sum + (line.taxAmount || 0), 0),
       totalEfka: lines.reduce((sum, line) => sum + (line.efkaAmount || 0), 0),
-      employeeCount: lines.length
+      totalGarnishments,
+      employeeCount: lines.length,
+      garnishmentCount: garnishmentLines.length
     };
     
     const signature = generateSignature({ run, lines, totals });

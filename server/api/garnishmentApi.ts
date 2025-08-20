@@ -7,6 +7,9 @@ import {
   type GarnishmentCalculationInputs 
 } from "../../shared/schema";
 import { z } from "zod";
+import { GarnishmentRBACService } from "../services/GarnishmentRBACService";
+import { PayrollGarnishmentIntegration } from "../services/PayrollGarnishmentIntegration";
+import { PayslipGarnishmentRenderer } from "../services/PayslipGarnishmentRenderer";
 
 // Calc hook input schema
 const calcHookInputSchema = z.object({
@@ -55,9 +58,9 @@ export function registerGarnishmentRoutes(app: Express) {
   
   /**
    * POST /api/garnishments
-   * Create a new garnishment order
+   * Create a new garnishment order (RBAC protected)
    */
-  app.post('/api/garnishments', isAuthenticated, async (req, res) => {
+  app.post('/api/garnishments', isAuthenticated, GarnishmentRBACService.createGarnishmentAuthMiddleware('create'), async (req, res) => {
     try {
       const orderData: InsertGarnishmentOrder = req.body;
       
@@ -92,9 +95,9 @@ export function registerGarnishmentRoutes(app: Express) {
   
   /**
    * PUT /api/garnishments/:id
-   * Update a garnishment order
+   * Update a garnishment order (RBAC protected)
    */
-  app.put('/api/garnishments/:id', isAuthenticated, async (req, res) => {
+  app.put('/api/garnishments/:id', isAuthenticated, GarnishmentRBACService.createGarnishmentAuthMiddleware('update'), async (req, res) => {
     try {
       const { id } = req.params;
       const updates: Partial<InsertGarnishmentOrder> = req.body;
@@ -359,9 +362,9 @@ export function registerGarnishmentRoutes(app: Express) {
   
   /**
    * POST /api/garnishments/:id/suspend
-   * Suspend a garnishment order
+   * Suspend a garnishment order (RBAC protected)
    */
-  app.post('/api/garnishments/:id/suspend', isAuthenticated, async (req, res) => {
+  app.post('/api/garnishments/:id/suspend', isAuthenticated, GarnishmentRBACService.createGarnishmentAuthMiddleware('suspend'), async (req, res) => {
     try {
       const { id } = req.params;
       const { reason } = req.body;
@@ -394,9 +397,9 @@ export function registerGarnishmentRoutes(app: Express) {
   
   /**
    * POST /api/garnishments/:id/reactivate
-   * Reactivate a suspended garnishment order
+   * Reactivate a suspended garnishment order (RBAC protected)
    */
-  app.post('/api/garnishments/:id/reactivate', isAuthenticated, async (req, res) => {
+  app.post('/api/garnishments/:id/reactivate', isAuthenticated, GarnishmentRBACService.createGarnishmentAuthMiddleware('reactivate'), async (req, res) => {
     try {
       const { id } = req.params;
       

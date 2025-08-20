@@ -123,7 +123,7 @@ export class GarnishmentBDDTests {
       
       // Test GL entries
       const glEntries = GarnishmentService.generateGLEntries(result.garnishmentLines, input.employeeId, 'TEST-PROP', 'TEST-DEPT');
-      const creditEntry = glEntries.find((entry: any) => entry.credit === 150);
+      const creditEntry = glEntries.find((entry: any) => entry.credit && entry.credit === 150);
       
       if (!creditEntry) {
         this.results.push({
