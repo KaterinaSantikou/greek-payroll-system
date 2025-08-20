@@ -2,7 +2,7 @@
  * Payments Operations Schema - SEPA batch monitoring and reconciliation
  */
 
-import { pgTable, varchar, decimal, timestamp, boolean, integer, text, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, varchar, decimal, timestamp, boolean, integer, text, jsonb, date } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -277,3 +277,49 @@ export const insertPaymentExceptionSchema = createInsertSchema(paymentExceptions
 });
 export type InsertPaymentException = z.infer<typeof insertPaymentExceptionSchema>;
 export type PaymentException = typeof paymentExceptions.$inferSelect;
+
+// =============================================================================
+// WEBHOOK EVENTS (pain.002, camt.054 tracking)
+// =============================================================================
+
+export const webhookEvents = pgTable("webhook_events", {
+  eventId: varchar("event_id").primaryKey(),
+  type: varchar("type", { length: 20 }).notNull(), // pain.002, camt.054
+  messageId: varchar("message_id", { length: 100 }).notNull(),
+  bankProfile: varchar("bank_profile", { length: 50 }).notNull(),
+  payload: text("payload").notNull(), // JSON payload
+  status: varchar("status", { length: 20 }).notNull(), // processing, processed, failed
+  receivedAt: timestamp("received_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
+  errorMessage: text("error_message"),
+});
+
+// =============================================================================
+// INSTANT RE-ISSUE METRICS
+// =============================================================================
+
+export const instantMetrics = pgTable("instant_metrics", {
+  metricId: varchar("metric_id").primaryKey(),
+  transactionId: varchar("transaction_id", { length: 100 }).notNull(),
+  metricType: varchar("metric_type", { length: 30 }).notNull(), // settlement, rejection, sla_breach, status_change
+  value: varchar("value", { length: 100 }).notNull(), // Numeric value or status
+  metadata: text("metadata"), // JSON metadata
+  recordedAt: timestamp("recorded_at").defaultNow(),
+});
+
+// Relations for webhookEvents and instantMetrics (optional - for querying convenience)
+// Note: No foreign key constraints to avoid migration issues
+
+// Webhook Events schemas
+export const insertWebhookEventSchema = createInsertSchema(webhookEvents).omit({
+  receivedAt: true,
+});
+export type InsertWebhookEvent = z.infer<typeof insertWebhookEventSchema>;
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+
+// Instant Metrics schemas
+export const insertInstantMetricSchema = createInsertSchema(instantMetrics).omit({
+  recordedAt: true,
+});
+export type InsertInstantMetric = z.infer<typeof insertInstantMetricSchema>;
+export type InstantMetric = typeof instantMetrics.$inferSelect;

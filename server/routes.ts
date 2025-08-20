@@ -52,6 +52,7 @@ import { registerLaborNewsfeedRoutes } from "./api/laborNewsfeed";
 import { registerInstantPaymentRoutes } from "./api/instantPayments";
 import { registerPayEquityRoutes } from "./api/payEquity";
 import { registerCsrdRoutes } from "./api/csrd";
+import { instantReissueRoutes } from "./api/instantReissue";
 import securityRoutes from "./routes/securityRoutes";
 import cbaPackRoutes from "./routes/cbaPackRoutes";
 import { embeddedPayrollRoutes } from "./api/embedded";
@@ -3374,6 +3375,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerInstantPaymentRoutes(app);
   registerPayEquityRoutes(app);
   registerCsrdRoutes(app);
+  
+  // IRIS/SCT Instant Re-issue System - BDD compliant
+  instantReissueRoutes(app);
   embeddedPayrollRoutes(app);
   
   // Generic GL API (works with any ERP)
@@ -3419,8 +3423,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerIbanValidationRoutes(app);
 
   // Instant Re-issue (IRIS/SCT Instant)
-  const { instantReissueRoutes } = await import("./api/instantReissue");
-  instantReissueRoutes(app);
 
   // Register notification routes
   try {
