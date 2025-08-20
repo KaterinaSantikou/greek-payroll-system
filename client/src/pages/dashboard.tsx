@@ -396,33 +396,49 @@ export default function Dashboard() {
           {/* Primary CTA - Run Payroll Section */}
           <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 shadow-lg">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Zap className="h-6 w-6" />
-                    <h2 className="text-xl font-semibold">
-                      {payrollStatus.stage === 'draft' ? t('dashboard.resume_payroll_run') : t('dashboard.run_payroll')}
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div className="flex-1 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Zap className="h-6 w-6 flex-shrink-0" />
+                    <h2 className="text-xl font-semibold leading-tight">
+                      {payrollStatus.stage === 'draft' 
+                        ? (locale === 'el' ? 'Συνέχεια Μισθοδοσίας' : 'Resume Payroll Run')
+                        : (locale === 'el' ? 'Εκτέλεση Μισθοδοσίας' : 'Run Payroll')}
                     </h2>
                   </div>
-                  <p className="text-blue-100 mb-4">
+                  <p className="text-blue-100 text-sm leading-relaxed max-w-md">
                     {payrollStatus.stage === 'draft' 
-                      ? t('dashboard.draft_in_progress') 
-                      : t('dashboard.ready_to_process')}
+                      ? (locale === 'el' 
+                          ? 'Προσχέδιο μισθοδοσίας σε εξέλιξη - συνεχίστε από εκεί που σταματήσατε'
+                          : 'Draft payroll in progress - pick up where you left off')
+                      : (locale === 'el' 
+                          ? 'Έτοιμο για επεξεργασία μισθοδοσίας για αυτή την περίοδο'
+                          : 'Ready to process payroll for this period')}
                   </p>
                   
                   {/* Quick Stats */}
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <div className="text-blue-200">{t('dashboard.employees')}</div>
-                      <div className="font-semibold text-lg">{formatNumber(payrollStatus.totals.headcount, locale)}</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                    <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                      <div className="text-blue-200 text-xs font-medium mb-1">
+                        {locale === 'el' ? 'Εργαζόμενοι' : 'Employees'}
+                      </div>
+                      <div className="font-semibold text-lg text-white">
+                        {formatNumber(payrollStatus.totals.headcount, locale)}
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-blue-200">{t('dashboard.gross_total')}</div>
-                      <div className="font-semibold text-lg">{formatCurrency(payrollStatus.totals.gross)}</div>
+                    <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                      <div className="text-blue-200 text-xs font-medium mb-1">
+                        {locale === 'el' ? 'Συνολικά Μικτά' : 'Gross Total'}
+                      </div>
+                      <div className="font-semibold text-lg text-white">
+                        {formatCurrency(payrollStatus.totals.gross)}
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-blue-200">{t('dashboard.vs_last_month')}</div>
-                      <div className="font-semibold text-lg flex items-center gap-1">
+                    <div className="bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                      <div className="text-blue-200 text-xs font-medium mb-1">
+                        {locale === 'el' ? 'έναντι Προηγ. Μήνα' : 'vs Last Month'}
+                      </div>
+                      <div className="font-semibold text-lg flex items-center gap-1 text-white">
                         <Trending className="h-4 w-4" />
                         +{formatNumber(payrollStatus.totals.deltaPercent, locale)}%
                       </div>
@@ -430,33 +446,41 @@ export default function Dashboard() {
                   </div>
                 </div>
                 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 flex-shrink-0">
                   <Button 
                     size="lg" 
                     variant="secondary" 
-                    className="text-blue-600 bg-white hover:bg-blue-50 px-8 py-3 text-lg font-medium"
+                    className="text-blue-600 bg-white hover:bg-blue-50 px-8 py-3 text-lg font-medium whitespace-nowrap"
                     onClick={payrollStatus.stage === 'draft' ? handleResumePayroll : handleRunPayroll}
                     disabled={isRunningPayroll}
                   >
                     {isRunningPayroll ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                        {t('dashboard.processing')}
-                      </>
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        <span>{locale === 'el' ? 'Επεξεργασία...' : 'Processing...'}</span>
+                      </div>
                     ) : (
-                      <>
-                        {payrollStatus.stage === 'draft' ? <PauseCircle className="h-5 w-5 mr-2" /> : <PlayCircle className="h-5 w-5 mr-2" />}
-                        {payrollStatus.stage === 'draft' ? t('dashboard.resume_draft') : t('dashboard.start_payroll')}
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </>
+                      <div className="flex items-center gap-2">
+                        {payrollStatus.stage === 'draft' ? <PauseCircle className="h-5 w-5" /> : <PlayCircle className="h-5 w-5" />}
+                        <span>
+                          {payrollStatus.stage === 'draft' 
+                            ? (locale === 'el' ? 'Συνέχεια Προσχεδίου' : 'Resume Draft')
+                            : (locale === 'el' ? 'Έναρξη Μισθοδοσίας' : 'Start Payroll')}
+                        </span>
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
                     )}
                   </Button>
                   
                   {payrollStatus.stage === 'draft' && (
-                    <div className="text-center">
-                      <div className="text-xs text-blue-200 mb-1">{t('dashboard.progress')}</div>
-                      <Progress value={payrollStatus.progress} className="h-2 bg-blue-500/30" />
-                      <div className="text-xs text-blue-100 mt-1">{payrollStatus.progress}% {t('dashboard.complete')}</div>
+                    <div className="text-center bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+                      <div className="text-xs text-blue-200 mb-2">
+                        {locale === 'el' ? 'Πρόοδος' : 'Progress'}
+                      </div>
+                      <Progress value={payrollStatus.progress} className="h-2 bg-blue-500/30 mb-2" />
+                      <div className="text-xs text-blue-100">
+                        {payrollStatus.progress}% {locale === 'el' ? 'Ολοκληρώθηκε' : 'Complete'}
+                      </div>
                     </div>
                   )}
                 </div>
