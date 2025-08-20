@@ -99,14 +99,107 @@ export function registerPartnerRoutes(app: Express) {
         lastUsed: grant.lastUsedAt,
       }));
 
-      res.json({ clients });
+      // Add mock data for demo
+      const enhancedClients = clients.map(client => ({
+        ...client,
+        clientName: client.clientTenantId === 'princess-sa' ? 'Princess SA' : 
+                   client.clientTenantId === 'demo-hotel' ? 'Demo Hotel Group' :
+                   `Client ${client.clientTenantId.slice(0, 8)}`,
+        afm: client.clientTenantId === 'princess-sa' ? '123456789' : '987654321',
+        makerCheckerMode: client.grantedScopes.includes('filings:submit') ? 'partner_checker' : 'client_checker',
+        industry: 'hospitality',
+        size: 'medium' as const,
+        isFavorite: client.clientTenantId === 'princess-sa',
+        tags: ['hotel', 'seasonal']
+      }));
+
+      res.json({ clients: enhancedClients });
     } catch (error) {
       console.error('Error fetching accessible clients:', error);
       res.status(500).json({ error: 'Failed to fetch accessible clients' });
     }
   });
 
-  // Create OBO token to act as a client tenant
+  // Get OBO token for tenant context switching (Flow 7.1)
+  app.get('/v1/partner/obo-token', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { tenant_id } = req.query;
+
+      if (!tenant_id) {
+        return res.status(400).json({ error: 'tenant_id parameter is required' });
+      }
+
+      // Find the partner firm that has access to this tenant
+      const clientAccess = await db
+        .select({
+          grant: clientAccessGrants,
+          firm: partnerFirms,
+          membership: partnerMembers,
+        })
+        .from(clientAccessGrants)
+        .innerJoin(partnerFirms, eq(clientAccessGrants.partnerFirmId, partnerFirms.id))
+        .innerJoin(partnerMembers, eq(partnerFirms.id, partnerMembers.partnerFirmId))
+        .where(
+          and(
+            eq(partnerMembers.userId, userId),
+            eq(clientAccessGrants.clientTenantId, tenant_id as string),
+            eq(partnerMembers.isActive, true),
+            eq(clientAccessGrants.isActive, true),
+            eq(partnerFirms.isActive, true)
+          )
+        )
+        .limit(1);
+
+      if (clientAccess.length === 0) {
+        return res.status(403).json({ error: 'Access denied to this tenant' });
+      }
+
+      const { grant, firm, membership } = clientAccess[0];
+
+      // Create short-lived OBO token (15 minutes for context switching)
+      const tokenResponse = await OboService.createOboToken({
+        userId,
+        partnerFirmId: firm.id,
+        asTenantId: tenant_id as string,
+        scopes: grant.grantedScopes,
+        expiresInMinutes: 15, // Short-lived for security
+        sessionId: req.sessionID,
+        requestId: req.headers['x-request-id'] as string,
+      });
+
+      // Log the context switch
+      await AuditService.logEvent({
+        eventType: 'user_action',
+        eventCategory: 'authorization',
+        eventAction: 'tenant_context_switch',
+        tenantId: tenant_id as string,
+        partnerFirmId: firm.id,
+        userId,
+        eventData: {
+          tokenId: tokenResponse.tokenId,
+          clientName: grant.clientTenantId,
+          scopes: grant.grantedScopes,
+          expiresAt: tokenResponse.expiresAt,
+        },
+      });
+
+      res.json({
+        obo_token: tokenResponse.token,
+        expires_at: tokenResponse.expiresAt,
+        client_name: grant.clientTenantId,
+        granted_scopes: grant.grantedScopes,
+        maker_checker_mode: grant.makerCheckerMode,
+      });
+    } catch (error) {
+      console.error('Error creating context OBO token:', error);
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : 'Failed to create context token' 
+      });
+    }
+  });
+
+  // Create OBO token to act as a client tenant (legacy endpoint)
   app.post('/api/partners/obo-token', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
@@ -168,6 +261,100 @@ export function registerPartnerRoutes(app: Express) {
       res.status(500).json({ 
         error: error instanceof Error ? error.message : 'Failed to create OBO token' 
       });
+    }
+  });
+
+  // Switch tenant context in session (Flow 7.1)
+  app.post('/api/partners/switch-tenant', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const { tenantId, partnerFirmId } = req.body;
+
+      if (!tenantId || !partnerFirmId) {
+        return res.status(400).json({ error: 'tenantId and partnerFirmId are required' });
+      }
+
+      // Validate access to the tenant
+      const [clientAccess] = await db
+        .select({
+          grant: clientAccessGrants,
+          firm: partnerFirms,
+        })
+        .from(clientAccessGrants)
+        .innerJoin(partnerFirms, eq(clientAccessGrants.partnerFirmId, partnerFirms.id))
+        .innerJoin(partnerMembers, eq(partnerFirms.id, partnerMembers.partnerFirmId))
+        .where(
+          and(
+            eq(partnerMembers.userId, userId),
+            eq(clientAccessGrants.clientTenantId, tenantId),
+            eq(clientAccessGrants.partnerFirmId, partnerFirmId),
+            eq(partnerMembers.isActive, true),
+            eq(clientAccessGrants.isActive, true)
+          )
+        );
+
+      if (!clientAccess) {
+        return res.status(403).json({ error: 'Access denied to this tenant' });
+      }
+
+      // Store context in session
+      (req.session as any).currentTenant = tenantId;
+      (req.session as any).currentPartnerFirm = partnerFirmId;
+      (req.session as any).contextSwitchedAt = new Date().toISOString();
+
+      // Log the context switch
+      await AuditService.logEvent({
+        eventType: 'user_action',
+        eventCategory: 'session',
+        eventAction: 'context_switched',
+        tenantId,
+        partnerFirmId,
+        userId,
+        eventData: {
+          previousContext: (req.session as any).previousTenant || null,
+          newContext: tenantId,
+          firmName: clientAccess.firm.name,
+        },
+      });
+
+      // Update last used timestamp
+      await db
+        .update(clientAccessGrants)
+        .set({ lastUsedAt: new Date() })
+        .where(
+          and(
+            eq(clientAccessGrants.clientTenantId, tenantId),
+            eq(clientAccessGrants.partnerFirmId, partnerFirmId)
+          )
+        );
+
+      res.json({ 
+        success: true, 
+        currentTenant: tenantId,
+        currentPartnerFirm: partnerFirmId,
+      });
+    } catch (error) {
+      console.error('Error switching tenant context:', error);
+      res.status(500).json({ error: 'Failed to switch tenant context' });
+    }
+  });
+
+  // Get current context
+  app.get('/api/partners/current-context', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentTenant = (req.session as any).currentTenant;
+      const currentPartnerFirm = (req.session as any).currentPartnerFirm;
+      const contextSwitchedAt = (req.session as any).contextSwitchedAt;
+
+      res.json({
+        currentTenant,
+        currentPartnerFirm,
+        contextSwitchedAt,
+        hasActiveContext: !!(currentTenant && currentPartnerFirm),
+      });
+    } catch (error) {
+      console.error('Error getting current context:', error);
+      res.status(500).json({ error: 'Failed to get current context' });
     }
   });
 

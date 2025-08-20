@@ -199,6 +199,87 @@ export default function PartnerConsole() {
     },
   });
 
+  // APD Filing preparation and approval (Flow 7.2)
+  const prepareAPDMutation = useMutation({
+    mutationFn: async (params: { period: string, employeeData?: any[], validationOverrides?: any }) => {
+      return apiRequest({
+        url: '/api/partners/filings/apd/prepare',
+        method: 'POST',
+        body: params,
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'APD Draft Prepared',
+        description: `Period ${data.period} - ${data.canProceed ? 'Ready for approval' : 'Requires validation fixes'}`,
+      });
+    },
+  });
+
+  const sendForApprovalMutation = useMutation({
+    mutationFn: async ({ filingId, comments }: { filingId: string, comments?: string }) => {
+      return apiRequest({
+        url: `/api/partners/filings/apd/${filingId}/send-for-approval`,
+        method: 'POST',
+        body: { comments },
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Sent for Approval',
+        description: data.message,
+      });
+    },
+  });
+
+  const approvalDecisionMutation = useMutation({
+    mutationFn: async ({ approvalId, decision, comments }: { approvalId: string, decision: 'approve' | 'reject', comments?: string }) => {
+      return apiRequest({
+        url: `/api/partners/approvals/${approvalId}/decision`,
+        method: 'POST',
+        body: { decision, comments },
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: data.decision === 'approve' ? 'Approved' : 'Rejected',
+        description: data.message,
+      });
+    },
+  });
+
+  const submitAPDMutation = useMutation({
+    mutationFn: async (filingId: string) => {
+      return apiRequest({
+        url: `/api/partners/filings/apd/${filingId}/submit`,
+        method: 'POST',
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Submitted to AADE',
+        description: data.message,
+      });
+    },
+  });
+
+  // Inspector/Audit Pack generation (Flow 7.3)
+  const generateAuditPackMutation = useMutation({
+    mutationFn: async (params: { dateRange: string, contents?: string[], packType?: string }) => {
+      return apiRequest({
+        url: '/api/partners/audit-pack/generate',
+        method: 'POST',
+        body: params,
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Audit Pack Queued',
+        description: `Pack ID: ${data.packId} - Check status for progress`,
+      });
+    },
+  });
+
   if (firmsLoading || clientsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -391,6 +472,40 @@ export default function PartnerConsole() {
                 {currentClient?.makerCheckerMode === 'partner_checker' && '🏢 Partner Review'}
                 {currentClient?.makerCheckerMode === 'dual' && '🤝 Dual Approval'}
               </Badge>
+              
+              {/* Test Flows Buttons */}
+              {currentClient && (
+                <div className="flex items-center gap-2 ml-4 border-l pl-4">
+                  <Button 
+                    onClick={() => prepareAPDMutation.mutate({ period: '12/2024' })}
+                    size="sm"
+                    disabled={prepareAPDMutation.isPending}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {prepareAPDMutation.isPending ? (
+                      <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                    ) : (
+                      <FileText className="h-3 w-3 mr-1" />
+                    )}
+                    APD Flow
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => generateAuditPackMutation.mutate({ dateRange: 'current_month' })}
+                    size="sm"
+                    disabled={generateAuditPackMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {generateAuditPackMutation.isPending ? (
+                      <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                    ) : (
+                      <Download className="h-3 w-3 mr-1" />
+                    )}
+                    Audit Pack
+                  </Button>
+                </div>
+              )}
+              
               <Button variant="ghost" size="sm">
                 <Bell className="h-4 w-4" />
               </Button>

@@ -65,6 +65,7 @@ import { acceptanceCriteriaRoutes } from "./api/acceptanceCriteria";
 import { paymentsOpsRoutes } from "./api/paymentsOps";
 import { registerPartnerRoutes } from "./api/partners";
 import { registerClientApprovalRoutes } from "./api/clientApproval";
+import { registerFilingWorkflowRoutes } from "./api/filingWorkflow";
 import { paymentBatchRoutes } from "./api/paymentBatch";
 import { canonicalPaymentsRoutes } from "./api/canonicalPayments";
 import { paymentStateMachineRoutes } from "./api/paymentStateMachine";
@@ -2785,6 +2786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register Partner Management API routes
   registerPartnerRoutes(app);
+  registerFilingWorkflowRoutes(app);
   registerClientApprovalRoutes(app);
 
   // Register Hotel Tip Pooling API routes
