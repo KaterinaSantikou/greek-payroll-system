@@ -165,6 +165,17 @@ export const authAuditLogs = pgTable("auth_audit_logs", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+// Rate limiting table
+export const rateLimits = pgTable("rate_limits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  identifier: varchar("identifier").notNull(), // IP address, user ID, or email
+  endpoint: varchar("endpoint").notNull(), // API endpoint or action type
+  count: integer("count").default(1),
+  windowStart: timestamp("window_start").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [index("idx_rate_limits_identifier_endpoint").on(table.identifier, table.endpoint)]);
+
 // Properties / Cost Centers table
 export const properties = pgTable("properties", {
   propertyId: varchar("property_id").primaryKey().default(sql`gen_random_uuid()`),
