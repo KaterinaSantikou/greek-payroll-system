@@ -823,6 +823,132 @@ export const insertTimesheetSchema = createInsertSchema(timesheets).omit({
 export type User = typeof users.$inferSelect;
 export type UpsertUser = typeof users.$inferInsert;
 
+// =====================================================
+// DISASTER RECOVERY AND BUSINESS CONTINUITY TABLES
+// =====================================================
+
+// Tabletop Disaster Recovery Exercises
+export const disasterRecoveryExercises = pgTable("disaster_recovery_exercises", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  exerciseType: varchar("exercise_type", { length: 50 }).notNull(), // "tabletop", "walkthrough", "simulation", "full_test"
+  scenario: text("scenario").notNull(), // Disaster scenario description
+  scope: jsonb("scope").notNull(), // {systems: [], departments: [], recovery_sites: []}
+  participants: jsonb("participants").notNull(), // [{userId, role, department}]
+  facilitator: varchar("facilitator").notNull(),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  actualStartTime: timestamp("actual_start_time"),
+  actualEndTime: timestamp("actual_end_time"),
+  status: varchar("status", { length: 20 }).default("scheduled"), // scheduled, in_progress, completed, cancelled
+  results: jsonb("results"), // {objectives_met: [], gaps_identified: [], action_items: []}
+  findings: text("findings"),
+  actionItems: jsonb("action_items"), // [{item, owner, dueDate, status}]
+  nextExerciseDate: timestamp("next_exercise_date"),
+  complianceRequirement: varchar("compliance_requirement"), // "SOX", "ISO27001", "custom"
+  createdBy: varchar("created_by").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Automated Restore Testing
+export const automatedRestoreTests = pgTable("automated_restore_tests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  testName: varchar("test_name", { length: 200 }).notNull(),
+  backupSource: varchar("backup_source", { length: 100 }).notNull(), // "database", "object_storage", "application_data"
+  backupTimestamp: timestamp("backup_timestamp").notNull(),
+  restoreTarget: varchar("restore_target", { length: 100 }).notNull(), // "test_env", "staging", "sandbox"
+  testType: varchar("test_type", { length: 50 }).notNull(), // "full_restore", "partial_restore", "point_in_time"
+  startedAt: timestamp("started_at").defaultNow(),
+  completedAt: timestamp("completed_at"),
+  status: varchar("status", { length: 20 }).default("running"), // running, completed, failed, cancelled
+  result: varchar("result", { length: 20 }), // success, failure, warning
+  validationChecks: jsonb("validation_checks").notNull(), // [{check: "data_integrity", status: "pass", details: ""}]
+  metricsCollected: jsonb("metrics_collected"), // {restore_time_mins, data_size_gb, integrity_score}
+  errorLogs: text("error_logs"),
+  restoredDataSample: jsonb("restored_data_sample"), // Sample data for verification
+  nextScheduledTest: timestamp("next_scheduled_test"),
+  automationScript: text("automation_script"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// RPO/RTO SLA Monitoring
+export const rpoRtoSlaTracking = pgTable("rpo_rto_sla_tracking", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  serviceName: varchar("service_name", { length: 100 }).notNull(),
+  serviceCategory: varchar("service_category", { length: 50 }).notNull(), // "critical", "important", "standard"
+  rpoTargetMinutes: integer("rpo_target_minutes").notNull(), // Recovery Point Objective in minutes
+  rtoTargetMinutes: integer("rto_target_minutes").notNull(), // Recovery Time Objective in minutes
+  actualRpoMinutes: integer("actual_rpo_minutes"),
+  actualRtoMinutes: integer("actual_rto_minutes"),
+  slaStatus: varchar("sla_status", { length: 20 }).default("compliant"), // compliant, breach, warning
+  incidentId: varchar("incident_id"),
+  breachReason: text("breach_reason"),
+  breachStartTime: timestamp("breach_start_time"),
+  breachEndTime: timestamp("breach_end_time"),
+  mitigationActions: jsonb("mitigation_actions"), // [{action, timestamp, responsible}]
+  businessImpact: text("business_impact"),
+  alertsSent: jsonb("alerts_sent"), // [{channel, timestamp, recipient}]
+  escalationLevel: integer("escalation_level").default(0), // 0-4 escalation levels
+  ownerTeam: varchar("owner_team", { length: 100 }),
+  lastCheckedAt: timestamp("last_checked_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Object Storage WORM (Write Once Read Many) Registry
+export const wormObjectRegistry = pgTable("worm_object_registry", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  objectPath: varchar("object_path", { length: 500 }).notNull().unique(),
+  bucketName: varchar("bucket_name", { length: 100 }).notNull(),
+  objectKey: varchar("object_key", { length: 400 }).notNull(),
+  contentHash: varchar("content_hash", { length: 64 }).notNull(), // SHA-256 hash
+  contentSize: integer("content_size").notNull(),
+  contentType: varchar("content_type", { length: 100 }),
+  wormStatus: varchar("worm_status", { length: 20 }).default("protected"), // protected, verified, corrupted
+  retentionPeriodDays: integer("retention_period_days").notNull(),
+  retentionExpiresAt: timestamp("retention_expires_at").notNull(),
+  legalHoldStatus: boolean("legal_hold_status").default(false),
+  legalHoldReason: text("legal_hold_reason"),
+  complianceRequirement: varchar("compliance_requirement"), // "SOX", "GDPR", "audit", "regulatory"
+  auditTrailRef: varchar("audit_trail_ref"), // Reference to audit log entry
+  createdBy: varchar("created_by").notNull(),
+  lastVerifiedAt: timestamp("last_verified_at"),
+  verificationStatus: varchar("verification_status", { length: 20 }).default("pending"), // pending, verified, failed
+  tamperAttempts: integer("tamper_attempts").default(0),
+  accessLog: jsonb("access_log"), // [{timestamp, userId, action, result}]
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Disaster Recovery SLA Agreements (Formal documentation)
+export const disasterRecoverySLAs = pgTable("disaster_recovery_slas", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  serviceName: varchar("service_name", { length: 100 }).notNull(),
+  businessUnit: varchar("business_unit", { length: 100 }),
+  criticality: varchar("criticality", { length: 20 }).notNull(), // "critical", "high", "medium", "low"
+  rpoHours: decimal("rpo_hours", { precision: 6, scale: 2 }).notNull(),
+  rtoHours: decimal("rto_hours", { precision: 6, scale: 2 }).notNull(),
+  availabilityTarget: decimal("availability_target", { precision: 5, scale: 2 }).notNull(), // 99.99%
+  recoveryLocation: varchar("recovery_location", { length: 100 }),
+  backupFrequency: varchar("backup_frequency", { length: 50 }), // "real-time", "hourly", "daily", "weekly"
+  testingFrequency: varchar("testing_frequency", { length: 50 }), // "monthly", "quarterly", "annually"
+  businessImpactPerHour: decimal("business_impact_per_hour", { precision: 12, scale: 2 }),
+  escalationMatrix: jsonb("escalation_matrix"), // [{level, role, contact, timeframe}]
+  dependencies: jsonb("dependencies"), // {upstream: [], downstream: [], external: []}
+  complianceFramework: varchar("compliance_framework"), // "SOX", "ISO27001", "custom"
+  approvedBy: varchar("approved_by").notNull(),
+  approvedAt: timestamp("approved_at").notNull(),
+  effectiveFrom: timestamp("effective_from").notNull(),
+  effectiveUntil: timestamp("effective_until"),
+  lastReviewDate: timestamp("last_review_date"),
+  nextReviewDate: timestamp("next_review_date").notNull(),
+  version: varchar("version", { length: 10 }).default("1.0"),
+  status: varchar("status", { length: 20 }).default("active"), // active, draft, expired, superseded
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // =============================================================================
 // GARNISHMENTS & COURT ORDERS SCHEMA
 // =============================================================================
@@ -5352,6 +5478,172 @@ export const documentPackDownloadRelations = relations(documentPackDownloads, ({
     references: [oboTokens.id],
   }),
 }));
+
+// Disaster Recovery Schema
+
+// Tabletop DR Exercise Management
+export const drExercises = pgTable("dr_exercises", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  exerciseName: varchar("exercise_name").notNull(),
+  exerciseType: varchar("exercise_type").notNull(), // 'tabletop', 'walkthrough', 'simulation', 'live'
+  scenario: text("scenario").notNull(),
+  objectives: jsonb("objectives").notNull(), // Array of objectives
+  scope: varchar("scope").notNull(), // 'full', 'partial', 'component-specific'
+  targetRTO: integer("target_rto_minutes").notNull(), // Recovery Time Objective in minutes
+  targetRPO: integer("target_rpo_minutes").notNull(), // Recovery Point Objective in minutes
+  plannedDate: timestamp("planned_date").notNull(),
+  actualStartTime: timestamp("actual_start_time"),
+  actualEndTime: timestamp("actual_end_time"),
+  status: varchar("status").default('planned').notNull(), // 'planned', 'in_progress', 'completed', 'cancelled'
+  facilitatorId: varchar("facilitator_id").references(() => users.id),
+  participants: jsonb("participants").notNull(), // Array of participant user IDs
+  findings: jsonb("findings"), // Array of findings/issues discovered
+  actionItems: jsonb("action_items"), // Array of remediation tasks
+  overallScore: integer("overall_score"), // 1-100 score
+  lessonsLearned: text("lessons_learned"),
+  nextExerciseDate: timestamp("next_exercise_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Automated Restore Testing
+export const restoreTests = pgTable("restore_tests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  testName: varchar("test_name").notNull(),
+  testType: varchar("test_type").notNull(), // 'full', 'partial', 'validation', 'synthetic'
+  backupSource: varchar("backup_source").notNull(), // identifier of backup being tested
+  backupTimestamp: timestamp("backup_timestamp").notNull(),
+  testEnvironment: varchar("test_environment").notNull(), // 'production', 'staging', 'isolated'
+  automatedTestSuite: jsonb("automated_test_suite").notNull(), // Test definitions
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  status: varchar("status").default('pending').notNull(), // 'pending', 'running', 'passed', 'failed', 'error'
+  testResults: jsonb("test_results"), // Detailed test execution results
+  validationChecks: jsonb("validation_checks"), // Data integrity checks
+  performanceMetrics: jsonb("performance_metrics"), // Restore speed, etc.
+  dataIntegrityScore: integer("data_integrity_score"), // 0-100
+  actualRTO: integer("actual_rto_minutes"), // Measured recovery time
+  actualRPO: integer("actual_rpo_minutes"), // Measured data loss
+  errorLog: text("error_log"),
+  alertsSent: boolean("alerts_sent").default(false),
+  nextTestDate: timestamp("next_test_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// RPO/RTO SLA Management
+export const drSLAs = pgTable("dr_slas", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  serviceName: varchar("service_name").notNull(),
+  criticality: varchar("criticality").notNull(), // 'critical', 'high', 'medium', 'low'
+  businessFunction: varchar("business_function").notNull(),
+  rtoMinutes: integer("rto_minutes").notNull(), // Recovery Time Objective
+  rpoMinutes: integer("rpo_minutes").notNull(), // Recovery Point Objective
+  availabilityTarget: decimal("availability_target", { precision: 5, scale: 4 }).notNull(), // 99.99%
+  maxDowntimePerMonth: integer("max_downtime_per_month_minutes").notNull(),
+  backupFrequency: varchar("backup_frequency").notNull(), // 'continuous', 'hourly', 'daily', etc.
+  testingFrequency: varchar("testing_frequency").notNull(), // 'monthly', 'quarterly', etc.
+  lastTestedAt: timestamp("last_tested_at"),
+  lastIncidentAt: timestamp("last_incident_at"),
+  lastRTOBreach: timestamp("last_rto_breach"),
+  lastRPOBreach: timestamp("last_rpo_breach"),
+  currentStatus: varchar("current_status").default('compliant').notNull(), // 'compliant', 'warning', 'breach'
+  complianceScore: integer("compliance_score").default(100), // 0-100
+  escalationContacts: jsonb("escalation_contacts").notNull(), // Contact hierarchy
+  businessImpactStatement: text("business_impact_statement").notNull(),
+  isActive: boolean("is_active").default(true),
+  reviewDate: timestamp("review_date").notNull(),
+  approvedBy: varchar("approved_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Object Storage WORM (Write-Once Read-Many)
+export const wormObjects = pgTable("worm_objects", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  objectPath: varchar("object_path").notNull().unique(),
+  objectHash: varchar("object_hash").notNull(), // SHA-256 hash for integrity
+  bucketName: varchar("bucket_name").notNull(),
+  originalSize: integer("original_size").notNull(),
+  contentType: varchar("content_type"),
+  retentionPeriodDays: integer("retention_period_days").notNull(),
+  legalHoldStatus: boolean("legal_hold_status").default(false),
+  compliancePolicy: varchar("compliance_policy").notNull(), // 'audit', 'regulatory', 'legal', 'operational'
+  accessRestrictions: jsonb("access_restrictions").notNull(), // Role-based access
+  immutableUntil: timestamp("immutable_until").notNull(),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
+  lastAccessedAt: timestamp("last_accessed_at"),
+  accessCount: integer("access_count").default(0),
+  tamperAttempts: integer("tamper_attempts").default(0),
+  integrityChecks: jsonb("integrity_checks"), // History of integrity validations
+  complianceFlags: jsonb("compliance_flags"), // Regulatory compliance markers
+  status: varchar("status").default('active').notNull(), // 'active', 'expired', 'archived', 'deleted'
+  createdAt: timestamp("created_at").defaultNow(),
+  lastVerifiedAt: timestamp("last_verified_at").defaultNow(),
+});
+
+// Backup Monitoring and SLA Tracking
+export const backupMonitoring = pgTable("backup_monitoring", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  serviceName: varchar("service_name").notNull(),
+  backupType: varchar("backup_type").notNull(), // 'full', 'incremental', 'differential'
+  backupJobId: varchar("backup_job_id").notNull(),
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  status: varchar("status").notNull(), // 'running', 'success', 'failed', 'warning'
+  dataSize: integer("data_size_bytes"),
+  backupDuration: integer("backup_duration_minutes"),
+  compressionRatio: decimal("compression_ratio", { precision: 5, scale: 2 }),
+  verificationStatus: varchar("verification_status"), // 'passed', 'failed', 'skipped'
+  slaCompliance: boolean("sla_compliance"),
+  errorDetails: text("error_details"),
+  performanceMetrics: jsonb("performance_metrics"),
+  nextScheduledBackup: timestamp("next_scheduled_backup"),
+  retentionExpiresAt: timestamp("retention_expires_at"),
+  drSlaId: varchar("dr_sla_id").references(() => drSLAs.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Type exports for disaster recovery
+export type DRExercise = typeof drExercises.$inferSelect;
+export type InsertDRExercise = typeof drExercises.$inferInsert;
+export type RestoreTest = typeof restoreTests.$inferSelect;
+export type InsertRestoreTest = typeof restoreTests.$inferInsert;
+export type DRSLA = typeof drSLAs.$inferSelect;
+export type InsertDRSLA = typeof drSLAs.$inferInsert;
+export type WORMObject = typeof wormObjects.$inferSelect;
+export type InsertWORMObject = typeof wormObjects.$inferInsert;
+export type BackupMonitoring = typeof backupMonitoring.$inferSelect;
+export type InsertBackupMonitoring = typeof backupMonitoring.$inferInsert;
+
+// Insert schemas for disaster recovery
+export const insertDRExerciseSchema = createInsertSchema(drExercises).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertRestoreTestSchema = createInsertSchema(restoreTests).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertDRSLASchema = createInsertSchema(drSLAs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWORMObjectSchema = createInsertSchema(wormObjects).omit({
+  id: true,
+  createdAt: true,
+  lastVerifiedAt: true,
+});
+
+export const insertBackupMonitoringSchema = createInsertSchema(backupMonitoring).omit({
+  id: true,
+  createdAt: true,
+});
 
 // Import canonical payment schema tables
 export * from './payments-canonical-schema';

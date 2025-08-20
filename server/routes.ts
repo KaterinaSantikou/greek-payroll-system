@@ -127,6 +127,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }
 
+  // Initialize Disaster Recovery systems
+  try {
+    const { DisasterRecoveryInitializer } = await import('./services/DisasterRecoveryInitializer');
+    await DisasterRecoveryInitializer.initializeDRSystem();
+    console.log('🆘 Disaster Recovery systems initialized');
+  } catch (error) {
+    console.error('❌ Disaster Recovery initialization failed:', error);
+    // Continue with reduced DR capabilities in development
+    if (process.env.NODE_ENV === 'production') {
+      throw error; // Fail hard in production
+    }
+  }
+
   // Apply global MFA enforcement middleware (after auth but before other routes)
   app.use(mfaEnforcement.enforce());
 
@@ -2828,6 +2841,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(healthAPI);
   app.use(securityAPI);
   app.use(reportsAPI);
+  
+  // Disaster Recovery API
+  const disasterRecoveryAPI = (await import("./api/disasterRecovery")).default;
+  app.use("/api/disaster-recovery", disasterRecoveryAPI);
   
   // Register forecasting API routes
   registerForecastingRoutes(app);
