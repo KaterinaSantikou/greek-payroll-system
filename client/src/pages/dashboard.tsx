@@ -7,6 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { DashboardSkeleton } from "@/components/DashboardSkeleton";
+import { CommandPaletteModal } from "@/components/CommandPaletteModal";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useLocale } from "@/lib/i18n";
@@ -42,7 +46,11 @@ import {
   TrendingUp as Trending,
   PlayCircle,
   PauseCircle,
-  CalendarDays as CalendarIcon
+  CalendarDays as CalendarIcon,
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+  Command
 } from "lucide-react";
 
 interface Property {
@@ -78,6 +86,13 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isRunningPayroll, setIsRunningPayroll] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    actionInbox: true,
+    compliance: true,
+    performance: true
+  });
 
   // Properties data
   const properties: Property[] = [
@@ -87,6 +102,29 @@ export default function Dashboard() {
     { id: "prop-alex", name: "The Alex", group: "City Hotels" },
     { id: "prop-atlantis", name: "Atlantis", group: "Resort Complex" }
   ];
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeydown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(true);
+      }
+      if (e.key === 'Escape') {
+        setShowCommandPalette(false);
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
+  }, []);
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
 
   // Mock data with realistic values
   const actionInboxData = {
@@ -293,8 +331,29 @@ export default function Dashboard() {
     }, 1000);
   };
 
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeydown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowCommandPalette(true);
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeydown);
+    return () => document.removeEventListener('keydown', handleKeydown);
+  }, []);
+
+  // Show loading skeleton while data is loading
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Command Palette */}
+      <CommandPaletteModal isOpen={showCommandPalette} onClose={() => setShowCommandPalette(false)} />
+      
       <div className="container mx-auto px-6 py-4">
         
         {/* Top Bar - Always Visible */}
@@ -343,13 +402,19 @@ export default function Dashboard() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="⌘K Search people, runs, filings, actions..."
-                  className="pl-10"
+                  className="pl-10 pr-12"
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     handleGlobalSearch(e.target.value);
                   }}
+                  onClick={() => setShowCommandPalette(true)}
+                  readOnly
                 />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center text-xs text-gray-400">
+                  <Command className="h-3 w-3 mr-1" />
+                  K
+                </div>
               </div>
             </div>
 
@@ -357,18 +422,46 @@ export default function Dashboard() {
             <div className="flex items-center gap-6">
               {/* Mini Compliance Strip */}
               <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-neutral-200 dark:text-neutral-300">
-                    Digital Card {calculateDigitalCardCoverage(complianceData.digitalWorkCard.covered, complianceData.digitalWorkCard.scheduled)}%
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-neutral-200 dark:text-neutral-300">
-                    ERGANI {calculateErganiSuccessRate(complianceData.erganiQueue.success, complianceData.erganiQueue.failed)}%
-                  </span>
-                </div>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 cursor-help">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span className="text-neutral-200 dark:text-neutral-300">
+                          Digital Card {calculateDigitalCardCoverage(complianceData.digitalWorkCard.covered, complianceData.digitalWorkCard.scheduled)}%
+                        </span>
+                        <HelpCircle className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        {locale === 'el' 
+                          ? 'Ψηφιακή κάρτα εργασίας - υποχρεωτική για όλους τους εργαζομένους. Παρακολουθεί ποιοι από τους προγραμματισμένους έχουν κάνει check-in.'
+                          : 'Digital Work Card - mandatory for all employees. Tracks who among scheduled workers have checked in.'}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1 cursor-help">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span className="text-neutral-200 dark:text-neutral-300">
+                          ERGANI {calculateErganiSuccessRate(complianceData.erganiQueue.success, complianceData.erganiQueue.failed)}%
+                        </span>
+                        <HelpCircle className="h-3 w-3 text-gray-400" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="max-w-xs">
+                        {locale === 'el'
+                          ? 'ΕΡΓΑΝΗ ΙΙ - κυβερνητικό σύστημα για δηλώσεις εργαζομένων. Δείχνει ποσοστό επιτυχίας αυτόματων δηλώσεων.'
+                          : 'ERGANI II - government system for employee declarations. Shows success rate of automatic filings.'}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 {(actionInboxData.filings.filter(f => f.ddays <= 2).length > 0) && (
                   <div className="flex items-center gap-1">
                     <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
@@ -627,41 +720,51 @@ export default function Dashboard() {
 
             {/* Action Inbox & Performance (3/4 width) */}
             <div className="lg:col-span-3 space-y-6">
-              <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2 text-base font-medium">
-                        <Bell className="h-5 w-5 text-blue-600" />
-                        {locale === 'el' ? 'Κιβώτιο Ενεργειών' : 'Action Inbox'}
-                      </CardTitle>
-                      <CardDescription className="text-neutral-200 dark:text-neutral-300 text-sm mt-1">
-                        {locale === 'el' ? '1-κλικ για εκκαθάριση εμποδίων • Ταξινομημένα κατά επείγον & επίδραση' : '1-click to clear blockers • Sorted by urgency & impact'}
-                      </CardDescription>
-                    </div>
-                    <div className="text-xs text-neutral-200 dark:text-neutral-300">
-                      Updated {formatTimeAgo(lastUpdated)}
-                    </div>
-                  </div>
-                  
-                  {/* Exception Summary Bar */}
-                  <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <AlertTriangle className="h-4 w-4 text-orange-600" />
-                        <span className="font-medium text-orange-800 dark:text-orange-200">
-                          {actionInboxData.exceptions.reduce((sum, e) => sum + e.count, 0)} {locale === 'el' ? 'εξαιρέσεις:' : 'exceptions:'}
-                        </span>
+              <Collapsible open={expandedSections.actionInbox} onOpenChange={() => toggleSection('actionInbox')}>
+                <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm">
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="pb-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <CardTitle className="flex items-center gap-2 text-base font-medium">
+                              <Bell className="h-5 w-5 text-blue-600" />
+                              {locale === 'el' ? 'Κιβώτιο Ενεργειών' : 'Action Inbox'}
+                            </CardTitle>
+                            <CardDescription className="text-neutral-200 dark:text-neutral-300 text-sm mt-1">
+                              {locale === 'el' ? '1-κλικ για εκκαθάριση εμποδίων • Ταξινομημένα κατά επείγον & επίδραση' : '1-click to clear blockers • Sorted by urgency & impact'}
+                            </CardDescription>
+                          </div>
+                          {expandedSections.actionInbox ? 
+                            <ChevronUp className="h-4 w-4 text-gray-500" /> : 
+                            <ChevronDown className="h-4 w-4 text-gray-500" />
+                          }
+                        </div>
+                        <div className="text-xs text-neutral-200 dark:text-neutral-300">
+                          Updated {formatTimeAgo(lastUpdated)}
+                        </div>
                       </div>
-                      <span className="text-orange-700 dark:text-orange-300">
-                        {actionInboxData.exceptions.find(e => e.type === 'missing_clockins')?.count || 0} {locale === 'el' ? 'αφίξεις/αναχωρήσεις' : 'clock-ins'} • 
-                        {actionInboxData.exceptions.find(e => e.type === 'duplicate_clockins')?.count || 0} {locale === 'el' ? 'διπλές' : 'duplicates'} • 
-                        {actionInboxData.exceptions.find(e => e.type === 'wrong_location')?.count || 0} {locale === 'el' ? 'λάθος τοποθεσία' : 'wrong location'}
-                      </span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="py-3">
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent>
+                    <CardContent className="py-3">
+                      {/* Exception Summary Bar */}
+                      <div className="mb-3 p-2 bg-orange-50 dark:bg-orange-950/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                        <div className="flex items-center gap-4 text-sm">
+                          <div className="flex items-center gap-1">
+                            <AlertTriangle className="h-4 w-4 text-orange-600" />
+                            <span className="font-medium text-orange-800 dark:text-orange-200">
+                              {actionInboxData.exceptions.reduce((sum, e) => sum + e.count, 0)} {locale === 'el' ? 'εξαιρέσεις:' : 'exceptions:'}
+                            </span>
+                          </div>
+                          <span className="text-orange-700 dark:text-orange-300">
+                            {actionInboxData.exceptions.find(e => e.type === 'missing_clockins')?.count || 0} {locale === 'el' ? 'αφίξεις/αναχωρήσεις' : 'clock-ins'} • 
+                            {actionInboxData.exceptions.find(e => e.type === 'duplicate_clockins')?.count || 0} {locale === 'el' ? 'διπλές' : 'duplicates'} • 
+                            {actionInboxData.exceptions.find(e => e.type === 'wrong_location')?.count || 0} {locale === 'el' ? 'λάθος τοποθεσία' : 'wrong location'}
+                          </span>
+                        </div>
+                      </div>
                   <div className="space-y-3">
                     
                     {/* Approvals Pending */}
@@ -782,9 +885,11 @@ export default function Dashboard() {
                         ))}
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                      </div>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             </div>
 
             {/* Compliance Strip (1/3 width) */}
