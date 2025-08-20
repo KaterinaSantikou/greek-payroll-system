@@ -1545,12 +1545,102 @@ export const employeeContracts = pgTable("employee_contracts", {
   hourlyRate: decimal("hourly_rate", { precision: 8, scale: 2 }),
   salaryFrequency: varchar("salary_frequency", { length: 20 }).default("monthly"), // monthly, bi-weekly, weekly
   
+  // CBA Assignment Fields
+  cbaPackId: varchar("cba_pack_id").references(() => cbaPacks.id),
+  category: varchar("category", { length: 100 }), // Front Office, Housekeeping, etc.
+  grade: varchar("grade", { length: 10 }), // A, B, C
+  seniorityStep: integer("seniority_step").default(0),
+  nextStepDate: date("next_step_date"), // Auto-calculated anniversary date
+  
   // Status
   isActive: boolean("is_active").default(true),
   isPrimary: boolean("is_primary").default(false), // Primary contract for employee
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// CBA Step Change Events - Track seniority advancements
+export const cbaStepChangeEvents = pgTable("cba_step_change_events", {
+  eventId: varchar("event_id").primaryKey().default(sql`gen_random_uuid()`),
+  contractId: varchar("contract_id").notNull().references(() => employeeContracts.contractId),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId),
+  
+  // Change Details
+  eventType: varchar("event_type", { length: 50 }).notNull(), // hire, anniversary, promotion, manual
+  fromStep: integer("from_step").default(0),
+  toStep: integer("to_step").notNull(),
+  fromWage: decimal("from_wage", { precision: 10, scale: 2 }),
+  toWage: decimal("to_wage", { precision: 10, scale: 2 }).notNull(),
+  
+  // Timing
+  effectiveDate: date("effective_date").notNull(),
+  nextStepDate: date("next_step_date"), // Calculated next advancement
+  
+  // Audit
+  triggeredBy: varchar("triggered_by", { length: 50 }).default("auto"), // auto, manual
+  processedBy: varchar("processed_by").references(() => users.id),
+  notes: text("notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Premium Calculation Lines - Detailed premium breakdowns
+export const premiumCalculationLines = pgTable("premium_calculation_lines", {
+  lineId: varchar("line_id").primaryKey().default(sql`gen_random_uuid()`),
+  payrollLineId: varchar("payroll_line_id").references(() => payrollLines.lineId),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId),
+  periodId: varchar("period_id").notNull(),
+  
+  // Premium Details
+  premiumCode: varchar("premium_code", { length: 50 }).notNull(), // NIGHT_25, SUNDAY_75, etc.
+  premiumName: varchar("premium_name", { length: 255 }).notNull(),
+  premiumRate: decimal("premium_rate", { precision: 5, scale: 4 }).notNull(), // 0.25 for 25%
+  
+  // Time Breakdown
+  startDateTime: timestamp("start_date_time").notNull(),
+  endDateTime: timestamp("end_date_time").notNull(),
+  totalHours: decimal("total_hours", { precision: 8, scale: 2 }).notNull(),
+  applicableHours: decimal("applicable_hours", { precision: 8, scale: 2 }).notNull(),
+  
+  // Stacking Support
+  baseRate: decimal("base_rate", { precision: 8, scale: 2 }).notNull(),
+  premiumAmount: decimal("premium_amount", { precision: 10, scale: 2 }).notNull(),
+  stackedWith: jsonb("stacked_with"), // Array of other premium codes for same hours
+  
+  // Audit Trail
+  calculatedAt: timestamp("calculated_at").defaultNow(),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Constraint Violations - Track and propose fixes
+export const constraintViolations = pgTable("constraint_violations", {
+  violationId: varchar("violation_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId),
+  propertyId: varchar("property_id").references(() => properties.propertyId),
+  
+  // Violation Details
+  violationType: varchar("violation_type", { length: 50 }).notNull(), // rest_period, weekly_hours, daily_hours
+  constraintRule: varchar("constraint_rule", { length: 100 }).notNull(), // min_rest_11h, max_daily_10h
+  violationDate: date("violation_date").notNull(),
+  
+  // Current vs Required
+  currentValue: decimal("current_value", { precision: 8, scale: 2 }).notNull(),
+  requiredValue: decimal("required_value", { precision: 8, scale: 2 }).notNull(),
+  severity: varchar("severity", { length: 20 }).default("medium"), // low, medium, high, critical
+  
+  // Proposed Solutions
+  suggestedFix: varchar("suggested_fix", { length: 50 }), // reschedule, declare_overtime, split_shift
+  fixDetails: jsonb("fix_details"), // Specific fix parameters
+  
+  // Resolution
+  status: varchar("status", { length: 20 }).default("open"), // open, acknowledged, resolved, ignored
+  resolvedAt: timestamp("resolved_at"),
+  resolvedBy: varchar("resolved_by").references(() => users.id),
+  resolutionNotes: text("resolution_notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Leave Records Table
@@ -1655,6 +1745,42 @@ export const insertTipsDistributionsSchema = createInsertSchema(tipsDistribution
   createdAt: true,
   updatedAt: true,
 });
+
+// New insert schemas for CBA engine tables
+export const insertEmployeeContractSchema = createInsertSchema(employeeContracts).omit({
+  contractId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCbaStepChangeEventSchema = createInsertSchema(cbaStepChangeEvents).omit({
+  eventId: true,
+  createdAt: true,
+});
+
+export const insertPremiumCalculationLineSchema = createInsertSchema(premiumCalculationLines).omit({
+  lineId: true,
+  calculatedAt: true,
+  createdAt: true,
+});
+
+export const insertConstraintViolationSchema = createInsertSchema(constraintViolations).omit({
+  violationId: true,
+  createdAt: true,
+});
+
+// Types for the new tables
+export type EmployeeContract = typeof employeeContracts.$inferSelect;
+export type InsertEmployeeContract = z.infer<typeof insertEmployeeContractSchema>;
+
+export type CbaStepChangeEvent = typeof cbaStepChangeEvents.$inferSelect;
+export type InsertCbaStepChangeEvent = z.infer<typeof insertCbaStepChangeEventSchema>;
+
+export type PremiumCalculationLine = typeof premiumCalculationLines.$inferSelect;
+export type InsertPremiumCalculationLine = z.infer<typeof insertPremiumCalculationLineSchema>;
+
+export type ConstraintViolation = typeof constraintViolations.$inferSelect;
+export type InsertConstraintViolation = z.infer<typeof insertConstraintViolationSchema>;
 
 // Analytics type exports
 export type LiveOccupancy = typeof liveOccupancy.$inferSelect;

@@ -97,6 +97,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CBA Packs API (helper endpoints)
   const cbaPacksApi = (await import("./api/cbaPacksApi")).default;
   app.use('/api/cba-packs-api', cbaPacksApi);
+  
+  // Payroll Calculation Engine API
+  const payrollCalculationApi = (await import("./api/payrollCalculationApi")).default;
+  app.use('/api/payroll-engine', payrollCalculationApi);
 
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();
