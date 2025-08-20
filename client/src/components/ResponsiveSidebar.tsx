@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X, Menu } from "lucide-react";
 import { MainNavigation } from "./MainNavigation";
 import { useSidebarState } from "@/hooks/useSidebarState";
+import { useLocale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 interface ResponsiveSidebarProps {
@@ -11,6 +12,7 @@ interface ResponsiveSidebarProps {
 }
 
 export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
+  const { t } = useLocale();
   const {
     isExpanded,
     isCollapsed,
@@ -117,8 +119,8 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <h1 className="text-lg font-bold text-blue-600">PayrollSync</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Greek HR & Payroll</p>
+                <h1 className="text-lg font-bold text-blue-600">{t('app.name')}</h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('app.tagline')}</p>
               </motion.div>
             )}
             
@@ -160,8 +162,8 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
             className="p-4 border-t border-gray-200 dark:border-gray-800"
           >
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              <p>Version 2.1.0</p>
-              <p>© 2025 PayrollSync</p>
+              <p>{t('app.version')}</p>
+              <p>{t('app.copyright')}</p>
             </div>
           </motion.div>
         )}
@@ -174,9 +176,8 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
           {
             // Desktop: always account for sidebar
             "ml-70": isDesktop && shouldShowExpanded,
-            "ml-18": isDesktop && !shouldShowExpanded && !isMobile,
-            // Tablet: always account for collapsed sidebar unless mobile
-            "ml-18": isTablet && !isMobile,
+            // Desktop collapsed or tablet
+            "ml-18": (isDesktop && !shouldShowExpanded && !isMobile) || (isTablet && !isMobile),
             // Mobile: no margin (sidebar is overlay)
             "ml-0": isMobile,
           }

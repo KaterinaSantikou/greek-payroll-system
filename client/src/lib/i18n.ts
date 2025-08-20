@@ -89,6 +89,12 @@ interface TranslationKeys {
   'errors.not_found': string;
   'errors.server_error': string;
 
+  // App branding
+  'app.name': string;
+  'app.tagline': string;
+  'app.version': string;
+  'app.copyright': string;
+
   // Dashboard
   'dashboard.property-switcher': string;
   'dashboard.period-selector': string;
@@ -201,6 +207,12 @@ const translations: Record<Locale, TranslationKeys> = {
     'nav.guides': 'Guides',
     'nav.support': 'Support',
     'nav.audit-log': 'Audit Log',
+
+    // App branding
+    'app.name': 'PayrollSync',
+    'app.tagline': 'Greek HR & Payroll',
+    'app.version': 'Version 2.1.0',
+    'app.copyright': '© 2025 PayrollSync',
 
     // Dashboard
     'dashboard.property-switcher': 'Property Switcher',
@@ -353,6 +365,12 @@ const translations: Record<Locale, TranslationKeys> = {
     'nav.support': 'Υποστήριξη',
     'nav.audit-log': 'Ημερολόγιο Ενεργειών',
 
+    // App branding - Greek
+    'app.name': 'PayrollSync',
+    'app.tagline': 'Ελληνικό HR & Μισθοδοσία',
+    'app.version': 'Έκδοση 2.1.0',
+    'app.copyright': '© 2025 PayrollSync',
+
     // Dashboard - Greek translations from the provided file
     'dashboard.property-switcher': 'Επιλογή Μονάδας/Ξενοδοχείου',
     'dashboard.period-selector': 'Επιλογή Περιόδου',
@@ -467,7 +485,33 @@ interface LocaleContextType {
 const LocaleContext = React.createContext<LocaleContextType | undefined>(undefined);
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocale] = React.useState<Locale>('en');
+  // Initialize with persisted locale before first paint
+  const [locale, setLocale] = React.useState<Locale>(() => {
+    // This runs only once during initialization, before first paint
+    if (typeof window === 'undefined') return 'en'; // SSR fallback
+    
+    // Check localStorage first
+    const storedLocale = localStorage.getItem('preferred_locale') as Locale;
+    if (storedLocale && ['en', 'el'].includes(storedLocale)) {
+      return storedLocale;
+    }
+
+    // Check cookie
+    const cookieMatch = document.cookie.match(/(?:^|; )lang=([^;]*)/);
+    const cookieLocale = cookieMatch?.[1] as Locale;
+    if (cookieLocale && ['en', 'el'].includes(cookieLocale)) {
+      return cookieLocale;
+    }
+
+    // Check browser language
+    const browserLang = navigator.language.toLowerCase();
+    if (browserLang.startsWith('el')) {
+      return 'el';
+    }
+
+    // Fallback to English
+    return 'en';
+  });
 
   const t = React.useCallback((key: keyof TranslationKeys): string => {
     return translations[locale][key] || key;

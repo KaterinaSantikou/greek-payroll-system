@@ -7,6 +7,7 @@ import { useCommandPalette } from "@/hooks/useCommandPalette";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebarState } from "@/hooks/useSidebarState";
+import { useLocale } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ interface LayoutProps {
 
 function LayoutContent({ children }: LayoutProps) {
   const { setOpen } = useCommandPalette();
+  const { t } = useLocale();
   const currentProperty = { propertyId: "prop-princess", name: "Princess Resort & Spa" };
   
   const {
@@ -120,8 +122,8 @@ function LayoutContent({ children }: LayoutProps) {
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <h1 className="text-lg font-bold text-blue-600">PayrollSync</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Greek HR & Payroll</p>
+                <h1 className="text-lg font-bold text-blue-600">{t('app.name')}</h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('app.tagline')}</p>
               </motion.div>
             )}
             
@@ -163,8 +165,8 @@ function LayoutContent({ children }: LayoutProps) {
             className="p-4 border-t border-gray-200 dark:border-gray-800"
           >
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              <p>Version 2.1.0</p>
-              <p>© 2025 PayrollSync</p>
+              <p>{t('app.version')}</p>
+              <p>{t('app.copyright')}</p>
             </div>
           </motion.div>
         )}
