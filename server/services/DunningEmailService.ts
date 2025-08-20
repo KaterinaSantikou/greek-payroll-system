@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { addHours, format, isWithinInterval, setHours, setMinutes } from 'date-fns';
-import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 export interface DunningEmailConfig {
   globalSettings: {
@@ -17,7 +17,7 @@ export interface DunningEmailConfig {
         days: number[]; // [2,3,4,5] for Tue-Fri
       };
       D14: {
-        hours: [number, number]; // [9.5, 11] for 09:30-11:00
+        hours: [number, number]; // [9.75, 11] for 09:45-11:00
         days: number[]; // [1,2] for Mon/Tue
       };
     };
@@ -103,7 +103,7 @@ export class DunningEmailService extends EventEmitter {
             days: [2, 3, 4, 5] // Tue-Fri
           },
           D14: {
-            hours: [9.5, 11], // 09:30-11:00
+            hours: [9.75, 11], // 09:45-11:00
             days: [1, 2] // Mon/Tue
           }
         },
@@ -192,7 +192,7 @@ export class DunningEmailService extends EventEmitter {
     targetDate: Date,
     windowType: 'D3_D7' | 'D14'
   ): Date {
-    const athensTime = utcToZonedTime(targetDate, this.config.globalSettings.timezone);
+    const athensTime = toZonedTime(targetDate, this.config.globalSettings.timezone);
     const window = this.config.globalSettings.sendWindows[windowType];
     
     let candidateDate = new Date(athensTime);
@@ -214,12 +214,12 @@ export class DunningEmailService extends EventEmitter {
         
         // If current time is before window, schedule for window start
         if (candidateDate < windowStart) {
-          return zonedTimeToUtc(windowStart, this.config.globalSettings.timezone);
+          return fromZonedTime(windowStart, this.config.globalSettings.timezone);
         }
         
         // If current time is within window, schedule immediately
         if (isWithinInterval(candidateDate, { start: windowStart, end: windowEnd })) {
-          return zonedTimeToUtc(candidateDate, this.config.globalSettings.timezone);
+          return fromZonedTime(candidateDate, this.config.globalSettings.timezone);
         }
       }
       
@@ -748,187 +748,73 @@ If you need more time or a payment plan, reply to this email—we can help.
 
       // D14 Templates - Final notice
       'dunning_d14_en': {
-        subject: 'FINAL NOTICE: Account Suspension Imminent - Invoice {{invoice_number}}',
+        subject: 'Account access restricted until payment is received',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: #742a2a; color: white; padding: 20px; text-align: center; margin-bottom: 20px;">
-              <h1 style="margin: 0; font-size: 1.8em;">⚠️ FINAL NOTICE ⚠️</h1>
-              <p style="margin: 10px 0 0 0; font-size: 1.2em;">ACCOUNT SUSPENSION IMMINENT</p>
+            <h2 style="color: #c53030;">Access Temporarily Restricted</h2>
+            
+            <p>Hi {{customer_name}},</p>
+            
+            <p>We've temporarily restricted access for <strong>{{tenant_name}}</strong> due to the unpaid invoice <strong>{{invoice_series}}-{{invoice_number}}</strong> (total <strong>€{{amount_due}}</strong>).</p>
+            
+            <div style="background: #fed7d7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #c53030;">
+              <p style="margin: 0; font-size: 1.1em;">Filings and payment actions are paused until payment is completed. Your data remains safe and readable.</p>
             </div>
             
-            <p>Dear {{customer_name}},</p>
-            
-            <p><strong style="color: #742a2a; font-size: 1.2em;">This is your final notice.</strong> Your account is {{days_past_due}} days past due and faces immediate suspension.</p>
-            
-            <div style="background: #742a2a; color: white; padding: 25px; border-radius: 8px; margin: 25px 0;">
-              <h2 style="margin-top: 0; color: white; text-align: center;">CRITICAL ACCOUNT STATUS</h2>
-              <table style="width: 100%; color: white; font-size: 1.1em;">
-                <tr><td><strong>Invoice:</strong></td><td>{{invoice_series}}-{{invoice_number}}</td></tr>
-                <tr><td><strong>Amount Due:</strong></td><td><strong style="font-size: 1.4em;">{{formatted_amount}}</strong></td></tr>
-                <tr><td><strong>Days Overdue:</strong></td><td><strong style="font-size: 1.3em; color: #fed7d7;">{{days_past_due}} DAYS</strong></td></tr>
-                <tr><td><strong>Suspension Date:</strong></td><td><strong style="font-size: 1.2em; color: #fed7d7;">{{formatted_suspend_date}}</strong></td></tr>
-              </table>
+            <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0;"><strong>Restore Access:</strong></p>
+              <p style="margin: 5px 0;">• Pay now to restore access: <a href="{{pay_link}}" style="color: #c53030; font-weight: bold;">{{pay_link}}</a></p>
+              <p style="margin: 5px 0;">• Need help or a payment plan? Contact <a href="mailto:{{support_email}}" style="color: #c53030;">{{support_email}}</a>.</p>
             </div>
             
-            <div style="background: #742a2a; color: white; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
-              <h3 style="margin: 0 0 10px 0; color: white; font-size: 1.4em;">🚨 IMMEDIATE ACTION REQUIRED 🚨</h3>
-              <p style="margin: 0; font-size: 1.2em; font-weight: bold;">Payment must be received by {{formatted_suspend_date}}</p>
-              <p style="margin: 10px 0 0 0; font-size: 1.1em;">or your {{tenant_name}} account will be suspended</p>
-            </div>
-            
-            <div style="text-align: center; margin: 35px 0;">
-              <a href="{{pay_link}}" style="background: #742a2a; color: white; padding: 20px 40px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 1.2em; border: 3px solid #fed7d7;">🚨 EMERGENCY PAYMENT - {{formatted_amount}} 🚨</a>
-            </div>
-            
-            <div style="background: #fffaf0; padding: 20px; border-radius: 8px; margin: 25px 0; border: 2px solid #ed8936;">
-              <h3 style="margin-top: 0; color: #c05621;">Account Suspension Consequences</h3>
-              <ul style="margin: 0; padding-left: 20px; color: #c05621;">
-                <li><strong>Immediate:</strong> Access to {{tenant_name}} services suspended</li>
-                <li><strong>Data:</strong> Account data preserved but inaccessible</li>
-                <li><strong>Restoration:</strong> Full payment + reactivation fee required</li>
-                <li><strong>Collection:</strong> Account may be forwarded to collection agency</li>
-              </ul>
-            </div>
-            
-            <div style="background: #e6fffa; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #319795;">
-              <h3 style="margin-top: 0; color: #2c7a7b;">Last Chance Payment Options</h3>
-              <p style="margin: 5px 0;"><strong>🔥 Emergency Hotline:</strong> {{support_phone}} (immediate assistance)</p>
-              <p style="margin: 5px 0;"><strong>💳 Instant Payment:</strong> <a href="{{pay_link}}">{{pay_link}}</a></p>
-              <p style="margin: 5px 0;"><strong>📄 Invoice Download:</strong> <a href="{{invoice_pdf_url}}">{{invoice_pdf_url}}</a></p>
-              <p style="margin: 5px 0;"><strong>📧 Critical Support:</strong> <a href="mailto:{{support_email}}">{{support_email}}</a></p>
-            </div>
-            
-            <div style="background: #fed7d7; padding: 20px; border-radius: 8px; margin: 25px 0; border: 2px solid #c53030; text-align: center;">
-              <p style="margin: 0; font-size: 1.1em; color: #742a2a;"><strong>If you believe this notice is in error or have already made payment, contact us IMMEDIATELY at {{support_phone}} or {{support_email}}.</strong></p>
-            </div>
-            
-            <hr style="margin: 30px 0; border: none; border-top: 2px solid #742a2a;">
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
             <small style="color: #718096;">{{legal_footer}}</small>
           </div>
         `,
-        text: `⚠️ FINAL NOTICE - ACCOUNT SUSPENSION IMMINENT ⚠️
+        text: `Hi {{customer_name}},
 
-Dear {{customer_name}},
+We've temporarily restricted access for **{{tenant_name}}** due to the unpaid invoice **{{invoice_series}}-{{invoice_number}}** (total **€{{amount_due}}**).
 
-THIS IS YOUR FINAL NOTICE. Your account is {{days_past_due}} days past due and faces immediate suspension.
+Filings and payment actions are paused until payment is completed. Your data remains safe and readable.
 
-CRITICAL ACCOUNT STATUS:
-- Invoice: {{invoice_series}}-{{invoice_number}}
-- Amount Due: {{formatted_amount}}
-- Days Overdue: {{days_past_due}} DAYS
-- Suspension Date: {{formatted_suspend_date}}
-
-🚨 IMMEDIATE ACTION REQUIRED 🚨
-Payment must be received by {{formatted_suspend_date}} or your {{tenant_name}} account will be suspended.
-
-EMERGENCY PAYMENT: {{pay_link}}
-
-Account Suspension Consequences:
-• Immediate access to {{tenant_name}} suspended
-• Account data preserved but inaccessible
-• Full payment + reactivation fee required
-• Account may go to collection agency
-
-Last Chance Payment Options:
-🔥 Emergency Hotline: {{support_phone}}
-💳 Instant Payment: {{pay_link}}
-📄 Invoice: {{invoice_pdf_url}}
-📧 Critical Support: {{support_email}}
-
-If this is in error or payment made, contact IMMEDIATELY: {{support_phone}} or {{support_email}}
+• Pay now to restore access: {{pay_link}}  
+• Need help or a payment plan? Contact {{support_email}}.
 
 {{legal_footer}}`
       },
 
       'dunning_d14_el': {
-        subject: 'ΤΕΛΕΥΤΑΙΑ ΕΙΔΟΠΟΙΗΣΗ: Επικείμενη Αναστολή Λογαριασμού - Τιμολόγιο {{invoice_number}}',
+        subject: 'Περιορισμός πρόσβασης έως την εξόφληση',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: #742a2a; color: white; padding: 20px; text-align: center; margin-bottom: 20px;">
-              <h1 style="margin: 0; font-size: 1.8em;">⚠️ ΤΕΛΕΥΤΑΙΑ ΕΙΔΟΠΟΙΗΣΗ ⚠️</h1>
-              <p style="margin: 10px 0 0 0; font-size: 1.2em;">ΕΠΙΚΕΙΜΕΝΗ ΑΝΑΣΤΟΛΗ ΛΟΓΑΡΙΑΣΜΟΥ</p>
+            <h2 style="color: #c53030;">Προσωρινός Περιορισμός Πρόσβασης</h2>
+            
+            <p>Γεια σας {{customer_name}},</p>
+            
+            <p>Η πρόσβαση για <strong>{{tenant_name}}</strong> περιορίστηκε προσωρινά λόγω ανεξόφλητου τιμολογίου <strong>{{invoice_series}}-{{invoice_number}}</strong> (σύνολο <strong>€{{amount_due}}</strong>).</p>
+            
+            <div style="background: #fed7d7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #c53030;">
+              <p style="margin: 0; font-size: 1.1em;">Οι υποβολές και οι πληρωμές έχουν τεθεί σε παύση έως την ολοκλήρωση της πληρωμής. Τα δεδομένα σας παραμένουν ασφαλή και ορατά.</p>
             </div>
             
-            <p>Αγαπητέ/ή {{customer_name}},</p>
-            
-            <p><strong style="color: #742a2a; font-size: 1.2em;">Αυτή είναι η τελευταία σας ειδοποίηση.</strong> Ο λογαριασμός σας έχει {{days_past_due}} ημέρες καθυστέρηση και αντιμετωπίζει άμεση αναστολή.</p>
-            
-            <div style="background: #742a2a; color: white; padding: 25px; border-radius: 8px; margin: 25px 0;">
-              <h2 style="margin-top: 0; color: white; text-align: center;">ΚΡΙΣΙΜΗ ΚΑΤΑΣΤΑΣΗ ΛΟΓΑΡΙΑΣΜΟΥ</h2>
-              <table style="width: 100%; color: white; font-size: 1.1em;">
-                <tr><td><strong>Τιμολόγιο:</strong></td><td>{{invoice_series}}-{{invoice_number}}</td></tr>
-                <tr><td><strong>Οφειλόμενο Ποσό:</strong></td><td><strong style="font-size: 1.4em;">{{formatted_amount}}</strong></td></tr>
-                <tr><td><strong>Ημέρες Καθυστέρησης:</strong></td><td><strong style="font-size: 1.3em; color: #fed7d7;">{{days_past_due}} ΗΜΕΡΕΣ</strong></td></tr>
-                <tr><td><strong>Ημ. Αναστολής:</strong></td><td><strong style="font-size: 1.2em; color: #fed7d7;">{{formatted_suspend_date}}</strong></td></tr>
-              </table>
+            <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0;"><strong>Άρση Περιορισμού:</strong></p>
+              <p style="margin: 5px 0;">• Εξοφλήστε τώρα για άρση περιορισμού: <a href="{{pay_link}}" style="color: #c53030; font-weight: bold;">{{pay_link}}</a></p>
+              <p style="margin: 5px 0;">• Χρειάζεστε βοήθεια/διακανονισμό; <a href="mailto:{{support_email}}" style="color: #c53030;">{{support_email}}</a>.</p>
             </div>
             
-            <div style="background: #742a2a; color: white; padding: 20px; border-radius: 8px; margin: 25px 0; text-align: center;">
-              <h3 style="margin: 0 0 10px 0; color: white; font-size: 1.4em;">🚨 ΑΠΑΙΤΕΙΤΑΙ ΑΜΕΣΗ ΔΡΑΣΗ 🚨</h3>
-              <p style="margin: 0; font-size: 1.2em; font-weight: bold;">Η πληρωμή πρέπει να εισπραχθεί μέχρι {{formatted_suspend_date}}</p>
-              <p style="margin: 10px 0 0 0; font-size: 1.1em;">διαφορετικά ο λογαριασμός σας {{tenant_name}} θα ανασταλεί</p>
-            </div>
-            
-            <div style="text-align: center; margin: 35px 0;">
-              <a href="{{pay_link}}" style="background: #742a2a; color: white; padding: 20px 40px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 1.2em; border: 3px solid #fed7d7;">🚨 ΕΠΕΙΓΟΥΣΑ ΠΛΗΡΩΜΗ - {{formatted_amount}} 🚨</a>
-            </div>
-            
-            <div style="background: #fffaf0; padding: 20px; border-radius: 8px; margin: 25px 0; border: 2px solid #ed8936;">
-              <h3 style="margin-top: 0; color: #c05621;">Συνέπειες Αναστολής Λογαριασμού</h3>
-              <ul style="margin: 0; padding-left: 20px; color: #c05621;">
-                <li><strong>Άμεσα:</strong> Αναστολή πρόσβασης στις υπηρεσίες {{tenant_name}}</li>
-                <li><strong>Δεδομένα:</strong> Τα δεδομένα διατηρούνται αλλά δεν είναι προσβάσιμα</li>
-                <li><strong>Αποκατάσταση:</strong> Απαιτείται πλήρης πληρωμή + χρέωση επανενεργοποίησης</li>
-                <li><strong>Είσπραξη:</strong> Ο λογαριασμός μπορεί να προωθηθεί σε εταιρεία εισπράξεων</li>
-              </ul>
-            </div>
-            
-            <div style="background: #e6fffa; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #319795;">
-              <h3 style="margin-top: 0; color: #2c7a7b;">Τελευταίες Επιλογές Πληρωμής</h3>
-              <p style="margin: 5px 0;"><strong>🔥 Γραμμή Έκτακτης Ανάγκης:</strong> {{support_phone}} (άμεση βοήθεια)</p>
-              <p style="margin: 5px 0;"><strong>💳 Άμεση Πληρωμή:</strong> <a href="{{pay_link}}">{{pay_link}}</a></p>
-              <p style="margin: 5px 0;"><strong>📄 Λήψη Τιμολογίου:</strong> <a href="{{invoice_pdf_url}}">{{invoice_pdf_url}}</a></p>
-              <p style="margin: 5px 0;"><strong>📧 Κρίσιμη Υποστήριξη:</strong> <a href="mailto:{{support_email}}">{{support_email}}</a></p>
-            </div>
-            
-            <div style="background: #fed7d7; padding: 20px; border-radius: 8px; margin: 25px 0; border: 2px solid #c53030; text-align: center;">
-              <p style="margin: 0; font-size: 1.1em; color: #742a2a;"><strong>Εάν πιστεύετε ότι αυτή η ειδοποίηση είναι λάθος ή έχετε ήδη πληρώσει, επικοινωνήστε ΑΜΕΣΑ στο {{support_phone}} ή {{support_email}}.</strong></p>
-            </div>
-            
-            <hr style="margin: 30px 0; border: none; border-top: 2px solid #742a2a;">
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
             <small style="color: #718096;">{{legal_footer}}</small>
           </div>
         `,
-        text: `⚠️ ΤΕΛΕΥΤΑΙΑ ΕΙΔΟΠΟΙΗΣΗ - ΕΠΙΚΕΙΜΕΝΗ ΑΝΑΣΤΟΛΗ ΛΟΓΑΡΙΑΣΜΟΥ ⚠️
+        text: `Γεια σας {{customer_name}},
 
-Αγαπητέ/ή {{customer_name}},
+Η πρόσβαση για **{{tenant_name}}** περιορίστηκε προσωρινά λόγω ανεξόφλητου τιμολογίου **{{invoice_series}}-{{invoice_number}}** (σύνολο **€{{amount_due}}**).
 
-ΑΥΤΗ ΕΙΝΑΙ Η ΤΕΛΕΥΤΑΙΑ ΣΑΣ ΕΙΔΟΠΟΙΗΣΗ. Ο λογαριασμός σας έχει {{days_past_due}} ημέρες καθυστέρηση και αντιμετωπίζει άμεση αναστολή.
+Οι υποβολές και οι πληρωμές έχουν τεθεί σε παύση έως την ολοκλήρωση της πληρωμής. Τα δεδομένα σας παραμένουν ασφαλή και ορατά.
 
-ΚΡΙΣΙΜΗ ΚΑΤΑΣΤΑΣΗ ΛΟΓΑΡΙΑΣΜΟΥ:
-- Τιμολόγιο: {{invoice_series}}-{{invoice_number}}
-- Οφειλόμενο Ποσό: {{formatted_amount}}
-- Ημέρες Καθυστέρησης: {{days_past_due}} ΗΜΕΡΕΣ
-- Ημ. Αναστολής: {{formatted_suspend_date}}
-
-🚨 ΑΠΑΙΤΕΙΤΑΙ ΑΜΕΣΗ ΔΡΑΣΗ 🚨
-Η πληρωμή πρέπει να εισπραχθεί μέχρι {{formatted_suspend_date}} διαφορετικά ο λογαριασμός σας {{tenant_name}} θα ανασταλεί.
-
-ΕΠΕΙΓΟΥΣΑ ΠΛΗΡΩΜΗ: {{pay_link}}
-
-Συνέπειες Αναστολής:
-• Άμεση αναστολή πρόσβασης {{tenant_name}}
-• Δεδομένα διατηρούνται αλλά μη προσβάσιμα
-• Πλήρης πληρωμή + χρέωση επανενεργοποίησης
-• Προώθηση σε εταιρεία εισπράξεων
-
-Τελευταίες Επιλογές:
-🔥 Έκτακτη Γραμμή: {{support_phone}}
-💳 Άμεση Πληρωμή: {{pay_link}}
-📄 Τιμολόγιο: {{invoice_pdf_url}}
-📧 Κρίσιμη Υποστήριξη: {{support_email}}
-
-Εάν λάθος ή έχετε πληρώσει, επικοινωνήστε ΑΜΕΣΑ: {{support_phone}} ή {{support_email}}
+• Εξοφλήστε τώρα για άρση περιορισμού: {{pay_link}}  
+• Χρειάζεστε βοήθεια/διακανονισμό; {{support_email}}.
 
 {{legal_footer}}`
       },
