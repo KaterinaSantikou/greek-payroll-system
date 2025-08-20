@@ -141,6 +141,7 @@ function Router() {
         <Route path="/auth/forgot-password" component={ForgotPassword} />
         <Route path="/auth/reset-password" component={ResetPassword} />
         <Route path="/auth/sso" component={SSO} />
+        <Route path="/onboarding-chatbot" component={lazy(() => import("@/pages/OnboardingChatbotDemo"))} />
         <Route component={NotFound} />
       </Switch>
     );
