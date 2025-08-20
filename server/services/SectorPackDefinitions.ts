@@ -21,101 +21,33 @@ export const TOURISM_HOTELS_PACK: SectorPackDefinition = {
   pack: {
     name: "Greek Tourism - Hotels CBA Pack",
     sector: "tourism_hotels",
-    authorityRef: "Greek Hotel Workers Federation Agreement 2024-2026",
-    effectiveFrom: new Date('2024-01-01'),
-    effectiveTo: new Date('2026-12-31'),
-    version: "2024.1",
-    docHash: "sha256:tourism_hotels_2024_1",
+    authorityRef: "Greek Hotel Workers Federation Agreement 2025-2027",
+    effectiveFrom: new Date('2025-05-01'),
+    effectiveTo: new Date('2027-04-30'),
+    version: "2025.08.1",
+    docHash: "sha256:tourism_hotels_2025_08_1",
     status: "published"
   },
   
   wageTables: [
     // Front Office Staff
     {
-      category: "front_office",
-      grade: "A", // Entry level
+      category: "Front Office",
+      grade: "B",
       seniorityStep: 0,
-      baseMonthly: "800.00",
+      baseMonthly: "980.00",
       unit: "monthly",
-      notes: "Front desk clerk, reception"
-    },
-    {
-      category: "front_office",
-      grade: "B", // Senior
-      seniorityStep: 2,
-      baseMonthly: "950.00",
-      unit: "monthly",
-      notes: "Senior receptionist, guest relations"
-    },
-    {
-      category: "front_office",
-      grade: "C", // Manager
-      seniorityStep: 5,
-      baseMonthly: "1200.00",
-      unit: "monthly",
-      notes: "Front office manager"
+      notes: "Senior front office staff - updated 2025.08.1"
     },
     
     // Housekeeping
     {
-      category: "housekeeping",
-      grade: "A",
+      category: "Housekeeping",
+      grade: "C",
       seniorityStep: 0,
-      baseMonthly: "760.00",
-      unit: "monthly",
-      notes: "Room attendant"
-    },
-    {
-      category: "housekeeping",
-      grade: "B",
-      seniorityStep: 2,
-      baseMonthly: "850.00",
-      unit: "monthly",
-      notes: "Head housekeeper"
-    },
-    
-    // Food & Beverage
-    {
-      category: "fnb_service",
-      grade: "A",
-      seniorityStep: 0,
-      baseMonthly: "780.00",
-      unit: "monthly",
-      notes: "Waiter/waitress"
-    },
-    {
-      category: "fnb_service",
-      grade: "B",
-      seniorityStep: 3,
       baseMonthly: "920.00",
       unit: "monthly",
-      notes: "Head waiter, sommelier"
-    },
-    
-    // Kitchen Staff
-    {
-      category: "kitchen",
-      grade: "A",
-      seniorityStep: 0,
-      baseMonthly: "790.00",
-      unit: "monthly",
-      notes: "Kitchen helper, prep cook"
-    },
-    {
-      category: "kitchen",
-      grade: "B",
-      seniorityStep: 2,
-      baseMonthly: "980.00",
-      unit: "monthly",
-      notes: "Line cook, baker"
-    },
-    {
-      category: "kitchen",
-      grade: "C",
-      seniorityStep: 5,
-      baseMonthly: "1300.00",
-      unit: "monthly",
-      notes: "Sous chef, head chef"
+      notes: "Senior housekeeping staff - updated 2025.08.1"
     }
   ],
 
@@ -144,26 +76,27 @@ export const TOURISM_HOTELS_PACK: SectorPackDefinition = {
       priority: 20
     },
     {
-      code: "HOLIDAY_100",
+      code: "HOLIDAY_75",
       name: "Holiday Work Premium",
       rateType: "percent",
-      value: "100.0000",
+      value: "75.0000",
       bands: null,
-      stackable: false,
+      stackable: true,
       appliesTo: "holidays",
       priority: 30
     },
     {
-      code: "SEASONAL_PEAK",
-      name: "Peak Season Premium",
+      code: "SIXTH_DAY_40",
+      name: "Sixth Day Premium",
       rateType: "percent",
-      value: "15.0000",
+      value: "40.0000",
       bands: {
-        "months": ["06", "07", "08", "09"]
+        "enabled": false,
+        "note": "tourism default: disabled unless entity override"
       },
       stackable: true,
       appliesTo: "hours_worked",
-      priority: 5
+      priority: 15
     }
   ],
 
@@ -171,49 +104,31 @@ export const TOURISM_HOTELS_PACK: SectorPackDefinition = {
     {
       code: "MEAL_ALLOW",
       name: "Meal Allowance",
-      calc: "per_shift",
-      amount: "8.50",
-      taxTreatment: "exempt",
+      calc: "per_day",
+      amount: "6.00",
+      taxTreatment: "split",
       contributory: "no",
       conditions: {
-        "min_shift_hours": 6,
-        "meal_not_provided": true
+        "note": "up to 6€/day exempt; engine splits overage"
       }
     },
     {
       code: "ACCOM_ALLOW",
       name: "Accommodation Allowance",
-      calc: "fixed_monthly",
-      amount: "120.00",
-      taxTreatment: "exempt",
-      contributory: "no",
-      conditions: {
-        "employee_housing": false,
-        "commute_distance_km": ">30"
-      }
+      calc: "per_day",
+      amount: "10.00",
+      taxTreatment: "taxable",
+      contributory: "yes",
+      conditions: {}
     },
     {
       code: "UNIFORM_ALLOW",
-      name: "Uniform Maintenance",
+      name: "Uniform Allowance",
       calc: "fixed_monthly",
-      amount: "25.00",
-      taxTreatment: "exempt",
-      contributory: "no",
-      conditions: {
-        "uniform_required": true
-      }
-    },
-    {
-      code: "TRANSPORT_ALLOW",
-      name: "Transportation Allowance",
-      calc: "per_day",
-      amount: "4.50",
-      cap: "90.00",
-      taxTreatment: "exempt",
-      contributory: "no",
-      conditions: {
-        "public_transport_unavailable": true
-      }
+      amount: "20.00",
+      taxTreatment: "taxable",
+      contributory: "yes",
+      conditions: {}
     }
   ],
 
@@ -224,13 +139,12 @@ export const TOURISM_HOTELS_PACK: SectorPackDefinition = {
       restMinHours: 11,
       weeklyRest: 24,
       splitShift: "allowed",
-      breakMinMinutes: 20,
+      breakMinMinutes: 15,
       sixthDay: "sector_exemption",
       specialRules: {
-        "seasonal_flexibility": true,
-        "peak_season_overtime": "up_to_60h_per_week",
-        "split_shift_max_gap": "4_hours",
-        "consecutive_days_limit": 12
+        "ref_period": "4_month",
+        "lawful_overtime": true,
+        "default_off": "per_entity_switch_only_if_legally_eligible"
       }
     }
   ],
@@ -238,44 +152,39 @@ export const TOURISM_HOTELS_PACK: SectorPackDefinition = {
   erganiProfiles: [
     {
       eventMap: {
-        "hire": {
-          "advance_notice_hours": 24,
-          "required_docs": ["contract", "id", "tax_clearance", "health_certificate"]
-        },
         "schedule": {
-          "advance_notice_hours": 48,
-          "bulk_update_supported": true
+          "mode": "pre_announce"
         },
         "overtime": {
-          "auto_report": true,
-          "threshold_daily": 8,
-          "threshold_weekly": 40
-        },
-        "termination": {
-          "advance_notice_days": 30,
-          "severance_calc": "automatic"
+          "event": "required"
         }
       },
       requiredLeadTimes: {
-        "seasonal_hire": "7_days",
-        "schedule_change": "48_hours",
-        "overtime_approval": "same_day"
+        "schedule_change": "before_shift_start",
+        "overtime": "same_day_before_start"
       },
-      reasonCodes: {
-        "seasonal_work": "401",
-        "tourism_peak": "402",
-        "special_event": "403"
-      },
-      documentTemplates: {
-        "seasonal_contract": "tourism_seasonal_template_2024",
-        "accommodation_agreement": "staff_housing_template"
-      },
+      reasonCodes: {},
+      documentTemplates: {},
       autoSubmission: true,
-      validationRules: {
-        "health_certificate_required": true,
-        "tax_clearance_annual": true,
-        "seasonal_worker_registration": "automatic"
-      }
+      validationRules: {}
+    }
+  ],
+
+  tipPolicies: [
+    {
+      pool_source: "pos_revenue_percent",
+      source_percentage: "5.00",
+      distribution_method: "points",
+      role_points: {
+        "Waiter": 2.0,
+        "Bartender": 2.0,
+        "Host": 1.0,
+        "Runner": 1.0
+      },
+      employer_topup: "0.00",
+      tax_mapping: {},
+      contrib_mapping: {},
+      payout_frequency: "weekly"
     }
   ]
 };
