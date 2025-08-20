@@ -20,6 +20,10 @@ export interface DunningEmailConfig {
         hours: [number, number]; // [9.75, 11] for 09:45-11:00
         days: number[]; // [1,2] for Mon/Tue
       };
+      PREDUE: {
+        hours: [number, number]; // [10.5, 12] for 10:30-12:00
+        days: number[]; // [1,2,3,4,5] for Mon-Fri
+      };
     };
     utm: {
       source: string;
@@ -77,7 +81,7 @@ export interface DunningVariables {
 }
 
 export interface DunningStage {
-  stage: 'D0' | 'D3' | 'D7' | 'D14' | 'SUCCESS';
+  stage: 'PREDUE' | 'D0' | 'D3' | 'D7' | 'D14' | 'SUCCESS';
   scheduledAt: Date;
   sentAt?: Date;
   status: 'pending' | 'sent' | 'failed' | 'cancelled';
@@ -101,6 +105,10 @@ export class DunningEmailService extends EventEmitter {
           D3_D7: { 
             hours: [10, 12], // 10:00-12:00
             days: [2, 3, 4, 5] // Tue-Fri
+          },
+          PREDUE: {
+            hours: [10.5, 12], // 10:30-12:00
+            days: [1, 2, 3, 4, 5] // Mon-Fri
           },
           D14: {
             hours: [9.75, 11], // 09:45-11:00
@@ -190,7 +198,7 @@ export class DunningEmailService extends EventEmitter {
    */
   private calculateSendTime(
     targetDate: Date,
-    windowType: 'D3_D7' | 'D14'
+    windowType: 'D3_D7' | 'D14' | 'PREDUE'
   ): Date {
     const athensTime = toZonedTime(targetDate, this.config.globalSettings.timezone);
     const window = this.config.globalSettings.sendWindows[windowType];
@@ -234,11 +242,52 @@ export class DunningEmailService extends EventEmitter {
   }
 
   /**
+   * Initialize pre-due reminder for an upcoming invoice
+   */
+  public async initializePreDueReminder(
+    invoiceId: string,
+    variables: DunningVariables,
+    dueDate: Date
+  ): Promise<DunningStage> {
+    console.log(`⏰ Scheduling pre-due reminder for invoice ${invoiceId}`);
+
+    // Schedule for 1 day before due date at 10:30
+    const reminderDate = new Date(dueDate);
+    reminderDate.setDate(reminderDate.getDate() - 1);
+    
+    const stage: DunningStage = {
+      stage: 'PREDUE',
+      scheduledAt: this.calculateSendTime(reminderDate, 'PREDUE'),
+      status: 'pending',
+      templateId: this.getTemplateId('PREDUE', variables.is_el),
+      variables: this.enrichVariables(variables, 'PREDUE')
+    };
+
+    // Store the reminder
+    this.scheduledEmails.set(invoiceId, [stage]);
+    
+    // Start processing if not already running
+    this.startScheduleProcessor();
+
+    console.log(`⏰ Pre-due reminder scheduled for ${stage.scheduledAt.toISOString()}`);
+    return stage;
+  }
+
+  /**
    * Get template ID based on stage and language
    */
   private getTemplateId(stage: string, isGreek: boolean): string {
     const langCode = isGreek ? 'el' : 'en';
-    return `dunning_${stage.toLowerCase()}_${langCode}`;
+    const stageMap: Record<string, string> = {
+      'PREDUE': 'predue',
+      'D0': 'd0',
+      'D3': 'd3', 
+      'D7': 'd7',
+      'D14': 'd14',
+      'SUCCESS': 'success'
+    };
+    const templateStage = stageMap[stage] || stage.toLowerCase();
+    return `dunning_${templateStage}_${langCode}`;
   }
 
   /**
@@ -821,119 +870,118 @@ Filings and payment actions are paused until payment is completed. Your data rem
 
       // Success Templates - Payment received
       'dunning_success_en': {
-        subject: 'Payment Received - Thank You! Invoice {{invoice_number}}',
+        subject: 'Thank you — payment received for {{invoice_series}}-{{invoice_number}}',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: #22543d; color: white; padding: 15px; text-align: center; margin-bottom: 20px;">
-              <h2 style="margin: 0; font-size: 1.5em;">✅ PAYMENT RECEIVED</h2>
-            </div>
+            <p>Hi {{customer_name}},</p>
             
-            <p>Dear {{customer_name}},</p>
+            <p>We received your payment of <strong>€{{amount_due}}</strong> for invoice <strong>{{invoice_series}}-{{invoice_number}}</strong>.</p>
             
-            <p><strong style="color: #22543d;">Thank you for your payment!</strong> We have successfully received your payment for invoice {{invoice_number}}.</p>
+            <p>Your access is fully restored.<br>
+            Receipt/invoice PDF: <a href="{{invoice_pdf_url}}">{{invoice_pdf_url}}</a></p>
             
-            <div style="background: #c6f6d5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22543d;">
-              <h3 style="margin-top: 0; color: #22543d;">Payment Confirmation</h3>
-              <table style="width: 100%;">
-                <tr><td><strong>Invoice:</strong></td><td>{{invoice_series}}-{{invoice_number}}</td></tr>
-                <tr><td><strong>Amount Paid:</strong></td><td><strong style="color: #22543d;">{{formatted_amount}}</strong></td></tr>
-                <tr><td><strong>Payment Date:</strong></td><td>{{formatted_issue_date}}</td></tr>
-                <tr><td><strong>Payment Method:</strong></td><td>{{payment_method}}</td></tr>
-              </table>
-            </div>
-            
-            <p>Your {{tenant_name}} account is now in good standing and all services remain active.</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="{{invoice_pdf_url}}" style="background: #22543d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Download Receipt</a>
-            </div>
-            
-            <p>If you have any questions about this payment or your account, please don't hesitate to contact us at <a href="mailto:{{support_email}}">{{support_email}}</a> or {{support_phone}}.</p>
-            
-            <p>Thank you for your business!</p>
+            <p>Questions? <a href="mailto:{{support_email}}">{{support_email}}</a></p>
             
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
             <small style="color: #718096;">{{legal_footer}}</small>
           </div>
         `,
-        text: `✅ PAYMENT RECEIVED - Thank You!
+        text: `Hi {{customer_name}},
 
-Dear {{customer_name}},
+We received your payment of **€{{amount_due}}** for invoice **{{invoice_series}}-{{invoice_number}}**.
 
-Thank you for your payment! We have successfully received your payment for invoice {{invoice_number}}.
+Your access is fully restored.  
+Receipt/invoice PDF: {{invoice_pdf_url}}
 
-Payment Confirmation:
-- Invoice: {{invoice_series}}-{{invoice_number}}
-- Amount Paid: {{formatted_amount}}
-- Payment Date: {{formatted_issue_date}}
-- Payment Method: {{payment_method}}
-
-Your {{tenant_name}} account is now in good standing and all services remain active.
-
-Download receipt: {{invoice_pdf_url}}
-
-Questions? Contact {{support_email}} or {{support_phone}}.
-
-Thank you for your business!
+Questions? {{support_email}}
 
 {{legal_footer}}`
       },
 
       'dunning_success_el': {
-        subject: 'Πληρωμή Εισπράχθηκε - Ευχαριστούμε! Τιμολόγιο {{invoice_number}}',
+        subject: 'Ευχαριστούμε — πληρωμή καταχωρήθηκε για {{invoice_series}}-{{invoice_number}}',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: #22543d; color: white; padding: 15px; text-align: center; margin-bottom: 20px;">
-              <h2 style="margin: 0; font-size: 1.5em;">✅ ΠΛΗΡΩΜΗ ΕΙΣΠΡΑΧΘΗΚΕ</h2>
-            </div>
+            <p>Γεια σας {{customer_name}},</p>
             
-            <p>Αγαπητέ/ή {{customer_name}},</p>
+            <p>Λάβαμε την πληρωμή σας <strong>€{{amount_due}}</strong> για το τιμολόγιο <strong>{{invoice_series}}-{{invoice_number}}</strong>.</p>
             
-            <p><strong style="color: #22543d;">Ευχαριστούμε για την πληρωμή σας!</strong> Έχουμε εισπράξει επιτυχώς την πληρωμή σας για το τιμολόγιο {{invoice_number}}.</p>
+            <p>Η πρόσβασή σας αποκαταστάθηκε.<br>
+            Απόδειξη/Τιμολόγιο (PDF): <a href="{{invoice_pdf_url}}">{{invoice_pdf_url}}</a></p>
             
-            <div style="background: #c6f6d5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #22543d;">
-              <h3 style="margin-top: 0; color: #22543d;">Επιβεβαίωση Πληρωμής</h3>
-              <table style="width: 100%;">
-                <tr><td><strong>Τιμολόγιο:</strong></td><td>{{invoice_series}}-{{invoice_number}}</td></tr>
-                <tr><td><strong>Ποσό Πληρωμής:</strong></td><td><strong style="color: #22543d;">{{formatted_amount}}</strong></td></tr>
-                <tr><td><strong>Ημ. Πληρωμής:</strong></td><td>{{formatted_issue_date}}</td></tr>
-                <tr><td><strong>Μέθοδος Πληρωμής:</strong></td><td>{{payment_method}}</td></tr>
-              </table>
-            </div>
-            
-            <p>Ο λογαριασμός σας {{tenant_name}} είναι τώρα σε καλή κατάσταση και όλες οι υπηρεσίες παραμένουν ενεργές.</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="{{invoice_pdf_url}}" style="background: #22543d; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Κατεβάστε Απόδειξη</a>
-            </div>
-            
-            <p>Εάν έχετε οποιεσδήποτε ερωτήσεις για αυτήν την πληρωμή ή τον λογαριασμό σας, μη διστάσετε να επικοινωνήσετε μαζί μας στο <a href="mailto:{{support_email}}">{{support_email}}</a> ή {{support_phone}}.</p>
-            
-            <p>Ευχαριστούμε για τη συνεργασία σας!</p>
+            <p>Απορίες; <a href="mailto:{{support_email}}">{{support_email}}</a></p>
             
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
             <small style="color: #718096;">{{legal_footer}}</small>
           </div>
         `,
-        text: `✅ ΠΛΗΡΩΜΗ ΕΙΣΠΡΑΧΘΗΚΕ - Ευχαριστούμε!
+        text: `Γεια σας {{customer_name}},
 
-Αγαπητέ/ή {{customer_name}},
+Λάβαμε την πληρωμή σας **€{{amount_due}}** για το τιμολόγιο **{{invoice_series}}-{{invoice_number}}**.
 
-Ευχαριστούμε για την πληρωμή σας! Έχουμε εισπράξει επιτυχώς την πληρωμή σας για το τιμολόγιο {{invoice_number}}.
+Η πρόσβασή σας αποκαταστάθηκε.  
+Απόδειξη/Τιμολόγιο (PDF): {{invoice_pdf_url}}
 
-Επιβεβαίωση Πληρωμής:
-- Τιμολόγιο: {{invoice_series}}-{{invoice_number}}
-- Ποσό Πληρωμής: {{formatted_amount}}
-- Ημ. Πληρωμής: {{formatted_issue_date}}
-- Μέθοδος Πληρωμής: {{payment_method}}
+Απορίες; {{support_email}}
 
-Ο λογαριασμός σας {{tenant_name}} είναι τώρα σε καλή κατάσταση και όλες οι υπηρεσίες παραμένουν ενεργές.
+{{legal_footer}}`
+      },
 
-Κατεβάστε απόδειξη: {{invoice_pdf_url}}
+      // Pre-due reminder templates (D-1)
+      'dunning_predue_en': {
+        subject: 'Due tomorrow: invoice {{invoice_series}}-{{invoice_number}}',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <p>Hi {{customer_name}},</p>
+            
+            <p>Your invoice <strong>{{invoice_series}}-{{invoice_number}}</strong> for <strong>€{{amount_due}}</strong> is due tomorrow.</p>
+            
+            <p>Pay now: <a href="{{pay_link}}">{{pay_link}}</a><br>
+            Download PDF: <a href="{{invoice_pdf_url}}">{{invoice_pdf_url}}</a></p>
+            
+            <p>Questions? <a href="mailto:{{support_email}}">{{support_email}}</a></p>
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+            <small style="color: #718096;">{{legal_footer}}</small>
+          </div>
+        `,
+        text: `Hi {{customer_name}},
 
-Ερωτήσεις; Επικοινωνήστε {{support_email}} ή {{support_phone}}.
+Your invoice **{{invoice_series}}-{{invoice_number}}** for **€{{amount_due}}** is due tomorrow.
 
-Ευχαριστούμε για τη συνεργασία σας!
+Pay now: {{pay_link}}  
+Download PDF: {{invoice_pdf_url}}
+
+Questions? {{support_email}}
+
+{{legal_footer}}`
+      },
+
+      'dunning_predue_el': {
+        subject: 'Λήγει αύριο: τιμολόγιο {{invoice_series}}-{{invoice_number}}',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <p>Γεια σας {{customer_name}},</p>
+            
+            <p>Το τιμολόγιό σας <strong>{{invoice_series}}-{{invoice_number}}</strong> για <strong>€{{amount_due}}</strong> λήγει αύριο.</p>
+            
+            <p>Πληρώστε τώρα: <a href="{{pay_link}}">{{pay_link}}</a><br>
+            Κατεβάστε PDF: <a href="{{invoice_pdf_url}}">{{invoice_pdf_url}}</a></p>
+            
+            <p>Απορίες; <a href="mailto:{{support_email}}">{{support_email}}</a></p>
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+            <small style="color: #718096;">{{legal_footer}}</small>
+          </div>
+        `,
+        text: `Γεια σας {{customer_name}},
+
+Το τιμολόγιό σας **{{invoice_series}}-{{invoice_number}}** για **€{{amount_due}}** λήγει αύριο.
+
+Πληρώστε τώρα: {{pay_link}}  
+Κατεβάστε PDF: {{invoice_pdf_url}}
+
+Απορίες; {{support_email}}
 
 {{legal_footer}}`
       }
