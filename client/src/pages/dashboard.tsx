@@ -603,7 +603,7 @@ export default function Dashboard() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium flex items-center gap-2">
                     <FileText className="h-4 w-4" />
-                    {t('dashboard.filings_due')}
+                    {locale === 'el' ? 'Κυβερνητικές Δηλώσεις' : 'Government Filings'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -650,13 +650,13 @@ export default function Dashboard() {
                       <div className="flex items-center gap-1">
                         <AlertTriangle className="h-4 w-4 text-orange-600" />
                         <span className="font-medium text-orange-800 dark:text-orange-200">
-                          {actionInboxData.exceptions.reduce((sum, e) => sum + e.count, 0)} exceptions:
+                          {actionInboxData.exceptions.reduce((sum, e) => sum + e.count, 0)} {locale === 'el' ? 'εξαιρέσεις:' : 'exceptions:'}
                         </span>
                       </div>
                       <span className="text-orange-700 dark:text-orange-300">
-                        {actionInboxData.exceptions.find(e => e.type === 'missed_punches')?.count || 0} missed punches • 
-                        {actionInboxData.exceptions.find(e => e.type === 'duplicate_punches')?.count || 0} duplicates • 
-                        {actionInboxData.exceptions.find(e => e.type === 'wrong_site')?.count || 0} wrong site
+                        {actionInboxData.exceptions.find(e => e.type === 'missing_clockins')?.count || 0} {locale === 'el' ? 'αφίξεις/αναχωρήσεις' : 'clock-ins'} • 
+                        {actionInboxData.exceptions.find(e => e.type === 'duplicate_clockins')?.count || 0} {locale === 'el' ? 'διπλές' : 'duplicates'} • 
+                        {actionInboxData.exceptions.find(e => e.type === 'wrong_location')?.count || 0} {locale === 'el' ? 'λάθος τοποθεσία' : 'wrong location'}
                       </span>
                     </div>
                   </div>
@@ -793,7 +793,7 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    Compliance Strip
+                    {locale === 'el' ? 'Συμμόρφωση & Παρακολούθηση' : 'Compliance Monitoring'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -801,20 +801,22 @@ export default function Dashboard() {
                     
                     <div className="p-3 border rounded-lg bg-green-50 dark:bg-green-950/20">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-green-800 dark:text-green-200">Digital Work Card</span>
+                        <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                          {locale === 'el' ? 'Ψηφιακή Κάρτα Εργασίας' : 'Digital Work Card'}
+                        </span>
                         <Badge variant="default" className="bg-green-600">
                           {calculateDigitalCardCoverage(complianceData.digitalWorkCard.covered, complianceData.digitalWorkCard.scheduled)}%
                         </Badge>
                       </div>
                       <div className="text-xs text-neutral-200 dark:text-neutral-300 mb-2">
-                        {complianceData.digitalWorkCard.covered}/{complianceData.digitalWorkCard.scheduled} scheduled clocked in
+                        {complianceData.digitalWorkCard.covered}/{complianceData.digitalWorkCard.scheduled} {locale === 'el' ? 'προγραμματισμένοι συνδέθηκαν' : 'scheduled clocked in'}
                       </div>
                       <Progress 
                         value={(complianceData.digitalWorkCard.covered / complianceData.digitalWorkCard.scheduled) * 100} 
                         className="h-2"
                       />
                       <div className="text-xs text-green-700 dark:text-green-300 mt-2">
-                        Formula: (# scheduled who clocked in ÷ # scheduled) × 100
+                        {locale === 'el' ? 'Τύπος: (προγραμματισμένοι που συνδέθηκαν ÷ σύνολο προγραμματισμένων) × 100' : 'Formula: (# scheduled who clocked in ÷ # scheduled) × 100'}
                       </div>
                     </div>
 
