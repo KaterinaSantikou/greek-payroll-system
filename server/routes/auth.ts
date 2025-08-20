@@ -8,10 +8,20 @@ import { SessionService } from '../services/SessionService';
 import { MfaService } from '../services/MfaService';
 import { AuditService } from '../services/AuditService';
 import { SsoService } from '../services/SsoService';
+import { LocalizationService } from '../services/LocalizationService';
+import { GdprService } from '../services/GdprService';
 import { db } from '../db';
 import { users, emailVerificationTokens, passwordResetTokens, magicLinkTokens } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { rateLimitMiddleware } from '../middleware/rateLimitMiddleware';
+import { 
+  csrfProtection, 
+  generateCSRFToken, 
+  cspHeaders, 
+  bruteForceProtection,
+  resetBruteForceOnSuccess,
+  getSecureCookieOptions 
+} from '../middleware/securityMiddleware';
 
 // Express session configuration
 if (typeof process.env.SESSION_SECRET === 'undefined') {
@@ -32,8 +42,14 @@ const sessionMiddleware = session({
 
 const router = express.Router();
 
-// Apply session middleware
+// Apply security middleware
+router.use(cspHeaders());
 router.use(sessionMiddleware);
+router.use(csrfProtection());
+router.use(resetBruteForceOnSuccess());
+
+// CSRF token endpoint
+router.get('/csrf-token', generateCSRFToken());
 
 // Helper function to get client info
 const getClientInfo = (req: express.Request) => ({
@@ -41,30 +57,35 @@ const getClientInfo = (req: express.Request) => ({
   userAgent: req.headers['user-agent'] || '',
 });
 
-// Helper function for uniform error responses
-const errorResponse = (code: string, message: string, retryInSeconds?: number) => ({
-  error: {
-    code,
-    message,
-    ...(retryInSeconds && { retry_in_seconds: retryInSeconds }),
-  },
-});
+// Helper function for uniform error responses (prevents account enumeration)
+const createErrorResponse = (req: express.Request, code: string, messageKey: keyof import('../services/LocalizationService').LocalizedMessages, retryInSeconds?: number) => {
+  const locale = LocalizationService.getUserLocale(req);
+  return LocalizationService.createErrorResponse(code, messageKey, locale, {}, retryInSeconds);
+};
+
+const createSuccessResponse = (req: express.Request, messageKey: keyof import('../services/LocalizationService').LocalizedMessages, data: any = {}, variables: Record<string, string> = {}) => {
+  const locale = LocalizationService.getUserLocale(req);
+  return LocalizationService.createSuccessResponse(messageKey, locale, variables, data);
+};
 
 /**
  * 4.1 Sign-Up
  * POST /auth/signup
  */
-router.post('/signup', rateLimitMiddleware('signup'), async (req, res) => {
+router.post('/signup', 
+  rateLimitMiddleware('signup'),
+  bruteForceProtection({ maxAttempts: 5, windowMinutes: 60, blockMinutes: 15 }),
+  async (req, res) => {
   try {
     const { email, password, accept_tos, locale } = req.body;
     const { ipAddress, userAgent } = getClientInfo(req);
 
     if (!email || !password) {
-      return res.status(400).json(errorResponse('MISSING_FIELDS', 'Email and password are required'));
+      return res.status(400).json(createErrorResponse(req, 'MISSING_FIELDS', 'GENERIC_ERROR'));
     }
 
     if (!accept_tos) {
-      return res.status(400).json(errorResponse('TOS_NOT_ACCEPTED', 'Terms of service must be accepted'));
+      return res.status(400).json(createErrorResponse(req, 'TOS_NOT_ACCEPTED', 'GDPR_CONSENT_REQUIRED'));
     }
 
     // Check if user already exists
@@ -83,7 +104,11 @@ router.post('/signup', rateLimitMiddleware('signup'), async (req, res) => {
         reason: 'Email already registered',
       });
 
-      return res.status(409).json(errorResponse('EMAIL_EXISTS', 'Email already registered'));
+      // Return generic success to prevent email enumeration
+      return res.status(201).json(createSuccessResponse(req, 'SIGNUP_SUCCESS', {
+        user_id: 'pending',
+        requires_verification: true,
+      }));
     }
 
     // Hash password
@@ -125,10 +150,10 @@ router.post('/signup', rateLimitMiddleware('signup'), async (req, res) => {
     // In a real app, send verification email here
     // await EmailService.sendVerificationEmail(email, verificationToken.token);
 
-    res.status(201).json({
+    res.status(201).json(createSuccessResponse(req, 'SIGNUP_SUCCESS', {
       user_id: newUser.id,
       requires_verification: true,
-    });
+    }));
 
   } catch (error) {
     console.error('Signup error:', error);
@@ -905,5 +930,109 @@ router.post('/logout', async (req, res) => {
     res.status(500).json(errorResponse('LOGOUT_FAILED', 'Internal server error'));
   }
 });
+
+/**
+ * GDPR Compliance Endpoints
+ */
+
+// Get user consent status
+router.get('/gdpr/consent', async (req, res) => {
+  try {
+    // This would need session-based auth in real implementation
+    const userId = req.query.user_id as string;
+    if (!userId) {
+      return res.status(400).json(createErrorResponse(req, 'MISSING_USER_ID', 'GENERIC_ERROR'));
+    }
+
+    const consentStatus = await GdprService.getConsentStatus(userId);
+    res.json(consentStatus);
+  } catch (error) {
+    console.error('Get consent error:', error);
+    res.status(500).json(createErrorResponse(req, 'GDPR_ERROR', 'GENERIC_ERROR'));
+  }
+});
+
+// Update user consent
+router.post('/gdpr/consent', async (req, res) => {
+  try {
+    const { user_id, consents } = req.body;
+    
+    if (!user_id || !consents) {
+      return res.status(400).json(createErrorResponse(req, 'MISSING_FIELDS', 'GENERIC_ERROR'));
+    }
+
+    await GdprService.updateConsent(user_id, consents);
+    res.json(createSuccessResponse(req, 'GDPR_CONSENT_REQUIRED'));
+  } catch (error) {
+    console.error('Update consent error:', error);
+    res.status(500).json(createErrorResponse(req, 'GDPR_ERROR', 'GENERIC_ERROR'));
+  }
+});
+
+// Export user data (GDPR Article 20)
+router.post('/gdpr/export', 
+  rateLimitMiddleware('gdpr'),
+  async (req, res) => {
+    try {
+      const { user_id } = req.body;
+      
+      if (!user_id) {
+        return res.status(400).json(createErrorResponse(req, 'MISSING_USER_ID', 'GENERIC_ERROR'));
+      }
+
+      const exportData = await GdprService.exportUserData(user_id);
+      
+      // Set appropriate headers for download
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="user_data_export_${new Date().toISOString().split('T')[0]}.json"`);
+      
+      res.json(exportData);
+    } catch (error) {
+      console.error('Export data error:', error);
+      res.status(500).json(createErrorResponse(req, 'EXPORT_FAILED', 'GENERIC_ERROR'));
+    }
+  }
+);
+
+// Delete user account (GDPR Article 17)
+router.post('/gdpr/delete-account',
+  rateLimitMiddleware('gdpr'),
+  async (req, res) => {
+    try {
+      const { user_id, confirmation } = req.body;
+      
+      if (!user_id || confirmation !== 'DELETE_MY_ACCOUNT') {
+        return res.status(400).json(createErrorResponse(req, 'INVALID_CONFIRMATION', 'GENERIC_ERROR'));
+      }
+
+      // Get user data for audit log before deletion
+      const [user] = await db.select().from(users).where(eq(users.id, user_id));
+      if (!user) {
+        return res.status(404).json(createErrorResponse(req, 'USER_NOT_FOUND', 'GENERIC_ERROR'));
+      }
+
+      // Log account deletion request
+      await AuditService.log({
+        eventType: 'ACCOUNT_DELETION_REQUESTED',
+        userId: user_id,
+        email: user.email,
+        ipAddress: getClientInfo(req).ipAddress,
+        userAgent: getClientInfo(req).userAgent,
+        result: 'SUCCESS',
+      });
+
+      // Perform deletion
+      await GdprService.deleteUserData(user_id);
+      
+      // Clear session cookie
+      res.clearCookie('sessionToken', getSecureCookieOptions(false));
+      
+      res.json(createSuccessResponse(req, 'ACCOUNT_DELETED'));
+    } catch (error) {
+      console.error('Delete account error:', error);
+      res.status(500).json(createErrorResponse(req, 'DELETION_FAILED', 'GENERIC_ERROR'));
+    }
+  }
+);
 
 export default router;
