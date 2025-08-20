@@ -369,12 +369,27 @@ export class DunningEmailService extends EventEmitter {
   }
 
   /**
-   * Simple template rendering (Handlebars-style)
+   * Enhanced template rendering with Handlebars-style conditionals
    */
   private renderTemplate(template: string, variables: any): string {
-    return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-      return variables[key] || match;
+    let rendered = template;
+    
+    // Handle conditional blocks: {{#if (eq field value)}} ... {{/if}}
+    rendered = rendered.replace(/\{\{#if \(eq (\w+) "([^"]+)"\)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, field, value, content) => {
+      return variables[field] === value ? content.trim() : '';
     });
+    
+    // Handle simple conditionals: {{#if field}} ... {{/if}}
+    rendered = rendered.replace(/\{\{#if (\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g, (match, field, content) => {
+      return variables[field] ? content.trim() : '';
+    });
+    
+    // Handle simple variable substitution: {{variable}}
+    rendered = rendered.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+      return variables[key] !== undefined ? String(variables[key]) : match;
+    });
+    
+    return rendered;
   }
 
   /**
@@ -404,113 +419,129 @@ export class DunningEmailService extends EventEmitter {
    */
   private getDunningEmailTemplates(): Record<string, { subject: string; html: string; text: string }> {
     return {
-      // D0 Templates - Immediate notification
+      // D0 Templates - Payment Failed (Immediate notification)
       'dunning_d0_en': {
-        subject: 'Payment Due: Invoice {{invoice_number}} - {{formatted_amount}}',
+        subject: '[Action Required] We couldn\'t process invoice {{invoice_series}}-{{invoice_number}}',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #1a365d;">Payment Due Notice</h2>
+            <h2 style="color: #c53030;">[Action Required] Payment Failed</h2>
             
-            <p>Dear {{customer_name}},</p>
+            <p>Hi {{customer_name}},</p>
             
-            <p>This is a friendly reminder that your payment for invoice <strong>{{invoice_number}}</strong> is now due.</p>
+            <p>We couldn't process <strong>€{{amount_due}}</strong> for invoice <strong>{{invoice_series}}-{{invoice_number}}</strong> (issued {{invoice_issue_date}}).</p>
             
-            <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0;">Invoice Details</h3>
-              <table style="width: 100%;">
-                <tr><td><strong>Invoice Number:</strong></td><td>{{invoice_series}}-{{invoice_number}}</td></tr>
-                <tr><td><strong>Issue Date:</strong></td><td>{{formatted_issue_date}}</td></tr>
-                <tr><td><strong>Amount Due:</strong></td><td><strong style="color: #c53030;">{{formatted_amount}}</strong></td></tr>
-                <tr><td><strong>Due Date:</strong></td><td>{{formatted_due_date}}</td></tr>
-                <tr><td><strong>Days Past Due:</strong></td><td>{{days_past_due}}</td></tr>
-              </table>
+            {{#if (eq payment_method "card")}}
+            <div style="background: #fed7d7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #c53030;">
+              <p style="margin: 0;"><strong>Card Payment Failed:</strong></p>
+              <p style="margin: 5px 0;">• Card ending <strong>{{last4}}</strong> was declined. Please update your card or retry the payment.</p>
             </div>
+            {{/if}}
+            
+            {{#if (eq payment_method "sepa_dd")}}
+            <div style="background: #fef5e7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #dd9421;">
+              <p style="margin: 0;"><strong>SEPA Direct Debit Returned:</strong></p>
+              <p style="margin: 5px 0;">• SEPA Direct Debit (Mandate {{sepa_mandate_ref}}) was returned. We'll retry on <strong>{{next_retry_date}}</strong>.</p>
+            </div>
+            {{/if}}
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="{{pay_link}}" style="background: #3182ce; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Pay Now</a>
+              <a href="{{pay_link}}" style="background: #c53030; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">→ Pay securely now</a>
             </div>
             
-            <p>You can also <a href="{{invoice_pdf_url}}">download your invoice</a> for your records.</p>
+            <p>You can also <strong><a href="{{invoice_pdf_url}}">download the invoice PDF</a></strong> here.</p>
             
-            <p>If you have any questions, please contact us at <a href="mailto:{{support_email}}">{{support_email}}</a> or {{support_phone}}.</p>
+            <p>If you need help, reply to this email or contact <strong>{{support_email}}</strong>.</p>
+            
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+              <p style="margin: 0;"><strong>Thanks,</strong></p>
+              <p style="margin: 5px 0;">{{supplier_name}} Billing</p>
+            </div>
             
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
             <small style="color: #718096;">{{legal_footer}}</small>
           </div>
         `,
-        text: `Payment Due Notice
+        text: `Hi {{customer_name}},
 
-Dear {{customer_name}},
+We couldn't process **€{{amount_due}}** for invoice **{{invoice_series}}-{{invoice_number}}** (issued {{invoice_issue_date}}).
 
-This is a friendly reminder that your payment for invoice {{invoice_number}} is now due.
+{{#if (eq payment_method "card")}}
+• Card ending **{{last4}}** was declined. Please update your card or retry the payment.
+{{/if}}
+{{#if (eq payment_method "sepa_dd")}}
+• SEPA Direct Debit (Mandate {{sepa_mandate_ref}}) was returned. We'll retry on **{{next_retry_date}}**.
+{{/if}}
 
-Invoice Details:
-- Invoice Number: {{invoice_series}}-{{invoice_number}}
-- Issue Date: {{formatted_issue_date}}
-- Amount Due: {{formatted_amount}}
-- Due Date: {{formatted_due_date}}
-- Days Past Due: {{days_past_due}}
+→ Pay securely now: **{{pay_link}}**  
+You can also **download the invoice PDF** here: {{invoice_pdf_url}}
 
-Pay now: {{pay_link}}
+If you need help, reply to this email or contact **{{support_email}}**.
 
-Download invoice: {{invoice_pdf_url}}
-
-If you have questions, contact us at {{support_email}} or {{support_phone}}.
+Thanks,  
+{{supplier_name}} Billing
 
 {{legal_footer}}`
       },
 
       'dunning_d0_el': {
-        subject: 'Οφειλόμενη Πληρωμή: Τιμολόγιο {{invoice_number}} - {{formatted_amount}}',
+        subject: '[Απαιτείται ενέργεια] Αποτυχία πληρωμής για το τιμολόγιο {{invoice_series}}-{{invoice_number}}',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #1a365d;">Ειδοποίηση Οφειλόμενης Πληρωμής</h2>
+            <h2 style="color: #c53030;">[Απαιτείται ενέργεια] Αποτυχία πληρωμής</h2>
             
-            <p>Αγαπητέ/ή {{customer_name}},</p>
+            <p>Γεια σας {{customer_name}},</p>
             
-            <p>Αυτή είναι μια φιλική υπενθύμιση ότι η πληρωμή σας για το τιμολόγιο <strong>{{invoice_number}}</strong> έχει καταστεί οφειλόμενη.</p>
+            <p>Δεν ήταν δυνατή η χρέωση ποσού <strong>€{{amount_due}}</strong> για το τιμολόγιο <strong>{{invoice_series}}-{{invoice_number}}</strong> (έκδοση {{invoice_issue_date}}).</p>
             
-            <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0;">Στοιχεία Τιμολογίου</h3>
-              <table style="width: 100%;">
-                <tr><td><strong>Αριθμός Τιμολογίου:</strong></td><td>{{invoice_series}}-{{invoice_number}}</td></tr>
-                <tr><td><strong>Ημερομηνία Έκδοσης:</strong></td><td>{{formatted_issue_date}}</td></tr>
-                <tr><td><strong>Οφειλόμενο Ποσό:</strong></td><td><strong style="color: #c53030;">{{formatted_amount}}</strong></td></tr>
-                <tr><td><strong>Ημερομηνία Λήξης:</strong></td><td>{{formatted_due_date}}</td></tr>
-                <tr><td><strong>Ημέρες Καθυστέρησης:</strong></td><td>{{days_past_due}}</td></tr>
-              </table>
+            {{#if (eq payment_method "card")}}
+            <div style="background: #fed7d7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #c53030;">
+              <p style="margin: 0;"><strong>Αποτυχία πληρωμής με κάρτα:</strong></p>
+              <p style="margin: 5px 0;">• Η κάρτα που λήγει σε <strong>{{last4}}</strong> απορρίφθηκε. Ενημερώστε την κάρτα ή δοκιμάστε ξανά την πληρωμή.</p>
             </div>
+            {{/if}}
+            
+            {{#if (eq payment_method "sepa_dd")}}
+            <div style="background: #fef5e7; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #dd9421;">
+              <p style="margin: 0;"><strong>Επιστροφή πάγιας εντολής SEPA:</strong></p>
+              <p style="margin: 5px 0;">• Η πάγια εντολή SEPA (Mandate {{sepa_mandate_ref}}) επιστράφηκε. Θα επαναλάβουμε την προσπάθεια στις <strong>{{next_retry_date}}</strong>.</p>
+            </div>
+            {{/if}}
             
             <div style="text-align: center; margin: 30px 0;">
-              <a href="{{pay_link}}" style="background: #3182ce; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Πληρώστε Τώρα</a>
+              <a href="{{pay_link}}" style="background: #c53030; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">→ Πληρώστε με ασφάλεια τώρα</a>
             </div>
             
-            <p>Μπορείτε επίσης να <a href="{{invoice_pdf_url}}">κατεβάσετε το τιμολόγιό σας</a> για τα αρχεία σας.</p>
+            <p>Μπορείτε επίσης να <strong><a href="{{invoice_pdf_url}}">κατεβάσετε το τιμολόγιο (PDF)</a></strong> εδώ.</p>
             
-            <p>Για οποιεσδήποτε ερωτήσεις, επικοινωνήστε μαζί μας στο <a href="mailto:{{support_email}}">{{support_email}}</a> ή {{support_phone}}.</p>
+            <p>Χρειάζεστε βοήθεια; Απαντήστε σε αυτό το email ή επικοινωνήστε στο <strong>{{support_email}}</strong>.</p>
+            
+            <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+              <p style="margin: 0;"><strong>Ευχαριστούμε,</strong></p>
+              <p style="margin: 5px 0;">Τμήμα Χρέωσης {{supplier_name}}</p>
+            </div>
             
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
             <small style="color: #718096;">{{legal_footer}}</small>
           </div>
         `,
-        text: `Ειδοποίηση Οφειλόμενης Πληρωμής
+        text: `Γεια σας {{customer_name}},
 
-Αγαπητέ/ή {{customer_name}},
+Δεν ήταν δυνατή η χρέωση ποσού **€{{amount_due}}** για το τιμολόγιο **{{invoice_series}}-{{invoice_number}}** (έκδοση {{invoice_issue_date}}).
 
-Αυτή είναι μια φιλική υπενθύμιση ότι η πληρωμή σας για το τιμολόγιο {{invoice_number}} έχει καταστεί οφειλόμενη.
+{{#if (eq payment_method "card")}}
+• Η κάρτα που λήγει σε **{{last4}}** απορρίφθηκε. Ενημερώστε την κάρτα ή δοκιμάστε ξανά την πληρωμή.
+{{/if}}
+{{#if (eq payment_method "sepa_dd")}}
+• Η πάγια εντολή SEPA (Mandate {{sepa_mandate_ref}}) επιστράφηκε. Θα επαναλάβουμε την προσπάθεια στις **{{next_retry_date}}**.
+{{/if}}
 
-Στοιχεία Τιμολογίου:
-- Αριθμός Τιμολογίου: {{invoice_series}}-{{invoice_number}}
-- Ημερομηνία Έκδοσης: {{formatted_issue_date}}
-- Οφειλόμενο Ποσό: {{formatted_amount}}
-- Ημερομηνία Λήξης: {{formatted_due_date}}
-- Ημέρες Καθυστέρησης: {{days_past_due}}
+→ Πληρώστε με ασφάλεια τώρα: **{{pay_link}}**  
+Μπορείτε επίσης να **κατεβάσετε το τιμολόγιο (PDF)** εδώ: {{invoice_pdf_url}}
 
-Πληρώστε τώρα: {{pay_link}}
+Χρειάζεστε βοήθεια; Απαντήστε σε αυτό το email ή επικοινωνήστε στο **{{support_email}}**.
 
-Κατεβάστε τιμολόγιο: {{invoice_pdf_url}}
-
-Για ερωτήσεις, επικοινωνήστε στο {{support_email}} ή {{support_phone}}.
+Ευχαριστούμε,  
+Τμήμα Χρέωσης {{supplier_name}}
 
 {{legal_footer}}`
       },
@@ -1188,6 +1219,85 @@ Thank you for your business!
       sentEmails,
       failedEmails
     };
+  }
+
+  /**
+   * Test D0 template rendering with conditional logic
+   */
+  public testD0TemplateRendering(): void {
+    console.log('🧪 Testing D0 template conditional rendering...\n');
+
+    // Test data for card payment failure
+    const cardVariables: DunningVariables = {
+      customer_name: 'Hotel Santikos',
+      tenant_name: 'santikos_corp',
+      invoice_number: '2024-001',
+      invoice_series: 'SALES-24',
+      invoice_issue_date: '2024-01-15',
+      amount_due: 1250.00,
+      currency: 'EUR',
+      due_date: '2024-01-30',
+      days_past_due: 5,
+      pay_link: 'https://pay.payrollsync.com/invoice/2024-001',
+      invoice_pdf_url: 'https://docs.payrollsync.com/invoice/2024-001.pdf',
+      payment_method: 'card',
+      last4: '4567',
+      sepa_mandate_ref: '',
+      next_retry_date: '2024-02-05',
+      grace_suspend_date: '2024-02-10',
+      support_email: 'support@payrollsync.com',
+      support_phone: '+30 210 123 4567',
+      supplier_name: 'PayrollSync',
+      supplier_vat: '123456789',
+      supplier_tax_office: 'Α\' ΑΘΗΝΩΝ',
+      supplier_address: 'Athens, Greece',
+      supplier_domain: 'payrollsync.com',
+      legal_footer: 'PayrollSync S.A. • ΑΦΜ: 123456789 • ΔΟΥ: Α\' ΑΘΗΝΩΝ',
+      is_el: false,
+      trigger_id: 'D0_CARD_FAIL_001'
+    };
+
+    // Test data for SEPA DD failure  
+    const sepaVariables: DunningVariables = {
+      ...cardVariables,
+      payment_method: 'sepa_dd',
+      last4: undefined,
+      sepa_mandate_ref: 'UMR-001-2024',
+      is_el: true,
+      trigger_id: 'D0_SEPA_FAIL_001'
+    };
+
+    // Test English card template
+    console.log('📧 English Card Failure Template:');
+    console.log('================================');
+    const enCardTemplate = this.getDunningEmailTemplate('dunning_d0_en', cardVariables);
+    console.log('Subject:', enCardTemplate.subject);
+    console.log('Body Preview:', enCardTemplate.text.substring(0, 300) + '...\n');
+
+    // Test Greek SEPA template
+    console.log('📧 Greek SEPA DD Failure Template:');
+    console.log('==================================');
+    const elSepaTemplate = this.getDunningEmailTemplate('dunning_d0_el', sepaVariables);
+    console.log('Subject:', elSepaTemplate.subject);
+    console.log('Body Preview:', elSepaTemplate.text.substring(0, 300) + '...\n');
+
+    // Test conditional rendering specifically
+    console.log('🔍 Conditional Rendering Test:');
+    console.log('==============================');
+    const testTemplate = `
+Payment method: {{payment_method}}
+
+{{#if (eq payment_method "card")}}
+This is for CARD payments - Last4: {{last4}}
+{{/if}}
+
+{{#if (eq payment_method "sepa_dd")}}
+This is for SEPA DD - Mandate: {{sepa_mandate_ref}}
+{{/if}}
+    `;
+
+    console.log('Card rendering:', this.renderTemplate(testTemplate, cardVariables));
+    console.log('SEPA rendering:', this.renderTemplate(testTemplate, sepaVariables));
   }
 
   /**
