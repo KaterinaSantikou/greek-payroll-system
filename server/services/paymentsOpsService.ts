@@ -118,13 +118,27 @@ export class PaymentsOpsService {
       .where(eq(paymentBatches.entityId, entityId));
 
     if (dateRange) {
-      query = query.where(
-        and(
-          eq(paymentBatches.entityId, entityId),
-          gte(paymentBatches.createdAt, dateRange.start),
-          lte(paymentBatches.createdAt, dateRange.end)
-        )
-      ) as any;
+      query = db
+        .select({
+          batchId: paymentBatches.batchId,
+          status: paymentBatches.status,
+          totalAmount: paymentBatches.totalAmount,
+          totalTransactions: paymentBatches.totalTransactions,
+          sctCount: paymentBatches.sctCount,
+          sctAmount: paymentBatches.sctAmount,
+          sctInstCount: paymentBatches.sctInstCount,
+          sctInstAmount: paymentBatches.sctInstAmount,
+          pastCutOff: paymentBatches.pastCutOff,
+          recommendInstant: paymentBatches.recommendInstant,
+        })
+        .from(paymentBatches)
+        .where(
+          and(
+            eq(paymentBatches.entityId, entityId),
+            gte(paymentBatches.createdAt, dateRange.start),
+            lte(paymentBatches.createdAt, dateRange.end)
+          )
+        );
     }
 
     const batches = await query;
@@ -315,8 +329,7 @@ export class PaymentsOpsService {
       .where(
         and(
           eq(paymentTransactions.status, 'rejected'),
-          sql`${paymentTransactions.transactionId} = ANY(ARRAY[${request.originalTransactionIds.map(() => '?').join(',')}])`, 
-          ...request.originalTransactionIds
+          sql`${paymentTransactions.transactionId} = ANY(${request.originalTransactionIds})`
         )
       );
 

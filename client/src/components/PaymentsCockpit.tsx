@@ -12,6 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { toast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { 
   Clock, 
   CheckCircle, 
@@ -29,6 +34,12 @@ import {
   Users,
   DollarSign,
   Target,
+  Loader2,
+  ArrowRight,
+  CreditCard,
+  Shield,
+  Timer,
+  X,
 } from 'lucide-react';
 import { BatchStateMachineDisplay } from './BatchStateMachineDisplay';
 import { CutOffDisplay } from './CutOffDisplay';
@@ -61,6 +72,38 @@ interface BatchData {
   submittedAt?: string;
   cutOffStatus?: any;
   reconciliationFiles?: Array<{ fileId: string; type: string; processedAt: string; status: string }>;
+}
+
+interface EligibilityResult {
+  lineId: string;
+  eligible: boolean;
+  eligibilityCriteria: {
+    bankSupportsInstant: boolean;
+    amountWithinLimit: boolean;
+    beneficiaryReachable: boolean;
+    originalNotSettled: boolean;
+    validStatus: boolean;
+    notSuperseded: boolean;
+  };
+  blockingFactors: string[];
+  estimatedSettlementTime: string;
+  instantFees?: {
+    perTransaction: number;
+    total: number;
+  };
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+}
+
+interface InstantReissueStatus {
+  batchId: string;
+  status: string;
+  progress: number;
+  estimatedCompletion: string;
+  timeline: Array<{
+    timestamp: string;
+    event: string;
+    status: 'completed' | 'pending' | 'failed';
+  }>;
 }
 
 interface PaymentsCockpitProps {
@@ -123,6 +166,14 @@ export function PaymentsCockpit({
   });
   const [contextDrawerOpen, setContextDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [eligibilityDrawerOpen, setEligibilityDrawerOpen] = useState(false);
+  const [reissueModalOpen, setReissueModalOpen] = useState(false);
+  const [eligibilityResults, setEligibilityResults] = useState<EligibilityResult[]>([]);
+  const [eligibilityLoading, setEligibilityLoading] = useState(false);
+  const [reissueLoading, setReissueLoading] = useState(false);
+  const [reissueReason, setReissueReason] = useState('');
+  const [activeReissues, setActiveReissues] = useState<Map<string, InstantReissueStatus>>(new Map());
+  const [statusPolling, setStatusPolling] = useState<Map<string, NodeJS.Timeout>>(new Map());
 
   // Mock data for demonstration
   useEffect(() => {
@@ -176,6 +227,158 @@ export function PaymentsCockpit({
       return line && ['submitted', 'accepted', 'rejected'].includes(line.status) && line.amount <= 100000;
     });
   };
+
+  // Eligibility checking functions
+  const checkInstantEligibility = async (lineIds: string[]) => {
+    if (!lineIds.length) return;
+    
+    setEligibilityLoading(true);
+    try {
+      const response = await fetch('/v1/instant-reissue/eligibility-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lineIds }),
+      });
+      
+      if (!response.ok) throw new Error('Eligibility check failed');
+      
+      const data = await response.json();
+      setEligibilityResults(data.eligibility_check.results);
+      setEligibilityDrawerOpen(true);
+      
+      toast({
+        title: "Eligibility Check Complete",
+        description: `${data.eligibility_check.summary.eligibleLines} of ${lineIds.length} lines eligible for instant re-issue`,
+        duration: 3000,
+      });
+    } catch (error) {
+      toast({
+        title: "Eligibility Check Failed",
+        description: "Unable to check instant re-issue eligibility",
+        variant: "destructive",
+      });
+    } finally {
+      setEligibilityLoading(false);
+    }
+  };
+
+  const executeInstantReissue = async () => {
+    const eligibleLineIds = eligibilityResults
+      .filter(r => r.eligible)
+      .map(r => r.lineId);
+    
+    if (!eligibleLineIds.length || !reissueReason.trim()) return;
+    
+    setReissueLoading(true);
+    try {
+      const response = await fetch('/v1/instant-reissue/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalLineIds: eligibleLineIds,
+          reason: reissueReason.trim(),
+          operatorId: 'current-user', // Replace with actual user ID
+          urgency: 'HIGH',
+          overrideFees: false,
+          doublePayProtection: true,
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Instant re-issue failed');
+      
+      const result = await response.json();
+      
+      if (result.execution_result.success) {
+        // Start status polling for the new batch
+        startStatusPolling(result.execution_result.newBatchId);
+        
+        toast({
+          title: "🚀 Instant Re-issue Initiated",
+          description: `${result.status_summary.reissued} payments re-issued as SCT Instant`,
+          duration: 5000,
+        });
+        
+        setReissueModalOpen(false);
+        setReissueReason('');
+        setSelectedLines([]); // Clear selection
+      } else {
+        toast({
+          title: "Re-issue Partially Successful",
+          description: `${result.status_summary.reissued} succeeded, ${result.status_summary.failed} failed`,
+          variant: "destructive",
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Re-issue Failed",
+        description: "Unable to execute instant re-issue",
+        variant: "destructive",
+      });
+    } finally {
+      setReissueLoading(false);
+    }
+  };
+
+  const startStatusPolling = (batchId: string) => {
+    const pollStatus = async () => {
+      try {
+        const response = await fetch(`/v1/instant-reissue/${batchId}/status`);
+        if (response.ok) {
+          const data = await response.json();
+          const status = data.real_time_status;
+          
+          setActiveReissues(prev => new Map(prev.set(batchId, status)));
+          
+          if (status.progress >= 100) {
+            // Polling complete
+            const intervalId = statusPolling.get(batchId);
+            if (intervalId) {
+              clearInterval(intervalId);
+              setStatusPolling(prev => {
+                const newMap = new Map(prev);
+                newMap.delete(batchId);
+                return newMap;
+              });
+            }
+            
+            toast({
+              title: "✅ Settlement Complete",
+              description: `Instant re-issue batch ${batchId} settled successfully`,
+              duration: 4000,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Status polling error:', error);
+      }
+    };
+    
+    // Poll immediately, then every 5 seconds
+    pollStatus();
+    const intervalId = setInterval(pollStatus, 5000);
+    setStatusPolling(prev => new Map(prev.set(batchId, intervalId)));
+  };
+
+  const handleInstantReissueClick = () => {
+    if (selectedLines.length === 0) {
+      toast({
+        title: "No Lines Selected",
+        description: "Please select payment lines for instant re-issue",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    checkInstantEligibility(selectedLines);
+  };
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      statusPolling.forEach(intervalId => clearInterval(intervalId));
+    };
+  }, []);
 
   if (!batchData) {
     return (
@@ -430,9 +633,17 @@ export function PaymentsCockpit({
                   </div>
                   <div className="flex space-x-2">
                     {getEligibleForReissue().length > 0 && (
-                      <Button size="sm" onClick={() => onReissueLines?.(getEligibleForReissue())}>
-                        <Zap className="h-4 w-4 mr-1" />
-                        Re-issue as SCT Instant
+                      <Button 
+                        size="sm" 
+                        onClick={handleInstantReissueClick}
+                        disabled={eligibilityLoading}
+                      >
+                        {eligibilityLoading ? (
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        ) : (
+                          <Zap className="h-4 w-4 mr-1" />
+                        )}
+                        {eligibilityLoading ? 'Checking...' : 'Re-issue as SCT Instant'}
                       </Button>
                     )}
                     <Button variant="outline" size="sm" onClick={() => onCancelLines?.(selectedLines)}>
@@ -664,16 +875,307 @@ export function PaymentsCockpit({
                 
                 <Button 
                   className="w-full" 
-                  onClick={() => onReissueLines?.(getEligibleForReissue())}
+                  onClick={handleInstantReissueClick}
+                  disabled={eligibilityLoading}
                 >
-                  <Zap className="h-4 w-4 mr-2" />
-                  Re-issue as SCT Instant now
+                  {eligibilityLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Zap className="h-4 w-4 mr-2" />
+                  )}
+                  {eligibilityLoading ? 'Checking Eligibility...' : 'Re-issue as SCT Instant now'}
                 </Button>
               </div>
             )}
           </div>
         </div>
       )}
+
+      {/* Eligibility Side Drawer */}
+      <Sheet open={eligibilityDrawerOpen} onOpenChange={setEligibilityDrawerOpen}>
+        <SheetContent side="right" className="w-[500px] sm:w-[540px]">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              SCT Instant Eligibility
+            </SheetTitle>
+            <SheetDescription>
+              Eligibility check and estimated settlement time for selected payment lines
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 space-y-4">
+            {eligibilityLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                <span className="ml-3 text-gray-600">Checking eligibility...</span>
+              </div>
+            ) : (
+              <>
+                {/* Summary */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-green-600">
+                          {eligibilityResults.filter(r => r.eligible).length}
+                        </div>
+                        <div className="text-sm text-gray-600">Eligible</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-red-600">
+                          {eligibilityResults.filter(r => !r.eligible).length}
+                        </div>
+                        <div className="text-sm text-gray-600">Ineligible</div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                      <div className="text-sm font-medium text-blue-800">Estimated Settlement</div>
+                      <div className="text-xs text-blue-600">Within 10 seconds for eligible lines</div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Eligibility Results */}
+                <div className="space-y-3">
+                  {eligibilityResults.map((result) => {
+                    const line = batchData?.lines.find(l => l.lineId === result.lineId);
+                    return (
+                      <Card key={result.lineId} className={result.eligible ? 'border-green-200' : 'border-red-200'}>
+                        <CardContent className="pt-4">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="font-medium">{line?.employeeName}</div>
+                              <div className="text-sm text-gray-600">€{line?.amount?.toFixed(2)}</div>
+                              <div className="text-xs text-gray-500">{result.lineId}</div>
+                            </div>
+                            <div className={`flex items-center gap-1 ${result.eligible ? 'text-green-600' : 'text-red-600'}`}>
+                              {result.eligible ? (
+                                <CheckCircle className="h-4 w-4" />
+                              ) : (
+                                <XCircle className="h-4 w-4" />
+                              )}
+                              <span className="text-xs font-medium">
+                                {result.eligible ? 'ELIGIBLE' : 'INELIGIBLE'}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {!result.eligible && result.blockingFactors.length > 0 && (
+                            <div className="mt-3 p-2 bg-red-50 rounded">
+                              <div className="text-xs font-medium text-red-800 mb-1">Blocking Factors:</div>
+                              <ul className="text-xs text-red-700 space-y-1">
+                                {result.blockingFactors.map((factor, idx) => (
+                                  <li key={idx}>• {factor}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+
+                          {result.eligible && result.instantFees && (
+                            <div className="mt-3 flex items-center justify-between text-xs">
+                              <span className="text-gray-600">Instant Fee:</span>
+                              <span className="font-medium">€{result.instantFees.total.toFixed(2)}</span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* Action Buttons */}
+                {eligibilityResults.some(r => r.eligible) && (
+                  <div className="sticky bottom-0 bg-white border-t pt-4">
+                    <Button 
+                      className="w-full" 
+                      size="lg"
+                      onClick={() => {
+                        setEligibilityDrawerOpen(false);
+                        setReissueModalOpen(true);
+                      }}
+                    >
+                      <ArrowRight className="h-4 w-4 mr-2" />
+                      Proceed with Re-issue ({eligibilityResults.filter(r => r.eligible).length} lines)
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Instant Re-issue Confirmation Modal */}
+      <Dialog open={reissueModalOpen} onOpenChange={setReissueModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Confirm SCT Instant Re-issue
+            </DialogTitle>
+            <DialogDescription>
+              Review details and provide authorization reason for instant re-issue processing
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Summary */}
+            <Card>
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-lg font-bold">
+                      {eligibilityResults.filter(r => r.eligible).length}
+                    </div>
+                    <div className="text-sm text-gray-600">Lines to Re-issue</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold">
+                      €{eligibilityResults
+                        .filter(r => r.eligible)
+                        .reduce((sum, r) => {
+                          const line = batchData?.lines.find(l => l.lineId === r.lineId);
+                          return sum + (line?.amount || 0);
+                        }, 0)
+                        .toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-600">Total Amount</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-bold">
+                      €{eligibilityResults
+                        .filter(r => r.eligible && r.instantFees)
+                        .reduce((sum, r) => sum + (r.instantFees?.total || 0), 0)
+                        .toFixed(2)}
+                    </div>
+                    <div className="text-sm text-gray-600">Total Fees</div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-center space-x-6 text-sm">
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <Timer className="h-4 w-4" />
+                    <span>Settlement: ~10 seconds</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-green-600">
+                    <CreditCard className="h-4 w-4" />
+                    <span>Method: SCT Instant</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Cut-off Context */}
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Cut-off Context:</strong> SCT Instant payments are processed immediately 
+                and do not follow traditional cut-off schedules. This re-issue will be 
+                submitted directly to TIPS for real-time processing.
+              </AlertDescription>
+            </Alert>
+
+            {/* Authorization Reason */}
+            <div className="space-y-2">
+              <Label htmlFor="reason">Authorization Reason *</Label>
+              <Textarea
+                id="reason"
+                placeholder="Enter reason for instant re-issue (minimum 10 characters)"
+                value={reissueReason}
+                onChange={(e) => setReissueReason(e.target.value)}
+                className="min-h-[80px]"
+              />
+              <div className="text-xs text-gray-500">
+                {reissueReason.length}/10 minimum characters
+              </div>
+            </div>
+
+            {/* Double-pay Protection Notice */}
+            <Alert>
+              <Shield className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Double-pay Protection:</strong> Enabled. Disbursement keys will prevent 
+                duplicate payments for the same employee, period, and amount combination.
+              </AlertDescription>
+            </Alert>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setReissueModalOpen(false);
+                setReissueReason('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={executeInstantReissue}
+              disabled={reissueLoading || reissueReason.trim().length < 10}
+            >
+              {reissueLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Zap className="h-4 w-4 mr-2" />
+              )}
+              {reissueLoading ? 'Processing...' : 'Authorize Re-issue'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Active Re-issue Status Cards */}
+      {Array.from(activeReissues.entries()).map(([batchId, status]) => (
+        <div 
+          key={batchId}
+          className="fixed bottom-4 right-4 w-80 bg-white border shadow-lg rounded-lg p-4 z-50"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-blue-600" />
+              <span className="font-medium text-sm">Instant Re-issue</span>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                setActiveReissues(prev => {
+                  const newMap = new Map(prev);
+                  newMap.delete(batchId);
+                  return newMap;
+                });
+              }}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="space-y-2">
+            <div className="text-xs text-gray-600">{batchId}</div>
+            <Progress value={status.progress} className="h-2" />
+            <div className="text-xs text-gray-600">
+              {status.progress}% - {status.estimatedCompletion}
+            </div>
+            
+            {status.timeline && status.timeline.length > 0 && (
+              <div className="mt-3 space-y-1">
+                {status.timeline.slice(-3).map((event, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-xs">
+                    <div className={`w-2 h-2 rounded-full ${
+                      event.status === 'completed' ? 'bg-green-500' :
+                      event.status === 'failed' ? 'bg-red-500' : 'bg-yellow-500'
+                    }`} />
+                    <span className="text-gray-600">{event.event}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

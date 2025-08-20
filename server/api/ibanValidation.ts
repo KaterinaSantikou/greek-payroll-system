@@ -9,7 +9,8 @@
  * - BDD test scenarios
  */
 
-import type { Express } from "express";
+import type { Express, Router } from "express";
+import { Router } from "express";
 import { isAuthenticated } from "../replitAuth";
 import { IbanValidationService } from "../services/IbanValidationService";
 import { validateIbanEnhanced, getValidationMetrics } from "@shared/ibanValidationEnhanced";
