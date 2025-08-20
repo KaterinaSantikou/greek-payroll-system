@@ -88,6 +88,7 @@ import VerifyEmail from "@/pages/auth/VerifyEmail";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import SSO from "@/pages/auth/SSO";
+const GRCCompliance = lazy(() => import("./pages/Compliance"));
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -170,6 +171,7 @@ function Router() {
             <Route path="/hotel-tip-pooling" component={HotelTipPooling} />
             <Route path="/ux-architecture" component={UXArchitecture} />
             <Route path="/compliance" component={Compliance} />
+            <Route path="/grc-compliance" component={GRCCompliance} />
             <Route path="/analytics" component={Analytics} />
             <Route path="/deployment" component={Deployment} />
             <Route path="/success-metrics" component={SuccessMetrics} />
