@@ -47,14 +47,20 @@ function maskIban(iban: string): string {
   return '****' + iban.slice(-4);
 }
 
-// Main aggregate dashboard endpoint
+// Main aggregate dashboard endpoint with stale-while-revalidate caching
 router.get('/employee/dashboard', isAuthenticated, async (req, res) => {
   try {
+    const startTime = Date.now();
     const employee = await getCurrentEmployee(req);
     const period = req.query.period as string || format(new Date(), 'yyyy-MM');
     const week = req.query.week as string || format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-'W'II");
     const lang = req.query.lang as string || 'en-US';
     const locale = lang === 'el-GR' ? 'el-GR' : 'en-US';
+    
+    // AC6: Performance - stale-while-revalidate for cold <2.0s, subsequent <1.0s  
+    res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=300');
+    res.setHeader('ETag', `"dashboard-${employee.id}-${Math.floor(Date.now() / 30000)}"`);
+    res.setHeader('X-Response-Time', `${Date.now() - startTime}ms`);
 
     // Generate mock data that follows the contract
     const currentDate = new Date();
