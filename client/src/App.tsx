@@ -75,6 +75,7 @@ import SeveranceTestPage from "@/pages/SeveranceTestPage";
 import GarnishmentPage from "@/pages/GarnishmentPage";
 import IbanTestPage from "@/pages/IbanTestPage";
 import SimpleIbanTest from "@/pages/SimpleIbanTest";
+import PartnerConsole from "@/pages/PartnerConsole";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 
@@ -198,6 +199,7 @@ function Router() {
         <Route path="/embedded-payroll" component={EmbeddedPayroll} />
         <Route path="/embed" component={EmbedPage} />
         <Route path="/ai-copilot" component={AICopilot} />
+        <Route path="/partner-console" component={PartnerConsole} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

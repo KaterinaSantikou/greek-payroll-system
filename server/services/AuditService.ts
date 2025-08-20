@@ -1,5 +1,6 @@
 import { db } from '../db';
-import { authAuditLogs } from '@shared/schema';
+import { authAuditLogs, hashChainedAuditLog } from '@shared/schema';
+import { eq } from 'drizzle-orm';
 import crypto from 'crypto';
 
 export interface AuditEvent {
@@ -18,11 +19,108 @@ export interface AuditEvent {
   severity?: 'info' | 'warning' | 'error' | 'critical';
 }
 
+export interface GeneralAuditEvent {
+  eventType: string;
+  eventCategory: string;
+  eventAction: string;
+  tenantId: string;
+  partnerFirmId?: string;
+  userId: string;
+  eventData: any;
+  ipAddress?: string;
+  userAgent?: string;
+  sessionId?: string;
+  requestId?: string;
+}
+
 export class AuditService {
   /**
-   * Log audit event with PII redaction
+   * Log general business operation event to hash-chained audit log
    */
-  static async logEvent(event: AuditEvent, correlationId?: string): Promise<void> {
+  static async logEvent(event: GeneralAuditEvent): Promise<string> {
+    try {
+      // Get the latest log entry to create chain
+      const [latestEntry] = await db
+        .select()
+        .from(hashChainedAuditLog)
+        .orderBy(hashChainedAuditLog.sequenceNumber)
+        .limit(1);
+
+      const sequenceNumber = (latestEntry?.sequenceNumber || 0) + 1;
+      const previousHash = latestEntry?.chainHash || '0';
+
+      // Create event hash
+      const eventHash = this.createEventHash(event, sequenceNumber);
+
+      // Create chain hash
+      const chainHash = this.createChainHash(previousHash, eventHash);
+
+      // Insert audit log entry
+      const [logEntry] = await db
+        .insert(hashChainedAuditLog)
+        .values({
+          sequenceNumber,
+          eventType: event.eventType,
+          eventCategory: event.eventCategory,
+          eventAction: event.eventAction,
+          tenantId: event.tenantId,
+          partnerFirmId: event.partnerFirmId,
+          userId: event.userId,
+          eventData: event.eventData,
+          eventHash,
+          previousHash,
+          chainHash,
+          ipAddress: event.ipAddress,
+          userAgent: event.userAgent,
+          sessionId: event.sessionId,
+          requestId: event.requestId,
+        })
+        .returning();
+
+      return logEntry.id;
+
+    } catch (error) {
+      console.error('Error logging audit event:', error);
+      throw new Error('Failed to log audit event');
+    }
+  }
+
+  /**
+   * Create hash for a general event
+   */
+  private static createEventHash(event: GeneralAuditEvent, sequenceNumber: number): string {
+    const data = {
+      sequenceNumber,
+      eventType: event.eventType,
+      eventCategory: event.eventCategory,
+      eventAction: event.eventAction,
+      tenantId: event.tenantId,
+      partnerFirmId: event.partnerFirmId,
+      userId: event.userId,
+      eventData: event.eventData,
+      timestamp: new Date().toISOString(),
+    };
+
+    return crypto
+      .createHash('sha256')
+      .update(JSON.stringify(data))
+      .digest('hex');
+  }
+
+  /**
+   * Create chain hash linking to previous entry
+   */
+  private static createChainHash(previousHash: string, currentHash: string): string {
+    return crypto
+      .createHash('sha256')
+      .update(previousHash + currentHash)
+      .digest('hex');
+  }
+
+  /**
+   * Log authentication audit event with PII redaction (legacy method)
+   */
+  static async logAuthEvent(event: AuditEvent, correlationId?: string): Promise<void> {
     try {
       const maskedEmail = event.email ? this.maskEmail(event.email) : undefined;
       const safeMetadata = this.redactPII(event.metadata || {});

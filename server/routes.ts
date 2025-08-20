@@ -71,6 +71,7 @@ import { cutOffLogicRoutes } from "./api/cutOffLogic";
 import { reissueAlgorithmRoutes } from "./api/reissueAlgorithm";
 import eventQueueAPI from "./api/eventQueue";
 // ibanValidationRoutes already imported on line 5
+import { registerPartnerRoutes } from "./api/partners";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -2779,6 +2780,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Change Log & Legal Watch API routes
   registerChangeLogLegalWatchRoutes(app);
+
+  // Register Partner Management API routes
+  registerPartnerRoutes(app);
 
   // Register Hotel Tip Pooling API routes
   const { registerHotelTipPoolingRoutes } = await import("./api/hotelTipPooling");

@@ -4582,3 +4582,548 @@ export const garnishmentAuditRelations = relations(garnishmentAudit, ({ one }) =
     references: [garnishmentOrders.id],
   }),
 }));
+
+// ========================================
+// MULTI-TENANT ACCOUNTING FIRMS SYSTEM
+// ========================================
+
+// Partner accounting firms
+export const partnerFirms = pgTable("partner_firms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  displayName: varchar("display_name"),
+  taxId: varchar("tax_id"), // AFM for Greek firms
+  businessLicense: varchar("business_license"),
+  
+  // Contact information
+  email: varchar("email"),
+  phone: varchar("phone"),
+  website: varchar("website"),
+  
+  // Address
+  address: text("address"),
+  city: varchar("city"),
+  postalCode: varchar("postal_code"),
+  region: varchar("region"),
+  country: varchar("country").default("GR"),
+  
+  // Business settings
+  firmType: varchar("firm_type").notNull().default("accounting"), // 'accounting', 'payroll', 'consulting'
+  certificationNumber: varchar("certification_number"), // Professional certification
+  
+  // Branding and customization
+  logoUrl: varchar("logo_url"),
+  primaryColor: varchar("primary_color"),
+  secondaryColor: varchar("secondary_color"),
+  
+  // System settings
+  defaultTimezone: varchar("default_timezone").default("Europe/Athens"),
+  defaultLocale: varchar("default_locale").default("el"),
+  makerCheckerEnabled: boolean("maker_checker_enabled").default(true),
+  
+  // Status and lifecycle
+  isActive: boolean("is_active").default(true),
+  suspendedAt: timestamp("suspended_at"),
+  suspensionReason: text("suspension_reason"),
+  
+  // Audit
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by"),
+});
+
+// Partner firm members and their roles
+export const partnerMembers = pgTable("partner_members", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  partnerFirmId: varchar("partner_firm_id").notNull().references(() => partnerFirms.id, { onDelete: 'cascade' }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  
+  // Role within the partner firm
+  role: varchar("role").notNull(), // 'partner_admin', 'partner_staff', 'partner_reviewer', 'partner_viewer'
+  title: varchar("title"), // Custom job title
+  department: varchar("department"),
+  
+  // Permissions and access
+  permissions: jsonb("permissions"), // Granular permissions array
+  canManageClients: boolean("can_manage_clients").default(false),
+  canSubmitFilings: boolean("can_submit_filings").default(false),
+  canApproveActions: boolean("can_approve_actions").default(false),
+  maxClientsAccess: integer("max_clients_access"), // Null = unlimited
+  
+  // Work settings
+  employeeId: varchar("employee_id"), // Internal employee ID
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
+  billableRate: decimal("billable_rate", { precision: 10, scale: 2 }),
+  
+  // Status
+  isActive: boolean("is_active").default(true),
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  lastActiveAt: timestamp("last_active_at"),
+  
+  // Audit
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  invitedBy: varchar("invited_by"),
+  invitedAt: timestamp("invited_at"),
+  joinedAt: timestamp("joined_at"),
+});
+
+// Client tenant access grants - manages which partner firms can access which client tenants
+export const clientAccessGrants = pgTable("client_access_grants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  clientTenantId: varchar("client_tenant_id").notNull(), // References client's tenant/property ID
+  partnerFirmId: varchar("partner_firm_id").notNull().references(() => partnerFirms.id, { onDelete: 'cascade' }),
+  
+  // Access scope and permissions
+  accessLevel: varchar("access_level").notNull().default("read_write"), // 'read_only', 'read_write', 'full_admin'
+  grantedScopes: jsonb("granted_scopes").notNull(), // Array of scope strings
+  restrictedActions: jsonb("restricted_actions"), // Actions that require client approval
+  
+  // Service configuration
+  serviceType: varchar("service_type").notNull(), // 'payroll', 'filings', 'compliance', 'all'
+  includedServices: jsonb("included_services"), // Specific services included
+  excludedServices: jsonb("excluded_services"), // Specific services excluded
+  
+  // Approval and workflow settings
+  requiresClientApproval: boolean("requires_client_approval").default(true),
+  clientApproverUserId: varchar("client_approver_user_id"), // Who can approve on client side
+  partnerReviewerRequired: boolean("partner_reviewer_required").default(false),
+  
+  // Time and billing
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
+  monthlyRetainer: decimal("monthly_retainer", { precision: 10, scale: 2 }),
+  billingCycle: varchar("billing_cycle").default("monthly"), // 'monthly', 'quarterly', 'annual'
+  
+  // Validity and status
+  validFrom: timestamp("valid_from").defaultNow(),
+  validUntil: timestamp("valid_until"),
+  isActive: boolean("is_active").default(true),
+  suspendedAt: timestamp("suspended_at"),
+  suspensionReason: text("suspension_reason"),
+  
+  // Audit
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  grantedBy: varchar("granted_by").notNull(), // Client user who granted access
+  lastUsedAt: timestamp("last_used_at"),
+});
+
+// On-Behalf-Of (OBO) tokens for temporary delegation
+export const oboTokens = pgTable("obo_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tokenHash: varchar("token_hash").notNull().unique(), // Hashed token for security
+  
+  // Token subject (who the token represents)
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  partnerFirmId: varchar("partner_firm_id").references(() => partnerFirms.id, { onDelete: 'cascade' }),
+  asTenantId: varchar("as_tenant_id").notNull(), // The tenant being acted upon
+  
+  // Authorization details
+  scopes: jsonb("scopes").notNull(), // Array of granted scopes
+  permissions: jsonb("permissions"), // Specific permissions granted
+  oboContext: jsonb("obo_context").notNull(), // Contains obo=true and context
+  
+  // Access constraints
+  allowedActions: jsonb("allowed_actions"), // Specific actions allowed
+  restrictedActions: jsonb("restricted_actions"), // Actions that are forbidden
+  ipRestrictions: jsonb("ip_restrictions"), // IP addresses allowed to use token
+  userAgentRestrictions: text("user_agent_restrictions"),
+  
+  // Lifecycle
+  issuedAt: timestamp("issued_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+  lastUsedAt: timestamp("last_used_at"),
+  usageCount: integer("usage_count").default(0),
+  maxUsage: integer("max_usage"), // Null = unlimited
+  
+  // Status
+  isActive: boolean("is_active").default(true),
+  revokedAt: timestamp("revoked_at"),
+  revokedBy: varchar("revoked_by"),
+  revocationReason: text("revocation_reason"),
+  
+  // Audit context
+  issuedBy: varchar("issued_by").notNull(),
+  issuedFor: varchar("issued_for"), // Purpose or reason for token
+  sessionId: varchar("session_id"),
+  requestId: varchar("request_id"),
+});
+
+// Maker-checker approval queue
+export const approvalQueue = pgTable("approval_queue", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Request details
+  requestType: varchar("request_type").notNull(), // 'filing_submit', 'payroll_run', 'payment_batch', 'data_correction'
+  requestSubtype: varchar("request_subtype"), // More specific type like 'apd_filing', 'fmy_filing'
+  requestData: jsonb("request_data").notNull(), // The actual data/action being requested
+  
+  // Tenant and actor context
+  tenantId: varchar("tenant_id").notNull(),
+  partnerFirmId: varchar("partner_firm_id").references(() => partnerFirms.id),
+  
+  // Maker (requester)
+  requestedBy: varchar("requested_by").notNull().references(() => users.id),
+  requestedAt: timestamp("requested_at").defaultNow(),
+  makerRole: varchar("maker_role"), // Role of the person making the request
+  makerComments: text("maker_comments"),
+  
+  // Checker/Approver
+  assignedToRole: varchar("assigned_to_role"), // 'partner_reviewer', 'client_owner', 'payroll_admin'
+  assignedToUserId: varchar("assigned_to_user_id").references(() => users.id),
+  assignedAt: timestamp("assigned_at"),
+  
+  // Approval workflow
+  status: varchar("status").notNull().default("pending"), // 'pending', 'approved', 'rejected', 'cancelled', 'expired'
+  priority: varchar("priority").default("normal"), // 'low', 'normal', 'high', 'urgent'
+  
+  // Checker response
+  reviewedBy: varchar("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  checkerComments: text("checker_comments"),
+  rejectionReason: text("rejection_reason"),
+  
+  // Execution
+  executedAt: timestamp("executed_at"),
+  executedBy: varchar("executed_by").references(() => users.id),
+  executionResult: jsonb("execution_result"),
+  executionError: text("execution_error"),
+  
+  // Expiration and lifecycle
+  expiresAt: timestamp("expires_at"),
+  cancelledAt: timestamp("cancelled_at"),
+  cancelledBy: varchar("cancelled_by").references(() => users.id),
+  cancellationReason: text("cancellation_reason"),
+  
+  // Metadata
+  riskScore: decimal("risk_score", { precision: 5, scale: 2 }), // Risk assessment score
+  estimatedImpact: varchar("estimated_impact"), // 'low', 'medium', 'high'
+  relatedEntityIds: jsonb("related_entity_ids"), // IDs of related entities (employees, etc)
+  
+  // System fields
+  correlationId: varchar("correlation_id"), // For tracking related requests
+  parentRequestId: varchar("parent_request_id").references(() => approvalQueue.id),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Hash-chained audit log for immutable audit trail
+export const hashChainedAuditLog = pgTable("hash_chained_audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sequenceNumber: serial("sequence_number"), // Monotonic sequence for chain verification
+  
+  // Hash chain integrity
+  eventHash: varchar("event_hash").notNull(), // SHA-256 hash of this event
+  previousHash: varchar("previous_hash"), // Hash of previous event in chain
+  chainHash: varchar("chain_hash").notNull(), // Combined hash for chain validation
+  
+  // Event details
+  eventType: varchar("event_type").notNull(), // 'user_action', 'system_event', 'data_change', 'access_grant'
+  eventCategory: varchar("event_category").notNull(), // 'authentication', 'authorization', 'data_modification', 'filing', 'payment'
+  eventAction: varchar("event_action").notNull(), // Specific action taken
+  
+  // Context
+  tenantId: varchar("tenant_id"),
+  partnerFirmId: varchar("partner_firm_id"),
+  userId: varchar("user_id"),
+  
+  // OBO (On-Behalf-Of) context
+  isOboAction: boolean("is_obo_action").default(false),
+  oboActorUserId: varchar("obo_actor_user_id"), // Who actually performed the action
+  oboTargetUserId: varchar("obo_target_user_id"), // On whose behalf
+  oboTokenId: varchar("obo_token_id").references(() => oboTokens.id),
+  
+  // Event data
+  eventData: jsonb("event_data"), // Structured event data
+  beforeState: jsonb("before_state"), // State before the change
+  afterState: jsonb("after_state"), // State after the change
+  
+  // Request context
+  requestId: varchar("request_id"),
+  sessionId: varchar("session_id"),
+  correlationId: varchar("correlation_id"),
+  
+  // Network and device context
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  deviceFingerprint: varchar("device_fingerprint"),
+  
+  // Timing
+  timestamp: timestamp("timestamp").defaultNow(),
+  processingDuration: integer("processing_duration"), // Processing time in milliseconds
+  
+  // Compliance and risk
+  riskLevel: varchar("risk_level"), // 'low', 'medium', 'high', 'critical'
+  complianceFlags: jsonb("compliance_flags"), // Compliance-related flags
+  dataClassification: varchar("data_classification"), // 'public', 'internal', 'confidential', 'restricted'
+  
+  // Verification
+  isVerified: boolean("is_verified").default(false),
+  verificationMethod: varchar("verification_method"), // How the event was verified
+  digitalSignature: text("digital_signature"), // Optional digital signature
+});
+
+// Document and audit pack generation
+export const documentPacks = pgTable("document_packs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Pack metadata
+  packType: varchar("pack_type").notNull(), // 'inspector_pack', 'audit_pack', 'compliance_pack', 'filing_pack'
+  packName: varchar("pack_name").notNull(),
+  description: text("description"),
+  
+  // Scope
+  tenantId: varchar("tenant_id").notNull(),
+  partnerFirmId: varchar("partner_firm_id").references(() => partnerFirms.id),
+  
+  // Time range
+  periodStart: date("period_start"),
+  periodEnd: date("period_end"),
+  generatedFor: varchar("generated_for"), // 'tax_audit', 'labor_inspection', 'internal_review', 'client_request'
+  
+  // Contents
+  includedDocuments: jsonb("included_documents").notNull(), // Array of document types included
+  excludedDocuments: jsonb("excluded_documents"), // Documents explicitly excluded
+  customInclusions: jsonb("custom_inclusions"), // Custom data inclusions
+  
+  // Filters and criteria
+  filterCriteria: jsonb("filter_criteria"), // Filtering criteria applied
+  employeeScope: jsonb("employee_scope"), // Which employees included
+  departmentScope: jsonb("department_scope"), // Which departments included
+  
+  // Generation details
+  requestedBy: varchar("requested_by").notNull().references(() => users.id),
+  requestedAt: timestamp("requested_at").defaultNow(),
+  generatedBy: varchar("generated_by").references(() => users.id),
+  generatedAt: timestamp("generated_at"),
+  
+  // File details
+  fileUrl: varchar("file_url"),
+  fileName: varchar("file_name"),
+  fileSize: integer("file_size"), // Size in bytes
+  fileMimeType: varchar("file_mime_type"),
+  fileChecksum: varchar("file_checksum"), // SHA-256 checksum
+  
+  // Status and lifecycle
+  status: varchar("status").notNull().default("requested"), // 'requested', 'generating', 'ready', 'downloaded', 'expired', 'error'
+  expiresAt: timestamp("expires_at"),
+  downloadCount: integer("download_count").default(0),
+  maxDownloads: integer("max_downloads"),
+  
+  // Access control
+  accessLevel: varchar("access_level").default("requester_only"), // 'requester_only', 'tenant_users', 'partner_firm', 'public'
+  downloadToken: varchar("download_token"), // Secure download token
+  passwordProtected: boolean("password_protected").default(false),
+  
+  // Error handling
+  generationError: text("generation_error"),
+  retryCount: integer("retry_count").default(0),
+  lastRetryAt: timestamp("last_retry_at"),
+  
+  // Metadata
+  tags: jsonb("tags"), // Searchable tags
+  customMetadata: jsonb("custom_metadata"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Document pack downloads log
+export const documentPackDownloads = pgTable("document_pack_downloads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  documentPackId: varchar("document_pack_id").notNull().references(() => documentPacks.id, { onDelete: 'cascade' }),
+  
+  downloadedBy: varchar("downloaded_by").notNull().references(() => users.id),
+  downloadedAt: timestamp("downloaded_at").defaultNow(),
+  
+  // Download context
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  downloadMethod: varchar("download_method"), // 'direct', 'api', 'email_link'
+  
+  // File verification
+  checksumVerified: boolean("checksum_verified").default(false),
+  downloadComplete: boolean("download_complete").default(true),
+  bytesDownloaded: integer("bytes_downloaded"),
+  
+  // OBO context if applicable
+  isOboDownload: boolean("is_obo_download").default(false),
+  oboTokenId: varchar("obo_token_id").references(() => oboTokens.id),
+  
+  sessionId: varchar("session_id"),
+  requestId: varchar("request_id"),
+});
+
+// Type exports for multi-tenant system
+export type PartnerFirm = typeof partnerFirms.$inferSelect;
+export type InsertPartnerFirm = typeof partnerFirms.$inferInsert;
+
+export type PartnerMember = typeof partnerMembers.$inferSelect;
+export type InsertPartnerMember = typeof partnerMembers.$inferInsert;
+
+export type ClientAccessGrant = typeof clientAccessGrants.$inferSelect;
+export type InsertClientAccessGrant = typeof clientAccessGrants.$inferInsert;
+
+export type OboToken = typeof oboTokens.$inferSelect;
+export type InsertOboToken = typeof oboTokens.$inferInsert;
+
+export type ApprovalQueue = typeof approvalQueue.$inferSelect;
+export type InsertApprovalQueue = typeof approvalQueue.$inferInsert;
+
+export type HashChainedAuditLog = typeof hashChainedAuditLog.$inferSelect;
+export type InsertHashChainedAuditLog = typeof hashChainedAuditLog.$inferInsert;
+
+export type DocumentPack = typeof documentPacks.$inferSelect;
+export type InsertDocumentPack = typeof documentPacks.$inferInsert;
+
+export type DocumentPackDownload = typeof documentPackDownloads.$inferSelect;
+export type InsertDocumentPackDownload = typeof documentPackDownloads.$inferInsert;
+
+// Schema validation for multi-tenant system
+export const insertPartnerFirmSchema = createInsertSchema(partnerFirms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPartnerMemberSchema = createInsertSchema(partnerMembers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastActiveAt: true,
+});
+
+export const insertClientAccessGrantSchema = createInsertSchema(clientAccessGrants).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  lastUsedAt: true,
+});
+
+export const insertOboTokenSchema = createInsertSchema(oboTokens).omit({
+  id: true,
+  tokenHash: true,
+  issuedAt: true,
+  lastUsedAt: true,
+  usageCount: true,
+});
+
+export const insertApprovalQueueSchema = createInsertSchema(approvalQueue).omit({
+  id: true,
+  requestedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertHashChainedAuditLogSchema = createInsertSchema(hashChainedAuditLog).omit({
+  id: true,
+  sequenceNumber: true,
+  eventHash: true,
+  previousHash: true,
+  chainHash: true,
+  timestamp: true,
+});
+
+export const insertDocumentPackSchema = createInsertSchema(documentPacks).omit({
+  id: true,
+  requestedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDocumentPackDownloadSchema = createInsertSchema(documentPackDownloads).omit({
+  id: true,
+  downloadedAt: true,
+});
+
+// Relations for multi-tenant system
+export const partnerFirmRelations = relations(partnerFirms, ({ many }) => ({
+  members: many(partnerMembers),
+  clientGrants: many(clientAccessGrants),
+  oboTokens: many(oboTokens),
+}));
+
+export const partnerMemberRelations = relations(partnerMembers, ({ one, many }) => ({
+  partnerFirm: one(partnerFirms, {
+    fields: [partnerMembers.partnerFirmId],
+    references: [partnerFirms.id],
+  }),
+  user: one(users, {
+    fields: [partnerMembers.userId],
+    references: [users.id],
+  }),
+}));
+
+export const clientAccessGrantRelations = relations(clientAccessGrants, ({ one }) => ({
+  partnerFirm: one(partnerFirms, {
+    fields: [clientAccessGrants.partnerFirmId],
+    references: [partnerFirms.id],
+  }),
+}));
+
+export const oboTokenRelations = relations(oboTokens, ({ one }) => ({
+  user: one(users, {
+    fields: [oboTokens.userId],
+    references: [users.id],
+  }),
+  partnerFirm: one(partnerFirms, {
+    fields: [oboTokens.partnerFirmId],
+    references: [partnerFirms.id],
+  }),
+}));
+
+export const approvalQueueRelations = relations(approvalQueue, ({ one }) => ({
+  requestedByUser: one(users, {
+    fields: [approvalQueue.requestedBy],
+    references: [users.id],
+  }),
+  assignedToUser: one(users, {
+    fields: [approvalQueue.assignedToUserId],
+    references: [users.id],
+  }),
+  reviewedByUser: one(users, {
+    fields: [approvalQueue.reviewedBy],
+    references: [users.id],
+  }),
+  partnerFirm: one(partnerFirms, {
+    fields: [approvalQueue.partnerFirmId],
+    references: [partnerFirms.id],
+  }),
+  parentRequest: one(approvalQueue, {
+    fields: [approvalQueue.parentRequestId],
+    references: [approvalQueue.id],
+  }),
+}));
+
+export const documentPackRelations = relations(documentPacks, ({ one, many }) => ({
+  requestedByUser: one(users, {
+    fields: [documentPacks.requestedBy],
+    references: [users.id],
+  }),
+  generatedByUser: one(users, {
+    fields: [documentPacks.generatedBy],
+    references: [users.id],
+  }),
+  partnerFirm: one(partnerFirms, {
+    fields: [documentPacks.partnerFirmId],
+    references: [partnerFirms.id],
+  }),
+  downloads: many(documentPackDownloads),
+}));
+
+export const documentPackDownloadRelations = relations(documentPackDownloads, ({ one }) => ({
+  documentPack: one(documentPacks, {
+    fields: [documentPackDownloads.documentPackId],
+    references: [documentPacks.id],
+  }),
+  downloadedByUser: one(users, {
+    fields: [documentPackDownloads.downloadedBy],
+    references: [users.id],
+  }),
+  oboToken: one(oboTokens, {
+    fields: [documentPackDownloads.oboTokenId],
+    references: [oboTokens.id],
+  }),
+}));
