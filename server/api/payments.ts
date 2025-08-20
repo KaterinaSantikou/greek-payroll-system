@@ -1655,4 +1655,176 @@ export function paymentsRoutes(app: Express) {
       });
     }
   });
+
+  // =============================================================================
+  // ACCEPTANCE CRITERIA & TEST PLAN ENDPOINTS
+  // =============================================================================
+
+  // Get acceptance criteria validation results
+  app.get('/v1/payments/acceptance/:batchId', async (req, res) => {
+    try {
+      const { batchId } = req.params;
+      const { AcceptanceCriteriaValidator } = await import('../services/acceptanceCriteriaValidator');
+      
+      const validation = await AcceptanceCriteriaValidator.validateAllCriteria(batchId);
+      
+      res.json({
+        success: true,
+        validation_results: validation,
+        validated_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error validating acceptance criteria:', error);
+      res.status(500).json({
+        error: 'Failed to validate acceptance criteria'
+      });
+    }
+  });
+
+  // Get state transition tracker
+  app.get('/v1/payments/acceptance/state-tracker/:batchId', async (req, res) => {
+    try {
+      const { batchId } = req.params;
+      const { AcceptanceCriteriaValidator } = await import('../services/acceptanceCriteriaValidator');
+      
+      const tracker = AcceptanceCriteriaValidator.getBatchStateTracker(batchId);
+      
+      if (!tracker) {
+        return res.status(404).json({
+          error: 'State tracker not found for batch',
+          batch_id: batchId
+        });
+      }
+      
+      res.json({
+        success: true,
+        state_tracker: tracker,
+        retrieved_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error getting state tracker:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve state tracker'
+      });
+    }
+  });
+
+  // Export audit trail
+  app.get('/v1/payments/acceptance/audit-export/:batchId', async (req, res) => {
+    try {
+      const { batchId } = req.params;
+      const { format = 'json' } = req.query;
+      const { AcceptanceCriteriaValidator } = await import('../services/acceptanceCriteriaValidator');
+      
+      const exportData = await AcceptanceCriteriaValidator.generateAuditTrailExport(
+        batchId,
+        format as 'json' | 'csv' | 'xlsx'
+      );
+      
+      if (format === 'json') {
+        res.json({
+          success: true,
+          export_data: exportData,
+          generated_at: new Date().toISOString()
+        });
+      } else {
+        // For CSV/XLSX, return download info
+        res.json({
+          success: true,
+          export_info: {
+            batch_id: batchId,
+            format: format,
+            size_bytes: exportData.export_size_bytes,
+            download_url: `/v1/payments/acceptance/download/${batchId}?format=${format}`,
+            generated_at: exportData.generated_at
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error generating audit export:', error);
+      res.status(500).json({
+        error: 'Failed to generate audit trail export'
+      });
+    }
+  });
+
+  // Execute test plan
+  app.post('/v1/payments/test-plan/execute', async (req, res) => {
+    try {
+      const { test_type } = req.body;
+      const { TestPlanExecutor } = await import('../services/testPlanExecutor');
+      
+      let result;
+      
+      switch (test_type) {
+        case 'full':
+          result = await TestPlanExecutor.executeFullTestPlan();
+          break;
+        case 'happy_path':
+          result = await TestPlanExecutor.executeHappyPathTest();
+          break;
+        case 'partial_reject':
+          result = await TestPlanExecutor.executePartialRejectTest();
+          break;
+        case 'cutoff_validation':
+          result = await TestPlanExecutor.executePastCutoffTest();
+          break;
+        case 'idempotency':
+          result = await TestPlanExecutor.executeIdempotencyTest();
+          break;
+        case 'double_pay_guard':
+          result = await TestPlanExecutor.executeDoublePayGuardTest();
+          break;
+        default:
+          return res.status(400).json({
+            error: 'Invalid test type. Supported: full, happy_path, partial_reject, cutoff_validation, idempotency, double_pay_guard'
+          });
+      }
+      
+      res.json({
+        success: true,
+        test_execution: result,
+        executed_at: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error executing test plan:', error);
+      res.status(500).json({
+        error: 'Failed to execute test plan'
+      });
+    }
+  });
+
+  // Get test execution reports
+  app.get('/v1/payments/test-plan/reports', async (req, res) => {
+    try {
+      const { test_run_id } = req.query;
+      const { TestPlanExecutor } = await import('../services/testPlanExecutor');
+      
+      if (test_run_id) {
+        const report = TestPlanExecutor.getTestExecutionReport(test_run_id as string);
+        if (!report) {
+          return res.status(404).json({
+            error: 'Test execution report not found',
+            test_run_id
+          });
+        }
+        res.json({
+          success: true,
+          test_report: report
+        });
+      } else {
+        const allReports = TestPlanExecutor.getAllTestReports();
+        res.json({
+          success: true,
+          test_reports: allReports,
+          total_reports: allReports.length
+        });
+      }
+    } catch (error) {
+      console.error('Error getting test reports:', error);
+      res.status(500).json({
+        error: 'Failed to retrieve test execution reports'
+      });
+    }
+  });
 }
