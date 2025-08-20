@@ -3,6 +3,7 @@ import { PropertySwitcher } from "./PropertySwitcher";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 import { CommandPaletteButton } from "./CommandPaletteButton";
+import { SupportChatWidget } from "./SupportChat";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 import { useProperty } from "@/contexts/PropertyContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -222,6 +223,9 @@ function LayoutContent({ children }: LayoutProps) {
           {children}
         </motion.div>
       </main>
+
+      {/* Support Chat Widget */}
+      <SupportChatWidget />
     </div>
   );
 }

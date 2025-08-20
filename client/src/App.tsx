@@ -341,6 +341,7 @@ function Router() {
         <Route path="/embedded-payroll" component={EmbeddedPayroll} />
         <Route path="/embed" component={EmbedPage} />
         <Route path="/ai-copilot" component={AICopilot} />
+        <Route path="/help-center" component={lazy(() => import("@/pages/HelpCenter"))} />
         <Route path="/partner-console" component={PartnerConsole} />
         <Route path="/partner" nest>
           <Partner />
