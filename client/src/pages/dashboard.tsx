@@ -91,24 +91,24 @@ export default function Dashboard() {
   // Mock data with realistic values
   const actionInboxData = {
     approvals: [
-      { type: "overtime", count: 7, urgency: "high", impact: "medium" },
-      { type: "schedule_changes", count: 3, urgency: "medium", impact: "low" },
-      { type: "corrections", count: 2, urgency: "low", impact: "high" }
+      { type: "overtime_requests", displayName: locale === 'el' ? 'Αιτήματα Υπερωριών' : 'Overtime Requests', count: 7, urgency: "high", impact: "medium" },
+      { type: "schedule_changes", displayName: locale === 'el' ? 'Αλλαγές Προγράμματος' : 'Schedule Changes', count: 3, urgency: "medium", impact: "low" },
+      { type: "pay_corrections", displayName: locale === 'el' ? 'Διορθώσεις Μισθοδοσίας' : 'Pay Corrections', count: 2, urgency: "low", impact: "high" }
     ],
     exceptions: [
-      { type: "missed_punches", count: 5, urgency: "high" },
-      { type: "duplicate_punches", count: 2, urgency: "medium" },
-      { type: "wrong_site", count: 1, urgency: "low" },
-      { type: "break_issues", count: 3, urgency: "medium" }
+      { type: "missing_clockins", displayName: locale === 'el' ? 'Λείπουν Αφίξεις/Αναχωρήσεις' : 'Missing Clock-ins', count: 5, urgency: "high" },
+      { type: "duplicate_clockins", displayName: locale === 'el' ? 'Διπλές Καταχωρήσεις' : 'Duplicate Clock-ins', count: 2, urgency: "medium" },
+      { type: "wrong_location", displayName: locale === 'el' ? 'Λάθος Τοποθεσία' : 'Wrong Location', count: 1, urgency: "low" },
+      { type: "break_violations", displayName: locale === 'el' ? 'Παραβάσεις Διαλειμμάτων' : 'Break Violations', count: 3, urgency: "medium" }
     ],
     filings: [
-      { type: "ERGANI", ddays: 1, status: "pending", urgency: "critical" },
-      { type: "APD", ddays: 3, status: "ready", urgency: "high" },
-      { type: "ΦΜΥ", ddays: 7, status: "draft", urgency: "medium" }
+      { type: "ERGANI", displayName: "ΕΡΓΑΝΗ ΙΙ", ddays: 1, status: locale === 'el' ? 'εκκρεμεί' : 'pending', urgency: "critical" },
+      { type: "APD", displayName: "ΑΠΔ", ddays: 3, status: locale === 'el' ? 'έτοιμο' : 'ready', urgency: "high" },
+      { type: "ΦΜΥ", displayName: "ΦΜΥ", ddays: 7, status: locale === 'el' ? 'προσχέδιο' : 'draft', urgency: "medium" }
     ],
     banking: [
-      { type: "SEPA_upload", count: 1, urgency: "high" },
-      { type: "pain002_rejects", count: 0, urgency: "none" }
+      { type: "sepa_upload", displayName: locale === 'el' ? 'Αποστολή SEPA' : 'SEPA Upload', count: 1, urgency: "high" },
+      { type: "payment_rejects", displayName: locale === 'el' ? 'Απορρίψεις Πληρωμών' : 'Payment Rejects', count: 0, urgency: "none" }
     ]
   };
 
@@ -518,7 +518,9 @@ export default function Dashboard() {
                   <div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">{t('dashboard.to_approve')}</div>
                     <div className="font-semibold text-sm">{actionInboxData.approvals.reduce((sum, a) => sum + a.count, 0)} {t('dashboard.items')}</div>
-                    <div className="text-xs text-orange-600">{t('dashboard.needs_attention')}</div>
+                    <div className="text-xs text-orange-600">
+                      {locale === 'el' ? 'Χρειάζεται Προσοχή' : 'Needs Attention'}
+                    </div>
                   </div>
                 </div>
 
@@ -631,10 +633,10 @@ export default function Dashboard() {
                     <div>
                       <CardTitle className="flex items-center gap-2 text-base font-medium">
                         <Bell className="h-5 w-5 text-blue-600" />
-                        Action Inbox
+                        {locale === 'el' ? 'Κιβώτιο Ενεργειών' : 'Action Inbox'}
                       </CardTitle>
                       <CardDescription className="text-neutral-200 dark:text-neutral-300 text-sm mt-1">
-                        1-click to clear blockers • Sorted by urgency & impact
+                        {locale === 'el' ? '1-κλικ για εκκαθάριση εμποδίων • Ταξινομημένα κατά επείγον & επίδραση' : '1-click to clear blockers • Sorted by urgency & impact'}
                       </CardDescription>
                     </div>
                     <div className="text-xs text-neutral-200 dark:text-neutral-300">
@@ -666,7 +668,7 @@ export default function Dashboard() {
                     <div className="p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
                       <h4 className="font-medium text-sm mb-2 flex items-center gap-2 text-orange-800 dark:text-orange-200">
                         <Clock className="h-4 w-4" />
-                        Approvals Pending
+                        {locale === 'el' ? 'Εγκρίσεις σε Αναμονή' : 'Approvals Pending'}
                       </h4>
                       <div className="grid grid-cols-3 gap-3">
                         {actionInboxData.approvals.map((item, idx) => (
@@ -677,11 +679,11 @@ export default function Dashboard() {
                             className="justify-between h-auto p-2"
                             onClick={() => handleActionClick('approval', item.type)}
                           >
-                            <div className="text-left">
-                              <div className="font-medium text-xs">
-                                {item.type.replace('_', ' ')}
+                            <div className="text-left min-w-0 flex-1">
+                              <div className="font-medium text-xs truncate">
+                                {item.displayName}
                               </div>
-                              <div className="text-xs text-gray-500">{item.count} items</div>
+                              <div className="text-xs text-gray-500">{item.count} {locale === 'el' ? 'στοιχεία' : 'items'}</div>
                             </div>
                             <Badge 
                               variant={item.urgency === 'high' ? 'destructive' : 'secondary'}
@@ -698,7 +700,7 @@ export default function Dashboard() {
                     <div className="p-3 border rounded-lg bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
                       <h4 className="font-medium text-sm mb-2 flex items-center gap-2 text-red-800 dark:text-red-200">
                         <AlertTriangle className="h-4 w-4" />
-                        Exceptions to Resolve
+                        {locale === 'el' ? 'Εξαιρέσεις προς Επίλυση' : 'Exceptions to Resolve'}
                       </h4>
                       <div className="grid grid-cols-2 gap-3">
                         {actionInboxData.exceptions.map((item, idx) => (
@@ -709,11 +711,11 @@ export default function Dashboard() {
                             className="justify-between h-auto p-2"
                             onClick={() => handleActionClick('exception', item.type)}
                           >
-                            <div className="text-left">
-                              <div className="font-medium text-xs">
-                                {item.type.replace('_', ' ')}
+                            <div className="text-left min-w-0 flex-1">
+                              <div className="font-medium text-xs truncate">
+                                {item.displayName}
                               </div>
-                              <div className="text-xs text-gray-500">{item.count} items</div>
+                              <div className="text-xs text-gray-500">{item.count} {locale === 'el' ? 'στοιχεία' : 'items'}</div>
                             </div>
                           </Button>
                         ))}
@@ -724,7 +726,7 @@ export default function Dashboard() {
                     <div className="p-3 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
                       <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
                         <FileText className="h-4 w-4" />
-                        Filings Due
+                        {locale === 'el' ? 'Δηλώσεις σε Εκκρεμότητα' : 'Filings Due'}
                       </h4>
                       <div className="grid grid-cols-3 gap-3">
                         {actionInboxData.filings.map((item, idx) => (
@@ -735,8 +737,8 @@ export default function Dashboard() {
                             className="justify-between h-auto p-2"
                             onClick={() => handleActionClick('filing', item.type)}
                           >
-                            <div className="text-left">
-                              <div className="font-medium text-xs">{item.type}</div>
+                            <div className="text-left min-w-0 flex-1">
+                              <div className="font-medium text-xs truncate">{item.displayName}</div>
                               <div className="text-xs text-gray-500">
                                 {item.ddays}D • {item.status}
                               </div>
@@ -756,7 +758,7 @@ export default function Dashboard() {
                     <div className="p-3 border rounded-lg bg-green-50 dark:bg-green-950/20">
                       <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
                         <BanknoteIcon className="h-4 w-4" />
-                        Bank Tasks
+                        {locale === 'el' ? 'Τραπεζικές Εργασίες' : 'Bank Tasks'}
                       </h4>
                       <div className="grid grid-cols-2 gap-3">
                         {actionInboxData.banking.map((item, idx) => (
@@ -768,12 +770,12 @@ export default function Dashboard() {
                             onClick={() => handleActionClick('banking', item.type)}
                             disabled={item.count === 0}
                           >
-                            <div className="text-left">
-                              <div className="font-medium text-xs">
-                                {item.type.replace('_', ' ')}
+                            <div className="text-left min-w-0 flex-1">
+                              <div className="font-medium text-xs truncate">
+                                {item.displayName}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {item.count || 'none'} {item.count === 1 ? 'item' : 'items'}
+                                {item.count || (locale === 'el' ? 'κανένα' : 'none')} {item.count === 1 ? (locale === 'el' ? 'στοιχείο' : 'item') : (locale === 'el' ? 'στοιχεία' : 'items')}
                               </div>
                             </div>
                           </Button>
