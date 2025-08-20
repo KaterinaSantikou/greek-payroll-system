@@ -2928,6 +2928,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.error('Failed to register RCA routes:', error);
   }
+
+  // Register incident ownership routes
+  try {
+    const incidentOwnershipRoutes = (await import('./api/incidentOwnership')).default;
+    app.use('/api/incident-ownership', incidentOwnershipRoutes);
+  } catch (error) {
+    console.error('Failed to register incident ownership routes:', error);
+  }
   
   // Register forecasting API routes
   registerForecastingRoutes(app);

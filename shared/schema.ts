@@ -6416,6 +6416,77 @@ export type InsertRCAActionItem = typeof rcaActionItems.$inferInsert;
 export type RCATimeline = typeof rcaTimelines.$inferSelect;
 export type InsertRCATimeline = typeof rcaTimelines.$inferInsert;
 
+// Incident Ownership and Assignment Tables
+
+// Available Responders - Pool of people who can handle incidents
+export const availableResponders = pgTable("available_responders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  email: varchar("email").notNull(),
+  responderType: varchar("responder_type", { length: 50 }).notNull(), // engineer, manager, on_call, specialist
+  isAvailable: boolean("is_available").default(true),
+  statusReason: text("status_reason"), // Why unavailable
+  capabilities: jsonb("capabilities"), // Skills, escalation level, availability hours
+  lastActiveAt: timestamp("last_active_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Incident Assignments - Track who is assigned to what incident
+export const incidentAssignments = pgTable("incident_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentId: varchar("incident_id").notNull(), // References incidents table
+  assigneeId: varchar("assignee_id").notNull(),
+  assigneeName: varchar("assignee_name").notNull(),
+  assigneeType: varchar("assignee_type", { length: 50 }), // person, team, fallback_pool
+  assignmentType: varchar("assignment_type", { length: 50 }).notNull(), // manual, auto_assigned, escalated, fallback_assigned
+  assignedAt: timestamp("assigned_at").notNull().defaultNow(),
+  assignedBy: varchar("assigned_by"), // Who/what made the assignment
+  unassignedAt: timestamp("unassigned_at"),
+  unassignmentReason: varchar("unassignment_reason"), // resolved, escalated, reassigned
+  previousAssignmentId: varchar("previous_assignment_id"), // For escalation chain
+  expectedResponseTime: integer("expected_response_time"), // in minutes
+  actualResponseTime: integer("actual_response_time"), // in minutes
+  escalationLevel: integer("escalation_level").default(1), // 1-5 escalation level
+  notes: text("notes"),
+});
+
+// Escalation Fallbacks - What to do when no escalation path exists
+export const escalationFallbacks = pgTable("escalation_fallbacks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentId: varchar("incident_id").notNull(),
+  assignmentId: varchar("assignment_id").references(() => incidentAssignments.id),
+  fallbackReason: varchar("fallback_reason", { length: 100 }).notNull(), // no_escalation_targets, no_available_responders
+  fallbackActions: jsonb("fallback_actions").$type<string[]>().default([]), // Actions to take
+  fallbackContacts: jsonb("fallback_contacts").$type<string[]>().default([]), // Emergency contacts
+  isActive: boolean("is_active").default(true),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Incident Workload - Track current incident load per responder
+export const incidentWorkload = pgTable("incident_workload", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  responderId: varchar("responder_id").notNull().references(() => availableResponders.id),
+  currentIncidents: integer("current_incidents").default(0),
+  maxCapacity: integer("max_capacity").default(5),
+  workloadScore: decimal("workload_score").default("0"), // Weighted score based on incident severity
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type AvailableResponder = typeof availableResponders.$inferSelect;
+export type InsertAvailableResponder = typeof availableResponders.$inferInsert;
+
+export type IncidentAssignment = typeof incidentAssignments.$inferSelect;
+export type InsertIncidentAssignment = typeof incidentAssignments.$inferInsert;
+
+export type EscalationFallback = typeof escalationFallbacks.$inferSelect;
+export type InsertEscalationFallback = typeof escalationFallbacks.$inferInsert;
+
+export type IncidentWorkload = typeof incidentWorkload.$inferSelect;
+export type InsertIncidentWorkload = typeof incidentWorkload.$inferInsert;
+
 // Automated Runbooks System Schema
 
 // Runbook definitions and templates

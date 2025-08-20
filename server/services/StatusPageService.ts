@@ -70,6 +70,7 @@ export class StatusPageService extends EventEmitter {
   private monitoringInterval?: NodeJS.Timeout;
   private communicationTemplates: IncidentCommunicationTemplates;
   private rcaService: any; // Will be imported dynamically
+  private ownershipService: any; // Will be imported dynamically
 
   constructor() {
     super();
@@ -89,6 +90,10 @@ export class StatusPageService extends EventEmitter {
       // Import RCA service dynamically to avoid circular dependency
       const { RootCauseAnalysisService } = await import('./RootCauseAnalysisService');
       this.rcaService = RootCauseAnalysisService.getInstance();
+      
+      // Import ownership service dynamically to avoid circular dependency
+      const { IncidentOwnershipService } = await import('./IncidentOwnershipService');
+      this.ownershipService = IncidentOwnershipService.getInstance();
       
       await this.createDefaultComponents();
       await this.startStatusMonitoring();
@@ -589,6 +594,27 @@ export class StatusPageService extends EventEmitter {
 
       // Emit event for real-time updates
       this.emit('incident_created', { incident, communication });
+
+      // Auto-assign incident when no named owner exists
+      if (this.ownershipService) {
+        try {
+          const incidentContext = {
+            id: incident.id,
+            severity: severity as 'minor' | 'major' | 'critical',
+            type: 'system_incident',
+            requiredSkills: ['incident_response', 'system_administration'],
+            createdAt: new Date(),
+            componentId: componentId
+          };
+
+          const assignment = await this.ownershipService.autoAssignIncident(incidentContext);
+          if (assignment) {
+            console.log(`🎯 Auto-assigned incident ${incident.id} to ${assignment.assigneeName}`);
+          }
+        } catch (error) {
+          console.error('Failed to auto-assign incident:', error);
+        }
+      }
 
       // Auto-initiate RCA for major/critical incidents
       if ((severity === 'major' || severity === 'critical') && this.rcaService) {
