@@ -6487,6 +6487,85 @@ export type InsertEscalationFallback = typeof escalationFallbacks.$inferInsert;
 export type IncidentWorkload = typeof incidentWorkload.$inferSelect;
 export type InsertIncidentWorkload = typeof incidentWorkload.$inferInsert;
 
+// Incident Response Ownership with Named Roles and Responsibilities
+
+// Incident Response Roles - Defined roles with clear responsibilities
+export const incidentResponseRoles = pgTable("incident_response_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  roleName: varchar("role_name").notNull(),
+  description: text("description"),
+  responsibilities: jsonb("responsibilities").$type<string[]>().default([]),
+  requiredSkills: jsonb("required_skills").$type<string[]>().default([]),
+  requiredCertifications: jsonb("required_certifications").$type<string[]>().default([]),
+  escalationLevel: integer("escalation_level").default(1), // 1-5 escalation level
+  maxConcurrentIncidents: integer("max_concurrent_incidents").default(3),
+  responseTimeMinutes: integer("response_time_minutes").default(15),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Incident Response Teams - Organized teams with specific purposes
+export const incidentResponseTeams = pgTable("incident_response_teams", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  teamName: varchar("team_name").notNull(),
+  description: text("description"),
+  teamType: varchar("team_type", { length: 50 }).notNull(), // primary, escalation, specialist, executive
+  teamLead: varchar("team_lead"), // Person ID of team lead
+  escalationTargets: jsonb("escalation_targets").$type<string[]>().default([]), // Team IDs to escalate to
+  oncallSettings: jsonb("oncall_settings"), // On-call rotation settings
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Role Assignments - Who is assigned to which roles in which teams
+export const incidentRoleAssignments = pgTable("incident_role_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  teamId: varchar("team_id").notNull().references(() => incidentResponseTeams.id),
+  roleId: varchar("role_id").notNull().references(() => incidentResponseRoles.id),
+  personId: varchar("person_id").notNull(),
+  personName: varchar("person_name").notNull(),
+  personEmail: varchar("person_email").notNull(),
+  personPhone: varchar("person_phone"),
+  isPrimary: boolean("is_primary").default(false), // Primary person for this role
+  isOncall: boolean("is_oncall").default(false), // Currently on-call
+  isActive: boolean("is_active").default(true),
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Escalation Matrix - Formal escalation paths for different incident types
+export const escalationMatrix = pgTable("escalation_matrix", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  incidentType: varchar("incident_type", { length: 100 }).notNull(), // system_outage, security_incident, etc.
+  severity: varchar("severity", { length: 50 }).notNull(), // minor, major, critical
+  initialResponseTeam: varchar("initial_response_team").notNull().references(() => incidentResponseTeams.id),
+  initialResponseTime: integer("initial_response_time").notNull(), // in minutes
+  escalationLevels: jsonb("escalation_levels").$type<{
+    level: number;
+    targetTeamId: string;
+    triggerConditions: string[];
+    timeoutMinutes: number;
+    requiredApprovals?: string[];
+  }[]>().default([]),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type IncidentResponseRole = typeof incidentResponseRoles.$inferSelect;
+export type InsertIncidentResponseRole = typeof incidentResponseRoles.$inferInsert;
+
+export type IncidentResponseTeam = typeof incidentResponseTeams.$inferSelect;
+export type InsertIncidentResponseTeam = typeof incidentResponseTeams.$inferInsert;
+
+export type IncidentRoleAssignment = typeof incidentRoleAssignments.$inferSelect;
+export type InsertIncidentRoleAssignment = typeof incidentRoleAssignments.$inferInsert;
+
+export type EscalationMatrix = typeof escalationMatrix.$inferSelect;
+export type InsertEscalationMatrix = typeof escalationMatrix.$inferInsert;
+
 // Automated Runbooks System Schema
 
 // Runbook definitions and templates

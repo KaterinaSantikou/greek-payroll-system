@@ -2936,6 +2936,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.error('Failed to register incident ownership routes:', error);
   }
+
+  // Register incident response ownership routes
+  try {
+    const incidentResponseOwnershipRoutes = (await import('./api/incidentResponseOwnership')).default;
+    app.use('/api/incident-response-ownership', incidentResponseOwnershipRoutes);
+  } catch (error) {
+    console.error('Failed to register incident response ownership routes:', error);
+  }
   
   // Register forecasting API routes
   registerForecastingRoutes(app);
