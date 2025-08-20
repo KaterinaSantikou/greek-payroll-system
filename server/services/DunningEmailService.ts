@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { addHours, format, isWithinInterval, setHours, setMinutes } from 'date-fns';
-import { zonedTimeToUtc, toZonedTime } from 'date-fns-tz';
+import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
 
 export interface DunningEmailConfig {
   globalSettings: {
@@ -192,7 +192,7 @@ export class DunningEmailService extends EventEmitter {
     targetDate: Date,
     windowType: 'D3_D7' | 'D14'
   ): Date {
-    const athensTime = toZonedTime(targetDate, this.config.globalSettings.timezone);
+    const athensTime = utcToZonedTime(targetDate, this.config.globalSettings.timezone);
     const window = this.config.globalSettings.sendWindows[windowType];
     
     let candidateDate = new Date(athensTime);
@@ -657,145 +657,91 @@ Questions? {{support_email}} | {{support_phone}}
 {{legal_footer}}`
       },
 
-      // D7 Templates - Second reminder
+      // D7 Templates - Final notice before restriction
       'dunning_d7_en': {
-        subject: 'URGENT: Payment Required - Invoice {{invoice_number}} ({{days_past_due}} days overdue)',
+        subject: 'Final reminder: payment overdue ({{days_past_due}} days)',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: #c53030; color: white; padding: 15px; text-align: center; margin-bottom: 20px;">
-              <h2 style="margin: 0; font-size: 1.5em;">URGENT PAYMENT REQUIRED</h2>
+            <h2 style="color: #d69e2e;">Final Payment Reminder</h2>
+            
+            <p>Hi {{customer_name}},</p>
+            
+            <p>Invoice <strong>{{invoice_series}}-{{invoice_number}}</strong> for <strong>€{{amount_due}}</strong> is now <strong>{{days_past_due}} days past due</strong>.</p>
+            
+            <div style="background: #fef5e7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d69e2e;">
+              <h3 style="margin-top: 0; color: #c05621;">Service Continuation Notice</h3>
+              <p style="margin: 0; font-size: 1.1em;">To keep filings and payroll services active, please settle the balance before <strong>{{grace_suspend_date}}</strong>.</p>
             </div>
             
-            <p>Dear {{customer_name}},</p>
-            
-            <p><strong style="color: #c53030;">Your account is seriously past due.</strong> Invoice {{invoice_number}} has been outstanding for <strong>{{days_past_due}} days</strong> and requires immediate attention.</p>
-            
-            <div style="background: #c53030; color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: white;">OVERDUE INVOICE</h3>
-              <table style="width: 100%; color: white;">
-                <tr><td><strong>Invoice:</strong></td><td>{{invoice_series}}-{{invoice_number}}</td></tr>
-                <tr><td><strong>Amount Due:</strong></td><td><strong style="font-size: 1.3em;">{{formatted_amount}}</strong></td></tr>
-                <tr><td><strong>Days Overdue:</strong></td><td><strong style="font-size: 1.2em;">{{days_past_due}}</strong></td></tr>
-                <tr><td><strong>Grace Period Ends:</strong></td><td><strong>{{formatted_suspend_date}}</strong></td></tr>
-              </table>
+            <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0;"><strong>Payment Actions:</strong></p>
+              <p style="margin: 5px 0;">• Pay securely: <a href="{{pay_link}}" style="color: #d69e2e; font-weight: bold;">{{pay_link}}</a></p>
+              <p style="margin: 5px 0;">• Invoice (PDF): <a href="{{invoice_pdf_url}}" style="color: #d69e2e;">{{invoice_pdf_url}}</a></p>
             </div>
             
-            <div style="background: #fed7d7; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #c53030;">
-              <h3 style="color: #c53030; margin-top: 0;">⚠️ ACTION REQUIRED</h3>
-              <p style="margin: 0; font-size: 1.1em;"><strong>Pay by {{formatted_suspend_date}} to avoid service suspension.</strong></p>
-              <p style="margin: 10px 0 0 0;">After this date, access to your {{tenant_name}} account may be restricted until payment is received.</p>
+            <div style="background: #e6f3ff; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #3182ce;">
+              <p style="margin: 0;"><strong>Need Help?</strong></p>
+              <p style="margin: 5px 0;">If you need more time or a payment plan, reply to this email—we can help.</p>
             </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="{{pay_link}}" style="background: #c53030; color: white; padding: 16px 32px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 1.1em;">EMERGENCY PAYMENT - {{formatted_amount}}</a>
-            </div>
-            
-            <div style="background: #fffaf0; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ed8936;">
-              <h4 style="margin-top: 0; color: #c05621;">Payment Options</h4>
-              <p style="margin: 5px 0;">• <strong>Immediate:</strong> <a href="{{pay_link}}">Pay online now</a></p>
-              <p style="margin: 5px 0;">• <strong>Invoice PDF:</strong> <a href="{{invoice_pdf_url}}">Download for bank transfer</a></p>
-              <p style="margin: 5px 0;">• <strong>Support:</strong> Call {{support_phone}} for assistance</p>
-            </div>
-            
-            <p><strong>If payment has already been made, please ignore this notice or contact us immediately at <a href="mailto:{{support_email}}">{{support_email}}</a>.</strong></p>
             
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
             <small style="color: #718096;">{{legal_footer}}</small>
           </div>
         `,
-        text: `URGENT PAYMENT REQUIRED
+        text: `Hi {{customer_name}},
 
-Dear {{customer_name}},
+Invoice **{{invoice_series}}-{{invoice_number}}** for **€{{amount_due}}** is now **{{days_past_due}} days past due**.
 
-YOUR ACCOUNT IS SERIOUSLY PAST DUE. Invoice {{invoice_number}} has been outstanding for {{days_past_due}} days.
+To keep filings and payroll services active, please settle the balance before **{{grace_suspend_date}}**.
 
-OVERDUE INVOICE:
-- Invoice: {{invoice_series}}-{{invoice_number}}
-- Amount Due: {{formatted_amount}}
-- Days Overdue: {{days_past_due}}
-- Grace Period Ends: {{formatted_suspend_date}}
+• Pay securely: {{pay_link}}  
+• Invoice (PDF): {{invoice_pdf_url}}
 
-⚠️ ACTION REQUIRED: Pay by {{formatted_suspend_date}} to avoid service suspension.
-
-EMERGENCY PAYMENT: {{pay_link}}
-
-Payment Options:
-• Immediate: Pay online now
-• Invoice PDF: {{invoice_pdf_url}}
-• Support: Call {{support_phone}}
-
-If payment made, contact {{support_email}} immediately.
+If you need more time or a payment plan, reply to this email—we can help.
 
 {{legal_footer}}`
       },
 
       'dunning_d7_el': {
-        subject: 'ΕΠΕΙΓΟΝ: Απαιτείται Πληρωμή - Τιμολόγιο {{invoice_number}} ({{days_past_due}} ημέρες καθυστέρηση)',
+        subject: 'Τελευταία υπενθύμιση: καθυστέρηση πληρωμής ({{days_past_due}} ημέρες)',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <div style="background: #c53030; color: white; padding: 15px; text-align: center; margin-bottom: 20px;">
-              <h2 style="margin: 0; font-size: 1.5em;">ΕΠΕΙΓΟΝ - ΑΠΑΙΤΕΙΤΑΙ ΠΛΗΡΩΜΗ</h2>
+            <h2 style="color: #d69e2e;">Τελευταία Υπενθύμιση Πληρωμής</h2>
+            
+            <p>Γεια σας {{customer_name}},</p>
+            
+            <p>Το τιμολόγιο <strong>{{invoice_series}}-{{invoice_number}}</strong> ποσού <strong>€{{amount_due}}</strong> είναι <strong>σε καθυστέρηση {{days_past_due}} ημερών</strong>.</p>
+            
+            <div style="background: #fef5e7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d69e2e;">
+              <h3 style="margin-top: 0; color: #c05621;">Ειδοποίηση Συνέχισης Υπηρεσιών</h3>
+              <p style="margin: 0; font-size: 1.1em;">Για να παραμείνουν διαθέσιμες οι υπηρεσίες (δηλώσεις & μισθοδοσία), εξοφλήστε έως <strong>{{grace_suspend_date}}</strong>.</p>
             </div>
             
-            <p>Αγαπητέ/ή {{customer_name}},</p>
-            
-            <p><strong style="color: #c53030;">Ο λογαριασμός σας έχει σοβαρή καθυστέρηση.</strong> Το τιμολόγιο {{invoice_number}} είναι ανεξόφλητο για <strong>{{days_past_due}} ημέρες</strong> και χρειάζεται άμεση προσοχή.</p>
-            
-            <div style="background: #c53030; color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: white;">ΛΗΞΙΠΡΟΘΕΣΜΟ ΤΙΜΟΛΟΓΙΟ</h3>
-              <table style="width: 100%; color: white;">
-                <tr><td><strong>Τιμολόγιο:</strong></td><td>{{invoice_series}}-{{invoice_number}}</td></tr>
-                <tr><td><strong>Οφειλόμενο Ποσό:</strong></td><td><strong style="font-size: 1.3em;">{{formatted_amount}}</strong></td></tr>
-                <tr><td><strong>Ημέρες Καθυστέρησης:</strong></td><td><strong style="font-size: 1.2em;">{{days_past_due}}</strong></td></tr>
-                <tr><td><strong>Λήξη Περ. Χάριτος:</strong></td><td><strong>{{formatted_suspend_date}}</strong></td></tr>
-              </table>
+            <div style="background: #f7fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0 0 10px 0;"><strong>Ενέργειες Πληρωμής:</strong></p>
+              <p style="margin: 5px 0;">• Πληρωμή με ασφάλεια: <a href="{{pay_link}}" style="color: #d69e2e; font-weight: bold;">{{pay_link}}</a></p>
+              <p style="margin: 5px 0;">• Τιμολόγιο (PDF): <a href="{{invoice_pdf_url}}" style="color: #d69e2e;">{{invoice_pdf_url}}</a></p>
             </div>
             
-            <div style="background: #fed7d7; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #c53030;">
-              <h3 style="color: #c53030; margin-top: 0;">⚠️ ΑΠΑΙΤΕΙΤΑΙ ΔΡΑΣΗ</h3>
-              <p style="margin: 0; font-size: 1.1em;"><strong>Πληρώστε μέχρι {{formatted_suspend_date}} για να αποφύγετε αναστολή υπηρεσιών.</strong></p>
-              <p style="margin: 10px 0 0 0;">Μετά από αυτήν την ημερομηνία, η πρόσβαση στον λογαριασμό σας {{tenant_name}} μπορεί να περιοριστεί μέχρι την εξόφληση.</p>
+            <div style="background: #e6f3ff; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #3182ce;">
+              <p style="margin: 0;"><strong>Χρειάζεστε Βοήθεια;</strong></p>
+              <p style="margin: 5px 0;">Χρειάζεστε παράταση ή διακανονισμό; Απαντήστε σε αυτό το email—μπορούμε να βοηθήσουμε.</p>
             </div>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="{{pay_link}}" style="background: #c53030; color: white; padding: 16px 32px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 1.1em;">ΕΠΕΙΓΟΥΣΑ ΠΛΗΡΩΜΗ - {{formatted_amount}}</a>
-            </div>
-            
-            <div style="background: #fffaf0; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ed8936;">
-              <h4 style="margin-top: 0; color: #c05621;">Επιλογές Πληρωμής</h4>
-              <p style="margin: 5px 0;">• <strong>Άμεση:</strong> <a href="{{pay_link}}">Πληρώστε online τώρα</a></p>
-              <p style="margin: 5px 0;">• <strong>PDF Τιμολογίου:</strong> <a href="{{invoice_pdf_url}}">Κατεβάστε για τραπεζικό έμβασμα</a></p>
-              <p style="margin: 5px 0;">• <strong>Υποστήριξη:</strong> Καλέστε {{support_phone}} για βοήθεια</p>
-            </div>
-            
-            <p><strong>Εάν η πληρωμή έχει ήδη γίνει, παρακαλούμε αγνοήστε αυτήν την ειδοποίηση ή επικοινωνήστε μαζί μας άμεσα στο <a href="mailto:{{support_email}}">{{support_email}}</a>.</strong></p>
             
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
             <small style="color: #718096;">{{legal_footer}}</small>
           </div>
         `,
-        text: `ΕΠΕΙΓΟΝ - ΑΠΑΙΤΕΙΤΑΙ ΠΛΗΡΩΜΗ
+        text: `Γεια σας {{customer_name}},
 
-Αγαπητέ/ή {{customer_name}},
+Το τιμολόγιο **{{invoice_series}}-{{invoice_number}}** ποσού **€{{amount_due}}** είναι **σε καθυστέρηση {{days_past_due}} ημερών**.
 
-Ο ΛΟΓΑΡΙΑΣΜΟΣ ΣΑΣ ΕΧΕΙ ΣΟΒΑΡΗ ΚΑΘΥΣΤΕΡΗΣΗ. Το τιμολόγιο {{invoice_number}} είναι ανεξόφλητο για {{days_past_due}} ημέρες.
+Για να παραμείνουν διαθέσιμες οι υπηρεσίες (δηλώσεις & μισθοδοσία), εξοφλήστε έως **{{grace_suspend_date}}**.
 
-ΛΗΞΙΠΡΟΘΕΣΜΟ ΤΙΜΟΛΟΓΙΟ:
-- Τιμολόγιο: {{invoice_series}}-{{invoice_number}}
-- Οφειλόμενο Ποσό: {{formatted_amount}}
-- Ημέρες Καθυστέρησης: {{days_past_due}}
-- Λήξη Περ. Χάριτος: {{formatted_suspend_date}}
+• Πληρωμή με ασφάλεια: {{pay_link}}  
+• Τιμολόγιο (PDF): {{invoice_pdf_url}}
 
-⚠️ ΑΠΑΙΤΕΙΤΑΙ ΔΡΑΣΗ: Πληρώστε μέχρι {{formatted_suspend_date}} για να αποφύγετε αναστολή υπηρεσιών.
-
-ΕΠΕΙΓΟΥΣΑ ΠΛΗΡΩΜΗ: {{pay_link}}
-
-Επιλογές Πληρωμής:
-• Άμεση: Πληρώστε online τώρα
-• PDF Τιμολογίου: {{invoice_pdf_url}}
-• Υποστήριξη: Καλέστε {{support_phone}}
-
-Εάν έχετε πληρώσει, επικοινωνήστε {{support_email}} άμεσα.
+Χρειάζεστε παράταση ή διακανονισμό; Απαντήστε σε αυτό το email—μπορούμε να βοηθήσουμε.
 
 {{legal_footer}}`
       },
@@ -1347,6 +1293,66 @@ This is for SEPA DD - Mandate: {{sepa_mandate_ref}}
     console.log('Body Preview:', elSepaTemplate.text.substring(0, 300) + '...\n');
 
     console.log('✅ D3 template rendering test completed!');
+  }
+
+  /**
+   * Test D7 template rendering - final notice before restriction
+   */
+  public testD7TemplateRendering(): void {
+    console.log('🧪 Testing D7 template - final notice before restriction...\n');
+
+    // Test data for D7 final notice
+    const testVariables: DunningVariables = {
+      customer_name: 'Hotel Santikos',
+      tenant_name: 'santikos_corp',
+      invoice_number: '2024-001',
+      invoice_series: 'SALES-24',
+      invoice_issue_date: '2024-01-15',
+      amount_due: 1250.00,
+      currency: 'EUR',
+      due_date: '2024-01-30',
+      days_past_due: 7,
+      pay_link: 'https://pay.payrollsync.com/invoice/2024-001',
+      invoice_pdf_url: 'https://docs.payrollsync.com/invoice/2024-001.pdf',
+      payment_method: 'card',
+      last4: '4567',
+      sepa_mandate_ref: '',
+      next_retry_date: '2024-02-05',
+      grace_suspend_date: '2024-02-12',
+      support_email: 'support@payrollsync.com',
+      support_phone: '+30 210 123 4567',
+      supplier_name: 'PayrollSync',
+      supplier_vat: '123456789',
+      supplier_tax_office: 'Α\' ΑΘΗΝΩΝ',
+      supplier_address: 'Athens, Greece',
+      supplier_domain: 'payrollsync.com',
+      legal_footer: 'PayrollSync S.A. • ΑΦΜ: 123456789 • ΔΟΥ: Α\' ΑΘΗΝΩΝ',
+      is_el: false,
+      trigger_id: 'D7_FINAL_NOTICE_001'
+    };
+
+    // Test Greek version as well
+    const testVariablesEl: DunningVariables = {
+      ...testVariables,
+      is_el: true,
+      trigger_id: 'D7_FINAL_NOTICE_EL_001'
+    };
+
+    // Test English D7 template
+    console.log('📧 English D7 Final Notice Template:');
+    console.log('===================================');
+    const enTemplate = this.getDunningEmailTemplate('dunning_d7_en', testVariables);
+    console.log('Subject:', enTemplate.subject);
+    console.log('Body Preview:', enTemplate.text.substring(0, 300) + '...\n');
+
+    // Test Greek D7 template
+    console.log('📧 Greek D7 Final Notice Template:');
+    console.log('==================================');
+    const elTemplate = this.getDunningEmailTemplate('dunning_d7_el', testVariablesEl);
+    console.log('Subject:', elTemplate.subject);
+    console.log('Body Preview:', elTemplate.text.substring(0, 300) + '...\n');
+
+    console.log('✅ D7 template rendering test completed!');
   }
 
   /**
