@@ -56,6 +56,7 @@ import { AppProvider } from "@/contexts/AppContext";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 const MobilePayroll = lazy(() => import("@/pages/MobilePayroll"));
 const IndustryTemplates = lazy(() => import("@/pages/IndustryTemplates"));
+const IntegrationMarketplacePage = lazy(() => import("@/pages/IntegrationMarketplacePage"));
 import { usePWA } from "@/hooks/usePWA";
 import { PaymentsCockpitDemo } from './pages/PaymentsCockpitDemo';
 import SmartNotifications from "@/pages/smartNotifications";
@@ -131,6 +132,7 @@ function Router() {
         <Route path="/property-dashboard" component={PropertyDashboard} />
         <Route path="/mobile-payroll" component={MobilePayroll} />
         <Route path="/industry-templates" component={IndustryTemplates} />
+        <Route path="/integration-marketplace" component={IntegrationMarketplacePage} />
         
         {/* People Section */}
         <Route path="/employees" component={Employees} />
