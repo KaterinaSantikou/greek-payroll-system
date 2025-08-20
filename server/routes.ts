@@ -69,6 +69,7 @@ import { paymentStateMachineRoutes } from "./api/paymentStateMachine";
 import { reconciliationEngineRoutes } from "./api/reconciliationEngine";
 import { cutOffLogicRoutes } from "./api/cutOffLogic";
 import { reissueAlgorithmRoutes } from "./api/reissueAlgorithm";
+import eventQueueAPI from "./api/eventQueue";
 // ibanValidationRoutes already imported on line 5
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
@@ -127,6 +128,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Enhanced IBAN Validation API
   registerIbanValidationRoutes(app);
+
+  // Event Queue API - Evented Platform
+  app.use('/', eventQueueAPI);
 
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();

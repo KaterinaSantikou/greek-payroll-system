@@ -3760,6 +3760,201 @@ export const glMappingRulesRelations = relations(glMappingRules, ({ one }) => ({
 }));
 
 // =============================================================================
+// EVENT QUEUE SYSTEM - EVENTED PLATFORM
+// =============================================================================
+
+// Event Queue - Persistent event queue with retry logic
+export const eventQueue = pgTable("event_queue", {
+  eventId: varchar("event_id").primaryKey().default(sql`gen_random_uuid()`),
+  eventType: varchar("event_type", { length: 100 }).notNull(), // payroll.run.finalized, payment.completed
+  idempotencyKey: varchar("idempotency_key", { length: 255 }).unique().notNull(), // For replay safety
+  
+  // Event Payload and Context
+  payload: jsonb("payload").notNull(), // Event data
+  metadata: jsonb("metadata").default('{}'), // Additional context
+  sourceSystem: varchar("source_system", { length: 50 }).default("payroll"),
+  correlationId: varchar("correlation_id", { length: 255 }), // For event correlation
+  
+  // Processing Status
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending|processing|completed|failed|dead_letter
+  priority: integer("priority").default(0), // Higher = more urgent
+  
+  // Retry Logic
+  attemptCount: integer("attempt_count").default(0),
+  maxAttempts: integer("max_attempts").default(5),
+  nextAttemptAt: timestamp("next_attempt_at"),
+  lastAttemptAt: timestamp("last_attempt_at"),
+  
+  // Processing Results
+  processingResult: jsonb("processing_result"), // Success/failure details
+  errorMessage: text("error_message"),
+  
+  // Performance Tracking
+  processingStartedAt: timestamp("processing_started_at"),
+  processingCompletedAt: timestamp("processing_completed_at"),
+  processingDurationMs: integer("processing_duration_ms"),
+  
+  // Timestamps
+  scheduledFor: timestamp("scheduled_for").defaultNow(), // When to process
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_event_queue_status_scheduled").on(table.status, table.scheduledFor),
+  index("idx_event_queue_type_status").on(table.eventType, table.status),
+  index("idx_event_queue_priority").on(table.priority),
+  index("idx_event_queue_correlation_id").on(table.correlationId),
+]);
+
+// Event Handlers - Configuration for event processing
+export const eventHandlers = pgTable("event_handlers", {
+  handlerId: varchar("handler_id").primaryKey().default(sql`gen_random_uuid()`),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  handlerName: varchar("handler_name", { length: 100 }).notNull(), // GLAutoPostHandler, WebhookDeliveryHandler
+  
+  // Handler Configuration
+  isActive: boolean("is_active").default(true),
+  config: jsonb("config").default('{}'), // Handler-specific configuration
+  
+  // Performance Requirements
+  targetProcessingTimeMs: integer("target_processing_time_ms").default(30000), // 30 seconds
+  timeoutMs: integer("timeout_ms").default(120000), // 2 minutes
+  
+  // Retry Configuration
+  retryPolicy: jsonb("retry_policy").default('{"initialDelayMs": 1000, "maxDelayMs": 300000, "backoffMultiplier": 2.0, "maxAttempts": 5}'),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_event_handlers_type_active").on(table.eventType, table.isActive),
+]);
+
+// Event Processing Log - Detailed processing history
+export const eventProcessingLog = pgTable("event_processing_log", {
+  logId: varchar("log_id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").notNull(),
+  handlerId: varchar("handler_id"),
+  
+  // Processing Attempt
+  attemptNumber: integer("attempt_number").notNull(),
+  status: varchar("status", { length: 20 }).notNull(), // started|completed|failed|timeout
+  
+  // Processing Details
+  startedAt: timestamp("started_at").notNull(),
+  completedAt: timestamp("completed_at"),
+  durationMs: integer("duration_ms"),
+  
+  // Results
+  result: jsonb("result"), // Processing result data
+  errorDetails: jsonb("error_details"), // Structured error information
+  stackTrace: text("stack_trace"),
+  
+  // Performance Metrics
+  memoryUsageMb: integer("memory_usage_mb"),
+  cpuTimeMs: integer("cpu_time_ms"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_event_processing_log_event_id").on(table.eventId),
+  index("idx_event_processing_log_status").on(table.status),
+]);
+
+// Dead Letter Queue - Failed events for manual review
+export const deadLetterQueue = pgTable("dead_letter_queue", {
+  deadLetterId: varchar("dead_letter_id").primaryKey().default(sql`gen_random_uuid()`),
+  originalEventId: varchar("original_event_id").notNull(),
+  eventType: varchar("event_type", { length: 100 }).notNull(),
+  
+  // Original Event Data
+  originalPayload: jsonb("original_payload").notNull(),
+  originalMetadata: jsonb("original_metadata"),
+  idempotencyKey: varchar("idempotency_key", { length: 255 }).notNull(),
+  
+  // Failure Information
+  failureReason: text("failure_reason").notNull(),
+  lastError: text("last_error"),
+  totalAttempts: integer("total_attempts").notNull(),
+  firstFailedAt: timestamp("first_failed_at").notNull(),
+  lastFailedAt: timestamp("last_failed_at").notNull(),
+  
+  // Resolution
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending|investigating|resolved|discarded
+  resolution: text("resolution"), // What was done to resolve
+  resolvedBy: varchar("resolved_by"),
+  resolvedAt: timestamp("resolved_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_dead_letter_queue_status").on(table.status),
+  index("idx_dead_letter_queue_event_type").on(table.eventType),
+]);
+
+// =============================================================================
+// EVENT QUEUE RELATIONS
+// =============================================================================
+
+export const eventQueueRelations = relations(eventQueue, ({ many }) => ({
+  processingLogs: many(eventProcessingLog),
+}));
+
+export const eventHandlersRelations = relations(eventHandlers, ({ many }) => ({
+  processingLogs: many(eventProcessingLog),
+}));
+
+export const eventProcessingLogRelations = relations(eventProcessingLog, ({ one }) => ({
+  event: one(eventQueue, {
+    fields: [eventProcessingLog.eventId],
+    references: [eventQueue.eventId],
+  }),
+  handler: one(eventHandlers, {
+    fields: [eventProcessingLog.handlerId],
+    references: [eventHandlers.handlerId],
+  }),
+}));
+
+// =============================================================================
+// EVENT QUEUE SCHEMA EXPORTS
+// =============================================================================
+
+// Event Queue schemas
+export const insertEventQueueSchema = createInsertSchema(eventQueue).omit({
+  eventId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertEventQueue = z.infer<typeof insertEventQueueSchema>;
+export type EventQueue = typeof eventQueue.$inferSelect;
+
+// Event Handler schemas
+export const insertEventHandlerSchema = createInsertSchema(eventHandlers).omit({
+  handlerId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertEventHandler = z.infer<typeof insertEventHandlerSchema>;
+export type EventHandler = typeof eventHandlers.$inferSelect;
+
+// Event Processing Log schemas
+export const insertEventProcessingLogSchema = createInsertSchema(eventProcessingLog).omit({
+  logId: true,
+  createdAt: true,
+});
+export type InsertEventProcessingLog = z.infer<typeof insertEventProcessingLogSchema>;
+export type EventProcessingLog = typeof eventProcessingLog.$inferSelect;
+
+// Dead Letter Queue schemas
+export const insertDeadLetterQueueSchema = createInsertSchema(deadLetterQueue).omit({
+  deadLetterId: true,
+  createdAt: true,
+});
+export type InsertDeadLetterQueue = z.infer<typeof insertDeadLetterQueueSchema>;
+export type DeadLetterQueue = typeof deadLetterQueue.$inferSelect;
+
+// Event processing validation schemas
+export const eventQueueStatusSchema = z.enum(["pending", "processing", "completed", "failed", "dead_letter"]);
+export const eventProcessingStatusSchema = z.enum(["started", "completed", "failed", "timeout"]);
+export const deadLetterStatusSchema = z.enum(["pending", "investigating", "resolved", "discarded"]);
+
+// =============================================================================
 // GENERIC GL SCHEMA EXPORTS
 // =============================================================================
 

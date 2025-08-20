@@ -1,0 +1,265 @@
+Here’s a ready-to-drop el.json (Greek locale) covering every UI term we’ve used so far across the app (sidebar, dashboard, time/compliance, payments cockpit, IBAN checks, disaster mode, auth, explainslip, partner console, and marketing CTAs). It uses ICU plurals and placeholders you can pass as variables.
+
+{
+  "common": {
+    "ok": "ΟΚ",
+    "cancel": "Ακύρωση",
+    "save": "Αποθήκευση",
+    "edit": "Επεξεργασία",
+    "delete": "Διαγραφή",
+    "close": "Κλείσιμο",
+    "back": "Πίσω",
+    "next": "Επόμενο",
+    "previous": "Προηγούμενο",
+    "apply": "Εφαρμογή",
+    "clear": "Καθαρισμός",
+    "search": "Αναζήτηση",
+    "search_placeholder": "Αναζήτηση ατόμων, κύκλων, δηλώσεων…",
+    "filter": "Φίλτρο",
+    "reset": "Επαναφορά",
+    "download": "Λήψη",
+    "upload": "Μεταφόρτωση",
+    "export": "Εξαγωγή",
+    "import": "Εισαγωγή",
+    "view": "Προβολή",
+    "show_more": "Περισσότερα",
+    "show_less": "Λιγότερα",
+    "enabled": "Ενεργό",
+    "disabled": "Ανενεργό",
+    "active": "Ενεργό",
+    "inactive": "Ανενεργό",
+    "yes": "Ναι",
+    "no": "Όχι",
+    "copy": "Αντιγραφή",
+    "copied": "Αντιγράφηκε",
+    "minutes_ago": "πριν από {{count}} λεπτά",
+    "updated_just_now": "Μόλις ενημερώθηκε",
+    "hours": "ώρες",
+    "days": "ημέρες",
+    "items": "{count, plural, one {στοιχείο} other {στοιχεία}}"
+  },
+
+  "nav": {
+    "dashboard": "Πίνακας",
+    "overview": "Επισκόπηση",
+    "people": "Προσωπικό",
+    "employees": "Εργαζόμενοι",
+    "onboarding": "Ένταξη",
+    "exits": "Αποχωρήσεις",
+    "teams_roles": "Ομάδες & Ρόλοι",
+    "time": "Χρόνος & Παρουσία",
+    "exceptions": "Εξαιρέσεις",
+    "timesheets": "Κάρτες εργασίας",
+    "scheduling": "Προγράμματα",
+    "compliance": "Συμμόρφωση & Δηλώσεις",
+    "ergani": "ΕΡΓΑΝΗ",
+    "apd": "ΑΠΔ",
+    "fmy": "ΦΜΥ",
+    "payments": "Πληρωμές",
+    "banking": "Τραπεζικά",
+    "instant": "Άμεσες πληρωμές",
+    "analytics": "Αναλύσεις",
+    "cost_insights": "Κόστος",
+    "settings": "Ρυθμίσεις",
+    "employee_portal": "Πύλη Εργαζομένου",
+    "manager_dashboard": "Πίνακας Διευθυντή"
+  },
+
+  "topbar": {
+    "property": "Μονάδα",
+    "this_month": "Τρέχων μήνας",
+    "language": "Γλώσσα",
+    "english": "Αγγλικά",
+    "greek": "Ελληνικά",
+    "search_placeholder": "⌘K Αναζήτηση…"
+  },
+
+  "dashboard": {
+    "hours_this_week": "Ώρες αυτής της εβδομάδας",
+    "leave_balance": "Υπόλοιπο άδειας",
+    "next_payday": "Επόμενη μισθοδοσία",
+    "days_away": "{{count}} {count, plural, one {ημέρα} other {ημέρες}} από τώρα",
+    "digital_card_sync": "Ψηφιακή Κάρτα",
+    "ergani_sync": "ΕΡΓΑΝΗ σε συγχρονισμό",
+    "filings_due": "{count, plural, one {1 δήλωση σε εκκρεμότητα} other {# δηλώσεις σε εκκρεμότητα}}",
+    "exceptions_summary": "Εξαιρέσεις",
+    "missed_punches": "παραλείψεις χτυπημάτων",
+    "duplicates": "διπλότυπα",
+    "wrong_site": "λάθος τοποθεσία",
+    "approvals_pending": "Εγκρίσεις σε εκκρεμότητα",
+    "priority_high": "υψηλή",
+    "priority_medium": "μεσαία",
+    "priority_low": "χαμηλή",
+    "view_timesheet": "Προβολή κάρτας",
+    "request_leave": "Αίτημα άδειας",
+    "preview_payslip": "Προεπισκόπηση εκκαθαριστικού"
+  },
+
+  "people": {
+    "add_employee": "Προσθήκη εργαζομένου",
+    "total_employees": "{count, plural, one {# εργαζόμενος} other {# εργαζόμενοι}}",
+    "onboarding_count": "{count, plural, one {# ένταξη} other {# εντάξεις}}",
+    "exits_count": "{count, plural, one {# αποχώρηση} other {# αποχωρήσεις}}"
+  },
+
+  "time": {
+    "exceptions": "Εξαιρέσεις",
+    "timesheets": "Κάρτες εργασίας",
+    "schedule_changes": "Αλλαγές προγράμματος",
+    "corrections": "Διορθώσεις",
+    "break_issues": "Ζητήματα διαλείμματος",
+    "missed_punch": "Παράλειψη χτυπήματος",
+    "duplicate_punch": "Διπλότυπο χτύπημα"
+  },
+
+  "compliance": {
+    "live_compliance": "Ζωντανή συμμόρφωση",
+    "coverage": "Κάλυψη",
+    "due_by": "Προθεσμία: {{date}}",
+    "submit_now": "Υποβολή τώρα",
+    "apd_submit": "Υποβολή ΑΠΔ",
+    "fmy_submit": "Υποβολή ΦΜΥ",
+    "ergani_in_sync": "ΕΡΓΑΝΗ σε συγχρονισμό",
+    "ergani_events": "Συμβάντα ΕΡΓΑΝΗ",
+    "filing_success_rate": "Ποσοστό επιτυχίας δηλώσεων"
+  },
+
+  "payments": {
+    "cockpit": "Cockpit πληρωμών",
+    "batch": "Πακέτο πληρωμών",
+    "lines": "Γραμμές",
+    "method": "Μέθοδος",
+    "sct": "SCT",
+    "sct_inst": "SCT Inst",
+    "iris": "IRIS",
+    "cutoff": "Cut-off",
+    "time_to_cutoff": "Χρόνος έως cut-off",
+    "eligible": "Επιλέξιμο",
+    "limit_exceeded": "Υπέρβαση ορίου",
+    "reachable": "Προσβάσιμο",
+    "unreachable": "Μη προσβάσιμο",
+    "reissue_instant": "Επανέκδοση ως Άμεση πληρωμή",
+    "cancel_pending": "Ακύρωση εκκρεμών",
+    "export_csv": "Εξαγωγή CSV",
+    "accepted": "Εγκρίθηκε",
+    "rejected": "Απορρίφθηκε",
+    "settled": "Εκκαθαρισμένο",
+    "submitted": "Υποβλήθηκε",
+    "superseded": "Αντικαταστάθηκε",
+    "reason_code": "Κωδικός αιτίας",
+    "double_pay_blocked": "Αποτροπή διπλής πληρωμής"
+  },
+
+  "banking": {
+    "iban": "IBAN",
+    "account_holder": "Δικαιούχος λογαριασμού",
+    "invalid_iban": "Μη έγκυρο IBAN.",
+    "name_mismatch_title": "Ασυμφωνία ονόματος λογαριασμού",
+    "name_mismatch_body": "Το όνομα του δικαιούχου φαίνεται να διαφέρει από το νόμιμο όνομα. Θέλετε να συνεχίσετε;",
+    "override_reason": "Αιτιολογία παράκαμψης",
+    "saved": "Οι τραπεζικές πληροφορίες αποθηκεύτηκαν",
+    "validation_passed": "Έλεγχος IBAN ολοκληρώθηκε"
+  },
+
+  "disaster_mode": {
+    "enter": "Είσοδος σε Disaster Mode",
+    "explain": "Κλείδωμα καθαρών ποσών και δημιουργία κιτ εκτός σύνδεσης",
+    "kit_ready": "Το κιτ εκτός σύνδεσης είναι έτοιμο",
+    "freeze_hash": "Hash παγώματος",
+    "record_settlements": "Καταγραφή πληρωμών χειροκίνητα",
+    "reconcile_now": "Συμφωνία τώρα",
+    "status_frozen": "Παγωμένο (εκτός σύνδεσης)",
+    "status_settled_offline": "Εξοφλήθηκε εκτός σύνδεσης",
+    "status_settled_bank": "Εξοφλήθηκε μέσω τράπεζας",
+    "status_reconciled": "Συμφωνημένο",
+    "double_pay_guard": "Φραγή διπλής πληρωμής ενεργή"
+  },
+
+  "auth": {
+    "sign_in": "Σύνδεση",
+    "sign_up": "Εγγραφή",
+    "email": "Email",
+    "password": "Κωδικός πρόσβασης",
+    "continue": "Συνέχεια",
+    "use_sso": "Σύνδεση με SSO",
+    "magic_link": "Σύνδεσμος σύνδεσης",
+    "forgot_password": "Ξεχάσατε τον κωδικό;",
+    "verify_email": "Επιβεβαίωση email",
+    "two_factor": "Έλεγχος δύο παραγόντων",
+    "invalid_credentials": "Μη έγκυρο email ή κωδικός.",
+    "too_many_attempts": "Πάρα πολλές προσπάθειες. Δοκιμάστε ξανά σε {{minutes}} λεπτά."
+  },
+
+  "explain_pay": {
+    "title": "Εξήγηση αποδοχών",
+    "why_this_month": "Γιατί είναι ο μισθός μου {{amount}} αυτόν τον μήνα;",
+    "what_changed": "Τι άλλαξε σε σχέση με τον προηγούμενο μήνα",
+    "see_formula": "Προβολή τύπου",
+    "code_rule_chip": "{{code}} • {{rule}}",
+    "coverage": "Κάλυψη εξήγησης: {{pct}}%",
+    "feedback_label": "Πόσο κατανοητή ήταν η εξήγηση;",
+    "thanks_feedback": "Ευχαριστούμε για τα σχόλιά σας!"
+  },
+
+  "earnings_codes": {
+    "REG": "Τακτικές ώρες",
+    "NIGHT_25": "Νυχτερινή προσαύξηση",
+    "SUNDAY_75": "Προσαύξηση Κυριακής",
+    "HOLIDAY_75": "Προσαύξηση αργίας",
+    "SIXTH_DAY_40": "Προσαύξηση 6ης ημέρας",
+    "OT_TIER1_40": "Νόμιμη υπερωρία",
+    "OT_TIER2_60": "Υπερωρία με άδεια",
+    "OT_EXCEPTIONAL_80": "Μη εξουσιοδοτημένη υπερωρία",
+    "BONUS_EASTER": "Δώρο Πάσχα",
+    "BONUS_CHRISTMAS": "Δώρο Χριστουγέννων",
+    "ALLOWANCE_LEAVE": "Επίδομα άδειας",
+    "TIPS_DISTRIBUTED": "Διανομή φιλοδωρημάτων",
+    "MEAL_VOUCHER": "Επίδομα σίτισης",
+    "TRAVEL_PER_DIEM": "Ημερήσια αποζημίωση",
+    "SICK_EMP_50": "Ασθένεια εργοδότη (50%)",
+    "SICK_EFKA": "Παροχή ΕΦΚΑ (ενημ.)",
+    "HOLIDAY_NOT_WORKED": "Αμειβόμενη αργία"
+  },
+
+  "partner_console": {
+    "partner": "Συνεργάτης",
+    "as_client": "Ως πελάτης",
+    "approvals": "Εγκρίσεις",
+    "prepare": "Προετοιμασία",
+    "submit": "Υποβολή",
+    "review": "Έλεγχος",
+    "audit_pack": "Φάκελος ελέγχου",
+    "maker_checker": "Αρχή δύο επιπέδων (maker-checker)"
+  },
+
+  "statuses": {
+    "pending": "Σε εκκρεμότητα",
+    "approved": "Εγκρίθηκε",
+    "rejected": "Απορρίφθηκε",
+    "in_progress": "Σε εξέλιξη",
+    "completed": "Ολοκληρώθηκε",
+    "failed": "Απέτυχε",
+    "canceled": "Ακυρώθηκε",
+    "due": "Λήγει",
+    "overdue": "Εκπρόθεσμο"
+  },
+
+  "errors": {
+    "unknown": "Κάτι πήγε στραβά.",
+    "network": "Σφάλμα δικτύου. Προσπαθήστε ξανά.",
+    "forbidden": "Δεν έχετε δικαίωμα πρόσβασης.",
+    "not_found": "Δεν βρέθηκε.",
+    "validation": "Ελέγξτε τα πεδία και δοκιμάστε ξανά."
+  },
+
+  "marketing": {
+    "hero_title": "Μισθοδοσία σχεδιασμένη για την Ελλάδα. Γρήγορη. Συμμορφωμένη. Άμεση.",
+    "hero_sub": "Ολοκληρώστε μισθοδοσία σε λίγα λεπτά με Ψηφιακή Κάρτα, ΕΡΓΑΝΗ ΙΙ, ΑΠΔ/ΦΜΥ και άμεσες πληρωμές.",
+    "cta_try": "Δοκιμάστε δωρεάν",
+    "cta_demo": "Κλείστε demo",
+    "pricing": "Τιμολόγηση",
+    "security": "Ασφάλεια",
+    "product": "Προϊόν",
+    "contact": "Επικοινωνία"
+  }
+}
