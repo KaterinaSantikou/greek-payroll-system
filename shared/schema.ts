@@ -12,6 +12,7 @@ import {
   index,
   uuid,
   serial,
+  unique,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -802,6 +803,15 @@ export const paymentBatches = pgTable("payment_batches", {
   failedAt: timestamp("failed_at"),
   failureReason: text("failure_reason"),
   
+  // Disbursement key and scope tracking
+  disbursementKey: varchar("disbursement_key", { length: 64 }), // SHA256 hash
+  scopeId: varchar("scope_id").references(() => payrollScopes.scopeId),
+  
+  // Superseding fields for payment adjustments
+  supersededReason: text("superseded_reason"),
+  supersededBy: varchar("superseded_by"),
+  supersededAt: timestamp("superseded_at"),
+  
   createdBy: varchar("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -809,6 +819,36 @@ export const paymentBatches = pgTable("payment_batches", {
   index("idx_payment_batches_period").on(table.period),
   index("idx_payment_batches_status").on(table.status),
   index("idx_payment_batches_number").on(table.batchNumber),
+  index("idx_payment_batches_disbursement_key").on(table.disbursementKey),
+  index("idx_payment_batches_scope_id").on(table.scopeId),
+]);
+
+// Period Cap Tracker table - Tracks remaining caps for Greek payroll compliance
+export const periodCapTracker = pgTable("period_cap_tracker", {
+  trackerId: varchar("tracker_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  period: varchar("period", { length: 7 }).notNull(), // YYYY-MM format
+  
+  // Greek cap amounts (remaining for period)
+  efkaBaseRemaining: decimal("efka_base_remaining", { precision: 10, scale: 2 }).notNull(),
+  unemploymentInsuranceRemaining: decimal("unemployment_insurance_remaining", { precision: 10, scale: 2 }).notNull(),
+  housingAllowanceRemaining: decimal("housing_allowance_remaining", { precision: 10, scale: 2 }).notNull(),
+  mealAllowanceRemaining: decimal("meal_allowance_remaining", { precision: 10, scale: 2 }).notNull(),
+  transportAllowanceRemaining: decimal("transport_allowance_remaining", { precision: 10, scale: 2 }).notNull(),
+  solidarityTaxRemaining: decimal("solidarity_tax_remaining", { precision: 10, scale: 2 }).notNull(),
+  
+  // Tracking metadata
+  lastResetAt: timestamp("last_reset_at").defaultNow(),
+  lastConsumedAt: timestamp("last_consumed_at"),
+  lastConsumedByScopeId: varchar("last_consumed_by_scope_id"),
+  
+  createdBy: varchar("created_by").references(() => users.id).default('system'),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_period_cap_tracker_employee_period").on(table.employeeId, table.period),
+  index("idx_period_cap_tracker_period").on(table.period),
+  unique("unique_employee_period_cap").on(table.employeeId, table.period),
 ]);
 
 // Filings table - Government compliance submissions
@@ -1608,6 +1648,12 @@ export const insertPaymentBatchSchema = createInsertSchema(paymentBatches).omit(
   updatedAt: true,
 });
 
+export const insertPeriodCapTrackerSchema = createInsertSchema(periodCapTracker).omit({
+  trackerId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types for selective payroll runs
 export type PayrollScope = typeof payrollScopes.$inferSelect;
 export type InsertPayrollScope = z.infer<typeof insertPayrollScopeSchema>;
@@ -1623,6 +1669,9 @@ export type InsertPayrollScopeLine = z.infer<typeof insertPayrollScopeLineSchema
 
 export type PaymentBatch = typeof paymentBatches.$inferSelect;
 export type InsertPaymentBatch = z.infer<typeof insertPaymentBatchSchema>;
+
+export type PeriodCapTracker = typeof periodCapTracker.$inferSelect;
+export type InsertPeriodCapTracker = z.infer<typeof insertPeriodCapTrackerSchema>;
 
 // Additional type definitions for new data model
 export type Contract = typeof contracts.$inferSelect;
