@@ -105,6 +105,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CBA Governance API
   const cbaGovernanceApi = (await import("./api/cbaGovernanceApi")).default;
   app.use('/api/cba-governance', cbaGovernanceApi);
+  
+  // Acceptance Tests API
+  const acceptanceTestApi = (await import("./api/acceptanceTestApi")).default;
+  app.use('/api/acceptance-tests', acceptanceTestApi);
 
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();
