@@ -21,6 +21,12 @@ import healthAPI from "./api/health";
 import securityAPI from "./api/security";
 import reportsAPI from "./api/reports";
 import { registerForecastingRoutes } from "./api/forecasting";
+import { 
+  requestLoggingMiddleware, 
+  errorLoggingMiddleware, 
+  performanceLoggingMiddleware, 
+  securityLoggingMiddleware 
+} from "./middleware/loggingMiddleware";
 import { registerDocumentAIRoutes } from "./api/documentAI";
 import { registerChangeLogLegalWatchRoutes } from "./api/changeLogLegalWatch";
 import { 
@@ -148,6 +154,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Add OBO middleware for tenant context injection
   app.use(oboMiddleware);
+
+  // Apply central logging middleware to all routes
+  app.use(requestLoggingMiddleware('payroll-sync'));
+  app.use(performanceLoggingMiddleware('payroll-sync'));
+  app.use(securityLoggingMiddleware('payroll-sync-security'));
 
   // Comprehensive Authentication Routes
   app.use('/api/auth/v2', authRoutes);
@@ -2845,6 +2856,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Disaster Recovery API
   const disasterRecoveryAPI = (await import("./api/disasterRecovery")).default;
   app.use("/api/disaster-recovery", disasterRecoveryAPI);
+  
+  // Central Log Management API
+  const logsAPI = (await import("./api/logs")).default;
+  app.use("/api/logs", logsAPI);
   
   // Register forecasting API routes
   registerForecastingRoutes(app);

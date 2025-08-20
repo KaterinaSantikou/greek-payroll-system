@@ -5645,5 +5645,167 @@ export const insertBackupMonitoringSchema = createInsertSchema(backupMonitoring)
   createdAt: true,
 });
 
+// Central Log Aggregation Schema
+
+// Core log entries table with partitioning support
+export const logEntries = pgTable("log_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  level: varchar("level").notNull(), // 'debug', 'info', 'warn', 'error', 'fatal'
+  service: varchar("service").notNull(), // Service/component name
+  component: varchar("component"), // Specific component within service
+  userId: varchar("user_id").references(() => users.id),
+  sessionId: varchar("session_id"),
+  requestId: varchar("request_id"), // Correlation ID for request tracing
+  message: text("message").notNull(),
+  details: jsonb("details"), // Structured log data
+  tags: jsonb("tags"), // Searchable tags array
+  source: varchar("source").notNull(), // 'application', 'system', 'security', 'audit'
+  category: varchar("category"), // 'payroll', 'hr', 'compliance', 'billing', etc.
+  severity: integer("severity").default(0), // 0-100 severity score
+  environment: varchar("environment").default('development'), // 'development', 'staging', 'production'
+  hostname: varchar("hostname"),
+  processId: varchar("process_id"),
+  threadId: varchar("thread_id"),
+  stackTrace: text("stack_trace"),
+  duration: integer("duration_ms"), // For performance logs
+  statusCode: integer("status_code"), // For HTTP logs
+  ipAddress: varchar("ip_address"),
+  userAgent: varchar("user_agent"),
+  metadata: jsonb("metadata"), // Additional structured metadata
+  indexed: boolean("indexed").default(false), // For search indexing
+  archived: boolean("archived").default(false),
+  retentionExpiresAt: timestamp("retention_expires_at"),
+});
+
+// Log aggregation views and metrics
+export const logMetrics = pgTable("log_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  timeWindow: timestamp("time_window").notNull(), // Start of time window
+  windowSize: integer("window_size_minutes").default(60), // Size of aggregation window
+  service: varchar("service").notNull(),
+  level: varchar("level").notNull(),
+  category: varchar("category"),
+  entryCount: integer("entry_count").default(0),
+  errorCount: integer("error_count").default(0),
+  warnCount: integer("warn_count").default(0),
+  avgSeverity: decimal("avg_severity", { precision: 5, scale: 2 }),
+  avgDuration: decimal("avg_duration_ms", { precision: 10, scale: 2 }),
+  uniqueUsers: integer("unique_users").default(0),
+  uniqueSessions: integer("unique_sessions").default(0),
+  topErrors: jsonb("top_errors"), // Most frequent error messages
+  performanceP95: decimal("performance_p95_ms", { precision: 10, scale: 2 }),
+  performanceP99: decimal("performance_p99_ms", { precision: 10, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Real-time log streaming subscriptions
+export const logSubscriptions = pgTable("log_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  name: varchar("name").notNull(),
+  filters: jsonb("filters").notNull(), // Search criteria
+  isActive: boolean("is_active").default(true),
+  alertThreshold: integer("alert_threshold"), // Alert after N matching logs
+  lastTriggered: timestamp("last_triggered"),
+  notificationChannels: jsonb("notification_channels"), // email, slack, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Log retention policies
+export const logRetentionPolicies = pgTable("log_retention_policies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  service: varchar("service").notNull(),
+  level: varchar("level"),
+  category: varchar("category"),
+  retentionDays: integer("retention_days").notNull().default(90),
+  archiveAfterDays: integer("archive_after_days").default(30),
+  compressionEnabled: boolean("compression_enabled").default(true),
+  backupEnabled: boolean("backup_enabled").default(true),
+  complianceFramework: varchar("compliance_framework"), // 'GDPR', 'SOX', 'PCI', etc.
+  isActive: boolean("is_active").default(true),
+  priority: integer("priority").default(0), // Higher priority policies override lower
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Search index for fast log queries
+export const logSearchIndex = pgTable("log_search_index", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  logEntryId: varchar("log_entry_id").references(() => logEntries.id).notNull(),
+  searchTerms: text("search_terms").notNull(), // Tokenized searchable text
+  serviceTerms: varchar("service_terms"),
+  messageTerms: text("message_terms"),
+  detailsTerms: text("details_terms"),
+  indexedAt: timestamp("indexed_at").defaultNow(),
+});
+
+// Log analysis patterns and anomaly detection
+export const logPatterns = pgTable("log_patterns", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patternType: varchar("pattern_type").notNull(), // 'anomaly', 'trend', 'correlation'
+  service: varchar("service").notNull(),
+  pattern: jsonb("pattern").notNull(), // Pattern definition
+  confidence: decimal("confidence", { precision: 5, scale: 4 }), // 0-1 confidence score
+  frequency: varchar("frequency"), // 'hourly', 'daily', 'weekly'
+  lastDetected: timestamp("last_detected"),
+  occurrenceCount: integer("occurrence_count").default(0),
+  severity: varchar("severity").default('medium'), // 'low', 'medium', 'high', 'critical'
+  description: text("description"),
+  recommendedAction: text("recommended_action"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Type exports for log aggregation
+export type LogEntry = typeof logEntries.$inferSelect;
+export type InsertLogEntry = typeof logEntries.$inferInsert;
+export type LogMetrics = typeof logMetrics.$inferSelect;
+export type InsertLogMetrics = typeof logMetrics.$inferInsert;
+export type LogSubscription = typeof logSubscriptions.$inferSelect;
+export type InsertLogSubscription = typeof logSubscriptions.$inferInsert;
+export type LogRetentionPolicy = typeof logRetentionPolicies.$inferSelect;
+export type InsertLogRetentionPolicy = typeof logRetentionPolicies.$inferInsert;
+export type LogSearchIndex = typeof logSearchIndex.$inferSelect;
+export type InsertLogSearchIndex = typeof logSearchIndex.$inferInsert;
+export type LogPattern = typeof logPatterns.$inferSelect;
+export type InsertLogPattern = typeof logPatterns.$inferInsert;
+
+// Insert schemas for log aggregation
+export const insertLogEntrySchema = createInsertSchema(logEntries).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const insertLogMetricsSchema = createInsertSchema(logMetrics).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertLogSubscriptionSchema = createInsertSchema(logSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLogRetentionPolicySchema = createInsertSchema(logRetentionPolicies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertLogSearchIndexSchema = createInsertSchema(logSearchIndex).omit({
+  id: true,
+  indexedAt: true,
+});
+
+export const insertLogPatternSchema = createInsertSchema(logPatterns).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Import canonical payment schema tables
 export * from './payments-canonical-schema';
