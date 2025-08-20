@@ -3836,6 +3836,29 @@ export const documentTrail = pgTable("document_trail", {
 // SEVERANCE & FINAL PAY TABLES
 // =============================================================================
 
+// Versioned severance rules table for Greek legal compliance
+export const severanceRules = pgTable("severance_rules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  version: varchar("version").notNull(), // e.g., 'v2025.1', 'v2024.3'
+  effectiveFrom: timestamp("effective_from").notNull(),
+  effectiveTo: timestamp("effective_to"), // null for current version
+  isActive: boolean("is_active").default(true),
+  
+  // Severance bands according to Ν. 4093/2012
+  bands: jsonb("bands").notNull(), // Array of {minMonths, maxMonths, severanceMonths}
+  
+  // Legal references and notes
+  legalReference: varchar("legal_reference").notNull(),
+  description: text("description"),
+  descriptionGr: text("description_gr"),
+  
+  // Audit fields
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: varchar("created_by"),
+  approvedAt: timestamp("approved_at"),
+  approvedBy: varchar("approved_by")
+});
+
 // Termination records with Greek legal compliance
 export const terminationRecords = pgTable("termination_records", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -3895,6 +3918,11 @@ export const finalPayLines = pgTable("final_pay_lines", {
 });
 
 // Relations for severance tables
+// Severance rules relations
+export const severanceRulesRelations = relations(severanceRules, ({ many }) => ({
+  calculations: many(severanceCalculations)
+}));
+
 export const terminationRecordsRelations = relations(terminationRecords, ({ one, many }) => ({
   employee: one(employees, {
     fields: [terminationRecords.employeeId],
@@ -3910,6 +3938,10 @@ export const severanceCalculationsRelations = relations(severanceCalculations, (
   terminationRecord: one(terminationRecords, {
     fields: [severanceCalculations.terminationRecordId],
     references: [terminationRecords.id],
+  }),
+  severanceRule: one(severanceRules, {
+    fields: [severanceCalculations.rulesetVersion],
+    references: [severanceRules.version],
   }),
   finalPayLines: many(finalPayLines),
 }));

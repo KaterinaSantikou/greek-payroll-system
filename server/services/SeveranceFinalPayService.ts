@@ -14,6 +14,7 @@ import {
   type InsertFinalPayLine
 } from "../../shared/schema";
 import { CalcProvenanceService } from "./CalcProvenanceService";
+import { SeveranceRulesService } from "./SeveranceRulesService";
 import { eq, desc } from "drizzle-orm";
 
 /**
@@ -55,8 +56,11 @@ export class SeveranceFinalPayService {
       const finalPayLines: any[] = [];
 
       // 1. Calculate severance (if eligible)
+      let severanceRuleVersion = 'greek-v2025.1';
       if (this.isSeveranceEligible(inputs.terminationType, inputs.terminationCause)) {
-        severanceAmount = this.calculateSeveranceAmount(inputs.yearsOfService, inputs.lastMonthlyWage);
+        const severanceCalc = await this.calculateSeveranceAmount(inputs.yearsOfService, inputs.lastMonthlyWage);
+        severanceAmount = severanceCalc.amount;
+        severanceRuleVersion = severanceCalc.ruleVersion;
         
         finalPayLines.push({
           lineType: 'severance',
@@ -64,8 +68,8 @@ export class SeveranceFinalPayService {
           description: 'Severance Payment',
           descriptionGr: 'Αποζημίωση Απόλυσης',
           calculatedAmount: severanceAmount,
-          legalReference: 'Ν. 4093/2012 άρθρο 1',
-          calculationFormula: this.getSeveranceFormula(inputs.yearsOfService)
+          legalReference: 'Ν. 4093/2012 άρθρα 1-3',
+          calculationFormula: severanceCalc.formula
         });
       }
 
@@ -390,41 +394,61 @@ export class SeveranceFinalPayService {
   }
 
   /**
-   * Calculate severance amount based on years of service
-   * According to Ν. 4093/2012
+   * Calculate severance amount using current legal rules
+   * According to Ν. 4093/2012 exact bands
    */
-  private static calculateSeveranceAmount(yearsOfService: number, monthlyWage: number): number {
-    if (yearsOfService < 1) return 0;
-
-    // Greek severance calculation tiers
-    if (yearsOfService < 2) {
-      // Less than 2 years: no severance
-      return 0;
-    } else if (yearsOfService < 5) {
-      // 2-5 years: 2 months per year of service
-      return Math.floor(yearsOfService) * 2 * monthlyWage;
-    } else if (yearsOfService < 10) {
-      // 5-10 years: 3 months per year of service
-      return Math.floor(yearsOfService) * 3 * monthlyWage;
-    } else {
-      // 10+ years: 4 months per year of service
-      return Math.floor(yearsOfService) * 4 * monthlyWage;
+  private static async calculateSeveranceAmount(yearsOfService: number, monthlyWage: number): Promise<{
+    amount: number;
+    formula: string;
+    formulaGr: string;
+    ruleVersion: string;
+  }> {
+    if (yearsOfService < 1) {
+      return {
+        amount: 0,
+        formula: 'No severance (less than 1 year service)',
+        formulaGr: 'Καμία αποζημίωση (λιγότερο από 1 έτος υπηρεσίας)',
+        ruleVersion: 'greek-v2025.1'
+      };
     }
+
+    // Get current severance rules
+    const currentRules = await SeveranceRulesService.getCurrentRules();
+    if (!currentRules) {
+      // Initialize default rules if none exist
+      const defaultRules = await SeveranceRulesService.initializeDefaultRules();
+      const calculation = SeveranceRulesService.calculateSeveranceAmount(
+        yearsOfService * 12, // Convert to months
+        monthlyWage,
+        defaultRules
+      );
+      return {
+        amount: calculation.severanceAmount,
+        formula: calculation.formula,
+        formulaGr: calculation.formulaGr,
+        ruleVersion: defaultRules.version
+      };
+    }
+
+    const calculation = SeveranceRulesService.calculateSeveranceAmount(
+      yearsOfService * 12, // Convert to months  
+      monthlyWage,
+      currentRules
+    );
+    
+    return {
+      amount: calculation.severanceAmount,
+      formula: calculation.formula,
+      formulaGr: calculation.formulaGr,
+      ruleVersion: currentRules.version
+    };
   }
 
   /**
-   * Get severance calculation formula for explanation
+   * Check severance eligibility using current rules
    */
-  private static getSeveranceFormula(yearsOfService: number): string {
-    if (yearsOfService < 2) {
-      return 'No severance (less than 2 years service)';
-    } else if (yearsOfService < 5) {
-      return `${Math.floor(yearsOfService)} years × 2 months × monthly wage`;
-    } else if (yearsOfService < 10) {
-      return `${Math.floor(yearsOfService)} years × 3 months × monthly wage`;
-    } else {
-      return `${Math.floor(yearsOfService)} years × 4 months × monthly wage`;
-    }
+  private static isSeveranceEligible(terminationType: string, terminationCause?: string): boolean {
+    return SeveranceRulesService.isSeveranceEligible(terminationType, terminationCause);
   }
 
   /**

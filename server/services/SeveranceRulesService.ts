@@ -1,0 +1,285 @@
+import { db } from "../db";
+import { severanceRules } from "../../shared/schema";
+import { boolean, text } from "drizzle-orm/pg-core";
+
+// Define interfaces for the severance rules until schema types are ready
+interface SeveranceRule {
+  id: string;
+  version: string;
+  effectiveFrom: Date;
+  effectiveTo: Date | null;
+  isActive: boolean | null;
+  bands: any;
+  legalReference: string;
+  description: string | null;
+  descriptionGr: string | null;
+  createdAt: Date | null;
+  createdBy: string | null;
+  approvedAt: Date | null;
+  approvedBy: string | null;
+}
+
+interface InsertSeveranceRule {
+  version: string;
+  effectiveFrom: Date;
+  effectiveTo?: Date | null;
+  isActive?: boolean;
+  bands: any;
+  legalReference: string;
+  description?: string;
+  descriptionGr?: string;
+  createdAt?: Date;
+  createdBy?: string;
+  approvedAt?: Date;
+  approvedBy?: string;
+}
+import { eq, desc, and, isNull } from "drizzle-orm";
+
+/**
+ * SeveranceRulesService
+ * 
+ * Manages versioned severance rules according to Greek Labor Law
+ * Ν. 4093/2012 and subsequent updates
+ * 
+ * Key features:
+ * - Versioned severance calculation rules
+ * - Automatic rule versioning when laws change
+ * - Historical rule tracking for audit compliance
+ * - Legal reference documentation
+ */
+export class SeveranceRulesService {
+  
+  /**
+   * Get current active severance rules
+   */
+  static async getCurrentRules(): Promise<SeveranceRule | null> {
+    const [currentRules] = await db
+      .select()
+      .from(severanceRules)
+      .where(and(
+        eq(severanceRules.isActive, true),
+        isNull(severanceRules.effectiveTo)
+      ))
+      .orderBy(desc(severanceRules.effectiveFrom))
+      .limit(1);
+      
+    return currentRules || null;
+  }
+
+  /**
+   * Get severance rules by version
+   */
+  static async getRulesByVersion(version: string): Promise<SeveranceRule | null> {
+    const [rules] = await db
+      .select()
+      .from(severanceRules)
+      .where(eq(severanceRules.version, version))
+      .limit(1);
+      
+    return rules || null;
+  }
+
+  /**
+   * Initialize default Greek severance rules (Ν. 4093/2012)
+   */
+  static async initializeDefaultRules(): Promise<SeveranceRule> {
+    // Check if default rules already exist
+    const existing = await this.getRulesByVersion('greek-v2025.1');
+    if (existing) return existing;
+
+    const defaultRules: InsertSeveranceRule = {
+      version: 'greek-v2025.1',
+      effectiveFrom: new Date('2025-01-01'),
+      effectiveTo: null,
+      isActive: true,
+      
+      // Exact severance bands according to Ν. 4093/2012
+      bands: JSON.stringify([
+        // Less than 12 months: 0 months severance
+        { minMonths: 0, maxMonths: 12, severanceMonths: 0 },
+        
+        // 12 months to under 2 years: 2 months salary
+        { minMonths: 12, maxMonths: 24, severanceMonths: 2 },
+        
+        // 2 years to under 5 years: 3 months salary
+        { minMonths: 24, maxMonths: 60, severanceMonths: 3 },
+        
+        // 5 years to under 10 years: 4 months salary
+        { minMonths: 60, maxMonths: 120, severanceMonths: 4 },
+        
+        // 10 years to under 15 years: 5 months salary
+        { minMonths: 120, maxMonths: 180, severanceMonths: 5 },
+        
+        // 15 years to under 20 years: 6 months salary
+        { minMonths: 180, maxMonths: 240, severanceMonths: 6 },
+        
+        // 20 years to under 25 years: 12 months salary
+        { minMonths: 240, maxMonths: 300, severanceMonths: 12 },
+        
+        // 25+ years: 17 months salary (maximum)
+        { minMonths: 300, maxMonths: 999, severanceMonths: 17 }
+      ]),
+      
+      legalReference: 'Ν. 4093/2012, άρθρα 1-3',
+      description: 'Greek Labor Law 4093/2012 severance compensation rates for dismissal without cause',
+      descriptionGr: 'Αποζημιώσεις απόλυσης σύμφωνα με τον Ν. 4093/2012 για καταγγελία χωρίς σπουδαίο λόγο',
+      createdAt: new Date(),
+      createdBy: 'system-initialization'
+    };
+
+    const [newRules] = await db
+      .insert(severanceRules)
+      .values(defaultRules)
+      .returning();
+    
+    return newRules;
+  }
+
+  /**
+   * Calculate severance amount using specific rule version
+   */
+  static calculateSeveranceAmount(
+    monthsOfService: number, 
+    monthlyWage: number, 
+    rules: SeveranceRule
+  ): {
+    severanceAmount: number;
+    severanceMonths: number;
+    formula: string;
+    formulaGr: string;
+  } {
+    const bands = rules.bands as any[];
+    
+    // Find applicable band
+    let applicableBand = null;
+    for (const band of bands) {
+      if (monthsOfService >= band.minMonths && monthsOfService < band.maxMonths) {
+        applicableBand = band;
+        break;
+      }
+    }
+    
+    // If no band found, use the highest band (25+ years)
+    if (!applicableBand) {
+      applicableBand = bands[bands.length - 1];
+    }
+    
+    const severanceMonths = applicableBand.severanceMonths;
+    const severanceAmount = severanceMonths * monthlyWage;
+    
+    const yearsOfService = Math.floor(monthsOfService / 12);
+    const remainingMonths = monthsOfService % 12;
+    
+    let serviceDescription = '';
+    let serviceDescriptionGr = '';
+    
+    if (remainingMonths > 0) {
+      serviceDescription = `${yearsOfService} years and ${remainingMonths} months`;
+      serviceDescriptionGr = `${yearsOfService} έτη και ${remainingMonths} μήνες`;
+    } else {
+      serviceDescription = `${yearsOfService} years`;
+      serviceDescriptionGr = `${yearsOfService} έτη`;
+    }
+    
+    return {
+      severanceAmount,
+      severanceMonths,
+      formula: `${serviceDescription} of service = ${severanceMonths} months salary = €${severanceAmount.toFixed(2)}`,
+      formulaGr: `${serviceDescriptionGr} υπηρεσίας = ${severanceMonths} μήνες μισθού = €${severanceAmount.toFixed(2)}`
+    };
+  }
+
+  /**
+   * Get severance eligibility based on termination type and cause
+   */
+  static isSeveranceEligible(terminationType: string, terminationCause?: string): boolean {
+    // According to Ν. 4093/2012, severance is paid for:
+    // 1. Dismissal without cause (employer termination)
+    // 2. Constructive dismissal (employee resignation with cause)
+    // 3. Mutual agreement (if specified in agreement)
+    
+    if (terminationType === 'dismissal') {
+      // Dismissal without serious cause qualifies for severance
+      if (!terminationCause) return true;
+      
+      // Serious causes that disqualify severance (Article 2, Ν. 4093/2012)
+      const seriousCauses = [
+        'SERIOUS_MISCONDUCT',        // Σοβαρό παράπτωμα
+        'CRIMINAL_ACTIVITY',         // Ποινικό αδίκημα
+        'BREACH_OF_TRUST',          // Παραβίαση εμπιστοσύνης
+        'ABANDONMENT',              // Εγκατάλειψη θέσης
+        'INSUBORDINATION',          // Ανυπακοή
+        'DISCLOSURE_SECRETS',       // Αποκάλυψη μυστικών
+        'COMPETE_WITH_EMPLOYER',    // Ανταγωνισμός εργοδότη
+        'FALSE_CREDENTIALS'         // Ψευδή στοιχεία
+      ];
+      
+      return !seriousCauses.includes(terminationCause);
+    }
+    
+    // Resignation typically doesn't qualify unless it's constructive dismissal
+    if (terminationType === 'resignation') {
+      // Constructive dismissal causes that qualify for severance
+      const constructiveCauses = [
+        'EMPLOYER_BREACH',          // Παραβίαση από εργοδότη
+        'UNSAFE_CONDITIONS',        // Ανασφαλείς συνθήκες
+        'NON_PAYMENT',             // Μη πληρωμή μισθών
+        'HARASSMENT',              // Παρενόχληση
+        'MATERIAL_CHANGE'          // Ουσιώδης αλλαγή όρων
+      ];
+      
+      return terminationCause ? constructiveCauses.includes(terminationCause) : false;
+    }
+    
+    // Contract expiry - generally no severance unless specified
+    if (terminationType === 'expiry') return false;
+    
+    // Mutual agreement - severance can be negotiated
+    if (terminationType === 'mutual_agreement') return true;
+    
+    return false;
+  }
+
+  /**
+   * Create new version of severance rules (for law updates)
+   */
+  static async createNewVersion(
+    newVersion: string,
+    newBands: any[],
+    legalReference: string,
+    description: string,
+    descriptionGr: string,
+    effectiveFrom: Date,
+    createdBy: string
+  ): Promise<SeveranceRule> {
+    // Deactivate current rules
+    await db
+      .update(severanceRules)
+      .set({ 
+        isActive: false,
+        effectiveTo: effectiveFrom
+      })
+      .where(and(
+        eq(severanceRules.isActive, true),
+        isNull(severanceRules.effectiveTo)
+      ));
+
+    // Create new rules
+    const [newRules] = await db
+      .insert(severanceRules)
+      .values({
+        version: newVersion,
+        effectiveFrom,
+        effectiveTo: null,
+        isActive: true,
+        bands: newBands,
+        legalReference,
+        description,
+        descriptionGr,
+        createdBy
+      })
+      .returning();
+    
+    return newRules;
+  }
+}
