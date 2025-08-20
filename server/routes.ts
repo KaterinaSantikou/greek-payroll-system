@@ -2,6 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { mfaEnforcement, MfaEnforcementMiddleware } from "./middleware/mfaEnforcementMiddleware";
+import { SecurityEnforcementInitializer } from "./services/SecurityEnforcementInitializer";
 import { oboMiddleware } from "./middleware/oboMiddleware";
 import { registerIbanValidationRoutes } from "./api/ibanValidation";
 import authRoutes from "./routes/auth";
@@ -99,6 +101,21 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
+
+  // Initialize security enforcement components
+  try {
+    await SecurityEnforcementInitializer.initialize();
+    console.log('✅ Security enforcement components initialized');
+  } catch (error) {
+    console.error('❌ Security enforcement initialization failed:', error);
+    // Continue with reduced security in development
+    if (process.env.NODE_ENV === 'production') {
+      throw error; // Fail hard in production
+    }
+  }
+
+  // Apply global MFA enforcement middleware (after auth but before other routes)
+  app.use(mfaEnforcement.enforce());
 
   // Initialize rules engine
   await initializeRulesEngine();
@@ -2826,6 +2843,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/timezone/remote-work', dstTestingApi.calculateRemoteWork);
   app.post('/api/dst/schedule-recommendations', dstTestingApi.generateScheduleRecommendations);
   app.post('/api/timezone/optimal-meeting', dstTestingApi.findOptimalMeetingTime);
+
+  // Security Administration API routes
+  app.get('/api/security/status', async (req, res) => {
+    try {
+      const status = await SecurityEnforcementInitializer.getSecurityStatus();
+      res.json(status);
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to get security status' });
+    }
+  });
+
+  // MFA API routes with fresh verification requirement
+  app.post('/api/mfa/verify', MfaEnforcementMiddleware.markMfaVerified(), async (req, res) => {
+    // MFA verification endpoint implementation would go here
+    res.json({ success: true, verified: true });
+  });
+
+  // High-security operations require fresh MFA
+  app.use('/api/admin', MfaEnforcementMiddleware.requireFreshMfa());
+  app.use('/api/security', MfaEnforcementMiddleware.requireFreshMfa());
 
   // Register Hotel Tip Pooling API routes
   const { registerHotelTipPoolingRoutes } = await import("./api/hotelTipPooling");
