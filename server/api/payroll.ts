@@ -402,4 +402,121 @@ function storeIdempotency(key: string, response: any): void {
   setTimeout(() => idempotencyStore.delete(key), 24 * 60 * 60 * 1000);
 }
 
+// GET /api/payroll/pending-approvals - Mobile payroll approval dashboard
+router.get('/api/payroll/pending-approvals', isAuthenticated, async (req, res) => {
+  try {
+    // Mock data for mobile payroll approvals - in production this would query actual pending payroll runs
+    const mockApprovals = [
+      {
+        id: nanoid(),
+        period: "January 2025",
+        employeeCount: 25,
+        grossTotal: 28450.50,
+        netTotal: 19432.75,
+        status: "pending_approval",
+        submittedBy: "Maria Papadopoulos",
+        submittedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+        details: {
+          overtimeHours: 47,
+          bonuses: 2150.00,
+          deductions: 1825.50,
+          taxTotal: 5642.25,
+          efkaContributions: 3375.00
+        },
+        urgency: "high",
+        complianceChecks: {
+          ergani: true,
+          efka: true,
+          fmy: false
+        }
+      },
+      {
+        id: nanoid(),
+        period: "January 2025 - Bonus Run",
+        employeeCount: 12,
+        grossTotal: 6750.00,
+        netTotal: 4825.00,
+        status: "pending_approval",
+        submittedBy: "Nikos Andreou",
+        submittedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
+        details: {
+          overtimeHours: 0,
+          bonuses: 6750.00,
+          deductions: 0,
+          taxTotal: 1425.00,
+          efkaContributions: 500.00
+        },
+        urgency: "medium",
+        complianceChecks: {
+          ergani: true,
+          efka: true,
+          fmy: true
+        }
+      },
+      {
+        id: nanoid(),
+        period: "December 2024 - Correction",
+        employeeCount: 3,
+        grossTotal: 1200.00,
+        netTotal: 875.00,
+        status: "pending_approval",
+        submittedBy: "Elena Kostis",
+        submittedAt: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
+        details: {
+          overtimeHours: 8,
+          bonuses: 0,
+          deductions: 125.00,
+          taxTotal: 150.00,
+          efkaContributions: 50.00
+        },
+        urgency: "low",
+        complianceChecks: {
+          ergani: false,
+          efka: true,
+          fmy: true
+        }
+      }
+    ];
+
+    res.json(mockApprovals);
+  } catch (error) {
+    console.error("Error fetching pending approvals:", error);
+    res.status(500).json({ error: "Failed to fetch pending approvals" });
+  }
+});
+
+// POST /api/payroll/approvals/:id - Approve or reject payroll run
+router.post('/api/payroll/approvals/:id', isAuthenticated, async (req, res) => {
+  try {
+    const { action, comment } = req.body;
+    const approvalId = req.params.id;
+
+    if (!action || !['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ error: 'Invalid action. Must be "approve" or "reject"' });
+    }
+
+    // In production, this would update the actual payroll run status
+    console.log(`Payroll ${action} action:`, {
+      approvalId,
+      action,
+      comment,
+      userId: (req.user as any)?.claims?.sub,
+      timestamp: new Date().toISOString()
+    });
+
+    // Mock success response
+    res.json({
+      success: true,
+      approvalId,
+      action,
+      comment,
+      timestamp: new Date().toISOString(),
+      approvedBy: (req.user as any)?.claims?.sub || 'system'
+    });
+  } catch (error) {
+    console.error("Error processing payroll approval:", error);
+    res.status(500).json({ error: "Failed to process approval" });
+  }
+});
+
 export default router;
