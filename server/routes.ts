@@ -101,6 +101,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payroll Calculation Engine API
   const payrollCalculationApi = (await import("./api/payrollCalculationApi")).default;
   app.use('/api/payroll-engine', payrollCalculationApi);
+  
+  // CBA Governance API
+  const cbaGovernanceApi = (await import("./api/cbaGovernanceApi")).default;
+  app.use('/api/cba-governance', cbaGovernanceApi);
 
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();
