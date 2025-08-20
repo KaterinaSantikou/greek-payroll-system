@@ -4,10 +4,13 @@ import {
   dunningActions,
   invoices,
   subscriptions,
+  serviceRestrictions,
   type DunningCampaign,
   type NewDunningCampaign,
   type DunningAction,
   type NewDunningAction,
+  type ServiceRestriction,
+  type NewServiceRestriction,
   type Invoice,
   type Subscription
 } from '@shared/billingSchema';
@@ -34,38 +37,50 @@ export class DunningService {
     steps: [
       {
         step: 1,
-        daysAfterDue: 7, // 7 days after due date
+        daysAfterDue: 0, // D0: charge fails, send email #1 + retry same day
         actionType: 'email',
-        emailTemplate: 'payment_reminder_1',
-        emailSubject: 'Payment Reminder - Invoice {invoiceNumber}'
+        emailTemplate: 'payment_failed_d0',
+        emailSubject: 'Payment Failed - Invoice {invoiceNumber} - Action Required'
       },
       {
         step: 2,
-        daysAfterDue: 14, // 14 days after due date
+        daysAfterDue: 3, // D3: retry + email #2 (SEPA: represent)
         actionType: 'payment_retry',
       },
       {
         step: 3,
-        daysAfterDue: 21, // 21 days after due date
+        daysAfterDue: 3, // D3: Send email after retry
         actionType: 'email',
-        emailTemplate: 'payment_reminder_2',
-        emailSubject: 'Urgent: Payment Required - Invoice {invoiceNumber}'
+        emailTemplate: 'payment_retry_d3',
+        emailSubject: 'Payment Retry - Invoice {invoiceNumber}'
       },
       {
         step: 4,
-        daysAfterDue: 30, // 30 days after due date
-        actionType: 'service_suspension',
+        daysAfterDue: 7, // D7: retry + email #3; flag past due; restrict filings
+        actionType: 'payment_retry',
       },
       {
         step: 5,
-        daysAfterDue: 45, // 45 days after due date
+        daysAfterDue: 7, // D7: Email and restrict filings
+        actionType: 'email',
+        emailTemplate: 'past_due_d7',
+        emailSubject: 'Past Due - Service Restrictions Applied - Invoice {invoiceNumber}'
+      },
+      {
+        step: 6,
+        daysAfterDue: 14, // D14: final notice; suspend payments features; keep data read-only
+        actionType: 'service_suspension',
+      },
+      {
+        step: 7,
+        daysAfterDue: 14, // D14: Final notice email
         actionType: 'final_notice',
-        emailTemplate: 'final_notice',
-        emailSubject: 'Final Notice - Account will be suspended - Invoice {invoiceNumber}'
+        emailTemplate: 'final_notice_d14',
+        emailSubject: 'FINAL NOTICE - Payment Features Suspended - Invoice {invoiceNumber}'
       }
     ],
-    serviceAccessRevocationStep: 4,
-    finalNoticeStep: 5
+    serviceAccessRevocationStep: 6,
+    finalNoticeStep: 7
   };
 
   /**
@@ -170,7 +185,7 @@ export class DunningService {
           break;
         
         case 'service_suspension':
-          success = await this.suspendServiceAccess(campaign);
+          success = await this.applyServiceRestrictions(campaign, action.step);
           break;
         
         case 'final_notice':
@@ -343,27 +358,99 @@ export class DunningService {
   }
 
   /**
-   * Suspend service access
+   * Apply service restrictions based on dunning step
    */
-  private async suspendServiceAccess(campaign: DunningCampaign): Promise<boolean> {
+  private async applyServiceRestrictions(campaign: DunningCampaign, step: number): Promise<boolean> {
     try {
-      await db.update(dunningCampaigns)
-        .set({
-          serviceAccessRevoked: true,
-          serviceAccessRevokedAt: new Date()
-        })
-        .where(eq(dunningCampaigns.id, campaign.id));
+      const now = new Date();
 
-      // Here you would integrate with your application's access control system
-      // to actually revoke service access for the subscription
-      console.log(`Service access revoked for subscription ${campaign.subscriptionId}`);
+      // D7: Restrict filings
+      if (step === 5 && !campaign.filingsRestricted) {
+        await db.update(dunningCampaigns)
+          .set({
+            filingsRestricted: true,
+            filingsRestrictedAt: now
+          })
+          .where(eq(dunningCampaigns.id, campaign.id));
+
+        // Create service restriction record
+        await db.insert(serviceRestrictions)
+          .values({
+            subscriptionId: campaign.subscriptionId,
+            restrictionType: 'filings_restricted',
+            restrictionLevel: 2,
+            restrictFilings: true,
+            appliedAt: now,
+            reason: 'overdue_payment'
+          });
+
+        console.log(`Filings restricted for subscription ${campaign.subscriptionId} (D7)`);
+      }
+
+      // D14: Suspend payments features (keep data read-only)
+      if (step === 6 && !campaign.paymentsRestricted) {
+        await db.update(dunningCampaigns)
+          .set({
+            paymentsRestricted: true,
+            paymentsRestrictedAt: now,
+            serviceAccessRevoked: true,
+            serviceAccessRevokedAt: now
+          })
+          .where(eq(dunningCampaigns.id, campaign.id));
+
+        // Create service restriction record
+        await db.insert(serviceRestrictions)
+          .values({
+            subscriptionId: campaign.subscriptionId,
+            restrictionType: 'payments_suspended',
+            restrictionLevel: 3,
+            restrictFilings: true,
+            restrictPayments: true,
+            appliedAt: now,
+            reason: 'overdue_payment'
+          });
+
+        console.log(`Payment features suspended for subscription ${campaign.subscriptionId} (D14)`);
+      }
 
       return true;
 
     } catch (error) {
-      console.error('Failed to suspend service access:', error);
+      console.error('Failed to apply service restrictions:', error);
       return false;
     }
+  }
+
+  /**
+   * Check if subscription has active service restrictions
+   */
+  async getActiveServiceRestrictions(subscriptionId: string): Promise<ServiceRestriction[]> {
+    return db.select()
+      .from(serviceRestrictions)
+      .where(and(
+        eq(serviceRestrictions.subscriptionId, subscriptionId),
+        eq(serviceRestrictions.isActive, true)
+      ));
+  }
+
+  /**
+   * Check if specific functionality is restricted
+   */
+  async isFilingsRestricted(subscriptionId: string): Promise<boolean> {
+    const restrictions = await this.getActiveServiceRestrictions(subscriptionId);
+    return restrictions.some(r => r.restrictFilings);
+  }
+
+  async isPaymentsRestricted(subscriptionId: string): Promise<boolean> {
+    const restrictions = await this.getActiveServiceRestrictions(subscriptionId);
+    return restrictions.some(r => r.restrictPayments);
+  }
+
+  /**
+   * Suspend service access (legacy method, now uses applyServiceRestrictions)
+   */
+  private async suspendServiceAccess(campaign: DunningCampaign): Promise<boolean> {
+    return this.applyServiceRestrictions(campaign, 6);
   }
 
   /**
@@ -408,17 +495,43 @@ export class DunningService {
   }
 
   /**
-   * Restore service access (when payment is made)
+   * Lift service restrictions (when payment is made)
    */
-  async restoreServiceAccess(subscriptionId: string): Promise<void> {
+  async liftAllServiceRestrictions(subscriptionId: string): Promise<void> {
+    const now = new Date();
+
+    // Update dunning campaigns to lift restrictions
     await db.update(dunningCampaigns)
       .set({
         serviceAccessRevoked: false,
-        serviceAccessRevokedAt: null
+        serviceAccessRevokedAt: null,
+        filingsRestricted: false,
+        filingsRestrictedAt: null,
+        paymentsRestricted: false,
+        paymentsRestrictedAt: null
       })
       .where(eq(dunningCampaigns.subscriptionId, subscriptionId));
 
-    console.log(`Service access restored for subscription ${subscriptionId}`);
+    // Mark all active service restrictions as lifted
+    await db.update(serviceRestrictions)
+      .set({
+        isActive: false,
+        liftedAt: now,
+        updatedAt: now
+      })
+      .where(and(
+        eq(serviceRestrictions.subscriptionId, subscriptionId),
+        eq(serviceRestrictions.isActive, true)
+      ));
+
+    console.log(`All service restrictions lifted for subscription ${subscriptionId}`);
+  }
+
+  /**
+   * Restore service access (legacy method)
+   */
+  async restoreServiceAccess(subscriptionId: string): Promise<void> {
+    await this.liftAllServiceRestrictions(subscriptionId);
   }
 
   /**
@@ -438,6 +551,56 @@ export class DunningService {
    */
   private generateEmailContent(template: string, invoice: Invoice, subscription: Subscription): string {
     const templates: Record<string, string> = {
+      payment_failed_d0: `
+        Dear ${subscription.companyName},
+        
+        Your payment for invoice ${invoice.invoiceNumber} (€${invoice.totalCents / 100}) has failed.
+        
+        We will retry the payment automatically. Please ensure your payment method is valid and has sufficient funds.
+        
+        If the issue persists, please update your payment method or contact our billing team.
+        
+        Thank you for your prompt attention.
+      `,
+      payment_retry_d3: `
+        Dear ${subscription.companyName},
+        
+        We attempted to retry payment for invoice ${invoice.invoiceNumber} (€${invoice.totalCents / 100}) but it failed again.
+        
+        Please review and update your payment method immediately to avoid service disruptions.
+        
+        Our billing team is available to assist you with payment processing.
+      `,
+      past_due_d7: `
+        Dear ${subscription.companyName},
+        
+        Invoice ${invoice.invoiceNumber} for €${invoice.totalCents / 100} is now past due.
+        
+        IMPORTANT: To prevent further service disruptions, we have temporarily restricted:
+        - Payroll filing submissions to government systems
+        
+        Your data remains accessible, but filing capabilities are limited until payment is received.
+        
+        Please settle this invoice immediately to restore full service access.
+      `,
+      final_notice_d14: `
+        FINAL NOTICE - PAYMENT FEATURES SUSPENDED
+        
+        Dear ${subscription.companyName},
+        
+        Invoice ${invoice.invoiceNumber} for €${invoice.totalCents / 100} remains unpaid after multiple attempts.
+        
+        EFFECTIVE IMMEDIATELY, the following features are suspended:
+        - Payment processing capabilities
+        - Payroll filing submissions
+        - New employee onboarding
+        
+        Your data remains accessible in read-only mode for compliance purposes.
+        
+        Payment must be made within 48 hours to restore full service access.
+        Contact our billing team immediately: billing@payrollsync.gr
+      `,
+      // Legacy templates for backward compatibility
       payment_reminder_1: `
         Dear ${subscription.companyName},
         

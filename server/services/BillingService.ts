@@ -430,34 +430,63 @@ export class BillingService {
     return Math.floor(activeEmployees * 0.85); // ~85% typically have pay activity
   }
 
-  private async generateInvoiceNumber(year: number, series: 'INV' | 'CN'): Promise<string> {
-    // Get or create sequence for the year/series
-    let sequence = await db.select()
-      .from(invoiceSequences)
-      .where(and(
-        eq(invoiceSequences.year, year),
-        eq(invoiceSequences.series, series)
-      ))
-      .then(rows => rows[0]);
+  /**
+   * Generate gapless sequential invoice number per legal entity series
+   */
+  private async generateInvoiceNumber(
+    organizationId: string, 
+    type: 'invoice' | 'credit_note' = 'invoice'
+  ): Promise<{ invoiceNumber: string; series: string; sequentialNumber: number }> {
+    const now = new Date();
+    const year = now.getFullYear();
+    const yearSuffix = year.toString().slice(-2); // Last 2 digits
+    
+    // Determine series based on type
+    const seriesPrefix = type === 'credit_note' ? 'CN' : 'SALES';
+    const series = `${seriesPrefix}-${yearSuffix}`;
+    
+    // Use transaction to ensure gapless numbering
+    const result = await db.transaction(async (tx) => {
+      // Get or create sequence for this legal entity/series/year
+      let sequence = await tx.select()
+        .from(invoiceSequences)
+        .where(and(
+          eq(invoiceSequences.legalEntityId, organizationId),
+          eq(invoiceSequences.series, series),
+          eq(invoiceSequences.year, year)
+        ))
+        .then(rows => rows[0]);
 
-    if (!sequence) {
-      [sequence] = await db.insert(invoiceSequences)
-        .values({
-          year,
-          series,
-          lastNumber: 0
+      if (!sequence) {
+        [sequence] = await tx.insert(invoiceSequences)
+          .values({
+            legalEntityId: organizationId,
+            series,
+            year,
+            lastNumber: 0
+          })
+          .returning();
+      }
+
+      // Increment and update atomically
+      const nextNumber = sequence.lastNumber + 1;
+      await tx.update(invoiceSequences)
+        .set({ 
+          lastNumber: nextNumber,
+          updatedAt: new Date()
         })
-        .returning();
-    }
+        .where(eq(invoiceSequences.id, sequence.id));
 
-    // Increment and update
-    const nextNumber = sequence.lastNumber + 1;
-    await db.update(invoiceSequences)
-      .set({ lastNumber: nextNumber })
-      .where(eq(invoiceSequences.id, sequence.id));
+      const invoiceNumber = `${series}-${String(nextNumber).padStart(6, '0')}`;
+      
+      return {
+        invoiceNumber,
+        series,
+        sequentialNumber: nextNumber
+      };
+    });
 
-    // Format: INV-2024-00001 or CN-2024-00001
-    return `${series}-${year}-${String(nextNumber).padStart(5, '0')}`;
+    return result;
   }
 
   private isEUCountry(countryCode: string): boolean {

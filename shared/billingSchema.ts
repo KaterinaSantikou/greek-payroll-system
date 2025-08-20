@@ -64,22 +64,42 @@ export const subscriptions = pgTable("subscriptions", {
   index("subscriptions_period_idx").on(table.currentPeriodStart, table.currentPeriodEnd)
 ]);
 
-// Invoice Sequences (for Greek sequential numbering)
+// Invoice Sequences (for Greek sequential numbering per legal entity)
 export const invoiceSequences = pgTable("invoice_sequences", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  legalEntityId: varchar("legal_entity_id", { length: 50 }).notNull().default("default"), // Per legal entity
+  series: varchar("series", { length: 20 }).notNull(), // SALES-24, CN-24, etc.
   year: integer("year").notNull(),
-  series: varchar("series", { length: 10 }).notNull().default("INV"), // INV, CN (credit note)
   lastNumber: integer("last_number").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
-  unique().on(table.year, table.series)
+  unique().on(table.legalEntityId, table.series, table.year),
+  index("invoice_sequences_series_idx").on(table.series, table.year)
+]);
+
+// Exchange Rates (ECB)
+export const exchangeRates = pgTable("exchange_rates", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  baseCurrency: varchar("base_currency", { length: 3 }).notNull().default("EUR"),
+  targetCurrency: varchar("target_currency", { length: 3 }).notNull(),
+  rate: decimal("rate", { precision: 12, scale: 6 }).notNull(),
+  rateDate: date("rate_date").notNull(),
+  source: varchar("source", { length: 20 }).notNull().default("ECB"), // ECB, manual
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique().on(table.baseCurrency, table.targetCurrency, table.rateDate),
+  index("exchange_rates_date_idx").on(table.rateDate),
+  index("exchange_rates_currency_idx").on(table.targetCurrency)
 ]);
 
 // Invoices
 export const invoices = pgTable("invoices", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
   subscriptionId: uuid("subscription_id").references(() => subscriptions.id).notNull(),
-  invoiceNumber: varchar("invoice_number", { length: 50 }).notNull(), // e.g., INV-2024-00001
+  invoiceNumber: varchar("invoice_number", { length: 50 }).notNull(), // e.g., SALES-24-000001
+  series: varchar("series", { length: 20 }).notNull().default("SALES"), // SALES-24 per legal entity
+  sequentialNumber: integer("sequential_number").notNull(), // Gapless within series
   type: varchar("type", { length: 20 }).notNull().default("invoice"), // invoice, credit_note
   status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, sent, paid, overdue, cancelled
   
@@ -89,10 +109,21 @@ export const invoices = pgTable("invoices", {
   periodStart: date("period_start").notNull(),
   periodEnd: date("period_end").notNull(),
   
-  // Amounts (in EUR cents to avoid decimal precision issues)
+  // Currency support
+  originalCurrency: varchar("original_currency", { length: 3 }).notNull().default("EUR"),
+  exchangeRate: decimal("exchange_rate", { precision: 12, scale: 6 }).notNull().default("1.0"), // Rate to EUR
+  exchangeRateDate: date("exchange_rate_date").notNull(),
+  
+  // Amounts (in original currency cents)
   subtotalCents: integer("subtotal_cents").notNull(),
   vatAmountCents: integer("vat_amount_cents").notNull(),
   totalCents: integer("total_cents").notNull(),
+  
+  // EUR amounts for VAT compliance (calculated using exchange rate)
+  subtotalEurCents: integer("subtotal_eur_cents").notNull(),
+  vatAmountEurCents: integer("vat_amount_eur_cents").notNull(),
+  totalEurCents: integer("total_eur_cents").notNull(),
+  
   vatRate: decimal("vat_rate", { precision: 5, scale: 4 }).notNull(),
   
   // VAT compliance
@@ -109,6 +140,12 @@ export const invoices = pgTable("invoices", {
   mydataTransmissionDate: timestamp("mydata_transmission_date"),
   mydataInvoiceUid: varchar("mydata_invoice_uid", { length: 100 }),
   mydataQrCode: text("mydata_qr_code"), // Base64 QR code
+  mydataMark: varchar("mydata_mark", { length: 100 }), // AADE Mark
+  mydataAuthenticationCode: varchar("mydata_authentication_code", { length: 100 }),
+  
+  // Credit note specific fields
+  originalInvoiceId: uuid("original_invoice_id").references(() => invoices.id), // For credit notes
+  creditReason: varchar("credit_reason", { length: 100 }), // Reason for credit note
   
   // PDF generation
   pdfGenerated: boolean("pdf_generated").notNull().default(false),
@@ -213,6 +250,31 @@ export const paymentAttempts = pgTable("payment_attempts", {
   index("payment_attempts_date_idx").on(table.attemptedAt)
 ]);
 
+// Service Restrictions (for dunning management)
+export const serviceRestrictions = pgTable("service_restrictions", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  subscriptionId: uuid("subscription_id").references(() => subscriptions.id).notNull(),
+  restrictionType: varchar("restriction_type", { length: 30 }).notNull(), // filings_restricted, payments_suspended, full_suspension
+  reason: varchar("reason", { length: 50 }).notNull().default("overdue_payment"), // overdue_payment, policy_violation
+  restrictionLevel: integer("restriction_level").notNull().default(1), // 1=light, 2=moderate, 3=severe
+  
+  // Restrictions details
+  restrictFilings: boolean("restrict_filings").notNull().default(false), // D7: Cannot submit payroll filings
+  restrictPayments: boolean("restrict_payments").notNull().default(false), // D14: Cannot process payments
+  restrictReadOnly: boolean("restrict_read_only").notNull().default(false), // Full read-only mode
+  
+  // Metadata
+  appliedAt: timestamp("applied_at").notNull(),
+  liftedAt: timestamp("lifted_at"),
+  isActive: boolean("is_active").notNull().default(true),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("service_restrictions_subscription_idx").on(table.subscriptionId),
+  index("service_restrictions_active_idx").on(table.subscriptionId, table.isActive)
+]);
+
 // Dunning Management
 export const dunningCampaigns = pgTable("dunning_campaigns", {
   id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -220,11 +282,15 @@ export const dunningCampaigns = pgTable("dunning_campaigns", {
   subscriptionId: uuid("subscription_id").references(() => subscriptions.id).notNull(),
   status: varchar("status", { length: 20 }).notNull().default("active"), // active, paused, completed, cancelled
   currentStep: integer("current_step").notNull().default(1), // 1-based step number
-  maxSteps: integer("max_steps").notNull().default(4),
+  maxSteps: integer("max_steps").notNull().default(7), // Updated for new D0/D3/D7/D14 flow
   
   // Service access control
   serviceAccessRevoked: boolean("service_access_revoked").notNull().default(false),
   serviceAccessRevokedAt: timestamp("service_access_revoked_at"),
+  filingsRestricted: boolean("filings_restricted").notNull().default(false),
+  filingsRestrictedAt: timestamp("filings_restricted_at"),
+  paymentsRestricted: boolean("payments_restricted").notNull().default(false),
+  paymentsRestrictedAt: timestamp("payments_restricted_at"),
   
   // Timing
   startedAt: timestamp("started_at").notNull(),
@@ -312,6 +378,7 @@ export const subscriptionsRelations = relations(subscriptions, ({ one, many }) =
   metering: many(employeeMetering),
   paymentMethods: many(paymentMethods),
   creditNotes: many(creditNotes),
+  serviceRestrictions: many(serviceRestrictions),
 }));
 
 export const invoicesRelations = relations(invoices, ({ one, many }) => ({
@@ -362,6 +429,13 @@ export const dunningCampaignsRelations = relations(dunningCampaigns, ({ one, man
   actions: many(dunningActions),
 }));
 
+export const serviceRestrictionsRelations = relations(serviceRestrictions, ({ one }) => ({
+  subscription: one(subscriptions, {
+    fields: [serviceRestrictions.subscriptionId],
+    references: [subscriptions.id],
+  }),
+}));
+
 export const dunningActionsRelations = relations(dunningActions, ({ one }) => ({
   campaign: one(dunningCampaigns, {
     fields: [dunningActions.campaignId],
@@ -389,6 +463,10 @@ export type BillingPlan = typeof billingPlans.$inferSelect;
 export type NewBillingPlan = typeof billingPlans.$inferInsert;
 export type Subscription = typeof subscriptions.$inferSelect;
 export type NewSubscription = typeof subscriptions.$inferInsert;
+export type InvoiceSequence = typeof invoiceSequences.$inferSelect;
+export type NewInvoiceSequence = typeof invoiceSequences.$inferInsert;
+export type ExchangeRate = typeof exchangeRates.$inferSelect;
+export type NewExchangeRate = typeof exchangeRates.$inferInsert;
 export type Invoice = typeof invoices.$inferSelect;
 export type NewInvoice = typeof invoices.$inferInsert;
 export type EmployeeMetering = typeof employeeMetering.$inferSelect;
@@ -399,6 +477,8 @@ export type PaymentAttempt = typeof paymentAttempts.$inferSelect;
 export type NewPaymentAttempt = typeof paymentAttempts.$inferInsert;
 export type DunningCampaign = typeof dunningCampaigns.$inferSelect;
 export type NewDunningCampaign = typeof dunningCampaigns.$inferInsert;
+export type ServiceRestriction = typeof serviceRestrictions.$inferSelect;
+export type NewServiceRestriction = typeof serviceRestrictions.$inferInsert;
 export type DunningAction = typeof dunningActions.$inferSelect;
 export type NewDunningAction = typeof dunningActions.$inferInsert;
 export type CreditNote = typeof creditNotes.$inferSelect;
