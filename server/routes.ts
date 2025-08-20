@@ -114,6 +114,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const securityAuditApi = (await import("./api/securityAuditApi")).default;
   app.use('/api/security-audit', securityAuditApi);
 
+  // Severance & Final Pay API
+  const severanceApi = (await import("./api/severanceApi")).default;
+  app.use('/api/severance', severanceApi);
+
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();
   const glExportService = new GLExportService();

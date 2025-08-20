@@ -3799,7 +3799,7 @@ export const calcProvenance = pgTable("calc_provenance", {
 // Maker-Checker approval workflow
 export const makerCheckerApprovals = pgTable("maker_checker_approvals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  requestType: varchar("request_type").notNull(), // "pack_change", "version_publish", "rollout_execute"
+  requestType: varchar("request_type").notNull(), // "pack_change", "version_publish", "rollout_execute", "severance_execute"
   requestId: varchar("request_id").notNull(), // ID of the change request
   requestData: jsonb("request_data").notNull(), // Full request payload
   makerUserId: varchar("maker_user_id").notNull(), // User who initiated the change
@@ -3830,6 +3830,158 @@ export const documentTrail = pgTable("document_trail", {
   storageLocation: varchar("storage_location"), // S3/GCS path or local path
   documentSignature: varchar("document_signature").notNull(), // HMAC signature
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// =============================================================================
+// SEVERANCE & FINAL PAY TABLES
+// =============================================================================
+
+// Termination records with Greek legal compliance
+export const terminationRecords = pgTable("termination_records", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId),
+  contractId: varchar("contract_id").notNull(), // Reference to employment contract/record
+  terminationType: varchar("termination_type").notNull(), // 'dismissal', 'resignation', 'expiry', 'mutual_agreement'
+  terminationCause: varchar("termination_cause"), // Greek legal cause codes
+  effectiveDate: timestamp("effective_date").notNull(),
+  noticeDate: timestamp("notice_date"),
+  noticePeriodDays: integer("notice_period_days").default(0),
+  severanceEligible: boolean("severance_eligible").default(false),
+  yearsOfService: decimal("years_of_service", { precision: 10, scale: 2 }),
+  lastWorkingDay: timestamp("last_working_day"),
+  erganiEventId: varchar("ergani_event_id"), // ERGANI II termination event reference
+  legalBasis: varchar("legal_basis"), // Ν. 4093/2012 article reference
+  calculationRulesetId: varchar("calculation_ruleset_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: varchar("created_by").notNull(),
+});
+
+// Severance calculations with detailed breakdown
+export const severanceCalculations = pgTable("severance_calculations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  terminationRecordId: varchar("termination_record_id").notNull().references(() => terminationRecords.id),
+  severanceAmount: decimal("severance_amount", { precision: 10, scale: 2 }).default("0.00"),
+  unpaidWages: decimal("unpaid_wages", { precision: 10, scale: 2 }).default("0.00"),
+  unusedLeaveAmount: decimal("unused_leave_amount", { precision: 10, scale: 2 }).default("0.00"),
+  holidayAllowanceAmount: decimal("holiday_allowance_amount", { precision: 10, scale: 2 }).default("0.00"),
+  proRataEasterBonus: decimal("pro_rata_easter_bonus", { precision: 10, scale: 2 }).default("0.00"),
+  proRataChristmasBonus: decimal("pro_rata_christmas_bonus", { precision: 10, scale: 2 }).default("0.00"),
+  otherBalances: decimal("other_balances", { precision: 10, scale: 2 }).default("0.00"),
+  grossTotal: decimal("gross_total", { precision: 10, scale: 2 }).notNull(),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).default("0.00"),
+  socialSecurityAmount: decimal("social_security_amount", { precision: 10, scale: 2 }).default("0.00"),
+  netTotal: decimal("net_total", { precision: 10, scale: 2 }).notNull(),
+  calculationDate: timestamp("calculation_date").defaultNow(),
+  rulesetVersion: varchar("ruleset_version").notNull(),
+  explanationGr: text("explanation_gr"), // Greek explanation with legal citations
+  explanationEn: text("explanation_en"), // English explanation
+});
+
+// Final pay line items for detailed breakdown
+export const finalPayLines = pgTable("final_pay_lines", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  severanceCalculationId: varchar("severance_calculation_id").notNull().references(() => severanceCalculations.id),
+  lineType: varchar("line_type").notNull(), // 'severance', 'wages', 'leave', 'bonus', 'allowance', 'deduction', 'tax'
+  code: varchar("code").notNull(), // e.g., 'SEVERANCE_DISMISSAL', 'LEAVE_UNUSED', 'BONUS_EASTER_PRORATA'
+  description: varchar("description").notNull(),
+  descriptionGr: varchar("description_gr"),
+  baseAmount: decimal("base_amount", { precision: 10, scale: 2 }),
+  rate: decimal("rate", { precision: 10, scale: 4 }),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }),
+  calculatedAmount: decimal("calculated_amount", { precision: 10, scale: 2 }).notNull(),
+  legalReference: varchar("legal_reference"), // e.g., "Ν. 4093/2012 άρθρο 1"
+  calculationFormula: text("calculation_formula"),
+  sortOrder: integer("sort_order").default(0),
+});
+
+// Relations for severance tables
+export const terminationRecordsRelations = relations(terminationRecords, ({ one, many }) => ({
+  employee: one(employees, {
+    fields: [terminationRecords.employeeId],
+    references: [employees.employeeId],
+  }),
+  severanceCalculation: one(severanceCalculations, {
+    fields: [terminationRecords.id],
+    references: [severanceCalculations.terminationRecordId],
+  }),
+}));
+
+export const severanceCalculationsRelations = relations(severanceCalculations, ({ one, many }) => ({
+  terminationRecord: one(terminationRecords, {
+    fields: [severanceCalculations.terminationRecordId],
+    references: [terminationRecords.id],
+  }),
+  finalPayLines: many(finalPayLines),
+}));
+
+export const finalPayLinesRelations = relations(finalPayLines, ({ one }) => ({
+  severanceCalculation: one(severanceCalculations, {
+    fields: [finalPayLines.severanceCalculationId],
+    references: [severanceCalculations.id],
+  }),
+}));
+
+// Types for severance system
+export type TerminationRecord = typeof terminationRecords.$inferSelect;
+export type InsertTerminationRecord = typeof terminationRecords.$inferInsert;
+export type SeveranceCalculation = typeof severanceCalculations.$inferSelect;
+export type InsertSeveranceCalculation = typeof severanceCalculations.$inferInsert;
+export type FinalPayLine = typeof finalPayLines.$inferSelect;
+export type InsertFinalPayLine = typeof finalPayLines.$inferInsert;
+
+// Severance calculation interfaces
+export interface SeveranceCalculationInputs {
+  employeeId: string;
+  contractId: string;
+  terminationType: 'dismissal' | 'resignation' | 'expiry' | 'mutual_agreement';
+  terminationCause?: string;
+  effectiveDate: Date;
+  noticeDate?: Date;
+  yearsOfService: number;
+  lastMonthlyWage: number;
+  unusedLeaveDays: number;
+  pendingAllowances: Record<string, number>;
+  pendingTips: number;
+}
+
+export interface SeveranceCalculationOutputs {
+  severanceAmount: number;
+  unpaidWages: number;
+  unusedLeaveAmount: number;
+  holidayAllowanceAmount: number;
+  proRataEasterBonus: number;
+  proRataChristmasBonus: number;
+  otherBalances: number;
+  grossTotal: number;
+  taxAmount: number;
+  socialSecurityAmount: number;
+  netTotal: number;
+  explanationGr: string;
+  explanationEn: string;
+  finalPayLines: Array<{
+    lineType: string;
+    code: string;
+    description: string;
+    descriptionGr: string;
+    calculatedAmount: number;
+    legalReference?: string;
+    calculationFormula?: string;
+  }>;
+}
+
+// Severance Zod schemas
+export const insertTerminationRecordSchema = createInsertSchema(terminationRecords).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSeveranceCalculationSchema = createInsertSchema(severanceCalculations).omit({
+  id: true,
+  calculationDate: true,
+});
+
+export const insertFinalPayLineSchema = createInsertSchema(finalPayLines).omit({
+  id: true,
 });
 
 // Security & Audit Type Definitions

@@ -12,7 +12,7 @@ import { nanoid } from "nanoid";
  */
 
 export interface MakerCheckerRequest {
-  requestType: 'pack_change' | 'version_publish' | 'rollout_execute';
+  requestType: 'pack_change' | 'version_publish' | 'rollout_execute' | 'severance_execute';
   requestId: string;
   requestData: any;
   makerUserId: string;

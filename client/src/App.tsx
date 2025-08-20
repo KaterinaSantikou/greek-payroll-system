@@ -70,6 +70,7 @@ import S1MetricsPage from "@/pages/S1MetricsPage";
 import S1AcceptanceTesting from "@/pages/S1AcceptanceTesting";
 import EmbeddedPayroll from "@/pages/EmbeddedPayroll";
 import EmbedPage from "@/pages/EmbedPage";
+import { SeverancePage } from "@/pages/SeverancePage";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 
@@ -114,6 +115,7 @@ function Router() {
         <Route path="/employee-master" component={EmployeeMaster} />
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/exits" component={Exits} />
+        <Route path="/severance" component={SeverancePage} />
         <Route path="/teams-roles" component={TeamsRoles} />
         
         {/* Time Section */}
