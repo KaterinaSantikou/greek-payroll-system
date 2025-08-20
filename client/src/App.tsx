@@ -207,6 +207,7 @@ function Router() {
             <Route path="/exit-intent-demo" component={lazy(() => import("@/pages/ExitIntentDemo"))} />
             <Route path="/ab-testing-dashboard" component={lazy(() => import("@/pages/ABTestingDashboard"))} />
             <Route path="/ab-testing-demo" component={lazy(() => import("@/pages/ABTestingDemo"))} />
+            <Route path="/roi-calculator" component={lazy(() => import("@/pages/ROICalculator"))} />
             <Route component={NotFound} />
           </Switch>
         </Suspense>
