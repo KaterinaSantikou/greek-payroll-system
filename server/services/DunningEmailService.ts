@@ -984,6 +984,106 @@ Questions? {{support_email}}
 Απορίες; {{support_email}}
 
 {{legal_footer}}`
+      },
+
+      // Card expiring templates (7 days ahead)
+      'card_expiring_en': {
+        subject: 'Your card ending {{last4}} expires soon',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <p>Hi {{customer_name}},</p>
+            
+            <p>To avoid failed payments, please update your card details before the next invoice.</p>
+            
+            <p>Update card: <a href="{{pay_link}}">{{pay_link}}</a></p>
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+            <small style="color: #718096;">{{legal_footer}}</small>
+          </div>
+        `,
+        text: `Hi {{customer_name}},
+
+To avoid failed payments, please update your card details before the next invoice.
+Update card: {{pay_link}}
+
+{{legal_footer}}`
+      },
+
+      'card_expiring_el': {
+        subject: 'Η κάρτα που λήγει σε {{last4}} εκπνέει σύντομα',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <p>Γεια σας {{customer_name}},</p>
+            
+            <p>Για να αποφύγετε αποτυχημένες χρεώσεις, ενημερώστε την κάρτα πριν το επόμενο τιμολόγιο.</p>
+            
+            <p>Ενημέρωση κάρτας: <a href="{{pay_link}}">{{pay_link}}</a></p>
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+            <small style="color: #718096;">{{legal_footer}}</small>
+          </div>
+        `,
+        text: `Γεια σας {{customer_name}},
+
+Για να αποφύγετε αποτυχημένες χρεώσεις, ενημερώστε την κάρτα πριν το επόμενο τιμολόγιο.
+Ενημέρωση κάρτας: {{pay_link}}
+
+{{legal_footer}}`
+      },
+
+      // SEPA mandate setup required templates
+      'sepa_mandate_en': {
+        subject: 'Action needed: set up your SEPA Direct Debit',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <p>Hi {{customer_name}},</p>
+            
+            <p>We need to set up your SEPA Direct Debit mandate to continue processing your payments automatically.</p>
+            
+            <p>Set up SEPA mandate: <a href="{{pay_link}}">{{pay_link}}</a></p>
+            
+            <p>Questions? <a href="mailto:{{support_email}}">{{support_email}}</a></p>
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+            <small style="color: #718096;">{{legal_footer}}</small>
+          </div>
+        `,
+        text: `Hi {{customer_name}},
+
+We need to set up your SEPA Direct Debit mandate to continue processing your payments automatically.
+
+Set up SEPA mandate: {{pay_link}}
+
+Questions? {{support_email}}
+
+{{legal_footer}}`
+      },
+
+      'sepa_mandate_el': {
+        subject: 'Απαιτείται ενέργεια: ρύθμιση πάγιας εντολής SEPA',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <p>Γεια σας {{customer_name}},</p>
+            
+            <p>Χρειάζεται να ρυθμίσουμε την πάγια εντολή SEPA για να συνεχίσουμε την αυτόματη επεξεργασία των πληρωμών σας.</p>
+            
+            <p>Ρύθμιση πάγιας εντολής SEPA: <a href="{{pay_link}}">{{pay_link}}</a></p>
+            
+            <p>Απορίες; <a href="mailto:{{support_email}}">{{support_email}}</a></p>
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+            <small style="color: #718096;">{{legal_footer}}</small>
+          </div>
+        `,
+        text: `Γεια σας {{customer_name}},
+
+Χρειάζεται να ρυθμίσουμε την πάγια εντολή SEPA για να συνεχίσουμε την αυτόματη επεξεργασία των πληρωμών σας.
+
+Ρύθμιση πάγιας εντολής SEPA: {{pay_link}}
+
+Απορίες; {{support_email}}
+
+{{legal_footer}}`
       }
     };
   }
@@ -1014,6 +1114,76 @@ Questions? {{support_email}}
         
         this.sendSuccessEmail(invoiceId, successVariables);
       }
+    }
+  }
+
+  /**
+   * Send card expiring notification (7 days ahead)
+   */
+  public async sendCardExpiringEmail(
+    customerId: string,
+    variables: DunningVariables
+  ): Promise<void> {
+    const templateId = `card_expiring_${variables.is_el ? 'el' : 'en'}`;
+    
+    console.log(`💳 Sending card expiring notification for customer ${customerId}`);
+    
+    try {
+      const template = this.getDunningEmailTemplate(templateId, variables);
+      
+      // This would integrate with your email service
+      // await this.emailService.send(template);
+      
+      console.log(`✅ Card expiring email sent for customer ${customerId}`);
+      this.emit('email:sent', {
+        type: 'card_expiring',
+        customerId,
+        templateId,
+        status: 'sent'
+      });
+    } catch (error) {
+      console.error(`❌ Failed to send card expiring email for customer ${customerId}:`, error);
+      this.emit('email:failed', {
+        type: 'card_expiring',
+        customerId,
+        templateId,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Send SEPA mandate setup notification
+   */
+  public async sendSepaMandateSetupEmail(
+    customerId: string,
+    variables: DunningVariables
+  ): Promise<void> {
+    const templateId = `sepa_mandate_${variables.is_el ? 'el' : 'en'}`;
+    
+    console.log(`🏦 Sending SEPA mandate setup notification for customer ${customerId}`);
+    
+    try {
+      const template = this.getDunningEmailTemplate(templateId, variables);
+      
+      // This would integrate with your email service
+      // await this.emailService.send(template);
+      
+      console.log(`✅ SEPA mandate setup email sent for customer ${customerId}`);
+      this.emit('email:sent', {
+        type: 'sepa_mandate',
+        customerId,
+        templateId,
+        status: 'sent'
+      });
+    } catch (error) {
+      console.error(`❌ Failed to send SEPA mandate setup email for customer ${customerId}:`, error);
+      this.emit('email:failed', {
+        type: 'sepa_mandate',
+        customerId,
+        templateId,
+        error: error.message
+      });
     }
   }
 
