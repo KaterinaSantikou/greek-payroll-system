@@ -19,7 +19,8 @@ import {
   CheckCircle,
   AlertCircle
 } from "lucide-react";
-import { useLocale, formatCurrency } from "@/hooks/useLocale";
+import { useLocale } from "@/lib/i18n";
+import { formatCurrency } from "@/lib/i18n";
 
 export default function EmployeePortal() {
   const { t, locale } = useLocale();

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { useLocale } from "@/hooks/useLocale";
+import { useLocale } from "@/lib/i18n";
 import { formatNumber, formatCurrency as formatCurrencyLocale, formatRelativeTime } from "@/lib/i18n";
 import { 
   Building2, 

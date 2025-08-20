@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useLocale } from "@/hooks/useLocale";
+import { useLocale } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { 
