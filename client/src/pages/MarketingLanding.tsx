@@ -31,8 +31,8 @@ interface LandingPageProps {
   locale?: 'en' | 'el';
 }
 
-export default function MarketingLanding({ locale: initialLocale = 'en' }: LandingPageProps) {
-  const [locale, setLocale] = useState<'en' | 'el'>(initialLocale);
+export default function MarketingLanding(props: any) {
+  const [locale, setLocale] = useState<'en' | 'el'>('en');
   const [stickyVisible, setStickyVisible] = useState(false);
 
   // Sticky CTA visibility on scroll
