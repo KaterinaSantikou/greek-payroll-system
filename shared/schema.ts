@@ -5352,3 +5352,6 @@ export const documentPackDownloadRelations = relations(documentPackDownloads, ({
     references: [oboTokens.id],
   }),
 }));
+
+// Import canonical payment schema tables
+export * from './payments-canonical-schema';
