@@ -4247,6 +4247,150 @@ export const calcProvenance = pgTable("calc_provenance", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// =============================================================================
+// EXPLAIN-YOUR-PAY SYSTEM TABLES
+// =============================================================================
+
+// Explanation Rules - Master catalog of how to explain each earnings/deduction code
+export const explanationRules = pgTable("explanation_rules", {
+  ruleId: varchar("rule_id").primaryKey().default(sql`gen_random_uuid()`),
+  earningsCode: varchar("earnings_code", { length: 20 }).notNull(), // REG, OT1, NIGHT_25, SUNDAY_75, BONUS, TAX_WHT, EFKA_EE
+  ruleVersion: varchar("rule_version", { length: 20 }).notNull(), // v2025.1
+  
+  // Bilingual Labels
+  labelEn: varchar("label_en", { length: 100 }).notNull(), // "Regular Hours"
+  labelEl: varchar("label_el", { length: 100 }).notNull(), // "Κανονικές Ώρες"
+  
+  // Formula Template with placeholders
+  formulaTemplateEn: text("formula_template_en").notNull(), // "{hours} hours × €{hourly_rate} = €{amount}"
+  formulaTemplateEl: text("formula_template_el").notNull(), // "{hours} ώρες × €{hourly_rate} = €{amount}"
+  
+  // Explanation Template 
+  explanationTemplateEn: text("explanation_template_en").notNull(),
+  explanationTemplateEl: text("explanation_template_el").notNull(),
+  
+  // Calculation metadata
+  calculationType: varchar("calculation_type", { length: 50 }).notNull(), // hourly, percentage, fixed, tiered
+  variables: jsonb("variables"), // {hours: "timesheet.regular", rate: "contract.hourly_rate"}
+  
+  // Policy reference
+  policyRef: varchar("policy_ref", { length: 100 }), // Reference to policy document
+  regulationRef: varchar("regulation_ref", { length: 100 }), // Greek law reference
+  
+  isActive: boolean("is_active").default(true),
+  effectiveFrom: date("effective_from").notNull(),
+  effectiveTo: date("effective_to"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Payslip Explanations - Generated explanations for each payslip
+export const payslipExplanations = pgTable("payslip_explanations", {
+  explanationId: varchar("explanation_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").notNull(),
+  payrollRunId: varchar("payroll_run_id").notNull(),
+  periodStart: date("period_start").notNull(),
+  periodEnd: date("period_end").notNull(),
+  
+  // Generated explanation content
+  explanationJson: jsonb("explanation_json").notNull(), // Structured explanation data
+  explanationTextEn: text("explanation_text_en"),
+  explanationTextEl: text("explanation_text_el"),
+  
+  // Coverage metrics
+  totalPayslipValue: decimal("total_payslip_value", { precision: 10, scale: 2 }).notNull(),
+  explainedValue: decimal("explained_value", { precision: 10, scale: 2 }).notNull(),
+  coveragePercentage: decimal("coverage_percentage", { precision: 5, scale: 2 }).notNull(), // 95.5
+  unexplainedLines: jsonb("unexplained_lines"), // Array of line items that couldn't be explained
+  
+  // Generation metadata
+  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+  generatedBy: varchar("generated_by").default("system").notNull(), // system, llm-rewrite
+  rulePackVersion: varchar("rule_pack_version", { length: 20 }).notNull(),
+  confidenceScore: decimal("confidence_score", { precision: 3, scale: 2 }), // 0.0-1.0
+  
+  // Quality metrics
+  csatRating: integer("csat_rating"), // 1-5 scale
+  csatFeedback: text("csat_feedback"),
+  csatSubmittedAt: timestamp("csat_submitted_at"),
+  
+  status: varchar("status", { length: 20 }).default("generated"), // generated, reviewed, published, flagged
+  reviewedBy: varchar("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Explanation Citations - Links explanation sections to specific rules and formulas
+export const explanationCitations = pgTable("explanation_citations", {
+  citationId: varchar("citation_id").primaryKey().default(sql`gen_random_uuid()`),
+  explanationId: varchar("explanation_id").notNull(),
+  
+  // Citation details
+  sectionType: varchar("section_type", { length: 50 }).notNull(), // earnings, deductions, summary
+  lineItem: varchar("line_item", { length: 100 }).notNull(), // Specific payslip line
+  ruleId: varchar("rule_id").notNull(),
+  
+  // Calculated values used in this citation
+  calculatedAmount: decimal("calculated_amount", { precision: 10, scale: 2 }).notNull(),
+  variables: jsonb("variables"), // Actual values used: {hours: 40, rate: 15.50}
+  formulaUsed: text("formula_used"), // Rendered formula: "40 hours × €15.50 = €620.00"
+  
+  // Display position
+  displayOrder: integer("display_order").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Explanation Feedback - Employee feedback on explanation quality
+export const explanationFeedback = pgTable("explanation_feedback", {
+  feedbackId: varchar("feedback_id").primaryKey().default(sql`gen_random_uuid()`),
+  explanationId: varchar("explanation_id").notNull(),
+  employeeId: varchar("employee_id").notNull(),
+  
+  // Feedback details
+  helpfulnessRating: integer("helpfulness_rating"), // 1-5 scale
+  clarityRating: integer("clarity_rating"), // 1-5 scale  
+  completenessRating: integer("completeness_rating"), // 1-5 scale
+  overallRating: integer("overall_rating"), // 1-5 scale (CSAT)
+  
+  feedbackText: text("feedback_text"),
+  suggestedImprovements: text("suggested_improvements"),
+  
+  // Specific issues
+  confusingItems: jsonb("confusing_items"), // Array of items that were confusing
+  missingItems: jsonb("missing_items"), // Items employee expected to see explained
+  
+  // Engagement metrics
+  timeSpentReading: integer("time_spent_reading"), // Seconds
+  sectionsViewed: jsonb("sections_viewed"), // Which sections were expanded/viewed
+  citationsClicked: jsonb("citations_clicked"), // Which citations were clicked for details
+  
+  submittedAt: timestamp("submitted_at").defaultNow(),
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+});
+
+// Explanation Templates - Reusable templates for common scenarios
+export const explanationTemplates = pgTable("explanation_templates", {
+  templateId: varchar("template_id").primaryKey().default(sql`gen_random_uuid()`),
+  templateName: varchar("template_name", { length: 100 }).notNull(),
+  templateType: varchar("template_type", { length: 50 }).notNull(), // section, summary, intro, formula
+  
+  // Template content
+  templateEn: text("template_en").notNull(),
+  templateEl: text("template_el").notNull(),
+  
+  // Template variables and usage
+  variables: jsonb("variables"), // Required variables for this template
+  usageNotes: text("usage_notes"),
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Maker-Checker approval workflow
 export const makerCheckerApprovals = pgTable("maker_checker_approvals", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -4467,6 +4611,18 @@ export const insertFinalPayLineSchema = createInsertSchema(finalPayLines).omit({
   id: true,
 });
 
+// Explain-Your-Pay Type Definitions
+export type ExplanationRule = typeof explanationRules.$inferSelect;
+export type InsertExplanationRule = typeof explanationRules.$inferInsert;
+export type PayslipExplanation = typeof payslipExplanations.$inferSelect;
+export type InsertPayslipExplanation = typeof payslipExplanations.$inferInsert;
+export type ExplanationCitation = typeof explanationCitations.$inferSelect;
+export type InsertExplanationCitation = typeof explanationCitations.$inferInsert;
+export type ExplanationFeedback = typeof explanationFeedback.$inferSelect;
+export type InsertExplanationFeedback = typeof explanationFeedback.$inferInsert;
+export type ExplanationTemplate = typeof explanationTemplates.$inferSelect;
+export type InsertExplanationTemplate = typeof explanationTemplates.$inferInsert;
+
 // Security & Audit Type Definitions
 export type CalcProvenance = typeof calcProvenance.$inferSelect;
 export type InsertCalcProvenance = typeof calcProvenance.$inferInsert;
@@ -4474,6 +4630,36 @@ export type MakerCheckerApproval = typeof makerCheckerApprovals.$inferSelect;
 export type InsertMakerCheckerApproval = typeof makerCheckerApprovals.$inferInsert;
 export type DocumentTrail = typeof documentTrail.$inferSelect;
 export type InsertDocumentTrail = typeof documentTrail.$inferInsert;
+
+// Explain-Your-Pay Zod Schemas
+export const insertExplanationRuleSchema = createInsertSchema(explanationRules).omit({
+  ruleId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPayslipExplanationSchema = createInsertSchema(payslipExplanations).omit({
+  explanationId: true,
+  generatedAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertExplanationCitationSchema = createInsertSchema(explanationCitations).omit({
+  citationId: true,
+  createdAt: true,
+});
+
+export const insertExplanationFeedbackSchema = createInsertSchema(explanationFeedback).omit({
+  feedbackId: true,
+  submittedAt: true,
+});
+
+export const insertExplanationTemplateSchema = createInsertSchema(explanationTemplates).omit({
+  templateId: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
 // Security & Audit Zod Schemas
 export const insertCalcProvenanceSchema = createInsertSchema(calcProvenance).omit({

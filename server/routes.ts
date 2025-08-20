@@ -53,6 +53,7 @@ import { registerLaborNewsfeedRoutes } from "./api/laborNewsfeed";
 import { registerInstantPaymentRoutes } from "./api/instantPayments";
 import { registerPayEquityRoutes } from "./api/payEquity";
 import { registerCsrdRoutes } from "./api/csrd";
+import { registerExplanationRoutes } from "./api/explanations";
 import { instantReissueRoutes } from "./api/instantReissue";
 import securityRoutes from "./routes/securityRoutes";
 import cbaPackRoutes from "./routes/cbaPackRoutes";
@@ -3395,6 +3396,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerInstantPaymentRoutes(app);
   registerPayEquityRoutes(app);
   registerCsrdRoutes(app);
+  registerExplanationRoutes(app);
   
   // IRIS/SCT Instant Re-issue System - BDD compliant
   instantReissueRoutes(app);
