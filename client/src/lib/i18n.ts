@@ -429,6 +429,82 @@ const translations: Record<Locale, TranslationKeys> = {
     'errors.unauthorized': 'Access denied',
     'errors.not_found': 'Item not found',
     'errors.server_error': 'Server error occurred',
+
+    // Comprehensive Rota System - English
+    'rota.title': 'Work Schedule Management',
+    'rota.subtitle': 'Comprehensive team scheduling with Greek compliance',
+    'rota.builder': 'Rota Builder',
+    'rota.people': 'People & Availability',
+    'rota.costs': 'Costs & Budget',
+    'rota.compliance': 'Compliance Engine',
+    'rota.analytics': 'Labor Analytics',
+    'rota.publishing': 'Publishing & Comms',
+    'rota.mobile': 'Mobile Features',
+
+    // Rota Builder
+    'rota.week_view': 'Week View',
+    'rota.fortnight_view': 'Fortnight View', 
+    'rota.month_view': 'Month View',
+    'rota.drag_drop': 'Drag & Drop Shifts',
+    'rota.templates': 'Templates',
+    'rota.copy_paste': 'Copy/Paste',
+    'rota.bulk_edit': 'Bulk Edit',
+    'rota.shift_details': 'Shift Details',
+    'rota.role_required': 'Role Required',
+    'rota.min_hours': 'Min Hours',
+    'rota.max_hours': 'Max Hours',
+    'rota.rest_period': 'Rest Period',
+
+    // People Layer
+    'rota.availability_requests': 'Availability Requests',
+    'rota.time_off': 'Time Off Requests',
+    'rota.shift_swaps': 'Shift Swaps',
+    'rota.shift_bidding': 'Shift Bidding',
+    'rota.approval_flow': 'Approval Flow',
+    'rota.pending_approvals': 'Pending Approvals',
+
+    // Costs & Budget
+    'rota.labor_cost_forecast': 'Labor Cost Forecast',
+    'rota.budget_vs_actual': 'Budget vs Actual',
+    'rota.over_budget': 'Over Budget',
+    'rota.under_budget': 'Under Budget',
+    'rota.cost_per_day': 'Cost per Day',
+    'rota.cost_per_week': 'Cost per Week',
+
+    // Mobile & Time Tracking
+    'rota.clock_in': 'Clock In',
+    'rota.clock_out': 'Clock Out',
+    'rota.gps_verify': 'GPS Verification',
+    'rota.geofence': 'Geofence',
+    'rota.early_arrival': 'Early Arrival',
+    'rota.late_arrival': 'Late Arrival',
+    'rota.overtime_flag': 'Overtime Alert',
+
+    // Greek Compliance
+    'rota.night_shift': 'Night Shift (22:00-06:00)',
+    'rota.sunday_premium': 'Sunday Premium',
+    'rota.holiday_premium': 'Holiday Premium', 
+    'rota.max_weekly': 'Max Weekly Hours',
+    'rota.rest_between': 'Rest Between Shifts',
+    'rota.sixth_day': 'Sixth Day Rules',
+    'rota.ergani_announcement': 'ERGANI II Announcement',
+
+    // Analytics
+    'rota.coverage_percent': 'Coverage %',
+    'rota.understaffed': 'Understaffed Windows',
+    'rota.overtime_risk': 'Overtime Risk',
+    'rota.forecast_accuracy': 'Forecast Accuracy',
+    'rota.schedule_adherence': 'Schedule Adherence',
+    'rota.cost_per_role': 'Cost per Role',
+    'rota.no_show_rate': 'No-Show Rate',
+
+    // Publishing
+    'rota.draft': 'Draft',
+    'rota.publish': 'Publish',
+    'rota.published': 'Published',
+    'rota.notify_staff': 'Notify Staff',
+    'rota.acknowledge': 'Acknowledge',
+    'rota.acknowledged': 'Acknowledged',
   },
   
   el: {
@@ -513,6 +589,82 @@ const translations: Record<Locale, TranslationKeys> = {
     'common.add': 'Προσθήκη',
     'common.create': 'Δημιουργία',
     'common.update': 'Ενημέρωση',
+
+    // Comprehensive Rota System - Greek
+    'rota.title': 'Διαχείριση Ωραρίων Εργασίας',
+    'rota.subtitle': 'Ολοκληρωμένος προγραμματισμός ομάδας με ελληνική συμμόρφωση',
+    'rota.builder': 'Δημιουργός Ροτών',
+    'rota.people': 'Άτομα & Διαθεσιμότητα',
+    'rota.costs': 'Κόστη & Προϋπολογισμός',
+    'rota.compliance': 'Μηχανή Συμμόρφωσης',
+    'rota.analytics': 'Αναλυτικά Εργασίας',
+    'rota.publishing': 'Δημοσίευση & Επικοινωνία',
+    'rota.mobile': 'Χαρακτηριστικά Κινητού',
+
+    // Rota Builder - Greek
+    'rota.week_view': 'Προβολή Εβδομάδας',
+    'rota.fortnight_view': 'Προβολή Δεκαπενθημέρου', 
+    'rota.month_view': 'Προβολή Μήνα',
+    'rota.drag_drop': 'Σύρσιμο & Εναπόθεση Βαρδιών',
+    'rota.templates': 'Πρότυπα',
+    'rota.copy_paste': 'Αντιγραφή/Επικόλληση',
+    'rota.bulk_edit': 'Μαζική Επεξεργασία',
+    'rota.shift_details': 'Λεπτομέρειες Βάρδιας',
+    'rota.role_required': 'Απαιτούμενος Ρόλος',
+    'rota.min_hours': 'Ελάχιστες Ώρες',
+    'rota.max_hours': 'Μέγιστες Ώρες',
+    'rota.rest_period': 'Περίοδος Ανάπαυσης',
+
+    // People Layer - Greek
+    'rota.availability_requests': 'Αιτήματα Διαθεσιμότητας',
+    'rota.time_off': 'Αιτήματα Άδειας',
+    'rota.shift_swaps': 'Ανταλλαγές Βαρδιών',
+    'rota.shift_bidding': 'Προσφορές Βαρδιών',
+    'rota.approval_flow': 'Ροή Έγκρισης',
+    'rota.pending_approvals': 'Εκκρεμείς Εγκρίσεις',
+
+    // Costs & Budget - Greek
+    'rota.labor_cost_forecast': 'Πρόβλεψη Κόστους Εργασίας',
+    'rota.budget_vs_actual': 'Προϋπολογισμός εναντίον Πραγματικού',
+    'rota.over_budget': 'Πάνω από Προϋπολογισμό',
+    'rota.under_budget': 'Κάτω από Προϋπολογισμό',
+    'rota.cost_per_day': 'Κόστος ανά Ημέρα',
+    'rota.cost_per_week': 'Κόστος ανά Εβδομάδα',
+
+    // Mobile & Time Tracking - Greek
+    'rota.clock_in': 'Είσοδος',
+    'rota.clock_out': 'Έξοδος',
+    'rota.gps_verify': 'Επιβεβαίωση GPS',
+    'rota.geofence': 'Γεωφράκτης',
+    'rota.early_arrival': 'Νωρίς Άφιξη',
+    'rota.late_arrival': 'Αργή Άφιξη',
+    'rota.overtime_flag': 'Ειδοποίηση Υπερωριών',
+
+    // Greek Compliance
+    'rota.night_shift': 'Νυχτερινή Βάρδια (22:00-06:00)',
+    'rota.sunday_premium': 'Επίδομα Κυριακής',
+    'rota.holiday_premium': 'Επίδομα Αργίας', 
+    'rota.max_weekly': 'Μέγιστες Εβδομαδιαίες Ώρες',
+    'rota.rest_between': 'Ανάπαυση Μεταξύ Βαρδιών',
+    'rota.sixth_day': 'Κανόνες Έκτης Ημέρας',
+    'rota.ergani_announcement': 'Προαναγγελία ΕΡΓΑΝΗ ΙΙ',
+
+    // Analytics - Greek
+    'rota.coverage_percent': 'Κάλυψη %',
+    'rota.understaffed': 'Ανεπαρκώς Στελεχωμένα Παράθυρα',
+    'rota.overtime_risk': 'Κίνδυνος Υπερωριών',
+    'rota.forecast_accuracy': 'Ακρίβεια Πρόβλεψης',
+    'rota.schedule_adherence': 'Συμμόρφωση Προγράμματος',
+    'rota.cost_per_role': 'Κόστος ανά Ρόλο',
+    'rota.no_show_rate': 'Ποσοστό Μη Εμφάνισης',
+
+    // Publishing - Greek
+    'rota.draft': 'Προσχέδιο',
+    'rota.publish': 'Δημοσίευση',
+    'rota.published': 'Δημοσιευμένο',
+    'rota.notify_staff': 'Ειδοποίηση Προσωπικού',
+    'rota.acknowledge': 'Αναγνώριση',
+    'rota.acknowledged': 'Αναγνωρισμένο',
 
     // Status labels
     'status.pending': 'Εκκρεμής',
