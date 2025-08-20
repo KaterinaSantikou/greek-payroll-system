@@ -53,7 +53,8 @@ import {
   Command,
   Calculator,
   User,
-  UserPlus
+  UserPlus,
+  ChevronRight
 } from "lucide-react";
 
 interface Property {
@@ -844,57 +845,87 @@ export default function Dashboard() {
                   <div className="space-y-3">
                     
                     {/* Approvals Pending */}
-                    <div className="p-3 border rounded-lg bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
-                      <h4 className="font-medium text-sm mb-2 flex items-center gap-2 text-orange-800 dark:text-orange-200">
-                        <Clock className="h-4 w-4" />
+                    <div className="p-4 border-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border-amber-200 dark:border-amber-700 shadow-sm">
+                      <h4 className="font-semibold text-sm mb-3 flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                        <div className="p-1 bg-amber-100 dark:bg-amber-800/50 rounded-full">
+                          <Clock className="h-4 w-4 text-amber-600 dark:text-amber-300" />
+                        </div>
                         {locale === 'el' ? 'Εγκρίσεις σε Αναμονή' : 'Approvals Pending'}
+                        <Badge variant="secondary" className="ml-auto bg-amber-100 text-amber-800 border-amber-300">
+                          {actionInboxData.approvals.reduce((sum, item) => sum + item.count, 0)}
+                        </Badge>
                       </h4>
                       <div className="grid grid-cols-3 gap-3">
                         {actionInboxData.approvals.map((item, idx) => (
                           <Button 
                             key={idx} 
-                            variant="outline" 
+                            variant="ghost" 
                             size="sm" 
-                            className="justify-between h-auto p-2"
+                            className="justify-between h-auto p-3 min-h-[52px] touch-manipulation bg-white/60 dark:bg-gray-800/60 hover:bg-amber-100/70 dark:hover:bg-amber-900/30 border border-amber-200/50 dark:border-amber-700/50 rounded-lg transition-all duration-200"
                             onClick={() => handleActionClick('approval', item.type)}
                           >
                             <div className="text-left min-w-0 flex-1">
-                              <div className="font-medium text-xs truncate">
+                              <div className="font-semibold text-sm truncate text-gray-800 dark:text-gray-200">
                                 {item.displayName}
                               </div>
-                              <div className="text-xs text-gray-500">{item.count} {locale === 'el' ? 'στοιχεία' : 'items'}</div>
+                              <div className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                                {item.count} {locale === 'el' ? 'στοιχεία' : 'items'} • {locale === 'el' ? 'Απαιτεί έγκριση' : 'Requires approval'}
+                              </div>
                             </div>
-                            <Badge 
-                              variant={item.urgency === 'high' ? 'destructive' : 'secondary'}
-                              className="text-xs"
-                            >
-                              {item.urgency}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant={item.urgency === 'high' ? 'destructive' : 'secondary'}
+                                className={`text-xs font-medium ${
+                                  item.urgency === 'high' 
+                                    ? 'bg-red-100 text-red-700 border-red-300' 
+                                    : 'bg-gray-100 text-gray-600 border-gray-300'
+                                }`}
+                              >
+                                {item.urgency === 'high' ? (locale === 'el' ? 'Επείγον' : 'Urgent') : (locale === 'el' ? 'Κανονικό' : 'Normal')}
+                              </Badge>
+                              <ChevronRight className="h-4 w-4 text-amber-500" />
+                            </div>
                           </Button>
                         ))}
                       </div>
                     </div>
 
                     {/* Exceptions to Resolve */}
-                    <div className="p-3 border rounded-lg bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800">
-                      <h4 className="font-medium text-sm mb-2 flex items-center gap-2 text-red-800 dark:text-red-200">
-                        <AlertTriangle className="h-4 w-4" />
+                    <div className="p-4 border-2 rounded-xl bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border-red-200 dark:border-red-700 shadow-sm">
+                      <h4 className="font-semibold text-sm mb-3 flex items-center gap-2 text-red-800 dark:text-red-200">
+                        <div className="p-1 bg-red-100 dark:bg-red-800/50 rounded-full">
+                          <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-300" />
+                        </div>
                         {locale === 'el' ? 'Εξαιρέσεις προς Επίλυση' : 'Exceptions to Resolve'}
+                        <Badge variant="destructive" className="ml-auto bg-red-100 text-red-800 border-red-300">
+                          {actionInboxData.exceptions.reduce((sum, item) => sum + item.count, 0)}
+                        </Badge>
                       </h4>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {actionInboxData.exceptions.map((item, idx) => (
                           <Button 
                             key={idx} 
-                            variant="outline" 
+                            variant="ghost" 
                             size="sm"
-                            className="justify-between h-auto p-2"
+                            className="justify-between h-auto p-3 min-h-[52px] touch-manipulation bg-white/60 dark:bg-gray-800/60 hover:bg-red-100/70 dark:hover:bg-red-900/30 border border-red-200/50 dark:border-red-700/50 rounded-lg transition-all duration-200"
                             onClick={() => handleActionClick('exception', item.type)}
                           >
                             <div className="text-left min-w-0 flex-1">
-                              <div className="font-medium text-xs truncate">
+                              <div className="font-semibold text-sm truncate text-gray-800 dark:text-gray-200">
                                 {item.displayName}
                               </div>
-                              <div className="text-xs text-gray-500">{item.count} {locale === 'el' ? 'στοιχεία' : 'items'}</div>
+                              <div className="text-xs text-red-600 dark:text-red-400 font-medium">
+                                {item.count} {locale === 'el' ? 'περιστατικά' : 'incidents'} • {locale === 'el' ? 'Απαιτεί διόρθωση' : 'Requires fix'}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant="destructive" 
+                                className="text-xs font-medium bg-red-100 text-red-700 border-red-300"
+                              >
+                                {item.impact === 'high' ? (locale === 'el' ? 'Υψηλό' : 'High') : (locale === 'el' ? 'Μέτριο' : 'Medium')}
+                              </Badge>
+                              <AlertTriangle className="h-4 w-4 text-red-500" />
                             </div>
                           </Button>
                         ))}
@@ -934,28 +965,57 @@ export default function Dashboard() {
                     </div>
 
                     {/* Bank Tasks */}
-                    <div className="p-3 border rounded-lg bg-green-50 dark:bg-green-950/20">
-                      <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
-                        <BanknoteIcon className="h-4 w-4" />
+                    <div className="p-4 border-2 rounded-xl bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30 border-emerald-200 dark:border-emerald-700 shadow-sm">
+                      <h4 className="font-semibold text-sm mb-3 flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
+                        <div className="p-1 bg-emerald-100 dark:bg-emerald-800/50 rounded-full">
+                          <BanknoteIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-300" />
+                        </div>
                         {locale === 'el' ? 'Τραπεζικές Εργασίες' : 'Bank Tasks'}
+                        <Badge variant="secondary" className="ml-auto bg-emerald-100 text-emerald-800 border-emerald-300">
+                          {actionInboxData.banking.reduce((sum, item) => sum + (item.count || 0), 0)}
+                        </Badge>
                       </h4>
                       <div className="grid grid-cols-2 gap-3">
                         {actionInboxData.banking.map((item, idx) => (
                           <Button 
                             key={idx} 
-                            variant="outline" 
+                            variant="ghost" 
                             size="sm"
-                            className="justify-between h-auto p-2"
+                            className={`justify-between h-auto p-3 min-h-[52px] touch-manipulation border rounded-lg transition-all duration-200 ${
+                              item.count === 0 
+                                ? 'bg-gray-50/60 dark:bg-gray-800/60 border-gray-200/50 dark:border-gray-700/50 opacity-60' 
+                                : 'bg-white/60 dark:bg-gray-800/60 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/30 border-emerald-200/50 dark:border-emerald-700/50'
+                            }`}
                             onClick={() => handleActionClick('banking', item.type)}
                             disabled={item.count === 0}
                           >
                             <div className="text-left min-w-0 flex-1">
-                              <div className="font-medium text-xs truncate">
+                              <div className={`font-semibold text-sm truncate ${
+                                item.count === 0 ? 'text-gray-500 dark:text-gray-400' : 'text-gray-800 dark:text-gray-200'
+                              }`}>
                                 {item.displayName}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className={`text-xs font-medium ${
+                                item.count === 0 
+                                  ? 'text-gray-400 dark:text-gray-500' 
+                                  : 'text-emerald-600 dark:text-emerald-400'
+                              }`}>
                                 {item.count || (locale === 'el' ? 'κανένα' : 'none')} {item.count === 1 ? (locale === 'el' ? 'στοιχείο' : 'item') : (locale === 'el' ? 'στοιχεία' : 'items')}
+                                {item.count > 0 && ` • ${locale === 'el' ? 'Έτοιμο για εξαγωγή' : 'Ready for export'}`}
                               </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {item.count > 0 && (
+                                <Badge 
+                                  variant="secondary" 
+                                  className="text-xs font-medium bg-emerald-100 text-emerald-700 border-emerald-300"
+                                >
+                                  {locale === 'el' ? 'Έτοιμο' : 'Ready'}
+                                </Badge>
+                              )}
+                              <Download className={`h-4 w-4 ${
+                                item.count === 0 ? 'text-gray-400' : 'text-emerald-500'
+                              }`} />
                             </div>
                           </Button>
                         ))}
