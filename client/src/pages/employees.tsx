@@ -168,9 +168,9 @@ export default function Employees() {
     exportEmployeesMutation.mutate();
   };
 
-  // Get unique departments and positions for filters
-  const departments = Array.from(new Set(employees.map((emp: Employee) => emp.department)));
-  const positions = Array.from(new Set(employees.map((emp: Employee) => emp.position)));
+  // Get unique departments and positions for filters - using available fields
+  const departments = ['Front Office', 'Housekeeping', 'Food & Beverage', 'Maintenance']; // Static for now
+  const positions = ['Manager', 'Supervisor', 'Staff', 'Intern']; // Static for now
 
   useEffect(() => {
     const userId = null; // This would be checked by the auth system
@@ -289,10 +289,10 @@ export default function Employees() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {employees.map((employee: Employee) => (
             <EmployeeCard
-              key={employee.id}
+              key={employee.employeeId}
               employee={employee}
               onEdit={() => handleEditEmployee(employee)}
-              onDelete={() => handleDeleteEmployee(employee.id)}
+              onDelete={() => handleDeleteEmployee(employee.employeeId)}
             />
           ))}
         </div>
