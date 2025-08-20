@@ -54,6 +54,12 @@ export const paymentBatches = pgTable("payment_batches", {
   camt054Received: boolean("camt054_received").default(false),
   reconciliationStatus: varchar("reconciliation_status", { length: 20 }).default("pending"), // pending, matched, discrepant
   
+  // Disaster Mode / One-Click Flow fields
+  freezeId: varchar("freeze_id", { length: 20 }),
+  freezeHash: varchar("freeze_hash", { length: 64 }),
+  lockedBy: varchar("locked_by", { length: 50 }),
+  lockedAt: timestamp("locked_at"),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -95,6 +101,10 @@ export const paymentTransactions = pgTable("payment_transactions", {
   bankReference: varchar("bank_reference", { length: 100 }),
   settledAmount: decimal("settled_amount", { precision: 10, scale: 2 }),
   settledAt: timestamp("settled_at"),
+  
+  // Disaster Mode fields
+  freezeId: varchar("freeze_id", { length: 20 }),
+  freezeHash: varchar("freeze_hash", { length: 64 }),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -169,6 +179,39 @@ export const bankMessages = pgTable("bank_messages", {
 // =============================================================================
 // PAYMENT EXCEPTIONS & REJECTS
 // =============================================================================
+
+// =============================================================================
+// OFFLINE KITS (Disaster Mode)
+// =============================================================================
+
+export const offlineKits = pgTable("offline_kits", {
+  kitId: varchar("kit_id").primaryKey(),
+  freezeId: varchar("freeze_id", { length: 20 }).notNull(),
+  runId: varchar("run_id", { length: 100 }).notNull(),
+  
+  // Kit Details
+  freezeHash: varchar("freeze_hash", { length: 64 }).notNull(),
+  operatorId: varchar("operator_id", { length: 50 }).notNull(),
+  reason: text("reason"),
+  
+  // Kit Contents Metadata
+  totalLines: integer("total_lines").notNull(),
+  totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
+  bankProfiles: jsonb("bank_profiles"), // Array of bank profile IDs
+  
+  // File Information
+  encryptionMethod: varchar("encryption_method", { length: 50 }).default("AES-256-GCM"),
+  kitSizeBytes: integer("kit_size_bytes"),
+  downloadCount: integer("download_count").default(0),
+  
+  // Status
+  status: varchar("status", { length: 20 }).default("generated"), // generated, downloaded, expired
+  expiresAt: timestamp("expires_at"), // Kit expiry for security
+  lastDownloadedAt: timestamp("last_downloaded_at"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
 export const paymentExceptions = pgTable("payment_exceptions", {
   exceptionId: varchar("exception_id").primaryKey(),
@@ -277,6 +320,14 @@ export const insertPaymentExceptionSchema = createInsertSchema(paymentExceptions
 });
 export type InsertPaymentException = z.infer<typeof insertPaymentExceptionSchema>;
 export type PaymentException = typeof paymentExceptions.$inferSelect;
+
+// Offline Kits schemas
+export const insertOfflineKitSchema = createInsertSchema(offlineKits).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertOfflineKit = z.infer<typeof insertOfflineKitSchema>;
+export type OfflineKit = typeof offlineKits.$inferSelect;
 
 // =============================================================================
 // WEBHOOK EVENTS (pain.002, camt.054 tracking)

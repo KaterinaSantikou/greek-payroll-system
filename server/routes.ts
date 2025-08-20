@@ -73,6 +73,7 @@ import { paymentStateMachineRoutes } from "./api/paymentStateMachine";
 import { reconciliationEngineRoutes } from "./api/reconciliationEngine";
 import { cutOffLogicRoutes } from "./api/cutOffLogic";
 import { reissueAlgorithmRoutes } from "./api/reissueAlgorithm";
+import { oneClickFlowRoutes } from "./api/oneClickFlow";
 import eventQueueAPI from "./api/eventQueue";
 // ibanValidationRoutes already imported on line 5
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
@@ -3794,6 +3795,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GRC (Governance, Risk & Compliance) Mock API Routes
   const { registerMockGRCRoutes } = await import('./api/mockGRC');
   registerMockGRCRoutes(app);
+
+  // One-Click Flow (Disaster Mode) API Routes
+  app.post('/api/one-click-flow/freeze', isAuthenticated, oneClickFlowRoutes.freezeRunAndGenerateKit);
+  app.get('/api/one-click-flow/status/:runId', isAuthenticated, oneClickFlowRoutes.getDisasterModeStatus);
+  app.get('/api/one-click-flow/download/:freezeId', isAuthenticated, oneClickFlowRoutes.downloadOfflineKit);
+  app.post('/api/one-click-flow/reconcile/:freezeId', isAuthenticated, oneClickFlowRoutes.uploadReconciliation);
+  app.get('/api/one-click-flow/pre-checks/:runId', isAuthenticated, oneClickFlowRoutes.performPreChecks);
 
   const httpServer = createServer(app);
   return httpServer;
