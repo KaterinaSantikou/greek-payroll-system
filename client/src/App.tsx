@@ -10,43 +10,58 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import LandingPage from "@/pages/LandingPage";
 import MarketingLanding from "@/pages/MarketingLanding";
-// Lazy load major pages for better performance
+// Aggressive lazy loading for sub-2s Greek internet speeds
+// Core pages - highest priority lazy loading
 const Home = lazy(() => import("@/pages/home"));
+
+// Critical Greek payroll pages - medium priority
 const Employees = lazy(() => import("@/pages/employees"));
-const EmployeeMaster = lazy(() => import("@/pages/employeeMaster"));
 const Payroll = lazy(() => import("@/pages/payroll"));
+const ErganiCompliance = lazy(() => import("@/pages/erganiCompliance"));
+
+// Feature pages - low priority lazy loading with chunk optimization
+const EmployeeMaster = lazy(() => import("@/pages/employeeMaster"));
 const Schedules = lazy(() => import("@/pages/schedules"));
 const Allowances = lazy(() => import("@/pages/allowances"));
 const Overtime = lazy(() => import("@/pages/overtime"));
 const Leave = lazy(() => import("@/pages/leave"));
 const Legal = lazy(() => import("@/pages/legal"));
+
+// Advanced features - lowest priority, load on demand
 const DigitalWorkCard = lazy(() => import("@/pages/digitalWorkCard"));
 const AdvancedTimeCapture = lazy(() => import("@/pages/advancedTimeCapture"));
 const EnterpriseArchitecture = lazy(() => import("@/pages/enterpriseArchitecture"));
-const ErganiCompliance = lazy(() => import("@/pages/erganiCompliance"));
 const PayrollIntegration = lazy(() => import("@/pages/payrollIntegration"));
 const ManagerWorkflows = lazy(() => import("@/pages/managerWorkflows"));
 const HotelOperations = lazy(() => import("@/pages/hotelOperations"));
-import HotelEnhancements from "@/pages/hotelEnhancements";
-import HotelTipPooling from "@/pages/hotelTipPooling";
-import UXArchitecture from "@/pages/uxArchitecture";
-import Compliance from "@/pages/compliance";
+
+// Non-critical pages - keep non-lazy for now but consider lazy loading
+const HotelEnhancements = lazy(() => import("@/pages/hotelEnhancements"));
+const HotelTipPooling = lazy(() => import("@/pages/hotelTipPooling"));
+const UXArchitecture = lazy(() => import("@/pages/uxArchitecture"));
+const Compliance = lazy(() => import("@/pages/compliance"));
+
+// Analytics and reporting - lazy load with chunking
 const Analytics = lazy(() => import("@/pages/analytics"));
 const Deployment = lazy(() => import("@/pages/deployment"));
 const SuccessMetrics = lazy(() => import("@/pages/successMetrics"));
 const KPIDashboard = lazy(() => import("@/pages/kpiDashboard"));
 const ModernPayrollEngine = lazy(() => import("@/pages/modernPayrollEngine"));
 const ProductVision = lazy(() => import("@/pages/productVision"));
-import Payments from "@/pages/payments";
-import SepaPayments from "@/pages/sepaPayments";
-import SepaEngineDemo from "@/pages/sepaEngineDemo";
-import PaymentOpsChecklist from "@/pages/paymentOpsChecklist";
-import EmployeeSelfService from "@/pages/employeeSelfService";
-import RulesEngine from "@/pages/rulesEngine";
-import ManagerDashboard from "@/pages/managerDashboard";
-import Forecasting from "@/pages/forecasting";
-import DocumentAI from "@/pages/documentAI";
-import ChangeLogLegalWatch from "@/pages/changeLogLegalWatch";
+
+// Payment features - critical for Greek business, medium priority
+const Payments = lazy(() => import("@/pages/payments"));
+const SepaPayments = lazy(() => import("@/pages/sepaPayments"));
+const SepaEngineDemo = lazy(() => import("@/pages/sepaEngineDemo"));
+const PaymentOpsChecklist = lazy(() => import("@/pages/paymentOpsChecklist"));
+
+// Employee and management features
+const EmployeeSelfService = lazy(() => import("@/pages/employeeSelfService"));
+const RulesEngine = lazy(() => import("@/pages/rulesEngine"));
+const ManagerDashboard = lazy(() => import("@/pages/managerDashboard"));
+const Forecasting = lazy(() => import("@/pages/forecasting"));
+const DocumentAI = lazy(() => import("@/pages/documentAI"));
+const ChangeLogLegalWatch = lazy(() => import("@/pages/changeLogLegalWatch"));
 import { Navigation } from "@/components/Navigation";
 import Layout from "@/components/Layout";
 import { PropertyProvider } from "@/contexts/PropertyContext";
@@ -54,38 +69,47 @@ import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppProvider } from "@/contexts/AppContext";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+// Mobile and template features - chunked loading
 const MobilePayroll = lazy(() => import("@/pages/MobilePayroll"));
 const IndustryTemplates = lazy(() => import("@/pages/IndustryTemplates"));
 const IntegrationMarketplacePage = lazy(() => import("@/pages/IntegrationMarketplacePage"));
 import { usePWA } from "@/hooks/usePWA";
-import { PaymentsCockpitDemo } from './pages/PaymentsCockpitDemo';
-import SmartNotifications from "@/pages/smartNotifications";
-import VisualAnalytics from "@/pages/visualAnalytics";
-import PropertyDashboard from "@/pages/propertyDashboard";
-import RoleBasedDashboard from "@/components/RoleBasedDashboard";
+import "@/utils/performanceOptimizations";
+
+// Demo and specialized features - lazy load for performance
+const PaymentsCockpitDemo = lazy(() => import('./pages/PaymentsCockpitDemo').then(m => ({ default: m.PaymentsCockpitDemo })));
+const SmartNotifications = lazy(() => import("@/pages/smartNotifications"));
+const VisualAnalytics = lazy(() => import("@/pages/visualAnalytics"));
+const PropertyDashboard = lazy(() => import("@/pages/propertyDashboard"));
+const RoleBasedDashboard = lazy(() => import("@/components/RoleBasedDashboard"));
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const AICopilot = lazy(() => import("@/components/AICopilot").then(m => ({ default: m.AICopilot })));
+
+// Mobile and preview features
 const MobilePunch = lazy(() => import("@/pages/mobilePunch"));
 const PayrollPreview = lazy(() => import("@/pages/payrollPreview"));
 const PayExplanationDemo = lazy(() => import("@/pages/payExplanationDemo"));
 const AIEnginesDemo = lazy(() => import("@/pages/aiEnginesDemo"));
 const ExplanationDemo = lazy(() => import("@/pages/ExplanationDemo").then(m => ({ default: m.ExplanationDemo })));
-import CommandPaletteDemo from "@/pages/commandPaletteDemo";
-import Onboarding from "@/pages/onboarding";
-import Exits from "@/pages/exits";
-import ZeroTrustSecurityPage from "@/pages/ZeroTrustSecurityPage";
-import TeamsRoles from "@/pages/teamsRoles";
-import S1Dashboard from "@/pages/S1Dashboard";
-import S1MetricsPage from "@/pages/S1MetricsPage";
-import S1AcceptanceTesting from "@/pages/S1AcceptanceTesting";
-import EmbeddedPayroll from "@/pages/EmbeddedPayroll";
-import EmbedPage from "@/pages/EmbedPage";
-import { SeverancePage } from "@/pages/SeverancePage";
-import SeveranceTestPage from "@/pages/SeveranceTestPage";
-import GarnishmentPage from "@/pages/GarnishmentPage";
-import SimpleIbanTest from "@/pages/SimpleIbanTest";
-import PartnerConsole from "@/pages/PartnerConsole";
-import Partner from "@/pages/Partner";
+
+// Command and workflow features
+const CommandPaletteDemo = lazy(() => import("@/pages/commandPaletteDemo"));
+const Onboarding = lazy(() => import("@/pages/onboarding"));
+const Exits = lazy(() => import("@/pages/exits"));
+const ZeroTrustSecurityPage = lazy(() => import("@/pages/ZeroTrustSecurityPage"));
+const TeamsRoles = lazy(() => import("@/pages/teamsRoles"));
+// Specialized features and testing - aggressive lazy loading
+const S1Dashboard = lazy(() => import("@/pages/S1Dashboard"));
+const S1MetricsPage = lazy(() => import("@/pages/S1MetricsPage"));
+const S1AcceptanceTesting = lazy(() => import("@/pages/S1AcceptanceTesting"));
+const EmbeddedPayroll = lazy(() => import("@/pages/EmbeddedPayroll"));
+const EmbedPage = lazy(() => import("@/pages/EmbedPage"));
+const SeverancePage = lazy(() => import("@/pages/SeverancePage").then(m => ({ default: m.SeverancePage })));
+const SeveranceTestPage = lazy(() => import("@/pages/SeveranceTestPage"));
+const GarnishmentPage = lazy(() => import("@/pages/GarnishmentPage"));
+const SimpleIbanTest = lazy(() => import("@/pages/SimpleIbanTest"));
+const PartnerConsole = lazy(() => import("@/pages/PartnerConsole"));
+const Partner = lazy(() => import("@/pages/Partner"));
 import { OboProvider } from "@/contexts/OboContext";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
