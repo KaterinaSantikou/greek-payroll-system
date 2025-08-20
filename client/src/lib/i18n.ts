@@ -195,6 +195,25 @@ interface TranslationKeys {
   'portal.personal-leave': string;
   'portal.digital-card': string;
   'portal.compliance-score': string;
+
+  // Onboarding
+  'onboarding.title': string;
+  'onboarding.description': string;
+  'onboarding.quick_hire': string;
+  'onboarding.seasonal_batch': string;
+  'onboarding.pending_docs': string;
+  'onboarding.awaiting_contract': string;
+  'onboarding.started': string;
+  'onboarding.progress': string;
+  'onboarding.missing_items': string;
+  'onboarding.completed_steps': string;
+  'onboarding.total_steps': string;
+  'onboarding.summer_batch': string;
+  'onboarding.total_positions': string;
+  'onboarding.hired': string;
+  'onboarding.in_progress': string;
+  'onboarding.pending': string;
+  'onboarding.deadline': string;
 }
 
 const translations: Record<Locale, TranslationKeys> = {
@@ -314,6 +333,25 @@ const translations: Record<Locale, TranslationKeys> = {
     'portal.personal-leave': 'Personal Leave',
     'portal.digital-card': 'Digital Card',
     'portal.compliance-score': 'Compliance Score',
+
+    // Onboarding
+    'onboarding.title': 'Employee Onboarding',
+    'onboarding.description': 'Quick hire, bulk seasonal rehires, checklists',
+    'onboarding.quick_hire': 'Quick Hire',
+    'onboarding.seasonal_batch': 'Seasonal Batch',
+    'onboarding.pending_docs': 'Pending documents',
+    'onboarding.awaiting_contract': 'Awaiting contract',
+    'onboarding.started': 'Started',
+    'onboarding.progress': 'Progress',
+    'onboarding.missing_items': 'Missing items',
+    'onboarding.completed_steps': 'Completed steps',
+    'onboarding.total_steps': 'Total steps',
+    'onboarding.summer_batch': 'Summer 2025 Batch',
+    'onboarding.total_positions': 'Total positions',
+    'onboarding.hired': 'Hired',
+    'onboarding.in_progress': 'In progress',
+    'onboarding.pending': 'Pending',
+    'onboarding.deadline': 'Deadline',
 
     // Dashboard chips and status
     'dashboard.digital_card_sync': 'Digital Card',
@@ -509,6 +547,25 @@ const translations: Record<Locale, TranslationKeys> = {
     'portal.personal-leave': 'Προσωπική Άδεια',
     'portal.digital-card': 'Ψηφιακή Κάρτα',
     'portal.compliance-score': 'Βαθμός Συμμόρφωσης',
+
+    // Onboarding
+    'onboarding.title': 'Ένταξη Εργαζομένων',
+    'onboarding.description': 'Γρήγορη πρόσληψη, εποχιακές επαναλήψεις, λίστες ελέγχου',
+    'onboarding.quick_hire': 'Γρήγορη Πρόσληψη',
+    'onboarding.seasonal_batch': 'Εποχιακό Πακέτο',
+    'onboarding.pending_docs': 'Εκκρεμή έγγραφα',
+    'onboarding.awaiting_contract': 'Αναμονή σύμβασης',
+    'onboarding.started': 'Ξεκίνησε',
+    'onboarding.progress': 'Πρόοδος',
+    'onboarding.missing_items': 'Ελλείπαντα στοιχεία',
+    'onboarding.completed_steps': 'Ολοκληρωμένα βήματα',
+    'onboarding.total_steps': 'Συνολικά βήματα',
+    'onboarding.summer_batch': 'Πακέτο Καλοκαιρίου 2025',
+    'onboarding.total_positions': 'Συνολικές θέσεις',
+    'onboarding.hired': 'Προσληφθέντες',
+    'onboarding.in_progress': 'Σε εξέλιξη',
+    'onboarding.pending': 'Εκκρεμείς',
+    'onboarding.deadline': 'Προθεσμία',
 
     // Dashboard chips and status  
     'dashboard.digital_card_sync': 'Ψηφιακή Κάρτα',

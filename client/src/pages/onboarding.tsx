@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useTranslation } from "@/lib/i18n";
 import { 
   UserPlus, 
   Clock, 
@@ -15,6 +16,8 @@ import {
 } from "lucide-react";
 
 export default function Onboarding() {
+  const { t } = useTranslation();
+  
   const onboardingCases = [
     {
       id: 1,
@@ -64,17 +67,17 @@ export default function Onboarding() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Employee Onboarding</h1>
-          <p className="text-gray-600 dark:text-gray-400">Quick hire, bulk seasonal rehires, checklists</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('onboarding.title')}</h1>
+          <p className="text-gray-600 dark:text-gray-400">{t('onboarding.description')}</p>
         </div>
         <div className="flex gap-2">
           <Button>
             <UserPlus className="h-4 w-4 mr-2" />
-            Quick Hire
+            {t('onboarding.quick_hire')}
           </Button>
           <Button variant="outline">
             <Users className="h-4 w-4 mr-2" />
-            Bulk Import
+            {t('onboarding.seasonal_batch')}
           </Button>
         </div>
       </div>
