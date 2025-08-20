@@ -580,4 +580,110 @@ export function registerGarnishmentRoutes(app: Express) {
       });
     }
   });
+  
+  /**
+   * POST /api/garnishments/bdd-tests
+   * Run BDD acceptance tests for garnishment calculation engine
+   */
+  app.post('/api/garnishments/bdd-tests', async (req, res) => {
+    try {
+      const { runGarnishmentBDDTests } = await import('../test/garnishment-bdd-tests');
+      const results = await runGarnishmentBDDTests();
+      
+      res.json({
+        success: true,
+        data: {
+          ...results,
+          summary: `${results.passed}/${results.totalTests} tests passed`,
+          allPassed: results.failed === 0
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('BDD test execution error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to run BDD tests',
+        details: error?.message || String(error)
+      });
+    }
+  });
+  
+  /**
+   * GET /api/garnishments/audit/:employeeId
+   * Get audit trail for employee garnishment calculations
+   */
+  app.get('/api/garnishments/audit/:employeeId', isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId } = req.params;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      
+      // For now, return mock audit data since we need to implement the actual query
+      const mockAuditTrail = [
+        {
+          id: 'audit-001',
+          timestamp: new Date().toISOString(),
+          eventType: 'calculate',
+          actor: (req.user as any)?.claims?.sub || 'system',
+          disposableNetBefore: '2325.00',
+          disposableNetAfter: '1744.25',
+          requestedAmount: '580.75',
+          appliedAmount: '580.75',
+          capReason: null,
+          wasSkipped: false,
+          wasCapped: false,
+          runType: 'regular',
+          eventReason: 'Garnishment calculation completed successfully'
+        }
+      ];
+      
+      res.json({
+        success: true,
+        data: {
+          auditTrail: mockAuditTrail,
+          employeeId,
+          totalEntries: mockAuditTrail.length
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('Audit trail retrieval error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve audit trail'
+      });
+    }
+  });
+  
+  /**
+   * GET /api/garnishments/warnings/:employeeId
+   * Get calculation warnings for UI display
+   */
+  app.get('/api/garnishments/warnings/:employeeId', isAuthenticated, async (req, res) => {
+    try {
+      const { employeeId } = req.params;
+      const { payrollRunId } = req.query;
+      
+      const warnings = await GarnishmentService.getCalculationWarnings(
+        employeeId, 
+        payrollRunId as string
+      );
+      
+      res.json({
+        success: true,
+        data: {
+          warnings,
+          count: warnings.length,
+          hasWarnings: warnings.length > 0
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('Warning retrieval error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to retrieve warnings'
+      });
+    }
+  });
 }

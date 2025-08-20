@@ -3,13 +3,15 @@ import {
   garnishmentOrders, 
   garnishmentTransactions,
   garnishmentBalances,
+  garnishmentAudit,
   type GarnishmentOrder,
   type GarnishmentTransaction,
   type GarnishmentCalculationInputs,
   type GarnishmentCalculationResult,
   type InsertGarnishmentOrder,
   type InsertGarnishmentTransaction,
-  type InsertGarnishmentBalance
+  type InsertGarnishmentBalance,
+  type InsertGarnishmentAudit
 } from "../../shared/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 
@@ -29,6 +31,108 @@ import { eq, desc, and, sql } from "drizzle-orm";
 export class GarnishmentService {
   
   /**
+   * Log audit entry for garnishment calculation events
+   */
+  static async logAuditEntry(auditData: {
+    employeeId: string;
+    eventType: string;
+    actor: string;
+    disposableNetBefore?: number;
+    disposableNetAfter?: number;
+    requestedAmount?: number;
+    appliedAmount?: number;
+    capReason?: string;
+    wasSkipped?: boolean;
+    wasCapped?: boolean;
+    garnishmentOrderId?: string;
+    payrollRunId?: string;
+    runType?: string;
+    applyScope?: string;
+    priority?: number;
+    eventReason?: string;
+    sessionId?: string;
+  }): Promise<void> {
+    try {
+      await db.insert(garnishmentAudit).values({
+        employeeId: auditData.employeeId,
+        eventType: auditData.eventType,
+        actor: auditData.actor,
+        disposableNetBefore: auditData.disposableNetBefore?.toString(),
+        disposableNetAfter: auditData.disposableNetAfter?.toString(),
+        requestedAmount: auditData.requestedAmount?.toString(),
+        appliedAmount: auditData.appliedAmount?.toString(),
+        capReason: auditData.capReason,
+        wasSkipped: auditData.wasSkipped || false,
+        wasCapped: auditData.wasCapped || false,
+        garnishmentOrderId: auditData.garnishmentOrderId,
+        payrollRunId: auditData.payrollRunId,
+        runType: auditData.runType,
+        applyScope: auditData.applyScope,
+        priority: auditData.priority,
+        eventReason: auditData.eventReason,
+        sessionId: auditData.sessionId || 'system',
+      });
+    } catch (error) {
+      console.error('Failed to log garnishment audit entry:', error);
+      // Don't throw - audit logging shouldn't break calculations
+    }
+  }
+
+  /**
+   * Get garnishment calculation warnings (for UI display)
+   */
+  static async getCalculationWarnings(employeeId: string, payrollRunId?: string): Promise<Array<{
+    type: 'capped' | 'skipped';
+    message: string;
+    orderRef: string;
+    creditorName: string;
+    requestedAmount: number;
+    appliedAmount: number;
+    reason: string;
+  }>> {
+    const warnings: Array<{
+      type: 'capped' | 'skipped';
+      message: string;
+      orderRef: string;
+      creditorName: string;
+      requestedAmount: number;
+      appliedAmount: number;
+      reason: string;
+    }> = [];
+
+    // Query recent audit entries for warnings
+    const recentAudits = await db
+      .select()
+      .from(garnishmentAudit)
+      .where(
+        and(
+          eq(garnishmentAudit.employeeId, employeeId),
+          payrollRunId ? eq(garnishmentAudit.payrollRunId, payrollRunId) : sql`true`
+        )
+      )
+      .orderBy(desc(garnishmentAudit.timestamp))
+      .limit(20);
+
+    for (const audit of recentAudits) {
+      if (audit.wasSkipped || audit.wasCapped) {
+        warnings.push({
+          type: audit.wasSkipped ? 'skipped' : 'capped',
+          message: audit.wasSkipped 
+            ? `Garnishment skipped: ${audit.capReason}`
+            : `Garnishment capped: ${audit.capReason}`,
+          orderRef: audit.garnishmentOrderId || '',
+          creditorName: '', // Would need to join with garnishment order
+          requestedAmount: Number(audit.requestedAmount || 0),
+          appliedAmount: Number(audit.appliedAmount || 0),
+          reason: audit.capReason || ''
+        });
+      }
+    }
+
+    return warnings;
+  }
+
+  /**
    * Calc Hook (Engine Internal)
    * 
    * Input: employee_id, run_context (period, run_type), pre_tax, taxes, contribs, net_before_garnishments.
@@ -44,6 +148,8 @@ export class GarnishmentService {
     contribs: number;
     netBeforeGarnishments: number;
     activeGarnishments?: any[];
+    actor?: string;
+    payrollRunId?: string;
   }): Promise<{
     garnishmentLines: Array<{
       type: string;
@@ -56,6 +162,12 @@ export class GarnishmentService {
     }>;
     netAfterGarnishments: number;
     calculationLog: string[];
+    warnings: Array<{
+      type: 'capped' | 'skipped';
+      message: string;
+      orderRef: string;
+      reason: string;
+    }>;
   }> {
     const calculationLog: string[] = [];
     const garnishmentLines: Array<{
@@ -67,6 +179,15 @@ export class GarnishmentService {
       glAccount: string;
       description: string;
     }> = [];
+    const warnings: Array<{
+      type: 'capped' | 'skipped';
+      message: string;
+      orderRef: string;
+      reason: string;
+    }> = [];
+    
+    const actor = inputs.actor || 'system';
+    const originalDisposableNet = inputs.netBeforeGarnishments;
     
     calculationLog.push(`Starting garnishment calculation for employee ${inputs.employeeId}`);
     calculationLog.push(`Pre-tax: €${inputs.preTax.toFixed(2)}, Taxes: €${inputs.taxes.toFixed(2)}, Contribs: €${inputs.contribs.toFixed(2)}`);
@@ -97,7 +218,34 @@ export class GarnishmentService {
       // Skip if DisposableNet is at or below protected floor
       const protectedNetFloor = order.protectedNetFloor || 0;
       if (disposableNet <= protectedNetFloor) {
+        const skipReason = 'protected_floor';
         calculationLog.push(`Skipping - DisposableNet (€${disposableNet.toFixed(2)}) <= protected floor (€${protectedNetFloor.toFixed(2)})`);
+        
+        // Log audit entry for skipped garnishment
+        await this.logAuditEntry({
+          employeeId: inputs.employeeId,
+          eventType: 'calculate',
+          actor,
+          garnishmentOrderId: order.id,
+          payrollRunId: inputs.payrollRunId,
+          disposableNetBefore: originalDisposableNet,
+          disposableNetAfter: disposableNet,
+          requestedAmount: Number(order.amount || 0),
+          appliedAmount: 0,
+          capReason: skipReason,
+          wasSkipped: true,
+          runType: inputs.runContext.runType,
+          priority: order.priority,
+          eventReason: `Garnishment skipped: DisposableNet (€${disposableNet.toFixed(2)}) <= protected floor (€${protectedNetFloor.toFixed(2)})`
+        });
+        
+        warnings.push({
+          type: 'skipped',
+          message: `Garnishment skipped: DisposableNet below protected floor`,
+          orderRef: order.orderRef,
+          reason: skipReason
+        });
+        
         continue;
       }
       
@@ -141,6 +289,38 @@ export class GarnishmentService {
         }
       }
       
+      // Determine if this was capped
+      const wasCapped = deduction < candidate;
+      let capReason = '';
+      if (wasCapped) {
+        if (deduction === Math.max(0, disposableNet - protectedNetFloor)) {
+          capReason = 'protected_floor';
+        } else if (order.totalBalance && deduction === Math.max(0, Number(order.totalBalance) - collectedYtd)) {
+          capReason = 'balance_exhausted';
+        } else if (order.perRunCap && candidate === Number(order.perRunCap)) {
+          capReason = 'per_run_cap';
+        }
+      }
+      
+      // Log audit entry for this calculation
+      await this.logAuditEntry({
+        employeeId: inputs.employeeId,
+        eventType: 'calculate',
+        actor,
+        garnishmentOrderId: order.id,
+        payrollRunId: inputs.payrollRunId,
+        disposableNetBefore: originalDisposableNet,
+        disposableNetAfter: disposableNet - deduction,
+        requestedAmount: candidate,
+        appliedAmount: deduction,
+        capReason: capReason || undefined,
+        wasSkipped: deduction === 0,
+        wasCapped,
+        runType: inputs.runContext.runType,
+        priority: order.priority,
+        eventReason: wasCapped ? `Garnishment capped: ${capReason}` : undefined
+      });
+      
       // Update running totals
       if (deduction > 0) {
         disposableNet -= deduction;
@@ -161,8 +341,25 @@ export class GarnishmentService {
         });
         
         calculationLog.push(`Deducted: €${deduction.toFixed(2)}, DisposableNet now: €${disposableNet.toFixed(2)}, Remaining balance: €${remainingBalance.toFixed(2)}`);
+        
+        // Add warning if capped
+        if (wasCapped) {
+          warnings.push({
+            type: 'capped',
+            message: `Garnishment capped: ${capReason}`,
+            orderRef: order.orderRef,
+            reason: capReason
+          });
+        }
       } else {
         calculationLog.push(`No deduction this run - insufficient DisposableNet after protection`);
+        
+        warnings.push({
+          type: 'skipped',
+          message: `Garnishment skipped: insufficient disposable net`,
+          orderRef: order.orderRef,
+          reason: 'insufficient_net'
+        });
       }
       
       // Guarantee: DisposableNet never < protected_net_floor and never negative
@@ -182,7 +379,8 @@ export class GarnishmentService {
     return {
       garnishmentLines,
       netAfterGarnishments: disposableNet,
-      calculationLog
+      calculationLog,
+      warnings
     };
   }
   

@@ -4231,3 +4231,53 @@ export const insertGarnishmentBalanceSchema = createInsertSchema(garnishmentBala
   id: true,
   lastUpdated: true,
 });
+
+// Garnishment audit log for error tracking and compliance
+export const garnishmentAudit = pgTable("garnishment_audit", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").notNull(),
+  garnishmentOrderId: varchar("garnishment_order_id").references(() => garnishmentOrders.id),
+  payrollRunId: varchar("payroll_run_id"),
+  
+  // Event tracking
+  eventType: varchar("event_type").notNull(), // 'create', 'update', 'apply', 'stop', 'reverse', 'calculate'
+  eventReason: text("event_reason"),
+  actor: varchar("actor").notNull(), // User ID who triggered the event
+  
+  // Calculation snapshot
+  disposableNetBefore: decimal("disposable_net_before", { precision: 10, scale: 2 }),
+  disposableNetAfter: decimal("disposable_net_after", { precision: 10, scale: 2 }),
+  requestedAmount: decimal("requested_amount", { precision: 10, scale: 2 }),
+  appliedAmount: decimal("applied_amount", { precision: 10, scale: 2 }),
+  
+  // Cap and protection details
+  capReason: varchar("cap_reason"), // 'protected_floor', 'per_run_cap', 'balance_exhausted', 'scope_filter'
+  protectedFloorUsed: decimal("protected_floor_used", { precision: 10, scale: 2 }),
+  wasSkipped: boolean("was_skipped").default(false),
+  wasCapped: boolean("was_capped").default(false),
+  
+  // Additional context
+  runType: varchar("run_type"), // 'regular', 'bonus', 'offcycle'
+  applyScope: varchar("apply_scope"), // 'all_runs', 'regular_only'
+  priority: integer("priority"),
+  
+  // Audit metadata
+  timestamp: timestamp("timestamp").defaultNow(),
+  sessionId: varchar("session_id"),
+  ipAddress: varchar("ip_address")
+});
+
+export type GarnishmentAudit = typeof garnishmentAudit.$inferSelect;
+export type InsertGarnishmentAudit = typeof garnishmentAudit.$inferInsert;
+
+export const insertGarnishmentAuditSchema = createInsertSchema(garnishmentAudit).omit({
+  id: true,
+  timestamp: true,
+});
+
+export const garnishmentAuditRelations = relations(garnishmentAudit, ({ one }) => ({
+  garnishmentOrder: one(garnishmentOrders, {
+    fields: [garnishmentAudit.garnishmentOrderId],
+    references: [garnishmentOrders.id],
+  }),
+}));
