@@ -319,6 +319,8 @@ export function registerExplanationRoutes(app: Express) {
           citations: true,
           coverage: true,
           feedback: true,
+          edgeCases: true,
+          qualityMetrics: true,
         },
       });
     } catch (error) {
@@ -326,6 +328,134 @@ export function registerExplanationRoutes(app: Express) {
         success: false,
         status: "unhealthy",
         error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  });
+
+  /**
+   * Demo endpoint with sample payslip matching specification
+   * GET /api/explanations/demo
+   */
+  app.get("/api/explanations/demo", async (req, res) => {
+    try {
+      const locale = (req.query.locale as string) || 'en';
+      
+      // Sample payslip data matching the specification
+      const samplePayslipData = {
+        employeeId: "emp_demo_001",
+        payrollRunId: "run_2025_01",
+        periodStart: "2025-01-01",
+        periodEnd: "2025-01-31",
+        lines: [
+          {
+            lineId: "line_001",
+            runId: "run_2025_01",
+            employeeId: "emp_demo_001",
+            code: "REG",
+            description: "Regular Hours",
+            amount: "1200.00",
+            createdAt: new Date(),
+            hours: null,
+            units: null,
+            rate: null,
+            costCenter: null,
+            isEarning: true,
+            isTaxable: true,
+            isInsurable: true,
+            notes: null,
+            isDeduction: false,
+          },
+          {
+            lineId: "line_002",
+            runId: "run_2025_01",
+            employeeId: "emp_demo_001",
+            code: "OT_TIER1_40",
+            description: "Overtime Tier 1",
+            amount: "18.00",
+            createdAt: new Date(),
+            hours: null,
+            units: null,
+            rate: null,
+            costCenter: null,
+            isEarning: true,
+            isTaxable: true,
+            isInsurable: true,
+            notes: null,
+            isDeduction: false,
+          },
+          {
+            lineId: "line_003",
+            runId: "run_2025_01",
+            employeeId: "emp_demo_001",
+            code: "NIGHT_25",
+            description: "Night Premium",
+            amount: "9.38",
+            createdAt: new Date(),
+            hours: null,
+            units: null,
+            rate: null,
+            costCenter: null,
+            isEarning: true,
+            isTaxable: true,
+            isInsurable: true,
+            notes: null,
+            isDeduction: false,
+          },
+          {
+            lineId: "line_004",
+            runId: "run_2025_01",
+            employeeId: "emp_demo_001",
+            code: "SUNDAY_75",
+            description: "Sunday Premium",
+            amount: "16.88",
+            createdAt: new Date(),
+            hours: null,
+            units: null,
+            rate: null,
+            costCenter: null,
+            isEarning: true,
+            isTaxable: true,
+            isInsurable: true,
+            notes: null,
+            isDeduction: false,
+          }
+        ],
+        timesheetAggregates: {
+          regularHours: 160,
+          overtimeHours: 6,
+          nightHours: 5,
+          sundayHours: 3,
+          holidayHours: 0,
+        },
+        employeeData: {
+          name: "Maria Papadopoulos",
+          hourlyRate: 7.50,
+          locale: locale,
+        },
+      };
+
+      // Generate explanation
+      const result = await payslipExplanationService.generateExplanation(samplePayslipData);
+
+      res.json({
+        success: true,
+        demo: true,
+        explanation: {
+          content: result.explanationJson,
+          textEn: result.explanationTextEn,
+          textEl: result.explanationTextEl,
+          coverage: result.coverage,
+          confidenceScore: result.confidenceScore,
+          qualityMetrics: result.qualityMetrics,
+        },
+        sampleData: samplePayslipData,
+      });
+    } catch (error) {
+      console.error("Error generating demo explanation:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to generate demo explanation",
+        details: error instanceof Error ? error.message : "Unknown error",
       });
     }
   });

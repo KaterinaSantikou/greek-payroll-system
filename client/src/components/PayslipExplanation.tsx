@@ -15,7 +15,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTranslation } from '@/lib/i18n';
+// Removed i18n import - using built-in locale support
 
 // Types for explanation data
 interface ExplanationItem {
@@ -96,7 +96,7 @@ export function PayslipExplanation({
   const [showFormulas, setShowFormulas] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [rating, setRating] = useState<number>(0);
-  const { t } = useTranslation();
+  // Using direct locale-based translations
   
   const isGreek = locale === 'el';
 

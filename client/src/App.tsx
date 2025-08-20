@@ -61,6 +61,7 @@ import MobilePunch from "@/pages/mobilePunch";
 import PayrollPreview from "@/pages/payrollPreview";
 import PayExplanationDemo from "@/pages/payExplanationDemo";
 import AIEnginesDemo from "@/pages/aiEnginesDemo";
+import { ExplanationDemo } from "@/pages/ExplanationDemo";
 import CommandPaletteDemo from "@/pages/commandPaletteDemo";
 import Onboarding from "@/pages/onboarding";
 import Exits from "@/pages/exits";
@@ -195,6 +196,7 @@ function Router() {
             <Route path="/mobile-punch" component={MobilePunch} />
             <Route path="/payroll-preview" component={PayrollPreview} />
             <Route path="/pay-explanation-demo" component={PayExplanationDemo} />
+            <Route path="/explanation-demo" component={ExplanationDemo} />
             <Route path="/ai-engines-demo" component={AIEnginesDemo} />
             <Route path="/command-palette-demo" component={CommandPaletteDemo} />
             <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
