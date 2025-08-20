@@ -5,7 +5,9 @@
 
 import { db } from "../db";
 import { secureIbanVault, ibanValidationHistory, employees } from "@shared/schema";
-import { validateIban, matchAccountHolderName, maskIban, type IbanValidationResult, type NameMatchResult } from "@shared/ibanValidation";
+import { validateIbanEnhanced, maskIbanSecurely, type EnhancedIbanValidationResult } from "@shared/ibanValidationEnhanced";
+import { matchGreekNames, type NameMatchResult } from "@shared/greekNameNormalization";
+import { ibanI18n, type Language } from "@shared/ibanI18n";
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
@@ -18,16 +20,16 @@ export interface IbanValidationRequest {
 
 export interface IbanValidationResponse {
   success: boolean;
-  validation: IbanValidationResult;
-  nameMatch: NameMatchResult;
-  warnings: Array<{
-    type: 'name_mismatch' | 'iban_warning' | 'bank_unknown';
-    message: string;
-    canOverride: boolean;
-    severity: 'low' | 'medium' | 'high';
-  }>;
+  validation: EnhancedIbanValidationResult;
   requiresOverride: boolean;
   canSave: boolean;
+  maskedIban: string;
+  validationTimeMs: number;
+  localized: {
+    summary: string;
+    errors: string[];
+    warnings: string[];
+  };
 }
 
 export interface SecureIbanSaveRequest {
@@ -52,8 +54,12 @@ export class IbanValidationService {
     request: IbanValidationRequest,
     validatedBy: string,
     ipAddress?: string,
-    userAgent?: string
+    userAgent?: string,
+    language: Language = 'en'
   ): Promise<IbanValidationResponse> {
+    
+    // Set language for localization
+    ibanI18n.setLanguage(language);
     
     // Get employee information
     const [employee] = await db.select()
@@ -64,81 +70,64 @@ export class IbanValidationService {
       throw new Error('Employee not found');
     }
     
-    // Validate IBAN format and checksum
-    const ibanValidation = validateIban(request.iban);
-    
-    // Check name match - parse from name field
+    // Get employee name
     const employeeFullName = employee.name || 'Unknown Employee';
-    const nameMatch = matchAccountHolderName(employeeFullName, request.accountHolderName);
     
-    // Build warnings array
-    const warnings: IbanValidationResponse['warnings'] = [];
+    // Enhanced IBAN validation with Greek name matching
+    const validation = validateIbanEnhanced(
+      request.iban,
+      employeeFullName,
+      request.accountHolderName
+    );
     
-    // Add IBAN warnings
-    for (const warning of ibanValidation.warnings) {
-      warnings.push({
-        type: 'iban_warning',
-        message: warning,
-        canOverride: true,
-        severity: 'low'
-      });
-    }
+    // Determine save capability
+    const requiresOverride = validation.decision === 'warn';
+    const canSave = validation.decision !== 'fail' && 
+                   (validation.decision === 'pass' || request.overrideReason);
     
-    // Add name match warnings
-    if (!nameMatch.isMatch) {
-      let severity: 'low' | 'medium' | 'high' = 'high';
-      
-      if (nameMatch.similarity >= 70) {
-        severity = 'medium';
-      } else if (nameMatch.similarity >= 50) {
-        severity = 'medium';
-      }
-      
-      warnings.push({
-        type: 'name_mismatch',
-        message: `Account holder name "${request.accountHolderName}" does not match employee name "${employeeFullName}" (${nameMatch.similarity}% similarity). ${nameMatch.reason}`,
-        canOverride: true,
-        severity
-      });
-    }
+    // Localize messages
+    const localizedErrors = validation.errors.map(error => 
+      ibanI18n.getValidationErrorMessage(error)
+    );
     
-    // Add bank warnings
-    if (!ibanValidation.bankName) {
-      warnings.push({
-        type: 'bank_unknown',
-        message: 'Bank could not be identified from IBAN',
-        canOverride: true,
-        severity: 'low'
-      });
-    }
+    const localizedWarnings = validation.warnings.map(warning => 
+      ibanI18n.getValidationErrorMessage(warning.message)
+    );
     
-    // Determine if override is required
-    const requiresOverride = !ibanValidation.isValid || !nameMatch.isMatch;
-    const canSave = ibanValidation.isValid && (nameMatch.isMatch || request.overrideReason);
+    const summary = ibanI18n.formatValidationSummary(
+      validation.decision,
+      validation.validationTimeMs,
+      validation.nameMatch?.score
+    );
     
-    // Log validation attempt
+    // Log validation attempt with enhanced metrics
     await this.logValidationAttempt({
       employeeId: request.employeeId,
-      maskedIban: maskIban(request.iban),
-      validationType: 'full_validation',
-      validationResult: canSave ? 'pass' : (requiresOverride ? 'warning' : 'fail'),
-      errors: ibanValidation.errors,
-      warnings: warnings.map(w => w.message),
+      maskedIban: validation.maskedIban,
+      validationType: 'enhanced_validation',
+      validationResult: validation.decision,
+      errors: validation.errors,
+      warnings: validation.warnings.map(w => w.message),
       employeeNameUsed: employeeFullName,
       accountHolderNameProvided: request.accountHolderName,
-      nameSimilarityScore: nameMatch.similarity,
+      nameSimilarityScore: validation.nameMatch?.score || 0,
       validatedBy,
       ipAddress,
       userAgent
     });
     
     return {
-      success: ibanValidation.isValid && !ibanValidation.errors.length,
-      validation: ibanValidation,
-      nameMatch,
-      warnings,
+      success: validation.isValid,
+      validation,
       requiresOverride,
-      canSave
+      canSave,
+      maskedIban: validation.maskedIban,
+      validationTimeMs: validation.validationTimeMs,
+      localized: {
+        summary,
+        errors: localizedErrors,
+        warnings: localizedWarnings
+      }
     };
   }
   
@@ -179,18 +168,18 @@ export class IbanValidationService {
       })
       .where(eq(secureIbanVault.employeeId, request.employeeId));
     
-    // Save new IBAN record
+    // Save new IBAN record with enhanced validation data
     const [vaultRecord] = await db.insert(secureIbanVault)
       .values({
         vaultId,
         employeeId: request.employeeId,
         fullIban: cleanIban,
         ibanCountryCode: cleanIban.substring(0, 2),
-        bankCode: validation.validation.bankCode,
-        bankName: validation.validation.bankName,
+        bankCode: validation.validation.bankInfo?.bankCode,
+        bankName: validation.validation.bankInfo?.bankName,
         accountHolderName: request.accountHolderName,
-        nameMatchScore: validation.nameMatch.similarity,
-        nameMatchStatus: validation.nameMatch.isMatch ? 'match' : 'override',
+        nameMatchScore: validation.validation.nameMatch?.score || 0,
+        nameMatchStatus: validation.validation.nameMatch?.isAcceptable ? 'match' : 'override',
         nameOverrideReason: request.nameOverrideReason,
         ibanValidated: true,
         validatedAt: new Date(),
@@ -216,7 +205,7 @@ export class IbanValidationService {
     return {
       success: true,
       vaultId,
-      maskedIban: validation.validation.maskedIban || maskIban(cleanIban)
+      maskedIban: validation.validation.maskedIban
     };
   }
   

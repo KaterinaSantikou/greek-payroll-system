@@ -73,6 +73,7 @@ import EmbedPage from "@/pages/EmbedPage";
 import { SeverancePage } from "@/pages/SeverancePage";
 import SeveranceTestPage from "@/pages/SeveranceTestPage";
 import GarnishmentPage from "@/pages/GarnishmentPage";
+import SimpleIbanTest from "@/pages/SimpleIbanTest";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 
@@ -120,6 +121,7 @@ function Router() {
         <Route path="/severance" component={SeverancePage} />
         <Route path="/severance/test" component={SeveranceTestPage} />
         <Route path="/garnishments" component={GarnishmentPage} />
+        <Route path="/iban-test" component={IbanTestPage} />
         <Route path="/teams-roles" component={TeamsRoles} />
         
         {/* Time Section */}

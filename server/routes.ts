@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { registerIbanValidationRoutes } from "./api/ibanValidation";
 import authRoutes from "./routes/auth";
 import authAPIRoutes from "./routes/auth";
 import { rulesAPIRouter } from "./rulesAPI";
@@ -122,6 +123,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Garnishments & Court Orders API
   const { registerGarnishmentRoutes } = await import("./api/garnishmentApi");
   registerGarnishmentRoutes(app);
+
+  // Enhanced IBAN Validation API
+  registerIbanValidationRoutes(app);
 
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();
