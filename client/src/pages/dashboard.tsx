@@ -50,7 +50,10 @@ import {
   ChevronDown,
   ChevronUp,
   HelpCircle,
-  Command
+  Command,
+  Calculator,
+  User,
+  UserPlus
 } from "lucide-react";
 
 interface Property {
@@ -88,12 +91,58 @@ export default function Dashboard() {
   const [isRunningPayroll, setIsRunningPayroll] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
-  const [expandedSections, setExpandedSections] = useState({
-    actionInbox: true,
-    compliance: true,
-    performance: true
-  });
+  const [userRole, setUserRole] = useState<'payroll_admin' | 'hr' | 'manager' | 'employee'>('payroll_admin');
+  
+  // Role-based default section states
+  const getRoleBasedDefaults = (role: string) => {
+    switch (role) {
+      case 'payroll_admin':
+        return { actionInbox: true, compliance: true, performance: true, banking: true };
+      case 'hr':
+        return { actionInbox: true, compliance: false, performance: false, people: true };
+      case 'manager':
+        return { actionInbox: true, compliance: false, performance: false, team: true };
+      default:
+        return { actionInbox: true, compliance: true, performance: true };
+    }
+  };
+  
+  const [expandedSections, setExpandedSections] = useState(getRoleBasedDefaults(userRole));
 
+  // Role-specific dashboard configurations
+  const getRoleConfig = (role: string) => {
+    switch (role) {
+      case 'payroll_admin':
+        return {
+          primaryActions: [
+            { id: 'run-payroll', label: locale === 'el' ? 'Εκτέλεση Μισθοδοσίας' : 'Run Payroll', icon: Calculator },
+            { id: 'bank-export', label: locale === 'el' ? 'Εξαγωγή Τράπεζας' : 'Bank Export', icon: BanknoteIcon },
+            { id: 'ergani-sync', label: locale === 'el' ? 'Συγχρονισμός ΕΡΓΑΝΗ' : 'ERGANI Sync', icon: FileText }
+          ],
+          focusAreas: ['payroll', 'compliance', 'banking'],
+          dashboardTitle: locale === 'el' ? 'Κεντρικός Πίνακας Μισθοδοσίας' : 'Payroll Control Center'
+        };
+      case 'hr':
+        return {
+          primaryActions: [
+            { id: 'add-employee', label: locale === 'el' ? 'Προσθήκη Εργαζομένου' : 'Add Employee', icon: Users },
+            { id: 'review-requests', label: locale === 'el' ? 'Αιτήματα Αδειών' : 'Leave Requests', icon: Calendar },
+            { id: 'onboarding', label: locale === 'el' ? 'Ενσωμάτωση' : 'Onboarding', icon: UserPlus }
+          ],
+          focusAreas: ['people', 'compliance', 'onboarding'],
+          dashboardTitle: locale === 'el' ? 'Κεντρικός Πίνακας HR' : 'HR Control Center'
+        };
+      default:
+        return {
+          primaryActions: [],
+          focusAreas: ['general'],
+          dashboardTitle: locale === 'el' ? 'Κεντρικός Πίνακας' : 'Dashboard'
+        };
+    }
+  };
+  
+  const roleConfig = getRoleConfig(userRole);
+  
   // Properties data
   const properties: Property[] = [
     { id: "prop-princess", name: "Princess", group: "Luxury Collection" },
@@ -360,8 +409,35 @@ export default function Dashboard() {
         <div className="sticky top-0 z-[60] bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-lg shadow-sm border mb-6 p-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             
-            {/* Left Side - Property & Period */}
+            {/* Left Side - Role Switcher, Property & Period */}
             <div className="flex items-center gap-4">
+              
+              {/* Role Switcher */}
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                <Select value={userRole} onValueChange={(value: any) => {
+                  setUserRole(value);
+                  setExpandedSections(getRoleBasedDefaults(value));
+                }}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="payroll_admin">
+                      {locale === 'el' ? 'Μισθοδοσία' : 'Payroll Admin'}
+                    </SelectItem>
+                    <SelectItem value="hr">
+                      {locale === 'el' ? 'HR' : 'HR'}
+                    </SelectItem>
+                    <SelectItem value="manager">
+                      {locale === 'el' ? 'Διευθυντής' : 'Manager'}
+                    </SelectItem>
+                    <SelectItem value="employee">
+                      {locale === 'el' ? 'Εργαζόμενος' : 'Employee'}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                 <Select value={selectedProperty} onValueChange={setSelectedProperty}>
