@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import authRoutes from "./routes/auth";
 import { rulesAPIRouter } from "./rulesAPI";
 import { initializeRulesEngine } from "./rulesEngine";
 import authAPI from "./api/auth";
@@ -77,6 +78,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize rules engine
   await initializeRulesEngine();
+
+  // Comprehensive Authentication Routes
+  app.use('/api/auth/v2', authRoutes);
 
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();

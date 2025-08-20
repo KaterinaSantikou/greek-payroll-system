@@ -27,15 +27,142 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table for Replit Auth
+// Enhanced User authentication table (backward compatible with Replit Auth)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
+  email: varchar("email").unique().notNull(),
+  emailVerified: boolean("email_verified").default(false),
+  emailVerifiedAt: timestamp("email_verified_at"),
+  passwordHash: varchar("password_hash"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  locale: varchar("locale").default('en').notNull(), // 'en' or 'el' (Greek)
+  timezone: varchar("timezone").default('Europe/Athens'),
+  mfaEnabled: boolean("mfa_enabled").default(false),
+  lastLoginAt: timestamp("last_login_at"),
+  loginAttempts: integer("login_attempts").default(0),
+  lockedUntil: timestamp("locked_until"),
+  gdprConsentAt: timestamp("gdpr_consent_at"),
+  tosAcceptedAt: timestamp("tos_accepted_at"),
+  privacyAcceptedAt: timestamp("privacy_accepted_at"),
+  isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Email verification tokens
+export const emailVerificationTokens = pgTable("email_verification_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  email: varchar("email").notNull(),
+  token: varchar("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Password reset tokens
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  token: varchar("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Magic link tokens (passwordless authentication)
+export const magicLinkTokens = pgTable("magic_link_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").notNull(),
+  token: varchar("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").default(false),
+  ipAddress: varchar("ip_address"),
+  userAgent: varchar("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// MFA TOTP secrets
+export const mfaTotpSecrets = pgTable("mfa_totp_secrets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  secret: varchar("secret").notNull(),
+  backupCodes: jsonb("backup_codes"), // Array of hashed backup codes
+  enabled: boolean("enabled").default(false),
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// WebAuthn credentials (passkeys)
+export const webauthnCredentials = pgTable("webauthn_credentials", {
+  id: varchar("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  credentialId: varchar("credential_id").notNull().unique(),
+  publicKey: text("public_key").notNull(),
+  counter: integer("counter").default(0),
+  deviceName: varchar("device_name"),
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// SSO providers configuration
+export const ssoProviders = pgTable("sso_providers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(), // e.g., 'Google', 'Microsoft', 'Custom SAML'
+  type: varchar("type").notNull(), // 'oidc' or 'saml'
+  domain: varchar("domain"), // Auto-discover by email domain
+  clientId: varchar("client_id"),
+  clientSecret: varchar("client_secret"),
+  issuer: varchar("issuer"), // OIDC issuer URL
+  samlMetadata: text("saml_metadata"), // SAML metadata XML
+  config: jsonb("config"), // Additional provider-specific config
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User SSO connections
+export const userSsoConnections = pgTable("user_sso_connections", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  providerId: varchar("provider_id").references(() => ssoProviders.id, { onDelete: 'cascade' }),
+  externalId: varchar("external_id").notNull(), // User ID from SSO provider
+  email: varchar("email"),
+  displayName: varchar("display_name"),
+  lastLoginAt: timestamp("last_login_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Enhanced session management
+export const userSessions = pgTable("user_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  sessionToken: varchar("session_token").notNull().unique(),
+  refreshToken: varchar("refresh_token").unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  refreshExpiresAt: timestamp("refresh_expires_at"),
+  ipAddress: varchar("ip_address"),
+  userAgent: varchar("user_agent"),
+  deviceFingerprint: varchar("device_fingerprint"),
+  lastActivityAt: timestamp("last_activity_at").defaultNow(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Authentication audit log
+export const authAuditLogs = pgTable("auth_audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'set null' }),
+  sessionId: varchar("session_id").references(() => userSessions.id, { onDelete: 'set null' }),
+  action: varchar("action").notNull(), // login, logout, signup, password_reset, mfa_setup, etc.
+  method: varchar("method"), // password, sso, magic_link, mfa
+  result: varchar("result").notNull(), // success, failure, blocked
+  ipAddress: varchar("ip_address"),
+  userAgent: varchar("user_agent"),
+  metadata: jsonb("metadata"), // Additional context data
+  riskScore: integer("risk_score"), // 0-100, for fraud detection
+  timestamp: timestamp("timestamp").defaultNow(),
 });
 
 // Properties / Cost Centers table
@@ -674,6 +801,36 @@ export const insertTimesheetSchema = createInsertSchema(timesheets).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type UpsertUser = typeof users.$inferInsert;
+export type InsertUser = typeof users.$inferInsert;
+export type UpdateUser = Partial<InsertUser>;
+
+// Authentication type exports
+export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect;
+export type InsertEmailVerificationToken = typeof emailVerificationTokens.$inferInsert;
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type InsertPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
+export type MagicLinkToken = typeof magicLinkTokens.$inferSelect;
+export type InsertMagicLinkToken = typeof magicLinkTokens.$inferInsert;
+
+export type MfaTotpSecret = typeof mfaTotpSecrets.$inferSelect;
+export type InsertMfaTotpSecret = typeof mfaTotpSecrets.$inferInsert;
+
+export type WebauthnCredential = typeof webauthnCredentials.$inferSelect;
+export type InsertWebauthnCredential = typeof webauthnCredentials.$inferInsert;
+
+export type SsoProvider = typeof ssoProviders.$inferSelect;
+export type InsertSsoProvider = typeof ssoProviders.$inferInsert;
+
+export type UserSsoConnection = typeof userSsoConnections.$inferSelect;
+export type InsertUserSsoConnection = typeof userSsoConnections.$inferInsert;
+
+export type UserSession = typeof userSessions.$inferSelect;
+export type InsertUserSession = typeof userSessions.$inferInsert;
+
+export type AuthAuditLog = typeof authAuditLogs.$inferSelect;
+export type InsertAuthAuditLog = typeof authAuditLogs.$inferInsert;
 
 // Self-Service Portal tables
 export const paycheckHistory = pgTable("paycheck_history", {
