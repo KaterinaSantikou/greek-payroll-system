@@ -84,6 +84,15 @@ import {
   insertPaymentInstructionsSchema, 
   insertGlExportsSchema 
 } from "@shared/schema";
+import { 
+  uploadDataFile, 
+  uploadMiddleware,
+  setColumnMapping, 
+  validateData, 
+  dryRunImport, 
+  executeImport, 
+  getImportSession 
+} from "./api/dataImport";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -122,6 +131,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Acceptance Tests API
   const acceptanceTestApi = (await import("./api/acceptanceTestApi")).default;
   app.use('/api/acceptance-tests', acceptanceTestApi);
+  
+  // Data Import API - CSV/Excel file upload, mapping, validation, and import
+  app.post('/api/data-import/upload', isAuthenticated, uploadMiddleware, uploadDataFile);
+  app.put('/api/data-import/:sessionId/mapping', isAuthenticated, setColumnMapping);
+  app.post('/api/data-import/:sessionId/validate', isAuthenticated, validateData);
+  app.post('/api/data-import/:sessionId/dry-run', isAuthenticated, dryRunImport);
+  app.post('/api/data-import/:sessionId/execute', isAuthenticated, executeImport);
+  app.get('/api/data-import/:sessionId', isAuthenticated, getImportSession);
   
   // Security & Audit API
   const securityAuditApi = (await import("./api/securityAuditApi")).default;

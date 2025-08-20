@@ -1,0 +1,57 @@
+Conditional blocks (Handlebars-style):
+
+{{#if (eq payment_method "card")}} ... {{/if}}
+{{#if (eq payment_method "sepa_dd")}} ... {{/if}}
+
+1) D0 — Payment failed (Attempt 1)
+
+Trigger: charge.failed (card) OR sepa_dd.return (R-transactions)
+Timing: immediate
+
+Subject (EN): [Action Required] We couldn’t process invoice {{invoice_series}}-{{invoice_number}}
+Subject (EL): [Απαιτείται ενέργεια] Αποτυχία πληρωμής για το τιμολόγιο {{invoice_series}}-{{invoice_number}}
+Preview (EN): Update your payment method to avoid service disruption.
+Preview (EL): Ενημερώστε τον τρόπο πληρωμής για να αποφύγετε διακοπή υπηρεσίας.
+
+Body (EN):
+
+Hi {{customer_name}},
+
+We couldn’t process **€{{amount_due}}** for invoice **{{invoice_series}}-{{invoice_number}}** (issued {{invoice_issue_date}}).
+
+{{#if (eq payment_method "card")}}
+• Card ending **{{last4}}** was declined. Please update your card or retry the payment.
+{{/if}}
+{{#if (eq payment_method "sepa_dd")}}
+• SEPA Direct Debit (Mandate {{sepa_mandate_ref}}) was returned. We’ll retry on **{{next_retry_date}}**.
+{{/if}}
+
+→ Pay securely now: **{{pay_link}}**  
+You can also **download the invoice PDF** here: {{invoice_pdf_url}}
+
+If you need help, reply to this email or contact **{{support_email}}**.
+
+Thanks,  
+{{supplier_name}} Billing
+
+
+Body (EL):
+
+Γεια σας {{customer_name}},
+
+Δεν ήταν δυνατή η χρέωση ποσού **€{{amount_due}}** για το τιμολόγιο **{{invoice_series}}-{{invoice_number}}** (έκδοση {{invoice_issue_date}}).
+
+{{#if (eq payment_method "card")}}
+• Η κάρτα που λήγει σε **{{last4}}** απορρίφθηκε. Ενημερώστε την κάρτα ή δοκιμάστε ξανά την πληρωμή.
+{{/if}}
+{{#if (eq payment_method "sepa_dd")}}
+• Η πάγια εντολή SEPA (Mandate {{sepa_mandate_ref}}) επιστράφηκε. Θα επαναλάβουμε την προσπάθεια στις **{{next_retry_date}}**.
+{{/if}}
+
+→ Πληρώστε με ασφάλεια τώρα: **{{pay_link}}**  
+Μπορείτε επίσης να **κατεβάσετε το τιμολόγιο (PDF)** εδώ: {{invoice_pdf_url}}
+
+Χρειάζεστε βοήθεια; Απαντήστε σε αυτό το email ή επικοινωνήστε στο **{{support_email}}**.
+
+Ευχαριστούμε,  
+Τμήμα Χρέωσης {{supplier_name}}

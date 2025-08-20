@@ -49,6 +49,9 @@ const KPIDashboard = lazy(() => import("@/pages/kpiDashboard"));
 const ModernPayrollEngine = lazy(() => import("@/pages/modernPayrollEngine"));
 const ProductVision = lazy(() => import("@/pages/productVision"));
 
+// Data Import - for CSV/Excel import with Greek compliance validation
+const DataImport = lazy(() => import("@/pages/DataImport"));
+
 // Payment features - critical for Greek business, medium priority
 const Payments = lazy(() => import("@/pages/payments"));
 const SepaPayments = lazy(() => import("@/pages/sepaPayments"));
@@ -319,6 +322,7 @@ function Router() {
             <Route path="/ai-engines-demo" component={AIEnginesDemo} />
             <Route path="/command-palette-demo" component={CommandPaletteDemo} />
             <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
+            <Route path="/data-import" component={DataImport} />
             <Route path="/zero-trust-security" component={ZeroTrustSecurityPage} />
             <Route path="/error-tracking" component={lazy(() => import("@/pages/ErrorTrackingPage"))} />
             <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo"))} />
