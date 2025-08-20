@@ -216,6 +216,7 @@ function Router() {
             <Route path="/command-palette-demo" component={CommandPaletteDemo} />
             <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
             <Route path="/zero-trust-security" component={ZeroTrustSecurityPage} />
+            <Route path="/error-tracking" component={lazy(() => import("@/pages/ErrorTrackingPage"))} />
         <Route path="/s1-dashboard" component={S1Dashboard} />
         <Route path="/s1-metrics" component={S1MetricsPage} />
         <Route path="/s1-acceptance-testing" component={S1AcceptanceTesting} />
