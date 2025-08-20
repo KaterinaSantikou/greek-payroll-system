@@ -6,6 +6,7 @@ import { Users, Calculator, FileText, TrendingUp, Shield, CheckCircle, AlertTria
 import { Link } from "wouter";
 import GreekComplianceInfo from "@/components/GreekComplianceInfo";
 import ComplianceRecommendations from "@/components/ComplianceRecommendations";
+import LegalWatchNewsfeed from "@/components/LegalWatchNewsfeed";
 import { useAppContext } from "@/contexts/AppContext";
 import { CompliancePaymentsCues, EnhancedKPICard } from "@/components/CompliancePaymentsCues";
 
@@ -171,6 +172,9 @@ export default function Home() {
           <GreekComplianceInfo />
         </CardContent>
       </Card>
+
+      {/* Legal Watch & Newsfeed */}
+      <LegalWatchNewsfeed />
 
       {/* AI Recommendations */}
       <ComplianceRecommendations />
