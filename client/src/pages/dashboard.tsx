@@ -88,6 +88,8 @@ export default function Dashboard() {
   const [selectedProperty, setSelectedProperty] = useState("prop-princess");
   const [selectedPeriod, setPeriod] = useState("this-month");
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const [isRunningPayroll, setIsRunningPayroll] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -381,6 +383,28 @@ export default function Dashboard() {
     }, 1000);
   };
 
+  // Global search handler
+  const handleGlobalSearch = (query: string) => {
+    if (query.length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+    
+    // Simulate search results - in real app this would be an API call
+    const mockResults = [
+      { id: 1, type: 'employee', name: 'Maria Papadopoulos', role: 'Front Desk Manager' },
+      { id: 2, type: 'payroll', name: 'December 2024 Payroll', amount: '€124,280' },
+      { id: 3, type: 'filing', name: 'ΕΡΓΑΝΗ ΙΙ Filing', status: 'Pending' }
+    ].filter(item => 
+      item.name.toLowerCase().includes(query.toLowerCase()) ||
+      item.type.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    setSearchResults(mockResults);
+    setShowSearchResults(mockResults.length > 0);
+  };
+  
   // Add keyboard shortcuts
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -473,18 +497,19 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Center - Global Search */}
+            {/* Center - Enhanced Global Search */}
             <div className="flex-1 max-w-md">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="⌘K Search people, runs, filings, actions..."
-                  className="pl-10 pr-12"
+                  placeholder={locale === 'el' ? '⌘K Αναζήτηση εργαζομένων, μισθοδοσίας, ενεργειών...' : '⌘K Search people, runs, filings, actions...'}
+                  className="pl-10 pr-12 bg-gray-50/50 dark:bg-gray-800/50 border-gray-200/50 dark:border-gray-700/50 focus:bg-white dark:focus:bg-gray-800 transition-colors"
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
                     handleGlobalSearch(e.target.value);
                   }}
+                  onFocus={() => setShowCommandPalette(true)}
                   onClick={() => setShowCommandPalette(true)}
                   readOnly
                 />
@@ -492,6 +517,15 @@ export default function Dashboard() {
                   <Command className="h-3 w-3 mr-1" />
                   K
                 </div>
+                
+                {/* Search suggestions badge */}
+                {searchQuery.length === 0 && (
+                  <div className="absolute -bottom-8 left-0 right-0 flex justify-center">
+                    <div className="bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-medium border border-blue-200 dark:border-blue-800">
+                      {locale === 'el' ? 'Αυτόματη συμπλήρωση & ιστορικό' : 'Autocomplete & search history'}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
