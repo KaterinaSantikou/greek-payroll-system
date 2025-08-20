@@ -13,6 +13,9 @@ import {
   type InsertCbaStepChangeEvent
 } from "../../shared/schema";
 import { CbaPackService } from "./CbaPackService";
+import { CalcProvenanceService } from "./CalcProvenanceService";
+import { TourismHotelsCBAPack } from "../packs/TourismHotelsCBAPack";
+import { FnBRestaurantsCBAPack } from "../packs/FnBRestaurantsCBAPack";
 
 export interface PayrollCalculationContext {
   employeeId: string;

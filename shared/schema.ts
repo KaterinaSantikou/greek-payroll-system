@@ -3777,3 +3777,82 @@ export const insertPackAssignmentSchema = createInsertSchema(packAssignments).om
   id: true,
   createdAt: true,
 });
+
+// Security & Audit Tables
+
+// Immutable calculation provenance - records which pack/version calculated each payslip
+export const calcProvenance = pgTable("calc_provenance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  payslipId: varchar("payslip_id").notNull(),
+  employeeId: varchar("employee_id").notNull(),
+  packId: varchar("pack_id").notNull(), // e.g., "tourism-hotels"
+  packVersion: varchar("pack_version").notNull(), // e.g., "v2025.1"
+  calculationDate: timestamp("calculation_date").defaultNow().notNull(),
+  calculationEngine: varchar("calculation_engine").default("payroll-engine-v1").notNull(),
+  inputHash: varchar("input_hash").notNull(), // SHA-256 of calculation inputs
+  outputHash: varchar("output_hash").notNull(), // SHA-256 of calculation outputs
+  auditTrail: jsonb("audit_trail").notNull(), // Complete step-by-step calculation log
+  immutableSignature: varchar("immutable_signature").notNull(), // HMAC signature to prevent tampering
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Maker-Checker approval workflow
+export const makerCheckerApprovals = pgTable("maker_checker_approvals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  requestType: varchar("request_type").notNull(), // "pack_change", "version_publish", "rollout_execute"
+  requestId: varchar("request_id").notNull(), // ID of the change request
+  requestData: jsonb("request_data").notNull(), // Full request payload
+  makerUserId: varchar("maker_user_id").notNull(), // User who initiated the change
+  makerRole: varchar("maker_role").notNull(), // "payroll_admin", "hr_manager"
+  checkerUserId: varchar("checker_user_id"), // User who approved/rejected
+  checkerRole: varchar("checker_role"), // "legal", "payroll_admin"
+  status: varchar("status").default("pending").notNull(), // "pending", "approved", "rejected"
+  approvalReason: text("approval_reason"),
+  rejectionReason: text("rejection_reason"),
+  requiredApprovers: jsonb("required_approvers").notNull(), // ["legal", "payroll_admin"]
+  currentApprovers: jsonb("current_approvers").default(sql`'[]'::jsonb`).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Document trail for CBA PDFs and encoding diffs
+export const documentTrail = pgTable("document_trail", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  packId: varchar("pack_id").notNull(),
+  packVersion: varchar("pack_version").notNull(),
+  documentType: varchar("document_type").notNull(), // "cba_pdf", "encoding_diff", "impact_report"
+  originalFileName: varchar("original_file_name"),
+  fileHash: varchar("file_hash").notNull(), // SHA-256 of the document
+  fileSize: integer("file_size"),
+  mimeType: varchar("mime_type"),
+  uploadedBy: varchar("uploaded_by").notNull(),
+  diffMetadata: jsonb("diff_metadata"), // For encoding diffs: changes, affected rules, etc.
+  storageLocation: varchar("storage_location"), // S3/GCS path or local path
+  documentSignature: varchar("document_signature").notNull(), // HMAC signature
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Security & Audit Type Definitions
+export type CalcProvenance = typeof calcProvenance.$inferSelect;
+export type InsertCalcProvenance = typeof calcProvenance.$inferInsert;
+export type MakerCheckerApproval = typeof makerCheckerApprovals.$inferSelect;
+export type InsertMakerCheckerApproval = typeof makerCheckerApprovals.$inferInsert;
+export type DocumentTrail = typeof documentTrail.$inferSelect;
+export type InsertDocumentTrail = typeof documentTrail.$inferInsert;
+
+// Security & Audit Zod Schemas
+export const insertCalcProvenanceSchema = createInsertSchema(calcProvenance).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertMakerCheckerApprovalSchema = createInsertSchema(makerCheckerApprovals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertDocumentTrailSchema = createInsertSchema(documentTrail).omit({
+  id: true,
+  createdAt: true,
+});

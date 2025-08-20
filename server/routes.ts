@@ -109,6 +109,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Acceptance Tests API
   const acceptanceTestApi = (await import("./api/acceptanceTestApi")).default;
   app.use('/api/acceptance-tests', acceptanceTestApi);
+  
+  // Security & Audit API
+  const securityAuditApi = (await import("./api/securityAuditApi")).default;
+  app.use('/api/security-audit', securityAuditApi);
 
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();
