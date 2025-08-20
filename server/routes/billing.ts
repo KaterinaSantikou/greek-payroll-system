@@ -319,7 +319,9 @@ export function registerBillingRoutes(app: Express) {
             mydataTransmitted: true,
             mydataTransmissionDate: result.transmissionDate,
             mydataInvoiceUid: result.invoiceUid,
-            mydataQrCode: result.qrCode
+            mydataQrCode: result.qrCode,
+            mydataMark: result.mark,
+            mydataAuthenticationCode: result.authenticationCode
           })
           .where(eq(invoices.id, invoiceId));
       }
@@ -364,6 +366,67 @@ export function registerBillingRoutes(app: Express) {
     } catch (error) {
       console.error('Error fetching metering data:', error);
       res.status(500).json({ error: 'Failed to fetch metering data' });
+    }
+  });
+
+  // Generate B2G e-invoice (EN 16931 XML)
+  app.post('/api/billing/invoice/:invoiceId/b2g-xml', isAuthenticated, async (req, res) => {
+    try {
+      const { invoiceId } = req.params;
+      
+      const invoice = await db.select()
+        .from(invoices)
+        .where(eq(invoices.id, invoiceId))
+        .then(rows => rows[0]);
+      
+      if (!invoice) {
+        return res.status(404).json({ error: 'Invoice not found' });
+      }
+
+      const subscription = await db.select()
+        .from(subscriptions)
+        .where(eq(subscriptions.id, invoice.subscriptionId))
+        .then(rows => rows[0]);
+
+      if (!subscription) {
+        return res.status(404).json({ error: 'Subscription not found' });
+      }
+
+      // Generate EN 16931 XML for B2G e-invoicing
+      const xml = await myDataService.generateEN16931XML(
+        invoice,
+        {
+          name: process.env.COMPANY_NAME || 'PayrollSync',
+          vatNumber: process.env.COMPANY_VAT_NUMBER || 'EL123456789',
+          address: {
+            street: process.env.COMPANY_ADDRESS || 'Πανεπιστημίου 1',
+            city: process.env.COMPANY_CITY || 'Αθήνα',
+            postalCode: process.env.COMPANY_POSTAL_CODE || '10671'
+          }
+        },
+        {
+          name: subscription.companyName,
+          vatNumber: subscription.vatNumber || 'ΧΩΡΙΣ ΑΦΜ',
+          address: subscription.billingAddress as any
+        }
+      );
+
+      // If customer is public sector, deliver via e-invoicing provider
+      const isB2G = subscription.vatNumber?.startsWith('EL999') || subscription.vatNumber?.startsWith('GR999');
+      if (isB2G) {
+        const deliveryResult = await myDataService.deliverB2GInvoice(xml, subscription.vatNumber!);
+        console.log('B2G delivery result:', deliveryResult);
+      }
+
+      res.set({
+        'Content-Type': 'application/xml',
+        'Content-Disposition': `attachment; filename="${invoice.invoiceNumber}.xml"`
+      });
+
+      res.send(xml);
+    } catch (error) {
+      console.error('Error generating B2G XML:', error);
+      res.status(500).json({ error: 'Failed to generate B2G XML' });
     }
   });
 

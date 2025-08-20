@@ -16,39 +16,49 @@ export interface MyDataInvoiceRequest {
 export interface MyDataResponse {
   success: boolean;
   invoiceUid?: string;
+  mark?: string; // AADE Mark for the document
   qrCode?: string;
+  authenticationCode?: string;
   errors?: string[];
   transmissionDate?: Date;
 }
 
 export interface MyDataInvoiceData {
   invoiceHeader: {
-    series: string;
-    aa: string; // Sequential number
+    series: string; // Max 50 chars
+    aa: string; // Sequential number, max 50 chars
     issueDate: string;
-    invoiceType: string; // 1.1 for Services, 5.1 for Credit Note
+    invoiceType: string; // 1.1 for Services Provided, 5.1 for Correlated Credit Note
     currency: string;
+    exchangeRate?: number;
+    selfPricing?: boolean;
+    dispatchDate?: string;
+    dispatchTime?: string;
+    vehicleNumber?: string;
+    movePurpose?: string;
   };
   counterpart: {
     vatNumber: string;
+    country: string;
+    branch?: number;
     name: string;
     address: {
       street: string;
       number?: string;
-      city: string;
       postalCode: string;
-      country: string;
+      city: string;
     };
   };
   issuer: {
     vatNumber: string;
+    country: string;
+    branch?: number;
     name: string;
     address: {
       street: string;
       number?: string;
-      city: string;
       postalCode: string;
-      country: string;
+      city: string;
     };
   };
   invoiceDetails: Array<{
@@ -56,11 +66,25 @@ export interface MyDataInvoiceData {
     recType: string; // 1 for services
     fuelCode?: string;
     quantity: number;
-    measurementUnit: string;
+    measurementUnit: string; // 1 for pieces/units
     invoiceDetailType: string; // 1 for Service provision
     netValue: number;
-    vatCategory: string; // 1 for 24%, 2 for 13%, etc.
+    vatCategory: string; // 1 for 24%, 2 for 13%, 3 for 6%, 4 for 17%, 5 for 9%, 6 for 4%, 7 for 0%, 8 for exemptions
     vatAmount: number;
+    vatExemptionCategory?: string;
+    dienergia?: string; // For specific service types
+    // Income classifications (required)
+    incomeClassification: Array<{
+      classificationType: string; // E3_561_001, E3_562_001, etc.
+      classificationCategory: string; // category_1_1, category_1_2, etc.
+      amount: number;
+    }>;
+    // Expenses classifications (if applicable)
+    expensesClassification?: Array<{
+      classificationType: string;
+      classificationCategory: string;
+      amount: number;
+    }>;
     withholdingTaxCategory?: string;
     withholdingTaxAmount?: number;
     stampDutyCategory?: string;
@@ -82,6 +106,18 @@ export interface MyDataInvoiceData {
     totalOtherTaxesAmount: number;
     totalDeductionsAmount: number;
     totalGrossValue: number;
+    // Income classification totals
+    incomeClassification: Array<{
+      classificationType: string;
+      classificationCategory: string;
+      amount: number;
+    }>;
+    // Expenses classification totals (if applicable)
+    expensesClassification?: Array<{
+      classificationType: string;
+      classificationCategory: string;
+      amount: number;
+    }>;
   };
 }
 
@@ -141,7 +177,9 @@ export class MyDataService {
       return {
         success: true,
         invoiceUid: result.invoiceUid,
+        mark: result.mark, // AADE Mark
         qrCode: result.qrCode,
+        authenticationCode: result.authenticationCode,
         transmissionDate: new Date()
       };
 
@@ -238,6 +276,14 @@ export class MyDataService {
     // Parse invoice number to extract series and sequential number
     const [series, year, number] = invoice.invoiceNumber.split('-');
     
+    // Validate myDATA constraints
+    if (series.length > 50) {
+      throw new Error('Invoice series exceeds myDATA maximum length of 50 characters');
+    }
+    if (number.length > 50) {
+      throw new Error('Invoice number exceeds myDATA maximum length of 50 characters');
+    }
+    
     // Get customer details from subscription - would need to be fetched separately
     // For now, we'll extract what we can from the invoice
     const customerVatNumber = '';
@@ -246,27 +292,32 @@ export class MyDataService {
 
     const invoiceData: MyDataInvoiceData = {
       invoiceHeader: {
-        series: series,
-        aa: number, // Sequential number
+        series: series.substring(0, 50), // Ensure myDATA length limit
+        aa: number.substring(0, 50), // Ensure myDATA length limit
         issueDate: invoice.issueDate,
-        invoiceType: invoice.type === 'credit_note' ? '5.1' : '1.1', // 1.1 for Services, 5.1 for Credit Note
+        invoiceType: invoice.type === 'credit_note' ? '5.1' : '1.1', // 1.1 for Services Provided, 5.1 for Correlated Credit Note
         currency: 'EUR'
       },
       
       counterpart: {
         vatNumber: customerVatNumber,
+        country: 'GR',
         name: customerName,
-        address: customerAddress
+        address: {
+          street: customerAddress.street,
+          postalCode: customerAddress.postalCode,
+          city: customerAddress.city
+        }
       },
       
       issuer: {
         vatNumber: organizationVatNumber,
+        country: 'GR',
         name: organizationName,
         address: {
           street: organizationAddress.street,
-          city: organizationAddress.city,
           postalCode: organizationAddress.postalCode,
-          country: organizationAddress.country
+          city: organizationAddress.city
         }
       },
 
@@ -280,22 +331,41 @@ export class MyDataService {
         totalStampDutyAmount: 0,
         totalOtherTaxesAmount: 0,
         totalDeductionsAmount: 0,
-        totalGrossValue: invoice.totalCents / 100
+        totalGrossValue: invoice.totalCents / 100,
+        // Income classification for software services
+        incomeClassification: [
+          {
+            classificationType: 'E3_561_001', // Services - Software/IT
+            classificationCategory: 'category_1_1',
+            amount: invoice.subtotalCents / 100
+          }
+        ]
       }
     };
 
     // Build invoice details from line items
     const items = Array.isArray(invoice.items) ? invoice.items : [];
     items.forEach((item: any, index: number) => {
+      const itemNetValue = item.subtotalCents / 100;
+      const itemVatAmount = (item.subtotalCents * parseFloat(invoice.vatRate)) / 100;
+      
       invoiceData.invoiceDetails.push({
         lineNumber: index + 1,
         recType: '1', // Services
         quantity: item.quantity,
-        measurementUnit: '1', // Default unit
+        measurementUnit: '1', // Pieces/units
         invoiceDetailType: '1', // Service provision
-        netValue: item.subtotalCents / 100,
+        netValue: itemNetValue,
         vatCategory: this.getVatCategoryFromRate(parseFloat(invoice.vatRate)),
-        vatAmount: (item.subtotalCents * parseFloat(invoice.vatRate)) / 100,
+        vatAmount: itemVatAmount,
+        // Required income classification per line item
+        incomeClassification: [
+          {
+            classificationType: 'E3_561_001', // Services - Software/IT
+            classificationCategory: 'category_1_1',
+            amount: itemNetValue
+          }
+        ],
         comments: item.description
       });
     });
@@ -355,6 +425,176 @@ export class MyDataService {
     if (vatRate === 0) return '8'; // 0% (exempt/reverse charge)
     
     return '1'; // Default to 24%
+  }
+
+  /**
+   * Generate EN 16931 XML for B2G e-invoicing
+   */
+  async generateEN16931XML(invoice: Invoice, organizationDetails: any, customerDetails: any): Promise<string> {
+    // EN 16931 is the European standard for electronic invoicing
+    // This would generate UBL 2.1 or UN/CEFACT Cross Industry Invoice XML
+    
+    const issueDate = new Date(invoice.issueDate).toISOString().split('T')[0];
+    const dueDate = new Date(invoice.dueDate).toISOString().split('T')[0];
+    
+    // Simplified UBL 2.1 XML structure
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" 
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" 
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+  <cbc:CustomizationID>urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0</cbc:CustomizationID>
+  <cbc:ProfileID>urn:fdc:peppol.eu:2017:poacc:billing:01:1.0</cbc:ProfileID>
+  <cbc:ID>${invoice.invoiceNumber}</cbc:ID>
+  <cbc:IssueDate>${issueDate}</cbc:IssueDate>
+  <cbc:DueDate>${dueDate}</cbc:DueDate>
+  <cbc:InvoiceTypeCode>380</cbc:InvoiceTypeCode>
+  <cbc:Note>PayrollSync HR &amp; Payroll Services</cbc:Note>
+  <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
+  
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cac:PartyName>
+        <cbc:Name>${organizationDetails.name}</cbc:Name>
+      </cac:PartyName>
+      <cac:PostalAddress>
+        <cbc:StreetName>${organizationDetails.address.street}</cbc:StreetName>
+        <cbc:CityName>${organizationDetails.address.city}</cbc:CityName>
+        <cbc:PostalZone>${organizationDetails.address.postalCode}</cbc:PostalZone>
+        <cac:Country>
+          <cbc:IdentificationCode>GR</cbc:IdentificationCode>
+        </cac:Country>
+      </cac:PostalAddress>
+      <cac:PartyTaxScheme>
+        <cbc:CompanyID>${organizationDetails.vatNumber}</cbc:CompanyID>
+        <cac:TaxScheme>
+          <cbc:ID>VAT</cbc:ID>
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+  
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyName>
+        <cbc:Name>${customerDetails.name}</cbc:Name>
+      </cac:PartyName>
+      <cac:PostalAddress>
+        <cbc:StreetName>${customerDetails.address.street}</cbc:StreetName>
+        <cbc:CityName>${customerDetails.address.city}</cbc:CityName>
+        <cbc:PostalZone>${customerDetails.address.postalCode}</cbc:PostalZone>
+        <cac:Country>
+          <cbc:IdentificationCode>GR</cbc:IdentificationCode>
+        </cac:Country>
+      </cac:PostalAddress>
+      <cac:PartyTaxScheme>
+        <cbc:CompanyID>${customerDetails.vatNumber}</cbc:CompanyID>
+        <cac:TaxScheme>
+          <cbc:ID>VAT</cbc:ID>
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+  
+  ${this.generateInvoiceLines(invoice)}
+  
+  <cac:TaxTotal>
+    <cbc:TaxAmount currencyID="EUR">${(invoice.vatAmountCents / 100).toFixed(2)}</cbc:TaxAmount>
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="EUR">${(invoice.subtotalCents / 100).toFixed(2)}</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="EUR">${(invoice.vatAmountCents / 100).toFixed(2)}</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <cbc:ID>S</cbc:ID>
+        <cbc:Percent>${(parseFloat(invoice.vatRate) * 100).toFixed(0)}</cbc:Percent>
+        <cac:TaxScheme>
+          <cbc:ID>VAT</cbc:ID>
+        </cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+  
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="EUR">${(invoice.subtotalCents / 100).toFixed(2)}</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="EUR">${(invoice.subtotalCents / 100).toFixed(2)}</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="EUR">${(invoice.totalCents / 100).toFixed(2)}</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="EUR">${(invoice.totalCents / 100).toFixed(2)}</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+</Invoice>`;
+
+    return xml;
+  }
+
+  /**
+   * Generate invoice lines for EN 16931 XML
+   */
+  private generateInvoiceLines(invoice: Invoice): string {
+    const items = Array.isArray(invoice.items) ? invoice.items : [];
+    
+    return items.map((item: any, index: number) => `
+  <cac:InvoiceLine>
+    <cbc:ID>${index + 1}</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="C62">${item.quantity}</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="EUR">${(item.subtotalCents / 100).toFixed(2)}</cbc:LineExtensionAmount>
+    <cac:Item>
+      <cbc:Name>${this.escapeXml(item.description)}</cbc:Name>
+      <cac:ClassifiedTaxCategory>
+        <cbc:ID>S</cbc:ID>
+        <cbc:Percent>${(parseFloat(invoice.vatRate) * 100).toFixed(0)}</cbc:Percent>
+        <cac:TaxScheme>
+          <cbc:ID>VAT</cbc:ID>
+        </cac:TaxScheme>
+      </cac:ClassifiedTaxCategory>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="EUR">${(item.unitPriceCents / 100).toFixed(2)}</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>`).join('');
+  }
+
+  /**
+   * Escape XML special characters
+   */
+  private escapeXml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&apos;');
+  }
+
+  /**
+   * Deliver B2G e-invoice via provider
+   */
+  async deliverB2GInvoice(xml: string, customerVatNumber: string): Promise<boolean> {
+    try {
+      // This would integrate with a B2G e-invoicing provider
+      // Such as PEPPOL Access Point or national e-invoicing platform
+      console.log('Delivering B2G invoice via e-invoicing provider...');
+      console.log(`Customer VAT: ${customerVatNumber}`);
+      console.log(`XML length: ${xml.length} characters`);
+      
+      // Mock delivery - in production, integrate with actual provider
+      return true;
+    } catch (error) {
+      console.error('B2G invoice delivery failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get income classification type based on service type
+   */
+  getIncomeClassification(serviceType: string): string {
+    // Greek income classification types for different service categories
+    const classifications = {
+      'software': 'E3_561_001', // Software development services
+      'payroll': 'E3_562_001',  // Payroll processing services
+      'hr': 'E3_563_001',       // HR consulting services
+      'consulting': 'E3_564_001', // Business consulting
+      'training': 'E3_565_001'   // Training services
+    };
+    
+    return classifications[serviceType as keyof typeof classifications] || 'E3_561_001'; // Default to software
   }
 
   /**

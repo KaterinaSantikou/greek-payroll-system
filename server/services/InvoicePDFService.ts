@@ -78,34 +78,59 @@ export class InvoicePDFService {
       invoice: isGreek ? 'ΤΙΜΟΛΟΓΙΟ' : 'INVOICE',
       creditNote: isGreek ? 'ΠΙΣΤΩΤΙΚΟ ΣΗΜΕΙΩΜΑ' : 'CREDIT NOTE',
       invoiceNumber: isGreek ? 'Αριθμός Τιμολογίου' : 'Invoice Number',
+      series: isGreek ? 'Σειρά' : 'Series',
       issueDate: isGreek ? 'Ημερομηνία Έκδοσης' : 'Issue Date',
+      issueTime: isGreek ? 'Ώρα Έκδοσης' : 'Issue Time',
       dueDate: isGreek ? 'Ημερομηνία Λήξης' : 'Due Date',
       period: isGreek ? 'Περίοδος Χρέωσης' : 'Billing Period',
       billTo: isGreek ? 'Στοιχεία Πελάτη' : 'Bill To',
+      billFrom: isGreek ? 'Στοιχεία Προμηθευτή' : 'Bill From',
       description: isGreek ? 'Περιγραφή' : 'Description',
       quantity: isGreek ? 'Ποσότητα' : 'Quantity',
       unitPrice: isGreek ? 'Τιμή Μονάδας' : 'Unit Price',
+      netAmount: isGreek ? 'Καθαρή Αξία' : 'Net Amount',
       amount: isGreek ? 'Ποσό' : 'Amount',
       subtotal: isGreek ? 'Υποσύνολο' : 'Subtotal',
-      vat: isGreek ? 'ΦΠΑ' : 'VAT',
+      vat: isGreek ? 'Φ.Π.Α.' : 'VAT',
       total: isGreek ? 'Σύνολο' : 'Total',
       vatNumber: isGreek ? 'Α.Φ.Μ.' : 'VAT Number',
       taxOffice: isGreek ? 'Δ.Ο.Υ.' : 'Tax Office',
       address: isGreek ? 'Διεύθυνση' : 'Address',
       paymentTerms: isGreek ? 'Όροι Πληρωμής' : 'Payment Terms',
       notes: isGreek ? 'Σημειώσεις' : 'Notes',
-      currency: 'EUR'
+      currency: 'EUR',
+      originalInvoice: isGreek ? 'Αρχικό Τιμολόγιο' : 'Original Invoice',
+      creditReason: isGreek ? 'Λόγος Πίστωσης' : 'Credit Reason',
+      noVat: 'ΧΩΡΙΣ ΑΦΜ'
     };
 
     const invoiceTitle = invoice.type === 'credit_note' ? labels.creditNote : labels.invoice;
+    
+    // Parse invoice number for series and sequential number
+    const [series, year, sequentialNumber] = invoice.invoiceNumber.split('-');
+    
+    // Format issue date and time
+    const issueDateTime = new Date(invoice.issueDate);
+    const formattedDate = this.formatDate(issueDateTime, invoice.language as 'el' | 'en');
+    const formattedTime = issueDateTime.toLocaleTimeString(isGreek ? 'el-GR' : 'en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
     
     // Format billing address
     const billingAddress = subscription.billingAddress as any;
     const customerAddress = billingAddress ? [
       billingAddress.street,
       `${billingAddress.postalCode} ${billingAddress.city}`,
-      billingAddress.country
+      billingAddress.country || 'Greece'
     ].filter(Boolean).join('<br>') : '';
+    
+    // Determine customer VAT display
+    const customerVatDisplay = subscription.vatNumber || labels.noVat;
+    
+    // Generate VAT breakdown by rate
+    const vatBreakdown = this.generateVatBreakdown(items, parseFloat(invoice.vatRate), isGreek);
 
     return `
 <!DOCTYPE html>
@@ -291,17 +316,26 @@ export class InvoicePDFService {
     <div class="invoice-meta">
       <div class="invoice-title">${invoiceTitle}</div>
       <dl class="invoice-details">
+        <dt>${labels.series}:</dt>
+        <dd>${series}</dd><br>
+        
         <dt>${labels.invoiceNumber}:</dt>
-        <dd>${invoice.invoiceNumber}</dd><br>
+        <dd>${sequentialNumber}/${year}</dd><br>
         
         <dt>${labels.issueDate}:</dt>
-        <dd>${new Date(invoice.issueDate).toLocaleDateString(isGreek ? 'el-GR' : 'en-US')}</dd><br>
+        <dd>${formattedDate}</dd><br>
+        
+        <dt>${labels.issueTime}:</dt>
+        <dd>${formattedTime}</dd><br>
+        
+        <dt>${labels.currency}:</dt>
+        <dd>EUR</dd><br>
         
         <dt>${labels.dueDate}:</dt>
-        <dd>${new Date(invoice.dueDate).toLocaleDateString(isGreek ? 'el-GR' : 'en-US')}</dd><br>
+        <dd>${this.formatDate(new Date(invoice.dueDate), invoice.language as 'el' | 'en')}</dd><br>
         
         <dt>${labels.period}:</dt>
-        <dd>${new Date(invoice.periodStart).toLocaleDateString(isGreek ? 'el-GR' : 'en-US')} - ${new Date(invoice.periodEnd).toLocaleDateString(isGreek ? 'el-GR' : 'en-US')}</dd>
+        <dd>${this.formatDate(new Date(invoice.periodStart), invoice.language as 'el' | 'en')} - ${this.formatDate(new Date(invoice.periodEnd), invoice.language as 'el' | 'en')}</dd>
       </dl>
       
       ${invoice.mydataQrCode ? `
@@ -312,21 +346,42 @@ export class InvoicePDFService {
     </div>
   </div>
 
-  <div class="customer-info">
-    <h3>${labels.billTo}</h3>
-    <strong>${subscription.companyName}</strong><br>
-    ${subscription.vatNumber ? `${labels.vatNumber}: ${subscription.vatNumber}<br>` : ''}
-    ${subscription.taxOffice ? `${labels.taxOffice}: ${subscription.taxOffice}<br>` : ''}
-    ${customerAddress}
+  <div class="billing-parties" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+    <div class="supplier-info">
+      <h3>${labels.billFrom}</h3>
+      <strong>${organizationDetails.name}</strong><br>
+      ${labels.vatNumber}: ${organizationDetails.vatNumber}<br>
+      ${labels.taxOffice}: ${organizationDetails.taxOffice}<br>
+      ${organizationDetails.address.street}<br>
+      ${organizationDetails.address.postalCode} ${organizationDetails.address.city}<br>
+      ${organizationDetails.address.country || 'Ελλάδα'}<br>
+      ${organizationDetails.address.phone ? `Τηλ.: ${organizationDetails.address.phone}<br>` : ''}
+      ${organizationDetails.address.email ? `Email: ${organizationDetails.address.email}` : ''}
+    </div>
+    
+    <div class="customer-info">
+      <h3>${labels.billTo}</h3>
+      <strong>${subscription.companyName}</strong><br>
+      ${labels.vatNumber}: ${customerVatDisplay}<br>
+      ${subscription.taxOffice ? `${labels.taxOffice}: ${subscription.taxOffice}<br>` : ''}
+      ${customerAddress}
+    </div>
   </div>
+
+  ${invoice.type === 'credit_note' ? `
+    <div class="credit-note-info" style="background-color: #fef3c7; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+      <strong>${labels.originalInvoice}:</strong> ${(invoice as any).originalInvoiceNumber || 'N/A'}<br>
+      <strong>${labels.creditReason}:</strong> ${(invoice as any).creditReason || 'N/A'}
+    </div>
+  ` : ''}
 
   <table class="invoice-table">
     <thead>
       <tr>
-        <th style="width: 50%">${labels.description}</th>
+        <th style="width: 45%">${labels.description}</th>
         <th style="width: 15%">${labels.quantity}</th>
-        <th style="width: 15%">${labels.unitPrice} (€)</th>
-        <th style="width: 20%">${labels.amount} (€)</th>
+        <th style="width: 20%">${labels.unitPrice} (€)</th>
+        <th style="width: 20%">${labels.netAmount} (€)</th>
       </tr>
     </thead>
     <tbody>
@@ -334,12 +389,12 @@ export class InvoicePDFService {
         <tr>
           <td>
             ${item.description}
-            ${item.periodStart && item.periodEnd ? `<br><small>${new Date(item.periodStart).toLocaleDateString(isGreek ? 'el-GR' : 'en-US')} - ${new Date(item.periodEnd).toLocaleDateString(isGreek ? 'el-GR' : 'en-US')}</small>` : ''}
+            ${item.periodStart && item.periodEnd ? `<br><small>${this.formatDate(new Date(item.periodStart), invoice.language as 'el' | 'en')} - ${this.formatDate(new Date(item.periodEnd), invoice.language as 'el' | 'en')}</small>` : ''}
             ${item.isProrated ? `<br><span class="prorated">${isGreek ? 'Αναλογικό' : 'Prorated'}</span>` : ''}
           </td>
-          <td>${item.quantity}</td>
-          <td class="amount">${(item.unitPriceCents / 100).toFixed(2)}</td>
-          <td class="amount">${(item.subtotalCents / 100).toFixed(2)}</td>
+          <td>${this.formatNumber(item.quantity, invoice.language as 'el' | 'en')}</td>
+          <td class="amount">${this.formatCurrency(item.unitPriceCents, invoice.language as 'el' | 'en').replace('€', '').trim()}</td>
+          <td class="amount">${this.formatCurrency(item.subtotalCents, invoice.language as 'el' | 'en').replace('€', '').trim()}</td>
         </tr>
       `).join('')}
     </tbody>
@@ -348,23 +403,34 @@ export class InvoicePDFService {
   <div class="invoice-summary">
     <table>
       <tr>
-        <td><strong>${labels.subtotal}</strong></td>
-        <td class="amount"><strong>€${(invoice.subtotalCents / 100).toFixed(2)}</strong></td>
+        <td><strong>${labels.subtotal} (${labels.netAmount})</strong></td>
+        <td class="amount"><strong>${this.formatCurrency(invoice.subtotalCents, invoice.language as 'el' | 'en').replace('€', '')} €</strong></td>
       </tr>
-      <tr>
-        <td>${labels.vat} (${(parseFloat(invoice.vatRate) * 100).toFixed(0)}%)</td>
-        <td class="amount">€${(invoice.vatAmountCents / 100).toFixed(2)}</td>
-      </tr>
+      ${vatBreakdown}
       <tr class="total-row">
-        <td><strong>${labels.total}</strong></td>
-        <td class="amount"><strong>€${(invoice.totalCents / 100).toFixed(2)}</strong></td>
+        <td><strong>${labels.total} (${isGreek ? 'Συμπ. Φ.Π.Α.' : 'Incl. VAT'})</strong></td>
+        <td class="amount"><strong>${this.formatCurrency(invoice.totalCents, invoice.language as 'el' | 'en').replace('€', '')} €</strong></td>
       </tr>
     </table>
   </div>
 
-  ${invoice.vatNote ? `
+  ${invoice.vatNote || invoice.vatTreatment === 'reverse_charge' ? `
     <div class="vat-info">
-      <strong>${isGreek ? 'Σημείωση ΦΠΑ' : 'VAT Note'}:</strong> ${invoice.vatNote}
+      <strong>${isGreek ? 'Σημείωση ΦΠΑ' : 'VAT Note'}:</strong> 
+      ${invoice.vatTreatment === 'reverse_charge' ? 
+        (isGreek ? 'Αντίστροφη Επιβάρυνση - Ο λήπτης οφείλει το ΦΠΑ' : 'Reverse Charge - VAT payable by recipient') : 
+        invoice.vatNote
+      }
+    </div>
+  ` : ''}
+
+  ${this.isB2GTransaction(subscription) ? `
+    <div class="b2g-info" style="background-color: #dbeafe; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+      <strong>${isGreek ? 'Ηλεκτρονική Τιμολόγηση Δημοσίου' : 'Public Sector E-Invoicing'}:</strong><br>
+      ${isGreek ? 
+        'Το παρόν τιμολόγιο διαβιβάστηκε ηλεκτρονικά σύμφωνα με το πρότυπο EN 16931.' :
+        'This invoice was transmitted electronically according to EN 16931 standard.'
+      }
     </div>
   ` : ''}
 
@@ -403,14 +469,30 @@ export class InvoicePDFService {
   }
 
   /**
-   * Format currency for Greek locale
+   * Format currency for Greek locale (decimal comma)
    */
   formatCurrency(amountCents: number, language: 'el' | 'en' = 'el'): string {
     const amount = amountCents / 100;
-    return new Intl.NumberFormat(language === 'el' ? 'el-GR' : 'en-US', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(amount);
+    if (language === 'el') {
+      // Greek format: 1.234,56 €
+      return amount.toLocaleString('el-GR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + ' €';
+    } else {
+      // English format: €1,234.56
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'EUR'
+      }).format(amount);
+    }
+  }
+
+  /**
+   * Format number for Greek locale (decimal comma)
+   */
+  formatNumber(value: number, language: 'el' | 'en' = 'el'): string {
+    return value.toLocaleString(language === 'el' ? 'el-GR' : 'en-US');
   }
 
   /**
@@ -419,6 +501,45 @@ export class InvoicePDFService {
   formatDate(date: string | Date, language: 'el' | 'en' = 'el'): string {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return dateObj.toLocaleDateString(language === 'el' ? 'el-GR' : 'en-US');
+  }
+
+  /**
+   * Generate VAT breakdown by rate
+   */
+  private generateVatBreakdown(items: any[], mainVatRate: number, isGreek: boolean): string {
+    const vatLabel = isGreek ? 'Φ.Π.Α.' : 'VAT';
+    const vatPercentage = Math.round(mainVatRate * 100);
+    
+    // For now, assuming single VAT rate - can be extended for multiple rates
+    const totalNet = items.reduce((sum, item) => sum + item.subtotalCents, 0);
+    const vatAmount = Math.round(totalNet * mainVatRate);
+    
+    const formattedNet = isGreek ? 
+      (totalNet / 100).toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) :
+      (totalNet / 100).toFixed(2);
+    const formattedVat = isGreek ? 
+      (vatAmount / 100).toLocaleString('el-GR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) :
+      (vatAmount / 100).toFixed(2);
+
+    return `
+      <tr>
+        <td>${vatLabel} ${vatPercentage}%</td>
+        <td class="amount">${formattedVat} €</td>
+      </tr>
+    `;
+  }
+
+  /**
+   * Check if transaction is B2G (Business to Government)
+   */
+  private isB2GTransaction(subscription: any): boolean {
+    // Check if customer VAT number indicates public sector
+    const vatNumber = subscription.vatNumber;
+    if (!vatNumber) return false;
+    
+    // Greek public sector VAT numbers often start with specific patterns
+    // This would need to be enhanced with actual public sector VAT number patterns
+    return vatNumber.startsWith('EL999') || vatNumber.startsWith('GR999');
   }
 }
 
