@@ -9,7 +9,7 @@ import employeesAPI from "./api/employees";
 import timeAPI from "./api/time";
 import payrollAPI from "./api/payroll";
 import filingsAPI from "./api/filings";
-import paymentsAPI from "./api/payments";
+import { paymentsRoutes } from "./api/payments";
 import webhooksAPI from "./api/webhooks";
 import healthAPI from "./api/health";
 import securityAPI from "./api/security";
@@ -2710,7 +2710,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(timeAPI);
   app.use(payrollAPI);
   app.use(filingsAPI);
-  app.use(paymentsAPI);
+  // V1 Payments API
+  paymentsRoutes(app);
   app.use(webhooksAPI);
   app.use(healthAPI);
   app.use(securityAPI);
