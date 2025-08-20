@@ -101,16 +101,22 @@ interface GarnishmentCalculationResult {
 }
 
 const orderTypes = [
+  { value: 'wage_garnishment', label: 'Wage Garnishment' },
   { value: 'child_support', label: 'Child Support' },
   { value: 'tax_levy', label: 'Tax Levy' },
-  { value: 'wage_garnishment', label: 'Wage Garnishment' },
-  { value: 'student_loan', label: 'Student Loan' },
+  { value: 'court_order', label: 'Court Order' },
+  { value: 'other', label: 'Other' },
 ];
 
-const deductionTypes = [
+const deductionMethods = [
   { value: 'fixed_amount', label: 'Fixed Amount' },
-  { value: 'percentage', label: 'Percentage' },
-  { value: 'percentage_with_cap', label: 'Percentage with Cap' },
+  { value: 'percent_of_disposable_net', label: 'Percent of Disposable Net' },
+];
+
+const applicationScope = [
+  { value: 'all_runs', label: 'All runs' },
+  { value: 'only_regular', label: 'Only regular' },
+  { value: 'only_off_cycle', label: 'Only off-cycle' },
 ];
 
 export default function GarnishmentPage() {
@@ -122,24 +128,39 @@ export default function GarnishmentPage() {
   
   // New order form state
   const [orderForm, setOrderForm] = useState({
-    orderNumber: '',
+    type: '',
     creditorName: '',
-    creditorAccountCode: '',
-    orderType: '',
+    creditorIban: '',
+    orderRef: '',
+    caseId: '',
+    documentUpload: null as File | null,
     priority: 1,
-    deductionType: '',
-    deductionAmount: '',
-    deductionPercentage: '',
-    maximumAmount: '',
-    totalOrderAmount: '',
-    protectedNetAmount: '',
-    protectedPercentage: '',
-    courtName: '',
-    orderDate: '',
-    effectiveDate: '',
-    expirationDate: '',
+    startDate: '',
+    endDate: '',
+    stopAfterBalance: false,
+    method: '',
+    amount: '',
+    percent: '',
+    protectedNetFloor: '',
+    maxPercentCap: '',
+    perRunCap: '',
+    totalBalance: '',
+    perRunMin: '',
+    applyTo: 'all_runs',
     notes: ''
   });
+  
+  // Preview calculation state
+  const [previewData, setPreviewData] = useState<{
+    grossPay: number;
+    taxes: number;
+    contributions: number;
+    disposableNet: number;
+    proposedDeductions: Array<{ creditor: string; amount: number; }>;
+    netRemaining: number;
+    belowFloor: boolean;
+    cappedAmount: number;
+  } | null>(null);
 
   // Calculator form state
   const [calculatorForm, setCalculatorForm] = useState({
@@ -274,16 +295,54 @@ export default function GarnishmentPage() {
       return;
     }
 
-    // Convert string values to numbers where appropriate
+    // Validate required fields
+    if (!orderForm.type || !orderForm.creditorName || !orderForm.orderRef || 
+        !orderForm.method || !orderForm.startDate) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (orderForm.method === 'fixed_amount' && !orderForm.amount) {
+      toast({
+        title: "Error",
+        description: "Amount is required for fixed amount method",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (orderForm.method === 'percent_of_disposable_net' && !orderForm.percent) {
+      toast({
+        title: "Error",
+        description: "Percentage is required for percentage method",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Convert new form structure to API format
     const formData = {
-      ...orderForm,
+      orderNumber: orderForm.orderRef,
+      creditorName: orderForm.creditorName,
+      creditorAccountCode: orderForm.creditorIban || '',
+      orderType: orderForm.type,
       priority: Number(orderForm.priority),
-      deductionAmount: orderForm.deductionAmount ? Number(orderForm.deductionAmount) : undefined,
-      deductionPercentage: orderForm.deductionPercentage ? Number(orderForm.deductionPercentage) : undefined,
-      maximumAmount: orderForm.maximumAmount ? Number(orderForm.maximumAmount) : undefined,
-      totalOrderAmount: orderForm.totalOrderAmount ? Number(orderForm.totalOrderAmount) : undefined,
-      protectedNetAmount: orderForm.protectedNetAmount ? Number(orderForm.protectedNetAmount) : undefined,
-      protectedPercentage: orderForm.protectedPercentage ? Number(orderForm.protectedPercentage) : undefined,
+      deductionType: orderForm.method,
+      deductionAmount: orderForm.method === 'fixed_amount' ? Number(orderForm.amount) : undefined,
+      deductionPercentage: orderForm.method === 'percent_of_disposable_net' ? Number(orderForm.percent) : undefined,
+      maximumAmount: orderForm.perRunCap ? Number(orderForm.perRunCap) : undefined,
+      totalOrderAmount: orderForm.totalBalance ? Number(orderForm.totalBalance) : undefined,
+      protectedNetAmount: orderForm.protectedNetFloor ? Number(orderForm.protectedNetFloor) : undefined,
+      protectedPercentage: orderForm.maxPercentCap ? Number(orderForm.maxPercentCap) : undefined,
+      courtName: orderForm.caseId || '',
+      orderDate: orderForm.startDate,
+      effectiveDate: orderForm.startDate,
+      expirationDate: orderForm.endDate || undefined,
+      notes: orderForm.notes || ''
     };
 
     createOrderMutation.mutate(formData);
@@ -346,6 +405,15 @@ export default function GarnishmentPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
+          {/* Breadcrumb Navigation */}
+          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+            <span>Employee</span>
+            <span>→</span>
+            <span>Deductions</span>
+            <span>→</span>
+            <span className="font-medium">New Garnishment</span>
+          </div>
+          
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <GavelIcon className="h-8 w-8" />
             Garnishments & Court Orders
@@ -387,12 +455,12 @@ export default function GarnishmentPage() {
       </Card>
 
       {selectedEmployee && (
-        <Tabs defaultValue="orders" className="space-y-6">
+        <Tabs defaultValue="new-order" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="new-order">New Garnishment</TabsTrigger>
             <TabsTrigger value="orders">Active Orders</TabsTrigger>
             <TabsTrigger value="calculator">Calculator</TabsTrigger>
             <TabsTrigger value="transactions">History</TabsTrigger>
-            <TabsTrigger value="new-order">New Order</TabsTrigger>
           </TabsList>
 
           {/* Active Orders Tab */}
@@ -754,34 +822,17 @@ export default function GarnishmentPage() {
                   Add a new court-ordered garnishment for {selectedEmployee.firstName} {selectedEmployee.lastName}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Type */}
                   <div>
-                    <Label htmlFor="orderNumber">Order Number *</Label>
-                    <Input
-                      id="orderNumber"
-                      placeholder="CO-2024-12345"
-                      value={orderForm.orderNumber}
-                      onChange={(e) => setOrderForm({ ...orderForm, orderNumber: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="creditorName">Creditor Name *</Label>
-                    <Input
-                      id="creditorName"
-                      placeholder="IRS, Child Support Division, etc."
-                      value={orderForm.creditorName}
-                      onChange={(e) => setOrderForm({ ...orderForm, creditorName: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="orderType">Order Type *</Label>
+                    <Label htmlFor="type">Type *</Label>
                     <Select
-                      value={orderForm.orderType}
-                      onValueChange={(value) => setOrderForm({ ...orderForm, orderType: value })}
+                      value={orderForm.type}
+                      onValueChange={(value) => setOrderForm({ ...orderForm, type: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select order type..." />
+                        <SelectValue placeholder="Select garnishment type..." />
                       </SelectTrigger>
                       <SelectContent>
                         {orderTypes.map((type) => (
@@ -792,8 +843,10 @@ export default function GarnishmentPage() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Priority */}
                   <div>
-                    <Label htmlFor="priority">Priority (1=Highest) *</Label>
+                    <Label htmlFor="priority">Priority (1 = highest) *</Label>
                     <Input
                       id="priority"
                       type="number"
@@ -803,189 +856,329 @@ export default function GarnishmentPage() {
                       onChange={(e) => setOrderForm({ ...orderForm, priority: parseInt(e.target.value) || 1 })}
                     />
                   </div>
+                </div>
+
+                {/* Creditor Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Creditor Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="creditorName">Creditor Name *</Label>
+                      <Input
+                        id="creditorName"
+                        placeholder="IRS, Child Support Division, etc."
+                        value={orderForm.creditorName}
+                        onChange={(e) => setOrderForm({ ...orderForm, creditorName: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="creditorIban">Creditor IBAN (optional)</Label>
+                      <Input
+                        id="creditorIban"
+                        placeholder="GR16 0110 1250 0000 0001 2300 695"
+                        value={orderForm.creditorIban}
+                        onChange={(e) => setOrderForm({ ...orderForm, creditorIban: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Order Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="orderRef">Order Reference *</Label>
+                      <Input
+                        id="orderRef"
+                        placeholder="CO-2024-12345"
+                        value={orderForm.orderRef}
+                        onChange={(e) => setOrderForm({ ...orderForm, orderRef: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="caseId">Case ID</Label>
+                      <Input
+                        id="caseId"
+                        placeholder="CASE-789456"
+                        value={orderForm.caseId}
+                        onChange={(e) => setOrderForm({ ...orderForm, caseId: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="documentUpload">Document Upload (PDF)</Label>
+                      <Input
+                        id="documentUpload"
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => setOrderForm({ ...orderForm, documentUpload: e.target.files?.[0] || null })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dates */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Dates</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="startDate">Start Date *</Label>
+                      <Input
+                        id="startDate"
+                        type="date"
+                        value={orderForm.startDate}
+                        onChange={(e) => setOrderForm({ ...orderForm, startDate: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="endDate">End Date</Label>
+                      <Input
+                        id="endDate"
+                        type="date"
+                        value={orderForm.endDate}
+                        onChange={(e) => setOrderForm({ ...orderForm, endDate: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="stopAfterBalance"
+                      checked={orderForm.stopAfterBalance}
+                      onChange={(e) => setOrderForm({ ...orderForm, stopAfterBalance: e.target.checked })}
+                    />
+                    <Label htmlFor="stopAfterBalance">Stop after balance = €0</Label>
+                  </div>
+                </div>
+
+                {/* Deduction Method */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Deduction Method</h3>
                   <div>
-                    <Label htmlFor="deductionType">Deduction Type *</Label>
+                    <Label htmlFor="method">Method *</Label>
                     <Select
-                      value={orderForm.deductionType}
-                      onValueChange={(value) => setOrderForm({ ...orderForm, deductionType: value })}
+                      value={orderForm.method}
+                      onValueChange={(value) => setOrderForm({ ...orderForm, method: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select deduction type..." />
+                        <SelectValue placeholder="Select deduction method..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {deductionTypes.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.label}
+                        {deductionMethods.map((method) => (
+                          <SelectItem key={method.value} value={method.value}>
+                            {method.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  
-                  {orderForm.deductionType === 'fixed_amount' && (
-                    <div>
-                      <Label htmlFor="deductionAmount">Deduction Amount ($) *</Label>
-                      <Input
-                        id="deductionAmount"
-                        type="number"
-                        step="0.01"
-                        placeholder="250.00"
-                        value={orderForm.deductionAmount}
-                        onChange={(e) => setOrderForm({ ...orderForm, deductionAmount: e.target.value })}
-                      />
-                    </div>
-                  )}
-                  
-                  {(orderForm.deductionType === 'percentage' || orderForm.deductionType === 'percentage_with_cap') && (
-                    <>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {orderForm.method === 'fixed_amount' && (
                       <div>
-                        <Label htmlFor="deductionPercentage">Deduction Percentage (%) *</Label>
+                        <Label htmlFor="amount">Amount (€) *</Label>
                         <Input
-                          id="deductionPercentage"
+                          id="amount"
+                          type="number"
+                          step="0.01"
+                          placeholder="150.00"
+                          value={orderForm.amount}
+                          onChange={(e) => setOrderForm({ ...orderForm, amount: e.target.value })}
+                        />
+                      </div>
+                    )}
+                    
+                    {orderForm.method === 'percent_of_disposable_net' && (
+                      <div>
+                        <Label htmlFor="percent">Percent (%) *</Label>
+                        <Input
+                          id="percent"
                           type="number"
                           step="0.01"
                           max="100"
-                          placeholder="25.00"
-                          value={orderForm.deductionPercentage}
-                          onChange={(e) => setOrderForm({ ...orderForm, deductionPercentage: e.target.value })}
+                          placeholder="20.00"
+                          value={orderForm.percent}
+                          onChange={(e) => setOrderForm({ ...orderForm, percent: e.target.value })}
                         />
                       </div>
-                      {orderForm.deductionType === 'percentage_with_cap' && (
-                        <div>
-                          <Label htmlFor="maximumAmount">Maximum Amount per Period ($)</Label>
-                          <Input
-                            id="maximumAmount"
-                            type="number"
-                            step="0.01"
-                            placeholder="500.00"
-                            value={orderForm.maximumAmount}
-                            onChange={(e) => setOrderForm({ ...orderForm, maximumAmount: e.target.value })}
-                          />
-                        </div>
-                      )}
-                    </>
-                  )}
-                  
-                  <div>
-                    <Label htmlFor="totalOrderAmount">Total Order Amount ($)</Label>
-                    <Input
-                      id="totalOrderAmount"
-                      type="number"
-                      step="0.01"
-                      placeholder="5000.00"
-                      value={orderForm.totalOrderAmount}
-                      onChange={(e) => setOrderForm({ ...orderForm, totalOrderAmount: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="courtName">Court Name</Label>
-                    <Input
-                      id="courtName"
-                      placeholder="Superior Court of County"
-                      value={orderForm.courtName}
-                      onChange={(e) => setOrderForm({ ...orderForm, courtName: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="orderDate">Order Date *</Label>
-                    <Input
-                      id="orderDate"
-                      type="date"
-                      value={orderForm.orderDate}
-                      onChange={(e) => setOrderForm({ ...orderForm, orderDate: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="effectiveDate">Effective Date *</Label>
-                    <Input
-                      id="effectiveDate"
-                      type="date"
-                      value={orderForm.effectiveDate}
-                      onChange={(e) => setOrderForm({ ...orderForm, effectiveDate: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="expirationDate">Expiration Date</Label>
-                    <Input
-                      id="expirationDate"
-                      type="date"
-                      value={orderForm.expirationDate}
-                      onChange={(e) => setOrderForm({ ...orderForm, expirationDate: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="creditorAccountCode">GL Account Code</Label>
-                    <Input
-                      id="creditorAccountCode"
-                      placeholder="2200-GARNISHMENT"
-                      value={orderForm.creditorAccountCode}
-                      onChange={(e) => setOrderForm({ ...orderForm, creditorAccountCode: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="protectedNetAmount">Protected Net Amount ($)</Label>
-                    <Input
-                      id="protectedNetAmount"
-                      type="number"
-                      step="0.01"
-                      placeholder="435.00"
-                      value={orderForm.protectedNetAmount}
-                      onChange={(e) => setOrderForm({ ...orderForm, protectedNetAmount: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="protectedPercentage">Protected Percentage (%)</Label>
-                    <Input
-                      id="protectedPercentage"
-                      type="number"
-                      step="0.01"
-                      max="100"
-                      placeholder="75.00"
-                      value={orderForm.protectedPercentage}
-                      onChange={(e) => setOrderForm({ ...orderForm, protectedPercentage: e.target.value })}
-                    />
+                    )}
                   </div>
                 </div>
-                
+
+                {/* Protection & Caps */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Protection & Caps</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="protectedNetFloor">Protected Net Floor (€)</Label>
+                      <Input
+                        id="protectedNetFloor"
+                        type="number"
+                        step="0.01"
+                        placeholder="800.00"
+                        value={orderForm.protectedNetFloor}
+                        onChange={(e) => setOrderForm({ ...orderForm, protectedNetFloor: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="maxPercentCap">Max Percent Cap (%)</Label>
+                      <Input
+                        id="maxPercentCap"
+                        type="number"
+                        step="0.01"
+                        max="100"
+                        placeholder="50.00"
+                        value={orderForm.maxPercentCap}
+                        onChange={(e) => setOrderForm({ ...orderForm, maxPercentCap: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="perRunCap">Per-Run Cap (€)</Label>
+                      <Input
+                        id="perRunCap"
+                        type="number"
+                        step="0.01"
+                        placeholder="500.00"
+                        value={orderForm.perRunCap}
+                        onChange={(e) => setOrderForm({ ...orderForm, perRunCap: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="perRunMin">Per-Run Min (€)</Label>
+                      <Input
+                        id="perRunMin"
+                        type="number"
+                        step="0.01"
+                        placeholder="50.00"
+                        value={orderForm.perRunMin}
+                        onChange={(e) => setOrderForm({ ...orderForm, perRunMin: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Balance & Application */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium">Balance & Application</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="totalBalance">Total Balance (€, optional for arrears)</Label>
+                      <Input
+                        id="totalBalance"
+                        type="number"
+                        step="0.01"
+                        placeholder="5000.00"
+                        value={orderForm.totalBalance}
+                        onChange={(e) => setOrderForm({ ...orderForm, totalBalance: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="applyTo">Apply To *</Label>
+                      <Select
+                        value={orderForm.applyTo}
+                        onValueChange={(value) => setOrderForm({ ...orderForm, applyTo: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select application scope..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {applicationScope.map((scope) => (
+                            <SelectItem key={scope.value} value={scope.value}>
+                              {scope.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notes */}
                 <div>
                   <Label htmlFor="notes">Notes</Label>
                   <Textarea
                     id="notes"
-                    placeholder="Additional notes about this garnishment order..."
+                    placeholder="Additional notes or special instructions..."
                     value={orderForm.notes}
                     onChange={(e) => setOrderForm({ ...orderForm, notes: e.target.value })}
                   />
                 </div>
 
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => {
-                    setOrderForm({
-                      orderNumber: '',
-                      creditorName: '',
-                      creditorAccountCode: '',
-                      orderType: '',
-                      priority: 1,
-                      deductionType: '',
-                      deductionAmount: '',
-                      deductionPercentage: '',
-                      maximumAmount: '',
-                      totalOrderAmount: '',
-                      protectedNetAmount: '',
-                      protectedPercentage: '',
-                      courtName: '',
-                      orderDate: '',
-                      effectiveDate: '',
-                      expirationDate: '',
-                      notes: ''
-                    });
-                  }}>
-                    Reset Form
-                  </Button>
-                  <Button 
-                    onClick={handleCreateOrder} 
+                {/* Preview for Next Run */}
+                {orderForm.method && orderForm.creditorName && (orderForm.amount || orderForm.percent) && (
+                  <div className="space-y-4 border rounded-lg p-4 bg-gray-50">
+                    <h3 className="text-lg font-medium flex items-center gap-2">
+                      <CalculatorIcon className="h-5 w-5" />
+                      Preview for Next Run
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-center">
+                      <div>
+                        <div className="text-sm text-gray-600">Gross Pay</div>
+                        <div className="text-lg font-semibold">€2,500.00</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Taxes/Contributions</div>
+                        <div className="text-lg font-semibold text-red-600">-€750.00</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Disposable Net</div>
+                        <div className="text-lg font-semibold">€1,750.00</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Proposed Deduction</div>
+                        <div className="text-lg font-semibold text-orange-600">
+                          -{orderForm.method === 'fixed_amount' 
+                            ? `€${orderForm.amount}` 
+                            : `€${((Number(orderForm.percent) / 100) * 1750).toFixed(2)}`
+                          }
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Net Remaining</div>
+                        <div className="text-lg font-semibold text-green-600">
+                          €{orderForm.method === 'fixed_amount' 
+                            ? (1750 - Number(orderForm.amount || 0)).toFixed(2)
+                            : (1750 - ((Number(orderForm.percent) / 100) * 1750)).toFixed(2)
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Floor Protection Warning */}
+                    {orderForm.protectedNetFloor && (
+                      (orderForm.method === 'fixed_amount' 
+                        ? (1750 - Number(orderForm.amount || 0)) < Number(orderForm.protectedNetFloor)
+                        : (1750 - ((Number(orderForm.percent) / 100) * 1750)) < Number(orderForm.protectedNetFloor)
+                      ) && (
+                        <Alert className="border-yellow-200 bg-yellow-50">
+                          <AlertCircleIcon className="h-4 w-4 text-yellow-600" />
+                          <AlertDescription className="text-yellow-800">
+                            <span className="font-medium">Capped to maintain net floor</span> - 
+                            Deduction reduced to protect minimum net pay of €{orderForm.protectedNetFloor}
+                          </AlertDescription>
+                        </Alert>
+                      )
+                    )}
+                  </div>
+                )}
+
+                {/* Submit Buttons */}
+                <div className="flex gap-4 pt-4">
+                  <Button
+                    onClick={handleCreateOrder}
                     disabled={createOrderMutation.isPending}
+                    className="flex-1"
                   >
-                    {createOrderMutation.isPending ? 'Creating...' : 'Create Order'}
+                    {createOrderMutation.isPending ? 'Creating...' : 'Create Garnishment Order'}
+                  </Button>
+                  <Button variant="outline" onClick={() => setOrderForm({
+                    type: '', creditorName: '', creditorIban: '', orderRef: '', caseId: '',
+                    documentUpload: null, priority: 1, startDate: '', endDate: '', stopAfterBalance: false,
+                    method: '', amount: '', percent: '', protectedNetFloor: '', maxPercentCap: '',
+                    perRunCap: '', totalBalance: '', perRunMin: '', applyTo: 'all_runs', notes: ''
+                  })}>
+                    Reset Form
                   </Button>
                 </div>
               </CardContent>
