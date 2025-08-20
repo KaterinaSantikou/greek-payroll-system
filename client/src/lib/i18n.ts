@@ -50,6 +50,45 @@ interface TranslationKeys {
   'nav.support': string;
   'nav.audit-log': string;
 
+  // Dashboard chips and status
+  'dashboard.digital_card_sync': string;
+  'dashboard.ergani_sync': string;
+  'dashboard.filings_due': string;
+  'dashboard.updated_just_now': string;
+  
+  // Explanation system
+  'explanation.title': string;
+  'explanation.coverage': string;
+  'explanation.confidence': string;
+  'explanation.generated': string;
+  'explanation.show_formulas': string;
+  'explanation.hide_formulas': string;
+  'explanation.rate_explanation': string;
+  'explanation.submit': string;
+  'explanation.cancel': string;
+  'explanation.helpful_question': string;
+  'explanation.calculation_formula': string;
+  'explanation.unexplained_items': string;
+  'explanation.unexplained_description': string;
+  'explanation.earnings': string;
+  'explanation.deductions': string;
+  'explanation.summary': string;
+  'explanation.total_earnings': string;
+  'explanation.total_deductions': string;
+  'explanation.net_pay': string;
+  'explanation.gross_pay': string;
+  'explanation.quality_metrics': string;
+  'explanation.edge_cases': string;
+  'explanation.security': string;
+  'explanation.edge_cases_detected': string;
+
+  // Error messages
+  'errors.network_error': string;
+  'errors.validation_error': string;
+  'errors.unauthorized': string;
+  'errors.not_found': string;
+  'errors.server_error': string;
+
   // Dashboard
   'dashboard.property-switcher': string;
   'dashboard.period-selector': string;
@@ -225,6 +264,45 @@ const translations: Record<Locale, TranslationKeys> = {
     'portal.personal-leave': 'Personal Leave',
     'portal.digital-card': 'Digital Card',
     'portal.compliance-score': 'Compliance Score',
+
+    // Dashboard chips and status
+    'dashboard.digital_card_sync': 'Digital Card',
+    'dashboard.ergani_sync': 'ERGANI in sync',
+    'dashboard.filings_due': '{count, plural, one {# filing due} other {# filings due}}',
+    'dashboard.updated_just_now': 'Updated just now',
+    
+    // Explanation system
+    'explanation.title': 'Payslip Explanation',
+    'explanation.coverage': 'coverage',
+    'explanation.confidence': 'confidence',
+    'explanation.generated': 'Generated',
+    'explanation.show_formulas': 'Show Formulas',
+    'explanation.hide_formulas': 'Hide Formulas',
+    'explanation.rate_explanation': 'Rate',
+    'explanation.submit': 'Submit',
+    'explanation.cancel': 'Cancel',
+    'explanation.helpful_question': 'How helpful was this explanation?',
+    'explanation.calculation_formula': 'Calculation Formula',
+    'explanation.unexplained_items': 'Unexplained Items',
+    'explanation.unexplained_description': 'The following items could not be explained automatically:',
+    'explanation.earnings': 'Earnings',
+    'explanation.deductions': 'Deductions',
+    'explanation.summary': 'Summary',
+    'explanation.total_earnings': 'Gross Pay',
+    'explanation.total_deductions': 'Total Deductions',
+    'explanation.net_pay': 'Net Pay',
+    'explanation.gross_pay': 'Gross Pay',
+    'explanation.quality_metrics': 'Quality Metrics',
+    'explanation.edge_cases': 'Edge Cases',
+    'explanation.security': 'Security',
+    'explanation.edge_cases_detected': 'Edge Cases Detected:',
+
+    // Error messages
+    'errors.network_error': 'Network connection error',
+    'errors.validation_error': 'Please check your input',
+    'errors.unauthorized': 'Access denied',
+    'errors.not_found': 'Item not found',
+    'errors.server_error': 'Server error occurred',
   },
   
   el: {
@@ -337,6 +415,45 @@ const translations: Record<Locale, TranslationKeys> = {
     'portal.personal-leave': 'Προσωπική Άδεια',
     'portal.digital-card': 'Ψηφιακή Κάρτα',
     'portal.compliance-score': 'Βαθμός Συμμόρφωσης',
+
+    // Dashboard chips and status  
+    'dashboard.digital_card_sync': 'Ψηφιακή Κάρτα',
+    'dashboard.ergani_sync': 'ΕΡΓΑΝΗ σε συγχρονισμό',
+    'dashboard.filings_due': '{count, plural, one {# δήλωση σε εκκρεμότητα} other {# δηλώσεις σε εκκρεμότητα}}',
+    'dashboard.updated_just_now': 'Μόλις ενημερώθηκε',
+    
+    // Explanation system
+    'explanation.title': 'Εξήγηση Μισθοδοσίας',
+    'explanation.coverage': 'κάλυψη',
+    'explanation.confidence': 'εμπιστοσύνη',
+    'explanation.generated': 'Δημιουργήθηκε',
+    'explanation.show_formulas': 'Εμφάνιση Τύπων',
+    'explanation.hide_formulas': 'Απόκρυψη Τύπων',
+    'explanation.rate_explanation': 'Αξιολόγηση',
+    'explanation.submit': 'Υποβολή',
+    'explanation.cancel': 'Ακύρωση',
+    'explanation.helpful_question': 'Πόσο χρήσιμη ήταν αυτή η εξήγηση;',
+    'explanation.calculation_formula': 'Τύπος Υπολογισμού',
+    'explanation.unexplained_items': 'Μη Εξηγημένα Στοιχεία',
+    'explanation.unexplained_description': 'Τα παρακάτω στοιχεία δεν μπόρεσαν να εξηγηθούν αυτόματα:',
+    'explanation.earnings': 'Αποδοχές',
+    'explanation.deductions': 'Κρατήσεις',
+    'explanation.summary': 'Σύνοψη',
+    'explanation.total_earnings': 'Μικτές Αποδοχές',
+    'explanation.total_deductions': 'Σύνολο Κρατήσεων',
+    'explanation.net_pay': 'Καθαρές Αποδοχές',
+    'explanation.gross_pay': 'Μικτές Αποδοχές',
+    'explanation.quality_metrics': 'Μετρικές Ποιότητας',
+    'explanation.edge_cases': 'Ειδικές Περιπτώσεις',
+    'explanation.security': 'Ασφάλεια',
+    'explanation.edge_cases_detected': 'Ειδικές Περιπτώσεις που Εντοπίστηκαν:',
+
+    // Error messages
+    'errors.network_error': 'Σφάλμα σύνδεσης δικτύου',
+    'errors.validation_error': 'Παρακαλώ ελέγξτε τα στοιχεία σας',
+    'errors.unauthorized': 'Δεν έχετε δικαίωμα πρόσβασης',
+    'errors.not_found': 'Το στοιχείο δεν βρέθηκε',
+    'errors.server_error': 'Παρουσιάστηκε σφάλμα διακομιστή',
   },
 };
 
@@ -377,21 +494,169 @@ export function useLocale() {
   return context;
 }
 
-// Utility function for formatting numbers with Greek locale
+// Translation function with fallback for missing keys (dev warning)
+export function createTranslator(locale: Locale) {
+  return function t(key: keyof TranslationKeys, variables?: Record<string, any>): string {
+    let translation = translations[locale][key] || translations['en'][key] || key;
+    
+    // Warn in development for missing translations
+    if (process.env.NODE_ENV === 'development' && !translations[locale][key] && translations['en'][key]) {
+      console.warn(`Missing translation for key "${key}" in locale "${locale}"`);
+    }
+    
+    // Handle ICU-style variables and pluralization
+    if (variables && typeof translation === 'string') {
+      // Simple variable replacement
+      translation = translation.replace(/\{(\w+)\}/g, (match, varName) => {
+        return variables[varName]?.toString() || match;
+      });
+      
+      // Handle ICU plurals like {count, plural, one {...} other {...}}
+      if (translation.includes('{count, plural,')) {
+        const count = variables.count || 0;
+        const pluralMatch = translation.match(/\{count, plural, one \{([^}]+)\} other \{([^}]+)\}\}/);
+        if (pluralMatch) {
+          const [, oneForm, otherForm] = pluralMatch;
+          const selectedForm = count === 1 ? oneForm : otherForm;
+          translation = selectedForm.replace('#', count.toString());
+        }
+      }
+    }
+    
+    return translation;
+  };
+}
+
+// Hook that provides translator function
+export function useTranslation() {
+  const { locale } = useLocale();
+  return { 
+    t: createTranslator(locale),
+    locale 
+  };
+}
+
+// Enhanced Greek locale formatting with decimal comma
 export function formatCurrency(amount: number, locale: Locale): string {
   return new Intl.NumberFormat(locale === 'el' ? 'el-GR' : 'en-US', {
     style: 'currency',
     currency: 'EUR',
+    currencyDisplay: 'symbol',
   }).format(amount);
 }
 
-// Utility function for formatting dates with Greek locale
-export function formatDate(date: Date, locale: Locale): string {
-  return new Intl.DateTimeFormat(locale === 'el' ? 'el-GR' : 'en-US', {
+// Format numbers with proper Greek decimal comma
+export function formatNumber(value: number, locale: Locale, decimals: number = 2): string {
+  return new Intl.NumberFormat(locale === 'el' ? 'el-GR' : 'en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(value);
+}
+
+// ICU pluralization for Greek
+export function pluralize(count: number, locale: Locale, key: string): string {
+  if (locale === 'el') {
+    // Greek pluralization rules
+    const pluralRules = new Intl.PluralRules('el');
+    const rule = pluralRules.select(count);
+    
+    const greekPlurals: Record<string, Record<string, string>> = {
+      'hours': {
+        'one': 'ώρα',
+        'other': 'ώρες'
+      },
+      'filings': {
+        'one': 'δήλωση σε εκκρεμότητα', 
+        'other': 'δηλώσεις σε εκκρεμότητα'
+      },
+      'employees': {
+        'one': 'εργαζόμενος',
+        'other': 'εργαζόμενοι'
+      },
+      'days': {
+        'one': 'ημέρα',
+        'other': 'ημέρες'
+      }
+    };
+    
+    const forms = greekPlurals[key];
+    if (forms) {
+      return forms[rule] || forms['other'];
+    }
+  }
+  
+  // English fallback
+  const englishPlurals: Record<string, Record<string, string>> = {
+    'hours': {
+      'one': 'hour',
+      'other': 'hours'
+    },
+    'filings': {
+      'one': 'filing due',
+      'other': 'filings due'
+    },
+    'employees': {
+      'one': 'employee',
+      'other': 'employees'
+    },
+    'days': {
+      'one': 'day',
+      'other': 'days'
+    }
+  };
+  
+  const forms = englishPlurals[key];
+  if (forms) {
+    const rule = count === 1 ? 'one' : 'other';
+    return forms[rule];
+  }
+  
+  return key;
+}
+
+// Format with ICU-style pluralization and count
+export function formatPlural(count: number, locale: Locale, key: string): string {
+  const pluralForm = pluralize(count, locale, key);
+  const formattedCount = formatNumber(count, locale, 0);
+  return `${formattedCount} ${pluralForm}`;
+}
+
+// Enhanced date formatting with Greek month names
+export function formatDate(date: Date, locale: Locale, options?: Intl.DateTimeFormatOptions): string {
+  const defaultOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+  };
+  
+  return new Intl.DateTimeFormat(locale === 'el' ? 'el-GR' : 'en-US', {
+    ...defaultOptions,
+    ...options,
   }).format(date);
+}
+
+// Relative time formatting with Greek localization
+export function formatRelativeTime(date: Date, locale: Locale): string {
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+  
+  if (locale === 'el') {
+    if (diffInMinutes < 1) return 'Μόλις τώρα';
+    if (diffInMinutes < 60) return `Πριν από ${diffInMinutes} λεπτά`;
+    if (diffInHours < 24) return `Πριν από ${diffInHours} ώρες`;
+    if (diffInDays < 30) return `Πριν από ${diffInDays} ημέρες`;
+    return formatDate(date, locale, { month: 'short', day: 'numeric' });
+  }
+  
+  // English
+  if (diffInMinutes < 1) return 'Just now';
+  if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+  if (diffInHours < 24) return `${diffInHours} hours ago`;
+  if (diffInDays < 30) return `${diffInDays} days ago`;
+  return formatDate(date, locale, { month: 'short', day: 'numeric' });
 }
 
 // Utility function for formatting time with Greek locale

@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PayslipExplanation } from '@/components/PayslipExplanation';
+import { LanguageSwitch, useLanguagePersistence } from '@/components/LanguageSwitch';
+import { formatNumber, LocaleProvider } from '@/lib/i18n';
 import { Loader2, TestTube, Globe, FileText } from 'lucide-react';
 
 interface DemoResponse {
@@ -31,7 +33,7 @@ interface DemoResponse {
 }
 
 export function ExplanationDemo() {
-  const [locale, setLocale] = useState<'en' | 'el'>('en');
+  const { locale, changeLocale } = useLanguagePersistence();
   
   const { data, isLoading, error, refetch } = useQuery<DemoResponse>({
     queryKey: ['/api/explanations/demo', locale],
@@ -45,7 +47,7 @@ export function ExplanationDemo() {
   });
 
   const handleLocaleChange = (newLocale: 'en' | 'el') => {
-    setLocale(newLocale);
+    changeLocale(newLocale);
   };
 
   const handleFeedback = async (feedback: any) => {
@@ -124,22 +126,7 @@ export function ExplanationDemo() {
             <span className="text-sm font-medium">
               {locale === 'en' ? 'Language:' : 'Γλώσσα:'}
             </span>
-            <div className="flex gap-2">
-              <Button
-                variant={locale === 'en' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleLocaleChange('en')}
-              >
-                English
-              </Button>
-              <Button
-                variant={locale === 'el' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => handleLocaleChange('el')}
-              >
-                Ελληνικά
-              </Button>
-            </div>
+            <LanguageSwitch locale={locale} onLocaleChange={handleLocaleChange} />
             <Button onClick={() => refetch()} variant="outline" size="sm">
               {locale === 'en' ? 'Refresh Demo' : 'Ανανέωση'}
             </Button>
@@ -159,7 +146,7 @@ export function ExplanationDemo() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-green-600">
-                {data.explanation.coverage.coveragePercentage.toFixed(1)}%
+                {formatNumber(data.explanation.coverage.coveragePercentage, locale, 1)}%
               </div>
               <div className="text-sm text-gray-600">
                 {locale === 'en' ? 'Coverage' : 'Κάλυψη'}
@@ -167,7 +154,7 @@ export function ExplanationDemo() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {(data.explanation.confidenceScore * 100).toFixed(0)}%
+                {formatNumber(data.explanation.confidenceScore * 100, locale, 0)}%
               </div>
               <div className="text-sm text-gray-600">
                 {locale === 'en' ? 'Confidence' : 'Εμπιστοσύνη'}

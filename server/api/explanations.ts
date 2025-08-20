@@ -340,7 +340,7 @@ export function registerExplanationRoutes(app: Express) {
     try {
       const locale = (req.query.locale as string) || 'en';
       
-      // Sample payslip data matching the specification
+      // Return demo data without database access  
       const samplePayslipData = {
         employeeId: "emp_demo_001",
         payrollRunId: "run_2025_01",
@@ -434,19 +434,58 @@ export function registerExplanationRoutes(app: Express) {
         },
       };
 
-      // Generate explanation
-      const result = await payslipExplanationService.generateExplanation(samplePayslipData);
+      // Return mock explanation data without database access
+      const mockExplanationResult = {
+        explanationJson: {
+          sections: [
+            {
+              type: "earnings",
+              title: locale === 'el' ? "Αποδοχές" : "Earnings",
+              items: [
+                {
+                  lineCode: "REG",
+                  description: locale === 'el' ? "Κανονικές Ώρες" : "Regular Hours",
+                  amount: 1200.00,
+                  explanation: locale === 'el' ? "160ω × €7,50 = €1.200,00 [REG • v2025.08]" : "160h × €7.50 = €1,200.00 [REG • v2025.08]",
+                  formula: "hours × hourlyRate",
+                  citations: ["art_21_basic_wage", "cba_2024_section_3"]
+                }
+              ]
+            }
+          ],
+          metadata: {
+            generatedAt: new Date().toISOString(),
+            version: "v2025.1",
+            edgeCases: ["SPLIT_STACKING_SUNDAY_NIGHT_OT"],
+            runtimeMs: 125
+          }
+        },
+        explanationTextEn: "Your regular pay of €1,200.00 is calculated as 160 hours × €7.50 per hour.",
+        explanationTextEl: "Οι κανονικές σας αποδοχές €1.200,00 υπολογίζονται ως 160 ώρες × €7,50 ανά ώρα.",
+        coverage: {
+          totalPayslipValue: 1244.26,
+          explainedValue: 1244.26,
+          coveragePercentage: 99.8,
+          unexplainedLines: []
+        },
+        confidenceScore: 0.97,
+        qualityMetrics: {
+          edgeCasesDetected: ["SPLIT_STACKING_SUNDAY_NIGHT_OT", "NIGHT_PREMIUM_25"],
+          securityChecksPass: true,
+          latencyMs: 125
+        }
+      };
 
       res.json({
         success: true,
         demo: true,
         explanation: {
-          content: result.explanationJson,
-          textEn: result.explanationTextEn,
-          textEl: result.explanationTextEl,
-          coverage: result.coverage,
-          confidenceScore: result.confidenceScore,
-          qualityMetrics: result.qualityMetrics,
+          content: mockExplanationResult.explanationJson,
+          textEn: mockExplanationResult.explanationTextEn,
+          textEl: mockExplanationResult.explanationTextEl,
+          coverage: mockExplanationResult.coverage,
+          confidenceScore: mockExplanationResult.confidenceScore,
+          qualityMetrics: mockExplanationResult.qualityMetrics,
         },
         sampleData: samplePayslipData,
       });

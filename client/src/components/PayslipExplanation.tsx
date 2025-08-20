@@ -15,7 +15,7 @@ import {
   HelpCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-// Removed i18n import - using built-in locale support
+import { useTranslation, formatCurrency, formatNumber, formatDate } from '@/lib/i18n';
 
 // Types for explanation data
 interface ExplanationItem {
@@ -96,9 +96,10 @@ export function PayslipExplanation({
   const [showFormulas, setShowFormulas] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [rating, setRating] = useState<number>(0);
-  // Using direct locale-based translations
+  const { t, locale: translationLocale } = useTranslation();
   
   const isGreek = locale === 'el';
+  const currentLocale = locale || translationLocale;
 
   const toggleSection = (sectionType: string) => {
     const newOpenSections = new Set(openSections);
@@ -110,11 +111,8 @@ export function PayslipExplanation({
     setOpenSections(newOpenSections);
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(isGreek ? 'el-GR' : 'en-US', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount);
+  const formatCurrencyAmount = (amount: number) => {
+    return formatCurrency(amount, currentLocale);
   };
 
   const getConfidenceColor = (score: number) => {
@@ -150,14 +148,14 @@ export function PayslipExplanation({
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              {isGreek ? 'Εξήγηση Μισθοδοσίας' : 'Payslip Explanation'}
+              {t('explanation.title')}
             </CardTitle>
             <div className="flex items-center gap-4">
               <Badge className={getCoverageColor(coverage.coveragePercentage)}>
-                {coverage.coveragePercentage.toFixed(1)}% {isGreek ? 'κάλυψη' : 'coverage'}
+                {formatNumber(coverage.coveragePercentage, currentLocale, 1)}% {t('explanation.coverage')}
               </Badge>
               <div className={cn('text-sm font-medium', getConfidenceColor(confidenceScore))}>
-                {(confidenceScore * 100).toFixed(0)}% {isGreek ? 'εμπιστοσύνη' : 'confidence'}
+                {formatNumber(confidenceScore * 100, currentLocale, 0)}% {t('explanation.confidence')}
               </div>
             </div>
           </div>
@@ -165,8 +163,7 @@ export function PayslipExplanation({
         <CardContent>
           <div className="flex items-center justify-between text-sm text-gray-600">
             <span>
-              {isGreek ? 'Δημιουργήθηκε' : 'Generated'}: {' '}
-              {new Date(content.metadata.generatedAt).toLocaleDateString(locale)}
+              {t('explanation.generated')}: {formatDate(new Date(content.metadata.generatedAt), currentLocale)}
             </span>
             <div className="flex items-center gap-4">
               <Button
@@ -176,10 +173,7 @@ export function PayslipExplanation({
                 className="flex items-center gap-2"
               >
                 <Calculator className="h-4 w-4" />
-                {showFormulas 
-                  ? (isGreek ? 'Απόκρυψη Τύπων' : 'Hide Formulas')
-                  : (isGreek ? 'Εμφάνιση Τύπων' : 'Show Formulas')
-                }
+                {showFormulas ? t('explanation.hide_formulas') : t('explanation.show_formulas')}
               </Button>
               {onFeedback && (
                 <Button
