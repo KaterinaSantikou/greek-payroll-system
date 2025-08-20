@@ -51,6 +51,7 @@ import { registerLaborNewsfeedRoutes } from "./api/laborNewsfeed";
 import { registerInstantPaymentRoutes } from "./api/instantPayments";
 import { registerPayEquityRoutes } from "./api/payEquity";
 import { registerCsrdRoutes } from "./api/csrd";
+import securityRoutes from "./routes/securityRoutes";
 import { embeddedPayrollRoutes } from "./api/embedded";
 import { glGenericRoutes } from "./api/glGeneric";
 import { nativeConnectorRoutes } from "./api/nativeConnectors";
@@ -85,6 +86,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Authentication routes with API contract compliance
   app.use('/auth', authAPIRoutes);
+  
+  // Security compliance and audit routes
+  app.use('/api/security', securityRoutes);
 
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();
