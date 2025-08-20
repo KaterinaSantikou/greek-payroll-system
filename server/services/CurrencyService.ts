@@ -275,6 +275,87 @@ export class CurrencyService {
 
     return exchangeRate;
   }
+
+  /**
+   * OPERATIONAL REQUIREMENT: Store ECB FX rate snapshot for non-EUR invoices
+   * This ensures Greek VAT amounts are correctly calculated and auditable
+   */
+  async captureInvoiceRateSnapshot(
+    invoiceId: string,
+    originalCurrency: string,
+    eurAmountCents: number,
+    originalAmountCents: number
+  ): Promise<void> {
+    if (originalCurrency === 'EUR') {
+      console.log(`Invoice ${invoiceId}: EUR invoice, no FX snapshot needed`);
+      return;
+    }
+
+    const exchangeRate = eurAmountCents / originalAmountCents;
+    const captureDate = new Date();
+    
+    try {
+      // Store the exact rate used for this invoice
+      await db.insert(exchangeRates)
+        .values({
+          baseCurrency: originalCurrency,
+          targetCurrency: 'EUR', 
+          rate: exchangeRate.toString(),
+          rateDate: captureDate.toISOString().split('T')[0] as any,
+          source: `INVOICE_${invoiceId}` // Mark as invoice-specific snapshot
+        });
+
+      console.log(`📷 Captured FX snapshot for invoice ${invoiceId}: ${originalCurrency}→EUR = ${exchangeRate}`);
+    } catch (error) {
+      console.error(`Failed to capture rate snapshot for invoice ${invoiceId}:`, error);
+    }
+  }
+
+  /**
+   * OPERATIONAL REQUIREMENT: Monitor ECB rate fetch success for reliability
+   */
+  async getECBRateHealth(): Promise<{
+    lastSuccessfulFetch: Date | null;
+    consecutiveFailures: number;
+    currentStatus: 'healthy' | 'degraded' | 'critical';
+  }> {
+    try {
+      const latestRate = await db.select()
+        .from(exchangeRates)
+        .where(eq(exchangeRates.source, 'ECB'))
+        .orderBy(desc(exchangeRates.createdAt))
+        .limit(1)
+        .then(rows => rows[0]);
+
+      if (!latestRate) {
+        return {
+          lastSuccessfulFetch: null,
+          consecutiveFailures: 999,
+          currentStatus: 'critical'
+        };
+      }
+
+      const lastFetch = new Date(latestRate.createdAt!);
+      const hoursSinceLastFetch = (Date.now() - lastFetch.getTime()) / (1000 * 60 * 60);
+
+      let status: 'healthy' | 'degraded' | 'critical' = 'healthy';
+      if (hoursSinceLastFetch > 48) status = 'critical';
+      else if (hoursSinceLastFetch > 24) status = 'degraded';
+
+      return {
+        lastSuccessfulFetch: lastFetch,
+        consecutiveFailures: hoursSinceLastFetch > 24 ? 1 : 0,
+        currentStatus: status
+      };
+    } catch (error) {
+      console.error('Failed to check ECB rate health:', error);
+      return {
+        lastSuccessfulFetch: null,
+        consecutiveFailures: 999,
+        currentStatus: 'critical'
+      };
+    }
+  }
 }
 
 export const currencyService = new CurrencyService();

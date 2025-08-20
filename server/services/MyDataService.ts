@@ -583,10 +583,14 @@ export class MyDataService {
 
   /**
    * Get income classification type based on service type
+   * OPERATIONAL REQUIREMENT: Keep classification mapping updated with AADE changes
    */
   getIncomeClassification(serviceType: string): string {
     // Greek income classification types for different service categories
+    // Last updated: 2025-08-20 - Monitor for AADE classification changes
     const classifications = {
+      'payroll_service_base': 'E3_561_007', // Software services
+      'payroll_service_employee': 'E3_561_007', // Per-employee billing
       'software': 'E3_561_001', // Software development services
       'payroll': 'E3_562_001',  // Payroll processing services
       'hr': 'E3_563_001',       // HR consulting services
@@ -594,7 +598,35 @@ export class MyDataService {
       'training': 'E3_565_001'   // Training services
     };
     
-    return classifications[serviceType as keyof typeof classifications] || 'E3_561_001'; // Default to software
+    return classifications[serviceType as keyof typeof classifications] || 'E3_561_007'; // Default to software services
+  }
+
+  /**
+   * OPERATIONAL REQUIREMENT: myDATA API version monitoring
+   */
+  async checkApiVersionStatus(): Promise<{
+    currentVersion: string;
+    isDeprecated: boolean;
+    migrationRequired: boolean;
+    deprecationDate?: Date;
+  }> {
+    try {
+      // This would call AADE's version status endpoint
+      // For now, return current known status
+      return {
+        currentVersion: 'v1.0.8',
+        isDeprecated: false,
+        migrationRequired: false,
+        deprecationDate: undefined
+      };
+    } catch (error) {
+      console.error('Failed to check myDATA API version:', error);
+      return {
+        currentVersion: 'unknown',
+        isDeprecated: false,
+        migrationRequired: true // Assume migration needed if check fails
+      };
+    }
   }
 
   /**

@@ -432,6 +432,7 @@ export class BillingService {
 
   /**
    * Generate gapless sequential invoice number per legal entity series
+   * OPERATIONAL REQUIREMENT: Separate series per legal entity and separate credit-note series
    */
   private async generateInvoiceNumber(
     organizationId: string, 
@@ -441,9 +442,11 @@ export class BillingService {
     const year = now.getFullYear();
     const yearSuffix = year.toString().slice(-2); // Last 2 digits
     
-    // Determine series based on type
+    // Determine series based on type - SEPARATE credit note series per operational requirement
     const seriesPrefix = type === 'credit_note' ? 'CN' : 'SALES';
     const series = `${seriesPrefix}-${yearSuffix}`;
+    
+    console.log(`Generating ${type} number for entity ${organizationId}, series: ${series}`);
     
     // Use transaction to ensure gapless numbering
     const result = await db.transaction(async (tx) => {
