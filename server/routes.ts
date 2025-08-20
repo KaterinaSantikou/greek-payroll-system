@@ -73,6 +73,7 @@ import { canonicalPaymentsRoutes } from "./api/canonicalPayments";
 import { paymentStateMachineRoutes } from "./api/paymentStateMachine";
 import { reconciliationEngineRoutes } from "./api/reconciliationEngine";
 import { cutOffLogicRoutes } from "./api/cutOffLogic";
+import { registerBillingRoutes } from "./routes/billing";
 import { reissueAlgorithmRoutes } from "./api/reissueAlgorithm";
 import { oneClickFlowRoutes } from "./api/oneClickFlow";
 import eventQueueAPI from "./api/eventQueue";
@@ -3832,6 +3833,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       message: 'Successfully subscribed to Greek payroll notifications'
     });
   });
+
+  // Register billing routes
+  registerBillingRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
