@@ -3,7 +3,8 @@
  */
 
 import { db } from '../db';
-import { paymentBatches, paymentTransactions, bankProfiles } from '@shared/payments-schema';
+import { paymentBatches, paymentTransactions } from '@shared/payments-schema';
+import { bankRegistry as bankProfiles } from '@shared/schema';
 import { payrollRuns, payrollLines, employees } from '@shared/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
@@ -68,14 +69,13 @@ export class PaymentBatchService {
       .select({
         lineId: payrollLines.lineId,
         employeeId: payrollLines.employeeId,
-        grossAmount: payrollLines.grossAmount,
-        netAmount: payrollLines.netAmount,
+        amount: payrollLines.amount,
         description: payrollLines.description,
       })
       .from(payrollLines)
       .where(and(
         eq(payrollLines.runId, request.runId),
-        eq(payrollLines.earningCode, 'NET_PAY') // Only net pay lines for bank transfer
+        eq(payrollLines.code, 'NET_PAY') // Only net pay lines for bank transfer
       ));
 
     if (payrollData.length === 0) {
@@ -87,13 +87,10 @@ export class PaymentBatchService {
     const employeeData = await db
       .select({
         employeeId: employees.employeeId,
-        firstName: employees.firstName,
-        lastName: employees.lastName,
-        bankAccount: employees.bankAccount,
-        bankName: employees.bankName,
+        bankIban: employees.bankIban,
       })
       .from(employees)
-      .where(sql`${employees.employeeId} = ANY(ARRAY[${employeeIds.map(() => '?').join(',')}])`, ...employeeIds);
+      .where(sql`${employees.employeeId} = ANY(${sql`ARRAY[${sql.join(employeeIds.map(id => sql`${id}`), sql`, `)}]`})`);
 
     const employeeLookup = new Map(employeeData.map(emp => [emp.employeeId, emp]));
 
@@ -111,7 +108,7 @@ export class PaymentBatchService {
     // Determine payment methods based on cut-offs and amounts
     const transactions: any[] = [];
     let sctCount = 0, sctAmount = 0, sctInstCount = 0, sctInstAmount = 0;
-    const cutOffTime = this.calculateTodaysCutOff(bankProfile.sctCutOffTime, bankProfile.timezone);
+    const cutOffTime = this.calculateTodaysCutOff(bankProfile.sctCutOffTime || '16:00', bankProfile.timezone || 'Europe/Athens');
     const now = new Date();
     const pastCutOff = now > cutOffTime;
 
@@ -122,7 +119,7 @@ export class PaymentBatchService {
         continue;
       }
 
-      const amount = parseFloat(payrollLine.netAmount);
+      const amount = parseFloat(payrollLine.amount.toString());
       if (amount <= 0) continue;
 
       // Determine payment method

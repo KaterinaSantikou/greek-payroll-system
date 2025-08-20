@@ -157,7 +157,7 @@ router.post('/signup',
 
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(500).json(errorResponse('SIGNUP_FAILED', 'Internal server error'));
+    res.status(500).json(createErrorResponse(req, 'SIGNUP_FAILED', 'Internal server error'));
   }
 });
 
@@ -171,7 +171,7 @@ router.post('/login', rateLimitMiddleware('login'), async (req, res) => {
     const { ipAddress, userAgent } = getClientInfo(req);
 
     if (!email || !password) {
-      return res.status(400).json(errorResponse('MISSING_CREDENTIALS', 'Email and password are required'));
+      return res.status(400).json(createErrorResponse(req, 'MISSING_CREDENTIALS', 'Email and password are required'));
     }
 
     // Find user
@@ -190,23 +190,23 @@ router.post('/login', rateLimitMiddleware('login'), async (req, res) => {
         reason: 'Invalid credentials',
       });
 
-      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid email or password'));
+      return res.status(401).json(createErrorResponse(req, 'INVALID_CREDENTIALS', 'Invalid email or password'));
     }
 
     // Check if account is active
     if (!user.isActive) {
-      return res.status(403).json(errorResponse('ACCOUNT_DEACTIVATED', 'Account is deactivated'));
+      return res.status(403).json(createErrorResponse(req, 'ACCOUNT_DEACTIVATED', 'Account is deactivated'));
     }
 
     // Check if email is verified
     if (!user.emailVerified) {
-      return res.status(403).json(errorResponse('EMAIL_NOT_VERIFIED', 'Email address not verified'));
+      return res.status(403).json(createErrorResponse(req, 'EMAIL_NOT_VERIFIED', 'Email address not verified'));
     }
 
     // Check if account is locked
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const retryAfter = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 1000);
-      return res.status(423).json(errorResponse('RATE_LIMITED', 'Account is temporarily locked', retryAfter));
+      return res.status(423).json(createErrorResponse(req, 'RATE_LIMITED', 'Account is temporarily locked', retryAfter));
     }
 
     // Verify password
@@ -242,7 +242,7 @@ router.post('/login', rateLimitMiddleware('login'), async (req, res) => {
       });
 
       const retryAfter = shouldLock ? 15 * 60 : undefined;
-      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid email or password', retryAfter));
+      return res.status(401).json(createErrorResponse(req, 'INVALID_CREDENTIALS', 'Invalid email or password', retryAfter));
     }
 
     // Check if MFA is required
@@ -289,7 +289,7 @@ router.post('/login', rateLimitMiddleware('login'), async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json(errorResponse('LOGIN_FAILED', 'Internal server error'));
+    res.status(500).json(createErrorResponse(req, 'LOGIN_FAILED', 'Internal server error'));
   }
 });
 
@@ -303,7 +303,7 @@ router.post('/mfa/challenge', rateLimitMiddleware('mfa-verify'), async (req, res
     const { ipAddress, userAgent } = getClientInfo(req);
 
     if (!code || !email) {
-      return res.status(400).json(errorResponse('MISSING_FIELDS', 'Code and email are required'));
+      return res.status(400).json(createErrorResponse(req, 'MISSING_FIELDS', 'Code and email are required'));
     }
 
     // Find user
@@ -313,7 +313,7 @@ router.post('/mfa/challenge', rateLimitMiddleware('mfa-verify'), async (req, res
       .where(eq(users.email, email.toLowerCase()));
 
     if (!user || !user.mfaEnabled) {
-      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid credentials'));
+      return res.status(401).json(createErrorResponse(req, 'INVALID_CREDENTIALS', 'Invalid credentials'));
     }
 
     // Verify MFA token
@@ -343,7 +343,7 @@ router.post('/mfa/challenge', rateLimitMiddleware('mfa-verify'), async (req, res
         reason: 'Invalid MFA token',
       });
 
-      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid MFA code'));
+      return res.status(401).json(createErrorResponse(req, 'INVALID_CREDENTIALS', 'Invalid MFA code'));
     }
 
     // Create session with higher authentication level
@@ -371,7 +371,7 @@ router.post('/mfa/challenge', rateLimitMiddleware('mfa-verify'), async (req, res
 
   } catch (error) {
     console.error('MFA challenge error:', error);
-    res.status(500).json(errorResponse('MFA_ERROR', 'Internal server error'));
+    res.status(500).json(createErrorResponse(req, 'MFA_ERROR', 'Internal server error'));
   }
 });
 
@@ -385,7 +385,7 @@ router.post('/mfa/webauthn/verify', async (req, res) => {
     const { ipAddress, userAgent } = getClientInfo(req);
 
     if (!email || !webauthnResponse) {
-      return res.status(400).json(errorResponse('MISSING_FIELDS', 'Email and WebAuthn response are required'));
+      return res.status(400).json(createErrorResponse(req, 'MISSING_FIELDS', 'Email and WebAuthn response are required'));
     }
 
     // Find user
@@ -395,7 +395,7 @@ router.post('/mfa/webauthn/verify', async (req, res) => {
       .where(eq(users.email, email.toLowerCase()));
 
     if (!user || !user.mfaEnabled) {
-      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid credentials'));
+      return res.status(401).json(createErrorResponse(req, 'INVALID_CREDENTIALS', 'Invalid credentials'));
     }
 
     try {
@@ -403,7 +403,7 @@ router.post('/mfa/webauthn/verify', async (req, res) => {
       const isValid = await MfaService.verifyWebAuthnAssertion(user.id, webauthnResponse);
       
       if (!isValid) {
-        return res.status(401).json(errorResponse('WEBAUTHN_ERROR', 'WebAuthn verification failed'));
+        return res.status(401).json(createErrorResponse(req, 'WEBAUTHN_ERROR', 'WebAuthn verification failed'));
       }
 
       // Create session with higher authentication level
@@ -431,12 +431,12 @@ router.post('/mfa/webauthn/verify', async (req, res) => {
 
     } catch (error) {
       console.error('WebAuthn verification error:', error);
-      return res.status(401).json(errorResponse('WEBAUTHN_ERROR', 'WebAuthn verification failed'));
+      return res.status(401).json(createErrorResponse(req, 'WEBAUTHN_ERROR', 'WebAuthn verification failed'));
     }
 
   } catch (error) {
     console.error('WebAuthn MFA error:', error);
-    res.status(500).json(errorResponse('WEBAUTHN_ERROR', 'Internal server error'));
+    res.status(500).json(createErrorResponse(req, 'WEBAUTHN_ERROR', 'Internal server error'));
   }
 });
 
@@ -450,7 +450,7 @@ router.post('/magic-link', rateLimitMiddleware('magic-link'), async (req, res) =
     const { ipAddress, userAgent } = getClientInfo(req);
 
     if (!email) {
-      return res.status(400).json(errorResponse('MISSING_EMAIL', 'Email is required'));
+      return res.status(400).json(createErrorResponse(req, 'MISSING_EMAIL', 'Email is required'));
     }
 
     // Always return 202 to prevent email enumeration
@@ -515,7 +515,7 @@ router.get('/magic-link/consume', async (req, res) => {
     const { ipAddress, userAgent } = getClientInfo(req);
 
     if (!token || typeof token !== 'string') {
-      return res.status(400).json(errorResponse('INVALID_TOKEN', 'Invalid magic link token'));
+      return res.status(400).json(createErrorResponse(req, 'INVALID_TOKEN', 'Invalid magic link token'));
     }
 
     // Verify token
@@ -523,7 +523,7 @@ router.get('/magic-link/consume', async (req, res) => {
     try {
       payload = TokenService.verifyMagicLinkToken(token);
     } catch (error) {
-      return res.status(400).json(errorResponse('TOKEN_EXPIRED', 'Magic link token expired or invalid'));
+      return res.status(400).json(createErrorResponse(req, 'TOKEN_EXPIRED', 'Magic link token expired or invalid'));
     }
 
     // Check database token
@@ -539,7 +539,7 @@ router.get('/magic-link/consume', async (req, res) => {
       );
 
     if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
-      return res.status(400).json(errorResponse('TOKEN_EXPIRED', 'Magic link token expired or invalid'));
+      return res.status(400).json(createErrorResponse(req, 'TOKEN_EXPIRED', 'Magic link token expired or invalid'));
     }
 
     // Mark token as used
@@ -579,7 +579,7 @@ router.get('/magic-link/consume', async (req, res) => {
 
   } catch (error) {
     console.error('Magic link consume error:', error);
-    res.status(400).json(errorResponse('TOKEN_EXPIRED', 'Magic link token expired or invalid'));
+    res.status(400).json(createErrorResponse(req, 'TOKEN_EXPIRED', 'Magic link token expired or invalid'));
   }
 });
 
@@ -593,7 +593,7 @@ router.post('/password/forgot', rateLimitMiddleware('forgot-password'), async (r
     const { ipAddress, userAgent } = getClientInfo(req);
 
     if (!email) {
-      return res.status(400).json(errorResponse('MISSING_EMAIL', 'Email is required'));
+      return res.status(400).json(createErrorResponse(req, 'MISSING_EMAIL', 'Email is required'));
     }
 
     // Always return success to prevent email enumeration
@@ -646,7 +646,7 @@ router.post('/password/forgot', rateLimitMiddleware('forgot-password'), async (r
 
   } catch (error) {
     console.error('Forgot password error:', error);
-    res.status(500).json(errorResponse('RESET_REQUEST_FAILED', 'Internal server error'));
+    res.status(500).json(createErrorResponse(req, 'RESET_REQUEST_FAILED', 'Internal server error'));
   }
 });
 
@@ -660,7 +660,7 @@ router.post('/password/reset', async (req, res) => {
     const { ipAddress, userAgent } = getClientInfo(req);
 
     if (!token || !new_password) {
-      return res.status(400).json(errorResponse('MISSING_FIELDS', 'Token and new password are required'));
+      return res.status(400).json(createErrorResponse(req, 'MISSING_FIELDS', 'Token and new password are required'));
     }
 
     // Verify token
@@ -668,7 +668,7 @@ router.post('/password/reset', async (req, res) => {
     try {
       payload = TokenService.verifyPasswordResetToken(token);
     } catch (error) {
-      return res.status(400).json(errorResponse('TOKEN_EXPIRED', 'Reset token expired or invalid'));
+      return res.status(400).json(createErrorResponse(req, 'TOKEN_EXPIRED', 'Reset token expired or invalid'));
     }
 
     // Check database token
@@ -684,7 +684,7 @@ router.post('/password/reset', async (req, res) => {
       );
 
     if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
-      return res.status(400).json(errorResponse('TOKEN_EXPIRED', 'Reset token expired or invalid'));
+      return res.status(400).json(createErrorResponse(req, 'TOKEN_EXPIRED', 'Reset token expired or invalid'));
     }
 
     // Hash new password
@@ -723,7 +723,7 @@ router.post('/password/reset', async (req, res) => {
 
   } catch (error) {
     console.error('Reset password error:', error);
-    res.status(500).json(errorResponse('RESET_FAILED', 'Internal server error'));
+    res.status(500).json(createErrorResponse(req, 'RESET_FAILED', 'Internal server error'));
   }
 });
 
@@ -754,7 +754,7 @@ router.get('/oidc/:provider/login', async (req, res) => {
     };
 
     if (!config.clientId) {
-      return res.status(400).json(errorResponse('SSO_FORBIDDEN', `SSO provider ${provider} not configured`));
+      return res.status(400).json(createErrorResponse(req, 'SSO_FORBIDDEN', `SSO provider ${provider} not configured`));
     }
 
     // Build authorization URL
@@ -764,7 +764,7 @@ router.get('/oidc/:provider/login', async (req, res) => {
 
   } catch (error) {
     console.error('SSO login error:', error);
-    res.status(500).json(errorResponse('SSO_FORBIDDEN', 'SSO login failed'));
+    res.status(500).json(createErrorResponse(req, 'SSO_FORBIDDEN', 'SSO login failed'));
   }
 });
 
@@ -780,13 +780,13 @@ router.get('/oidc/:provider/callback', async (req, res) => {
 
     // Verify state parameter
     if (!state || state !== req.session.ssoState) {
-      return res.status(400).json(errorResponse('SSO_FORBIDDEN', 'Invalid state parameter'));
+      return res.status(400).json(createErrorResponse(req, 'SSO_FORBIDDEN', 'Invalid state parameter'));
     }
 
     // Get stored PKCE data
     const pkce = req.session.pkce;
     if (!pkce) {
-      return res.status(400).json(errorResponse('SSO_FORBIDDEN', 'Missing PKCE data'));
+      return res.status(400).json(createErrorResponse(req, 'SSO_FORBIDDEN', 'Missing PKCE data'));
     }
 
     // Get provider config
@@ -840,7 +840,7 @@ router.get('/oidc/:provider/callback', async (req, res) => {
 
   } catch (error) {
     console.error('SSO callback error:', error);
-    res.status(500).json(errorResponse('SSO_FORBIDDEN', 'SSO authentication failed'));
+    res.status(500).json(createErrorResponse(req, 'SSO_FORBIDDEN', 'SSO authentication failed'));
   }
 });
 
@@ -853,14 +853,14 @@ router.get('/session', async (req, res) => {
     const sessionToken = req.cookies?.sessionToken;
     
     if (!sessionToken) {
-      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'No active session'));
+      return res.status(401).json(createErrorResponse(req, 'INVALID_CREDENTIALS', 'No active session'));
     }
 
     const session = await SessionService.validateSession(sessionToken);
     
     if (!session) {
       res.clearCookie('sessionToken');
-      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid session'));
+      return res.status(401).json(createErrorResponse(req, 'INVALID_CREDENTIALS', 'Invalid session'));
     }
 
     // Get user
@@ -870,7 +870,7 @@ router.get('/session', async (req, res) => {
       .where(eq(users.id, session.userId));
 
     if (!user) {
-      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'User not found'));
+      return res.status(401).json(createErrorResponse(req, 'INVALID_CREDENTIALS', 'User not found'));
     }
 
     res.json({
@@ -891,7 +891,7 @@ router.get('/session', async (req, res) => {
 
   } catch (error) {
     console.error('Get session error:', error);
-    res.status(500).json(errorResponse('SESSION_ERROR', 'Internal server error'));
+    res.status(500).json(createErrorResponse(req, 'SESSION_ERROR', 'Internal server error'));
   }
 });
 
@@ -927,7 +927,7 @@ router.post('/logout', async (req, res) => {
 
   } catch (error) {
     console.error('Logout error:', error);
-    res.status(500).json(errorResponse('LOGOUT_FAILED', 'Internal server error'));
+    res.status(500).json(createErrorResponse(req, 'LOGOUT_FAILED', 'Internal server error'));
   }
 });
 

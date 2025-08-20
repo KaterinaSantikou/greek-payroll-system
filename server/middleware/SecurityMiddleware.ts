@@ -297,7 +297,7 @@ export class SecurityMiddleware {
     // In production, validate with service like Google reCAPTCHA
     // POST to https://www.google.com/recaptcha/api/siteverify
     // For now, accept any token that looks valid
-    return token && token.length > 10;
+    return Boolean(token && token.length > 10);
   }
 
   /**
