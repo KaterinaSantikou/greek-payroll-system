@@ -307,6 +307,100 @@ export class WebhookService {
       payload
     );
   }
+
+  // =============================================================================
+  // PAYMENT-SPECIFIC WEBHOOK EVENTS
+  // =============================================================================
+
+  /**
+   * payments.batch.submitted
+   */
+  static async sendPaymentsBatchSubmittedEvent(
+    partnerId: string,
+    payload: { batchId: string; method: string; totals: any }
+  ) {
+    return this.queueWebhookEvent(
+      partnerId,
+      'payments.batch.submitted',
+      payload.batchId,
+      payload
+    );
+  }
+
+  /**
+   * payments.batch.updated
+   */
+  static async sendPaymentsBatchUpdatedEvent(
+    partnerId: string,
+    payload: { batchId: string; status: string; counters: any }
+  ) {
+    return this.queueWebhookEvent(
+      partnerId,
+      'payments.batch.updated',
+      payload.batchId,
+      payload
+    );
+  }
+
+  /**
+   * payments.line.accepted
+   */
+  static async sendPaymentsLineAcceptedEvent(
+    partnerId: string,
+    payload: { lineId: string; reasonCode?: string }
+  ) {
+    return this.queueWebhookEvent(
+      partnerId,
+      'payments.line.accepted',
+      payload.lineId,
+      payload
+    );
+  }
+
+  /**
+   * payments.line.rejected
+   */
+  static async sendPaymentsLineRejectedEvent(
+    partnerId: string,
+    payload: { lineId: string; reasonCode: string }
+  ) {
+    return this.queueWebhookEvent(
+      partnerId,
+      'payments.line.rejected',
+      payload.lineId,
+      payload
+    );
+  }
+
+  /**
+   * payments.line.settled
+   */
+  static async sendPaymentsLineSettledEvent(
+    partnerId: string,
+    payload: { lineId: string; camtRef: string }
+  ) {
+    return this.queueWebhookEvent(
+      partnerId,
+      'payments.line.settled',
+      payload.lineId,
+      payload
+    );
+  }
+
+  /**
+   * payments.line.superseded
+   */
+  static async sendPaymentsLineSupersededEvent(
+    partnerId: string,
+    payload: { lineId: string; newLineId: string }
+  ) {
+    return this.queueWebhookEvent(
+      partnerId,
+      'payments.line.superseded',
+      payload.lineId,
+      payload
+    );
+  }
 }
 
 // Start background retry process (in production, this would be a separate service)
