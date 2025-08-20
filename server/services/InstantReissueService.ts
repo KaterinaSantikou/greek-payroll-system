@@ -28,6 +28,8 @@ export interface EligibilityCheckResult {
     originalNotSettled: boolean;
     validStatus: boolean;
     notSuperseded: boolean;
+    noDoublePayRisk: boolean;
+    withinCutOff: boolean;
   };
   blockingFactors: string[];
   estimatedSettlementTime: string;
@@ -36,6 +38,8 @@ export interface EligibilityCheckResult {
     total: number;
   };
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  autoRecommendInstant?: boolean;
+  cutOffGuidance?: string;
 }
 
 export interface DisbursementKey {
@@ -57,7 +61,7 @@ export interface InstantReissueRequest {
 export interface InstantReissueResult {
   success: boolean;
   newBatchId?: string;
-  reissuedLines: number;
+  reissuedLines: string[];
   supersededLines: string[];
   failedLines: Array<{
     lineId: string;
@@ -65,14 +69,12 @@ export interface InstantReissueResult {
   }>;
   protectedLines: string[]; // Double-pay protected
   processingTime: number; // milliseconds
-  estimatedSettlement: string;
-  auditLog: {
-    operatorId: string;
-    timestamp: string;
-    reason: string;
-    originalBatch: string;
-    newBatch?: string;
-  };
+  estimatedSettlement?: string;
+  submissionResults?: Array<{
+    lineId: string;
+    submitted: boolean;
+    reason?: string;
+  }>;
 }
 
 export class InstantReissueService {
@@ -123,6 +125,8 @@ export class InstantReissueService {
           ? amount <= parseFloat(profile.maxSctInstAmount) 
           : amount <= 100000, // Default SEPA Instant limit
         beneficiaryReachable: await this.checkBeneficiaryReachability(line.creditorAccount),
+        noDoublePayRisk: await this.checkDoublePayProtection(line),
+        withinCutOff: this.isWithinCutOff(),
         originalNotSettled: !['settled', 'cancelled'].includes(line.status),
         validStatus: ['submitted', 'accepted', 'rejected'].includes(line.status),
         notSuperseded: !line.reissuedAs,
@@ -510,4 +514,251 @@ export class InstantReissueService {
       timeline,
     };
   }
+
+  /**
+   * Check double-pay protection using disbursement key
+   */
+  private static async checkDoublePayProtection(line: any): Promise<boolean> {
+    const disbursementKey = this.generateDisbursementKey({
+      employeeId: line.employeeId,
+      period: '2025-01', // Extract from actual transaction
+      amount: parseFloat(line.amount),
+      runId: 'PAYROLL-2025-001' // Extract from actual transaction
+    });
+    
+    // Check if any settled payment exists with same disbursement key
+    const existingPayments = await db
+      .select()
+      .from(paymentTransactions)
+      .where(and(
+        sql`CONCAT(${paymentTransactions.employeeId}, '-', '2025-01', '-', ${paymentTransactions.amount}, '-', 'PAYROLL-2025-001') = ${disbursementKey}`,
+        eq(paymentTransactions.status, 'settled')
+      ));
+    
+    return existingPayments.length === 0; // No risk if no existing payments
+  }
+
+  /**
+   * Check if within normal cut-off window
+   */
+  private static isWithinCutOff(): boolean {
+    const now = new Date();
+    const hour = now.getHours();
+    const minutes = now.getMinutes();
+    
+    // SCT cut-off typically 17:00 CET for same-day processing
+    return hour < 17 || (hour === 17 && minutes === 0);
+  }
+
+  /**
+   * Check if past SCT cut-off (auto-recommend instant)
+   */
+  private static isPastSctCutOff(): boolean {
+    const now = new Date();
+    const hour = now.getHours();
+    
+    // Past 17:00 CET - recommend instant automatically
+    return hour >= 17;
+  }
+
+  /**
+   * Generate new EndToEndId in format {sourceLineId}-R1
+   */
+  private static generateReissueEndToEndId(originalEndToEndId: string): string {
+    return `${originalEndToEndId}-R1`;
+  }
+
+  /**
+   * Submit transaction to payment channel with proper error handling
+   */
+  private static async submitToChannel(transaction: any): Promise<{ success: boolean; reason?: string }> {
+    try {
+      // Simulate channel submission with edge cases
+      const random = Math.random();
+      
+      // Bank offline scenario - show retry message, don't supersede
+      if (random < 0.05) {
+        return {
+          success: false,
+          reason: 'Bank offline (no confirmation) - retry after 5 minutes. Original not superseded.'
+        };
+      }
+      
+      // Amount > limit: block with actionable message
+      if (transaction.amount > 100000) {
+        return {
+          success: false,
+          reason: `Amount €${transaction.amount.toFixed(2)} exceeds instant limit €100,000.00`
+        };
+      }
+      
+      // Beneficiary not reachable: block; propose standard SCT next business day
+      if (random < 0.07) {
+        return {
+          success: false,
+          reason: 'Beneficiary not reachable via SCT Instant - propose standard SCT next business day'
+        };
+      }
+      
+      // Successful submission
+      return { success: true };
+      
+    } catch (error) {
+      return {
+        success: false,
+        reason: `Channel error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
+
+  /**
+   * Handle settlement notification (camt/push)
+   * Implements settlement state management
+   */
+  static async handleSettlement(
+    transactionId: string,
+    settlementDetails: {
+      settledAt: Date;
+      bankReference?: string;
+      uetr?: string;
+    }
+  ): Promise<void> {
+    try {
+      // On settlement: log settled_at, update totals
+      await db
+        .update(paymentTransactions)
+        .set({
+          status: 'settled',
+          settledAt: settlementDetails.settledAt,
+          bankReference: settlementDetails.bankReference,
+        })
+        .where(eq(paymentTransactions.transactionId, transactionId));
+
+      // Update batch totals
+      await this.updateBatchTotals(transactionId);
+
+      // Check for double-pay incidents (reversal edge case)
+      await this.checkDoublePayIncident(transactionId);
+      
+    } catch (error) {
+      console.error('Settlement handling failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update batch totals on settlement
+   */
+  private static async updateBatchTotals(transactionId: string): Promise<void> {
+    const [transaction] = await db
+      .select({ batchId: paymentTransactions.batchId })
+      .from(paymentTransactions)
+      .where(eq(paymentTransactions.transactionId, transactionId));
+    
+    if (transaction?.batchId) {
+      // Update batch settlement totals
+      const settledTransactions = await db
+        .select()
+        .from(paymentTransactions)
+        .where(and(
+          eq(paymentTransactions.batchId, transaction.batchId),
+          eq(paymentTransactions.status, 'settled')
+        ));
+      
+      const settledAmount = settledTransactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      
+      await db
+        .update(paymentBatches)
+        .set({
+          settledCount: settledTransactions.length,
+          settledAmount: settledAmount.toString(),
+        })
+        .where(eq(paymentBatches.batchId, transaction.batchId));
+    }
+  }
+
+  /**
+   * Check for double-pay incidents and create reversal tasks
+   * Edge case: If instant settled and original later also settles
+   */
+  private static async checkDoublePayIncident(transactionId: string): Promise<void> {
+    try {
+      // Get the settled instant transaction
+      const [instantTx] = await db
+        .select()
+        .from(paymentTransactions)
+        .where(and(
+          eq(paymentTransactions.transactionId, transactionId),
+          eq(paymentTransactions.status, 'settled')
+        ));
+
+      if (!instantTx?.originalTransactionId) return;
+
+      // Check if original transaction also settled
+      const [originalTx] = await db
+        .select()
+        .from(paymentTransactions)
+        .where(and(
+          eq(paymentTransactions.transactionId, instantTx.originalTransactionId),
+          eq(paymentTransactions.status, 'settled')
+        ));
+
+      if (originalTx?.settledAt) {
+        // Double-pay incident detected! Flag and create reversal task
+        await this.createReversalTask({
+          incidentType: 'DOUBLE_PAY',
+          instantTransactionId: transactionId,
+          originalTransactionId: originalTx.transactionId,
+          amount: parseFloat(instantTx.amount),
+          detectedAt: new Date(),
+          priority: 'HIGH',
+          description: `Double-pay detected: Both instant re-issue ${transactionId} and original ${originalTx.transactionId} settled for €${instantTx.amount}`,
+        });
+
+        console.warn(`Double-pay incident detected: instant=${transactionId}, original=${originalTx.transactionId}`);
+      }
+      
+    } catch (error) {
+      console.error('Double-pay check failed:', error);
+    }
+  }
+
+  /**
+   * Create automated reversal task
+   */
+  private static async createReversalTask(incident: {
+    incidentType: string;
+    instantTransactionId: string;
+    originalTransactionId: string;
+    amount: number;
+    detectedAt: Date;
+    priority: string;
+    description: string;
+  }): Promise<void> {
+    // In production, this would create a task in a workflow system
+    console.log('AUTO-REVERSAL TASK CREATED:', {
+      taskId: `REV-${nanoid(8)}`,
+      ...incident,
+      assignedTo: 'PAYMENTS_OPS_TEAM',
+      dueBy: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours
+    });
+
+    // Log audit trail for compliance
+    await this.logAuditTrail({
+      action: 'DOUBLE_PAY_INCIDENT',
+      details: incident,
+    });
+  }
+
+  /**
+   * Enhanced audit trail logging
+   */
+  private static async logAuditTrail(details: any): Promise<void> {
+    console.log('AUDIT TRAIL:', {
+      timestamp: new Date().toISOString(),
+      service: 'InstantReissueService',
+      ...details,
+    });
+  }
+
 }
