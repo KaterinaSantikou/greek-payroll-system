@@ -115,6 +115,7 @@ import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
 import { useExitIntent } from "@/hooks/useExitIntent";
+import { ABTestProvider } from "@/components/ABTestProvider";
 import { useLocation } from "wouter";
 
 // Authentication Pages
@@ -204,6 +205,8 @@ function Router() {
             <Route path="/compliance-risk-scoring" component={lazy(() => import("@/pages/ComplianceRiskScoringDemo"))} />
             <Route path="/webhook-system" component={lazy(() => import("@/pages/WebhookSystemDemo"))} />
             <Route path="/exit-intent-demo" component={lazy(() => import("@/pages/ExitIntentDemo"))} />
+            <Route path="/ab-testing-dashboard" component={lazy(() => import("@/pages/ABTestingDashboard"))} />
+            <Route path="/ab-testing-demo" component={lazy(() => import("@/pages/ABTestingDemo"))} />
             <Route component={NotFound} />
           </Switch>
         </Suspense>
@@ -353,15 +356,17 @@ function App() {
           <UserRoleProvider>
             <PropertyProvider>
               <AppProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Router />
-                  
-                  {/* PWA Install Prompt */}
-                  {pwaState.canInstall && (
-                    <PWAInstallPrompt variant="banner" />
-                  )}
-                </TooltipProvider>
+                <ABTestProvider>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Router />
+                    
+                    {/* PWA Install Prompt */}
+                    {pwaState.canInstall && (
+                      <PWAInstallPrompt variant="banner" />
+                    )}
+                  </TooltipProvider>
+                </ABTestProvider>
               </AppProvider>
             </PropertyProvider>
           </UserRoleProvider>
