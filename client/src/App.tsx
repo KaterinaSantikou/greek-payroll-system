@@ -55,6 +55,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppProvider } from "@/contexts/AppContext";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 const MobilePayroll = lazy(() => import("@/pages/MobilePayroll"));
+const IndustryTemplates = lazy(() => import("@/pages/IndustryTemplates"));
 import { usePWA } from "@/hooks/usePWA";
 import { PaymentsCockpitDemo } from './pages/PaymentsCockpitDemo';
 import SmartNotifications from "@/pages/smartNotifications";
@@ -129,6 +130,7 @@ function Router() {
         <Route path="/marketing" component={MarketingLanding} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
         <Route path="/mobile-payroll" component={MobilePayroll} />
+        <Route path="/industry-templates" component={IndustryTemplates} />
         
         {/* People Section */}
         <Route path="/employees" component={Employees} />
