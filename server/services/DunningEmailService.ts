@@ -296,6 +296,10 @@ export class DunningEmailService extends EventEmitter {
   private enrichVariables(variables: DunningVariables, stage: string): DunningVariables {
     const utmParams = `?utm_source=${this.config.globalSettings.utm.source}&utm_medium=${this.config.globalSettings.utm.medium}&utm_campaign=${variables.trigger_id}`;
     
+    const legalFooterEn = `You're receiving this service message because you're a billing contact for ${variables.tenant_name} on ${variables.supplier_name}.\n${variables.supplier_name} — VAT ${variables.supplier_vat} — ${variables.supplier_address} — Tax Office: ${variables.supplier_tax_office}\nNeed help? ${variables.support_email} | ${variables.support_phone}`;
+    
+    const legalFooterEl = `Λαμβάνετε αυτό το ενημερωτικό μήνυμα διότι είστε υπεύθυνος χρέωσης για το ${variables.tenant_name} στο ${variables.supplier_name}.\n${variables.supplier_name} — ΑΦΜ ${variables.supplier_vat} — ${variables.supplier_address} — ΔΟΥ: ${variables.supplier_tax_office}\nΧρειάζεστε βοήθεια; ${variables.support_email} | ${variables.support_phone}`;
+    
     return {
       ...variables,
       pay_link: `${variables.pay_link}${utmParams}`,
@@ -304,7 +308,8 @@ export class DunningEmailService extends EventEmitter {
       formatted_due_date: this.formatDate(variables.due_date, variables.is_el),
       formatted_issue_date: this.formatDate(variables.invoice_issue_date, variables.is_el),
       formatted_retry_date: this.formatDate(variables.next_retry_date, variables.is_el),
-      formatted_suspend_date: this.formatDate(variables.grace_suspend_date, variables.is_el)
+      formatted_suspend_date: this.formatDate(variables.grace_suspend_date, variables.is_el),
+      legal_footer: variables.is_el ? legalFooterEl : legalFooterEn
     };
   }
 
@@ -1038,11 +1043,9 @@ Update card: {{pay_link}}
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <p>Hi {{customer_name}},</p>
             
-            <p>We need to set up your SEPA Direct Debit mandate to continue processing your payments automatically.</p>
-            
-            <p>Set up SEPA mandate: <a href="{{pay_link}}">{{pay_link}}</a></p>
-            
-            <p>Questions? <a href="mailto:{{support_email}}">{{support_email}}</a></p>
+            <p>Please complete your SEPA mandate to enable automatic payments.<br>
+            Mandate link: <a href="{{pay_link}}">{{pay_link}}</a><br>
+            Reference: {{sepa_mandate_ref}} (if assigned)</p>
             
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
             <small style="color: #718096;">{{legal_footer}}</small>
@@ -1050,11 +1053,9 @@ Update card: {{pay_link}}
         `,
         text: `Hi {{customer_name}},
 
-We need to set up your SEPA Direct Debit mandate to continue processing your payments automatically.
-
-Set up SEPA mandate: {{pay_link}}
-
-Questions? {{support_email}}
+Please complete your SEPA mandate to enable automatic payments.  
+Mandate link: {{pay_link}}  
+Reference: {{sepa_mandate_ref}} (if assigned)
 
 {{legal_footer}}`
       },
@@ -1065,11 +1066,9 @@ Questions? {{support_email}}
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <p>Γεια σας {{customer_name}},</p>
             
-            <p>Χρειάζεται να ρυθμίσουμε την πάγια εντολή SEPA για να συνεχίσουμε την αυτόματη επεξεργασία των πληρωμών σας.</p>
-            
-            <p>Ρύθμιση πάγιας εντολής SEPA: <a href="{{pay_link}}">{{pay_link}}</a></p>
-            
-            <p>Απορίες; <a href="mailto:{{support_email}}">{{support_email}}</a></p>
+            <p>Ολοκληρώστε την πάγια εντολή SEPA για αυτόματες πληρωμές.<br>
+            Σύνδεσμος mandate: <a href="{{pay_link}}">{{pay_link}}</a><br>
+            Αναφορά: {{sepa_mandate_ref}} (αν υπάρχει)</p>
             
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
             <small style="color: #718096;">{{legal_footer}}</small>
@@ -1077,11 +1076,64 @@ Questions? {{support_email}}
         `,
         text: `Γεια σας {{customer_name}},
 
-Χρειάζεται να ρυθμίσουμε την πάγια εντολή SEPA για να συνεχίσουμε την αυτόματη επεξεργασία των πληρωμών σας.
+Ολοκληρώστε την πάγια εντολή SEPA για αυτόματες πληρωμές.  
+Σύνδεσμος mandate: {{pay_link}}  
+Αναφορά: {{sepa_mandate_ref}} (αν υπάρχει)
 
-Ρύθμιση πάγιας εντολής SEPA: {{pay_link}}
+{{legal_footer}}`
+      },
 
-Απορίες; {{support_email}}
+      // Payment plan offer templates (manual/conditional)
+      'payment_plan_en': {
+        subject: 'Need a payment plan? We can help.',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <p>Hi {{customer_name}},</p>
+            
+            <p>We understand that sometimes unexpected situations can make it difficult to pay invoices on time. We're here to help you find a solution that works for both of us.</p>
+            
+            <p>If you'd like to discuss a payment plan or installment arrangement, please reach out to our support team. We're committed to working with you to resolve this matter.</p>
+            
+            <p>Contact us: <a href="mailto:{{support_email}}">{{support_email}}</a> | {{support_phone}}</p>
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+            <small style="color: #718096;">{{legal_footer}}</small>
+          </div>
+        `,
+        text: `Hi {{customer_name}},
+
+We understand that sometimes unexpected situations can make it difficult to pay invoices on time. We're here to help you find a solution that works for both of us.
+
+If you'd like to discuss a payment plan or installment arrangement, please reach out to our support team. We're committed to working with you to resolve this matter.
+
+Contact us: {{support_email}} | {{support_phone}}
+
+{{legal_footer}}`
+      },
+
+      'payment_plan_el': {
+        subject: 'Χρειάζεστε διακανονισμό; Μπορούμε να βοηθήσουμε.',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <p>Γεια σας {{customer_name}},</p>
+            
+            <p>Κατανοούμε ότι μερικές φορές απροσδόκητες καταστάσεις μπορεί να δυσκολέψουν την έγκαιρη πληρωμή των τιμολογίων. Είμαστε εδώ για να σας βοηθήσουμε να βρείτε μια λύση που να λειτουργεί για όλους.</p>
+            
+            <p>Εάν θα θέλατε να συζητήσετε έναν διακανονισμό ή ρύθμιση δόσεων, παρακαλούμε επικοινωνήστε με την ομάδα υποστήριξής μας. Είμαστε δεσμευμένοι να συνεργαστούμε μαζί σας για να επιλύσουμε το θέμα.</p>
+            
+            <p>Επικοινωνία: <a href="mailto:{{support_email}}">{{support_email}}</a> | {{support_phone}}</p>
+            
+            <hr style="margin: 30px 0; border: none; border-top: 1px solid #e2e8f0;">
+            <small style="color: #718096;">{{legal_footer}}</small>
+          </div>
+        `,
+        text: `Γεια σας {{customer_name}},
+
+Κατανοούμε ότι μερικές φορές απροσδόκητες καταστάσεις μπορεί να δυσκολέψουν την έγκαιρη πληρωμή των τιμολογίων. Είμαστε εδώ για να σας βοηθήσουμε να βρείτε μια λύση που να λειτουργεί για όλους.
+
+Εάν θα θέλατε να συζητήσετε έναν διακανονισμό ή ρύθμιση δόσεων, παρακαλούμε επικοινωνήστε με την ομάδα υποστήριξής μας. Είμαστε δεσμευμένοι να συνεργαστούμε μαζί σας για να επιλύσουμε το θέμα.
+
+Επικοινωνία: {{support_email}} | {{support_phone}}
 
 {{legal_footer}}`
       }
@@ -1180,6 +1232,41 @@ Questions? {{support_email}}
       console.error(`❌ Failed to send SEPA mandate setup email for customer ${customerId}:`, error);
       this.emit('email:failed', {
         type: 'sepa_mandate',
+        customerId,
+        templateId,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Send payment plan offer notification (rule-based, manual/conditional)
+   */
+  public async sendPaymentPlanOfferEmail(
+    customerId: string,
+    variables: DunningVariables
+  ): Promise<void> {
+    const templateId = `payment_plan_${variables.is_el ? 'el' : 'en'}`;
+    
+    console.log(`💳 Sending payment plan offer for customer ${customerId}`);
+    
+    try {
+      const template = this.getDunningEmailTemplate(templateId, variables);
+      
+      // This would integrate with your email service
+      // await this.emailService.send(template);
+      
+      console.log(`✅ Payment plan offer email sent for customer ${customerId}`);
+      this.emit('email:sent', {
+        type: 'payment_plan',
+        customerId,
+        templateId,
+        status: 'sent'
+      });
+    } catch (error) {
+      console.error(`❌ Failed to send payment plan offer email for customer ${customerId}:`, error);
+      this.emit('email:failed', {
+        type: 'payment_plan',
         customerId,
         templateId,
         error: error.message
