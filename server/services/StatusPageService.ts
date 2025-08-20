@@ -21,6 +21,7 @@ import {
 } from '@shared/schema';
 import { eq, desc, and, gte, lte, sql, count, or, isNull, not } from 'drizzle-orm';
 import { EventEmitter } from 'events';
+import { IncidentCommunicationTemplates, type IncidentCommunication, type CommunicationTemplateType } from './IncidentCommunicationTemplates';
 
 export type ComponentStatus = 'operational' | 'degraded_performance' | 'partial_outage' | 'major_outage' | 'under_maintenance';
 export type IncidentSeverity = 'minor' | 'major' | 'critical';
@@ -67,9 +68,11 @@ export class StatusPageService extends EventEmitter {
   private lastCacheUpdate = 0;
   private cacheRefreshInterval = 30000; // 30 seconds
   private monitoringInterval?: NodeJS.Timeout;
+  private communicationTemplates: IncidentCommunicationTemplates;
 
   constructor() {
     super();
+    this.communicationTemplates = IncidentCommunicationTemplates.getInstance();
     this.initializeService();
   }
 
@@ -539,5 +542,207 @@ export class StatusPageService extends EventEmitter {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
     }
+  }
+
+  /**
+   * Create incident with standardized communication template
+   */
+  async createIncidentWithTemplate(
+    componentId: string,
+    severity: IncidentSeverity,
+    templateVariables: Record<string, string>,
+    channels: string[] = ['status_page']
+  ): Promise<{ incident: StatusPageIncident; communication: IncidentCommunication | null }> {
+    try {
+      // Generate communication from template
+      const communication = this.communicationTemplates.generateMessage(
+        'incident_detected',
+        templateVariables,
+        severity
+      );
+
+      // Create the incident
+      const [incident] = await db.insert(statusPageIncidents).values({
+        id: `inc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        componentId,
+        title: communication?.subject || `${severity} incident affecting ${templateVariables.componentName}`,
+        description: communication?.message || 'Incident detected',
+        severity,
+        status: 'investigating',
+        affectedComponents: [componentId],
+        communicationChannels: channels,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+
+      // Update component status based on severity
+      const componentStatus: ComponentStatus = 
+        severity === 'critical' ? 'major_outage' :
+        severity === 'major' ? 'partial_outage' : 'degraded_performance';
+
+      await this.updateComponentStatus(componentId, componentStatus, communication?.message);
+
+      // Emit event for real-time updates
+      this.emit('incident_created', { incident, communication });
+
+      return { incident, communication };
+    } catch (error) {
+      console.error('Failed to create incident with template:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update incident status with standardized communication
+   */
+  async updateIncidentWithTemplate(
+    incidentId: string,
+    newStatus: IncidentStatus,
+    templateVariables: Record<string, string>
+  ): Promise<{ incident: StatusPageIncident; communication: IncidentCommunication | null }> {
+    try {
+      // Get current incident
+      const [currentIncident] = await db.select()
+        .from(statusPageIncidents)
+        .where(eq(statusPageIncidents.id, incidentId));
+
+      if (!currentIncident) {
+        throw new Error(`Incident ${incidentId} not found`);
+      }
+
+      // Generate appropriate communication template
+      const templateType: CommunicationTemplateType = 
+        newStatus === 'investigating' ? 'incident_investigating' :
+        newStatus === 'identified' ? 'incident_identified' :
+        newStatus === 'monitoring' ? 'incident_monitoring' :
+        'incident_resolved';
+
+      const communication = this.communicationTemplates.generateMessage(
+        templateType,
+        templateVariables,
+        currentIncident.severity
+      );
+
+      // Update incident
+      const [updatedIncident] = await db.update(statusPageIncidents)
+        .set({
+          status: newStatus,
+          description: communication?.message || currentIncident.description,
+          updatedAt: new Date(),
+          ...(newStatus === 'resolved' && { resolvedAt: new Date() })
+        })
+        .where(eq(statusPageIncidents.id, incidentId))
+        .returning();
+
+      // If resolved, restore component status
+      if (newStatus === 'resolved' && currentIncident.affectedComponents) {
+        for (const componentId of currentIncident.affectedComponents) {
+          await this.updateComponentStatus(componentId, 'operational', 'Service restored');
+        }
+      }
+
+      // Emit event for real-time updates
+      this.emit('incident_updated', { incident: updatedIncident, communication });
+
+      return { incident: updatedIncident, communication };
+    } catch (error) {
+      console.error('Failed to update incident with template:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Schedule maintenance with standardized communication
+   */
+  async scheduleMaintenanceWithTemplate(
+    componentIds: string[],
+    templateVariables: Record<string, string>,
+    startTime: Date,
+    endTime: Date,
+    channels: string[] = ['status_page', 'email']
+  ): Promise<{ maintenance: StatusPageMaintenance; communication: IncidentCommunication | null }> {
+    try {
+      const communication = this.communicationTemplates.generateMessage(
+        'maintenance_scheduled',
+        templateVariables
+      );
+
+      const [maintenance] = await db.insert(statusPageMaintenances).values({
+        id: `maint_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: communication?.subject || `Scheduled maintenance`,
+        description: communication?.message || 'Scheduled maintenance',
+        affectedComponents: componentIds,
+        scheduledStartAt: startTime,
+        scheduledEndAt: endTime,
+        status: 'scheduled',
+        communicationChannels: channels,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+
+      // Emit event for real-time updates
+      this.emit('maintenance_scheduled', { maintenance, communication });
+
+      return { maintenance, communication };
+    } catch (error) {
+      console.error('Failed to schedule maintenance with template:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get available communication templates
+   */
+  getAvailableTemplates() {
+    return this.communicationTemplates.getAllTemplates();
+  }
+
+  /**
+   * Get template suggestions for incident
+   */
+  getTemplateSuggestions(
+    severity: IncidentSeverity,
+    componentName: string,
+    status: IncidentStatus
+  ) {
+    return this.communicationTemplates.getTemplateSuggestions(severity, componentName, status);
+  }
+
+  /**
+   * Generate custom communication from template
+   */
+  generateCommunication(
+    templateType: CommunicationTemplateType,
+    variables: Record<string, string>,
+    severity?: IncidentSeverity
+  ): IncidentCommunication | null {
+    try {
+      return this.communicationTemplates.generateMessage(templateType, variables, severity);
+    } catch (error) {
+      console.error('Failed to generate communication:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get template variables for a specific template type
+   */
+  getTemplateVariables(templateType: CommunicationTemplateType, severity?: IncidentSeverity) {
+    return this.communicationTemplates.getTemplateVariables(templateType, severity);
+  }
+
+  /**
+   * Validate template variables
+   */
+  validateTemplateVariables(
+    templateType: CommunicationTemplateType,
+    variables: Record<string, string>,
+    severity?: IncidentSeverity
+  ) {
+    const template = this.communicationTemplates.getTemplate(templateType, severity);
+    if (!template) {
+      return { isValid: false, errors: ['Template not found'] };
+    }
+    return this.communicationTemplates.validateVariables(template, variables);
   }
 }

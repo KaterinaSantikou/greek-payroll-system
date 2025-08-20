@@ -2912,6 +2912,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.error('Failed to register status page routes:', error);
   }
+
+  // Register incident communication templates routes
+  try {
+    const incidentTemplatesRoutes = (await import('./api/incidentTemplates')).default;
+    app.use('/api/incident-templates', incidentTemplatesRoutes);
+  } catch (error) {
+    console.error('Failed to register incident templates routes:', error);
+  }
   
   // Register forecasting API routes
   registerForecastingRoutes(app);
