@@ -97,20 +97,20 @@ export default function Dashboard() {
   const [userRole, setUserRole] = useState<'payroll_admin' | 'hr' | 'manager' | 'employee'>('payroll_admin');
   
   // Role-based default section states
-  const getRoleBasedDefaults = (role: string) => {
+  const getRoleBasedDefaults = (role: string): {[key: string]: boolean} => {
     switch (role) {
       case 'payroll_admin':
-        return { actionInbox: true, compliance: true, performance: true, banking: true };
+        return { actionInbox: true, compliance: true, performance: true, banking: true, people: false, team: false };
       case 'hr':
-        return { actionInbox: true, compliance: false, performance: false, people: true };
+        return { actionInbox: true, compliance: false, performance: false, people: true, banking: false, team: false };
       case 'manager':
-        return { actionInbox: true, compliance: false, performance: false, team: true };
+        return { actionInbox: true, compliance: false, performance: false, team: true, banking: false, people: false };
       default:
-        return { actionInbox: true, compliance: true, performance: true };
+        return { actionInbox: true, compliance: true, performance: true, banking: false, people: false, team: false };
     }
   };
   
-  const [expandedSections, setExpandedSections] = useState(getRoleBasedDefaults(userRole));
+  const [expandedSections, setExpandedSections] = useState<{[key: string]: boolean}>(getRoleBasedDefaults(userRole));
 
   // Role-specific dashboard configurations
   const getRoleConfig = (role: string) => {
@@ -186,10 +186,10 @@ export default function Dashboard() {
       { type: "pay_corrections", displayName: locale === 'el' ? 'Διορθώσεις Μισθοδοσίας' : 'Pay Corrections', count: 2, urgency: "low", impact: "high" }
     ],
     exceptions: [
-      { type: "missing_clockins", displayName: locale === 'el' ? 'Λείπουν Αφίξεις/Αναχωρήσεις' : 'Missing Clock-ins', count: 5, urgency: "high" },
-      { type: "duplicate_clockins", displayName: locale === 'el' ? 'Διπλές Καταχωρήσεις' : 'Duplicate Clock-ins', count: 2, urgency: "medium" },
-      { type: "wrong_location", displayName: locale === 'el' ? 'Λάθος Τοποθεσία' : 'Wrong Location', count: 1, urgency: "low" },
-      { type: "break_violations", displayName: locale === 'el' ? 'Παραβάσεις Διαλειμμάτων' : 'Break Violations', count: 3, urgency: "medium" }
+      { type: "missing_clockins", displayName: locale === 'el' ? 'Λείπουν Αφίξεις/Αναχωρήσεις' : 'Missing Clock-ins', count: 5, urgency: "high", impact: "high" },
+      { type: "duplicate_clockins", displayName: locale === 'el' ? 'Διπλές Καταχωρήσεις' : 'Duplicate Clock-ins', count: 2, urgency: "medium", impact: "medium" },
+      { type: "wrong_location", displayName: locale === 'el' ? 'Λάθος Τοποθεσία' : 'Wrong Location', count: 1, urgency: "low", impact: "low" },
+      { type: "break_violations", displayName: locale === 'el' ? 'Παραβάσεις Διαλειμμάτων' : 'Break Violations', count: 3, urgency: "medium", impact: "medium" }
     ],
     filings: [
       { type: "ERGANI", displayName: "ΕΡΓΑΝΗ ΙΙ", ddays: 1, status: locale === 'el' ? 'εκκρεμεί' : 'pending', urgency: "critical" },
@@ -298,14 +298,6 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleGlobalSearch = (query: string) => {
-    if (query.length < 3) return;
-    
-    toast({
-      title: "Searching...",
-      description: `Looking for "${query}" across people, runs, filings, and actions`,
-    });
-  };
 
   const handleActionClick = (action: string, type: string) => {
     toast({
