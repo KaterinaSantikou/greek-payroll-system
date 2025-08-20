@@ -73,7 +73,6 @@ import EmbedPage from "@/pages/EmbedPage";
 import { SeverancePage } from "@/pages/SeverancePage";
 import SeveranceTestPage from "@/pages/SeveranceTestPage";
 import GarnishmentPage from "@/pages/GarnishmentPage";
-import IbanTestPage from "@/pages/IbanTestPage";
 import SimpleIbanTest from "@/pages/SimpleIbanTest";
 import PartnerConsole from "@/pages/PartnerConsole";
 import Partner from "@/pages/Partner";
@@ -89,7 +88,7 @@ import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import SSO from "@/pages/auth/SSO";
 
-const GRCCompliance = lazy(() => import("./pages/Compliance"));
+const GRCCompliance = lazy(() => import("./pages/GRCCompliance"));
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -128,7 +127,7 @@ function Router() {
         <Route path="/severance" component={SeverancePage} />
         <Route path="/severance/test" component={SeveranceTestPage} />
         <Route path="/garnishments" component={GarnishmentPage} />
-        {/* <Route path="/iban-test" component={IbanTestPage} /> */}
+        <Route path="/iban-test" component={SimpleIbanTest} />
         <Route path="/teams-roles" component={TeamsRoles} />
         
         {/* Time Section */}

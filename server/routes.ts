@@ -64,7 +64,6 @@ import { reconciliationRoutes } from "./api/reconciliation";
 import { edgeCaseRoutes } from "./api/edgeCases";
 import { acceptanceCriteriaRoutes } from "./api/acceptanceCriteria";
 import { paymentsOpsRoutes } from "./api/paymentsOps";
-import { registerPartnerRoutes } from "./api/partners";
 import { registerClientApprovalRoutes } from "./api/clientApproval";
 import { registerFilingWorkflowRoutes } from "./api/filingWorkflow";
 import { registerTestingRoutes } from "./api/testing";
@@ -76,7 +75,6 @@ import { cutOffLogicRoutes } from "./api/cutOffLogic";
 import { reissueAlgorithmRoutes } from "./api/reissueAlgorithm";
 import eventQueueAPI from "./api/eventQueue";
 // ibanValidationRoutes already imported on line 5
-import { registerPartnerRoutes } from "./api/partners";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -2790,7 +2788,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerChangeLogLegalWatchRoutes(app);
 
   // Register Partner Management API routes
-  registerPartnerRoutes(app);
+  // registerPartnerRoutes(app); // TODO: Fix registerPartnerRoutes import
   registerFilingWorkflowRoutes(app);
   registerClientApprovalRoutes(app);
   
