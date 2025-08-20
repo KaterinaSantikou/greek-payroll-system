@@ -90,6 +90,46 @@ router.post('/signup',
 );
 
 /**
+ * Resend verification email
+ */
+router.post('/resend-verification',
+  auditLog('resend_verification'),
+  async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          error: 'Email is required',
+          code: 'MISSING_EMAIL'
+        });
+      }
+
+      const result = await AuthService.resendVerificationEmail(email);
+      
+      if (!result.success) {
+        return res.status(400).json({
+          error: result.error,
+          code: 'RESEND_FAILED'
+        });
+      }
+
+      res.json({ 
+        success: true,
+        message: 'Verification email resent successfully',
+        email: email 
+      });
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      res.status(400).json({
+        error: error instanceof Error ? error.message : 'Failed to resend verification email',
+        code: 'RESEND_ERROR'
+      });
+    }
+  }
+);
+
+/**
  * Verify email
  */
 router.post('/verify-email',

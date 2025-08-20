@@ -1,1 +1,268 @@
-import React, { useState } from 'react';\nimport { useNavigate, Link } from 'wouter';\nimport { useMutation } from '@tanstack/react-query';\nimport { useForm } from 'react-hook-form';\nimport { zodResolver } from '@hookform/resolvers/zod';\nimport { z } from 'zod';\nimport { Button } from '@/components/ui/button';\nimport { Input } from '@/components/ui/input';\nimport { Label } from '@/components/ui/label';\nimport { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Alert, AlertDescription } from '@/components/ui/alert';\nimport { Checkbox } from '@/components/ui/checkbox';\nimport { apiRequest } from '@/lib/queryClient';\nimport { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';\n\nconst loginSchema = z.object({\n  email: z.string().email('Please enter a valid email address'),\n  password: z.string().min(1, 'Password is required'),\n  rememberMe: z.boolean().optional(),\n});\n\ntype LoginFormData = z.infer<typeof loginSchema>;\n\nexport default function Login() {\n  const navigate = useNavigate();\n  const [showPassword, setShowPassword] = useState(false);\n  const [deviceFingerprint] = useState(() => {\n    // Simple device fingerprint\n    return btoa(`${navigator.userAgent}-${screen.width}x${screen.height}-${new Date().getTimezoneOffset()}`);\n  });\n\n  const form = useForm<LoginFormData>({\n    resolver: zodResolver(loginSchema),\n    defaultValues: {\n      email: '',\n      password: '',\n      rememberMe: false,\n    },\n  });\n\n  const loginMutation = useMutation({\n    mutationFn: async (data: LoginFormData) => {\n      const headers: Record<string, string> = {\n        'Content-Type': 'application/json',\n      };\n      \n      if (deviceFingerprint) {\n        headers['x-device-fingerprint'] = deviceFingerprint;\n      }\n\n      const response = await fetch('/api/auth/v2/login', {\n        method: 'POST',\n        headers,\n        body: JSON.stringify(data),\n        credentials: 'include', // Include cookies\n      });\n\n      if (!response.ok) {\n        const error = await response.json();\n        throw new Error(error.error || 'Login failed');\n      }\n\n      return response.json();\n    },\n    onSuccess: (data) => {\n      // Check if MFA is required\n      if (data.requiresMfa) {\n        navigate('/auth/mfa');\n      } else {\n        // Redirect to dashboard or last visited page\n        const returnTo = new URLSearchParams(window.location.search).get('returnTo');\n        navigate(returnTo || '/dashboard');\n      }\n    },\n  });\n\n  const magicLinkMutation = useMutation({\n    mutationFn: async (email: string) => {\n      const response = await fetch('/api/auth/v2/magic-link', {\n        method: 'POST',\n        headers: {\n          'Content-Type': 'application/json',\n        },\n        body: JSON.stringify({ email }),\n      });\n\n      if (!response.ok) {\n        const error = await response.json();\n        throw new Error(error.error || 'Failed to send magic link');\n      }\n\n      return response.json();\n    },\n  });\n\n  const onSubmit = (data: LoginFormData) => {\n    loginMutation.mutate(data);\n  };\n\n  const handleMagicLink = () => {\n    const email = form.getValues('email');\n    if (!email) {\n      form.setError('email', {\n        type: 'manual',\n        message: 'Please enter your email address first'\n      });\n      return;\n    }\n    magicLinkMutation.mutate(email);\n  };\n\n  const error = loginMutation.error || magicLinkMutation.error;\n  const isLoading = loginMutation.isPending;\n\n  return (\n    <div className=\"min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8\">\n      <Card className=\"w-full max-w-md\">\n        <CardHeader className=\"text-center\">\n          <CardTitle className=\"text-2xl font-bold\">Sign in to PayrollSync</CardTitle>\n          <CardDescription>\n            Enter your email and password to access your account\n          </CardDescription>\n        </CardHeader>\n        \n        <form onSubmit={form.handleSubmit(onSubmit)}>\n          <CardContent className=\"space-y-4\">\n            {error && (\n              <Alert variant=\"destructive\">\n                <AlertCircle className=\"h-4 w-4\" />\n                <AlertDescription>\n                  {error instanceof Error ? error.message : 'An error occurred'}\n                </AlertDescription>\n              </Alert>\n            )}\n\n            {magicLinkMutation.isSuccess && (\n              <Alert className=\"border-green-200 bg-green-50\">\n                <AlertDescription className=\"text-green-800\">\n                  Magic link sent! Check your email and click the link to sign in.\n                </AlertDescription>\n              </Alert>\n            )}\n\n            <div className=\"space-y-2\">\n              <Label htmlFor=\"email\">Email</Label>\n              <Input\n                id=\"email\"\n                type=\"email\"\n                placeholder=\"name@company.com\"\n                {...form.register('email')}\n                className={form.formState.errors.email ? 'border-red-500' : ''}\n              />\n              {form.formState.errors.email && (\n                <p className=\"text-sm text-red-500\">\n                  {form.formState.errors.email.message}\n                </p>\n              )}\n            </div>\n\n            <div className=\"space-y-2\">\n              <Label htmlFor=\"password\">Password</Label>\n              <div className=\"relative\">\n                <Input\n                  id=\"password\"\n                  type={showPassword ? 'text' : 'password'}\n                  placeholder=\"Enter your password\"\n                  {...form.register('password')}\n                  className={form.formState.errors.password ? 'border-red-500 pr-10' : 'pr-10'}\n                />\n                <button\n                  type=\"button\"\n                  className=\"absolute inset-y-0 right-0 flex items-center pr-3\"\n                  onClick={() => setShowPassword(!showPassword)}\n                >\n                  {showPassword ? (\n                    <EyeOff className=\"h-4 w-4 text-gray-400\" />\n                  ) : (\n                    <Eye className=\"h-4 w-4 text-gray-400\" />\n                  )}\n                </button>\n              </div>\n              {form.formState.errors.password && (\n                <p className=\"text-sm text-red-500\">\n                  {form.formState.errors.password.message}\n                </p>\n              )}\n            </div>\n\n            <div className=\"flex items-center space-x-2\">\n              <Checkbox\n                id=\"rememberMe\"\n                checked={form.watch('rememberMe')}\n                onCheckedChange={(checked) => form.setValue('rememberMe', !!checked)}\n              />\n              <Label htmlFor=\"rememberMe\" className=\"text-sm\">\n                Remember me for 30 days\n              </Label>\n            </div>\n\n            <Button\n              type=\"submit\"\n              className=\"w-full\"\n              disabled={isLoading}\n            >\n              {isLoading ? (\n                <>\n                  <Loader2 className=\"h-4 w-4 mr-2 animate-spin\" />\n                  Signing in...\n                </>\n              ) : (\n                'Sign in'\n              )}\n            </Button>\n\n            <div className=\"relative\">\n              <div className=\"absolute inset-0 flex items-center\">\n                <div className=\"w-full border-t border-gray-300\" />\n              </div>\n              <div className=\"relative flex justify-center text-sm\">\n                <span className=\"px-2 bg-white text-gray-500\">Or</span>\n              </div>\n            </div>\n\n            <Button\n              type=\"button\"\n              variant=\"outline\"\n              className=\"w-full\"\n              onClick={handleMagicLink}\n              disabled={magicLinkMutation.isPending}\n            >\n              {magicLinkMutation.isPending ? (\n                <>\n                  <Loader2 className=\"h-4 w-4 mr-2 animate-spin\" />\n                  Sending magic link...\n                </>\n              ) : (\n                'Send magic link'\n              )}\n            </Button>\n          </CardContent>\n\n          <CardFooter className=\"flex flex-col space-y-2\">\n            <div className=\"text-sm text-center\">\n              <Link href=\"/auth/forgot-password\" className=\"text-blue-600 hover:text-blue-500\">\n                Forgot your password?\n              </Link>\n            </div>\n            <div className=\"text-sm text-center\">\n              Don't have an account?{' '}\n              <Link href=\"/auth/signup\" className=\"text-blue-600 hover:text-blue-500\">\n                Sign up\n              </Link>\n            </div>\n          </CardFooter>\n        </form>\n      </Card>\n    </div>\n  );\n}
+import React, { useState } from 'react';
+import { useLocation, Link } from 'wouter';
+import { useMutation } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Checkbox } from '@/components/ui/checkbox';
+import { apiRequest } from '@/lib/queryClient';
+import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(1, 'Password is required'),
+  rememberMe: z.boolean().optional(),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+
+export default function Login() {
+  const [, setLocation] = useLocation();
+  const [showPassword, setShowPassword] = useState(false);
+  const [deviceFingerprint] = useState(() => {
+    // Simple device fingerprint
+    return btoa(`${navigator.userAgent}-${screen.width}x${screen.height}-${new Date().getTimezoneOffset()}`);
+  });
+
+  const form = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      rememberMe: false,
+    },
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: async (data: LoginFormData) => {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (deviceFingerprint) {
+        headers['x-device-fingerprint'] = deviceFingerprint;
+      }
+
+      const response = await fetch('/api/auth/v2/login', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(data),
+        credentials: 'include', // Include cookies
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Login failed');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // Check if MFA is required
+      if (data.requiresMfa) {
+        setLocation('/auth/mfa');
+      } else {
+        // Redirect to dashboard or last visited page
+        const returnTo = new URLSearchParams(window.location.search).get('returnTo');
+        setLocation(returnTo || '/dashboard');
+      }
+    },
+  });
+
+  const magicLinkMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const response = await fetch('/api/auth/v2/magic-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send magic link');
+      }
+
+      return response.json();
+    },
+  });
+
+  const onSubmit = (data: LoginFormData) => {
+    loginMutation.mutate(data);
+  };
+
+  const handleMagicLink = () => {
+    const email = form.getValues('email');
+    if (!email) {
+      form.setError('email', {
+        type: 'manual',
+        message: 'Please enter your email address first'
+      });
+      return;
+    }
+    magicLinkMutation.mutate(email);
+  };
+
+  const error = loginMutation.error || magicLinkMutation.error;
+  const isLoading = loginMutation.isPending;
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold">Sign in to PayrollSync</CardTitle>
+          <CardDescription>
+            Enter your email and password to access your account
+          </CardDescription>
+        </CardHeader>
+        
+        <form onSubmit={form.handleSubmit(onSubmit)}>
+          <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {error instanceof Error ? error.message : 'An error occurred'}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {magicLinkMutation.isSuccess && (
+              <Alert className="border-green-200 bg-green-50">
+                <AlertDescription className="text-green-800">
+                  Magic link sent! Check your email and click the link to sign in.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@company.com"
+                {...form.register('email')}
+                className={form.formState.errors.email ? 'border-red-500' : ''}
+              />
+              {form.formState.errors.email && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.email.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  {...form.register('password')}
+                  className={form.formState.errors.password ? 'border-red-500 pr-10' : 'pr-10'}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  )}
+                </button>
+              </div>
+              {form.formState.errors.password && (
+                <p className="text-sm text-red-500">
+                  {form.formState.errors.password.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="rememberMe"
+                checked={form.watch('rememberMe')}
+                onCheckedChange={(checked) => form.setValue('rememberMe', !!checked)}
+              />
+              <Label htmlFor="rememberMe" className="text-sm">
+                Remember me for 30 days
+              </Label>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Continue'
+              )}
+            </Button>
+
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Or</span>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleMagicLink}
+              disabled={magicLinkMutation.isPending}
+            >
+              {magicLinkMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending magic link...
+                </>
+              ) : (
+                'Sign in with magic link'
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => setLocation('/auth/sso')}
+            >
+              Use SSO
+            </Button>
+          </CardContent>
+
+          <CardFooter className="flex flex-col space-y-2">
+            <div className="text-sm text-center">
+              <Link href="/auth/forgot-password" className="text-blue-600 hover:text-blue-500">
+                Forgot your password?
+              </Link>
+            </div>
+            <div className="text-sm text-center">
+              Don't have an account?{' '}
+              <Link href="/auth/signup" className="text-blue-600 hover:text-blue-500">
+                Sign up
+              </Link>
+            </div>
+          </CardFooter>
+        </form>
+      </Card>
+    </div>
+  );
+}

@@ -73,6 +73,14 @@ import EmbedPage from "@/pages/EmbedPage";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 
+// Authentication Pages
+import Login from "@/pages/auth/Login";
+import Signup from "@/pages/auth/Signup";
+import VerifyEmail from "@/pages/auth/VerifyEmail";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
+import ResetPassword from "@/pages/auth/ResetPassword";
+import SSO from "@/pages/auth/SSO";
+
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
   const { open, setOpen } = useCommandPalette();
@@ -82,6 +90,13 @@ function Router() {
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
+        {/* Authentication Routes */}
+        <Route path="/auth/login" component={Login} />
+        <Route path="/auth/signup" component={Signup} />
+        <Route path="/auth/verify-email" component={VerifyEmail} />
+        <Route path="/auth/forgot-password" component={ForgotPassword} />
+        <Route path="/auth/reset-password" component={ResetPassword} />
+        <Route path="/auth/sso" component={SSO} />
         <Route component={NotFound} />
       </Switch>
     );
