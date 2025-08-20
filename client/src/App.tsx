@@ -71,6 +71,7 @@ import S1AcceptanceTesting from "@/pages/S1AcceptanceTesting";
 import EmbeddedPayroll from "@/pages/EmbeddedPayroll";
 import EmbedPage from "@/pages/EmbedPage";
 import { SeverancePage } from "@/pages/SeverancePage";
+import SeveranceTestPage from "@/pages/SeveranceTestPage";
 import { CommandPalette } from "@/components/CommandPalette";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
 
@@ -116,6 +117,7 @@ function Router() {
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/exits" component={Exits} />
         <Route path="/severance" component={SeverancePage} />
+        <Route path="/severance/test" component={SeveranceTestPage} />
         <Route path="/teams-roles" component={TeamsRoles} />
         
         {/* Time Section */}

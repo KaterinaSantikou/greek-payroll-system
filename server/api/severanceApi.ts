@@ -553,4 +553,172 @@ export function registerSeveranceRoutes(app: Express) {
   }
 });
 
+  // =============================================================================
+  // NEW ERGANI & DOCUMENT ENDPOINTS (v1 API)
+  // =============================================================================
+
+  // Build ERGANI termination payload (v1 endpoint)
+  app.post('/api/v1/ergani/term:build', isAuthenticated, async (req: any, res) => {
+    try {
+      const schema = z.object({
+        employeeId: z.string(),
+        terminationType: z.enum(['dismissal', 'resignation', 'expiry', 'mutual_agreement']),
+        terminationCause: z.string(),
+        effectiveDate: z.string(),
+        noticeDate: z.string().optional(),
+        companyVat: z.string(),
+        amka: z.string(),
+        afm: z.string(),
+        firstName: z.string(),
+        lastName: z.string(),
+        format: z.enum(['json', 'xml']).default('json')
+      });
+
+      const data = schema.parse(req.body);
+      const { getErganiEventCode } = await import('../services/SeveranceHelpers');
+
+      // Build ERGANI payload using Greek labels
+      const erganiPayload = {
+        "Α/Α": "1",
+        "Ε.Π.": "1",
+        "ΣΤΟΙΧΕΙΑ_ΕΡΓΟΔΟΤΗ": {
+          "ΑΦΜ_ΕΡΓΟΔΟΤΗ": data.companyVat,
+          "ΟΝΟΜΑ_ΕΡΓΟΔΟΤΗ": "PayrollSync Demo Hotel"
+        },
+        "ΣΤΟΙΧΕΙΑ_ΕΡΓΑΖΟΜΕΝΟΥ": {
+          "ΑΜΚΑ": data.amka,
+          "ΑΦΜ": data.afm,
+          "ΟΝΟΜΑ": data.firstName,
+          "ΕΠΩΝΥΜΟ": data.lastName
+        },
+        "ΣΤΟΙΧΕΙΑ_ΚΑΤΑΓΓΕΛΙΑΣ": {
+          "ΤΥΠΟΣ_ΚΑΤΑΓΓΕΛΙΑΣ": getErganiEventCode(data.terminationType),
+          "ΑΙΤΙΑ_ΚΑΤΑΓΓΕΛΙΑΣ": data.terminationCause,
+          "ΗΜΕΡΟΜΗΝΙΑ_ΛΗΞΗΣ": data.effectiveDate,
+          "ΗΜΕΡΟΜΗΝΙΑ_ΠΡΟΕΙΔΟΠΟΙΗΣΗΣ": data.noticeDate || null
+        },
+        "ΧΡΟΝΟΣΗΜΑ": new Date().toISOString(),
+        "ΥΠΟΓΡΑΦΗ_ΕΡΓΟΔΟΤΗ": "DEMO_SIGNATURE"
+      };
+
+      if (data.format === 'xml') {
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<ERGANI_TERMINATION>
+  <AA>${erganiPayload["Α/Α"]}</AA>
+  <EP>${erganiPayload["Ε.Π."]}</EP>
+  <EMPLOYER>
+    <VAT>${erganiPayload.ΣΤΟΙΧΕΙΑ_ΕΡΓΟΔΟΤΗ.ΑΦΜ_ΕΡΓΟΔΟΤΗ}</VAT>
+    <NAME>${erganiPayload.ΣΤΟΙΧΕΙΑ_ΕΡΓΟΔΟΤΗ.ΟΝΟΜΑ_ΕΡΓΟΔΟΤΗ}</NAME>
+  </EMPLOYER>
+  <EMPLOYEE>
+    <AMKA>${erganiPayload.ΣΤΟΙΧΕΙΑ_ΕΡΓΑΖΟΜΕΝΟΥ.ΑΜΚΑ}</AMKA>
+    <AFM>${erganiPayload.ΣΤΟΙΧΕΙΑ_ΕΡΓΑΖΟΜΕΝΟΥ.ΑΦΜ}</AFM>
+    <FIRSTNAME>${erganiPayload.ΣΤΟΙΧΕΙΑ_ΕΡΓΑΖΟΜΕΝΟΥ.ΟΝΟΜΑ}</FIRSTNAME>
+    <LASTNAME>${erganiPayload.ΣΤΟΙΧΕΙΑ_ΕΡΓΑΖΟΜΕΝΟΥ.ΕΠΩΝΥΜΟ}</LASTNAME>
+  </EMPLOYEE>
+  <TERMINATION>
+    <TYPE>${erganiPayload.ΣΤΟΙΧΕΙΑ_ΚΑΤΑΓΓΕΛΙΑΣ.ΤΥΠΟΣ_ΚΑΤΑΓΓΕΛΙΑΣ}</TYPE>
+    <CAUSE>${erganiPayload.ΣΤΟΙΧΕΙΑ_ΚΑΤΑΓΓΕΛΙΑΣ.ΑΙΤΙΑ_ΚΑΤΑΓΓΕΛΙΑΣ}</CAUSE>
+    <EFFECTIVE_DATE>${erganiPayload.ΣΤΟΙΧΕΙΑ_ΚΑΤΑΓΓΕΛΙΑΣ.ΗΜΕΡΟΜΗΝΙΑ_ΛΗΞΗΣ}</EFFECTIVE_DATE>
+    <NOTICE_DATE>${erganiPayload.ΣΤΟΙΧΕΙΑ_ΚΑΤΑΓΓΕΛΙΑΣ.ΗΜΕΡΟΜΗΝΙΑ_ΠΡΟΕΙΔΟΠΟΙΗΣΗΣ || ''}</NOTICE_DATE>
+  </TERMINATION>
+  <TIMESTAMP>${erganiPayload.ΧΡΟΝΟΣΗΜΑ}</TIMESTAMP>
+  <SIGNATURE>${erganiPayload.ΥΠΟΓΡΑΦΗ_ΕΡΓΟΔΟΤΗ}</SIGNATURE>
+</ERGANI_TERMINATION>`;
+        
+        res.set('Content-Type', 'application/xml');
+        res.send(xml);
+      } else {
+        res.json(erganiPayload);
+      }
+
+    } catch (error) {
+      console.error('ERGANI payload generation error:', error);
+      res.status(500).json({ 
+        error: 'Failed to generate ERGANI payload', 
+        message: error.message 
+      });
+    }
+  });
+
+  // Generate termination letter PDF (v1 endpoint)
+  app.post('/api/v1/docs/termination-letter', isAuthenticated, async (req: any, res) => {
+    try {
+      const schema = z.object({
+        employeeId: z.string(),
+        employeeName: z.string(),
+        terminationType: z.enum(['dismissal', 'resignation', 'expiry', 'mutual_agreement']),
+        terminationCause: z.string(),
+        effectiveDate: z.string(),
+        noticeDate: z.string().optional(),
+        severanceAmount: z.number().optional(),
+        netTotal: z.number(),
+        language: z.enum(['en', 'el']).default('el')
+      });
+
+      const data = schema.parse(req.body);
+      const { generateTerminationLetter } = await import('../services/SeveranceHelpers');
+
+      // Generate letter content based on termination type and language
+      const letterContent = generateTerminationLetter(data);
+
+      // Return HTML that could be converted to PDF
+      const html = `<!DOCTYPE html>
+<html lang="${data.language}">
+<head>
+  <meta charset="UTF-8">
+  <title>Termination Letter</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+    .header { text-align: center; margin-bottom: 40px; }
+    .content { margin-bottom: 30px; }
+    .footer { margin-top: 40px; }
+    .amount { font-weight: bold; color: #2563eb; }
+  </style>
+</head>
+<body>
+  ${letterContent}
+</body>
+</html>`;
+
+      res.set('Content-Type', 'text/html');
+      res.send(html);
+
+    } catch (error) {
+      console.error('Letter generation error:', error);
+      res.status(500).json({ 
+        error: 'Failed to generate termination letter', 
+        message: error.message 
+      });
+    }
+  });
+
+  // =============================================================================
+  // GOLDEN TEST SUITE
+  // =============================================================================
+
+  // Run golden test cases
+  app.post('/api/severance/test-golden', isAuthenticated, async (req: any, res) => {
+    try {
+      const { runGoldenTestSuite } = await import('../services/SeveranceHelpers');
+      const testResults = await runGoldenTestSuite();
+      
+      res.json({
+        success: true,
+        testResults,
+        summary: {
+          total: testResults.length,
+          passed: testResults.filter(t => t.passed).length,
+          failed: testResults.filter(t => !t.passed).length
+        }
+      });
+    } catch (error) {
+      console.error('Golden test suite error:', error);
+      res.status(500).json({ 
+        error: 'Failed to run golden tests', 
+        message: error.message 
+      });
+    }
+  });
+
 }

@@ -15,6 +15,7 @@ import {
 import { CalcProvenanceService } from "./CalcProvenanceService";
 import { SeveranceRulesService } from "./SeveranceRulesService";
 import { ExplanationTemplateService } from "./ExplanationTemplateService";
+import { applyEdgeCaseGuardrails } from "./SeveranceHelpers";
 import { eq, desc } from "drizzle-orm";
 
 /**
