@@ -5017,7 +5017,7 @@ export const approvalQueue = pgTable("approval_queue", {
   
   // System fields
   correlationId: varchar("correlation_id"), // For tracking related requests
-  parentRequestId: varchar("parent_request_id").references(() => approvalQueue.id),
+  parentRequestId: varchar("parent_request_id"),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
