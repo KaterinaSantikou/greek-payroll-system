@@ -85,21 +85,20 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       id: 'dashboard',
       label: t('nav.dashboard'),
       icon: LayoutDashboard,
-      href: '/',
-      badge: '3'
+      href: '/'
     },
     {
       id: 'people',
       label: t('nav.people'),
       icon: Users,
-      badge: '12',
       children: [
         {
           id: 'employees',
           label: t('nav.employees'),
           icon: User,
           href: '/employees',
-          badge: '147'
+          badge: '147',
+          badgeType: 'info'
         },
         {
           id: 'onboarding',
@@ -115,7 +114,9 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           label: t('nav.exits'),
           icon: UserMinus,
           href: '/exits',
-          badge: '2'
+          badge: '2',
+          urgent: true,
+          badgeType: 'warning'
         },
         {
           id: 'teams-roles',
@@ -129,14 +130,14 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       id: 'time',
       label: t('nav.time'),
       icon: Clock,
-      badge: '8',
       children: [
         {
           id: 'punches',
           label: t('nav.punches'),
           icon: Timer,
           href: '/punches',
-          badge: '23'
+          badge: '23',
+          badgeType: 'info'
         },
         {
           id: 'exceptions',
@@ -158,7 +159,8 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           label: t('nav.overtime'),
           icon: Clock,
           href: '/overtime',
-          badge: '15'
+          badge: '15',
+          badgeType: 'info'
         },
         {
           id: 'digital-work-card',
@@ -172,7 +174,6 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       id: 'payroll',
       label: t('nav.payroll'),
       icon: Banknote,
-      badge: '1',
       children: [
         {
           id: 'runs',
@@ -180,7 +181,8 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: Zap,
           href: '/payroll',
           badge: '1',
-          urgent: true
+          urgent: true,
+          badgeType: 'warning'
         },
         {
           id: 'components',
@@ -206,7 +208,6 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       id: 'filings',
       label: t('nav.filings'),
       icon: FileCheck,
-      badge: '4',
       children: [
         {
           id: 'ergani',
@@ -240,7 +241,8 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           label: t('nav.inspector-pack'),
           icon: Briefcase,
           href: '/filings/inspector',
-          badge: '1'
+          badge: '1',
+          badgeType: 'info'
         }
       ]
     },
@@ -268,7 +270,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           href: '/payments',
           badge: '4',
           urgent: true,
-          badgeType: 'danger'
+          badgeType: 'warning'
         }
       ]
     },
@@ -542,17 +544,18 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     
     // Determine badge type based on context and explicit badgeType
     const getBadgeClass = () => {
-      if (badgeType === 'danger') return "bg-red-500 text-white"; // Critical failures/rejects
-      if (badgeType === 'warning') return "bg-amber-500 text-white"; // Due items/pending tasks
-      if (badgeType === 'success') return "bg-green-500 text-white"; // Completed items
-      if (urgent) return "bg-red-500 text-white"; // Legacy urgent fallback
-      return "bg-blue-500 text-white"; // Info for general counts
+      if (badgeType === 'danger') return "bg-red-500 text-white shadow-sm"; // Critical failures/rejects
+      if (badgeType === 'warning') return "bg-amber-500 text-white shadow-sm"; // Due items/pending tasks
+      if (badgeType === 'success') return "bg-green-500 text-white shadow-sm"; // Completed items
+      if (badgeType === 'info') return "bg-slate-500 text-white shadow-sm"; // Inventory/info counts
+      if (urgent) return "bg-red-500 text-white shadow-sm"; // Legacy urgent fallback
+      return "bg-blue-500 text-white shadow-sm"; // Default counts
     };
     
     return (
       <div
         className={cn(
-          "px-2 py-0.5 rounded-full text-xs font-medium min-w-[18px] h-[18px] flex items-center justify-center",
+          "px-2 py-0.5 rounded-full text-xs font-semibold min-w-[20px] h-[20px] flex items-center justify-center",
           getBadgeClass()
         )}
         aria-label={getAriaLabel()}
@@ -587,15 +590,15 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     const getButtonClasses = (isLeaf: boolean = false) => cn(
       // Base styles
       "w-full justify-start px-4 text-gray-700 dark:text-gray-200 relative group",
-      // Size based on level
-      level === 0 ? "h-10 text-[15px] font-medium" : "h-9 text-[14px] ml-6",
-      // Connector lines for children
-      level > 0 && "before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
+      // Size and typography hierarchy
+      level === 0 ? "h-12 text-base font-semibold" : "h-10 text-sm ml-8 font-medium",
+      // Stronger connector lines for children
+      level > 0 && "before:absolute before:left-[-20px] before:top-0 before:bottom-0 before:w-0.5 before:bg-gray-300 dark:before:bg-gray-600",
       // Default state with motion preferences
       "hover:bg-gray-50 dark:hover:bg-gray-800/50",
       "transition-all motion-reduce:transition-none duration-200 motion-reduce:duration-0",
-      // Active state with accent bar
-      active && "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 before:!absolute before:!left-0 before:!top-2 before:!bottom-2 before:!w-[3px] before:!bg-blue-600 before:!rounded-r-sm before:!z-10",
+      // Stronger active state with accent bar
+      active && "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-semibold before:!absolute before:!left-0 before:!top-1 before:!bottom-1 before:!w-1 before:!bg-blue-600 before:!rounded-r-md before:!z-10 shadow-sm",
       // Focus ring for keyboard navigation
       "focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none",
       // Disabled state
@@ -645,11 +648,12 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
                 })()}
                 <div className="flex items-center gap-2 ml-auto">
                   {renderBadge(item.badge, item.urgent, item.label, item.badgeType)}
-                  {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-gray-400 transition-transform duration-200 motion-reduce:transition-none motion-reduce:duration-0" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 text-gray-400 transition-transform duration-200 motion-reduce:transition-none motion-reduce:duration-0" />
-                  )}
+                  <ChevronDown 
+                    className={cn(
+                      "h-5 w-5 text-gray-500 transition-transform duration-200 motion-reduce:transition-none motion-reduce:duration-0",
+                      isExpanded ? "rotate-0" : "-rotate-90"
+                    )} 
+                  />
                 </div>
               </>
             )}
@@ -861,49 +865,10 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         }
       }}
     >
-      {/* Optional Header */}
-      {!collapsed && (
-        <div className="px-4 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src="/api/placeholder/32/32" />
-                <AvatarFallback className="text-xs font-medium bg-blue-100 text-blue-600">
-                  PR
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  Princess Resort
-                </p>
-                <Badge variant="outline" className="text-xs mt-1">
-                  {userRole}
-                </Badge>
-              </div>
-            </div>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              className="h-8 w-8 p-0"
-              aria-label="Γρήγορες ενέργειες"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
       {/* Navigation Groups */}
-      <div className="flex-1 overflow-y-auto py-2" role="none">
+      <div className="flex-1 overflow-y-auto py-4 px-2" role="none">
         {navigationGroups.map((group, index) => (
-          <div key={group.id} role="none">
-            {index > 0 && (
-              <div 
-                className="h-px bg-gray-200 dark:bg-gray-700 mx-4 my-2" 
-                role="separator"
-                aria-hidden="true"
-              />
-            )}
+          <div key={group.id} role="none" className={index > 0 ? 'mt-6' : ''}>
             {renderNavigationItem(group)}
           </div>
         ))}
