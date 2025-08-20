@@ -94,7 +94,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'employees',
-          label: 'Employees',
+          label: t('nav.employees'),
           icon: User,
           href: '/employees',
           badge: '147',
@@ -102,7 +102,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         },
         {
           id: 'onboarding',
-          label: 'Onboarding',
+          label: t('nav.onboarding'),
           icon: UserPlus,
           href: '/onboarding',
           badge: '5',
@@ -110,7 +110,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         },
         {
           id: 'exits',
-          label: 'Exits',
+          label: t('nav.exits'),
           icon: UserMinus,
           href: '/exits',
           badge: '2',
@@ -118,7 +118,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         },
         {
           id: 'teams-roles',
-          label: 'Teams & roles',
+          label: t('nav.teams-roles'),
           icon: UserCheck,
           href: '/teams-roles'
         }
@@ -131,7 +131,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'punches',
-          label: 'Punches',
+          label: t('nav.punches'),
           icon: Timer,
           href: '/punches',
           badge: '23',
@@ -139,7 +139,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         },
         {
           id: 'exceptions',
-          label: 'Exceptions',
+          label: t('nav.exceptions'),
           icon: AlertTriangle,
           href: '/exceptions',
           badge: '7',
@@ -147,13 +147,13 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         },
         {
           id: 'schedules',
-          label: 'Schedules',
+          label: t('nav.schedules'),
           icon: CalendarDays,
           href: '/schedules'
         },
         {
           id: 'overtime',
-          label: 'Overtime',
+          label: t('nav.overtime'),
           icon: Clock,
           href: '/overtime',
           badge: '15',
@@ -161,7 +161,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         },
         {
           id: 'digital-work-card',
-          label: 'Digital work card',
+          label: t('nav.digital-work-card'),
           icon: Smartphone,
           href: '/digital-work-card'
         }
@@ -174,7 +174,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'runs',
-          label: 'Runs',
+          label: t('nav.runs'),
           icon: Zap,
           href: '/payroll',
           badge: '1',
@@ -182,19 +182,19 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         },
         {
           id: 'components',
-          label: 'Components',
+          label: t('nav.components'),
           icon: Building2,
           href: '/earnings-codes'
         },
         {
           id: 'bonuses',
-          label: 'Bonuses',
+          label: t('nav.bonuses'),
           icon: Euro,
           href: '/allowances'
         },
         {
           id: 'simulations',
-          label: 'Simulations',
+          label: t('nav.simulations'),
           icon: BarChart3,
           href: '/payroll-preview'
         }
@@ -207,7 +207,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'ergani',
-          label: 'ERGANI II',
+          label: t('nav.ergani'),
           icon: Shield,
           href: '/filings/ergani',
           badge: '2',
@@ -215,7 +215,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         },
         {
           id: 'efka-apd',
-          label: 'e-EFKA/APD',
+          label: t('nav.efka-apd'),
           icon: Receipt,
           href: '/filings/efka',
           badge: '1',
@@ -223,7 +223,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         },
         {
           id: 'aade-fmy',
-          label: 'AADE/ΦΜΥ',
+          label: t('nav.aade-fmy'),
           icon: FileText,
           href: '/filings/aade',
           badge: '3',
@@ -231,7 +231,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         },
         {
           id: 'inspector-pack',
-          label: 'Inspector pack',
+          label: t('nav.inspector-pack'),
           icon: Briefcase,
           href: '/filings/inspector',
           badge: '1',
@@ -246,19 +246,19 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'sepa',
-          label: 'SEPA files',
+          label: t('nav.sepa'),
           icon: Euro,
           href: '/sepa-payments'
         },
         {
           id: 'off-cycle',
-          label: 'Off-cycle payments',
+          label: t('nav.off-cycle'),
           icon: DollarSign,
           href: '/payments'
         },
         {
           id: 'reconciliation',
-          label: 'Reconciliation',
+          label: t('nav.reconciliation'),
           icon: BookOpen,
           href: '/payments',
           badge: '4',
@@ -273,13 +273,13 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'gl-export',
-          label: 'GL export',
+          label: t('nav.gl-export'),
           icon: Database,
           href: '/accounting'
         },
         {
           id: 'postings',
-          label: 'Postings',
+          label: t('nav.postings'),
           icon: FileText,
           href: '/accounting'
         }
@@ -292,19 +292,19 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       children: [
         {
           id: 'cost-ot',
-          label: 'Cost & OT analysis',
+          label: t('nav.cost-ot'),
           icon: TrendingUp,
           href: '/analytics/cost-ot'
         },
         {
           id: 'absence-turnover',
-          label: 'Absence & turnover',
+          label: t('nav.absence-turnover'),
           icon: PieChart,
           href: '/analytics'
         },
         {
           id: 'custom-reports',
-          label: 'Custom reports',
+          label: t('nav.custom-reports'),
           icon: BarChart3,
           href: '/analytics'
         }
@@ -524,14 +524,31 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     }
   }, [focusedIndex, flatItems]);
 
+  // Helper function for locale-aware number formatting
+  const formatNumber = (num: string | number): string => {
+    const numValue = typeof num === 'string' ? parseFloat(num) : num;
+    if (isNaN(numValue)) return String(num);
+    
+    // For Greek locale, use comma for decimals
+    // For integers, no change needed, but for decimals use comma
+    if (t('nav.dashboard') === 'Πίνακας Ελέγχου') { // Check if Greek locale
+      return numValue.toLocaleString('el-GR');
+    }
+    
+    return numValue.toLocaleString('en-US');
+  };
+
   const renderBadge = (badge?: string | number, urgent?: boolean, label?: string, badgeType?: 'info' | 'warning' | 'danger' | 'success') => {
     if (!badge) return null;
     
-    // Create ARIA label in Greek
+    const formattedBadge = formatNumber(badge);
+    
+    // Create ARIA label in appropriate language
     const getAriaLabel = () => {
-      if (urgent) return `${badge} επείγοντα στοιχεία`;
-      if (typeof badge === 'number' && badge === 1) return `1 στοιχείο`;
-      return `${badge} στοιχεία`;
+      const isGreek = t('nav.dashboard') === 'Πίνακας Ελέγχου';
+      if (urgent) return isGreek ? `${formattedBadge} επείγοντα στοιχεία` : `${formattedBadge} urgent items`;
+      if (typeof badge === 'number' && badge === 1) return isGreek ? `1 στοιχείο` : `1 item`;
+      return isGreek ? `${formattedBadge} στοιχεία` : `${formattedBadge} items`;
     };
     
     // Determine badge type based on context and explicit badgeType
@@ -563,7 +580,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         aria-label={getAriaLabel()}
         role="status"
       >
-        {badge}
+        {formattedBadge}
       </div>
     );
   };

@@ -230,12 +230,12 @@ const translations: Record<Locale, TranslationKeys> = {
   el: {
     // Navigation - Greek translations from the provided file
     'nav.dashboard': 'Πίνακας Ελέγχου',
-    'nav.people': 'Προσωπικό',
+    'nav.people': 'Άτομα',
     'nav.employees': 'Εργαζόμενοι',
     'nav.onboarding': 'Ένταξη (Onboarding)',
     'nav.exits': 'Αποχωρήσεις',
     'nav.teams-roles': 'Ομάδες & Ρόλοι',
-    'nav.time': 'Ώρα & Παρουσίες',
+    'nav.time': 'Χρόνος & Παρουσία',
     'nav.punches': 'Καταγραφές Προσέλευσης',
     'nav.exceptions': 'Εξαιρέσεις',
     'nav.schedules': 'Προγράμματα Βαρδιών',
@@ -248,7 +248,7 @@ const translations: Record<Locale, TranslationKeys> = {
     'nav.bonuses': 'Δώρα & Επιδόματα',
     'nav.simulations': 'Προσομοιώσεις',
     'nav.audit': 'Έλεγχος',
-    'nav.filings': 'Δηλώσεις',
+    'nav.filings': 'Συμμόρφωση & Δηλώσεις',
     'nav.ergani': 'ΕΡΓΑΝΗ ΙΙ',
     'nav.efka-apd': 'e-ΕΦΚΑ / ΑΠΔ',
     'nav.aade-fmy': 'ΑΑΔΕ / ΦΜΥ',
