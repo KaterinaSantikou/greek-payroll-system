@@ -335,6 +335,7 @@ function Router() {
             <Route path="/public-status" component={lazy(() => import("@/components/PublicStatusPage"))} />
             <Route path="/performance-budgets" component={lazy(() => import("@/components/PerformanceBudgetManager"))} />
             <Route path="/disaster-recovery" component={lazy(() => import("@/components/DisasterRecoveryManager"))} />
+            <Route path="/dunning-emails" component={lazy(() => import("@/components/DunningEmailManager"))} />
             <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
             <Route path="/data-import" component={DataImport} />
             <Route path="/zero-trust-security" component={ZeroTrustSecurityPage} />

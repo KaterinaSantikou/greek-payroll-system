@@ -2952,6 +2952,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   } catch (error) {
     console.error('Failed to register disaster recovery routes:', error);
   }
+
+  // Register dunning email routes
+  try {
+    const dunningEmailRoutes = (await import('./api/dunningEmails')).default;
+    app.use('/api/dunning-emails', dunningEmailRoutes);
+  } catch (error) {
+    console.error('Failed to register dunning email routes:', error);
+  }
   
   // Register forecasting API routes
   registerForecastingRoutes(app);
