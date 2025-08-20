@@ -3445,3 +3445,209 @@ export type {
   InsertBankMessage,
   InsertPaymentException
 } from './payments-schema';
+
+// CBA & Sector Packs - Greek Industry-Specific Rules
+// =================================================
+
+// CBA Pack - Versioned, installable rulesets for sectors
+export const cbaPacks = pgTable("cba_packs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  sector: varchar("sector", { length: 100 }).notNull(), // "tourism_hotels" | "fnb_restaurants"
+  authorityRef: varchar("authority_ref", { length: 255 }),
+  effectiveFrom: timestamp("effective_from").notNull(),
+  effectiveTo: timestamp("effective_to"),
+  version: varchar("version", { length: 50 }).notNull(),
+  docHash: varchar("doc_hash", { length: 128 }),
+  status: varchar("status", { length: 20 }).notNull().default('draft'), // draft | published
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Wage Tables - Sector-specific pay scales
+export const wageTables = pgTable("wage_tables", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  packId: varchar("pack_id").references(() => cbaPacks.id, { onDelete: 'cascade' }).notNull(),
+  category: varchar("category", { length: 100 }).notNull(), // role family
+  grade: varchar("grade", { length: 10 }).notNull(), // A/B/C...
+  seniorityStep: integer("seniority_step").notNull().default(0),
+  baseMonthly: decimal("base_monthly", { precision: 10, scale: 2 }),
+  baseDaily: decimal("base_daily", { precision: 8, scale: 2 }),
+  baseHourly: decimal("base_hourly", { precision: 6, scale: 2 }),
+  unit: varchar("unit", { length: 20 }).notNull().default('monthly'), // monthly | daily | hourly
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Premium Rules - Night, Sunday, Holiday premiums
+export const premiumRules = pgTable("premium_rules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  packId: varchar("pack_id").references(() => cbaPacks.id, { onDelete: 'cascade' }).notNull(),
+  code: varchar("code", { length: 50 }).notNull(), // NIGHT_25, SUNDAY_75, etc.
+  name: varchar("name", { length: 255 }).notNull(),
+  rateType: varchar("rate_type", { length: 20 }).notNull(), // percent | fixed
+  value: decimal("value", { precision: 8, scale: 4 }).notNull(),
+  bands: jsonb("bands"), // time bands, e.g., night 22:00-06:00
+  stackable: boolean("stackable").notNull().default(false),
+  appliesTo: varchar("applies_to", { length: 50 }).notNull(), // hours_worked | holidays | ot
+  priority: integer("priority").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Allowance Rules - Meal, accommodation, uniform allowances
+export const allowanceRules = pgTable("allowance_rules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  packId: varchar("pack_id").references(() => cbaPacks.id, { onDelete: 'cascade' }).notNull(),
+  code: varchar("code", { length: 50 }).notNull(), // MEAL_ALLOW, ACCOM_ALLOW
+  name: varchar("name", { length: 255 }).notNull(),
+  calc: varchar("calc", { length: 30 }).notNull(), // per_day | per_shift | fixed_monthly | percent_base
+  amount: decimal("amount", { precision: 8, scale: 2 }),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }),
+  cap: decimal("cap", { precision: 8, scale: 2 }),
+  taxTreatment: varchar("tax_treatment", { length: 20 }).notNull().default('taxable'), // exempt | taxable | split
+  contributory: varchar("contributory", { length: 20 }).notNull().default('yes'), // yes | no | split
+  conditions: jsonb("conditions"), // eligibility conditions
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Scheduling Constraints - Greek labor law constraints
+export const schedulingConstraints = pgTable("scheduling_constraints", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  packId: varchar("pack_id").references(() => cbaPacks.id, { onDelete: 'cascade' }).notNull(),
+  maxHoursDay: integer("max_hours_day").notNull().default(8),
+  maxHoursWeekAvg: integer("max_hours_week_avg").notNull().default(40),
+  restMinHours: integer("rest_min_hours").notNull().default(11), // daily rest
+  weeklyRest: integer("weekly_rest").notNull().default(24), // weekly rest hours
+  splitShift: varchar("split_shift", { length: 20 }).notNull().default('allowed'), // allowed | disallowed
+  breakMinMinutes: integer("break_min_minutes").notNull().default(15),
+  sixthDay: varchar("sixth_day", { length: 30 }).notNull().default('allowed'), // allowed | disallowed | sector_exemption
+  specialRules: jsonb("special_rules"), // sector-specific rules
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ERGANI Profiles - Sector-specific ERGANI requirements
+export const erganiProfiles = pgTable("ergani_profiles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  packId: varchar("pack_id").references(() => cbaPacks.id, { onDelete: 'cascade' }).notNull(),
+  eventMap: jsonb("event_map").notNull(), // hires, schedules, overtime, terminations
+  requiredLeadTimes: jsonb("required_lead_times"), // advance notice requirements
+  reasonCodes: jsonb("reason_codes"), // sector-specific codes
+  documentTemplates: jsonb("document_templates"),
+  autoSubmission: boolean("auto_submission").notNull().default(true),
+  validationRules: jsonb("validation_rules"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Tip Policy - F&B specific tip pooling and distribution
+export const tipPolicies = pgTable("tip_policies", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  packId: varchar("pack_id").references(() => cbaPacks.id, { onDelete: 'cascade' }).notNull(),
+  poolSource: varchar("pool_source", { length: 50 }).notNull(), // pos_revenue_pct | service_charge
+  sourcePercentage: decimal("source_percentage", { precision: 5, scale: 2 }),
+  distributionMethod: varchar("distribution_method", { length: 30 }).notNull(), // points | hours | equal
+  rolePoints: jsonb("role_points"), // points by role for distribution
+  employerTopup: decimal("employer_topup", { precision: 5, scale: 2 }),
+  taxMapping: jsonb("tax_mapping"),
+  contribMapping: jsonb("contrib_mapping"),
+  payoutFrequency: varchar("payout_frequency", { length: 20 }).notNull().default('weekly'),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Pack Overrides - Company and property customizations
+export const packOverrides = pgTable("pack_overrides", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  packId: varchar("pack_id").references(() => cbaPacks.id, { onDelete: 'cascade' }).notNull(),
+  propertyId: varchar("property_id").references(() => properties.propertyId, { onDelete: 'cascade' }),
+  companyId: varchar("company_id"), // if property is null, applies company-wide
+  overrideType: varchar("override_type", { length: 30 }).notNull(), // wage | premium | allowance | constraint
+  targetId: varchar("target_id").notNull(), // ID of rule being overridden
+  overrideData: jsonb("override_data").notNull(),
+  reason: text("reason"),
+  approvedBy: varchar("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  effectiveFrom: timestamp("effective_from").notNull(),
+  effectiveTo: timestamp("effective_to"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Pack Assignments - Which packs are active for which properties
+export const packAssignments = pgTable("pack_assignments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  packId: varchar("pack_id").references(() => cbaPacks.id, { onDelete: 'cascade' }).notNull(),
+  propertyId: varchar("property_id").references(() => properties.propertyId, { onDelete: 'cascade' }).notNull(),
+  assignedBy: varchar("assigned_by").notNull(),
+  priority: integer("priority").notNull().default(0), // Higher number = higher priority
+  effectiveFrom: timestamp("effective_from").notNull(),
+  effectiveTo: timestamp("effective_to"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_pack_assignments_property_active").on(table.propertyId, table.isActive),
+]);
+
+// CBA & Sector Packs Type Definitions
+export type CbaPack = typeof cbaPacks.$inferSelect;
+export type InsertCbaPack = typeof cbaPacks.$inferInsert;
+export type WageTable = typeof wageTables.$inferSelect;
+export type InsertWageTable = typeof wageTables.$inferInsert;
+export type PremiumRule = typeof premiumRules.$inferSelect;
+export type InsertPremiumRule = typeof premiumRules.$inferInsert;
+export type AllowanceRule = typeof allowanceRules.$inferSelect;
+export type InsertAllowanceRule = typeof allowanceRules.$inferInsert;
+export type SchedulingConstraint = typeof schedulingConstraints.$inferSelect;
+export type InsertSchedulingConstraint = typeof schedulingConstraints.$inferInsert;
+export type ErganiProfile = typeof erganiProfiles.$inferSelect;
+export type InsertErganiProfile = typeof erganiProfiles.$inferInsert;
+export type TipPolicy = typeof tipPolicies.$inferSelect;
+export type InsertTipPolicy = typeof tipPolicies.$inferInsert;
+export type PackOverride = typeof packOverrides.$inferSelect;
+export type InsertPackOverride = typeof packOverrides.$inferInsert;
+export type PackAssignment = typeof packAssignments.$inferSelect;
+export type InsertPackAssignment = typeof packAssignments.$inferInsert;
+
+// CBA Packs Zod Schemas for API validation
+export const insertCbaPackSchema = createInsertSchema(cbaPacks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWageTableSchema = createInsertSchema(wageTables).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPremiumRuleSchema = createInsertSchema(premiumRules).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAllowanceRuleSchema = createInsertSchema(allowanceRules).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSchedulingConstraintSchema = createInsertSchema(schedulingConstraints).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertErganiProfileSchema = createInsertSchema(erganiProfiles).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTipPolicySchema = createInsertSchema(tipPolicies).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPackOverrideSchema = createInsertSchema(packOverrides).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPackAssignmentSchema = createInsertSchema(packAssignments).omit({
+  id: true,
+  createdAt: true,
+});

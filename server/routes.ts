@@ -52,6 +52,7 @@ import { registerInstantPaymentRoutes } from "./api/instantPayments";
 import { registerPayEquityRoutes } from "./api/payEquity";
 import { registerCsrdRoutes } from "./api/csrd";
 import securityRoutes from "./routes/securityRoutes";
+import cbaPackRoutes from "./routes/cbaPackRoutes";
 import { embeddedPayrollRoutes } from "./api/embedded";
 import { glGenericRoutes } from "./api/glGeneric";
 import { nativeConnectorRoutes } from "./api/nativeConnectors";
@@ -89,6 +90,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Security compliance and audit routes
   app.use('/api/security', securityRoutes);
+  
+  // CBA & Sector Packs routes
+  app.use('/api/cba-packs', cbaPackRoutes);
+  
+  // CBA Packs API (helper endpoints)
+  const cbaPacksApi = (await import("./api/cbaPacksApi")).default;
+  app.use('/api/cba-packs-api', cbaPacksApi);
 
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();
