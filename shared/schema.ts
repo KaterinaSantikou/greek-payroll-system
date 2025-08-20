@@ -92,14 +92,26 @@ export const mfaTotpSecrets = pgTable("mfa_totp_secrets", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// MFA backup codes (separate table for better management)
+export const mfaBackupCodes = pgTable("mfa_backup_codes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  codeHash: varchar("code_hash").notNull(),
+  used: boolean("used").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  usedAt: timestamp("used_at"),
+});
+
 // WebAuthn credentials (passkeys)
 export const webauthnCredentials = pgTable("webauthn_credentials", {
-  id: varchar("id").primaryKey(),
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
   credentialId: varchar("credential_id").notNull().unique(),
   publicKey: text("public_key").notNull(),
   counter: integer("counter").default(0),
-  deviceName: varchar("device_name"),
+  transports: text("transports"), // JSON array of transports
+  name: varchar("name"), // User-friendly name
+  deviceName: varchar("device_name"), // Keep backward compatibility
   lastUsedAt: timestamp("last_used_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
