@@ -71,15 +71,13 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Magic link tokens (passwordless authentication)
+// Magic link tokens
 export const magicLinkTokens = pgTable("magic_link_tokens", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").notNull(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
   token: varchar("token").notNull().unique(),
   expiresAt: timestamp("expires_at").notNull(),
   used: boolean("used").default(false),
-  ipAddress: varchar("ip_address"),
-  userAgent: varchar("user_agent"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

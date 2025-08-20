@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import authRoutes from "./routes/auth";
+import authAPIRoutes from "./routes/auth";
 import { rulesAPIRouter } from "./rulesAPI";
 import { initializeRulesEngine } from "./rulesEngine";
 import authAPI from "./api/auth";
@@ -81,6 +82,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Comprehensive Authentication Routes
   app.use('/api/auth/v2', authRoutes);
+  
+  // Authentication routes with API contract compliance
+  app.use('/auth', authAPIRoutes);
 
   // Initialize services
   const sepaPaymentService = new SepaPaymentService();

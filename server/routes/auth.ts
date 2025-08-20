@@ -1,4 +1,5 @@
 import express from 'express';
+import session from 'express-session';
 import { z } from 'zod';
 import { RateLimitService } from '../services/RateLimitService';
 import { PasswordService } from '../services/PasswordService';
@@ -8,36 +9,31 @@ import { MfaService } from '../services/MfaService';
 import { AuditService } from '../services/AuditService';
 import { SsoService } from '../services/SsoService';
 import { db } from '../db';
-import { users, emailVerificationTokens, passwordResetTokens } from '@shared/schema';
+import { users, emailVerificationTokens, passwordResetTokens, magicLinkTokens } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { rateLimitMiddleware } from '../middleware/rateLimitMiddleware';
 
+// Express session configuration
+if (typeof process.env.SESSION_SECRET === 'undefined') {
+  throw new Error('SESSION_SECRET environment variable is required');
+}
+
+// Session middleware
+const sessionMiddleware = session({
+  secret: process.env.SESSION_SECRET!,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  },
+});
+
 const router = express.Router();
 
-// Validation schemas
-const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  locale: z.enum(['en', 'el']).default('en'),
-});
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-  mfaToken: z.string().optional(),
-  remember: z.boolean().default(false),
-});
-
-const forgotPasswordSchema = z.object({
-  email: z.string().email(),
-});
-
-const resetPasswordSchema = z.object({
-  token: z.string(),
-  password: z.string().min(8),
-});
+// Apply session middleware
+router.use(sessionMiddleware);
 
 // Helper function to get client info
 const getClientInfo = (req: express.Request) => ({
@@ -45,14 +41,31 @@ const getClientInfo = (req: express.Request) => ({
   userAgent: req.headers['user-agent'] || '',
 });
 
+// Helper function for uniform error responses
+const errorResponse = (code: string, message: string, retryInSeconds?: number) => ({
+  error: {
+    code,
+    message,
+    ...(retryInSeconds && { retry_in_seconds: retryInSeconds }),
+  },
+});
+
 /**
- * POST /auth/register
- * Register a new user account
+ * 4.1 Sign-Up
+ * POST /auth/signup
  */
-router.post('/register', rateLimitMiddleware('signup'), async (req, res) => {
+router.post('/signup', rateLimitMiddleware('signup'), async (req, res) => {
   try {
-    const { email, password, firstName, lastName, locale } = registerSchema.parse(req.body);
+    const { email, password, accept_tos, locale } = req.body;
     const { ipAddress, userAgent } = getClientInfo(req);
+
+    if (!email || !password) {
+      return res.status(400).json(errorResponse('MISSING_FIELDS', 'Email and password are required'));
+    }
+
+    if (!accept_tos) {
+      return res.status(400).json(errorResponse('TOS_NOT_ACCEPTED', 'Terms of service must be accepted'));
+    }
 
     // Check if user already exists
     const existingUser = await db
@@ -70,10 +83,7 @@ router.post('/register', rateLimitMiddleware('signup'), async (req, res) => {
         reason: 'Email already registered',
       });
 
-      return res.status(400).json({ 
-        error: 'Email already registered',
-        code: 'EMAIL_EXISTS'
-      });
+      return res.status(409).json(errorResponse('EMAIL_EXISTS', 'Email already registered'));
     }
 
     // Hash password
@@ -85,10 +95,9 @@ router.post('/register', rateLimitMiddleware('signup'), async (req, res) => {
       .values({
         email: email.toLowerCase(),
         passwordHash,
-        firstName,
-        lastName,
-        locale,
+        locale: locale || 'en',
         isActive: true,
+        tosAcceptedAt: new Date(),
       })
       .returning();
 
@@ -110,125 +119,35 @@ router.post('/register', rateLimitMiddleware('signup'), async (req, res) => {
       userAgent,
       email: email.toLowerCase(),
       result: 'success',
-      metadata: { 
-        method: 'email',
-        locale,
-      },
+      metadata: { locale, tos_accepted: true },
     });
 
     // In a real app, send verification email here
     // await EmailService.sendVerificationEmail(email, verificationToken.token);
 
     res.status(201).json({
-      message: 'Account created successfully. Please check your email for verification.',
-      requiresEmailVerification: true,
-      userId: newUser.id,
-      // For development, include the token (remove in production)
-      verificationToken: process.env.NODE_ENV === 'development' ? verificationToken.token : undefined,
+      user_id: newUser.id,
+      requires_verification: true,
     });
 
   } catch (error) {
-    const { ipAddress, userAgent } = getClientInfo(req);
-    
-    await AuditService.logEvent({
-      eventType: 'signup_failed',
-      ipAddress,
-      userAgent,
-      result: 'failure',
-      reason: error instanceof Error ? error.message : 'Unknown error',
-      severity: 'error',
-    });
-
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: 'Invalid input',
-        details: error.errors 
-      });
-    }
-
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Signup error:', error);
+    res.status(500).json(errorResponse('SIGNUP_FAILED', 'Internal server error'));
   }
 });
 
 /**
- * POST /auth/verify-email
- * Verify email address with token
- */
-router.post('/verify-email', rateLimitMiddleware('email-verify'), async (req, res) => {
-  try {
-    const { token } = z.object({ token: z.string() }).parse(req.body);
-    const { ipAddress, userAgent } = getClientInfo(req);
-
-    // Verify token
-    let payload;
-    try {
-      payload = TokenService.verifyEmailVerificationToken(token);
-    } catch (error) {
-      return res.status(400).json({ 
-        error: 'Invalid or expired verification token',
-        code: 'INVALID_TOKEN'
-      });
-    }
-
-    // Check database token
-    const [tokenRecord] = await db
-      .select()
-      .from(emailVerificationTokens)
-      .where(
-        and(
-          eq(emailVerificationTokens.userId, payload.userId),
-          eq(emailVerificationTokens.token, token)
-        )
-      );
-
-    if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
-      return res.status(400).json({ 
-        error: 'Invalid or expired verification token',
-        code: 'INVALID_TOKEN'
-      });
-    }
-
-    // Update user as verified
-    await db
-      .update(users)
-      .set({
-        emailVerified: true,
-        emailVerifiedAt: new Date(),
-      })
-      .where(eq(users.id, payload.userId));
-
-    // Delete used token
-    await db
-      .delete(emailVerificationTokens)
-      .where(eq(emailVerificationTokens.id, tokenRecord.id));
-
-    // Audit log
-    await AuditService.logEvent({
-      userId: payload.userId,
-      eventType: 'email_verified',
-      ipAddress,
-      userAgent,
-      email: payload.email,
-      result: 'success',
-    });
-
-    res.json({ message: 'Email verified successfully' });
-
-  } catch (error) {
-    console.error('Email verification error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-/**
+ * 4.2 Login
  * POST /auth/login
- * Authenticate user
  */
 router.post('/login', rateLimitMiddleware('login'), async (req, res) => {
   try {
-    const { email, password, mfaToken, remember } = loginSchema.parse(req.body);
+    const { email, password } = req.body;
     const { ipAddress, userAgent } = getClientInfo(req);
+
+    if (!email || !password) {
+      return res.status(400).json(errorResponse('MISSING_CREDENTIALS', 'Email and password are required'));
+    }
 
     // Find user
     const [user] = await db
@@ -246,49 +165,23 @@ router.post('/login', rateLimitMiddleware('login'), async (req, res) => {
         reason: 'Invalid credentials',
       });
 
-      return res.status(401).json({ 
-        error: 'Invalid email or password',
-        code: 'INVALID_CREDENTIALS'
-      });
+      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid email or password'));
     }
 
     // Check if account is active
     if (!user.isActive) {
-      await AuditService.logEvent({
-        userId: user.id,
-        eventType: 'login_failed',
-        ipAddress,
-        userAgent,
-        email: email.toLowerCase(),
-        result: 'blocked',
-        reason: 'Account deactivated',
-      });
+      return res.status(403).json(errorResponse('ACCOUNT_DEACTIVATED', 'Account is deactivated'));
+    }
 
-      return res.status(403).json({ 
-        error: 'Account is deactivated',
-        code: 'ACCOUNT_DEACTIVATED'
-      });
+    // Check if email is verified
+    if (!user.emailVerified) {
+      return res.status(403).json(errorResponse('EMAIL_NOT_VERIFIED', 'Email address not verified'));
     }
 
     // Check if account is locked
     if (user.lockedUntil && user.lockedUntil > new Date()) {
       const retryAfter = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 1000);
-      
-      await AuditService.logEvent({
-        userId: user.id,
-        eventType: 'login_failed',
-        ipAddress,
-        userAgent,
-        email: email.toLowerCase(),
-        result: 'blocked',
-        reason: 'Account locked',
-      });
-
-      return res.status(423).json({ 
-        error: 'Account is temporarily locked',
-        code: 'ACCOUNT_LOCKED',
-        retryAfter,
-      });
+      return res.status(423).json(errorResponse('RATE_LIMITED', 'Account is temporarily locked', retryAfter));
     }
 
     // Verify password
@@ -323,63 +216,17 @@ router.post('/login', rateLimitMiddleware('login'), async (req, res) => {
         metadata: { attempts: newAttempts },
       });
 
-      if (shouldLock) {
-        return res.status(423).json({ 
-          error: 'Too many failed attempts. Account locked for 15 minutes.',
-          code: 'ACCOUNT_LOCKED',
-          retryAfter: 15 * 60,
-        });
-      }
-
-      return res.status(401).json({ 
-        error: 'Invalid email or password',
-        code: 'INVALID_CREDENTIALS',
-        attemptsRemaining: 5 - newAttempts,
-      });
+      const retryAfter = shouldLock ? 15 * 60 : undefined;
+      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid email or password', retryAfter));
     }
 
     // Check if MFA is required
     if (user.mfaEnabled) {
-      if (!mfaToken) {
-        return res.status(200).json({
-          requiresMfa: true,
-          mfaMethods: await MfaService.getUserMfaMethods(user.id),
-        });
-      }
-
-      // Verify MFA token
-      let mfaValid = false;
-      
-      // Try TOTP first
-      if (mfaToken.length === 6 && /^\d+$/.test(mfaToken)) {
-        mfaValid = await MfaService.verifyTotp(user.id, mfaToken);
-        
-        // If TOTP fails, try backup code
-        if (!mfaValid) {
-          mfaValid = await MfaService.verifyBackupCode(user.id, mfaToken);
-        }
-      } else {
-        // Might be backup code format
-        mfaValid = await MfaService.verifyBackupCode(user.id, mfaToken);
-      }
-
-      if (!mfaValid) {
-        await AuditService.logEvent({
-          userId: user.id,
-          eventType: 'mfa_failed',
-          ipAddress,
-          userAgent,
-          email: email.toLowerCase(),
-          result: 'failure',
-          reason: 'Invalid MFA token',
-        });
-
-        return res.status(401).json({ 
-          error: 'Invalid MFA token',
-          code: 'INVALID_MFA',
-          requiresMfa: true,
-        });
-      }
+      const mfaMethods = await MfaService.getUserMfaMethods(user.id);
+      return res.status(200).json({
+        mfa_required: true,
+        mfa_methods: mfaMethods,
+      });
     }
 
     // Create session
@@ -387,7 +234,7 @@ router.post('/login', rateLimitMiddleware('login'), async (req, res) => {
       user.id,
       ipAddress,
       userAgent,
-      user.mfaEnabled ? 2 : 1
+      1 // Authentication level 1 (password only)
     );
 
     // Reset failed attempts
@@ -400,120 +247,39 @@ router.post('/login', rateLimitMiddleware('login'), async (req, res) => {
       })
       .where(eq(users.id, user.id));
 
-    // Reset rate limit on successful login
-    await RateLimitService.resetRateLimit(ipAddress, 'login', email.toLowerCase());
+    // Set HttpOnly session cookie
+    res.cookie('sessionToken', tokenPair.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
 
     res.json({
-      message: 'Login successful',
-      accessToken: tokenPair.accessToken,
-      refreshToken: tokenPair.refreshToken,
-      expiresAt: tokenPair.expiresAt.toISOString(),
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        locale: user.locale,
-        mfaEnabled: user.mfaEnabled,
+      session: {
+        id: tokenPair.sessionId,
+        expires_at: tokenPair.expiresAt.toISOString(),
       },
     });
 
   } catch (error) {
     console.error('Login error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: 'Invalid input',
-        details: error.errors 
-      });
-    }
-
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json(errorResponse('LOGIN_FAILED', 'Internal server error'));
   }
 });
 
 /**
- * POST /auth/refresh
- * Refresh access token
+ * 4.3 MFA Challenge - TOTP
+ * POST /auth/mfa/challenge
  */
-router.post('/refresh', async (req, res) => {
+router.post('/mfa/challenge', rateLimitMiddleware('mfa-verify'), async (req, res) => {
   try {
-    const { refreshToken } = z.object({ 
-      refreshToken: z.string() 
-    }).parse(req.body);
-
-    const tokenPair = await SessionService.refreshTokens(refreshToken);
-
-    res.json({
-      accessToken: tokenPair.accessToken,
-      refreshToken: tokenPair.refreshToken,
-      expiresAt: tokenPair.expiresAt.toISOString(),
-    });
-
-  } catch (error) {
-    console.error('Token refresh error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: 'Invalid input',
-        details: error.errors 
-      });
-    }
-
-    if (error instanceof Error) {
-      if (error.message.includes('reuse detected')) {
-        return res.status(403).json({ 
-          error: 'Token reuse detected',
-          code: 'TOKEN_REUSE'
-        });
-      }
-      
-      if (error.message.includes('expired') || error.message.includes('Invalid')) {
-        return res.status(401).json({ 
-          error: 'Invalid refresh token',
-          code: 'INVALID_TOKEN'
-        });
-      }
-    }
-
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-/**
- * POST /auth/logout
- * Revoke current session
- */
-router.post('/logout', async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'No authorization token provided' });
-    }
-
-    const accessToken = authHeader.slice(7);
-    const session = await SessionService.validateSession(accessToken);
-    
-    if (session) {
-      await SessionService.revokeSession(session.sessionId, 'User logout');
-    }
-
-    res.json({ message: 'Logged out successfully' });
-
-  } catch (error) {
-    console.error('Logout error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-/**
- * POST /auth/forgot-password
- * Send password reset token
- */
-router.post('/forgot-password', rateLimitMiddleware('forgot-password'), async (req, res) => {
-  try {
-    const { email } = forgotPasswordSchema.parse(req.body);
+    const { code, email } = req.body;
     const { ipAddress, userAgent } = getClientInfo(req);
+
+    if (!code || !email) {
+      return res.status(400).json(errorResponse('MISSING_FIELDS', 'Code and email are required'));
+    }
 
     // Find user
     const [user] = await db
@@ -521,10 +287,300 @@ router.post('/forgot-password', rateLimitMiddleware('forgot-password'), async (r
       .from(users)
       .where(eq(users.email, email.toLowerCase()));
 
+    if (!user || !user.mfaEnabled) {
+      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid credentials'));
+    }
+
+    // Verify MFA token
+    let mfaValid = false;
+    
+    // Try TOTP first
+    if (code.length === 6 && /^\d+$/.test(code)) {
+      mfaValid = await MfaService.verifyTotp(user.id, code);
+      
+      // If TOTP fails, try backup code
+      if (!mfaValid) {
+        mfaValid = await MfaService.verifyBackupCode(user.id, code);
+      }
+    } else {
+      // Might be backup code format
+      mfaValid = await MfaService.verifyBackupCode(user.id, code);
+    }
+
+    if (!mfaValid) {
+      await AuditService.logEvent({
+        userId: user.id,
+        eventType: 'mfa_failed',
+        ipAddress,
+        userAgent,
+        email: email.toLowerCase(),
+        result: 'failure',
+        reason: 'Invalid MFA token',
+      });
+
+      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid MFA code'));
+    }
+
+    // Create session with higher authentication level
+    const tokenPair = await SessionService.createSession(
+      user.id,
+      ipAddress,
+      userAgent,
+      2 // Authentication level 2 (password + MFA)
+    );
+
+    // Set HttpOnly session cookie
+    res.cookie('sessionToken', tokenPair.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+
+    res.json({
+      session: {
+        id: tokenPair.sessionId,
+        expires_at: tokenPair.expiresAt.toISOString(),
+      },
+    });
+
+  } catch (error) {
+    console.error('MFA challenge error:', error);
+    res.status(500).json(errorResponse('MFA_ERROR', 'Internal server error'));
+  }
+});
+
+/**
+ * 4.3 MFA Challenge - WebAuthn
+ * POST /auth/mfa/webauthn/verify
+ */
+router.post('/mfa/webauthn/verify', async (req, res) => {
+  try {
+    const { email, response: webauthnResponse } = req.body;
+    const { ipAddress, userAgent } = getClientInfo(req);
+
+    if (!email || !webauthnResponse) {
+      return res.status(400).json(errorResponse('MISSING_FIELDS', 'Email and WebAuthn response are required'));
+    }
+
+    // Find user
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()));
+
+    if (!user || !user.mfaEnabled) {
+      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid credentials'));
+    }
+
+    try {
+      // Verify WebAuthn assertion
+      const isValid = await MfaService.verifyWebAuthnAssertion(user.id, webauthnResponse);
+      
+      if (!isValid) {
+        return res.status(401).json(errorResponse('WEBAUTHN_ERROR', 'WebAuthn verification failed'));
+      }
+
+      // Create session with higher authentication level
+      const tokenPair = await SessionService.createSession(
+        user.id,
+        ipAddress,
+        userAgent,
+        2 // Authentication level 2 (password + MFA)
+      );
+
+      // Set HttpOnly session cookie
+      res.cookie('sessionToken', tokenPair.accessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      });
+
+      res.json({
+        session: {
+          id: tokenPair.sessionId,
+          expires_at: tokenPair.expiresAt.toISOString(),
+        },
+      });
+
+    } catch (error) {
+      console.error('WebAuthn verification error:', error);
+      return res.status(401).json(errorResponse('WEBAUTHN_ERROR', 'WebAuthn verification failed'));
+    }
+
+  } catch (error) {
+    console.error('WebAuthn MFA error:', error);
+    res.status(500).json(errorResponse('WEBAUTHN_ERROR', 'Internal server error'));
+  }
+});
+
+/**
+ * 4.4 Magic Link Request
+ * POST /auth/magic-link
+ */
+router.post('/magic-link', rateLimitMiddleware('magic-link'), async (req, res) => {
+  try {
+    const { email } = req.body;
+    const { ipAddress, userAgent } = getClientInfo(req);
+
+    if (!email) {
+      return res.status(400).json(errorResponse('MISSING_EMAIL', 'Email is required'));
+    }
+
+    // Always return 202 to prevent email enumeration
+    res.status(202).json({ message: 'Magic link sent if account exists' });
+
+    // Find user (but don't reveal if they exist)
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()));
+
+    if (!user) {
+      await AuditService.logEvent({
+        eventType: 'magic_link_requested',
+        ipAddress,
+        userAgent,
+        email: email.toLowerCase(),
+        result: 'failure',
+        reason: 'Email not found',
+      });
+      return; // Don't send email, but don't reveal this
+    }
+
+    // Generate magic link token
+    const magicToken = TokenService.generateMagicLinkToken(user.id, email.toLowerCase());
+    
+    await db.insert(magicLinkTokens).values({
+      userId: user.id,
+      token: magicToken.token,
+      expiresAt: magicToken.expiresAt,
+    });
+
+    // Audit log
+    await AuditService.logEvent({
+      userId: user.id,
+      eventType: 'magic_link_requested',
+      ipAddress,
+      userAgent,
+      email: email.toLowerCase(),
+      result: 'success',
+    });
+
+    // In a real app, send magic link email here
+    // await EmailService.sendMagicLinkEmail(email, magicToken.token);
+
+  } catch (error) {
+    console.error('Magic link error:', error);
+    // Still return 202 even on error to prevent information leakage
+    if (!res.headersSent) {
+      res.status(202).json({ message: 'Magic link sent if account exists' });
+    }
+  }
+});
+
+/**
+ * 4.4 Magic Link Consume
+ * GET /auth/magic-link/consume?token=...
+ */
+router.get('/magic-link/consume', async (req, res) => {
+  try {
+    const { token } = req.query;
+    const { ipAddress, userAgent } = getClientInfo(req);
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json(errorResponse('INVALID_TOKEN', 'Invalid magic link token'));
+    }
+
+    // Verify token
+    let payload;
+    try {
+      payload = TokenService.verifyMagicLinkToken(token);
+    } catch (error) {
+      return res.status(400).json(errorResponse('TOKEN_EXPIRED', 'Magic link token expired or invalid'));
+    }
+
+    // Check database token
+    const [tokenRecord] = await db
+      .select()
+      .from(magicLinkTokens)
+      .where(
+        and(
+          eq(magicLinkTokens.userId, payload.userId),
+          eq(magicLinkTokens.token, token),
+          eq(magicLinkTokens.used, false)
+        )
+      );
+
+    if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
+      return res.status(400).json(errorResponse('TOKEN_EXPIRED', 'Magic link token expired or invalid'));
+    }
+
+    // Mark token as used
+    await db
+      .update(magicLinkTokens)
+      .set({ used: true })
+      .where(eq(magicLinkTokens.id, tokenRecord.id));
+
+    // Create session
+    const tokenPair = await SessionService.createSession(
+      payload.userId,
+      ipAddress,
+      userAgent,
+      1 // Authentication level 1
+    );
+
+    // Set HttpOnly session cookie
+    res.cookie('sessionToken', tokenPair.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+
+    // Audit log
+    await AuditService.logEvent({
+      userId: payload.userId,
+      eventType: 'magic_link_login',
+      ipAddress,
+      userAgent,
+      email: payload.email,
+      result: 'success',
+    });
+
+    // Redirect to app
+    res.redirect('/');
+
+  } catch (error) {
+    console.error('Magic link consume error:', error);
+    res.status(400).json(errorResponse('TOKEN_EXPIRED', 'Magic link token expired or invalid'));
+  }
+});
+
+/**
+ * 4.5 Forgot Password
+ * POST /auth/password/forgot
+ */
+router.post('/password/forgot', rateLimitMiddleware('forgot-password'), async (req, res) => {
+  try {
+    const { email } = req.body;
+    const { ipAddress, userAgent } = getClientInfo(req);
+
+    if (!email) {
+      return res.status(400).json(errorResponse('MISSING_EMAIL', 'Email is required'));
+    }
+
     // Always return success to prevent email enumeration
     const successResponse = {
-      message: 'If an account with that email exists, we\'ve sent a password reset link.',
+      message: 'If an account with that email exists, you will receive a password reset link.',
     };
+
+    // Find user
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()));
 
     if (!user) {
       await AuditService.logEvent({
@@ -561,44 +617,33 @@ router.post('/forgot-password', rateLimitMiddleware('forgot-password'), async (r
     // In a real app, send reset email here
     // await EmailService.sendPasswordResetEmail(email, resetToken.token);
 
-    res.json({
-      ...successResponse,
-      // For development, include the token (remove in production)
-      resetToken: process.env.NODE_ENV === 'development' ? resetToken.token : undefined,
-    });
+    res.json(successResponse);
 
   } catch (error) {
     console.error('Forgot password error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: 'Invalid input',
-        details: error.errors 
-      });
-    }
-
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json(errorResponse('RESET_REQUEST_FAILED', 'Internal server error'));
   }
 });
 
 /**
- * POST /auth/reset-password
- * Reset password with token
+ * 4.5 Reset Password
+ * POST /auth/password/reset
  */
-router.post('/reset-password', async (req, res) => {
+router.post('/password/reset', async (req, res) => {
   try {
-    const { token, password } = resetPasswordSchema.parse(req.body);
+    const { token, new_password } = req.body;
     const { ipAddress, userAgent } = getClientInfo(req);
+
+    if (!token || !new_password) {
+      return res.status(400).json(errorResponse('MISSING_FIELDS', 'Token and new password are required'));
+    }
 
     // Verify token
     let payload;
     try {
       payload = TokenService.verifyPasswordResetToken(token);
     } catch (error) {
-      return res.status(400).json({ 
-        error: 'Invalid or expired reset token',
-        code: 'INVALID_TOKEN'
-      });
+      return res.status(400).json(errorResponse('TOKEN_EXPIRED', 'Reset token expired or invalid'));
     }
 
     // Check database token
@@ -614,22 +659,19 @@ router.post('/reset-password', async (req, res) => {
       );
 
     if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
-      return res.status(400).json({ 
-        error: 'Invalid or expired reset token',
-        code: 'INVALID_TOKEN'
-      });
+      return res.status(400).json(errorResponse('TOKEN_EXPIRED', 'Reset token expired or invalid'));
     }
 
     // Hash new password
-    const passwordHash = await PasswordService.hashPassword(password);
+    const passwordHash = await PasswordService.hashPassword(new_password);
 
     // Update password
     await db
       .update(users)
       .set({
         passwordHash,
-        loginAttempts: 0, // Reset failed attempts
-        lockedUntil: null, // Unlock account
+        loginAttempts: 0,
+        lockedUntil: null,
       })
       .where(eq(users.id, payload.userId));
 
@@ -656,15 +698,211 @@ router.post('/reset-password', async (req, res) => {
 
   } catch (error) {
     console.error('Reset password error:', error);
-    
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: 'Invalid input',
-        details: error.errors 
-      });
+    res.status(500).json(errorResponse('RESET_FAILED', 'Internal server error'));
+  }
+});
+
+/**
+ * 4.6 SSO Login
+ * GET /auth/oidc/:provider/login
+ */
+router.get('/oidc/:provider/login', async (req, res) => {
+  try {
+    const { provider } = req.params;
+    const { ipAddress, userAgent } = getClientInfo(req);
+
+    // Generate PKCE challenge and state
+    const pkce = SsoService.generatePkceChallenge();
+    const state = SsoService.generateState();
+
+    // Store PKCE data in session (or cache)
+    req.session.pkce = pkce;
+    req.session.ssoState = state;
+
+    // Get provider config (this would come from environment or database)
+    const config = {
+      clientId: process.env[`${provider.toUpperCase()}_CLIENT_ID`] || '',
+      clientSecret: process.env[`${provider.toUpperCase()}_CLIENT_SECRET`] || '',
+      issuer: process.env[`${provider.toUpperCase()}_ISSUER`] || '',
+      redirectUri: `${req.protocol}://${req.get('host')}/auth/oidc/${provider}/callback`,
+      scopes: ['openid', 'email', 'profile'],
+    };
+
+    if (!config.clientId) {
+      return res.status(400).json(errorResponse('SSO_FORBIDDEN', `SSO provider ${provider} not configured`));
     }
 
-    res.status(500).json({ error: 'Internal server error' });
+    // Build authorization URL
+    const authUrl = SsoService.buildAuthorizationUrl(provider, config, pkce, state);
+
+    res.redirect(authUrl);
+
+  } catch (error) {
+    console.error('SSO login error:', error);
+    res.status(500).json(errorResponse('SSO_FORBIDDEN', 'SSO login failed'));
+  }
+});
+
+/**
+ * 4.6 SSO Callback
+ * GET /auth/oidc/:provider/callback
+ */
+router.get('/oidc/:provider/callback', async (req, res) => {
+  try {
+    const { provider } = req.params;
+    const { code, state } = req.query;
+    const { ipAddress, userAgent } = getClientInfo(req);
+
+    // Verify state parameter
+    if (!state || state !== req.session.ssoState) {
+      return res.status(400).json(errorResponse('SSO_FORBIDDEN', 'Invalid state parameter'));
+    }
+
+    // Get stored PKCE data
+    const pkce = req.session.pkce;
+    if (!pkce) {
+      return res.status(400).json(errorResponse('SSO_FORBIDDEN', 'Missing PKCE data'));
+    }
+
+    // Get provider config
+    const config = {
+      clientId: process.env[`${provider.toUpperCase()}_CLIENT_ID`] || '',
+      clientSecret: process.env[`${provider.toUpperCase()}_CLIENT_SECRET`] || '',
+      issuer: process.env[`${provider.toUpperCase()}_ISSUER`] || '',
+      redirectUri: `${req.protocol}://${req.get('host')}/auth/oidc/${provider}/callback`,
+      scopes: ['openid', 'email', 'profile'],
+    };
+
+    // Exchange code for tokens
+    const tokens = await SsoService.exchangeCodeForTokens(
+      provider,
+      code as string,
+      pkce.codeVerifier,
+      config
+    );
+
+    // Get user info
+    const userInfo = await SsoService.getUserInfo(provider, tokens.accessToken);
+
+    // Map user data
+    const ssoUser = SsoService.mapSsoUser(provider, userInfo, tokens.idToken);
+
+    // Provision or authenticate user
+    const userId = await SsoService.provisionUser(ssoUser, ipAddress, userAgent);
+
+    // Create session
+    const tokenPair = await SessionService.createSession(
+      userId,
+      ipAddress,
+      userAgent,
+      1 // Authentication level 1
+    );
+
+    // Set HttpOnly session cookie
+    res.cookie('sessionToken', tokenPair.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    });
+
+    // Clear SSO session data
+    delete req.session.pkce;
+    delete req.session.ssoState;
+
+    // Redirect to app
+    res.redirect('/');
+
+  } catch (error) {
+    console.error('SSO callback error:', error);
+    res.status(500).json(errorResponse('SSO_FORBIDDEN', 'SSO authentication failed'));
+  }
+});
+
+/**
+ * 4.7 Get Current Session
+ * GET /auth/session
+ */
+router.get('/session', async (req, res) => {
+  try {
+    const sessionToken = req.cookies?.sessionToken;
+    
+    if (!sessionToken) {
+      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'No active session'));
+    }
+
+    const session = await SessionService.validateSession(sessionToken);
+    
+    if (!session) {
+      res.clearCookie('sessionToken');
+      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'Invalid session'));
+    }
+
+    // Get user
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, session.userId));
+
+    if (!user) {
+      return res.status(401).json(errorResponse('INVALID_CREDENTIALS', 'User not found'));
+    }
+
+    res.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        locale: user.locale,
+        mfaEnabled: user.mfaEnabled,
+      },
+      session: {
+        id: session.sessionId,
+        expires_at: session.expiresAt.toISOString(),
+        auth_level: session.authLevel,
+      },
+    });
+
+  } catch (error) {
+    console.error('Get session error:', error);
+    res.status(500).json(errorResponse('SESSION_ERROR', 'Internal server error'));
+  }
+});
+
+/**
+ * 4.7 Logout
+ * POST /auth/logout
+ */
+router.post('/logout', async (req, res) => {
+  try {
+    const sessionToken = req.cookies?.sessionToken;
+    
+    if (sessionToken) {
+      const session = await SessionService.validateSession(sessionToken);
+      if (session) {
+        await SessionService.revokeSession(session.sessionId, 'User logout');
+        
+        // Audit log
+        await AuditService.logEvent({
+          userId: session.userId,
+          sessionId: session.sessionId,
+          eventType: 'logout',
+          ipAddress: getClientInfo(req).ipAddress,
+          userAgent: getClientInfo(req).userAgent,
+          result: 'success',
+        });
+      }
+    }
+
+    // Clear session cookie
+    res.clearCookie('sessionToken');
+
+    res.json({ message: 'Logged out successfully' });
+
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json(errorResponse('LOGOUT_FAILED', 'Internal server error'));
   }
 });
 

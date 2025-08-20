@@ -21,6 +21,11 @@ export interface RefreshTokenPayload {
   jti: string;
 }
 
+export interface TokenWithExpiry {
+  token: string;
+  expiresAt: Date;
+}
+
 export class TokenService {
   private static readonly ACCESS_TOKEN_EXPIRES = 15 * 60; // 15 minutes
   private static readonly REFRESH_TOKEN_EXPIRES = 90 * 24 * 60 * 60; // 90 days
@@ -165,5 +170,105 @@ export class TokenService {
    */
   static generateTokenFamily(): string {
     return crypto.randomUUID();
+  }
+
+  /**
+   * Generate email verification token (24 hour expiry)
+   */
+  static generateEmailVerificationToken(userId: string, email: string): TokenWithExpiry {
+    const payload = {
+      type: 'email-verification',
+      userId,
+      email,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+    };
+
+    const token = jwt.sign(payload, this.JWT_SECRET);
+    
+    return {
+      token,
+      expiresAt: new Date(payload.exp * 1000),
+    };
+  }
+
+  /**
+   * Generate password reset token (15 minute expiry)
+   */
+  static generatePasswordResetToken(userId: string, email: string): TokenWithExpiry {
+    const payload = {
+      type: 'password-reset',
+      userId,
+      email,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + (15 * 60), // 15 minutes
+    };
+
+    const token = jwt.sign(payload, this.JWT_SECRET);
+    
+    return {
+      token,
+      expiresAt: new Date(payload.exp * 1000),
+    };
+  }
+
+  /**
+   * Verify password reset token
+   */
+  static verifyPasswordResetToken(token: string): { userId: string; email: string } {
+    try {
+      const payload = jwt.verify(token, this.JWT_SECRET) as any;
+      
+      if (payload.type !== 'password-reset') {
+        throw new Error('Invalid token type');
+      }
+      
+      return {
+        userId: payload.userId,
+        email: payload.email,
+      };
+    } catch (error) {
+      throw new Error('Invalid or expired password reset token');
+    }
+  }
+
+  /**
+   * Generate magic link token (15 minute expiry)
+   */
+  static generateMagicLinkToken(userId: string, email: string): TokenWithExpiry {
+    const payload = {
+      type: 'magic-link',
+      userId,
+      email,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + (15 * 60), // 15 minutes
+    };
+
+    const token = jwt.sign(payload, this.JWT_SECRET);
+    
+    return {
+      token,
+      expiresAt: new Date(payload.exp * 1000),
+    };
+  }
+
+  /**
+   * Verify magic link token
+   */
+  static verifyMagicLinkToken(token: string): { userId: string; email: string } {
+    try {
+      const payload = jwt.verify(token, this.JWT_SECRET) as any;
+      
+      if (payload.type !== 'magic-link') {
+        throw new Error('Invalid token type');
+      }
+      
+      return {
+        userId: payload.userId,
+        email: payload.email,
+      };
+    } catch (error) {
+      throw new Error('Invalid or expired magic link token');
+    }
   }
 }
