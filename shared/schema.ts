@@ -951,6 +951,112 @@ export const garnishmentCalculationInputsSchema = z.object({
 
 export type GarnishmentCalculationInputs = z.infer<typeof garnishmentCalculationInputsSchema>;
 
+// =============================================================================
+// SECURE IBAN VAULT & BANKING VALIDATION SCHEMA  
+// =============================================================================
+
+// Secure IBAN Vault for sensitive banking data
+export const secureIbanVault = pgTable("secure_iban_vault", {
+  vaultId: varchar("vault_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").notNull().references(() => employees.id, { onDelete: 'cascade' }),
+  
+  // Full IBAN (encrypted at rest)
+  fullIban: varchar("full_iban", { length: 34 }).notNull(),
+  ibanCountryCode: varchar("iban_country_code", { length: 2 }).notNull(),
+  bankCode: varchar("bank_code", { length: 10 }),
+  bankName: varchar("bank_name", { length: 100 }),
+  
+  // Account holder information
+  accountHolderName: varchar("account_holder_name", { length: 140 }).notNull(),
+  nameMatchScore: integer("name_match_score"), // 0-100 similarity score
+  nameMatchStatus: varchar("name_match_status").default('pending'), // 'match', 'warning', 'override', 'pending'
+  nameOverrideReason: varchar("name_override_reason"), // When name match failed but was overridden
+  
+  // Validation status
+  ibanValidated: boolean("iban_validated").default(false),
+  validatedAt: timestamp("validated_at"),
+  validatedBy: varchar("validated_by"),
+  
+  // Usage tracking
+  isActive: boolean("is_active").default(true),
+  lastUsedAt: timestamp("last_used_at"),
+  usageCount: integer("usage_count").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_secure_iban_employee").on(table.employeeId),
+  index("idx_secure_iban_country").on(table.ibanCountryCode),
+]);
+
+// IBAN Validation History for audit trail
+export const ibanValidationHistory = pgTable("iban_validation_history", {
+  validationId: varchar("validation_id").primaryKey().default(sql`gen_random_uuid()`),
+  vaultId: varchar("vault_id").references(() => secureIbanVault.vaultId),
+  employeeId: varchar("employee_id").references(() => employees.id),
+  
+  // Validation details
+  maskedIban: varchar("masked_iban", { length: 50 }), // For logging (GR** **** **** **34)
+  validationType: varchar("validation_type").notNull(), // 'format', 'checksum', 'name_match', 'manual_override'
+  validationResult: varchar("validation_result").notNull(), // 'pass', 'fail', 'warning'
+  errors: jsonb("errors"), // Array of error messages
+  warnings: jsonb("warnings"), // Array of warning messages
+  
+  // Name matching details
+  employeeNameUsed: varchar("employee_name_used", { length: 200 }),
+  accountHolderNameProvided: varchar("account_holder_name_provided", { length: 140 }),
+  nameSimilarityScore: integer("name_similarity_score"),
+  
+  // Validation context
+  validatedBy: varchar("validated_by").notNull(),
+  ipAddress: varchar("ip_address", { length: 45 }), // IPv4 or IPv6
+  userAgent: text("user_agent"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_iban_validation_vault").on(table.vaultId),
+  index("idx_iban_validation_employee").on(table.employeeId),
+  index("idx_iban_validation_date").on(table.createdAt),
+]);
+
+// IBAN Vault relations
+export const secureIbanVaultRelations = relations(secureIbanVault, ({ one, many }) => ({
+  employee: one(employees, {
+    fields: [secureIbanVault.employeeId],
+    references: [employees.id],
+  }),
+  validationHistory: many(ibanValidationHistory),
+}));
+
+export const ibanValidationHistoryRelations = relations(ibanValidationHistory, ({ one }) => ({
+  vault: one(secureIbanVault, {
+    fields: [ibanValidationHistory.vaultId],
+    references: [secureIbanVault.vaultId],
+  }),
+  employee: one(employees, {
+    fields: [ibanValidationHistory.employeeId],
+    references: [employees.id],
+  }),
+}));
+
+// IBAN Vault Zod schemas
+export const insertSecureIbanVaultSchema = createInsertSchema(secureIbanVault).omit({
+  vaultId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertIbanValidationHistorySchema = createInsertSchema(ibanValidationHistory).omit({
+  validationId: true,
+  createdAt: true,
+});
+
+// Type definitions for IBAN vault
+export type SecureIbanVault = typeof secureIbanVault.$inferSelect;
+export type InsertSecureIbanVault = typeof secureIbanVault.$inferInsert;
+export type IbanValidationHistory = typeof ibanValidationHistory.$inferSelect;
+export type InsertIbanValidationHistory = typeof ibanValidationHistory.$inferInsert;
+
 // Garnishment calculation output schema
 export interface GarnishmentCalculationResult {
   totalGarnishmentAmount: number;

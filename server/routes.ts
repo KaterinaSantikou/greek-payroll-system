@@ -67,6 +67,7 @@ import { paymentStateMachineRoutes } from "./api/paymentStateMachine";
 import { reconciliationEngineRoutes } from "./api/reconciliationEngine";
 import { cutOffLogicRoutes } from "./api/cutOffLogic";
 import { reissueAlgorithmRoutes } from "./api/reissueAlgorithm";
+import ibanValidationRoutes from "./api/ibanValidation";
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
 import { PayExplanationService } from "./payExplanationService";
@@ -3409,6 +3410,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Re-Issue Algorithm
   reissueAlgorithmRoutes(app);
+  
+  // IBAN Validation & Banking
+  app.use("/api/iban", ibanValidationRoutes);
 
   // Register notification routes
   try {

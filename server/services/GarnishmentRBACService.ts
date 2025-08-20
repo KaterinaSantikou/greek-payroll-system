@@ -146,4 +146,119 @@ export class GarnishmentRBACService {
     }
     
     // Check conditions
-    const conditionResult = await this.evaluatePermissionConditions(\n      permission.conditions || [],\n      userId,\n      context\n    );\n    \n    if (!conditionResult.met) {\n      return {\n        allowed: false,\n        reason: conditionResult.reason\n      };\n    }\n    \n    // Check if dual approval is required for sensitive operations\n    const requiresApproval = this.requiresDualApproval(action, roleDefinition);\n    \n    return {\n      allowed: true,\n      requiresApproval,\n      approverRoles: requiresApproval ? this.getApproverRoles(userRole, action) : undefined\n    };\n  }\n  \n  /**\n   * Get users who can approve garnishment operations\n   */\n  private static getApproverRoles(requesterRole: string, action: string): string[] {\n    const approverRoles: string[] = [];\n    \n    // High-value operations require finance controller approval\n    if (['create', 'stop', 'update'].includes(action)) {\n      approverRoles.push('finance_controller');\n      \n      // Payroll admin can also approve if not the requester\n      if (requesterRole !== 'payroll_admin') {\n        approverRoles.push('payroll_admin');\n      }\n    }\n    \n    return approverRoles;\n  }\n  \n  /**\n   * Check if action requires dual approval\n   */\n  private static requiresDualApproval(action: string, roleDefinition: GarnishmentRoleDefinition): boolean {\n    const sensitiveActions = ['create', 'stop', 'update'];\n    \n    return sensitiveActions.includes(action) && \n           roleDefinition.requiresDualApproval;\n  }\n  \n  /**\n   * Evaluate permission conditions\n   */\n  private static async evaluatePermissionConditions(\n    conditions: string[],\n    userId: string,\n    context?: {\n      employeeId?: string;\n      propertyId?: string;\n      departmentId?: string;\n    }\n  ): Promise<{\n    met: boolean;\n    reason?: string;\n  }> {\n    \n    for (const condition of conditions) {\n      switch (condition) {\n        case 'self_only':\n          if (context?.employeeId && context.employeeId !== userId) {\n            return {\n              met: false,\n              reason: 'Can only access own garnishment information'\n            };\n          }\n          break;\n          \n        case 'same_property':\n          // Would need to implement property checking logic\n          // For now, assume it passes\n          break;\n          \n        case 'same_department':\n          // Would need to implement department checking logic\n          // For now, assume it passes\n          break;\n          \n        case 'own_employees_only':\n          // Would need to implement employee hierarchy checking\n          // For now, assume it passes\n          break;\n      }\n    }\n    \n    return { met: true };\n  }\n  \n  /**\n   * Get garnishment permissions for user role\n   */\n  static getGarnishmentPermissions(userRole: string): GarnishmentPermission[] {\n    const roleDefinition = GARNISHMENT_ROLES.find(role => role.roleId === userRole);\n    return roleDefinition?.garnishmentPermissions || [];\n  }\n  \n  /**\n   * Check if user can view garnishment details for specific employee\n   */\n  static async canViewEmployeeGarnishments(\n    userId: string,\n    userRole: string,\n    targetEmployeeId: string\n  ): Promise<boolean> {\n    \n    const permission = await this.checkGarnishmentPermission(\n      userId,\n      userRole,\n      'read',\n      undefined,\n      { employeeId: targetEmployeeId }\n    );\n    \n    return permission.allowed;\n  }\n  \n  /**\n   * Generate audit entry for garnishment permission check\n   */\n  static async auditPermissionCheck(\n    userId: string,\n    userRole: string,\n    action: string,\n    resourceId: string,\n    allowed: boolean,\n    reason?: string\n  ): Promise<void> {\n    \n    // Log to garnishment audit trail\n    await this.logGarnishmentAudit({\n      eventType: 'permission_check',\n      actor: userId,\n      garnishmentOrderId: resourceId,\n      eventReason: `${action} permission ${allowed ? 'granted' : 'denied'} for role ${userRole}${reason ? ': ' + reason : ''}`,\n      disposableNetBefore: 0,\n      disposableNetAfter: 0,\n      requestedAmount: 0,\n      appliedAmount: 0,\n      wasSkipped: !allowed\n    });\n  }\n  \n  /**\n   * Helper to log garnishment audit entries\n   */\n  private static async logGarnishmentAudit(auditData: any): Promise<void> {\n    try {\n      // Import here to avoid circular dependency\n      const { GarnishmentService } = await import('./GarnishmentService');\n      await GarnishmentService.logAuditEntry(auditData);\n    } catch (error) {\n      console.error('Failed to log garnishment audit entry:', error);\n      // Don't throw - audit logging shouldn't break permission checks\n    }\n  }\n  \n  /**\n   * Middleware factory for garnishment route protection\n   */\n  static createGarnishmentAuthMiddleware(requiredAction: string) {\n    return async (req: any, res: any, next: any) => {\n      try {\n        const userId = req.user?.claims?.sub;\n        const userRole = await this.getUserRole(userId); // Would need to implement\n        \n        const permission = await this.checkGarnishmentPermission(\n          userId,\n          userRole,\n          requiredAction,\n          req.params.id,\n          {\n            employeeId: req.params.employeeId || req.body.employeeId,\n            propertyId: req.body.propertyId,\n            departmentId: req.body.departmentId\n          }\n        );\n        \n        // Audit the permission check\n        await this.auditPermissionCheck(\n          userId,\n          userRole,\n          requiredAction,\n          req.params.id || 'unknown',\n          permission.allowed,\n          permission.reason\n        );\n        \n        if (!permission.allowed) {\n          return res.status(403).json({\n            success: false,\n            error: 'Insufficient permissions for garnishment operation',\n            reason: permission.reason\n          });\n        }\n        \n        // Store permission info for downstream handlers\n        req.garnishmentPermission = permission;\n        \n        next();\n      } catch (error) {\n        console.error('Garnishment auth middleware error:', error);\n        res.status(500).json({\n          success: false,\n          error: 'Permission validation failed'\n        });\n      }\n    };\n  }\n  \n  /**\n   * Get user role (placeholder - would integrate with existing RBAC system)\n   */\n  private static async getUserRole(userId: string): Promise<string> {\n    // This would integrate with the existing RBAC service\n    // For now, return a default role\n    return 'employee';\n  }\n}
+    const conditionResult = await this.evaluatePermissionConditions(
+      permission.conditions || [],
+      userId,
+      context
+    );
+    
+    if (!conditionResult.met) {
+      return {
+        allowed: false,
+        reason: conditionResult.reason
+      };
+    }
+    
+    // Check if dual approval is required for sensitive operations
+    const requiresApproval = this.requiresDualApproval(action, roleDefinition);
+    
+    return {
+      allowed: true,
+      requiresApproval,
+      approverRoles: requiresApproval ? this.getApproverRoles(userRole, action) : undefined
+    };
+  }
+  
+  /**
+   * Get users who can approve garnishment operations
+   */
+  private static getApproverRoles(requesterRole: string, action: string): string[] {
+    const approverRoles: string[] = [];
+    
+    // High-value operations require finance controller approval
+    if (['create', 'stop', 'update'].includes(action)) {
+      approverRoles.push('finance_controller');
+      
+      // Payroll admin can also approve if not the requester
+      if (requesterRole !== 'payroll_admin') {
+        approverRoles.push('payroll_admin');
+      }
+    }
+    
+    return approverRoles;
+  }
+  
+  /**
+   * Check if action requires dual approval
+   */
+  private static requiresDualApproval(action: string, roleDefinition: GarnishmentRoleDefinition): boolean {
+    const sensitiveActions = ['create', 'stop', 'update'];
+    
+    return sensitiveActions.includes(action) && 
+           roleDefinition.requiresDualApproval;
+  }
+  
+  /**
+   * Evaluate permission conditions
+   */
+  private static async evaluatePermissionConditions(
+    conditions: string[],
+    userId: string,
+    context?: {
+      employeeId?: string;
+      propertyId?: string;
+      departmentId?: string;
+    }
+  ): Promise<{
+    met: boolean;
+    reason?: string;
+  }> {
+    
+    for (const condition of conditions) {
+      switch (condition) {
+        case 'self_only':
+          if (context?.employeeId && context.employeeId !== userId) {
+            return {
+              met: false,
+              reason: 'Can only access own garnishment information'
+            };
+          }
+          break;
+          
+        case 'same_property':
+          // Would need to implement property checking logic
+          // For now, assume it passes
+          break;
+          
+        case 'same_department':
+          // Would need to implement department checking logic
+          // For now, assume it passes
+          break;
+          
+        case 'own_employees_only':
+          // Would need to implement employee hierarchy checking
+          // For now, assume it passes
+          break;
+      }
+    }
+    
+    return { met: true };
+  }
+  
+  /**
+   * Get garnishment permissions for user role
+   */
+  static getGarnishmentPermissions(userRole: string): GarnishmentPermission[] {
+    const roleDefinition = GARNISHMENT_ROLES.find(role => role.roleId === userRole);
+    return roleDefinition?.garnishmentPermissions || [];
+  }
+  
+  /**
+   * Get user role (placeholder - would integrate with existing RBAC system)
+   */
+  private static async getUserRole(userId: string): Promise<string> {
+    // This would integrate with the existing RBAC service
+    // For now, return a default role
+    return 'employee';
+  }
+}
