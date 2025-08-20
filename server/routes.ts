@@ -73,6 +73,7 @@ import { canonicalPaymentsRoutes } from "./api/canonicalPayments";
 import { paymentStateMachineRoutes } from "./api/paymentStateMachine";
 import { reconciliationEngineRoutes } from "./api/reconciliationEngine";
 import { cutOffLogicRoutes } from "./api/cutOffLogic";
+import * as dstTestingApi from "./api/dstTestingApi";
 import { registerBillingRoutes } from "./routes/billing";
 import { reissueAlgorithmRoutes } from "./api/reissueAlgorithm";
 import { oneClickFlowRoutes } from "./api/oneClickFlow";
@@ -2814,6 +2815,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Testing Infrastructure routes
   registerTestingRoutes(app);
+
+  // DST Testing and Timezone API routes
+  app.post('/api/dst/test/all', dstTestingApi.executeAllDSTTests);
+  app.post('/api/dst/calculate-shift', dstTestingApi.calculateDSTAwareShift);
+  app.post('/api/dst/calculate-overtime', dstTestingApi.calculateDSTAwareOvertime);
+  app.get('/api/dst/transitions/:year?', dstTestingApi.getDSTTransitions);
+  app.post('/api/dst/validate-time', dstTestingApi.validateTimezone);
+  app.post('/api/timezone/convert', dstTestingApi.convertTimezones);
+  app.post('/api/timezone/remote-work', dstTestingApi.calculateRemoteWork);
+  app.post('/api/dst/schedule-recommendations', dstTestingApi.generateScheduleRecommendations);
+  app.post('/api/timezone/optimal-meeting', dstTestingApi.findOptimalMeetingTime);
 
   // Register Hotel Tip Pooling API routes
   const { registerHotelTipPoolingRoutes } = await import("./api/hotelTipPooling");
