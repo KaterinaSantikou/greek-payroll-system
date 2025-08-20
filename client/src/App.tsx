@@ -73,6 +73,7 @@ const ExplanationDemo = lazy(() => import("@/pages/ExplanationDemo").then(m => (
 import CommandPaletteDemo from "@/pages/commandPaletteDemo";
 import Onboarding from "@/pages/onboarding";
 import Exits from "@/pages/exits";
+import ZeroTrustSecurityPage from "@/pages/ZeroTrustSecurityPage";
 import TeamsRoles from "@/pages/teamsRoles";
 import S1Dashboard from "@/pages/S1Dashboard";
 import S1MetricsPage from "@/pages/S1MetricsPage";
@@ -214,6 +215,7 @@ function Router() {
             <Route path="/ai-engines-demo" component={AIEnginesDemo} />
             <Route path="/command-palette-demo" component={CommandPaletteDemo} />
             <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
+            <Route path="/zero-trust-security" component={ZeroTrustSecurityPage} />
         <Route path="/s1-dashboard" component={S1Dashboard} />
         <Route path="/s1-metrics" component={S1MetricsPage} />
         <Route path="/s1-acceptance-testing" component={S1AcceptanceTesting} />
