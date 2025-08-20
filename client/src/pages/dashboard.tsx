@@ -431,7 +431,7 @@ export default function Dashboard() {
       <div className="container mx-auto px-6 py-4">
         
         {/* Top Bar - Always Visible */}
-        <div className="sticky top-0 z-[60] bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-lg shadow-sm border mb-6 p-4">
+        <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-lg shadow-sm border mb-6 p-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             
             {/* Left Side - Role Switcher, Property & Period */}
