@@ -3793,6 +3793,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return evaluationRoutes.submitTestCase(req, res);
   });
 
+  // GRC (Governance, Risk & Compliance) Mock API Routes
+  const { registerMockGRCRoutes } = await import('./api/mockGRC');
+  registerMockGRCRoutes(app);
+
   const httpServer = createServer(app);
   return httpServer;
 }

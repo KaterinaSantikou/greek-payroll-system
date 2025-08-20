@@ -88,6 +88,7 @@ import VerifyEmail from "@/pages/auth/VerifyEmail";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import SSO from "@/pages/auth/SSO";
+
 const GRCCompliance = lazy(() => import("./pages/Compliance"));
 
 function Router() {
