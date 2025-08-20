@@ -5,35 +5,36 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LocaleProvider } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
-import { lazy } from "react";
+import { lazy, Suspense } from "react";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
-import Home from "@/pages/home";
-import Employees from "@/pages/employees";
-import EmployeeMaster from "@/pages/employeeMaster";
-import Payroll from "@/pages/payroll";
-import Schedules from "@/pages/schedules";
-import Allowances from "@/pages/allowances";
-import Overtime from "@/pages/overtime";
-import Leave from "@/pages/leave";
-import Legal from "@/pages/legal";
-import DigitalWorkCard from "@/pages/digitalWorkCard";
-import AdvancedTimeCapture from "@/pages/advancedTimeCapture";
-import EnterpriseArchitecture from "@/pages/enterpriseArchitecture";
-import ErganiCompliance from "@/pages/erganiCompliance";
-import PayrollIntegration from "@/pages/payrollIntegration";
-import ManagerWorkflows from "@/pages/managerWorkflows";
-import HotelOperations from "@/pages/hotelOperations";
+// Lazy load major pages for better performance
+const Home = lazy(() => import("@/pages/home"));
+const Employees = lazy(() => import("@/pages/employees"));
+const EmployeeMaster = lazy(() => import("@/pages/employeeMaster"));
+const Payroll = lazy(() => import("@/pages/payroll"));
+const Schedules = lazy(() => import("@/pages/schedules"));
+const Allowances = lazy(() => import("@/pages/allowances"));
+const Overtime = lazy(() => import("@/pages/overtime"));
+const Leave = lazy(() => import("@/pages/leave"));
+const Legal = lazy(() => import("@/pages/legal"));
+const DigitalWorkCard = lazy(() => import("@/pages/digitalWorkCard"));
+const AdvancedTimeCapture = lazy(() => import("@/pages/advancedTimeCapture"));
+const EnterpriseArchitecture = lazy(() => import("@/pages/enterpriseArchitecture"));
+const ErganiCompliance = lazy(() => import("@/pages/erganiCompliance"));
+const PayrollIntegration = lazy(() => import("@/pages/payrollIntegration"));
+const ManagerWorkflows = lazy(() => import("@/pages/managerWorkflows"));
+const HotelOperations = lazy(() => import("@/pages/hotelOperations"));
 import HotelEnhancements from "@/pages/hotelEnhancements";
 import HotelTipPooling from "@/pages/hotelTipPooling";
 import UXArchitecture from "@/pages/uxArchitecture";
 import Compliance from "@/pages/compliance";
-import Analytics from "@/pages/analytics";
-import Deployment from "@/pages/deployment";
-import SuccessMetrics from "@/pages/successMetrics";
-import KPIDashboard from "@/pages/kpiDashboard";
-import ModernPayrollEngine from "@/pages/modernPayrollEngine";
-import ProductVision from "@/pages/productVision";
+const Analytics = lazy(() => import("@/pages/analytics"));
+const Deployment = lazy(() => import("@/pages/deployment"));
+const SuccessMetrics = lazy(() => import("@/pages/successMetrics"));
+const KPIDashboard = lazy(() => import("@/pages/kpiDashboard"));
+const ModernPayrollEngine = lazy(() => import("@/pages/modernPayrollEngine"));
+const ProductVision = lazy(() => import("@/pages/productVision"));
 import Payments from "@/pages/payments";
 import SepaPayments from "@/pages/sepaPayments";
 import SepaEngineDemo from "@/pages/sepaEngineDemo";
@@ -55,13 +56,13 @@ import SmartNotifications from "@/pages/smartNotifications";
 import VisualAnalytics from "@/pages/visualAnalytics";
 import PropertyDashboard from "@/pages/propertyDashboard";
 import RoleBasedDashboard from "@/components/RoleBasedDashboard";
-import Dashboard from "@/pages/dashboard";
-import { AICopilot } from "@/components/AICopilot";
-import MobilePunch from "@/pages/mobilePunch";
-import PayrollPreview from "@/pages/payrollPreview";
-import PayExplanationDemo from "@/pages/payExplanationDemo";
-import AIEnginesDemo from "@/pages/aiEnginesDemo";
-import { ExplanationDemo } from "@/pages/ExplanationDemo";
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const AICopilot = lazy(() => import("@/components/AICopilot").then(m => ({ default: m.AICopilot })));
+const MobilePunch = lazy(() => import("@/pages/mobilePunch"));
+const PayrollPreview = lazy(() => import("@/pages/payrollPreview"));
+const PayExplanationDemo = lazy(() => import("@/pages/payExplanationDemo"));
+const AIEnginesDemo = lazy(() => import("@/pages/aiEnginesDemo"));
+const ExplanationDemo = lazy(() => import("@/pages/ExplanationDemo").then(m => ({ default: m.ExplanationDemo })));
 import CommandPaletteDemo from "@/pages/commandPaletteDemo";
 import Onboarding from "@/pages/onboarding";
 import Exits from "@/pages/exits";
@@ -116,6 +117,7 @@ function Router() {
     <OboProvider>
       <Layout>
         <CommandPalette open={open} onOpenChange={setOpen} />
+        <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
         <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
@@ -211,8 +213,9 @@ function Router() {
           <Partner />
         </Route>
         <Route component={NotFound} />
-      </Switch>
-    </Layout>
+        </Switch>
+        </Suspense>
+      </Layout>
     </OboProvider>
   );
 }

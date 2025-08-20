@@ -511,7 +511,7 @@ export class PaymentBatchService {
       '011': 'ETHNGRAA', // National Bank of Greece
       '014': 'PIRBGRAA', // Piraeus Bank
       '026': 'EFGBGRAA', // Eurobank
-      '014': 'CRBAGRAA', // Alpha Bank
+      '017': 'CRBAGRAA', // Alpha Bank
     };
 
     const bankCode = iban.substring(4, 7);
