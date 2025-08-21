@@ -224,6 +224,9 @@ interface TranslationKeys {
   'onboarding.in_progress': string;
   'onboarding.pending': string;
   'onboarding.deadline': string;
+  
+  // Rota system
+  'rota.subtitle': string;
 }
 
 const translations: Record<Locale, TranslationKeys> = {

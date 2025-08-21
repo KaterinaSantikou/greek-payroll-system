@@ -674,3 +674,25 @@ export default function Login() {
     </div>
   );
 }
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+export default function Login() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Sign In</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={() => window.location.href = '/api/auth/login'}
+            className="w-full"
+          >
+            Sign In
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

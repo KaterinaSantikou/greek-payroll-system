@@ -8,7 +8,7 @@ import { useCommandPalette } from "@/hooks/useCommandPalette";
 // import { useProperty } from "@/contexts/PropertyContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebarState } from "@/hooks/useSidebarState";
-import { useLocale } from "@/lib/i18n";
+import { useLocale } from "@/hooks/useLocale";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -244,4 +244,19 @@ function LayoutContent({ children }: LayoutProps) {
 
 export default function Layout({ children }: LayoutProps) {
   return <LayoutContent>{children}</LayoutContent>;
+}
+import { ReactNode } from "react";
+
+interface LayoutProps {
+  children: ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps) {
+  return (
+    <div className="min-h-screen bg-background">
+      <main className="container mx-auto p-4">
+        {children}
+      </main>
+    </div>
+  );
 }
