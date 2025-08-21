@@ -522,7 +522,7 @@ export class DisasterRecoveryService extends EventEmitter {
       }
     }
 
-    if (testResult.durationMinutes > procedure.estimatedDurationMinutes) {
+    if (testResult.durationMinutes > (procedure.estimatedDurationMinutes || 60)) {
       recommendations.push('Test execution exceeded estimated duration - optimize procedures');
     }
 
