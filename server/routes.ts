@@ -2912,6 +2912,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Performance & Monitoring API
   const monitoringRoutes = (await import("./api/monitoring")).default;
   app.use("/api/monitoring", monitoringRoutes);
+  
+  // Database Connection Pool API
+  const databasePoolRoutes = (await import("./api/database-pool")).default;
+  app.use("/api/database-pool", databasePoolRoutes);
 
   // Register automated runbooks routes
   try {

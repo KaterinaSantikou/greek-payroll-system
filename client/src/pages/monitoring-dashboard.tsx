@@ -23,7 +23,9 @@ import {
   RefreshCw,
   Shield,
   Globe,
-  HardDrive
+  HardDrive,
+  Users,
+  Link
 } from 'lucide-react';
 
 interface HealthStatus {
@@ -262,6 +264,7 @@ export default function MonitoringDashboard() {
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="system">System Resources</TabsTrigger>
+          <TabsTrigger value="pool">Connection Pool</TabsTrigger>
           <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
         </TabsList>
 
@@ -493,6 +496,23 @@ export default function MonitoringDashboard() {
               </Card>
             </div>
           )}
+        </TabsContent>
+
+        {/* Connection Pool Tab */}
+        <TabsContent value="pool" className="space-y-4">
+          <div className="text-center py-8">
+            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Database Connection Pool</h3>
+            <p className="text-gray-500 mb-4">
+              View detailed connection pool metrics and monitoring
+            </p>
+            <Button asChild>
+              <a href="/database-pool" className="inline-flex items-center">
+                <Link className="h-4 w-4 mr-2" />
+                Open Pool Dashboard
+              </a>
+            </Button>
+          </div>
         </TabsContent>
 
         {/* Recommendations Tab */}

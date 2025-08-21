@@ -7,6 +7,7 @@ import { errorTrackingService } from '../services/ErrorTrackingService';
 import { productionPerformanceService } from '../services/ProductionPerformanceService';
 import { databaseOptimizationService } from '../services/DatabaseOptimizationService';
 import { cdnService } from '../services/CDNService';
+import { databaseConnectionPoolService } from '../services/DatabaseConnectionPoolService';
 
 const router = Router();
 
@@ -22,7 +23,8 @@ router.get('/health', async (req, res) => {
         errorTracking: errorTrackingService.healthCheck(),
         performance: productionPerformanceService.healthCheck(),
         database: databaseOptimizationService.healthCheck(),
-        cdn: cdnService.healthCheck()
+        cdn: cdnService.healthCheck(),
+        connectionPool: await databaseConnectionPoolService.healthCheck()
       }
     };
 
