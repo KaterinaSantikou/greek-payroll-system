@@ -265,6 +265,7 @@ export default function MonitoringDashboard() {
           <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="system">System Resources</TabsTrigger>
           <TabsTrigger value="pool">Connection Pool</TabsTrigger>
+          <TabsTrigger value="cache">Redis Cache</TabsTrigger>
           <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
         </TabsList>
 
@@ -510,6 +511,23 @@ export default function MonitoringDashboard() {
               <a href="/database-pool" className="inline-flex items-center">
                 <Link className="h-4 w-4 mr-2" />
                 Open Pool Dashboard
+              </a>
+            </Button>
+          </div>
+        </TabsContent>
+
+        {/* Redis Cache Tab */}
+        <TabsContent value="cache" className="space-y-4">
+          <div className="text-center py-8">
+            <Database className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Redis Cache Layer</h3>
+            <p className="text-gray-500 mb-4">
+              Manage cache strategies, monitor performance, and view cache metrics
+            </p>
+            <Button asChild>
+              <a href="/cache-dashboard" className="inline-flex items-center">
+                <Link className="h-4 w-4 mr-2" />
+                Open Cache Dashboard
               </a>
             </Button>
           </div>

@@ -2916,6 +2916,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Database Connection Pool API
   const databasePoolRoutes = (await import("./api/database-pool")).default;
   app.use("/api/database-pool", databasePoolRoutes);
+  
+  // Redis Cache Management API
+  const cacheRoutes = (await import("./api/cache")).default;
+  app.use("/api/cache", cacheRoutes);
 
   // Register automated runbooks routes
   try {

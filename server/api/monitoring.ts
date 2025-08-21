@@ -8,6 +8,8 @@ import { productionPerformanceService } from '../services/ProductionPerformanceS
 import { databaseOptimizationService } from '../services/DatabaseOptimizationService';
 import { cdnService } from '../services/CDNService';
 import { databaseConnectionPoolService } from '../services/DatabaseConnectionPoolService';
+import { redisCacheService } from '../services/RedisCacheService';
+import { cacheManagerService } from '../services/CacheManagerService';
 
 const router = Router();
 
@@ -24,7 +26,9 @@ router.get('/health', async (req, res) => {
         performance: productionPerformanceService.healthCheck(),
         database: databaseOptimizationService.healthCheck(),
         cdn: cdnService.healthCheck(),
-        connectionPool: await databaseConnectionPoolService.healthCheck()
+        connectionPool: await databaseConnectionPoolService.healthCheck(),
+        cache: await redisCacheService.healthCheck(),
+        cacheManager: await cacheManagerService.healthCheck()
       }
     };
 

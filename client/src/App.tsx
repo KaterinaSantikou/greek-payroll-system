@@ -52,6 +52,9 @@ const KPIDashboard = lazy(() => import("@/pages/kpiDashboard"));
 const ModernPayrollEngine = lazy(() => import("@/pages/modernPayrollEngine"));
 const ProductVision = lazy(() => import("@/pages/productVision"));
 
+// Infrastructure dashboards
+const CacheDashboard = lazy(() => import("@/pages/cache-dashboard"));
+
 // Data Import - for CSV/Excel import with Greek compliance validation
 const DataImport = lazy(() => import("@/pages/DataImport"));
 
