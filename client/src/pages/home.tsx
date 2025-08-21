@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Users, Calculator, FileText, Shield, ArrowRight, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { useAppContext } from "@/contexts/AppContext";
-import { EnhancedKPICard } from '../components/EnhancedKPICard';
 
 export default function Home() {
   const { user } = useAuth();
