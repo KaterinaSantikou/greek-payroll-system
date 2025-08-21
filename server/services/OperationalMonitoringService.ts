@@ -72,7 +72,7 @@ export class OperationalMonitoringService {
         if (duplicates.length > 0) {
           seriesConflicts.push({
             legalEntityId: entityId,
-            conflictingSeries: [...new Set(duplicates)]
+            conflictingSeries: Array.from(new Set(duplicates))
           });
         }
       });
@@ -109,9 +109,9 @@ export class OperationalMonitoringService {
         .from(exchangeRates)
         .where(eq(exchangeRates.source, 'INVOICE_%'));
 
-      const currenciesTracked = [...new Set(
+      const currenciesTracked = Array.from(new Set(
         invoiceSnapshots.map(snap => snap.baseCurrency)
-      )];
+      ));
 
       const oldestSnapshot = invoiceSnapshots.length > 0 
         ? new Date(Math.min(...invoiceSnapshots.map(s => new Date(s.rateDate).getTime())))

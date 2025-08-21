@@ -22,23 +22,63 @@ router.get('/health', async (req, res) => {
     const health = {
       timestamp: new Date().toISOString(),
       status: 'healthy',
-      services: {
-        errorTracking: errorTrackingService.healthCheck(),
-        performance: productionPerformanceService.healthCheck(),
-        database: databaseOptimizationService.healthCheck(),
-        cdn: cdnService.healthCheck(),
-        connectionPool: await databaseConnectionPoolService.healthCheck(),
-        cache: await redisCacheService.healthCheck(),
-        cacheManager: await cacheManagerService.healthCheck(),
-        loadBalancer: await loadBalancerService.healthCheck()
-      }
+      services: {}
     };
 
+    // Safe health checks with error handling
+    try {
+      health.services.errorTracking = errorTrackingService.healthCheck();
+    } catch (e) {
+      health.services.errorTracking = { status: 'unhealthy', error: 'Service unavailable' };
+    }
+
+    try {
+      health.services.performance = productionPerformanceService.healthCheck();
+    } catch (e) {
+      health.services.performance = { status: 'unhealthy', error: 'Service unavailable' };
+    }
+
+    try {
+      health.services.database = databaseOptimizationService.healthCheck();
+    } catch (e) {
+      health.services.database = { status: 'unhealthy', error: 'Service unavailable' };
+    }
+
+    try {
+      health.services.cdn = cdnService.healthCheck();
+    } catch (e) {
+      health.services.cdn = { status: 'unhealthy', error: 'Service unavailable' };
+    }
+
+    try {
+      health.services.connectionPool = await databaseConnectionPoolService.healthCheck();
+    } catch (e) {
+      health.services.connectionPool = { status: 'unhealthy', error: 'Service unavailable' };
+    }
+
+    try {
+      health.services.cache = await redisCacheService.healthCheck();
+    } catch (e) {
+      health.services.cache = { status: 'degraded', error: 'Redis unavailable - running in fallback mode' };
+    }
+
+    try {
+      health.services.cacheManager = await cacheManagerService.healthCheck();
+    } catch (e) {
+      health.services.cacheManager = { status: 'degraded', error: 'Cache manager in fallback mode' };
+    }
+
+    try {
+      health.services.loadBalancer = await loadBalancerService.healthCheck();
+    } catch (e) {
+      health.services.loadBalancer = { status: 'unhealthy', error: 'Service unavailable' };
+    }
+
     // Determine overall status
-    const serviceStatuses = Object.values(health.services).map(s => s.status);
+    const serviceStatuses = Object.values(health.services).map((s: any) => s.status);
     if (serviceStatuses.includes('unhealthy')) {
       health.status = 'unhealthy';
-    } else if (serviceStatuses.includes('warning')) {
+    } else if (serviceStatuses.includes('warning') || serviceStatuses.includes('degraded')) {
       health.status = 'warning';
     }
 
