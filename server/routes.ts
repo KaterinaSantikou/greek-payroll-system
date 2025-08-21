@@ -3750,6 +3750,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Greek Benefits & Allowances Routes - Meal Vouchers, Travel Per Diem, Tips, In-Kind Benefits
   const { registerBenefitsAllowancesRoutes } = await import("./routes/benefitsAllowancesRoutes");
   registerBenefitsAllowancesRoutes(app);
+  
+  // Greek Payroll Mechanics Routes - Rounding, Negative Net Pay, Property Allocation, CBAs
+  const { registerPayrollMechanicsRoutes } = await import("./routes/payrollMechanicsRoutes");
+  registerPayrollMechanicsRoutes(app);
   registerAICopilotRoutes(app);
   registerLaborNewsfeedRoutes(app);
   registerInstantPaymentRoutes(app);

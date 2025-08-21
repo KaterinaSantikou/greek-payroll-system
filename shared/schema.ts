@@ -592,6 +592,74 @@ export const contracts = pgTable("contracts", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Collective Bargaining Agreements - ΣΣΕ (Συλλογικές Συμβάσεις Εργασίας)
+export const collectiveBargainingAgreements = pgTable("collective_bargaining_agreements", {
+  cbaId: varchar("cba_id").primaryKey().default(sql`gen_random_uuid()`),
+  cbaName: varchar("cba_name", { length: 200 }).notNull(),
+  cbaNameGreek: varchar("cba_name_greek", { length: 200 }).notNull(),
+  industry: varchar("industry", { length: 50 }).notNull(), // tourism-hotels, restaurants, manufacturing
+  effectiveDate: date("effective_date").notNull(),
+  expirationDate: date("expiration_date").notNull(),
+  
+  // Wage Rates
+  minimumWages: jsonb("minimum_wages").default('[]'), // [{position, hourlyRate, monthlyMinimum, nationalWageOverride}]
+  premiumRates: jsonb("premium_rates").default('{}'), // {overtime: 1.5, night: 0.25, sunday: 0.75, holiday: 1.0}
+  allowances: jsonb("allowances").default('{}'), // {food: 8.00, transport: 50.00, hazardPay: 100.00}
+  leaveEntitlements: jsonb("leave_entitlements").default('{}'), // {annualDays: 25, sickDays: 15, maternityDays: 119}
+  
+  // Application
+  applicableProperties: jsonb("applicable_properties").default('[]'), // Array of property IDs
+  overridesNationalWage: boolean("overrides_national_wage").default(false),
+  
+  status: varchar("status", { length: 20 }).default("active"), // active, expired, suspended
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Payroll Reconciliation - Rounding and GL adjustments
+export const payrollReconciliation = pgTable("payroll_reconciliation", {
+  reconciliationId: varchar("reconciliation_id").primaryKey().default(sql`gen_random_uuid()`),
+  periodId: varchar("period_id").references(() => payrollPeriods.periodId).notNull(),
+  
+  // Rounding Differences
+  apdRoundingDiff: decimal("apd_rounding_diff", { precision: 10, scale: 4 }).default("0.0000"),
+  payslipRoundingDiff: decimal("payslip_rounding_diff", { precision: 10, scale: 4 }).default("0.0000"),
+  glRoundingDiff: decimal("gl_rounding_diff", { precision: 10, scale: 4 }).default("0.0000"),
+  totalRoundingAdjustment: decimal("total_rounding_adjustment", { precision: 10, scale: 2 }).default("0.00"),
+  
+  // Reconciliation Status
+  reconciliationStatus: varchar("reconciliation_status", { length: 20 }).default("pending"), // pending, reconciled, variance
+  reconciliationNotes: text("reconciliation_notes"),
+  reconciliationEntries: jsonb("reconciliation_entries").default('[]'), // GL entries for rounding adjustments
+  
+  reconciledAt: timestamp("reconciled_at"),
+  reconciledBy: varchar("reconciled_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Employee Carry Forward Balances - For negative net pay prevention
+export const employeeCarryForward = pgTable("employee_carry_forward", {
+  carryForwardId: varchar("carry_forward_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  
+  // Balance Details
+  currentBalance: decimal("current_balance", { precision: 10, scale: 2 }).notNull(),
+  originalAmount: decimal("original_amount", { precision: 10, scale: 2 }).notNull(),
+  reason: varchar("reason", { length: 100 }).notNull(), // "Negative net pay prevention", "Garnishment excess"
+  
+  // Recovery Tracking
+  totalRecovered: decimal("total_recovered", { precision: 10, scale: 2 }).default("0.00"),
+  lastRecoveryDate: date("last_recovery_date"),
+  lastRecoveryAmount: decimal("last_recovery_amount", { precision: 10, scale: 2 }),
+  
+  status: varchar("status", { length: 20 }).default("active"), // active, recovered, written_off
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_carry_forward_employee").on(table.employeeId),
+  index("idx_carry_forward_status").on(table.status),
+]);
+
 // Multiple Employers Tracking - For cumulative tax calculations (πολλαπλή απασχόληση)
 export const multipleEmployers = pgTable("multiple_employers", {
   recordId: varchar("record_id").primaryKey().default(sql`gen_random_uuid()`),
@@ -2232,6 +2300,13 @@ export const payrollCalculations = pgTable("payroll_calculations", {
   totalDeductions: decimal("total_deductions", { precision: 10, scale: 2 }).notNull(),
   netPay: decimal("net_pay", { precision: 10, scale: 2 }).notNull(),
   totalEmployerCost: decimal("total_employer_cost", { precision: 10, scale: 2 }).notNull(),
+  
+  // Payroll Mechanics
+  roundingAdjustments: decimal("rounding_adjustments", { precision: 10, scale: 2 }).default("0.00"), // APD/GL rounding differences
+  carryForwardBalance: decimal("carry_forward_balance", { precision: 10, scale: 2 }).default("0.00"), // Negative net pay carry forward
+  propertyCostAllocations: jsonb("property_cost_allocations").default('[]'), // Multi-property cost splits
+  cbaId: varchar("cba_id", { length: 50 }), // Collective Bargaining Agreement applied
+  cbaAdjustments: decimal("cba_adjustments", { precision: 10, scale: 2 }).default("0.00"), // CBA minimum wage adjustments
   
   // Calculation Metadata
   calculatedAt: timestamp("calculated_at").defaultNow(),
