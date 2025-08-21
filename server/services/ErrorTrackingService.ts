@@ -287,7 +287,8 @@ export class ErrorTrackingService {
    */
   getRequestHandler() {
     if (!this.initialized) return (req: any, res: any, next: any) => next();
-    return Sentry.setupExpressErrorHandler;
+    // Sentry v8 auto-instruments with init, just return a no-op middleware
+    return (req: any, res: any, next: any) => next();
   }
 
   /**
@@ -303,7 +304,11 @@ export class ErrorTrackingService {
    */
   getErrorHandler() {
     if (!this.initialized) return (err: any, req: any, res: any, next: any) => next(err);
-    return Sentry.setupExpressErrorHandler;
+    // Sentry v8 auto-instruments with init, just return a no-op error handler
+    return (err: any, req: any, res: any, next: any) => {
+      this.captureError(err);
+      next(err);
+    };
   }
 
   /**
