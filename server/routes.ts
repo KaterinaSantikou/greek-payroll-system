@@ -44,6 +44,19 @@ import {
   insertDeviceRegistrySchema,
   insertOvertimeRequestSchema
 } from "@shared/schema";
+import {
+  basicRateLimit,
+  authRateLimit,
+  apiRateLimit,
+  payrollRateLimit,
+  progressiveDelay,
+  requestSizeLimit,
+  suspiciousPatternDetection,
+  ipBlockingMiddleware,
+  connectionLimiter,
+  securityHeaders,
+  exemptHealthCheck
+} from './middleware/ddosProtection';
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { erganiConnector } from "./erganiConnector";
@@ -170,6 +183,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('🔧 Development mode - skipping heavy enterprise services');
   }
 
+  // DDoS Protection - Apply early in middleware chain
+  console.log('🛡️  Applying DDoS protection middleware...');
+  app.use(exemptHealthCheck);
+  app.use(ipBlockingMiddleware);
+  app.use(securityHeaders);
+  app.use(connectionLimiter);
+  app.use(suspiciousPatternDetection);
+  app.use(requestSizeLimit);
+  app.use(progressiveDelay);
+  console.log('✅ DDoS protection middleware active');
+
   // Apply global MFA enforcement middleware (after auth but before other routes)
   app.use(mfaEnforcement.enforce());
 
@@ -188,8 +212,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Comprehensive Authentication Routes
   app.use('/api/auth/v2', authRoutes);
   
-  // Authentication routes with API contract compliance
-  app.use('/auth', authAPIRoutes);
+  // Authentication routes with API contract compliance (strict rate limiting)
+  app.use('/auth', authRateLimit, authAPIRoutes);
   
   // Security compliance and audit routes
   app.use('/api/security', securityRoutes);
@@ -201,9 +225,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const cbaPacksApi = (await import("./api/cbaPacksApi")).default;
   app.use('/api/cba-packs-api', cbaPacksApi);
   
-  // Payroll Calculation Engine API
+  // Payroll Calculation Engine API (very strict rate limiting)
   const payrollCalculationApi = (await import("./api/payrollCalculationApi")).default;
-  app.use('/api/payroll-engine', payrollCalculationApi);
+  app.use('/api/payroll-engine', payrollRateLimit, payrollCalculationApi);
   
   // CBA Governance API
   const cbaGovernanceApi = (await import("./api/cbaGovernanceApi")).default;
@@ -1632,7 +1656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Queue SEPA file generation for payroll run (async with job queue)
-  app.post('/api/payroll/sepa/:runId', isAuthenticated, async (req, res) => {
+  app.post('/api/payroll/sepa/:runId', payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const { runId } = req.params;
       const userId = req.user?.claims?.sub;
@@ -2184,7 +2208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payment Services Routes
 
   // Generate SEPA payment file
-  app.post('/api/payments/sepa/generate', isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/generate', payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const payrollPeriodId = req.body.payrollPeriodId;
       const propertyId = req.body.propertyId;
@@ -2221,7 +2245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Piraeus Bank encrypted SEPA file generation with e-PPS Mass Payments
-  app.post('/api/payments/sepa/generate-encrypted', isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/generate-encrypted', payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const { payrollRunId, encryptionKey, ePPSMode = true } = req.body;
       
@@ -2266,7 +2290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // NBG SEPA Instant file generation (off-cycle urgent corrections)
-  app.post('/api/payments/sepa/generate-instant', isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/generate-instant', payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const { payrollRunId, isOffCycle = true, urgentCorrections = true } = req.body;
       
@@ -2316,7 +2340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Comprehensive engine validation endpoint
-  app.post('/api/payments/sepa/validate-engine', isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/validate-engine', payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const { bankProfile, payments, requestedExecutionDate } = req.body;
       
@@ -2346,7 +2370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // pain.002 status processing and reject surfacing
-  app.post('/api/payments/sepa/process-status', isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/process-status', payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const { pain002Response, correlationId } = req.body;
       
@@ -2918,9 +2942,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Comprehensive API Routes
   app.use(authAPI);
-  app.use(employeesAPI);
-  app.use(timeAPI);
-  app.use(payrollAPI);
+  app.use('/api/employees', apiRateLimit, employeesAPI);
+  app.use('/api/time', apiRateLimit, timeAPI);
+  app.use('/api/payroll', payrollRateLimit, payrollAPI);
   app.use(filingsAPI);
 
   // RBAC API for user management and employee self-service
