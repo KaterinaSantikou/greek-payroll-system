@@ -57,6 +57,16 @@ import {
   securityHeaders,
   exemptHealthCheck
 } from './middleware/ddosProtection';
+import {
+  geoBlocking,
+  ipWhitelist,
+  ipBlacklist,
+  userAgentValidation,
+  protocolSecurity,
+  adminNetworkSecurity,
+  financialNetworkSecurity,
+  networkRequestValidation
+} from './middleware/networkSecurity';
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { erganiConnector } from "./erganiConnector";
@@ -183,9 +193,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('🔧 Development mode - skipping heavy enterprise services');
   }
 
-  // DDoS Protection - Apply early in middleware chain
-  console.log('🛡️  Applying DDoS protection middleware...');
+  // Network Security & Firewall - Apply first for maximum protection
+  console.log('🔒 Applying network security and firewall rules...');
   app.use(exemptHealthCheck);
+  app.use(ipBlacklist);
+  app.use(geoBlocking);
+  app.use(userAgentValidation);
+  app.use(protocolSecurity);
+  app.use(networkRequestValidation);
+  console.log('✅ Network security firewall active');
+
+  // DDoS Protection - Apply after network security
+  console.log('🛡️  Applying DDoS protection middleware...');
   app.use(ipBlockingMiddleware);
   app.use(securityHeaders);
   app.use(connectionLimiter);
@@ -215,8 +234,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes with API contract compliance (strict rate limiting)
   app.use('/auth', authRateLimit, authAPIRoutes);
   
-  // Security compliance and audit routes
-  app.use('/api/security', securityRoutes);
+  // Security compliance and audit routes (office network only)
+  app.use('/api/security', adminNetworkSecurity, securityRoutes);
   
   // CBA & Sector Packs routes
   app.use('/api/cba-packs', cbaPackRoutes);
@@ -225,9 +244,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const cbaPacksApi = (await import("./api/cbaPacksApi")).default;
   app.use('/api/cba-packs-api', cbaPacksApi);
   
-  // Payroll Calculation Engine API (very strict rate limiting)
+  // Payroll Calculation Engine API (financial network security + strict rate limiting)
   const payrollCalculationApi = (await import("./api/payrollCalculationApi")).default;
-  app.use('/api/payroll-engine', payrollRateLimit, payrollCalculationApi);
+  app.use('/api/payroll-engine', financialNetworkSecurity, payrollRateLimit, payrollCalculationApi);
   
   // CBA Governance API
   const cbaGovernanceApi = (await import("./api/cbaGovernanceApi")).default;
@@ -1655,8 +1674,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Queue SEPA file generation for payroll run (async with job queue)
-  app.post('/api/payroll/sepa/:runId', payrollRateLimit, isAuthenticated, async (req, res) => {
+  // Queue SEPA file generation for payroll run (financial network security + async with job queue)
+  app.post('/api/payroll/sepa/:runId', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const { runId } = req.params;
       const userId = req.user?.claims?.sub;
@@ -2208,7 +2227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payment Services Routes
 
   // Generate SEPA payment file
-  app.post('/api/payments/sepa/generate', payrollRateLimit, isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/generate', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const payrollPeriodId = req.body.payrollPeriodId;
       const propertyId = req.body.propertyId;
@@ -2245,7 +2264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Piraeus Bank encrypted SEPA file generation with e-PPS Mass Payments
-  app.post('/api/payments/sepa/generate-encrypted', payrollRateLimit, isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/generate-encrypted', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const { payrollRunId, encryptionKey, ePPSMode = true } = req.body;
       
@@ -2290,7 +2309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // NBG SEPA Instant file generation (off-cycle urgent corrections)
-  app.post('/api/payments/sepa/generate-instant', payrollRateLimit, isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/generate-instant', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const { payrollRunId, isOffCycle = true, urgentCorrections = true } = req.body;
       
@@ -2340,7 +2359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Comprehensive engine validation endpoint
-  app.post('/api/payments/sepa/validate-engine', payrollRateLimit, isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/validate-engine', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const { bankProfile, payments, requestedExecutionDate } = req.body;
       
@@ -2370,7 +2389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // pain.002 status processing and reject surfacing
-  app.post('/api/payments/sepa/process-status', payrollRateLimit, isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/process-status', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
     try {
       const { pain002Response, correlationId } = req.body;
       
@@ -2944,7 +2963,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(authAPI);
   app.use('/api/employees', apiRateLimit, employeesAPI);
   app.use('/api/time', apiRateLimit, timeAPI);
-  app.use('/api/payroll', payrollRateLimit, payrollAPI);
+  app.use('/api/payroll', financialNetworkSecurity, payrollRateLimit, payrollAPI);
   app.use(filingsAPI);
 
   // RBAC API for user management and employee self-service
