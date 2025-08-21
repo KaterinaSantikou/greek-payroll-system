@@ -323,261 +323,98 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Critical Alerts Banner */}
-      {mockPendingIssues.filter(issue => issue.severity === 'critical').length > 0 && (
-        <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">
-          <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-800 dark:text-red-200 flex items-center justify-between">
-            <div>
-              <strong>Critical Issues Detected:</strong> {mockPendingIssues.filter(issue => issue.severity === 'critical').length} issues require immediate attention.
-            </div>
-            <Button size="sm" variant="outline" className="border-red-200 text-red-700">
-              <Eye className="w-4 h-4 mr-1" />
-              View Details
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
 
-      {/* Action Items - Top Priority */}
-      <Card className="border-2 border-blue-200 dark:border-blue-800">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl flex items-center gap-3">
-              <Zap className="w-6 h-6 text-blue-600" />
-              Action Required Today
-            </CardTitle>
-            <Badge variant="outline" className="bg-blue-50 text-blue-700">
-              {mockActionItems.length} items
-            </Badge>
-          </div>
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Zap className="w-5 h-5 text-blue-600" />
+            Actions Today
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {mockActionItems.slice(0, 4).map((item) => (
-              <div
-                key={item.id}
-                className={`p-4 rounded-lg border-l-4 ${getPriorityColor(item.priority)} cursor-pointer hover:shadow-md transition-shadow`}
-                onClick={() => handleQuickAction(item.id)}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    <item.icon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium">{item.title}</h4>
-                        <Badge 
-                          variant={item.priority === 'critical' ? 'destructive' : 
-                                 item.priority === 'high' ? 'default' : 'secondary'}
-                          className="text-xs"
-                        >
-                          {item.priority}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{item.description}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    {item.deadline && (
-                      <div className="text-xs text-muted-foreground mb-1">
-                        Due: {new Date(item.deadline).toLocaleDateString()}
-                      </div>
-                    )}
-                    {item.estimated_time && (
-                      <div className="text-xs text-blue-600 font-medium">
-                        ~{item.estimated_time}
-                      </div>
-                    )}
-                    <ChevronRight className="w-4 h-4 text-gray-400 mt-1" />
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {mockActionItems.slice(0, 3).map((item) => (
+              <div key={item.id} className="p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer">
+                <div className="flex items-center gap-2 mb-1">
+                  <item.icon className="w-4 h-4" />
+                  <span className="font-medium text-sm">{item.title}</span>
                 </div>
+                <Badge 
+                  size="sm"
+                  variant={item.priority === 'critical' ? 'destructive' : 'secondary'}
+                >
+                  {item.priority}
+                </Badge>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Daily Metrics Dashboard */}
-      <Tabs value={dashboardView} onValueChange={(v) => setDashboardView(v as DashboardView)}>
-        <TabsContent value="executive" className="space-y-6">
-          {/* Executive Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow" 
-                  onClick={() => handleDrillDown('/analytics/labor-costs')}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-green-600" />
-                    Labor Cost Control
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-green-600">€142,350</div>
-                <div className="text-sm text-muted-foreground">vs €145,000 budget</div>
-                <div className="flex items-center gap-1 mt-2">
-                  <TrendingUp className="w-4 h-4 text-green-600" />
-                  <span className="text-sm text-green-600">2.0% under budget</span>
-                </div>
-                <Progress value={98.2} className="mt-3 h-2" />
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow"
-                  onClick={() => handleDrillDown('/analytics/workforce')}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-blue-600" />
-                    Workforce Health
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-blue-600">45</div>
-                <div className="text-sm text-muted-foreground">active employees</div>
-                <div className="flex items-center gap-1 mt-2">
-                  <TrendingUp className="w-4 h-4 text-green-600" />
-                  <span className="text-sm text-green-600">2 new hires MTD</span>
-                </div>
-                <div className="mt-3 text-xs text-muted-foreground">
-                  Staffing: 92% optimal
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow"
-                  onClick={() => handleDrillDown('/compliance/dashboard')}>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <FileCheck className="w-5 h-5 text-yellow-600" />
-                    Compliance Status
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-yellow-600">94.5%</div>
-                <div className="text-sm text-muted-foreground">compliance score</div>
-                <div className="flex items-center gap-1 mt-2">
-                  <AlertTriangle className="w-4 h-4 text-yellow-600" />
-                  <span className="text-sm text-yellow-600">Minor gaps detected</span>
-                </div>
-                <Progress value={94.5} className="mt-3 h-2" />
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="operational" className="space-y-6">
-          {/* Operational Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {getMetricsByCategory('operational').map((metric) => (
-              <Card key={metric.id} className="cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => handleDrillDown(metric.drilldownUrl)}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm flex items-center justify-between">
-                    {metric.title}
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-2xl font-bold ${getStatusColor(metric.status)}`}>
-                    {metric.value}
-                  </div>
-                  {metric.target && (
-                    <div className="text-xs text-muted-foreground">
-                      Target: {metric.target}
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {metric.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="financial" className="space-y-6">
-          {/* Financial Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {getMetricsByCategory('financial').map((metric) => (
-              <Card key={metric.id} className="cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => handleDrillDown(metric.drilldownUrl)}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center justify-between">
-                    {metric.title}
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-3xl font-bold ${getStatusColor(metric.status)}`}>
-                    {metric.value}
-                  </div>
-                  {metric.change !== undefined && (
-                    <div className="flex items-center gap-1 mt-2">
-                      {metric.changeType === 'positive' ? (
-                        <TrendingUp className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <TrendingDown className="w-4 h-4 text-red-600" />
-                      )}
-                      <span className={`text-sm ${metric.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
-                        {metric.change > 0 ? '+' : ''}{metric.change}%
-                      </span>
-                    </div>
-                  )}
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {metric.description}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      {/* Pending Issues Requiring Attention */}
-      {mockPendingIssues.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl flex items-center gap-3">
-              <AlertTriangle className="w-6 h-6 text-yellow-600" />
-              Issues Requiring Attention
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {mockPendingIssues.map((issue) => (
-                <div key={issue.id} className="flex items-center justify-between p-3 border rounded-lg hover:shadow-sm cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    {getSeverityIcon(issue.severity)}
-                    <div>
-                      <h4 className="font-medium">{issue.title}</h4>
-                      <p className="text-sm text-muted-foreground">{issue.description}</p>
-                      <div className="flex items-center gap-4 mt-1">
-                        <span className="text-xs text-muted-foreground">
-                          {issue.affectedCount} affected
-                        </span>
-                        <span className="text-xs text-blue-600">
-                          Est. resolution: {issue.estimatedResolutionTime}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">{issue.category}</Badge>
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                  </div>
-                </div>
-              ))}
-            </div>
+      {/* Key Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold text-green-600">€142k</div>
+            <p className="text-sm text-muted-foreground">Monthly Cost</p>
+            <div className="text-xs text-green-600 mt-1">↓ 2% under budget</div>
           </CardContent>
         </Card>
-      )}
+        
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold text-blue-600">45</div>
+            <p className="text-sm text-muted-foreground">Active Staff</p>
+            <div className="text-xs text-blue-600 mt-1">+2 new hires</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold text-yellow-600">94.5%</div>
+            <p className="text-sm text-muted-foreground">Compliance</p>
+            <div className="text-xs text-yellow-600 mt-1">Minor gaps</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold text-red-600">3</div>
+            <p className="text-sm text-muted-foreground">Issues</p>
+            <div className="text-xs text-red-600 mt-1">Need attention</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Clock className="w-5 h-5 text-gray-600" />
+            Recent Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-sm">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span>Payroll for 24 employees processed</span>
+              <span className="text-xs text-muted-foreground ml-auto">2h ago</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+              <span>Government system sync completed</span>
+              <span className="text-xs text-muted-foreground ml-auto">4h ago</span>
+            </div>
+            <div className="flex items-center gap-3 text-sm">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <span>2 overtime requests approved</span>
+              <span className="text-xs text-muted-foreground ml-auto">6h ago</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick Stats Footer */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
