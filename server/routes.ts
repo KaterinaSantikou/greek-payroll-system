@@ -2874,6 +2874,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(timeAPI);
   app.use(payrollAPI);
   app.use(filingsAPI);
+
+  // RBAC API for user management and employee self-service
+  const rbacAPI = (await import("./api/rbac")).default;
+  app.use("/api", rbacAPI);
   // V1 Payments API
   paymentsRoutes(app);
   app.use(webhooksAPI);

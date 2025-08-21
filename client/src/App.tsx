@@ -73,6 +73,8 @@ import { Navigation } from "@/components/Navigation";
 import Layout from "@/components/Layout";
 import { PropertyProvider } from "@/contexts/PropertyContext";
 import { UserRoleProvider } from "@/contexts/UserRoleContext";
+import { UserManagement } from "@/components/UserManagement";
+import { EmployeeSelfServicePortal } from "@/components/EmployeeSelfServicePortal";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AppProvider } from "@/contexts/AppContext";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
@@ -255,6 +257,10 @@ function Router() {
         <Route path="/employees" component={Employees} />
         <Route path="/employee-master" component={EmployeeMaster} />
         <Route path="/onboarding" component={Onboarding} />
+        
+        {/* RBAC & User Management */}
+        <Route path="/admin/users" component={UserManagement} />
+        <Route path="/employee-portal" component={EmployeeSelfServicePortal} />
         <Route path="/exits" component={Exits} />
         <Route path="/severance" component={SeverancePage} />
         <Route path="/severance/test" component={SeveranceTestPage} />

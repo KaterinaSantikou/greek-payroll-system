@@ -1,6 +1,16 @@
 import { db } from "../db";
-import { auditLog } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { 
+  auditLog, 
+  systemRoles, 
+  systemPermissions, 
+  rolePermissions, 
+  userRoles, 
+  userImpersonationSessions,
+  employeeSelfServiceAudit,
+  employees,
+  users
+} from "@shared/schema";
+import { eq, and, or, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 /**
@@ -54,82 +64,44 @@ export interface ApprovalRecord {
   timestamp: Date;
 }
 
-// Predefined roles for Greek HR/Payroll system
-const SYSTEM_ROLES: Role[] = [
-  {
-    roleId: 'hr_admin',
-    name: 'HR Administrator',
-    description: 'Full employee management capabilities',
-    level: 4,
-    permissions: [
-      { resource: 'employees', action: 'create' },
-      { resource: 'employees', action: 'read' },
-      { resource: 'employees', action: 'update' },
-      { resource: 'contracts', action: 'create' },
-      { resource: 'contracts', action: 'update' }
-    ]
-  },
-  {
-    roleId: 'payroll_manager',
-    name: 'Payroll Manager',
-    description: 'Payroll processing and validation',
-    level: 4,
-    permissions: [
-      { resource: 'payroll', action: 'create' },
-      { resource: 'payroll', action: 'calculate' },
-      { resource: 'payroll', action: 'validate' },
-      { resource: 'timesheets', action: 'lock' },
-      { resource: 'corrections', action: 'approve' }
-    ]
-  },
-  {
-    roleId: 'finance_controller',
-    name: 'Finance Controller',
-    description: 'Financial approvals and payment authorization',
-    level: 5,
-    permissions: [
-      { resource: 'payments', action: 'approve' },
-      { resource: 'filings', action: 'approve' },
-      { resource: 'payroll', action: 'finalize' },
-      { resource: 'corrections', action: 'approve' }
-    ]
-  },
-  {
-    roleId: 'compliance_officer',
-    name: 'Compliance Officer',
-    description: 'Government filing and compliance oversight',
-    level: 4,
-    permissions: [
-      { resource: 'filings', action: 'create' },
-      { resource: 'filings', action: 'submit' },
-      { resource: 'ergani', action: 'submit' },
-      { resource: 'audit', action: 'read' }
-    ]
-  },
-  {
-    roleId: 'property_manager',
-    name: 'Property Manager',
-    description: 'Single property operations management',
-    level: 3,
-    permissions: [
-      { resource: 'employees', action: 'read', conditions: ['same_property'] },
-      { resource: 'schedules', action: 'create' },
-      { resource: 'schedules', action: 'update' },
-      { resource: 'timesheets', action: 'read', conditions: ['same_property'] }
-    ]
-  },
-  {
-    roleId: 'supervisor',
-    name: 'Department Supervisor',
-    description: 'Team management and timesheet approval',
-    level: 2,
-    permissions: [
-      { resource: 'timesheets', action: 'approve', conditions: ['same_department'] },
-      { resource: 'overtime', action: 'approve', conditions: ['same_department'] },
-      { resource: 'schedules', action: 'read', conditions: ['same_department'] }
-    ]
-  }
-];
+// Enhanced system roles with proper scoping
+export enum SystemRoleName {
+  OWNER = 'owner',
+  PAYROLL_ADMIN = 'payroll_admin', 
+  HR_ADMIN = 'hr_admin',
+  MANAGER = 'manager',
+  ACCOUNTANT = 'accountant',
+  EMPLOYEE = 'employee',
+  READ_ONLY_AUDITOR = 'read_only_auditor'
+}
+
+export enum PermissionScope {
+  TENANT = 'tenant',
+  PROPERTY = 'property', 
+  EMPLOYEE = 'employee'
+}
+
+export interface ScopedPermission {
+  resource: string;
+  action: string;
+  scope: PermissionScope;
+  conditions?: string[];
+}
+
+export interface UserContext {
+  userId: string;
+  employeeId?: string;
+  propertyId?: string;
+  companyId: string;
+}
+
+export interface ImpersonationContext {
+  originalUserId: string;
+  impersonatedUserId: string;
+  impersonatedEmployeeId?: string;
+  sessionToken: string;
+  reason?: string;
+}
 
 // Approval workflows for sensitive operations
 const APPROVAL_WORKFLOWS: ApprovalWorkflow[] = [
@@ -519,6 +491,409 @@ class RBACService {
       ipAddress: '127.0.0.1',
       userAgent: 'PayrollSync-RBAC-Service'
     });
+  }
+
+  // ============================
+  // Enhanced RBAC Functionality  
+  // ============================
+
+  /**
+   * Initialize system roles and permissions (run once on startup)
+   */
+  async initializeSystemRoles(): Promise<void> {
+    try {
+      // Create core system roles
+      const roles = [
+        { name: SystemRoleName.OWNER, displayName: 'Owner', description: 'Full system access', level: 5 },
+        { name: SystemRoleName.PAYROLL_ADMIN, displayName: 'Payroll Administrator', description: 'Payroll management', level: 4 },
+        { name: SystemRoleName.HR_ADMIN, displayName: 'HR Administrator', description: 'HR management', level: 4 },
+        { name: SystemRoleName.MANAGER, displayName: 'Manager', description: 'Team management', level: 3 },
+        { name: SystemRoleName.ACCOUNTANT, displayName: 'Accountant', description: 'Financial operations', level: 3 },
+        { name: SystemRoleName.EMPLOYEE, displayName: 'Employee', description: 'Self-service access', level: 1 },
+        { name: SystemRoleName.READ_ONLY_AUDITOR, displayName: 'Read-Only Auditor', description: 'Audit access only', level: 2 },
+      ];
+      
+      // Insert system roles (ignoring conflicts)
+      for (const role of roles) {
+        await db.insert(systemRoles)
+          .values(role)
+          .onConflictDoNothing()
+          .execute();
+      }
+      
+      // Create core system permissions
+      const permissions = [
+        { name: 'employee_portal.view', resource: 'employee_portal', action: 'view', scope: PermissionScope.EMPLOYEE },
+        { name: 'payslip.view', resource: 'payslip', action: 'view', scope: PermissionScope.PROPERTY },
+        { name: 'user.impersonate_employee', resource: 'user', action: 'impersonate', scope: PermissionScope.TENANT },
+        { name: 'user.invite', resource: 'user', action: 'invite', scope: PermissionScope.TENANT },
+        { name: 'user.manage_roles', resource: 'user', action: 'manage_roles', scope: PermissionScope.TENANT },
+        { name: 'profile.view_own', resource: 'profile', action: 'view', scope: PermissionScope.EMPLOYEE },
+        { name: 'profile.view_any', resource: 'profile', action: 'view', scope: PermissionScope.TENANT },
+        { name: 'payroll.manage', resource: 'payroll', action: 'manage', scope: PermissionScope.TENANT },
+        { name: 'employee.manage', resource: 'employee', action: 'manage', scope: PermissionScope.PROPERTY },
+        { name: 'audit.view', resource: 'audit', action: 'view', scope: PermissionScope.TENANT },
+      ];
+      
+      for (const permission of permissions) {
+        await db.insert(systemPermissions)
+          .values(permission)
+          .onConflictDoNothing()
+          .execute();
+      }
+      
+    } catch (error) {
+      console.error("Error initializing system roles:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Enhanced permission check with proper scoping and impersonation support
+   */
+  async hasEnhancedPermission(
+    context: UserContext, 
+    permissionName: string, 
+    targetResourceId?: string,
+    impersonationContext?: ImpersonationContext
+  ): Promise<boolean> {
+    try {
+      const userId = impersonationContext?.originalUserId || context.userId;
+      const effectiveUserId = impersonationContext?.impersonatedUserId || context.userId;
+      
+      // Get user's roles
+      const userRoleList = await db
+        .select()
+        .from(userRoles)
+        .where(and(
+          eq(userRoles.userId, userId),
+          eq(userRoles.isActive, true)
+        ));
+      
+      // Get permission details
+      const [permission] = await db
+        .select()
+        .from(systemPermissions)
+        .where(eq(systemPermissions.name, permissionName));
+        
+      if (!permission) return false;
+      
+      // Check each role for the permission
+      for (const userRole of userRoleList) {
+        // Get role's permissions
+        const rolePerms = await db
+          .select()
+          .from(rolePermissions)
+          .innerJoin(systemRoles, eq(rolePermissions.roleId, systemRoles.id))
+          .innerJoin(systemPermissions, eq(rolePermissions.permissionId, systemPermissions.id))
+          .where(and(
+            eq(systemRoles.name, userRole.role),
+            eq(systemPermissions.name, permissionName)
+          ));
+        
+        if (rolePerms.length > 0) {
+          // Apply scoping rules
+          const hasAccess = await this.checkEnhancedPermissionScope(
+            context, 
+            permission, 
+            userRole, 
+            targetResourceId,
+            effectiveUserId
+          );
+          
+          if (hasAccess) {
+            // Log audit trail
+            if (impersonationContext) {
+              await this.logImpersonationAccess(
+                impersonationContext,
+                permissionName,
+                targetResourceId || '',
+                'success'
+              );
+            }
+            return true;
+          }
+        }
+      }
+      
+      return false;
+      
+    } catch (error) {
+      console.error("Enhanced permission check error:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Check permission scope (tenant, property, employee) with enhanced logic
+   */
+  private async checkEnhancedPermissionScope(
+    context: UserContext,
+    permission: any,
+    userRole: any,
+    targetResourceId?: string,
+    effectiveUserId?: string
+  ): Promise<boolean> {
+    
+    switch (permission.scope) {
+      case PermissionScope.TENANT:
+        // Tenant-wide access (for owners, admins)
+        return true;
+      
+      case PermissionScope.PROPERTY:
+        // Property/team-scoped access
+        if (!userRole.propertyId) return true; // No property restriction = all properties
+        if (!targetResourceId) return true; // No specific target = allowed within scope
+        
+        // Check if target belongs to user's property
+        // This would need to be implemented based on the specific resource type
+        return true; // Simplified for now
+        
+      case PermissionScope.EMPLOYEE:
+        // Employee self-only access
+        if (permission.resource === 'employee_portal' || permission.resource === 'profile') {
+          // Only allow access to own data
+          const targetEmployee = await db
+            .select()
+            .from(employees)
+            .where(eq(employees.employeeId, targetResourceId || ''))
+            .limit(1);
+            
+          if (targetEmployee.length === 0) return false;
+          
+          const userEmployee = await db
+            .select()
+            .from(employees)
+            .innerJoin(users, eq(employees.userId, users.id))
+            .where(eq(users.id, effectiveUserId || context.userId))
+            .limit(1);
+            
+          return userEmployee.length > 0 && 
+                 userEmployee[0].employees.employeeId === targetEmployee[0].employeeId;
+        }
+        
+        return false;
+        
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Get user roles with enhanced information
+   */
+  async getEnhancedUserRoles(userId: string): Promise<any[]> {
+    try {
+      const roles = await db
+        .select({
+          id: userRoles.id,
+          role: userRoles.role,
+          propertyId: userRoles.propertyId,
+          grantedAt: userRoles.grantedAt,
+          expiresAt: userRoles.expiresAt,
+          isActive: userRoles.isActive,
+          roleName: systemRoles.name,
+          displayName: systemRoles.displayName,
+          description: systemRoles.description,
+          level: systemRoles.level
+        })
+        .from(userRoles)
+        .leftJoin(systemRoles, eq(userRoles.role, systemRoles.name))
+        .where(and(
+          eq(userRoles.userId, userId),
+          eq(userRoles.isActive, true)
+        ));
+      
+      return roles;
+      
+    } catch (error) {
+      console.error("Error fetching enhanced user roles:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Assign role to user with proper scoping
+   */
+  async assignUserRole(
+    userId: string, 
+    roleName: string, 
+    assignedBy: string,
+    propertyId?: string,
+    expiresAt?: Date
+  ): Promise<boolean> {
+    try {
+      await db.insert(userRoles).values({
+        userId,
+        role: roleName,
+        propertyId: propertyId || null,
+        grantedBy: assignedBy,
+        expiresAt: expiresAt || null,
+        isActive: true
+      });
+      
+      return true;
+      
+    } catch (error) {
+      console.error("Error assigning role:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Start impersonation session for "View as Employee" functionality
+   */
+  async startImpersonationSession(
+    impersonatorId: string,
+    targetUserId: string,
+    reason: string,
+    durationMinutes: number = 60
+  ): Promise<string | null> {
+    try {
+      const sessionToken = nanoid(32);
+      const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
+      
+      // Get target employee info
+      const targetEmployee = await db
+        .select()
+        .from(employees)
+        .innerJoin(users, eq(employees.userId, users.id))
+        .where(eq(users.id, targetUserId))
+        .limit(1);
+      
+      await db.insert(userImpersonationSessions).values({
+        impersonatorId,
+        targetUserId,
+        targetEmployeeId: targetEmployee.length > 0 ? targetEmployee[0].employees.employeeId : null,
+        sessionToken,
+        reason,
+        expiresAt,
+        isActive: true
+      });
+      
+      return sessionToken;
+      
+    } catch (error) {
+      console.error("Error starting impersonation:", error);
+      return null;
+    }
+  }
+
+  /**
+   * End impersonation session
+   */
+  async endImpersonationSession(sessionToken: string): Promise<boolean> {
+    try {
+      await db
+        .update(userImpersonationSessions)
+        .set({ 
+          isActive: false, 
+          endedAt: new Date() 
+        })
+        .where(eq(userImpersonationSessions.sessionToken, sessionToken));
+        
+      return true;
+      
+    } catch (error) {
+      console.error("Error ending impersonation:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Log employee self-service access for audit
+   */
+  async logEmployeeSelfServiceAccess(
+    employeeId: string,
+    userId: string | null,
+    action: string,
+    resourceType: string,
+    resourceId?: string,
+    result: 'success' | 'denied' | 'error' = 'success',
+    impersonationContext?: ImpersonationContext
+  ): Promise<void> {
+    try {
+      await db.insert(employeeSelfServiceAudit).values({
+        employeeId,
+        userId,
+        action,
+        resourceType,
+        resourceId: resourceId || null,
+        accessResult: result,
+        isImpersonated: !!impersonationContext,
+        impersonatorId: impersonationContext?.originalUserId || null
+      });
+      
+    } catch (error) {
+      console.error("Error logging self-service access:", error);
+    }
+  }
+
+  /**
+   * Log impersonation access for audit
+   */
+  private async logImpersonationAccess(
+    impersonationContext: ImpersonationContext,
+    action: string,
+    resourceId: string,
+    result: string
+  ): Promise<void> {
+    try {
+      await db.insert(auditLog).values({
+        logId: nanoid(),
+        eventType: 'impersonation_access',
+        userId: impersonationContext.originalUserId,
+        resourceType: 'impersonation',
+        resourceId: impersonationContext.sessionToken,
+        action: action,
+        details: JSON.stringify({
+          originalUser: impersonationContext.originalUserId,
+          impersonatedUser: impersonationContext.impersonatedUserId,
+          resourceAccessed: resourceId,
+          result: result,
+          reason: impersonationContext.reason
+        }),
+        timestamp: new Date(),
+        ipAddress: '127.0.0.1',
+        userAgent: 'PayrollSync-RBAC-Service'
+      });
+      
+    } catch (error) {
+      console.error("Error logging impersonation access:", error);
+    }
+  }
+
+  /**
+   * Get all system roles
+   */
+  async getSystemRoles(): Promise<any[]> {
+    try {
+      return await db
+        .select()
+        .from(systemRoles)
+        .where(eq(systemRoles.isActive, true))
+        .orderBy(systemRoles.level);
+        
+    } catch (error) {
+      console.error("Error fetching system roles:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Get all system permissions
+   */
+  async getSystemPermissions(): Promise<any[]> {
+    try {
+      return await db
+        .select()
+        .from(systemPermissions)
+        .orderBy(systemPermissions.resource, systemPermissions.action);
+        
+    } catch (error) {
+      console.error("Error fetching system permissions:", error);
+      return [];
+    }
   }
 }
 

@@ -17,6 +17,9 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Import companies table from multi-tenancy schema
+import { companies } from "./multi-tenancy-schema";
+
 // Session storage table for Replit Auth
 export const sessions = pgTable(
   "sessions",
@@ -7843,6 +7846,237 @@ export const insertRunbookApprovalSchema = createInsertSchema(runbookApprovals).
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+// ===========================
+// Role-Based Access Control (RBAC) System
+// ===========================
+
+// System roles available in the system
+export const systemRoles = pgTable("system_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(), // 'owner', 'payroll_admin', 'hr_admin', 'manager', 'accountant', 'employee', 'read_only_auditor'
+  displayName: varchar("display_name").notNull(),
+  description: text("description"),
+  level: integer("level").notNull().default(1), // 1-5, higher numbers have more authority
+  isSystemRole: boolean("is_system_role").default(true),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Permissions that can be assigned to roles
+export const systemPermissions = pgTable("system_permissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull().unique(), // 'employee_portal.view', 'payslip.view', 'user.impersonate_employee'
+  resource: varchar("resource").notNull(), // 'employee_portal', 'payslip', 'user'
+  action: varchar("action").notNull(), // 'view', 'create', 'update', 'delete', 'impersonate'
+  description: text("description"),
+  scope: varchar("scope").notNull().default('tenant'), // 'tenant', 'property', 'employee'
+  isSystemPermission: boolean("is_system_permission").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Role-Permission mappings
+export const rolePermissions = pgTable("role_permissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  roleId: varchar("role_id").notNull().references(() => systemRoles.id, { onDelete: 'cascade' }),
+  permissionId: varchar("permission_id").notNull().references(() => systemPermissions.id, { onDelete: 'cascade' }),
+  conditions: jsonb("conditions"), // Additional conditions for the permission
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  unique("unique_role_permission").on(table.roleId, table.permissionId)
+]);
+
+// Company role templates (existing table definition)
+export const companyRoleTemplates = pgTable("company_role_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull().references(() => companies.companyId),
+  roleName: varchar("role_name").notNull(),
+  displayName: varchar("display_name").notNull(),
+  description: text("description"),
+  permissions: jsonb("permissions").$type<string[]>().default([]),
+  defaultAccessLevel: varchar("default_access_level").notNull().default('read'),
+  canInviteUsers: boolean("can_invite_users").default(false),
+  canManageRoles: boolean("can_manage_roles").default(false),
+  maxPropertiesAccess: integer("max_properties_access"), // null = unlimited
+  isSystemRole: boolean("is_system_role").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User role assignments (existing table definition)
+export const userRoles = pgTable("user_roles", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  role: varchar("role").notNull(), // References systemRoles.name or companyRoleTemplates.roleName
+  propertyId: varchar("property_id").references(() => properties.propertyId), // For property-scoped roles
+  grantedBy: varchar("granted_by").references(() => users.id),
+  grantedAt: timestamp("granted_at").defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// User impersonation sessions for "View as Employee" functionality  
+export const userImpersonationSessions = pgTable("user_impersonation_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  impersonatorId: varchar("impersonator_id").notNull().references(() => users.id),
+  targetUserId: varchar("target_user_id").notNull().references(() => users.id),
+  targetEmployeeId: varchar("target_employee_id").references(() => employees.employeeId),
+  sessionToken: varchar("session_token").notNull().unique(),
+  reason: text("reason"), // Why impersonation was needed
+  startedAt: timestamp("started_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+  endedAt: timestamp("ended_at"),
+  isActive: boolean("is_active").default(true),
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Employee self-service access log for audit purposes
+export const employeeSelfServiceAudit = pgTable("employee_self_service_audit", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").notNull().references(() => employees.employeeId),
+  userId: varchar("user_id").references(() => users.id), // If user is linked to employee
+  action: varchar("action").notNull(), // 'view_profile', 'view_payslip', 'download_payslip'
+  resourceType: varchar("resource_type").notNull(), // 'profile', 'payslip'
+  resourceId: varchar("resource_id"), // ID of the resource accessed
+  accessResult: varchar("access_result").notNull().default('success'), // 'success', 'denied', 'error'
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  timestamp: timestamp("timestamp").defaultNow(),
+  isImpersonated: boolean("is_impersonated").default(false),
+  impersonatorId: varchar("impersonator_id").references(() => users.id),
+});
+
+// Relations for RBAC system
+export const systemRolesRelations = relations(systemRoles, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+}));
+
+export const systemPermissionsRelations = relations(systemPermissions, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+}));
+
+export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
+  role: one(systemRoles, {
+    fields: [rolePermissions.roleId],
+    references: [systemRoles.id],
+  }),
+  permission: one(systemPermissions, {
+    fields: [rolePermissions.permissionId],
+    references: [systemPermissions.id],
+  }),
+}));
+
+export const userRolesRelations = relations(userRoles, ({ one }) => ({
+  user: one(users, {
+    fields: [userRoles.userId],
+    references: [users.id],
+  }),
+  property: one(properties, {
+    fields: [userRoles.propertyId],
+    references: [properties.propertyId],
+  }),
+  grantedByUser: one(users, {
+    fields: [userRoles.grantedBy],
+    references: [users.id],
+  }),
+}));
+
+export const companyRoleTemplatesRelations = relations(companyRoleTemplates, ({ one }) => ({
+  company: one(companies, {
+    fields: [companyRoleTemplates.companyId],
+    references: [companies.companyId],
+  }),
+}));
+
+export const userImpersonationSessionsRelations = relations(userImpersonationSessions, ({ one }) => ({
+  impersonator: one(users, {
+    fields: [userImpersonationSessions.impersonatorId],
+    references: [users.id],
+  }),
+  targetUser: one(users, {
+    fields: [userImpersonationSessions.targetUserId],
+    references: [users.id],
+  }),
+  targetEmployee: one(employees, {
+    fields: [userImpersonationSessions.targetEmployeeId],
+    references: [employees.employeeId],
+  }),
+}));
+
+export const employeeSelfServiceAuditRelations = relations(employeeSelfServiceAudit, ({ one }) => ({
+  employee: one(employees, {
+    fields: [employeeSelfServiceAudit.employeeId],
+    references: [employees.employeeId],
+  }),
+  user: one(users, {
+    fields: [employeeSelfServiceAudit.userId],
+    references: [users.id],
+  }),
+  impersonator: one(users, {
+    fields: [employeeSelfServiceAudit.impersonatorId],
+    references: [users.id],
+  }),
+}));
+
+// Type exports for RBAC system
+export type SystemRole = typeof systemRoles.$inferSelect;
+export type InsertSystemRole = typeof systemRoles.$inferInsert;
+export type SystemPermission = typeof systemPermissions.$inferSelect;
+export type InsertSystemPermission = typeof systemPermissions.$inferInsert;
+export type RolePermission = typeof rolePermissions.$inferSelect;
+export type InsertRolePermission = typeof rolePermissions.$inferInsert;
+export type CompanyRoleTemplate = typeof companyRoleTemplates.$inferSelect;
+export type InsertCompanyRoleTemplate = typeof companyRoleTemplates.$inferInsert;
+export type UserRole = typeof userRoles.$inferSelect;
+export type InsertUserRole = typeof userRoles.$inferInsert;
+export type UserImpersonationSession = typeof userImpersonationSessions.$inferSelect;
+export type InsertUserImpersonationSession = typeof userImpersonationSessions.$inferInsert;
+export type EmployeeSelfServiceAudit = typeof employeeSelfServiceAuditRelations.$inferSelect;
+export type InsertEmployeeSelfServiceAudit = typeof employeeSelfServiceAudit.$inferInsert;
+
+// Insert schemas for RBAC system
+export const insertSystemRoleSchema = createInsertSchema(systemRoles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSystemPermissionSchema = createInsertSchema(systemPermissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRolePermissionSchema = createInsertSchema(rolePermissions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertCompanyRoleTemplateSchema = createInsertSchema(companyRoleTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserRoleSchema = createInsertSchema(userRoles).omit({
+  id: true,
+  grantedAt: true,
+  createdAt: true,
+});
+
+export const insertUserImpersonationSessionSchema = createInsertSchema(userImpersonationSessions).omit({
+  id: true,
+  startedAt: true,
+  createdAt: true,
+});
+
+export const insertEmployeeSelfServiceAuditSchema = createInsertSchema(employeeSelfServiceAudit).omit({
+  id: true,
+  timestamp: true,
 });
 
 // Import canonical payment schema tables
