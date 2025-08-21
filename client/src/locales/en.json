@@ -58,5 +58,12 @@
   "auth.loading.creatingAccount": "Creating account...",
   "auth.loading.sending": "Sending...",
   "auth.loading.verifying": "Verifying...",
-  "auth.loading.resetting": "Resetting password..."
+  "auth.loading.resetting": "Resetting password...",
+  "nav.dashboard": "Dashboard",
+  "buttons.run_payroll": "Run Payroll",
+  "buttons.review_now": "Review Now",
+  "buttons.view_all": "View All",
+  "chips.due_today": "Due Today",
+  "chips.blocked": "Blocked",
+  "chips.needs_approval": "Needs Approval"
 }

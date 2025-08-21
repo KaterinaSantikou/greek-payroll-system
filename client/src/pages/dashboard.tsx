@@ -166,11 +166,11 @@ export default function Dashboard() {
             <div className="flex items-center justify-between pt-2">
               <Button className="flex-1 mr-2">
                 <PlayCircle className="h-4 w-4 mr-2" />
-                {mockDashboardData.payrollStatus.stage === 'draft' ? 'Resume Draft' : 'Start Payroll'}
+                {mockDashboardData.payrollStatus.stage === 'draft' ? 'Resume Draft' : t('buttons.run_payroll')}
               </Button>
               <Button variant="outline" size="sm">
                 <Eye className="h-4 w-4 mr-1" />
-                View all
+                {t('buttons.view_all')}
               </Button>
             </div>
           </CardContent>
@@ -211,11 +211,11 @@ export default function Dashboard() {
             <div className="flex items-center justify-between pt-2">
               <Button variant="outline" className="flex-1 mr-2">
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Review Now
+                {t('buttons.review_now')}
               </Button>
               <Button variant="outline" size="sm">
                 <Eye className="h-4 w-4 mr-1" />
-                View all ({mockDashboardData.timeApprovals.count})
+                {t('buttons.view_all')} ({mockDashboardData.timeApprovals.count})
               </Button>
             </div>
           </CardContent>
@@ -277,7 +277,7 @@ export default function Dashboard() {
               </Button>
               <Button variant="outline" size="sm">
                 <Eye className="h-4 w-4 mr-1" />
-                View all ({mockDashboardData.filingsDue})
+                {t('buttons.view_all')} ({mockDashboardData.filingsDue})
               </Button>
             </div>
           </CardContent>
@@ -337,7 +337,7 @@ export default function Dashboard() {
               )}
               <Button variant="outline" size="sm">
                 <Eye className="h-4 w-4 mr-1" />
-                View all
+                {t('buttons.view_all')}
               </Button>
             </div>
           </CardContent>

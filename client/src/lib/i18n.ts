@@ -162,6 +162,16 @@ interface TranslationKeys {
   'common.create': string;
   'common.update': string;
 
+  // Button labels (bilingual)
+  'buttons.run_payroll': string;
+  'buttons.review_now': string;
+  'buttons.view_all': string;
+
+  // Status chips (bilingual)
+  'chips.due_today': string;
+  'chips.blocked': string;
+  'chips.needs_approval': string;
+
   // Status labels
   'status.pending': string;
   'status.approved': string;
@@ -299,6 +309,16 @@ const translations: Record<Locale, TranslationKeys> = {
     'common.add': 'Add',
     'common.create': 'Create',
     'common.update': 'Update',
+
+    // Button labels (bilingual)
+    'buttons.run_payroll': 'Run Payroll',
+    'buttons.review_now': 'Review Now',
+    'buttons.view_all': 'View All',
+
+    // Status chips (bilingual)
+    'chips.due_today': 'Due Today',
+    'chips.blocked': 'Blocked',
+    'chips.needs_approval': 'Needs Approval',
 
     // Status labels
     'status.pending': 'Pending',
@@ -589,6 +609,16 @@ const translations: Record<Locale, TranslationKeys> = {
     'common.add': 'Προσθήκη',
     'common.create': 'Δημιουργία',
     'common.update': 'Ενημέρωση',
+
+    // Button labels (bilingual)
+    'buttons.run_payroll': 'Τρέξτε μισθοδοσία',
+    'buttons.review_now': 'Έλεγχος τώρα',
+    'buttons.view_all': 'Προβολή όλων',
+
+    // Status chips (bilingual)
+    'chips.due_today': 'Λήγει σήμερα',
+    'chips.blocked': 'Φραγή',
+    'chips.needs_approval': 'Απαιτεί έγκριση',
 
     // Comprehensive Rota System - Greek
     'rota.title': 'Διαχείριση Ωραρίων Εργασίας',

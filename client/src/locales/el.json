@@ -58,5 +58,12 @@
   "auth.loading.creatingAccount": "Δημιουργία λογαριασμού...",
   "auth.loading.sending": "Αποστολή...",
   "auth.loading.verifying": "Επαλήθευση...",
-  "auth.loading.resetting": "Επαναφορά κωδικού..."
+  "auth.loading.resetting": "Επαναφορά κωδικού...",
+  "nav.dashboard": "Πίνακας Ελέγχου",
+  "buttons.run_payroll": "Τρέξτε μισθοδοσία",
+  "buttons.review_now": "Έλεγχος τώρα",
+  "buttons.view_all": "Προβολή όλων",
+  "chips.due_today": "Λήγει σήμερα",
+  "chips.blocked": "Φραγή",
+  "chips.needs_approval": "Απαιτεί έγκριση"
 }
