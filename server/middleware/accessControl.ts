@@ -5,7 +5,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import ABACSecurityEngine, { SecurityContext, AccessRequest } from '../lib/abacSecurity';
-import { auditLogger } from '../lib/auditLogging';
+import { auditLogger } from '../lib/auditLogging.js';
 
 export interface AccessToken {
   sub: string; // user_id
