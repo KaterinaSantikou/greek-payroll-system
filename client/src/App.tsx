@@ -26,6 +26,7 @@ const Allowances = lazy(() => import("@/pages/allowances"));
 const Overtime = lazy(() => import("@/pages/overtime"));
 const Leave = lazy(() => import("@/pages/leave"));
 const Legal = lazy(() => import("@/pages/legal"));
+const TermsOfService = lazy(() => import("@/pages/legal/TermsOfService"));
 
 // Advanced features - lowest priority, load on demand
 const DigitalWorkCard = lazy(() => import("@/pages/digitalWorkCard"));
@@ -302,6 +303,7 @@ function Router() {
             <Route path="/overtime" component={Overtime} />
             <Route path="/leave" component={Leave} />
             <Route path="/legal" component={Legal} />
+            <Route path="/legal/terms" component={TermsOfService} />
             <Route path="/digital-work-card" component={DigitalWorkCard} />
             <Route path="/advanced-time-capture" component={AdvancedTimeCapture} />
             <Route path="/enterprise-architecture" component={EnterpriseArchitecture} />
