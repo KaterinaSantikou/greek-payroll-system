@@ -211,17 +211,17 @@ function Router() {
             <Route path="/status" component={PublicStatus} />
             
             {/* Demo pages accessible without authentication */}
-            <Route path="/onboarding-chatbot" component={lazy(() => import("@/pages/OnboardingChatbotDemo"))} />
-            <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo"))} />
-            <Route path="/churn-prevention" component={lazy(() => import("@/pages/ChurnPreventionDemo"))} />
-            <Route path="/ergani-validation" component={lazy(() => import("@/pages/ERGANIValidationDemo"))} />
-            <Route path="/cba-updates" component={lazy(() => import("@/pages/CBAUpdatesDemo"))} />
-            <Route path="/tax-law-alerts" component={lazy(() => import("@/pages/TaxLawAlertsDemo"))} />
-            <Route path="/digital-inspector-portal" component={lazy(() => import("@/pages/DigitalInspectorPortalDemo"))} />
-            <Route path="/cost-benchmarking" component={lazy(() => import("@/pages/CostBenchmarkingDemo"))} />
-            <Route path="/predictive-labor-costs" component={lazy(() => import("@/pages/PredictiveLaborCostsDemo"))} />
-            <Route path="/compliance-risk-scoring" component={lazy(() => import("@/pages/ComplianceRiskScoringDemo"))} />
-            <Route path="/webhook-system" component={lazy(() => import("@/pages/WebhookSystemDemo"))} />
+            <Route path="/onboarding-chatbot" component={lazy(() => import("@/pages/OnboardingChatbotDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/churn-prevention" component={lazy(() => import("@/pages/ChurnPreventionDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/ergani-validation" component={lazy(() => import("@/pages/ERGANIValidationDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/cba-updates" component={lazy(() => import("@/pages/CBAUpdatesDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/tax-law-alerts" component={lazy(() => import("@/pages/TaxLawAlertsDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/digital-inspector-portal" component={lazy(() => import("@/pages/DigitalInspectorPortalDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/cost-benchmarking" component={lazy(() => import("@/pages/CostBenchmarkingDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/predictive-labor-costs" component={lazy(() => import("@/pages/PredictiveLaborCostsDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/compliance-risk-scoring" component={lazy(() => import("@/pages/ComplianceRiskScoringDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/webhook-system" component={lazy(() => import("@/pages/WebhookSystemDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
             <Route path="/exit-intent-demo" component={lazy(() => import("@/pages/ExitIntentDemo"))} />
             <Route path="/ab-testing-dashboard" component={lazy(() => import("@/pages/ABTestingDashboard"))} />
             <Route path="/ab-testing-demo" component={lazy(() => import("@/pages/ABTestingDemo"))} />
@@ -345,27 +345,27 @@ function Router() {
             <Route path="/ai-engines-demo" component={AIEnginesDemo} />
             <Route path="/command-palette-demo" component={CommandPaletteDemo} />
             <Route path="/system-status" component={lazy(() => import("@/components/InAppStatusPage"))} />
-            <Route path="/incident-communications" component={lazy(() => import("@/components/IncidentCommunicationManager"))} />
-            <Route path="/root-cause-analysis" component={lazy(() => import("@/components/RootCauseAnalysisManager"))} />
-            <Route path="/incident-ownership" component={lazy(() => import("@/components/IncidentOwnershipManager"))} />
-            <Route path="/public-status" component={lazy(() => import("@/components/PublicStatusPage"))} />
-            <Route path="/performance-budgets" component={lazy(() => import("@/components/PerformanceBudgetManager"))} />
-            <Route path="/disaster-recovery" component={lazy(() => import("@/components/DisasterRecoveryManager"))} />
-            <Route path="/dunning-emails" component={lazy(() => import("@/components/DunningEmailManager"))} />
+            <Route path="/incident-communications" component={lazy(() => import("@/components/IncidentCommunicationManager").then(m => ({ default: m.IncidentCommunicationManager })))} />
+            <Route path="/root-cause-analysis" component={lazy(() => import("@/components/RootCauseAnalysisManager").then(m => ({ default: m.RootCauseAnalysisManager })))} />
+            <Route path="/incident-ownership" component={lazy(() => import("@/components/IncidentOwnershipManager").then(m => ({ default: m.IncidentOwnershipManager })))} />
+            <Route path="/public-status" component={lazy(() => import("@/components/PublicStatusPage").then(m => ({ default: m.PublicStatusPage })))} />
+            <Route path="/performance-budgets" component={lazy(() => import("@/components/PerformanceBudgetManager").then(m => ({ default: m.PerformanceBudgetManager })))} />
+            <Route path="/disaster-recovery" component={lazy(() => import("@/components/DisasterRecoveryManager").then(m => ({ default: m.DisasterRecoveryManager })))} />
+            <Route path="/dunning-emails" component={lazy(() => import("@/components/DunningEmailManager").then(m => ({ default: m.DunningEmailManager })))} />
             <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
             <Route path="/data-import" component={DataImport} />
             <Route path="/zero-trust-security" component={ZeroTrustSecurityPage} />
             <Route path="/error-tracking" component={lazy(() => import("@/pages/ErrorTrackingPage"))} />
-            <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo"))} />
-            <Route path="/churn-prevention" component={lazy(() => import("@/pages/ChurnPreventionDemo"))} />
-            <Route path="/ergani-validation" component={lazy(() => import("@/pages/ERGANIValidationDemo"))} />
-            <Route path="/cba-updates" component={lazy(() => import("@/pages/CBAUpdatesDemo"))} />
-            <Route path="/tax-law-alerts" component={lazy(() => import("@/pages/TaxLawAlertsDemo"))} />
-            <Route path="/digital-inspector-portal" component={lazy(() => import("@/pages/DigitalInspectorPortalDemo"))} />
-            <Route path="/cost-benchmarking" component={lazy(() => import("@/pages/CostBenchmarkingDemo"))} />
-            <Route path="/predictive-labor-costs" component={lazy(() => import("@/pages/PredictiveLaborCostsDemo"))} />
-            <Route path="/compliance-risk-scoring" component={lazy(() => import("@/pages/ComplianceRiskScoringDemo"))} />
-            <Route path="/webhook-system" component={lazy(() => import("@/pages/WebhookSystemDemo"))} />
+            <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/churn-prevention" component={lazy(() => import("@/pages/ChurnPreventionDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/ergani-validation" component={lazy(() => import("@/pages/ERGANIValidationDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/cba-updates" component={lazy(() => import("@/pages/CBAUpdatesDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/tax-law-alerts" component={lazy(() => import("@/pages/TaxLawAlertsDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/digital-inspector-portal" component={lazy(() => import("@/pages/DigitalInspectorPortalDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/cost-benchmarking" component={lazy(() => import("@/pages/CostBenchmarkingDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/predictive-labor-costs" component={lazy(() => import("@/pages/PredictiveLaborCostsDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/compliance-risk-scoring" component={lazy(() => import("@/pages/ComplianceRiskScoringDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
+            <Route path="/webhook-system" component={lazy(() => import("@/pages/WebhookSystemDemo").then(m => ({ default: (props: any) => <m.default locale="en" {...props} /> })))} />
             <Route path="/retrospective-mode-demo" component={lazy(() => import("@/pages/RetrospectiveModeDemo"))} />
         <Route path="/s1-dashboard" component={S1Dashboard} />
         <Route path="/s1-metrics" component={S1MetricsPage} />
