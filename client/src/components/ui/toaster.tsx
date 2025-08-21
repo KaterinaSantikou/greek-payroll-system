@@ -31,6 +31,3 @@ export function Toaster() {
     </ToastProvider>
   )
 }
-export function Toaster() {
-  return null;
-}

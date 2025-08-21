@@ -227,6 +227,39 @@ interface TranslationKeys {
   
   // Rota system
   'rota.subtitle': string;
+  'rota.builder': string;
+  'rota.people': string;
+  'rota.costs': string;
+  'rota.compliance': string;
+  'rota.analytics': string;
+  'rota.publishing': string;
+  'rota.mobile': string;
+
+  // Rota Builder
+  'rota.week_view': string;
+  'rota.fortnight_view': string;
+  'rota.month_view': string;
+  'rota.drag_drop': string;
+  'rota.templates': string;
+  'rota.copy_paste': string;
+  'rota.bulk_edit': string;
+  'rota.shift_details': string;
+  'rota.role_required': string;
+  'rota.min_hours': string;
+  'rota.max_hours': string;
+  'rota.rest_period': string;
+
+  // People Layer
+  'rota.availability_requests': string;
+  'rota.time_off': string;
+  'rota.shift_swaps': string;
+  'rota.shift_bidding': string;
+  'rota.approval_flow': string;
+  'rota.pending_approvals': string;
+
+  // Costs & Budget
+  'rota.labor_cost_forecast': string;
+  'rota.budget_vs_actual': string;
 }
 
 const translations: Record<Locale, TranslationKeys> = {
