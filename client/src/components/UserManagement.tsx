@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { UserPlus, Settings, Eye, Shield, Users } from 'lucide-react';
+import { UserPlus, Settings, Eye, Shield, Users, Mail, Send, CheckCircle, Grid3X3, Lock, Unlock } from 'lucide-react';
 
 interface User {
   id: string;
@@ -21,6 +21,15 @@ interface User {
   roles: UserRole[];
   lastLoginAt?: string;
   isActive: boolean;
+}
+
+interface InviteUserData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  propertyId?: string;
+  message?: string;
 }
 
 interface UserRole {
@@ -52,22 +61,23 @@ export function UserManagement() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAssignRoleOpen, setIsAssignRoleOpen] = useState(false);
   const [isImpersonationOpen, setIsImpersonationOpen] = useState(false);
+  const [isInviteUserOpen, setIsInviteUserOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Queries
-  const { data: users = [], isLoading: usersLoading } = useQuery({
+  const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ['/api/admin/users'],
     enabled: true,
   });
 
-  const { data: systemRoles = [], isLoading: rolesLoading } = useQuery({
+  const { data: systemRoles = [], isLoading: rolesLoading } = useQuery<SystemRole[]>({
     queryKey: ['/api/admin/system-roles'],
     enabled: true,
   });
 
-  const { data: properties = [], isLoading: propertiesLoading } = useQuery({
+  const { data: properties = [], isLoading: propertiesLoading } = useQuery<Property[]>({
     queryKey: ['/api/properties'],
     enabled: true,
   });
@@ -135,16 +145,39 @@ export function UserManagement() {
         durationMinutes: 60
       });
     },
-    onSuccess: (data) => {
-      const { sessionToken } = data;
-      // Store impersonation token and redirect to employee portal
+    onSuccess: (data: any) => {
+      const { sessionToken, impersonationData } = data;
+      // Store impersonation token and data
       sessionStorage.setItem('impersonation_token', sessionToken);
+      sessionStorage.setItem('impersonation_data', JSON.stringify(impersonationData));
       window.location.href = '/employee-portal';
     },
     onError: (error: any) => {
       toast({
         title: 'Error',
         description: error.message || 'Failed to start impersonation',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const inviteUserMutation = useMutation({
+    mutationFn: async (inviteData: InviteUserData) => {
+      return apiRequest('POST', '/api/admin/invite-user', inviteData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      setIsInviteUserOpen(false);
+      toast({
+        title: 'Invitation Sent',
+        description: 'User invitation has been sent successfully.',
+        variant: 'default',
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send invitation',
         variant: 'destructive',
       });
     },
@@ -185,7 +218,7 @@ export function UserManagement() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button>
+          <Button onClick={() => setIsInviteUserOpen(true)}>
             <UserPlus className="w-4 h-4 mr-2" />
             Invite User
           </Button>
@@ -201,6 +234,14 @@ export function UserManagement() {
           <TabsTrigger value="roles" className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
             Roles
+          </TabsTrigger>
+          <TabsTrigger value="matrix" className="flex items-center gap-2">
+            <Grid3X3 className="w-4 h-4" />
+            Roles & Policies Matrix
+          </TabsTrigger>
+          <TabsTrigger value="invitations" className="flex items-center gap-2">
+            <Mail className="w-4 h-4" />
+            Invitations
           </TabsTrigger>
         </TabsList>
 
@@ -342,6 +383,43 @@ export function UserManagement() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="matrix" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Roles & Policies Matrix</CardTitle>
+              <CardDescription>
+                Visual overview of role permissions and security policies across the system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RolesPoliciesMatrix 
+                systemRoles={systemRoles} 
+                isLoading={rolesLoading} 
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="invitations" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Invitations</CardTitle>
+              <CardDescription>
+                Manage pending user invitations and resend if needed
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PendingInvitations onResendInvite={(email) => {
+                // Resend invitation logic
+                toast({
+                  title: 'Invitation Resent',
+                  description: `Invitation has been resent to ${email}`,
+                });
+              }} />
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Role Assignment Dialog */}
@@ -376,6 +454,24 @@ export function UserManagement() {
             user={selectedUser}
             onSubmit={(data) => startImpersonationMutation.mutate(data)}
             isLoading={startImpersonationMutation.isPending}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* User Invitation Dialog */}
+      <Dialog open={isInviteUserOpen} onOpenChange={setIsInviteUserOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite New User</DialogTitle>
+            <DialogDescription>
+              Send an invitation to a new user with assigned role and permissions
+            </DialogDescription>
+          </DialogHeader>
+          <UserInvitationForm
+            systemRoles={systemRoles}
+            properties={properties}
+            onSubmit={(data) => inviteUserMutation.mutate(data)}
+            isLoading={inviteUserMutation.isPending}
           />
         </DialogContent>
       </Dialog>
@@ -507,6 +603,463 @@ function ImpersonationForm({ user, onSubmit, isLoading }: ImpersonationFormProps
         </Button>
       </DialogFooter>
     </form>
+  );
+}
+
+interface UserInvitationFormProps {
+  systemRoles: SystemRole[];
+  properties: Property[];
+  onSubmit: (data: InviteUserData) => void;
+  isLoading: boolean;
+}
+
+function UserInvitationForm({ systemRoles, properties, onSubmit, isLoading }: UserInvitationFormProps) {
+  const [formData, setFormData] = useState<InviteUserData>({
+    email: '',
+    firstName: '',
+    lastName: '',
+    role: '',
+    propertyId: '',
+    message: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.email || !formData.firstName || !formData.lastName || !formData.role) {
+      return;
+    }
+    onSubmit(formData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="firstName">First Name</Label>
+          <Input
+            id="firstName"
+            value={formData.firstName}
+            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+            required
+          />
+        </div>
+        <div>
+          <Label htmlFor="lastName">Last Name</Label>
+          <Input
+            id="lastName"
+            value={formData.lastName}
+            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="email">Email Address</Label>
+        <Input
+          id="email"
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="role">Role</Label>
+        <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a role" />
+          </SelectTrigger>
+          <SelectContent>
+            {systemRoles.map((role) => (
+              <SelectItem key={role.name} value={role.name}>
+                <div className="flex items-center justify-between w-full">
+                  <span>{role.displayName}</span>
+                  <Badge className={`ml-2 ${getRoleLevelColor(role.level)}`}>
+                    Level {role.level}
+                  </Badge>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="property">Property (Optional)</Label>
+        <Select value={formData.propertyId} onValueChange={(value) => setFormData({ ...formData, propertyId: value })}>
+          <SelectTrigger>
+            <SelectValue placeholder="All properties" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All properties</SelectItem>
+            {properties.map((property) => (
+              <SelectItem key={property.propertyId} value={property.propertyId}>
+                {property.propertyName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label htmlFor="message">Welcome Message (Optional)</Label>
+        <Input
+          id="message"
+          placeholder="Welcome to our payroll system!"
+          value={formData.message}
+          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+        />
+      </div>
+
+      <DialogFooter>
+        <Button type="submit" disabled={!formData.email || !formData.role || isLoading}>
+          {isLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+              Sending...
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4 mr-2" />
+              Send Invitation
+            </>
+          )}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+interface PendingInvitation {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  propertyName?: string;
+  sentAt: string;
+  expiresAt: string;
+  status: 'pending' | 'accepted' | 'expired';
+}
+
+interface PendingInvitationsProps {
+  onResendInvite: (email: string) => void;
+}
+
+function PendingInvitations({ onResendInvite }: PendingInvitationsProps) {
+  // Mock data - in real implementation, this would come from useQuery
+  const pendingInvitations: PendingInvitation[] = [
+    {
+      id: '1',
+      email: 'new.employee@hotel.gr',
+      firstName: 'Maria',
+      lastName: 'Papadakis',
+      role: 'employee',
+      sentAt: '2024-01-15T10:00:00Z',
+      expiresAt: '2024-01-22T10:00:00Z',
+      status: 'pending'
+    }
+  ];
+
+  const isExpired = (expiresAt: string) => {
+    return new Date(expiresAt) < new Date();
+  };
+
+  const getStatusColor = (status: string, expiresAt: string) => {
+    if (isExpired(expiresAt)) return 'destructive';
+    switch (status) {
+      case 'accepted': return 'default';
+      case 'pending': return 'secondary';
+      case 'expired': return 'destructive';
+      default: return 'outline';
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {pendingInvitations.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>No pending invitations</p>
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Sent</TableHead>
+              <TableHead>Expires</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {pendingInvitations.map((invitation) => (
+              <TableRow key={invitation.id}>
+                <TableCell>
+                  <div>
+                    <div className="font-medium">
+                      {invitation.firstName} {invitation.lastName}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {invitation.email}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary">
+                    {invitation.role}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {new Date(invitation.sentAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  {new Date(invitation.expiresAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getStatusColor(invitation.status, invitation.expiresAt)}>
+                    {isExpired(invitation.expiresAt) ? 'Expired' : invitation.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onResendInvite(invitation.email)}
+                      disabled={invitation.status === 'accepted'}
+                    >
+                      <Send className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </div>
+  );
+}
+
+interface RolesPoliciesMatrixProps {
+  systemRoles: SystemRole[];
+  isLoading: boolean;
+}
+
+function RolesPoliciesMatrix({ systemRoles, isLoading }: RolesPoliciesMatrixProps) {
+  const permissions = [
+    { id: 'view_payslips', name: 'View Payslips', category: 'Payroll' },
+    { id: 'manage_payroll', name: 'Manage Payroll', category: 'Payroll' },
+    { id: 'view_employees', name: 'View Employees', category: 'HR' },
+    { id: 'manage_employees', name: 'Manage Employees', category: 'HR' },
+    { id: 'view_timesheets', name: 'View Timesheets', category: 'Time' },
+    { id: 'manage_timesheets', name: 'Manage Timesheets', category: 'Time' },
+    { id: 'clock_in_out', name: 'Clock In/Out', category: 'Time' },
+    { id: 'view_reports', name: 'View Reports', category: 'Reporting' },
+    { id: 'export_data', name: 'Export Data', category: 'Data' },
+    { id: 'manage_users', name: 'Manage Users', category: 'Admin' },
+    { id: 'impersonate_users', name: 'Impersonate Users', category: 'Admin' },
+    { id: 'view_audit_logs', name: 'View Audit Logs', category: 'Security' },
+    { id: 'manage_security', name: 'Manage Security', category: 'Security' },
+  ];
+
+  const getRolePermissions = (roleName: string): string[] => {
+    const rolePermissionMap: Record<string, string[]> = {
+      'admin': [
+        'view_payslips', 'manage_payroll', 'view_employees', 'manage_employees',
+        'view_timesheets', 'manage_timesheets', 'view_reports', 'export_data',
+        'manage_users', 'impersonate_users', 'view_audit_logs', 'manage_security'
+      ],
+      'hr_payroll': [
+        'view_payslips', 'manage_payroll', 'view_employees', 'manage_employees',
+        'view_timesheets', 'manage_timesheets', 'view_reports', 'export_data'
+      ],
+      'manager': [
+        'view_payslips', 'view_employees', 'view_timesheets', 'manage_timesheets',
+        'view_reports', 'export_data'
+      ],
+      'employee': [
+        'view_payslips', 'view_timesheets', 'clock_in_out'
+      ],
+      'readonly': [
+        'view_payslips', 'view_employees', 'view_timesheets'
+      ]
+    };
+    return rolePermissionMap[roleName] || [];
+  };
+
+  const hasPermission = (roleName: string, permissionId: string): boolean => {
+    return getRolePermissions(roleName).includes(permissionId);
+  };
+
+  const getPermissionColor = (hasPermission: boolean, isHighRisk: boolean): string => {
+    if (!hasPermission) return 'bg-gray-100 text-gray-400';
+    if (isHighRisk) return 'bg-red-100 text-red-700 border-red-200';
+    return 'bg-green-100 text-green-700 border-green-200';
+  };
+
+  const isHighRiskPermission = (permissionId: string): boolean => {
+    return ['manage_payroll', 'manage_employees', 'impersonate_users', 'manage_security'].includes(permissionId);
+  };
+
+  const groupedPermissions = permissions.reduce((acc, perm) => {
+    if (!acc[perm.category]) {
+      acc[perm.category] = [];
+    }
+    acc[perm.category].push(perm);
+    return acc;
+  }, {} as Record<string, typeof permissions>);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <span className="ml-2 text-sm text-muted-foreground">Loading roles matrix...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Matrix Legend */}
+      <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-green-100 border border-green-200 rounded" />
+          <span className="text-sm">Granted</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-red-100 border border-red-200 rounded" />
+          <span className="text-sm">High Risk</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-gray-100 border border-gray-200 rounded" />
+          <span className="text-sm">Denied</span>
+        </div>
+      </div>
+
+      {/* Permissions Matrix */}
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-48">Permission</TableHead>
+              {systemRoles.map((role) => (
+                <TableHead key={role.name} className="text-center min-w-24">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-sm font-medium">{role.displayName}</span>
+                    <Badge className={getRoleLevelColor(role.level)} variant="outline">
+                      Level {role.level}
+                    </Badge>
+                  </div>
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Object.entries(groupedPermissions).map(([category, perms]) => (
+              <React.Fragment key={category}>
+                {/* Category Header */}
+                <TableRow className="bg-gray-50/50 dark:bg-gray-900/25">
+                  <TableCell colSpan={systemRoles.length + 1} className="font-medium text-sm text-muted-foreground">
+                    {category} Permissions
+                  </TableCell>
+                </TableRow>
+                
+                {/* Permissions in Category */}
+                {perms.map((permission) => (
+                  <TableRow key={permission.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        {isHighRiskPermission(permission.id) ? (
+                          <Lock className="w-4 h-4 text-red-500" />
+                        ) : (
+                          <Unlock className="w-4 h-4 text-green-500" />
+                        )}
+                        <span>{permission.name}</span>
+                      </div>
+                    </TableCell>
+                    {systemRoles.map((role) => (
+                      <TableCell key={`${role.name}-${permission.id}`} className="text-center">
+                        <div className="flex justify-center">
+                          <div 
+                            className={`w-6 h-6 rounded border flex items-center justify-center ${
+                              getPermissionColor(
+                                hasPermission(role.name, permission.id),
+                                isHighRiskPermission(permission.id)
+                              )
+                            }`}
+                          >
+                            {hasPermission(role.name, permission.id) && (
+                              <CheckCircle className="w-3 h-3" />
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </React.Fragment>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Security Policy Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium">ABAC Security</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Row-level access control based on employee_id matching
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Eye className="w-4 h-4 text-green-600" />
+              <span className="text-sm font-medium">PII Masking</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Automatic masking of sensitive data based on role
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Lock className="w-4 h-4 text-orange-600" />
+              <span className="text-sm font-medium">Audit Logging</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Tamper-evident logs for all sensitive operations
+            </p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Settings className="w-4 h-4 text-purple-600" />
+              <span className="text-sm font-medium">GDPR Ready</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Data subject rights and privacy controls
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
 

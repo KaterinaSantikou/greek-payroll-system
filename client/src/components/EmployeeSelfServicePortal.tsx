@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import ImpersonationBanner, { useImpersonation, DisabledDuringImpersonation } from '@/components/ImpersonationBanner';
+import PIIMasking from '@/lib/piiMasking';
 import { 
   User, 
   FileText, 
@@ -19,7 +21,11 @@ import {
   Euro,
   AlertCircle,
   Shield,
-  Eye
+  Eye,
+  CreditCard,
+  Phone,
+  Mail,
+  MapPin
 } from 'lucide-react';
 
 interface Employee {
@@ -66,43 +72,26 @@ interface TimeEntry {
   status: 'pending' | 'approved' | 'rejected';
 }
 
-interface ImpersonationAlert {
-  isImpersonated: boolean;
-  impersonatorName?: string;
-  reason?: string;
-}
 
 export function EmployeeSelfServicePortal() {
   const [selectedPayslip, setSelectedPayslip] = useState<Payslip | null>(null);
-  const [impersonationAlert, setImpersonationAlert] = useState<ImpersonationAlert>({ isImpersonated: false });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const impersonation = useImpersonation();
 
-  // Check for impersonation session
-  useEffect(() => {
-    const impersonationToken = sessionStorage.getItem('impersonation_token');
-    if (impersonationToken) {
-      // In a real implementation, you'd decode the token or make an API call
-      // to get impersonation details
-      setImpersonationAlert({
-        isImpersonated: true,
-        impersonatorName: 'Admin User',
-        reason: 'Troubleshooting payslip access'
-      });
-    }
-  }, []);
 
   // Queries - All scoped to current employee only
-  const { data: employee, isLoading: employeeLoading } = useQuery({
+  const { data: employee, isLoading: employeeLoading } = useQuery<Employee>({
     queryKey: ['/api/employee/profile'],
     enabled: true,
   });
 
-  const { data: payslips = [], isLoading: payslipsLoading } = useQuery({
+  const { data: payslips = [], isLoading: payslipsLoading } = useQuery<Payslip[]>({
     queryKey: ['/api/employee/payslips'],
     enabled: true,
   });
 
-  const { data: timeEntries = [], isLoading: timeEntriesLoading } = useQuery({
+  const { data: timeEntries = [], isLoading: timeEntriesLoading } = useQuery<TimeEntry[]>({
     queryKey: ['/api/employee/time-entries'],
     enabled: true,
   });
@@ -113,6 +102,7 @@ export function EmployeeSelfServicePortal() {
       return apiRequest('PUT', '/api/employee/profile', profileData);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/employee/profile'] });
       toast({
         title: 'Profile Updated',
         description: 'Your profile information has been updated successfully.',
@@ -129,11 +119,14 @@ export function EmployeeSelfServicePortal() {
 
   const downloadPayslipMutation = useMutation({
     mutationFn: async (payslipId: string) => {
-      return apiRequest('GET', `/api/employee/payslips/${payslipId}/download`);
+      const response = await fetch(`/api/employee/payslips/${payslipId}/download`);
+      if (!response.ok) {
+        throw new Error('Failed to download payslip');
+      }
+      return response.blob();
     },
-    onSuccess: (data, payslipId) => {
+    onSuccess: (blob, payslipId) => {
       // Create and trigger download
-      const blob = new Blob([data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -167,21 +160,16 @@ export function EmployeeSelfServicePortal() {
 
   return (
     <div className="space-y-6">
-      {/* Impersonation Alert */}
-      {impersonationAlert.isImpersonated && (
-        <div className="bg-amber-50 border-l-4 border-amber-400 p-4">
-          <div className="flex items-center">
-            <AlertCircle className="h-5 w-5 text-amber-400 mr-3" />
-            <div>
-              <p className="text-sm font-medium text-amber-800">
-                Administrative View Active
-              </p>
-              <p className="text-sm text-amber-700">
-                {impersonationAlert.impersonatorName} is viewing this portal for: {impersonationAlert.reason}
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Impersonation Banner */}
+      {impersonation.isActive && (
+        <ImpersonationBanner
+          impersonatorName={impersonation.impersonatorName || 'Admin User'}
+          targetEmployeeName={employee ? `${employee.firstName} ${employee.lastName}` : 'Employee'}
+          reason={impersonation.reason || 'Administrative support'}
+          startTime={impersonation.startTime || new Date().toISOString()}
+          duration={impersonation.duration || 60}
+          onExitImpersonation={impersonation.exitImpersonation}
+        />
       )}
 
       <div className="flex justify-between items-center">
@@ -194,18 +182,7 @@ export function EmployeeSelfServicePortal() {
           </p>
         </div>
         <div className="flex gap-2">
-          {impersonationAlert.isImpersonated && (
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                sessionStorage.removeItem('impersonation_token');
-                window.location.href = '/admin';
-              }}
-            >
-              <Shield className="w-4 h-4 mr-2" />
-              Exit Admin View
-            </Button>
-          )}
+          {/* Exit button is now in the banner */}
         </div>
       </div>
 
@@ -227,9 +204,10 @@ export function EmployeeSelfServicePortal() {
 
         <TabsContent value="profile" className="space-y-4">
           <EmployeeProfileForm 
-            employee={employee}
+            employee={employee || null}
             onUpdate={(data) => updateProfileMutation.mutate(data)}
             isUpdating={updateProfileMutation.isPending}
+            isImpersonated={impersonation.isActive}
           />
         </TabsContent>
 
@@ -402,13 +380,15 @@ export function EmployeeSelfServicePortal() {
   );
 }
 
+
 interface EmployeeProfileFormProps {
   employee: Employee | null;
   onUpdate: (data: Partial<Employee>) => void;
   isUpdating: boolean;
+  isImpersonated?: boolean;
 }
 
-function EmployeeProfileForm({ employee, onUpdate, isUpdating }: EmployeeProfileFormProps) {
+function EmployeeProfileForm({ employee, onUpdate, isUpdating, isImpersonated = false }: EmployeeProfileFormProps) {
   const [formData, setFormData] = useState<Partial<Employee>>({});
   const [isEditing, setIsEditing] = useState(false);
 
@@ -435,13 +415,24 @@ function EmployeeProfileForm({ employee, onUpdate, isUpdating }: EmployeeProfile
               Update your contact information and emergency contacts
             </CardDescription>
           </div>
-          <Button
-            variant={isEditing ? "default" : "outline"}
-            onClick={isEditing ? handleSave : () => setIsEditing(true)}
-            disabled={isUpdating}
-          >
-            {isUpdating ? 'Saving...' : isEditing ? 'Save Changes' : 'Edit Profile'}
-          </Button>
+          {isImpersonated ? (
+            <DisabledDuringImpersonation tooltip="Profile editing is disabled during administrative view">
+              <Button
+                variant="outline"
+                disabled
+              >
+                Edit Profile
+              </Button>
+            </DisabledDuringImpersonation>
+          ) : (
+            <Button
+              variant={isEditing ? "default" : "outline"}
+              onClick={isEditing ? handleSave : () => setIsEditing(true)}
+              disabled={isUpdating}
+            >
+              {isUpdating ? 'Saving...' : isEditing ? 'Save Changes' : 'Edit Profile'}
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -481,14 +472,14 @@ function EmployeeProfileForm({ employee, onUpdate, isUpdating }: EmployeeProfile
           <div>
             <Label>AFM (Tax ID)</Label>
             <Input
-              value={formData.afm || ''}
+              value={PIIMasking.maskAFM(formData.afm || '')}
               disabled // AFM can't be changed by employee
             />
           </div>
           <div>
             <Label>AMKA (Social Security)</Label>
             <Input
-              value={formData.amka || ''}
+              value={PIIMasking.maskAMKA(formData.amka || '')}
               disabled // AMKA can't be changed by employee
             />
           </div>
@@ -524,6 +515,16 @@ function EmployeeProfileForm({ employee, onUpdate, isUpdating }: EmployeeProfile
             <div>
               <Label>Employee ID</Label>
               <Input value={employee.employeeId} disabled />
+            </div>
+            <div>
+              <Label>Bank Account</Label>
+              <div className="flex items-center gap-2">
+                <Input 
+                  value={employee.bankAccount ? PIIMasking.maskBankAccount(employee.bankAccount) : 'Not provided'} 
+                  disabled 
+                />
+                <CreditCard className="h-4 w-4 text-muted-foreground" />
+              </div>
             </div>
             <div>
               <Label>Position</Label>
