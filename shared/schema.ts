@@ -660,6 +660,161 @@ export const employeeCarryForward = pgTable("employee_carry_forward", {
   index("idx_carry_forward_status").on(table.status),
 ]);
 
+// Enhanced Labor Compliance Tables - Missing Greek Law Components
+
+// Six-Day Workweek Tracking (Law 5053/2023)
+export const sixDayWorkweekRecords = pgTable("six_day_workweek_records", {
+  recordId: varchar("record_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  workWeekStart: date("work_week_start").notNull(),
+  regularWeeklyHours: decimal("regular_weekly_hours", { precision: 5, scale: 2 }).notNull(),
+  sixthDayHours: decimal("sixth_day_hours", { precision: 5, scale: 2 }).default("0.00"),
+  sixthDayPremiumRate: decimal("sixth_day_premium_rate", { precision: 5, scale: 4 }).default("0.4000"), // 40%
+  advanceNoticeProvided: boolean("advance_notice_provided").default(false),
+  sectorExclusion: boolean("sector_exclusion").default(false), // Tourism/food excluded
+  isCompliant: boolean("is_compliant").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_six_day_employee").on(table.employeeId),
+  index("idx_six_day_week").on(table.workWeekStart),
+]);
+
+// Right to Disconnect Violations (Law 4808/2021)
+export const rightToDisconnectViolations = pgTable("right_to_disconnect_violations", {
+  violationId: varchar("violation_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  violationType: varchar("violation_type", { length: 30 }).notNull(), // after_hours_contact, vacation_interruption, etc.
+  violationDate: timestamp("violation_date").notNull(),
+  contactMethod: varchar("contact_method", { length: 20 }).notNull(), // email, phone, chat, webcam_monitoring
+  outsideWorkingHours: boolean("outside_working_hours").default(false),
+  duringVacation: boolean("during_vacation").default(false),
+  employerResponse: text("employer_response"),
+  resolutionStatus: varchar("resolution_status", { length: 20 }).default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_rtd_employee").on(table.employeeId),
+  index("idx_rtd_date").on(table.violationDate),
+  index("idx_rtd_status").on(table.resolutionStatus),
+]);
+
+// Digital Work Card Records (ERGANI Integration)
+export const digitalWorkCards = pgTable("digital_work_cards", {
+  cardId: varchar("card_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
+  workDate: date("work_date").notNull(),
+  clockInTime: timestamp("clock_in_time").notNull(),
+  clockOutTime: timestamp("clock_out_time"),
+  breakTimes: jsonb("break_times").default('[]'), // [{start, end}] array
+  overtimeHours: decimal("overtime_hours", { precision: 5, scale: 2 }).default("0.00"),
+  isCardActive: boolean("is_card_active").default(true),
+  erganiSyncStatus: varchar("ergani_sync_status", { length: 20 }).default("pending"),
+  complianceStatus: varchar("compliance_status", { length: 20 }).default("compliant"),
+  fineAmount: decimal("fine_amount", { precision: 10, scale: 2 }), // €10,500 per deactivated card
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_dwc_employee").on(table.employeeId),
+  index("idx_dwc_property_date").on(table.propertyId, table.workDate),
+  index("idx_dwc_compliance").on(table.complianceStatus),
+]);
+
+// Enhanced Working Time Classifications
+export const enhancedWorkingTimeRecords = pgTable("enhanced_working_time_records", {
+  recordId: varchar("record_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  workDate: date("work_date").notNull(),
+  regularHours: decimal("regular_hours", { precision: 5, scale: 2 }).default("0.00"),
+  extraWorkHours: decimal("extra_work_hours", { precision: 5, scale: 2 }).default("0.00"), // +20%
+  overtimeHours: decimal("overtime_hours", { precision: 5, scale: 2 }).default("0.00"), // +40%
+  extendedOvertimeHours: decimal("extended_overtime_hours", { precision: 5, scale: 2 }).default("0.00"), // +60% (120+ hours)
+  illegalOvertimeHours: decimal("illegal_overtime_hours", { precision: 5, scale: 2 }).default("0.00"), // +120%
+  sundayPremiumHours: decimal("sunday_premium_hours", { precision: 5, scale: 2 }).default("0.00"), // +75%
+  holidayPremiumHours: decimal("holiday_premium_hours", { precision: 5, scale: 2 }).default("0.00"), // +75%
+  nightPremiumHours: decimal("night_premium_hours", { precision: 5, scale: 2 }).default("0.00"), // +25%
+  sundayOvertimePremiumHours: decimal("sunday_overtime_premium_hours", { precision: 5, scale: 2 }).default("0.00"), // +115%
+  nightOvertimePremiumHours: decimal("night_overtime_premium_hours", { precision: 5, scale: 2 }).default("0.00"), // +125%/+140%
+  totalCompensation: decimal("total_compensation", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_ewt_employee_date").on(table.employeeId, table.workDate),
+]);
+
+// LGBTQ+ Rights Extension (Law 5089/2024)
+export const lgbtqRightsExtensions = pgTable("lgbtq_rights_extensions", {
+  extensionId: varchar("extension_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  employeeType: varchar("employee_type", { length: 30 }).notNull(), // same_sex_spouse, lgbtq_parent, standard_employee
+  familyBenefitsEligible: jsonb("family_benefits_eligible").default('{}'), // {maternityLeave, paternityLeave, etc}
+  antidiscriminationProtections: jsonb("antidiscrimination_protections").default('{}'),
+  benefitEligibilityDate: date("benefit_eligibility_date").default(sql`'2024-01-01'`),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+}, (table) => [
+  index("idx_lgbtq_employee").on(table.employeeId),
+  index("idx_lgbtq_type").on(table.employeeType),
+]);
+
+// Workplace Harassment Policies (Law 4808/2021 - ILO Convention 190)
+export const workplaceHarassmentPolicies = pgTable("workplace_harassment_policies", {
+  policyId: varchar("policy_id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
+  companySize: integer("company_size").notNull(),
+  requiresMandatoryPolicy: boolean("requires_mandatory_policy").default(false), // 20+ employees
+  hasWrittenPolicy: boolean("has_written_policy").default(false),
+  hasInternalComplaintProcedure: boolean("has_internal_complaint_procedure").default(false),
+  hasZeroToleranceApproach: boolean("has_zero_tolerance_approach").default(false),
+  hasTrainingProgram: boolean("has_training_program").default(false),
+  hasSepeRegistry: boolean("has_sepe_registry").default(false), // Special SEPE registry
+  iloConvention190Compliant: boolean("ilo_convention_190_compliant").default(false),
+  policyElements: jsonb("policy_elements").default('{}'), // Physical, psychological, sexual, gender-based, mobbing
+  lastPolicyUpdate: date("last_policy_update"),
+  nextComplianceReview: date("next_compliance_review"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_harassment_property").on(table.propertyId),
+  index("idx_harassment_compliance").on(table.iloConvention190Compliant),
+]);
+
+// Labor Inspection Penalties (SEPE)
+export const laborInspectionPenalties = pgTable("labor_inspection_penalties", {
+  penaltyId: varchar("penalty_id").primaryKey().default(sql`gen_random_uuid()`),
+  propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
+  violationType: varchar("violation_type", { length: 100 }).notNull(),
+  penaltyAmount: decimal("penalty_amount", { precision: 10, scale: 2 }).notNull(), // Up to €50,000
+  violationDate: date("violation_date").notNull(),
+  inspectionDate: date("inspection_date").notNull(),
+  inspectorId: varchar("inspector_id", { length: 50 }),
+  penaltyStatus: varchar("penalty_status", { length: 20 }).default("assessed"), // assessed, paid, appealed, waived
+  legalReference: varchar("legal_reference", { length: 100 }), // Law 5053/2023, etc.
+  complianceDeadline: date("compliance_deadline"),
+  paymentDueDate: date("payment_due_date").notNull(),
+  paymentDate: date("payment_date"),
+  appealDate: date("appeal_date"),
+  isAnonymousComplaint: boolean("is_anonymous_complaint").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_penalty_property").on(table.propertyId),
+  index("idx_penalty_status").on(table.penaltyStatus),
+  index("idx_penalty_amount").on(table.penaltyAmount),
+]);
+
+// Enhanced Leave Entitlements
+export const enhancedLeaveEntitlements = pgTable("enhanced_leave_entitlements", {
+  entitlementId: varchar("entitlement_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  leaveYear: integer("leave_year").notNull(),
+  yearsOfService: integer("years_of_service").notNull(),
+  progressiveAnnualLeaveDays: integer("progressive_annual_leave_days").notNull(), // 20-26 days based on service
+  forceMajeureLeaveDays: integer("force_majeure_leave_days").default(2), // 2 days/year
+  caregiverLeaveDays: integer("caregiver_leave_days").default(5), // 5 days/year for serious conditions
+  assistedReproductionLeaveDays: integer("assisted_reproduction_leave_days").default(7), // 7 paid days
+  totalEntitlementDays: integer("total_entitlement_days").notNull(),
+  usedDays: integer("used_days").default(0),
+  remainingDays: integer("remaining_days").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_enhanced_leave_employee_year").on(table.employeeId, table.leaveYear),
+]);
+
 // Multiple Employers Tracking - For cumulative tax calculations (πολλαπλή απασχόληση)
 export const multipleEmployers = pgTable("multiple_employers", {
   recordId: varchar("record_id").primaryKey().default(sql`gen_random_uuid()`),

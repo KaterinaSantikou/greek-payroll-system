@@ -3754,6 +3754,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Greek Payroll Mechanics Routes - Rounding, Negative Net Pay, Property Allocation, CBAs
   const { registerPayrollMechanicsRoutes } = await import("./routes/payrollMechanicsRoutes");
   registerPayrollMechanicsRoutes(app);
+  
+  // Enhanced Greek Labor Compliance Routes - Missing Law Components
+  const { registerEnhancedLaborComplianceRoutes } = await import("./routes/enhancedLaborComplianceRoutes");
+  registerEnhancedLaborComplianceRoutes(app);
   registerAICopilotRoutes(app);
   registerLaborNewsfeedRoutes(app);
   registerInstantPaymentRoutes(app);
