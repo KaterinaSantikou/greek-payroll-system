@@ -7,7 +7,7 @@ import { LocaleProvider } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { lazy, Suspense, useEffect } from "react";
 import NotFound from "@/pages/not-found";
-import Landing from "@/pages/landing";
+import Landing from "@/pages/Landing";
 import LandingPage from "@/pages/LandingPage";
 import MarketingLanding from "@/pages/MarketingLanding";
 import { initMobileOptimizations } from "@/utils/mobileOptimizations";
