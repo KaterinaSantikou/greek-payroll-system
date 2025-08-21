@@ -246,7 +246,7 @@ function Router() {
         <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
         <Switch>
         <Route path="/" component={Home} />
-        <Route path="/dashboard" component={Home} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/marketing" component={MarketingLanding} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
         <Route path="/mobile-payroll" component={MobilePayroll} />
