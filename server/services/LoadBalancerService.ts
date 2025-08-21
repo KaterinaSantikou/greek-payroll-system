@@ -61,9 +61,16 @@ export class LoadBalancerService {
   constructor() {
     this.config = this.getOptimalLoadBalancerConfig();
     this.initializeMetrics();
-    this.initializeDefaultInstances();
-    this.startHealthChecks();
-    this.startMetricsCollection();
+    
+    // Only fully initialize in production
+    if (envConfig.NODE_ENV === 'production') {
+      this.initializeDefaultInstances();
+      this.startHealthChecks();
+      this.startMetricsCollection();
+    } else {
+      // Development: minimal setup
+      console.log('🔧 Load balancer running in development mode - minimal setup');
+    }
   }
 
   /**

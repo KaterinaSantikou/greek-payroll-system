@@ -112,70 +112,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware - Primary Replit Auth (Enterprise OIDC)
   await setupAuth(app);
 
-  // Initialize security enforcement components
-  try {
-    await SecurityEnforcementInitializer.initialize();
-    console.log('✅ Security enforcement components initialized');
-  } catch (error) {
-    console.error('❌ Security enforcement initialization failed:', error);
-    // Continue with reduced security in development
-    if (process.env.NODE_ENV === 'production') {
+  // Production-only enterprise services
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🔧 Initializing production enterprise services...');
+    
+    // Initialize security enforcement components
+    try {
+      await SecurityEnforcementInitializer.initialize();
+      console.log('✅ Security enforcement components initialized');
+    } catch (error) {
+      console.error('❌ Security enforcement initialization failed:', error);
       throw error; // Fail hard in production
     }
-  }
 
-  // Initialize GDPR compliance framework
-  try {
-    const { GDPRComplianceInitializer } = await import('./services/GDPRComplianceInitializer');
-    await GDPRComplianceInitializer.initialize();
-    console.log('🛡️  GDPR compliance framework initialized');
-  } catch (error) {
-    console.error('❌ GDPR compliance initialization failed:', error);
-    // Continue with reduced compliance in development
-    if (process.env.NODE_ENV === 'production') {
+    // Initialize GDPR compliance framework
+    try {
+      const { GDPRComplianceInitializer } = await import('./services/GDPRComplianceInitializer');
+      await GDPRComplianceInitializer.initialize();
+      console.log('🛡️  GDPR compliance framework initialized');
+    } catch (error) {
+      console.error('❌ GDPR compliance initialization failed:', error);
       throw error; // Fail hard in production
     }
-  }
 
-  // Initialize Disaster Recovery systems
-  try {
-    const { DisasterRecoveryInitializer } = await import('./services/DisasterRecoveryInitializer');
-    await DisasterRecoveryInitializer.initializeDRSystem();
-    console.log('🆘 Disaster Recovery systems initialized');
-  } catch (error) {
-    console.error('❌ Disaster Recovery initialization failed:', error);
-    // Continue with reduced DR capabilities in development
-    if (process.env.NODE_ENV === 'production') {
+    // Initialize Disaster Recovery systems
+    try {
+      const { DisasterRecoveryInitializer } = await import('./services/DisasterRecoveryInitializer');
+      await DisasterRecoveryInitializer.initializeDRSystem();
+      console.log('🆘 Disaster Recovery systems initialized');
+    } catch (error) {
+      console.error('❌ Disaster Recovery initialization failed:', error);
       throw error; // Fail hard in production
     }
-  }
 
-  // Initialize Government System Monitoring
-  try {
-    const { GovernmentSystemMonitoringService } = await import('./services/GovernmentSystemMonitoringService');
-    const monitoringService = GovernmentSystemMonitoringService.getInstance();
-    await monitoringService.initializeMonitoring();
-    console.log('🏛️  Government system monitoring initialized');
-  } catch (error) {
-    console.error('❌ Government system monitoring initialization failed:', error);
-    // Continue with reduced monitoring in development
-    if (process.env.NODE_ENV === 'production') {
+    // Initialize Government System Monitoring
+    try {
+      const { GovernmentSystemMonitoringService } = await import('./services/GovernmentSystemMonitoringService');
+      const monitoringService = GovernmentSystemMonitoringService.getInstance();
+      await monitoringService.initializeMonitoring();
+      console.log('🏛️  Government system monitoring initialized');
+    } catch (error) {
+      console.error('❌ Government system monitoring initialization failed:', error);
       throw error; // Fail hard in production
     }
-  }
 
-  // Initialize On-Call Rota System
-  try {
-    const { OnCallRotaService } = await import('./services/OnCallRotaService');
-    const onCallService = OnCallRotaService.getInstance();
-    await onCallService.initializeOnCallSystem();
-    console.log('🚨 On-call rota system initialized');
-  } catch (error) {
-    console.error('❌ On-call rota system initialization failed:', error);
-    // Continue with reduced on-call capabilities in development
-    if (process.env.NODE_ENV === 'production') {
+    // Initialize On-Call Rota System
+    try {
+      const { OnCallRotaService } = await import('./services/OnCallRotaService');
+      const onCallService = OnCallRotaService.getInstance();
+      await onCallService.initializeOnCallSystem();
+      console.log('🚨 On-call rota system initialized');
+    } catch (error) {
+      console.error('❌ On-call rota system initialization failed:', error);
       throw error; // Fail hard in production
     }
+  } else {
+    console.log('🔧 Development mode - skipping heavy enterprise services');
   }
 
   // Apply global MFA enforcement middleware (after auth but before other routes)

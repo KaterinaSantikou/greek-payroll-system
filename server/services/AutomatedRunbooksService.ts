@@ -78,12 +78,17 @@ export class AutomatedRunbooksService extends EventEmitter {
    * Initialize the runbooks service
    */
   async initializeService(): Promise<void> {
-    try {
-      await this.createDefaultRunbooks();
-      await this.initializeTriggerMonitoring();
-      console.log('📚 Automated runbooks service initialized');
-    } catch (error) {
-      console.error('Failed to initialize automated runbooks service:', error);
+    // Only initialize in production
+    if (process.env.NODE_ENV === 'production') {
+      try {
+        await this.createDefaultRunbooks();
+        await this.initializeTriggerMonitoring();
+        console.log('📚 Automated runbooks service initialized');
+      } catch (error) {
+        console.error('Failed to initialize automated runbooks service:', error);
+      }
+    } else {
+      console.log('🔧 Automated runbooks service - development mode (minimal setup)');
     }
   }
 
