@@ -448,7 +448,7 @@ const helpArticles: HelpArticle[] = [
               <ul className="text-xs space-y-1 mt-1">
                 <li>• SEPA εντός Ελλάδας: 0.50€ ανά μεταφορά</li>
                 <li>• SEPA εντός ΕΕ: 1.00€ ανά μεταφορά</li>
-                <li>• Bulk discounts: Έκπτωση για >50 μεταφορές</li>
+                <li>• Bulk discounts: Έκπτωση για {'>'}50 μεταφορές</li>
               </ul>
             </div>
           </div>
