@@ -260,6 +260,7 @@ interface TranslationKeys {
   // Costs & Budget
   'rota.labor_cost_forecast': string;
   'rota.budget_vs_actual': string;
+  'rota.over_budget': string;
 }
 
 const translations: Record<Locale, TranslationKeys> = {
