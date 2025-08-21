@@ -264,12 +264,11 @@ export class AuditService {
     ipAddress?: string;
     limit?: number;
   }) {
-    let query = db.select().from(authAuditLogs);
-
-    // Apply filters
-    if (filters.userId) {
-      query = query.where(eq(authAuditLogs.userId, filters.userId));
-    }
+    const baseQuery = db.select().from(authAuditLogs);
+    
+    const query = filters.userId 
+      ? baseQuery.where(eq(authAuditLogs.userId, filters.userId))
+      : baseQuery;
     // Add more filters as needed...
 
     return query.limit(filters.limit || 100);
@@ -337,6 +336,6 @@ export class AuditService {
       reason: event.reason
     };
 
-    return this.logEvent(generalEvent);
+    await this.logEvent(generalEvent);
   }
 }
