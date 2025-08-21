@@ -18,10 +18,15 @@ const envInfo = getEnvironmentInfo();
 
 // Initialize monitoring services for production readiness
 if (envConfig.NODE_ENV === 'production' || process.env.ENABLE_MONITORING === 'true') {
-  const errorTracking = ErrorTrackingService.getInstance();
-  app.use(errorTracking.getRequestHandler());
-  app.use(errorTracking.getTracingHandler());
-  console.log('✅ Error tracking enabled for production');
+  try {
+    const errorTracking = ErrorTrackingService.getInstance();
+    app.use(errorTracking.getRequestHandler());
+    app.use(errorTracking.getTracingHandler());
+    console.log('✅ Error tracking enabled for production');
+  } catch (error) {
+    console.log('⚠️  Error tracking initialization failed:', error);
+    // Continue without error tracking
+  }
 }
 
 // Production Domain Configuration
@@ -43,13 +48,14 @@ if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
 
 // Initialize cache management, status monitoring, and performance optimization
 try {
-  const cacheManager = CacheManagerService.getInstance();
+  const cacheManager = new CacheManagerService();
   const performanceService = PerformanceOptimizationService.getInstance();
   performanceService.configureApp(app);
-  StatusPageService.initialize();
+  const statusPageService = StatusPageService.getInstance();
   console.log('✅ Production monitoring and performance optimization initialized');
 } catch (error) {
   console.log('⚠️  Production services partially initialized:', error);
+  // Don't throw error to allow app to continue with reduced functionality
 }
 
 // CORS Configuration for Production Domains
@@ -146,8 +152,36 @@ app.use((req, res, next) => {
   next();
 });
 
+// Process error handlers to prevent crashes
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  console.error('Stack:', error.stack);
+  // Give process time to log error before exiting
+  setTimeout(() => {
+    process.exit(1);
+  }, 1000);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit process for unhandled rejections, just log them
+});
+
+process.on('SIGTERM', () => {
+  console.log('📤 SIGTERM received. Graceful shutdown initiated.');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('📤 SIGINT received. Graceful shutdown initiated.');
+  process.exit(0);
+});
+
+// Main application startup with comprehensive error handling
 (async () => {
-  const server = await registerRoutes(app);
+  try {
+    console.log('🚀 Starting application initialization...');
+    const server = await registerRoutes(app);
   
   // Initialize backup system (temporarily disabled)
   // if (envInfo.isProduction || envConfig.ENABLE_MONITORING) {
@@ -155,19 +189,22 @@ app.use((req, res, next) => {
   //   backupRecoveryService.startAutomatedBackups();
   // }
 
-  // Error tracking middleware (temporarily disabled)
-  // app.use(errorTrackingMiddleware);
-  
-  // Sentry error handler (temporarily disabled)
-  // app.use(errorTrackingService.getErrorHandler());
-
+  // Global error handler for unhandled application errors
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    console.error('❌ Application Error:', err);
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
+    
+    // Return error response
+    res.status(status).json({ 
+      message,
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined 
+    });
+    
+    // Don't throw the error to prevent crash
   });
+
+  // This error handler was replaced above with better error handling
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
@@ -231,6 +268,7 @@ app.use((req, res, next) => {
   }, () => {
     const protocol = httpsServer ? 'HTTPS+HTTP' : 'HTTP';
     log(`🚀 ${protocol} server running on port ${port}`);
+    log(`✅ Application initialization completed successfully`);
     
     // Production domain status
     if (productionDomain) {
@@ -248,4 +286,22 @@ app.use((req, res, next) => {
       log(`   ${productionDomain ? '✅' : '⚠️'} Custom domain: ${productionDomain || 'Set PRODUCTION_DOMAIN env var'}`);
     }
   });
-})();
+  
+  // Add error handling for server startup
+  server.on('error', (error: any) => {
+    console.error('❌ Server startup error:', error);
+    if (error.code === 'EADDRINUSE') {
+      console.error(`❌ Port ${port} is already in use`);
+    }
+    process.exit(1);
+  });
+  
+  } catch (error) {
+    console.error('❌ Critical application startup error:', error);
+    console.error('Stack:', error instanceof Error ? error.stack : 'No stack trace available');
+    process.exit(1);
+  }
+})().catch((error) => {
+  console.error('❌ Fatal startup error:', error);
+  process.exit(1);
+});
