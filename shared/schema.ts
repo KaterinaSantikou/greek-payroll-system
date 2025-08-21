@@ -211,6 +211,9 @@ export const employees = pgTable("employees", {
   employmentType: varchar("employment_type", { length: 50 }).notNull(), // indefinite, fixed-term, seasonal
   hireDate: date("hire_date").notNull(),
   termDate: date("term_date"), // Termination date, null if active
+  birthDate: date("birth_date"), // Date of birth for age-based labor protections
+  workPermitNumber: varchar("work_permit_number", { length: 50 }), // For minors under 18 (required by Greek law)
+  workPermitExpiresAt: date("work_permit_expires_at"), // Work permit expiration for minors
   defaultPropertyId: varchar("default_property_id").references(() => properties.propertyId),
   unionCbaRef: varchar("union_cba_ref", { length: 100 }), // Collective Bargaining Agreement reference
   createdAt: timestamp("created_at").defaultNow(),

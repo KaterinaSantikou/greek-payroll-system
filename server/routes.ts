@@ -89,6 +89,7 @@ import { registerBillingRoutes } from "./routes/billing";
 import { reissueAlgorithmRoutes } from "./api/reissueAlgorithm";
 import { oneClickFlowRoutes } from "./api/oneClickFlow";
 import eventQueueAPI from "./api/eventQueue";
+import { registerMinorLaborRoutes } from "./routes/minorLaborRoutes";
 // ibanValidationRoutes already imported on line 5
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
@@ -3734,6 +3735,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerSelfServiceRoutes(app);
   registerPropertiesRoutes(app);
   registerUserProfileRoutes(app);
+  
+  // Minor Labor Protection Routes - Greek Law Compliance for workers under 18
+  registerMinorLaborRoutes(app);
   registerAICopilotRoutes(app);
   registerLaborNewsfeedRoutes(app);
   registerInstantPaymentRoutes(app);
