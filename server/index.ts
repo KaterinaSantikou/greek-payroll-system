@@ -4,13 +4,18 @@ import { createServer as createSecureServer } from "https";
 import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { validateEnvironment, envConfig, getEnvironmentInfo } from "./lib/envConfig";
+
+// Validate environment configuration at startup
+validateEnvironment();
 
 const app = express();
+const envInfo = getEnvironmentInfo();
 
 // Production Domain Configuration
-const isProduction = process.env.NODE_ENV === 'production';
-const productionDomain = process.env.PRODUCTION_DOMAIN || process.env.REPLIT_DOMAIN;
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+const isProduction = envInfo.isProduction;
+const productionDomain = envConfig.PRODUCTION_DOMAIN || envConfig.REPLIT_DOMAIN;
+const allowedOrigins = envConfig.ALLOWED_ORIGINS?.split(',') || [];
 
 // Add production domain to allowed origins
 if (productionDomain) {
@@ -120,6 +125,12 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+  
+  // Initialize backup system
+  if (envInfo.isProduction || envConfig.ENABLE_MONITORING) {
+    const { backupRecoveryService } = await import("./services/BackupRecoveryService");
+    backupRecoveryService.startAutomatedBackups();
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -138,9 +149,9 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // SSL/TLS Configuration for Production
-  const sslCertPath = process.env.SSL_CERT_PATH || '/etc/ssl/certs/cert.pem';
-  const sslKeyPath = process.env.SSL_KEY_PATH || '/etc/ssl/private/key.pem';
+  // SSL/TLS Configuration for Production  
+  const sslCertPath = envConfig.SSL_CERT_PATH || '/etc/ssl/certs/cert.pem';
+  const sslKeyPath = envConfig.SSL_KEY_PATH || '/etc/ssl/private/key.pem';
   
   // Check for SSL certificates in production
   let httpsServer: any = null;
@@ -163,7 +174,7 @@ app.use((req, res, next) => {
       httpsServer = createSecureServer(sslOptions, app);
       
       // HTTPS on port 443 (standard) or 5443 for Replit
-      const httpsPort = parseInt(process.env.HTTPS_PORT || '5443', 10);
+      const httpsPort = envConfig.HTTPS_PORT || 5443;
       httpsServer.listen({
         port: httpsPort,
         host: "0.0.0.0",
@@ -183,7 +194,7 @@ app.use((req, res, next) => {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
+  const port = envConfig.PORT;
   server.listen({
     port,
     host: "0.0.0.0",

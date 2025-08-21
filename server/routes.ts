@@ -65,6 +65,7 @@ import { registerExplanationRoutes } from "./api/explanations";
 import { instantReissueRoutes } from "./api/instantReissue";
 import securityRoutes from "./routes/securityRoutes";
 import cbaPackRoutes from "./routes/cbaPackRoutes";
+import backupRoutes from "./api/backup";
 import { embeddedPayrollRoutes } from "./api/embedded";
 import { glGenericRoutes } from "./api/glGeneric";
 import { nativeConnectorRoutes } from "./api/nativeConnectors";
@@ -2904,6 +2905,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Employee Portal API
   const portalAPI = (await import("./api/portal")).default;
   app.use("/api/portal", portalAPI);
+  
+  // Backup and Recovery API
+  app.use("/api/backup", backupRoutes);
 
   // Register automated runbooks routes
   try {
