@@ -41,10 +41,12 @@ if (isProduction) {
   console.log('🔧 Development mode - minimal services loaded');
 }
 
+// Get production domain for both environments (used for logging)
+const productionDomain = envConfig.PRODUCTION_DOMAIN || envConfig.REPLIT_DOMAIN;
+
 // Environment-specific middleware
 if (isProduction) {
   // Production: Full CORS and security
-  const productionDomain = envConfig.PRODUCTION_DOMAIN || envConfig.REPLIT_DOMAIN;
   const allowedOrigins = envConfig.ALLOWED_ORIGINS?.split(',') || [];
   
   if (productionDomain) {
@@ -246,9 +248,8 @@ process.on('SIGINT', () => {
     log(`✅ Application initialization completed successfully`);
     
     // Production domain status
-    if (productionDomain) {
+    if (isProduction && productionDomain) {
       log(`🌐 Production domain configured: ${productionDomain}`);
-      log(`📋 Allowed origins: ${allowedOrigins.length} configured`);
     }
     
     if (isProduction) {
