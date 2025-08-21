@@ -119,8 +119,8 @@ export default function RealTimeAlerts({
   const mockAlerts: RealTimeAlert[] = [
     {
       id: 'alert-fmy-overdue',
-      title: 'ΦΜΥ Submission Overdue',
-      message: 'Quarterly ΦΜΥ submission is 3 days past due. Immediate action required to avoid penalties.',
+      title: 'Tax Submission Overdue',
+      message: 'Quarterly tax submission is 3 days past due. Immediate action required to avoid penalties.',
       severity: 'critical',
       category: 'compliance',
       status: 'active',
@@ -131,7 +131,7 @@ export default function RealTimeAlerts({
       estimatedResolutionTime: '30 min',
       metadata: {
         source: 'compliance_monitor',
-        relatedId: 'fmy-q1-2025',
+        relatedId: 'tax-q1-2025',
         autoResolve: false,
         persistent: true
       }
@@ -157,8 +157,8 @@ export default function RealTimeAlerts({
     },
     {
       id: 'alert-apd-deadline',
-      title: 'APD Filing Deadline Approaching',
-      message: 'Monthly APD filing due in 2 days. Review overtime approvals before submission.',
+      title: 'Monthly Filing Deadline Approaching',
+      message: 'Monthly government filing due in 2 days. Review overtime approvals before submission.',
       severity: 'high',
       category: 'deadline',
       status: 'active',
@@ -169,7 +169,7 @@ export default function RealTimeAlerts({
       estimatedResolutionTime: '15 min',
       metadata: {
         source: 'deadline_monitor',
-        relatedId: 'apd-jan-2025',
+        relatedId: 'filing-jan-2025',
         autoResolve: true,
         persistent: false
       }
@@ -194,8 +194,8 @@ export default function RealTimeAlerts({
     },
     {
       id: 'alert-ergani-sync',
-      title: 'ERGANI Sync Issues',
-      message: '3 employees have data inconsistencies preventing ERGANI submission.',
+      title: 'Government System Sync Issues',
+      message: '3 employees have data inconsistencies preventing government system submission.',
       severity: 'high',
       category: 'compliance',
       status: 'active',
@@ -206,7 +206,7 @@ export default function RealTimeAlerts({
       estimatedResolutionTime: '30 min',
       metadata: {
         source: 'ergani_sync',
-        relatedId: 'sync-errors-batch-3',
+        relatedId: 'gov-sync-errors-batch-3',
         autoResolve: false,
         persistent: true
       }

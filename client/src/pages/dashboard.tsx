@@ -136,8 +136,8 @@ export default function Dashboard() {
     },
     {
       id: 'apd-filing',
-      title: 'Submit APD Filing',
-      description: 'Monthly APD submission due in 3 days',
+      title: 'Submit Tax Filing',
+      description: 'Monthly tax submission due in 3 days',
       priority: 'high',
       deadline: '2025-01-31',
       category: 'filing',
@@ -202,7 +202,7 @@ export default function Dashboard() {
       changeType: 'negative',
       status: 'warning',
       drilldownUrl: '/compliance/dashboard',
-      description: 'Minor gaps in ERGANI sync',
+      description: 'Minor gaps in government system sync',
       category: 'compliance'
     },
     {
@@ -233,7 +233,7 @@ export default function Dashboard() {
   const mockPendingIssues: PendingIssue[] = [
     {
       id: 'ergani-sync-errors',
-      title: 'ERGANI Sync Errors',
+      title: 'Government System Sync Errors',
       description: '3 employees have data sync issues preventing submission',
       severity: 'critical',
       affectedCount: 3,
