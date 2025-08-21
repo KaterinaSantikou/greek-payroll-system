@@ -4922,14 +4922,12 @@ export type {
   PayrollSyncSDK
 } from './sdk-types';
 
-// Re-export payments schema types
+// Re-export payments schema types (excluding duplicates already defined above)
 export type {
-  PaymentBatch,
   PaymentTransaction,
   BankProfile,
   BankMessage,
   PaymentException,
-  InsertPaymentBatch,
   InsertPaymentTransaction,
   InsertBankProfile,
   InsertBankMessage,
@@ -7490,7 +7488,7 @@ export const runbooks = pgTable("runbooks", {
   version: varchar("version").notNull().default('1.0.0'),
   isActive: boolean("is_active").default(true),
   isTemplate: boolean("is_template").default(false),
-  parentRunbookId: varchar("parent_runbook_id").references(() => runbooks.id), // For versioning
+  parentRunbookId: varchar("parent_runbook_id"), // For versioning - will add FK after table creation
   
   // Trigger conditions
   triggerConditions: jsonb("trigger_conditions"), // Alert patterns, system states, incident types
@@ -8001,7 +7999,7 @@ export type UserRole = typeof userRoles.$inferSelect;
 export type InsertUserRole = typeof userRoles.$inferInsert;
 export type UserImpersonationSession = typeof userImpersonationSessions.$inferSelect;
 export type InsertUserImpersonationSession = typeof userImpersonationSessions.$inferInsert;
-export type EmployeeSelfServiceAudit = typeof employeeSelfServiceAuditRelations.$inferSelect;
+export type EmployeeSelfServiceAudit = typeof employeeSelfServiceAudit.$inferSelect;
 export type InsertEmployeeSelfServiceAudit = typeof employeeSelfServiceAudit.$inferInsert;
 
 // Insert schemas for RBAC system
