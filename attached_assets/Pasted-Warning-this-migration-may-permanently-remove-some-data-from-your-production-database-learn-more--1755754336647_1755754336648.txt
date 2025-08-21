@@ -1,0 +1,725 @@
+Warning, this migration may permanently remove some data from your production database, learn more:
+You're about to add not-null company_id column without default value, which contains 4 items
+You're about to add not-null company_id column without default value, which contains 1 items
+CREATE TABLE "calc_provenance" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL
+);
+CREATE TABLE "ergani_profiles" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"pack_id" varchar NOT NULL,
+	"event_map" jsonb,
+	"required_lead_times" jsonb,
+	"reason_codes" jsonb,
+	"document_templates" jsonb,
+	"auto_submission" boolean DEFAULT false,
+	"validation_rules" jsonb,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "tip_policies" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"pack_id" varchar NOT NULL,
+	"pool_source" varchar,
+	"source_percentage" numeric(5, 2),
+	"distribution_method" varchar,
+	"role_points" jsonb,
+	"employer_topup" numeric(5, 2),
+	"tax_mapping" jsonb,
+	"contrib_mapping" jsonb,
+	"payout_frequency" varchar,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "premium_rules" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"pack_id" varchar NOT NULL,
+	"code" varchar NOT NULL,
+	"name" varchar NOT NULL,
+	"rate_type" varchar,
+	"value" numeric(10, 4),
+	"bands" jsonb,
+	"stackable" boolean DEFAULT true,
+	"applies_to" varchar,
+	"priority" integer DEFAULT 0,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "labor_newsfeed_items" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"external_id" varchar(100) NOT NULL,
+	"category" varchar(50) NOT NULL,
+	"headline" text NOT NULL,
+	"summary" text NOT NULL,
+	"source" varchar(255) NOT NULL,
+	"source_url" text NOT NULL,
+	"published_date" date NOT NULL,
+	"last_checked" timestamp DEFAULT now(),
+	"is_active" boolean DEFAULT true,
+	"needs_review" boolean DEFAULT false,
+	"review_reason" text,
+	"ai_summary_hash" varchar(64),
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now(),
+	CONSTRAINT "labor_newsfeed_items_external_id_key" UNIQUE("external_id")
+);
+CREATE TABLE "password_reset_tokens" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" varchar,
+	"token" varchar NOT NULL,
+	"expires_at" timestamp NOT NULL,
+	"used" boolean DEFAULT false,
+	"created_at" timestamp DEFAULT now(),
+	CONSTRAINT "password_reset_tokens_token_key" UNIQUE("token")
+);
+CREATE TABLE "cba_packs" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"name" varchar NOT NULL,
+	"sector" varchar NOT NULL,
+	"authority_ref" varchar,
+	"effective_from" date,
+	"effective_to" date,
+	"version" varchar,
+	"doc_hash" varchar,
+	"status" varchar DEFAULT 'draft',
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "labor_newsfeed_citations" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"news_item_id" varchar NOT NULL,
+	"citation_id" varchar(50) NOT NULL,
+	"source_type" varchar(50) NOT NULL,
+	"source_description" text,
+	"source_url" text,
+	"is_verified" boolean DEFAULT false,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "scheduling_constraints" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"pack_id" varchar NOT NULL,
+	"max_hours_day" integer,
+	"max_hours_week_avg" integer,
+	"rest_min_hours" integer,
+	"weekly_rest" integer,
+	"split_shift" varchar,
+	"break_min_minutes" integer,
+	"sixth_day" varchar,
+	"special_rules" jsonb,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "pack_assignments" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"pack_id" varchar NOT NULL,
+	"property_id" varchar NOT NULL,
+	"assigned_by" varchar NOT NULL,
+	"priority" integer DEFAULT 0,
+	"effective_from" timestamp DEFAULT now(),
+	"effective_to" timestamp,
+	"is_active" boolean DEFAULT true,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "s1_training_metrics" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"reporting_period_id" varchar NOT NULL,
+	"employee_id" varchar,
+	"training_type" varchar(50) NOT NULL,
+	"training_hours" numeric(6, 2) NOT NULL,
+	"training_cost" numeric(10, 2),
+	"participant_gender" varchar(20),
+	"participant_age" integer,
+	"participant_level" varchar(30),
+	"completion_status" varchar(20) DEFAULT 'completed',
+	"competency_gained" boolean DEFAULT false,
+	"training_date" date NOT NULL,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "job_posting_salary_ranges" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"property_id" varchar NOT NULL,
+	"job_title" varchar(255) NOT NULL,
+	"department_id" varchar,
+	"min_salary" numeric(10, 2) NOT NULL,
+	"max_salary" numeric(10, 2) NOT NULL,
+	"salary_basis" varchar(20) NOT NULL,
+	"currency" varchar(3) DEFAULT 'EUR',
+	"benefits_description" text,
+	"pay_factors" jsonb DEFAULT '[]'::jsonb,
+	"is_active" boolean DEFAULT true,
+	"last_updated" timestamp DEFAULT now(),
+	"created_by" varchar NOT NULL,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "wage_tables" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"pack_id" varchar NOT NULL,
+	"category" varchar NOT NULL,
+	"grade" varchar NOT NULL,
+	"seniority_step" integer DEFAULT 0,
+	"base_monthly" numeric(10, 2),
+	"base_daily" numeric(10, 2),
+	"base_hourly" numeric(10, 2),
+	"unit" varchar,
+	"notes" text,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "csrd_export_log" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"reporting_period_id" varchar NOT NULL,
+	"export_type" varchar(30) NOT NULL,
+	"export_format" varchar(10) DEFAULT 'json',
+	"export_date" timestamp DEFAULT now(),
+	"s1_metrics_included" jsonb DEFAULT '[]'::jsonb,
+	"materiality_applied" boolean DEFAULT false,
+	"data_quality_score" numeric(3, 1),
+	"file_name" varchar(200),
+	"file_size_bytes" integer,
+	"checksum" varchar(64),
+	"esrs_compliance_status" varchar(20) DEFAULT 'compliant',
+	"validation_errors" jsonb DEFAULT '[]'::jsonb,
+	"exported_by" varchar NOT NULL,
+	"export_purpose" varchar(100),
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "severance_rules" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"version" varchar NOT NULL,
+	"effective_from" timestamp NOT NULL,
+	"effective_to" timestamp,
+	"is_active" boolean DEFAULT true,
+	"bands" jsonb NOT NULL,
+	"legal_reference" varchar NOT NULL,
+	"description" text,
+	"description_gr" text,
+	"created_at" timestamp DEFAULT now(),
+	"created_by" varchar,
+	"approved_at" timestamp,
+	"approved_by" varchar,
+	CONSTRAINT "severance_rules_version_key" UNIQUE("version")
+);
+CREATE TABLE "allowance_rules" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"pack_id" varchar NOT NULL,
+	"code" varchar NOT NULL,
+	"name" varchar NOT NULL,
+	"calc" varchar,
+	"amount" numeric(10, 2),
+	"cap" numeric(10, 2),
+	"tax_treatment" varchar,
+	"contributory" varchar,
+	"conditions" jsonb,
+	"created_at" timestamp DEFAULT now(),
+	"percentage" numeric(5, 2)
+);
+CREATE TABLE "s1_health_safety_incidents" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"reporting_period_id" varchar NOT NULL,
+	"incident_date" date NOT NULL,
+	"incident_type" varchar(50) NOT NULL,
+	"severity" varchar(20) NOT NULL,
+	"affected_worker_type" varchar(30) NOT NULL,
+	"worker_gender" varchar(20),
+	"worker_age" integer,
+	"location" varchar(100) NOT NULL,
+	"department" varchar(100),
+	"incident_description" text,
+	"root_cause" text,
+	"work_days_lost" integer DEFAULT 0,
+	"medical_treatment_required" boolean DEFAULT false,
+	"corrective_actions" text,
+	"preventive_actions" text,
+	"investigation_completed" boolean DEFAULT false,
+	"reported_to_authorities" boolean DEFAULT false,
+	"reporting_date" date,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "webhook_events" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"event_type" varchar NOT NULL,
+	"payload" jsonb,
+	"status" varchar DEFAULT 'pending',
+	"retry_count" integer DEFAULT 0,
+	"created_at" timestamp DEFAULT now(),
+	"processed_at" timestamp
+);
+CREATE TABLE "user_roles" (
+	"id" varchar(50) PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" varchar(255) NOT NULL,
+	"role" varchar(50) NOT NULL,
+	"property_id" varchar(50),
+	"granted_by" varchar(255),
+	"granted_at" timestamp DEFAULT now(),
+	"expires_at" timestamp,
+	"is_active" boolean DEFAULT true,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "pack_overrides" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"pack_id" varchar NOT NULL,
+	"property_id" varchar,
+	"rule_type" varchar,
+	"rule_id" varchar,
+	"override_data" jsonb,
+	"reason" text,
+	"approved_by" varchar,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "bank_profiles_canonical" (
+	"id" varchar(20) PRIMARY KEY NOT NULL,
+	"pain_version" varchar(20) NOT NULL,
+	"supports_instant" boolean NOT NULL,
+	"sct_inst_amount_limit" integer,
+	"cutoffs" jsonb NOT NULL,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "test_scenarios" (
+	"scenario_id" varchar(50) PRIMARY KEY NOT NULL,
+	"test_type" varchar(50) NOT NULL,
+	"description" text NOT NULL,
+	"input_data" jsonb NOT NULL,
+	"expected_output" jsonb NOT NULL,
+	"test_status" varchar(20) DEFAULT 'pending',
+	"actual_output" jsonb,
+	"error_details" text,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "s1_pay_metrics" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"reporting_period_id" varchar NOT NULL,
+	"highest_paid_individual_total" numeric(12, 2) NOT NULL,
+	"median_employee_compensation" numeric(10, 2) NOT NULL,
+	"ceo_pay_ratio" numeric(8, 2) NOT NULL,
+	"male_gross_hourly_pay" numeric(8, 2) NOT NULL,
+	"female_gross_hourly_pay" numeric(8, 2) NOT NULL,
+	"gender_pay_gap_percentage" numeric(5, 2) NOT NULL,
+	"calculation_methodology" text NOT NULL,
+	"contextual_factors" text,
+	"non_binary_gross_hourly_pay" numeric(8, 2),
+	"pay_equity_actions" jsonb DEFAULT '[]'::jsonb,
+	"calculation_date" date NOT NULL,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "user_training_progress" (
+	"id" varchar(50) PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" varchar(255) NOT NULL,
+	"role" varchar(50) NOT NULL,
+	"module_id" varchar(100) NOT NULL,
+	"module_name" varchar(255) NOT NULL,
+	"completion_percentage" integer DEFAULT 0,
+	"completed_at" timestamp,
+	"time_spent_minutes" integer DEFAULT 0,
+	"quiz_score" integer,
+	"certification_earned" boolean DEFAULT false,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "payroll_import_batches" (
+	"batch_id" varchar(50) PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"uploaded_by" varchar(255) NOT NULL,
+	"filename" varchar(255),
+	"payroll_period" varchar(20),
+	"property_id" varchar(50),
+	"total_payslips" integer NOT NULL,
+	"processed_payslips" integer DEFAULT 0,
+	"total_amount" numeric(12, 2),
+	"validation_errors" jsonb,
+	"payroll_data" jsonb NOT NULL,
+	"status" varchar(20) DEFAULT 'pending',
+	"import_type" varchar(20) DEFAULT 'historical',
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "s1_collective_bargaining" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"reporting_period_id" varchar NOT NULL,
+	"employees_covered_by_agreements" integer NOT NULL,
+	"coverage_percentage" numeric(5, 2) NOT NULL,
+	"active_agreements" integer DEFAULT 0,
+	"agreement_types" jsonb DEFAULT '[]'::jsonb,
+	"workers_representation_exists" boolean DEFAULT false,
+	"consultation_processes" jsonb DEFAULT '[]'::jsonb,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "company_users" (
+	"id" varchar(50) PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"company_id" varchar(50) NOT NULL,
+	"user_id" varchar(255) NOT NULL,
+	"role" varchar(50) NOT NULL,
+	"department" varchar(100),
+	"employee_id" varchar(50),
+	"permissions" jsonb DEFAULT '{}'::jsonb,
+	"access_level" varchar(20) DEFAULT 'standard',
+	"property_access" jsonb,
+	"date_joined" timestamp DEFAULT now(),
+	"last_active" timestamp,
+	"is_active" boolean DEFAULT true,
+	"invited_by" varchar(255),
+	"invited_at" timestamp,
+	"accepted_at" timestamp,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now(),
+	CONSTRAINT "company_users_company_id_user_id_key" UNIQUE("company_id","user_id")
+);
+CREATE TABLE "data_access_audit" (
+	"id" varchar(50) PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"company_id" varchar(50) NOT NULL,
+	"user_id" varchar(255) NOT NULL,
+	"action" varchar(50) NOT NULL,
+	"resource_type" varchar(50) NOT NULL,
+	"resource_id" varchar(50),
+	"accessed_data" jsonb,
+	"ip_address" "inet",
+	"user_agent" text,
+	"session_id" varchar(255),
+	"success" boolean DEFAULT true,
+	"error_message" text,
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "auth_audit_logs" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" varchar,
+	"session_id" varchar,
+	"action" varchar NOT NULL,
+	"method" varchar,
+	"result" varchar NOT NULL,
+	"ip_address" varchar,
+	"user_agent" varchar,
+	"metadata" jsonb,
+	"risk_score" integer,
+	"timestamp" timestamp DEFAULT now()
+);
+CREATE TABLE "user_sessions" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" varchar,
+	"session_token" varchar NOT NULL,
+	"refresh_token" varchar,
+	"expires_at" timestamp NOT NULL,
+	"refresh_expires_at" timestamp,
+	"ip_address" varchar,
+	"user_agent" varchar,
+	"device_fingerprint" varchar,
+	"last_activity_at" timestamp DEFAULT now(),
+	"is_active" boolean DEFAULT true,
+	"created_at" timestamp DEFAULT now(),
+	CONSTRAINT "user_sessions_session_token_key" UNIQUE("session_token"),
+	CONSTRAINT "user_sessions_refresh_token_key" UNIQUE("refresh_token")
+);
+CREATE TABLE "csrd_reporting_periods" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"property_id" varchar NOT NULL,
+	"reporting_year" integer NOT NULL,
+	"period_start" date NOT NULL,
+	"period_end" date NOT NULL,
+	"esrs_version" varchar(20) DEFAULT '1.0',
+	"implementation_wave" integer DEFAULT 1,
+	"stop_the_clock_applied" boolean DEFAULT false,
+	"materiality_assessment_date" date,
+	"s1_workforce_material" boolean DEFAULT true,
+	"materiality_justification" text,
+	"reporting_status" varchar(20) DEFAULT 'draft',
+	"submission_date" timestamp,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "pay_equity_compliance" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"property_id" varchar NOT NULL,
+	"transposition_deadline" date DEFAULT '2026-06-07' NOT NULL,
+	"next_reporting_deadline" date,
+	"readiness_score" numeric(5, 2) DEFAULT '0',
+	"last_assessment_date" timestamp,
+	"salary_ranges_published" boolean DEFAULT false,
+	"gender_pay_gap_reported" boolean DEFAULT false,
+	"pay_transparency_policy_active" boolean DEFAULT false,
+	"right_to_info_process_active" boolean DEFAULT false,
+	"pay_decisions_criteria_published" boolean DEFAULT false,
+	"last_gender_pay_gap_report" date,
+	"employee_count" integer DEFAULT 0,
+	"reporting_threshold_met" boolean DEFAULT false,
+	"outstanding_actions" jsonb DEFAULT '[]'::jsonb,
+	"compliance_notes" text,
+	"risk_level" varchar(20) DEFAULT 'medium',
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "employee_import_batches" (
+	"batch_id" varchar(50) PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"uploaded_by" varchar(255) NOT NULL,
+	"filename" varchar(255),
+	"total_records" integer NOT NULL,
+	"processed_records" integer DEFAULT 0,
+	"successful_imports" integer DEFAULT 0,
+	"failed_imports" integer DEFAULT 0,
+	"validation_errors" jsonb,
+	"import_data" jsonb NOT NULL,
+	"status" varchar(20) DEFAULT 'pending',
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "company_role_templates" (
+	"id" varchar(50) PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"company_id" varchar(50) NOT NULL,
+	"role_name" varchar(50) NOT NULL,
+	"display_name" varchar(100) NOT NULL,
+	"description" text,
+	"permissions" jsonb NOT NULL,
+	"default_access_level" varchar(20) DEFAULT 'standard',
+	"can_invite_users" boolean DEFAULT false,
+	"can_manage_roles" boolean DEFAULT false,
+	"max_properties_access" integer,
+	"is_system_role" boolean DEFAULT false,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now(),
+	CONSTRAINT "company_role_templates_company_id_role_name_key" UNIQUE("company_id","role_name")
+);
+CREATE TABLE "pay_decision_explanations" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"employee_id" varchar NOT NULL,
+	"decision_type" varchar(50) NOT NULL,
+	"decision_date" date NOT NULL,
+	"old_salary" numeric(10, 2),
+	"new_salary" numeric(10, 2) NOT NULL,
+	"salary_change" numeric(10, 2),
+	"performance_rating" varchar(20),
+	"experience_years" numeric(4, 1),
+	"education_level" varchar(50),
+	"skills_assessment" jsonb DEFAULT '{}'::jsonb,
+	"market_comparison" numeric(10, 2),
+	"explanation" text NOT NULL,
+	"contributing_factors" jsonb DEFAULT '[]'::jsonb,
+	"comparison_group" varchar(100),
+	"approved_by" varchar NOT NULL,
+	"hr_reviewed" boolean DEFAULT false,
+	"audit_trail" jsonb DEFAULT '[]'::jsonb,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "magic_link_tokens" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"email" varchar NOT NULL,
+	"token" varchar NOT NULL,
+	"expires_at" timestamp NOT NULL,
+	"used" boolean DEFAULT false,
+	"ip_address" varchar,
+	"user_agent" varchar,
+	"created_at" timestamp DEFAULT now(),
+	CONSTRAINT "magic_link_tokens_token_key" UNIQUE("token")
+);
+CREATE TABLE "pay_transparency_requests" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"employee_id" varchar NOT NULL,
+	"request_type" varchar(50) NOT NULL,
+	"request_date" timestamp DEFAULT now(),
+	"request_details" text NOT NULL,
+	"status" varchar(20) DEFAULT 'pending',
+	"response_deadline" timestamp NOT NULL,
+	"response_date" timestamp,
+	"response_details" text,
+	"response_documents" jsonb DEFAULT '[]'::jsonb,
+	"handled_by" varchar,
+	"rejection_reason" text,
+	"follow_up_required" boolean DEFAULT false,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "email_verification_tokens" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"user_id" varchar,
+	"email" varchar NOT NULL,
+	"token" varchar NOT NULL,
+	"expires_at" timestamp NOT NULL,
+	"created_at" timestamp DEFAULT now(),
+	CONSTRAINT "email_verification_tokens_token_key" UNIQUE("token")
+);
+CREATE TABLE "csrd_audit_trail" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"reporting_period_id" varchar NOT NULL,
+	"audit_date" timestamp DEFAULT now(),
+	"audit_type" varchar(30) NOT NULL,
+	"table_name" varchar(100),
+	"record_id" varchar,
+	"data_source" varchar(100) NOT NULL,
+	"calculation_method" text,
+	"input_parameters" jsonb DEFAULT '{}'::jsonb,
+	"old_value" jsonb,
+	"new_value" jsonb,
+	"change_reason" text,
+	"user_id" varchar,
+	"system_version" varchar(20),
+	"esrs_version" varchar(20),
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "s1_work_life_balance" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"reporting_period_id" varchar NOT NULL,
+	"employees_eligible_maternity_leave" integer DEFAULT 0,
+	"employees_eligible_paternity_leave" integer DEFAULT 0,
+	"employees_eligible_parental_leave" integer DEFAULT 0,
+	"employees_eligible_flexible_work" integer DEFAULT 0,
+	"maternity_leave_taken" integer DEFAULT 0,
+	"paternity_leave_taken" integer DEFAULT 0,
+	"parental_leave_taken" integer DEFAULT 0,
+	"employees_remote_work" integer DEFAULT 0,
+	"employees_flexible_hours" integer DEFAULT 0,
+	"employees_job_sharing" integer DEFAULT 0,
+	"return_rate_after_maternity_leave" numeric(5, 2),
+	"return_rate_after_parental_leave" numeric(5, 2),
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "companies" (
+	"company_id" varchar(50) PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"company_name" varchar(255) NOT NULL,
+	"legal_name" varchar(255) NOT NULL,
+	"tax_id" varchar(20),
+	"registration_number" varchar(50),
+	"industry_sector" varchar(100),
+	"company_size" varchar(20),
+	"address" jsonb,
+	"contact_info" jsonb,
+	"billing_info" jsonb,
+	"subscription_plan" varchar(50) DEFAULT 'basic',
+	"subscription_status" varchar(20) DEFAULT 'active',
+	"license_limits" jsonb,
+	"feature_flags" jsonb DEFAULT '{}'::jsonb,
+	"timezone" varchar(50) DEFAULT 'Europe/Athens',
+	"default_currency" varchar(3) DEFAULT 'EUR',
+	"default_locale" varchar(5) DEFAULT 'el',
+	"gdpr_settings" jsonb,
+	"audit_settings" jsonb,
+	"integration_settings" jsonb,
+	"is_active" boolean DEFAULT true,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now(),
+	CONSTRAINT "companies_tax_id_key" UNIQUE("tax_id")
+);
+CREATE TABLE "pay_equity_analysis" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"property_id" varchar NOT NULL,
+	"analysis_date" date NOT NULL,
+	"analysis_type" varchar(50) NOT NULL,
+	"job_category" varchar(100),
+	"department_id" varchar,
+	"male_employees" integer DEFAULT 0,
+	"female_employees" integer DEFAULT 0,
+	"other_gender_employees" integer DEFAULT 0,
+	"male_avg_salary" numeric(10, 2),
+	"female_avg_salary" numeric(10, 2),
+	"other_avg_salary" numeric(10, 2),
+	"gender_pay_gap_percent" numeric(5, 2),
+	"median_male_salary" numeric(10, 2),
+	"median_female_salary" numeric(10, 2),
+	"adjusted_pay_gap" numeric(5, 2),
+	"analysis_methodology" text,
+	"control_factors" jsonb DEFAULT '[]'::jsonb,
+	"compliance_status" varchar(20) DEFAULT 'pending',
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "s1_turnover_metrics" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"reporting_period_id" varchar NOT NULL,
+	"total_leavers" integer NOT NULL,
+	"voluntary_leavers" integer DEFAULT 0,
+	"involuntary_leavers" integer DEFAULT 0,
+	"turnover_rate" numeric(5, 2) NOT NULL,
+	"leavers_male" integer DEFAULT 0,
+	"leavers_female" integer DEFAULT 0,
+	"leavers_non_binary" integer DEFAULT 0,
+	"leavers_under_30" integer DEFAULT 0,
+	"leavers_30_to_50" integer DEFAULT 0,
+	"leavers_over_50" integer DEFAULT 0,
+	"total_hires" integer DEFAULT 0,
+	"hire_male" integer DEFAULT 0,
+	"hire_female" integer DEFAULT 0,
+	"hire_rate" numeric(5, 2),
+	"created_at" timestamp DEFAULT now()
+);
+CREATE TABLE "labor_newsfeed_config" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"refresh_interval_minutes" integer DEFAULT 240,
+	"last_refresh" timestamp,
+	"next_refresh" timestamp,
+	"max_items" integer DEFAULT 6,
+	"is_enabled" boolean DEFAULT true,
+	"ai_model" varchar(50) DEFAULT 'gpt-4o',
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+CREATE TABLE "s1_workforce_characteristics" (
+	"id" varchar PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"reporting_period_id" varchar NOT NULL,
+	"measurement_date" date NOT NULL,
+	"total_employees" integer NOT NULL,
+	"total_fte" numeric(8, 2) NOT NULL,
+	"non_employee_workers" integer DEFAULT 0,
+	"employees_male" integer DEFAULT 0,
+	"employees_female" integer DEFAULT 0,
+	"employees_non_binary" integer DEFAULT 0,
+	"employees_undisclosed" integer DEFAULT 0,
+	"employees_under_30" integer DEFAULT 0,
+	"employees_30_to_50" integer DEFAULT 0,
+	"employees_over_50" integer DEFAULT 0,
+	"permanent_contracts" integer DEFAULT 0,
+	"temporary_contracts" integer DEFAULT 0,
+	"part_time_employees" integer DEFAULT 0,
+	"full_time_employees" integer DEFAULT 0,
+	"employees_eu" integer DEFAULT 0,
+	"employees_non_eu" integer DEFAULT 0,
+	"created_at" timestamp DEFAULT now(),
+	"updated_at" timestamp DEFAULT now()
+);
+truncate table "properties" cascade;
+ALTER TABLE "properties" ADD COLUMN "company_id" varchar(50) NOT NULL;
+ALTER TABLE "users" ADD COLUMN "email_verified" boolean DEFAULT false;
+ALTER TABLE "users" ADD COLUMN "email_verified_at" timestamp;
+ALTER TABLE "users" ADD COLUMN "password_hash" varchar;
+ALTER TABLE "users" ADD COLUMN "locale" varchar DEFAULT 'en';
+ALTER TABLE "users" ADD COLUMN "timezone" varchar DEFAULT 'Europe/Athens';
+ALTER TABLE "users" ADD COLUMN "mfa_enabled" boolean DEFAULT false;
+ALTER TABLE "users" ADD COLUMN "last_login_at" timestamp;
+ALTER TABLE "users" ADD COLUMN "login_attempts" integer DEFAULT 0;
+ALTER TABLE "users" ADD COLUMN "locked_until" timestamp;
+ALTER TABLE "users" ADD COLUMN "gdpr_consent_at" timestamp;
+ALTER TABLE "users" ADD COLUMN "tos_accepted_at" timestamp;
+ALTER TABLE "users" ADD COLUMN "privacy_accepted_at" timestamp;
+ALTER TABLE "users" ADD COLUMN "is_active" boolean DEFAULT true;
+truncate table "employees" cascade;
+ALTER TABLE "employees" ADD COLUMN "company_id" varchar(50) NOT NULL;
+ALTER TABLE "ergani_profiles" ADD CONSTRAINT "ergani_profiles_pack_id_fkey" FOREIGN KEY ("pack_id") REFERENCES "public"."cba_packs"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "tip_policies" ADD CONSTRAINT "tip_policies_pack_id_fkey" FOREIGN KEY ("pack_id") REFERENCES "public"."cba_packs"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "premium_rules" ADD CONSTRAINT "premium_rules_pack_id_fkey" FOREIGN KEY ("pack_id") REFERENCES "public"."cba_packs"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "password_reset_tokens" ADD CONSTRAINT "password_reset_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "labor_newsfeed_citations" ADD CONSTRAINT "labor_newsfeed_citations_news_item_id_fkey" FOREIGN KEY ("news_item_id") REFERENCES "public"."labor_newsfeed_items"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "scheduling_constraints" ADD CONSTRAINT "scheduling_constraints_pack_id_fkey" FOREIGN KEY ("pack_id") REFERENCES "public"."cba_packs"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "pack_assignments" ADD CONSTRAINT "pack_assignments_pack_id_fkey" FOREIGN KEY ("pack_id") REFERENCES "public"."cba_packs"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "s1_training_metrics" ADD CONSTRAINT "s1_training_metrics_reporting_period_id_fkey" FOREIGN KEY ("reporting_period_id") REFERENCES "public"."csrd_reporting_periods"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "s1_training_metrics" ADD CONSTRAINT "s1_training_metrics_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("employee_id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "job_posting_salary_ranges" ADD CONSTRAINT "job_posting_salary_ranges_property_id_fkey" FOREIGN KEY ("property_id") REFERENCES "public"."properties"("property_id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "job_posting_salary_ranges" ADD CONSTRAINT "job_posting_salary_ranges_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "public"."departments"("department_id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "wage_tables" ADD CONSTRAINT "wage_tables_pack_id_fkey" FOREIGN KEY ("pack_id") REFERENCES "public"."cba_packs"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "csrd_export_log" ADD CONSTRAINT "csrd_export_log_reporting_period_id_fkey" FOREIGN KEY ("reporting_period_id") REFERENCES "public"."csrd_reporting_periods"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "allowance_rules" ADD CONSTRAINT "allowance_rules_pack_id_fkey" FOREIGN KEY ("pack_id") REFERENCES "public"."cba_packs"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "s1_health_safety_incidents" ADD CONSTRAINT "s1_health_safety_incidents_reporting_period_id_fkey" FOREIGN KEY ("reporting_period_id") REFERENCES "public"."csrd_reporting_periods"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "pack_overrides" ADD CONSTRAINT "pack_overrides_pack_id_fkey" FOREIGN KEY ("pack_id") REFERENCES "public"."cba_packs"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "s1_pay_metrics" ADD CONSTRAINT "s1_pay_metrics_reporting_period_id_fkey" FOREIGN KEY ("reporting_period_id") REFERENCES "public"."csrd_reporting_periods"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "s1_collective_bargaining" ADD CONSTRAINT "s1_collective_bargaining_reporting_period_id_fkey" FOREIGN KEY ("reporting_period_id") REFERENCES "public"."csrd_reporting_periods"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "company_users" ADD CONSTRAINT "company_users_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("company_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "company_users" ADD CONSTRAINT "company_users_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "company_users" ADD CONSTRAINT "company_users_invited_by_fkey" FOREIGN KEY ("invited_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "data_access_audit" ADD CONSTRAINT "data_access_audit_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("company_id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "data_access_audit" ADD CONSTRAINT "data_access_audit_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "auth_audit_logs" ADD CONSTRAINT "auth_audit_logs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE set null ON UPDATE no action;
+ALTER TABLE "user_sessions" ADD CONSTRAINT "user_sessions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "csrd_reporting_periods" ADD CONSTRAINT "csrd_reporting_periods_property_id_fkey" FOREIGN KEY ("property_id") REFERENCES "public"."properties"("property_id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "pay_equity_compliance" ADD CONSTRAINT "pay_equity_compliance_property_id_fkey" FOREIGN KEY ("property_id") REFERENCES "public"."properties"("property_id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "company_role_templates" ADD CONSTRAINT "company_role_templates_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("company_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "pay_decision_explanations" ADD CONSTRAINT "pay_decision_explanations_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("employee_id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "pay_transparency_requests" ADD CONSTRAINT "pay_transparency_requests_employee_id_fkey" FOREIGN KEY ("employee_id") REFERENCES "public"."employees"("employee_id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "email_verification_tokens" ADD CONSTRAINT "email_verification_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "csrd_audit_trail" ADD CONSTRAINT "csrd_audit_trail_reporting_period_id_fkey" FOREIGN KEY ("reporting_period_id") REFERENCES "public"."csrd_reporting_periods"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "s1_work_life_balance" ADD CONSTRAINT "s1_work_life_balance_reporting_period_id_fkey" FOREIGN KEY ("reporting_period_id") REFERENCES "public"."csrd_reporting_periods"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "pay_equity_analysis" ADD CONSTRAINT "pay_equity_analysis_property_id_fkey" FOREIGN KEY ("property_id") REFERENCES "public"."properties"("property_id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "pay_equity_analysis" ADD CONSTRAINT "pay_equity_analysis_department_id_fkey" FOREIGN KEY ("department_id") REFERENCES "public"."departments"("department_id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "s1_turnover_metrics" ADD CONSTRAINT "s1_turnover_metrics_reporting_period_id_fkey" FOREIGN KEY ("reporting_period_id") REFERENCES "public"."csrd_reporting_periods"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "s1_workforce_characteristics" ADD CONSTRAINT "s1_workforce_characteristics_reporting_period_id_fkey" FOREIGN KEY ("reporting_period_id") REFERENCES "public"."csrd_reporting_periods"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "properties" ADD CONSTRAINT "fk_properties_company" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("company_id") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "employees" ADD CONSTRAINT "fk_employees_company" FOREIGN KEY ("company_id") REFERENCES "public"."companies"("company_id") ON DELETE cascade ON UPDATE no action;
