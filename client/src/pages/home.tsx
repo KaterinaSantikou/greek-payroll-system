@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Calculator, FileText, Shield, ArrowRight, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { useAppContext } from "@/contexts/AppContext";
+import { EnhancedKPICard } from '../components/EnhancedKPICard';
 
 export default function Home() {
   const { user } = useAuth();
@@ -21,7 +22,7 @@ export default function Home() {
             Your comprehensive payroll management dashboard
           </p>
         </div>
-        
+
         {/* Quick Actions */}
         <div className="flex items-center gap-3">
           <Link href="/dashboard">
@@ -47,7 +48,7 @@ export default function Home() {
             <p className="text-sm text-muted-foreground">Active employees</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -60,7 +61,7 @@ export default function Home() {
             <p className="text-sm text-muted-foreground">Open positions</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <div className="flex items-center gap-2">
