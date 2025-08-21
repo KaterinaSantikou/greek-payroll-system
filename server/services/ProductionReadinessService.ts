@@ -116,6 +116,38 @@ export class ProductionReadinessService {
   }
 
   /**
+   * Get service status overview
+   */
+  async getServiceStatus(): Promise<{
+    services: ProductionHealthCheck['services'];
+    timestamp: string;
+    overall: string;
+  }> {
+    try {
+      const healthCheck = await this.performHealthCheck();
+      return {
+        services: healthCheck.services,
+        timestamp: new Date().toISOString(),
+        overall: healthCheck.overall
+      };
+    } catch (error) {
+      console.error('Error in getServiceStatus:', error);
+      return {
+        services: {
+          database: 'error',
+          authentication: 'down',
+          errorTracking: 'inactive',
+          monitoring: 'inactive',
+          compliance: 'none',
+          security: 'disabled',
+        },
+        timestamp: new Date().toISOString(),
+        overall: 'critical'
+      };
+    }
+  }
+
+  /**
    * Comprehensive production health check
    */
   async performHealthCheck(): Promise<ProductionHealthCheck> {

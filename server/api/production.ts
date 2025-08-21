@@ -49,6 +49,26 @@ export function registerProductionRoutes(app: Express): void {
   });
 
   /**
+   * GET /api/production/status - Service status overview
+   */
+  app.get("/api/production/status", async (req, res) => {
+    try {
+      const status = await productionService.getServiceStatus();
+      res.json(status);
+    } catch (error) {
+      console.error("Failed to get production status:", error);
+      res.status(500).json({ 
+        error: "Failed to retrieve status",
+        services: {
+          database: 'unknown',
+          authentication: 'unknown',
+          monitoring: 'unknown'
+        }
+      });
+    }
+  });
+
+  /**
    * GET /api/production/readiness - Full readiness report
    */
   app.get("/api/production/readiness", isAuthenticated, async (req, res) => {
