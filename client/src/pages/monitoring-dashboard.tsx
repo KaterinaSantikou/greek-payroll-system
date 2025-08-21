@@ -266,6 +266,7 @@ export default function MonitoringDashboard() {
           <TabsTrigger value="system">System Resources</TabsTrigger>
           <TabsTrigger value="pool">Connection Pool</TabsTrigger>
           <TabsTrigger value="cache">Redis Cache</TabsTrigger>
+          <TabsTrigger value="loadbalancer">Load Balancer</TabsTrigger>
           <TabsTrigger value="recommendations">Recommendations</TabsTrigger>
         </TabsList>
 
@@ -528,6 +529,23 @@ export default function MonitoringDashboard() {
               <a href="/cache-dashboard" className="inline-flex items-center">
                 <Link className="h-4 w-4 mr-2" />
                 Open Cache Dashboard
+              </a>
+            </Button>
+          </div>
+        </TabsContent>
+
+        {/* Load Balancer Tab */}
+        <TabsContent value="loadbalancer" className="space-y-4">
+          <div className="text-center py-8">
+            <Server className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Load Balancer</h3>
+            <p className="text-gray-500 mb-4">
+              Monitor traffic distribution, manage backend instances, and configure load balancing strategies
+            </p>
+            <Button asChild>
+              <a href="/load-balancer-dashboard" className="inline-flex items-center">
+                <Link className="h-4 w-4 mr-2" />
+                Open Load Balancer Dashboard
               </a>
             </Button>
           </div>

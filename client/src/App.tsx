@@ -54,6 +54,7 @@ const ProductVision = lazy(() => import("@/pages/productVision"));
 
 // Infrastructure dashboards
 const CacheDashboard = lazy(() => import("@/pages/cache-dashboard"));
+const LoadBalancerDashboard = lazy(() => import("@/pages/load-balancer-dashboard"));
 
 // Data Import - for CSV/Excel import with Greek compliance validation
 const DataImport = lazy(() => import("@/pages/DataImport"));
@@ -252,6 +253,7 @@ function Router() {
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/marketing" component={MarketingLanding} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
+        <Route path="/load-balancer-dashboard" component={LoadBalancerDashboard} />
         <Route path="/mobile-payroll" component={MobilePayroll} />
         <Route path="/industry-templates" component={IndustryTemplates} />
         <Route path="/integration-marketplace" component={IntegrationMarketplacePage} />

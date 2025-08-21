@@ -9,6 +9,7 @@ import { errorTrackingService } from "./services/ErrorTrackingService";
 import { productionPerformanceService } from "./services/ProductionPerformanceService";
 import { cdnService } from "./services/CDNService";
 import { performanceMiddleware, errorTrackingMiddleware } from "./middleware/performanceMiddleware";
+import { loadBalancerMiddleware, loadBalancerHeadersMiddleware } from './middleware/loadBalancerMiddleware';
 
 // Validate environment configuration at startup
 validateEnvironment();
@@ -22,6 +23,8 @@ if (envConfig.NODE_ENV === 'production') {
   app.use(errorTrackingService.getTracingHandler());
 }
 app.use(performanceMiddleware);
+app.use(loadBalancerMiddleware);
+app.use(loadBalancerHeadersMiddleware);
 
 // Production Domain Configuration
 const isProduction = envInfo.isProduction;

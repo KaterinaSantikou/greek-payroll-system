@@ -2920,6 +2920,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Redis Cache Management API
   const cacheRoutes = (await import("./api/cache")).default;
   app.use("/api/cache", cacheRoutes);
+  
+  // Load Balancer Management API
+  const loadBalancerRoutes = (await import("./api/load-balancer")).default;
+  app.use("/api/load-balancer", loadBalancerRoutes);
 
   // Register automated runbooks routes
   try {

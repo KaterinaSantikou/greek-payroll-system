@@ -10,6 +10,7 @@ import { cdnService } from '../services/CDNService';
 import { databaseConnectionPoolService } from '../services/DatabaseConnectionPoolService';
 import { redisCacheService } from '../services/RedisCacheService';
 import { cacheManagerService } from '../services/CacheManagerService';
+import { loadBalancerService } from '../services/LoadBalancerService';
 
 const router = Router();
 
@@ -28,7 +29,8 @@ router.get('/health', async (req, res) => {
         cdn: cdnService.healthCheck(),
         connectionPool: await databaseConnectionPoolService.healthCheck(),
         cache: await redisCacheService.healthCheck(),
-        cacheManager: await cacheManagerService.healthCheck()
+        cacheManager: await cacheManagerService.healthCheck(),
+        loadBalancer: await loadBalancerService.healthCheck()
       }
     };
 
