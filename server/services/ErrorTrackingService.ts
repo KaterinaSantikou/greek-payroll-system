@@ -30,10 +30,25 @@ export interface PerformanceMetrics {
 }
 
 export class ErrorTrackingService {
+  private static instance: ErrorTrackingService;
   private initialized = false;
 
   constructor() {
     this.initializeSentry();
+  }
+
+  static getInstance(): ErrorTrackingService {
+    if (!this.instance) {
+      this.instance = new ErrorTrackingService();
+    }
+    return this.instance;
+  }
+
+  /**
+   * Check if the service is initialized
+   */
+  isInitialized(): boolean {
+    return this.initialized;
   }
 
   /**
