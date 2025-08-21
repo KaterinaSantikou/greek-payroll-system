@@ -52,8 +52,14 @@ export class RedisCacheService {
   constructor() {
     this.config = this.getOptimalCacheConfig();
     this.initializeMetrics();
-    this.initializeRedis();
-    this.startMonitoring();
+    // Skip Redis initialization in development - use fallback mode
+    if (process.env.NODE_ENV === 'production') {
+      this.initializeRedis();
+      this.startMonitoring();
+    } else {
+      console.log('🚀 Redis cache service running in fallback mode (no Redis)');
+      this.isConnected = false;
+    }
   }
 
   /**
@@ -182,6 +188,7 @@ export class RedisCacheService {
     } catch (error) {
       console.warn('⚠️ Redis connection failed, running in fallback mode. Cache will be disabled.');
       this.isConnected = false;
+      // Don't rethrow the error - just continue without Redis
     }
   }
 

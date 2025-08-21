@@ -11,10 +11,17 @@ import { nanoid } from 'nanoid';
 declare global {
   namespace Express {
     interface Request {
-      requestId: string;
+      requestId?: string;
       sessionId?: string;
-      startTime: number;
-      logger: LoggerInstance;
+      startTime?: number;
+      logger?: LoggerInstance;
+      user?: { 
+        id?: string;
+        claims?: { 
+          sub?: string;
+          [key: string]: any;
+        };
+      };
     }
   }
 }

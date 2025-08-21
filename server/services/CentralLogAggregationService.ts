@@ -75,7 +75,7 @@ export interface AggregationOptions {
 
 export class CentralLogAggregationService extends EventEmitter {
   private static instance: CentralLogAggregationService;
-  private logLevels: Map<string, LogLevel>;
+  private logLevels: Map<string, LogLevel> = new Map();
   private retentionPolicies: Map<string, LogRetentionPolicy> = new Map();
   private activeSubscriptions: Map<string, LogSubscription> = new Map();
 
