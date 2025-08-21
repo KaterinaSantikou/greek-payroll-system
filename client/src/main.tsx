@@ -11,4 +11,6 @@ if (root) {
       <App />
     </StrictMode>
   );
+} else {
+  console.error("Root element not found! Make sure there's a div with id='root' in your HTML.");
 }
