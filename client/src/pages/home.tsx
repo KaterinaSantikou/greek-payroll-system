@@ -6,8 +6,45 @@ import { Link } from "wouter";
 import { useAppContext } from "@/contexts/AppContext";
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, isLoading, isAuthenticated, login } = useAuth();
   const { viewingMode, setViewingMode } = useAppContext();
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-neutral-600 dark:text-neutral-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Welcome to Payroll System</CardTitle>
+            <p className="text-neutral-600 dark:text-neutral-300">
+              Please sign in to access your dashboard
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              onClick={login}
+              className="w-full flex items-center gap-2"
+            >
+              <Shield className="h-4 w-4" />
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
