@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useTranslation } from "@/lib/i18n";
+import { useTranslation } from "@/hooks/useTranslation";
 import { 
   UserPlus, 
   Clock, 
@@ -121,7 +121,7 @@ export default function Onboarding() {
 
       {/* Individual Onboarding Cases */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">Active Onboarding Cases</h2>
+        <h2 className="text-lg font-semibold">{t('onboarding.active_cases')}</h2>
         {onboardingCases.map((employee) => (
           <Card key={employee.id}>
             <CardContent className="p-6">
@@ -135,11 +135,11 @@ export default function Onboarding() {
                     employee.status === 'pending_docs' ? 'destructive' :
                     employee.status === 'awaiting_contract' ? 'default' : 'secondary'
                   }>
-                    {employee.status.replace('_', ' ').toUpperCase()}
+                    {t(`status.${employee.status}`)}
                   </Badge>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium">Start Date</p>
+                  <p className="text-sm font-medium">{t('onboarding.start_date')}</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{employee.startDate}</p>
                 </div>
               </div>
@@ -147,15 +147,15 @@ export default function Onboarding() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium">Completion Progress</span>
-                    <span className="text-sm text-gray-500">{employee.completedSteps}/{employee.totalSteps} steps</span>
+                    <span className="text-sm font-medium">{t('onboarding.completion_progress')}</span>
+                    <span className="text-sm text-gray-500">{employee.completedSteps}/{employee.totalSteps} {t('onboarding.steps')}</span>
                   </div>
                   <Progress value={employee.progress} className="h-2 mb-3" />
                   
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-red-700 dark:text-red-400 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
-                      Missing Items
+                      {t('onboarding.missing_items')}
                     </h4>
                     <ul className="text-xs space-y-1">
                       {employee.missingItems.map((item, index) => (
@@ -170,24 +170,24 @@ export default function Onboarding() {
 
                 <div className="flex flex-col justify-between">
                   <div className="space-y-2 mb-4">
-                    <h4 className="text-sm font-medium">Quick Actions</h4>
+                    <h4 className="text-sm font-medium">{t('onboarding.quick_actions')}</h4>
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" className="h-7 text-xs">
                         <FileText className="h-3 w-3 mr-1" />
-                        View Checklist
+                        {t('onboarding.view_checklist')}
                       </Button>
                       <Button size="sm" variant="outline" className="h-7 text-xs">
                         <Upload className="h-3 w-3 mr-1" />
-                        Upload Docs
+                        {t('onboarding.upload_docs')}
                       </Button>
                       <Button size="sm" variant="outline" className="h-7 text-xs">
                         <Clock className="h-3 w-3 mr-1" />
-                        Schedule Interview
+                        {t('onboarding.schedule_interview')}
                       </Button>
                     </div>
                   </div>
                   <Button className="w-full">
-                    Continue Onboarding
+                    {t('onboarding.continue_onboarding')}
                   </Button>
                 </div>
               </div>
@@ -205,9 +205,9 @@ export default function Onboarding() {
                 <UserPlus className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium">This Week</p>
+                <p className="text-sm font-medium">{t('onboarding.this_week')}</p>
                 <p className="text-2xl font-bold">3</p>
-                <p className="text-xs text-gray-500">New hires started</p>
+                <p className="text-xs text-gray-500">{t('onboarding.new_hires_started')}</p>
               </div>
             </div>
           </CardContent>
@@ -220,9 +220,9 @@ export default function Onboarding() {
                 <Clock className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-sm font-medium">Avg. Time</p>
+                <p className="text-sm font-medium">{t('onboarding.avg_time')}</p>
                 <p className="text-2xl font-bold">4.2</p>
-                <p className="text-xs text-gray-500">Days to complete</p>
+                <p className="text-xs text-gray-500">{t('onboarding.days_to_complete')}</p>
               </div>
             </div>
           </CardContent>
@@ -235,9 +235,9 @@ export default function Onboarding() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium">Success Rate</p>
+                <p className="text-sm font-medium">{t('onboarding.success_rate')}</p>
                 <p className="text-2xl font-bold">94%</p>
-                <p className="text-xs text-gray-500">Completed on time</p>
+                <p className="text-xs text-gray-500">{t('onboarding.completed_on_time')}</p>
               </div>
             </div>
           </CardContent>
