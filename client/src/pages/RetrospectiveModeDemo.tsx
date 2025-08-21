@@ -1,7 +1,12 @@
-import React from "react";
-import { RetrospectiveModeManagement } from "@/components/RetrospectiveModeManagement";
+import React, { useState } from "react";
+import { RetrospectiveMainCard } from "@/components/RetrospectiveMainCard";
+import { EmployeeTimeline } from "@/components/EmployeeTimeline";
+import { ExceptionBoard } from "@/components/ExceptionBoard";
+import { KPIDashboard } from "@/components/KPIDashboard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   Database, 
@@ -11,14 +16,201 @@ import {
   Info,
   Shield,
   Clock,
-  Archive
+  Archive,
+  Users,
+  AlertTriangle,
+  BarChart3,
+  Eye
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+// Sample data for comprehensive demo showcasing Greek operational requirements
+const sampleKPIMetrics = {
+  coverage: {
+    current: 96.3,
+    target: 98,
+    trend: 'up' as const
+  },
+  lateSubmissionRisk: {
+    daysRemaining: 5,
+    riskLevel: 'medium' as const,
+    openExceptions: 12,
+    blockers: [
+      'Χαμένα χτυπήματα από 3 εργαζόμενους',
+      '2 εκτός εγκαταστάσεων χτυπήματα χρειάζονται επιβεβαίωση',
+      'Υπέρβαση διαλείμματος σε νυχτερινή βάρδια'
+    ]
+  },
+  penaltyGuard: {
+    mismatchRiskToday: 2.3,
+    offSitePunches: 7,
+    unvalidatedEvents: 4,
+    riskScore: 35
+  },
+  evidenceRetention: {
+    totalPacks: 15847,
+    oldestPack: '2020-01-15',
+    complianceScore: 99.8
+  }
+};
+
+const sampleWorkDays = [
+  {
+    date: '2025-08-25',
+    isSunday: true,
+    isHoliday: false,
+    events: [
+      { id: '1', timestamp: '2025-08-25T22:30:00Z', type: 'in' as const, location: 'Κεντρικό κτίριο' },
+      { id: '2', timestamp: '2025-08-26T06:15:00Z', type: 'out' as const, location: 'Κεντρικό κτίριο' }
+    ],
+    totalMinutes: 465,
+    nightMinutes: 240,
+    hasExceptions: false
+  },
+  {
+    date: '2025-08-26',
+    isSunday: false,
+    isHoliday: false,
+    events: [
+      { id: '3', timestamp: '2025-08-26T08:00:00Z', type: 'in' as const, location: 'Κεντρικό κτίριο' },
+      { id: '4', timestamp: '2025-08-26T17:30:00Z', type: 'out' as const, location: 'Παράρτημα Β', isOffSite: true }
+    ],
+    totalMinutes: 480,
+    nightMinutes: 0,
+    hasExceptions: true,
+    exceptionTypes: ['off-site', 'missing-break']
+  },
+  {
+    date: '2025-08-27',
+    isSunday: false,
+    isHoliday: true,
+    holidayName: 'Κοίμηση Θεοτόκου (15 Αυγούστου)',
+    events: [
+      { id: '5', timestamp: '2025-08-27T23:00:00Z', type: 'in' as const, location: 'Κεντρικό κτίριο' },
+      { id: '6', timestamp: '2025-08-28T05:00:00Z', type: 'out' as const, location: 'Κεντρικό κτίριο' }
+    ],
+    totalMinutes: 360,
+    nightMinutes: 300,
+    hasExceptions: false
+  }
+];
+
+const sampleExceptions = [
+  {
+    id: '1',
+    employeeId: 'EMP001',
+    employeeName: 'Γιάννης Παπαδόπουλος',
+    date: '2025-08-25',
+    type: 'missed' as const,
+    severity: 'high' as const,
+    description: 'Χαμένο χτύπημα εξόδου - δεν καταγράφηκε έξοδος στις 18:00',
+    suggestedFix: 'Προσθήκη χειροκίνητου χτυπήματος εξόδου με βάση το πρόγραμμα εργασίας',
+    canAutoFix: true,
+    affectedMinutes: 60,
+    timestamp: '2025-08-25T18:00:00Z'
+  },
+  {
+    id: '2',
+    employeeId: 'EMP002',
+    employeeName: 'Μαρία Ιωάννου',
+    date: '2025-08-26',
+    type: 'off-site' as const,
+    severity: 'medium' as const,
+    description: 'Χτύπημα εκτός εγκαταστάσεων χρειάζεται επιβεβαίωση',
+    suggestedFix: 'Επιβεβαίωση τοποθεσίας και αιτιολόγηση εργασίας εκτός γραφείων',
+    canAutoFix: false,
+    location: '37.9838, 23.7275 (Κέντρο Αθήνας)',
+    timestamp: '2025-08-26T14:30:00Z'
+  },
+  {
+    id: '3',
+    employeeId: 'EMP003',
+    employeeName: 'Κώστας Δημητρίου',
+    date: '2025-08-27',
+    type: 'break_overrun' as const,
+    severity: 'low' as const,
+    description: 'Υπέρβαση διαλείμματος κατά 15 λεπτά',
+    suggestedFix: 'Προσαρμογή ωρών εργασίας ή συμψηφισμός με επόμενο διάλειμμα',
+    canAutoFix: true,
+    affectedMinutes: 15,
+    timestamp: '2025-08-27T12:45:00Z'
+  },
+  {
+    id: '4',
+    employeeId: 'EMP004',
+    employeeName: 'Σοφία Κοσμά',
+    date: '2025-08-28',
+    type: 'duplicate' as const,
+    severity: 'medium' as const,
+    description: 'Διπλό χτύπημα εισόδου εντός 5 λεπτών',
+    suggestedFix: 'Διατήρηση του πρώτου χτυπήματος και διαγραφή του δεύτερου',
+    canAutoFix: true,
+    affectedMinutes: 0,
+    timestamp: '2025-08-28T08:03:00Z'
+  },
+  {
+    id: '5',
+    employeeId: 'EMP005',
+    employeeName: 'Νίκος Μπλέτας',
+    date: '2025-08-29',
+    type: 'schedule_deviation' as const,
+    severity: 'critical' as const,
+    description: 'Απόκλιση >120 λεπτά από προγραμματισμένη βάρδια',
+    suggestedFix: 'Απαιτείται έγκριση manager και reason code για μεγάλη απόκλιση',
+    canAutoFix: false,
+    affectedMinutes: 135,
+    timestamp: '2025-08-29T10:15:00Z'
+  }
+];
 
 /**
- * Demo page showcasing the comprehensive Digital Work Card retrospective architecture
- * Implemented according to Greek legal requirements for 5-year retention and compliance
+ * Comprehensive Demo showcasing all UI/UX requirements:
+ * - Main card "Απολογιστικό: Μήνας Αύγ 2025" with progress metrics
+ * - Employee timeline with night shift shading (22:00-06:00) and Sunday/Holiday badges  
+ * - Exception board with bulk fix capabilities
+ * - KPI dashboard with ≥98% coverage, penalty guards, 5-year retention
+ * - Deadline notifications and risk monitoring
  */
 export default function RetrospectiveModeDemo() {
+  const { toast } = useToast();
+  const [locale, setLocale] = useState<'en' | 'el'>('el');
+
+  const handlePreview = () => {
+    toast({
+      title: locale === 'el' ? 'Προεπισκόπηση δηλώσεων' : 'Preview Declarations',
+      description: locale === 'el' 
+        ? 'Δημιουργία προεπισκόπησης ERGANI II batch για Αύγουστο 2025...'
+        : 'Creating ERGANI II batch preview for August 2025...'
+    });
+  };
+
+  const handleSubmit = () => {
+    toast({
+      title: locale === 'el' ? 'Υποβολή δηλώσεων' : 'Submit Declarations',
+      description: locale === 'el' 
+        ? 'Υποβολή στο ERGANI II ολοκληρώθηκε με επιτυχία. Receipt: REC-2025-AUG-001'
+        : 'ERGANI II submission completed successfully. Receipt: REC-2025-AUG-001'
+    });
+  };
+
+  const handleBulkFix = (exceptionIds: string[], fixType: string, reason: string) => {
+    toast({
+      title: locale === 'el' ? 'Μαζική επιδιόρθωση' : 'Bulk Fix Applied',
+      description: locale === 'el' 
+        ? `Επιδιόρθωση ${exceptionIds.length} εξαιρέσεων με τύπο: ${fixType}`
+        : `Fixed ${exceptionIds.length} exceptions with type: ${fixType}`
+    });
+  };
+
+  const handleIndividualFix = (exceptionId: string, fixType: string, reason: string) => {
+    toast({
+      title: locale === 'el' ? 'Επιδιόρθωση εξαίρεσης' : 'Exception Fixed',
+      description: locale === 'el' 
+        ? `Εξαίρεση ${exceptionId} επιδιορθώθηκε`
+        : `Exception ${exceptionId} has been fixed`
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -28,11 +220,13 @@ export default function RetrospectiveModeDemo() {
             PayrollSync Digital Work Card
           </h1>
           <h2 className="text-2xl font-semibold text-gray-800">
-            Comprehensive Retrospective Mode Architecture
+            {locale === 'el' ? 'Ολοκληρωμένη Αρχιτεκτονική Απολογιστικού Τρόπου' : 'Comprehensive Retrospective Mode Architecture'}
           </h2>
           <p className="text-xl text-gray-600 max-w-4xl mx-auto">
-            Complete implementation of Greek legal compliance system for Digital Work Card (Ψηφιακή Κάρτα Εργασίας) 
-            with retrospective ("απολογιστικό") and pre-announcement ("προαναγγελτικό") operational modes.
+            {locale === 'el' 
+              ? 'Πλήρης υλοποίηση ελληνικού συστήματος νομικής συμμόρφωσης για Ψηφιακή Κάρτα Εργασίας με απολογιστικό ("απολογιστικό") και προαναγγελτικό ("προαναγγελτικό") τρόπους λειτουργίας.'
+              : 'Complete implementation of Greek legal compliance system for Digital Work Card (Ψηφιακή Κάρτα Εργασίας) with retrospective ("απολογιστικό") and pre-announcement ("προαναγγελτικό") operational modes.'
+            }
           </p>
           
           <div className="flex justify-center gap-4 flex-wrap">
@@ -42,7 +236,7 @@ export default function RetrospectiveModeDemo() {
             </Badge>
             <Badge variant="outline" className="px-4 py-2">
               <Clock className="h-4 w-4 mr-2" />
-              Real-time Processing
+              {locale === 'el' ? 'Επεξεργασία πραγματικού χρόνου' : 'Real-time Processing'}
             </Badge>
             <Badge variant="outline" className="px-4 py-2">
               <Send className="h-4 w-4 mr-2" />
@@ -50,8 +244,23 @@ export default function RetrospectiveModeDemo() {
             </Badge>
             <Badge variant="outline" className="px-4 py-2">
               <Archive className="h-4 w-4 mr-2" />
-              5-Year Retention
+              {locale === 'el' ? '5-ετής διατήρηση' : '5-Year Retention'}
             </Badge>
+          </div>
+
+          <div className="flex justify-center gap-4 mt-6">
+            <Button
+              variant={locale === 'el' ? 'default' : 'outline'}
+              onClick={() => setLocale('el')}
+            >
+              Ελληνικά
+            </Button>
+            <Button
+              variant={locale === 'en' ? 'default' : 'outline'}
+              onClick={() => setLocale('en')}
+            >
+              English
+            </Button>
           </div>
         </div>
 
@@ -60,11 +269,13 @@ export default function RetrospectiveModeDemo() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl">
               <Shield className="h-6 w-6 text-blue-600" />
-              Architecture Implementation Overview
+              {locale === 'el' ? 'Επισκόπηση Υλοποίησης Αρχιτεκτονικής' : 'Architecture Implementation Overview'}
             </CardTitle>
             <CardDescription className="text-lg">
-              Complete retrospective mode system with baseline comparison, deviation detection, 
-              ERGANI II batch submissions, and cryptographic evidence preservation.
+              {locale === 'el'
+                ? 'Πλήρες σύστημα απολογιστικού τρόπου με σύγκριση baseline, ανίχνευση αποκλίσεων, υποβολές ERGANI II batch, και κρυπτογραφική διατήρηση αποδείξεων.'
+                : 'Complete retrospective mode system with baseline comparison, deviation detection, ERGANI II batch submissions, and cryptographic evidence preservation.'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -73,14 +284,14 @@ export default function RetrospectiveModeDemo() {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Settings className="h-5 w-5 text-green-600" />
-                    Entity Month Mode
+                    {locale === 'el' ? 'Μηνιαίος Τρόπος Οντότητας' : 'Entity Month Mode'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
-                  <div>✓ Monthly mode declarations</div>
-                  <div>✓ Cannot mix modes in month</div>
-                  <div>✓ Legal deadline tracking</div>
-                  <div>✓ Validation & compliance</div>
+                  <div>✓ {locale === 'el' ? 'Μηνιαίες δηλώσεις τρόπου' : 'Monthly mode declarations'}</div>
+                  <div>✓ {locale === 'el' ? 'Δεν μπορεί ανάμιξη τρόπων στον μήνα' : 'Cannot mix modes in month'}</div>
+                  <div>✓ {locale === 'el' ? 'Παρακολούθηση νόμιμων προθεσμιών' : 'Legal deadline tracking'}</div>
+                  <div>✓ {locale === 'el' ? 'Επικύρωση & συμμόρφωση' : 'Validation & compliance'}</div>
                 </CardContent>
               </Card>
               
@@ -88,14 +299,14 @@ export default function RetrospectiveModeDemo() {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Database className="h-5 w-5 text-blue-600" />
-                    Processing Engine
+                    {locale === 'el' ? 'Μηχανή Επεξεργασίας' : 'Processing Engine'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
-                  <div>✓ Real-time punch ingestion</div>
-                  <div>✓ Shift consolidation/pairing</div>
-                  <div>✓ Night zone processing</div>
-                  <div>✓ Deviation detection</div>
+                  <div>✓ {locale === 'el' ? 'Εισαγωγή χτυπημάτων πραγματικού χρόνου' : 'Real-time punch ingestion'}</div>
+                  <div>✓ {locale === 'el' ? 'Ενοποίηση/ζεύξη βαρδιών' : 'Shift consolidation/pairing'}</div>
+                  <div>✓ {locale === 'el' ? 'Επεξεργασία νυχτερινής ζώνης' : 'Night zone processing'}</div>
+                  <div>✓ {locale === 'el' ? 'Ανίχνευση αποκλίσεων' : 'Deviation detection'}</div>
                 </CardContent>
               </Card>
               
@@ -107,10 +318,10 @@ export default function RetrospectiveModeDemo() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
-                  <div>✓ T+3 working days target</div>
+                  <div>✓ {locale === 'el' ? 'Στόχος T+3 εργάσιμες ημέρες' : 'T+3 working days target'}</div>
                   <div>✓ Idempotency keys</div>
-                  <div>✓ Retry logic & receipts</div>
-                  <div>✓ Legal deadline enforcement</div>
+                  <div>✓ {locale === 'el' ? 'Λογική επανάληψης & αποδείξεις' : 'Retry logic & receipts'}</div>
+                  <div>✓ {locale === 'el' ? 'Επιβολή νόμιμων προθεσμιών' : 'Legal deadline enforcement'}</div>
                 </CardContent>
               </Card>
               
@@ -118,239 +329,186 @@ export default function RetrospectiveModeDemo() {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <FileText className="h-5 w-5 text-orange-600" />
-                    Evidence Packs
+                    {locale === 'el' ? 'Πακέτα Αποδείξεων' : 'Evidence Packs'}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
-                  <div>✓ Timesheet snapshots</div>
-                  <div>✓ GPS & geofence data</div>
-                  <div>✓ Digital signatures</div>
-                  <div>✓ 5-year legal retention</div>
+                  <div>✓ {locale === 'el' ? 'Στιγμιότυπα χρονοδιαγραμμάτων' : 'Timesheet snapshots'}</div>
+                  <div>✓ {locale === 'el' ? 'Κρυπτογραφικές υπογραφές' : 'Cryptographic signatures'}</div>
+                  <div>✓ {locale === 'el' ? 'Ίχνη GPS & συσκευών' : 'GPS & device traces'}</div>
+                  <div>✓ {locale === 'el' ? '5-ετής διατήρηση' : '5-year retention'}</div>
                 </CardContent>
               </Card>
             </div>
           </CardContent>
         </Card>
 
-        {/* Database Schema Implementation */}
-        <Card className="border-2 border-green-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <Database className="h-6 w-6 text-green-600" />
-              Database Schema Implementation
-            </CardTitle>
-            <CardDescription className="text-lg">
-              Complete database architecture with comprehensive indexing and Greek legal compliance.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-gray-800">Core Tables Implemented:</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                    <div>
-                      <div className="font-medium text-green-700">entity_month_mode</div>
-                      <div className="text-sm text-gray-600">Monthly operational mode declarations with unique company/month constraint</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                    <div>
-                      <div className="font-medium text-blue-700">employee_schedule_baselines</div>
-                      <div className="text-sm text-gray-600">Contractual schedule patterns for comparison and deviation detection</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-                    <div>
-                      <div className="font-medium text-purple-700">timeline_events</div>
-                      <div className="text-sm text-gray-600">Enhanced punch storage with GPS, device fingerprints, and cryptographic integrity</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                    <div>
-                      <div className="font-medium text-orange-700">work_hour_change_items</div>
-                      <div className="text-sm text-gray-600">Deviation detection results with overtime, night, Sunday, and holiday classifications</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                    <div>
-                      <div className="font-medium text-red-700">ergani_declaration_batches</div>
-                      <div className="text-sm text-gray-600">ERGANI II batch submission system with idempotency and compliance deadlines</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-indigo-500 rounded-full mt-2"></div>
-                    <div>
-                      <div className="font-medium text-indigo-700">work_card_evidence_packs</div>
-                      <div className="text-sm text-gray-600">Comprehensive evidence storage with 5-year retention and legal hold capabilities</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-gray-800">Key Features:</h3>
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>Greek Legal Compliance</AlertTitle>
-                  <AlertDescription className="space-y-2 text-sm">
-                    <div>• <strong>Cannot mix modes:</strong> Unique constraint prevents mixing retrospective/preannounce in same month</div>
-                    <div>• <strong>Deadline tracking:</strong> Internal T+3 working days target with legal deadline enforcement</div>
-                    <div>• <strong>Evidence preservation:</strong> Cryptographic integrity with SHA-256 hashes and digital signatures</div>
-                    <div>• <strong>5-year retention:</strong> Automatic retention policy with legal hold capabilities</div>
-                    <div>• <strong>ERGANI compliance:</strong> Idempotency keys, receipt storage, and retry logic</div>
+        {/* Live Demo Alert */}
+        <Alert className="bg-blue-50 border-blue-200">
+          <Info className="h-4 w-4" />
+          <AlertTitle>{locale === 'el' ? 'Περιβάλλον Επίδειξης' : 'Live Demo Environment'}</AlertTitle>
+          <AlertDescription>
+            {locale === 'el' 
+              ? 'Αυτή είναι μια πλήρης επίδειξη της αρχιτεκτονικής απολογιστικού τρόπου λειτουργίας. Όλα τα δεδομένα είναι ενδεικτικά και διαμορφωμένα για να παρουσιάσουν την πλήρη λειτουργικότητα.'
+              : 'This is a comprehensive demonstration of the retrospective mode architecture. All data shown is representative and configured to showcase the full functionality including real-time processing, compliance monitoring, and ERGANI II integration.'
+            }
+          </AlertDescription>
+        </Alert>
+
+        {/* Main Retrospective Interface - Tabbed for comprehensive demonstration */}
+        <Tabs defaultValue="main" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="main" className="flex items-center gap-2">
+              <Eye className="h-4 w-4" />
+              {locale === 'el' ? 'Κύρια' : 'Main'}
+            </TabsTrigger>
+            <TabsTrigger value="timeline" className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              {locale === 'el' ? 'Χρονογραμμή' : 'Timeline'}
+            </TabsTrigger>
+            <TabsTrigger value="exceptions" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              {locale === 'el' ? 'Εξαιρέσεις' : 'Exceptions'}
+            </TabsTrigger>
+            <TabsTrigger value="kpis" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              KPIs
+            </TabsTrigger>
+            <TabsTrigger value="architecture" className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              {locale === 'el' ? 'Αρχιτεκτονική' : 'Architecture'}
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Main Card Tab - "Απολογιστικό: Μήνας Αύγ 2025" */}
+          <TabsContent value="main" className="space-y-6">
+            <RetrospectiveMainCard
+              month="2025-08"
+              locale={locale}
+              coverageDays={{ covered: 27, total: 31 }}
+              exceptions={12}
+              readyLinesPercent={96.3}
+              daysUntilDeadline={5}
+              onPreview={handlePreview}
+              onSubmit={handleSubmit}
+              canSubmit={false} // Not ready until ≥98%
+            />
+          </TabsContent>
+
+          {/* Employee Timeline Tab - with night shift shading (22:00-06:00) */}
+          <TabsContent value="timeline" className="space-y-6">
+            <EmployeeTimeline
+              employeeId="EMP001"
+              employeeName="Γιάννης Παπαδόπουλος"
+              workDays={sampleWorkDays}
+              locale={locale}
+              onEventClick={(eventId) => {
+                toast({
+                  title: locale === 'el' ? 'Επεξεργασία χτυπήματος' : 'Edit Punch',
+                  description: `Event ID: ${eventId}`
+                });
+              }}
+            />
+          </TabsContent>
+
+          {/* Exception Board Tab - with bulk fix capabilities */}
+          <TabsContent value="exceptions" className="space-y-6">
+            <ExceptionBoard
+              exceptions={sampleExceptions}
+              locale={locale}
+              onBulkFix={handleBulkFix}
+              onIndividualFix={handleIndividualFix}
+            />
+          </TabsContent>
+
+          {/* KPIs Tab - ≥98% coverage, penalty guards, risk monitoring */}
+          <TabsContent value="kpis" className="space-y-6">
+            <KPIDashboard
+              metrics={sampleKPIMetrics}
+              month="2025-08"
+              locale={locale}
+            />
+          </TabsContent>
+
+          {/* Architecture Tab - Implementation status */}
+          <TabsContent value="architecture">
+            <Card className="border-2 border-green-200 bg-green-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Shield className="h-6 w-6 text-green-600" />
+                  {locale === 'el' ? 'Κατάσταση Υλοποίησης: Έτοιμο για Παραγωγή' : 'Implementation Status: Production Ready'}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Alert className="bg-green-100 border-green-300">
+                  <Shield className="h-4 w-4" />
+                  <AlertTitle>✅ {locale === 'el' ? 'Πλήρης Ελληνική Νομική Συμμόρφωση' : 'Complete Greek Legal Compliance'}</AlertTitle>
+                  <AlertDescription>
+                    {locale === 'el'
+                      ? 'Όλες οι απαιτήσεις πλήρως υλοποιημένες συμπεριλαμβανομένων των T+3 εργάσιμων ημερών εσωτερικών προθεσμιών, επικύρωσης μη-ανάμειξης λειτουργιών, υποβολής ERGANI II batch, και 5-ετούς διατήρησης αποδείξεων με κρυπτογραφική ακεραιότητα.'
+                      : 'All requirements fully implemented including T+3 working days internal deadlines, cannot-mix-modes validation, ERGANI II batch submission, and 5-year evidence retention with cryptographic integrity.'
+                    }
                   </AlertDescription>
                 </Alert>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Service Layer Implementation */}
-        <Card className="border-2 border-purple-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <Settings className="h-6 w-6 text-purple-600" />
-              Service Layer Architecture
-            </CardTitle>
-            <CardDescription className="text-lg">
-              Comprehensive service layer with processing engines, batch management, and compliance validation.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="border-blue-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-blue-700">RetrospectiveProcessingEngine</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div><strong>Ingestion:</strong> Real-time punch collection with validation</div>
-                  <div><strong>Consolidation:</strong> Shift pairing, split detection, night zones</div>
-                  <div><strong>Detection:</strong> Baseline comparison & deviation analysis</div>
-                  <div><strong>Evidence:</strong> Comprehensive evidence pack generation</div>
-                </CardContent>
-              </Card>
-              
-              <Card className="border-green-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-green-700">ErganiDeclarationService</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div><strong>Batch Building:</strong> Optimal grouping for ERGANI submission</div>
-                  <div><strong>Deadlines:</strong> T+3 working days with penalty risk calculation</div>
-                  <div><strong>Submission:</strong> API integration with retry logic</div>
-                  <div><strong>Compliance:</strong> Validation & Greek legal requirements</div>
-                </CardContent>
-              </Card>
-              
-              <Card className="border-orange-200">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-orange-700">EntityMonthModeService</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div><strong>Mode Declaration:</strong> Monthly operational mode management</div>
-                  <div><strong>Validation:</strong> Greek legal requirement enforcement</div>
-                  <div><strong>Compliance Reports:</strong> Risk assessment & recommendations</div>
-                  <div><strong>Smart Suggestions:</strong> AI-powered mode recommendations</div>
-                </CardContent>
-              </Card>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Live Management Interface */}
-        <Card className="border-2 border-gray-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <Clock className="h-6 w-6 text-gray-600" />
-              Live Management Interface
-            </CardTitle>
-            <CardDescription className="text-lg">
-              Complete management dashboard with bilingual support (Greek/English) and real-time processing capabilities.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RetrospectiveModeManagement 
-              tenantId="demo_tenant_001" 
-              companyId="DEMO_COMPANY_GR"
-              locale="el"
-            />
-          </CardContent>
-        </Card>
-
-        {/* Technical Implementation Summary */}
-        <Card className="border-2 border-indigo-200 bg-indigo-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-2xl">
-              <Shield className="h-6 w-6 text-indigo-600" />
-              Technical Implementation Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-indigo-800">Database Architecture ✅</h3>
-                <div className="space-y-2 text-sm">
-                  <div>✓ 6 new tables with comprehensive relationships</div>
-                  <div>✓ Strategic indexing for performance</div>
-                  <div>✓ Greek legal compliance constraints</div>
-                  <div>✓ 5-year retention with legal hold support</div>
-                  <div>✓ Cryptographic integrity validation</div>
-                </div>
                 
-                <h3 className="text-xl font-semibold text-indigo-800">Processing Logic ✅</h3>
-                <div className="space-y-2 text-sm">
-                  <div>✓ Near-real-time punch ingestion</div>
-                  <div>✓ Intelligent shift consolidation</div>
-                  <div>✓ Baseline vs actual deviation detection</div>
-                  <div>✓ Night zone processing (22:00-06:00)</div>
-                  <div>✓ Evidence pack generation with GPS/device data</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Database className="h-5 w-5 text-green-600" />
+                      <strong>{locale === 'el' ? 'Σχήμα Βάσης Δεδομένων' : 'Database Schema'}</strong>
+                    </div>
+                    <div className="space-y-1 text-sm text-gray-700">
+                      <div>✓ entity_month_mode</div>
+                      <div>✓ employee_schedule_baselines</div>
+                      <div>✓ timeline_events</div>
+                      <div>✓ work_hour_change_items</div>
+                      <div>✓ ergani_declaration_batches</div>
+                      <div>✓ work_card_evidence_packs</div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Settings className="h-5 w-5 text-green-600" />
+                      <strong>{locale === 'el' ? 'Αρχιτεκτονική Υπηρεσιών' : 'Service Architecture'}</strong>
+                    </div>
+                    <div className="space-y-1 text-sm text-gray-700">
+                      <div>✓ RetrospectiveProcessingEngine</div>
+                      <div>✓ ErganiDeclarationService</div>
+                      <div>✓ EntityMonthModeService</div>
+                      <div>✓ {locale === 'el' ? 'Σύστημα διατήρησης αποδείξεων' : 'Evidence preservation system'}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="h-5 w-5 text-green-600" />
+                      <strong>{locale === 'el' ? 'Χαρακτηριστικά Συμμόρφωσης' : 'Compliance Features'}</strong>
+                    </div>
+                    <div className="space-y-1 text-sm text-gray-700">
+                      <div>✓ {locale === 'el' ? '5-ετής διατήρηση αποδείξεων' : '5-year evidence retention'}</div>
+                      <div>✓ {locale === 'el' ? 'Κρυπτογραφική ακεραιότητα' : 'Cryptographic integrity'}</div>
+                      <div>✓ {locale === 'el' ? 'Φύλακες κινδύνου & παρακολούθηση' : 'Risk guards & monitoring'}</div>
+                      <div>✓ {locale === 'el' ? 'Στόχοι κάλυψης ≥98%' : '≥98% coverage targets'}</div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-indigo-800">ERGANI II Integration ✅</h3>
-                <div className="space-y-2 text-sm">
-                  <div>✓ Batch submission system with idempotency</div>
-                  <div>✓ T+3 working days internal target</div>
-                  <div>✓ Legal deadline enforcement</div>
-                  <div>✓ Retry logic with exponential backoff</div>
-                  <div>✓ Receipt storage and validation</div>
-                </div>
-                
-                <h3 className="text-xl font-semibold text-indigo-800">User Experience ✅</h3>
-                <div className="space-y-2 text-sm">
-                  <div>✓ Bilingual interface (Greek/English)</div>
-                  <div>✓ Real-time processing with progress tracking</div>
-                  <div>✓ Comprehensive compliance reporting</div>
-                  <div>✓ Smart mode recommendations</div>
-                  <div>✓ Risk assessment and alerts</div>
-                </div>
-              </div>
-            </div>
-            
-            <Alert className="mt-6 border-green-300 bg-green-50">
-              <Shield className="h-4 w-4" />
-              <AlertTitle className="text-green-800">Implementation Complete</AlertTitle>
-              <AlertDescription className="text-green-700">
-                The comprehensive retrospective mode architecture for PayrollSync's Digital Work Card system has been 
-                fully implemented according to Greek legal requirements, including EntityMonthMode declarations, 
-                baseline schedule comparison, deviation detection engine, ERGANI II batch submissions, and 
-                evidence packs with 5-year retention capabilities.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Final Status */}
+        <Alert className="bg-green-50 border-green-200">
+          <Shield className="h-4 w-4" />
+          <AlertTitle>🎯 {locale === 'el' ? 'Ολοκληρωμένη Υλοποίηση Έτοιμη' : 'Comprehensive Implementation Ready'}</AlertTitle>
+          <AlertDescription className="text-green-700">
+            {locale === 'el' 
+              ? 'Το σύστημα παρουσιάζει πλήρως όλες τις απαιτήσεις UI/UX που καθορίστηκε: κύρια κάρτα προόδου, χρονογραμμή εργαζομένου με νυχτερινή ζώνη, πίνακα εξαιρέσεων με μαζική επιδιόρθωση, KPI παρακολούθηση με φύλακες κινδύνου, και πλήρη ελληνική νομική συμμόρφωση.'
+              : 'The system fully demonstrates all specified UI/UX requirements: main progress card, employee timeline with night zone, exception board with bulk fixes, KPI monitoring with risk guards, and complete Greek legal compliance.'
+            }
+          </AlertDescription>
+        </Alert>
       </div>
     </div>
   );
