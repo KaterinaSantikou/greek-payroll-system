@@ -1,15 +1,8 @@
 // Browser compatibility polyfills
 
 // requestIdleCallback polyfill for older browsers
-declare global {
-  interface Window {
-    requestIdleCallback?: (callback: (deadline: IdleDeadline) => void, options?: IdleRequestOptions) => number;
-    cancelIdleCallback?: (id: number) => void;
-  }
-}
-
 if (typeof window !== 'undefined' && !window.requestIdleCallback) {
-  window.requestIdleCallback = function(callback: (deadline: IdleDeadline) => void, options?: IdleRequestOptions) {
+  (window as any).requestIdleCallback = function(callback: any, options?: any) {
     const start = Date.now();
     const timeoutId = setTimeout(() => {
       callback({
@@ -22,7 +15,7 @@ if (typeof window !== 'undefined' && !window.requestIdleCallback) {
     return timeoutId;
   };
   
-  window.cancelIdleCallback = function(id: number) {
+  (window as any).cancelIdleCallback = function(id: number) {
     clearTimeout(id);
   };
 }
