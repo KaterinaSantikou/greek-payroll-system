@@ -21,7 +21,7 @@ import {
   bruteForceProtection,
   resetBruteForceOnSuccess,
   getSecureCookieOptions 
-} from '../middleware/securityMiddleware';
+} from '../middleware/SecurityMiddleware';
 
 // Express session configuration
 if (typeof process.env.SESSION_SECRET === 'undefined') {
