@@ -3742,6 +3742,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Greek Employment Types Routes - Apprenticeships, Variable Hours, Seasonal, Multiple Employers
   const { registerEmploymentTypesRoutes } = await import("./routes/employmentTypesRoutes");
   registerEmploymentTypesRoutes(app);
+  
+  // Greek Payroll Events Routes - Sick Leave, Maternity/Paternity, Unpaid Leave, Severance
+  const { registerPayrollEventsRoutes } = await import("./routes/payrollEventsRoutes");
+  registerPayrollEventsRoutes(app);
   registerAICopilotRoutes(app);
   registerLaborNewsfeedRoutes(app);
   registerInstantPaymentRoutes(app);
