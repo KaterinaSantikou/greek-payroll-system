@@ -1,0 +1,71 @@
+3) Ροές λειτουργίας (ops)
+
+Μηνιαία δήλωση mode
+
+Πριν την 1η κάθε μήνα: mode='retrospective' στο ERGANI II & στην εφαρμογή (EntityMonthMode). Δυνατότητα επιστροφής σε προαναγγελτικό από επόμενο μήνα. 
+Taxheaven
+
+Καθημερινό κλείσιμο
+
+Αυτόματος Daily Close: ενοποίηση χτυπημάτων, υπολογισμός actuals, exceptions report στον υπεύθυνο.
+
+Εβδομαδιαίο review
+
+Team leads εγκρίνουν διορθώσεις punches. Οι ανοιχτές εξαιρέσεις μπλοκάρουν τη δημιουργία δηλώσεων για τη βδομάδα.
+
+Μηνιαία αποστολή
+
+Όταν κλείσει ο μήνας: compile Retrospective Bundle → preview → submit προς ERGANI II → καταγραφή receipts.
+
+SLA συστήματος: ≥98% γραμμές χωρίς exception πριν την αποστολή.
+
+Μετάβαση mode (προαιρετικά)
+
+Αν χρειαστεί επιστροφή σε προαναγγελτικό: δήλωση στο ERGANI II πριν την 1η του επόμενου μήνα + toggle στο app. 
+Taxheaven
+
+4) Data model (προτάσεις)
+create table entity_month_mode(
+  tenant_id uuid, month char(7), mode text check (mode in ('retrospective','preannounce')),
+  declared_at timestamptz, declared_by uuid,
+  primary key (tenant_id, month)
+);
+
+create table time_events(
+  id uuid primary key, employee_id uuid, tenant_id uuid,
+  ts timestamptz, kind text check (kind in ('in','out')),
+  source text, device_id text, lat numeric(9,6), lon numeric(9,6),
+  hash text
+);
+
+create table time_unified(
+  id uuid primary key, employee_id uuid, date date, start timestamptz, end timestamptz,
+  minutes int, night_minutes int, sunday boolean, holiday boolean, exceptions jsonb
+);
+
+create table time_change_items(
+  id uuid primary key, employee_id uuid, work_date date, type text,
+  start timestamptz, end timestamptz, minutes int,
+  reason_code text, evidence_ref text, created_by uuid, created_at timestamptz
+);
+
+create table ergani_retrospective_bundle(
+  id uuid primary key, tenant_id uuid, month char(7), status text check (status in ('draft','submitted','accepted','rejected')),
+  lines int, submitted_at timestamptz, receipt_no text
+);
+
+5) APIs (συνοπτικά)
+POST /v1/dwc/mode
+{ tenant_id, month, mode: "retrospective" }  → validates switch window
+
+POST /v1/dwc/close-day?date=YYYY-MM-DD
+→ builds time_unified + exceptions
+
+POST /v1/dwc/retrospective/preview?month=YYYY-MM
+→ returns change_items grouped, coverage %, blockers
+
+POST /v1/dwc/retrospective/submit
+→ creates bundle, POST to ERGANI II connector, stores receipt
+
+
+Idempotency-Key σε κάθε POST. RBAC: only payroll_admin/compliance.
