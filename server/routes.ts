@@ -3738,6 +3738,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Minor Labor Protection Routes - Greek Law Compliance for workers under 18
   registerMinorLaborRoutes(app);
+  
+  // Greek Employment Types Routes - Apprenticeships, Variable Hours, Seasonal, Multiple Employers
+  const { registerEmploymentTypesRoutes } = await import("./routes/employmentTypesRoutes");
+  registerEmploymentTypesRoutes(app);
   registerAICopilotRoutes(app);
   registerLaborNewsfeedRoutes(app);
   registerInstantPaymentRoutes(app);

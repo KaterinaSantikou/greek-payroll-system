@@ -208,7 +208,7 @@ export const employees = pgTable("employees", {
   afm: varchar("afm", { length: 9 }), // Greek Tax ID
   name: varchar("name", { length: 200 }).notNull(), // Full name
   role: varchar("role").notNull(),
-  employmentType: varchar("employment_type", { length: 50 }).notNull(), // indefinite, fixed-term, seasonal
+  employmentType: varchar("employment_type", { length: 50 }).notNull(), // indefinite, fixed-term, seasonal, apprenticeship, part_time_variable, multiple_employers
   hireDate: date("hire_date").notNull(),
   termDate: date("term_date"), // Termination date, null if active
   birthDate: date("birth_date"), // Date of birth for age-based labor protections
@@ -220,6 +220,12 @@ export const employees = pgTable("employees", {
   updatedAt: timestamp("updated_at").defaultNow(),
   employeeNumber: varchar("employee_number", { length: 50 }), // Internal employee number
   companyId: varchar("company_id").notNull(), // Company identifier
+  
+  // Greek Employment Type Specific Fields
+  apprenticeshipEndDate: date("apprenticeship_end_date"), // For apprenticeship contracts (Law 3475/2006)
+  variableHoursContract: boolean("variable_hours_contract").default(false), // For εκ περιτροπής εργασία
+  primaryEmployer: boolean("primary_employer").default(true), // For multiple employers tracking
+  otherEmployersAfm: jsonb("other_employers_afm").default('[]'), // Array of other employer AFMs for tax coordination
 });
 
 // Wage Components table - Base salary and allowances per employee
@@ -567,17 +573,37 @@ export const dataRetentionPolicy = pgTable("data_retention_policy", {
 export const contracts = pgTable("contracts", {
   contractId: varchar("contract_id").primaryKey().default(sql`gen_random_uuid()`),
   employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
-  type: varchar("type", { length: 50 }).notNull(), // indefinite, fixed_term, seasonal, trial
+  type: varchar("type", { length: 50 }).notNull(), // indefinite, fixed_term, seasonal, trial, apprenticeship, part_time_variable, multiple_employers
   grade: varchar("grade", { length: 50 }), // Job grade/level from CBA
   basePay: decimal("base_pay", { precision: 10, scale: 2 }).notNull(),
   allowancesJson: jsonb("allowances_json").default('{}'), // Structured allowances
   ftePct: decimal("fte_pct", { precision: 5, scale: 2 }).default("100"), // FTE percentage
   propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
   cbaId: varchar("cba_id", { length: 100 }), // Collective Bargaining Agreement ID
+  
+  // Contract Type Specific Fields
+  apprenticeshipDuration: integer("apprenticeship_duration"), // Duration in months for apprenticeships
+  seasonalEndDate: date("seasonal_end_date"), // For seasonal contracts early termination calculations
+  variableHoursMin: integer("variable_hours_min"), // Minimum hours for part-time variable contracts
+  variableHoursMax: integer("variable_hours_max"), // Maximum hours for part-time variable contracts
   effectiveFrom: date("effective_from").notNull(),
   effectiveTo: date("effective_to"), // null means current
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Multiple Employers Tracking - For cumulative tax calculations (πολλαπλή απασχόληση)
+export const multipleEmployers = pgTable("multiple_employers", {
+  recordId: varchar("record_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeAfm: varchar("employee_afm", { length: 9 }).notNull(), // Employee's AFM
+  taxYear: integer("tax_year").notNull(), // Tax year for tracking
+  employerAfm: varchar("employer_afm", { length: 9 }).notNull(), // This employer's AFM
+  grossEarnings: decimal("gross_earnings", { precision: 12, scale: 2 }).default("0"), // YTD gross earnings from this employer
+  taxDeducted: decimal("tax_deducted", { precision: 12, scale: 2 }).default("0"), // YTD tax deducted by this employer
+  efkaContributions: decimal("efka_contributions", { precision: 12, scale: 2 }).default("0"), // YTD EFKA contributions
+  isPrimaryEmployer: boolean("is_primary_employer").default(false), // Primary employer handles total tax calculation
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Payroll Runs table - Master payroll processing batches
