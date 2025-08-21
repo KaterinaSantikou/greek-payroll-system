@@ -1,86 +1,58 @@
-import React from 'react';
-import { Router, Route, Switch } from 'wouter';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from './contexts/ThemeProvider';
-import { AppProvider } from './contexts/AppContext';
-import { PropertyProvider } from './contexts/PropertyProvider';
-import { LocaleProvider } from './lib/i18n';
-import Layout from './components/Layout';
 
-// Import pages
-import Home from './pages/home';
-
-// Create a query client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: 1,
-    },
-  },
-});
-
+<old_str>// Ultra-minimal App to test basic React mounting
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="payrollsync-theme">
-        <LocaleProvider>
-          <PropertyProvider>
-            <AppProvider>
-              <Router>
-                <Layout>
-              <Switch>
-                <Route path="/" component={Home} />
-                <Route path="/dashboard">
-                  <div className="p-8">
-                    <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-                    <p className="text-gray-600">Dashboard coming soon...</p>
-                  </div>
-                </Route>
-                <Route path="/employees">
-                  <div className="p-8">
-                    <h1 className="text-2xl font-bold mb-4">Employee Management</h1>
-                    <p className="text-gray-600">Employee management coming soon...</p>
-                  </div>
-                </Route>
-                <Route path="/payroll">
-                  <div className="p-8">
-                    <h1 className="text-2xl font-bold mb-4">Payroll Processing</h1>
-                    <p className="text-gray-600">Payroll processing coming soon...</p>
-                  </div>
-                </Route>
-                <Route path="/analytics">
-                  <div className="p-8">
-                    <h1 className="text-2xl font-bold mb-4">Analytics</h1>
-                    <p className="text-gray-600">Analytics coming soon...</p>
-                  </div>
-                </Route>
-                <Route path="/compliance">
-                  <div className="p-8">
-                    <h1 className="text-2xl font-bold mb-4">Compliance Management</h1>
-                    <p className="text-gray-600">Compliance management coming soon...</p>
-                  </div>
-                </Route>
-                <Route>
-                  <div className="flex items-center justify-center min-h-screen">
-                    <div className="text-center">
-                      <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-                      <p className="text-gray-600 mb-4">Page not found</p>
-                      <a href="/" className="text-blue-600 hover:text-blue-800">
-                        Return to Home
-                      </a>
-                    </div>
-                  </div>
-                </Route>
-              </Switch>
-                </Layout>
-              </Router>
-            </AppProvider>
-          </PropertyProvider>
-        </LocaleProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <div className="min-h-screen flex items-center justify-center bg-blue-50">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-blue-900 mb-4">PayrollSync Test</h1>
+        <p className="text-blue-700 mb-8">Greek HR & Payroll Management System</p>
+        <div className="text-sm text-blue-600">React is working!</div>
+        <button 
+          onClick={() => window.location.href = '/api/login'}
+          className="mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+        >
+          Sign In / Σύνδεση
+        </button>
+      </div>
+    </div>
   );
 }
 
-export default App;
+export default App;</old_str>
+<new_str>import { Router, Route, Switch } from "wouter";
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Home from "@/pages/home";
+import Login from "@/pages/auth/Login";
+import Layout from "@/components/Layout";
+
+const queryClient = new QueryClient();
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+        <Router>
+          <Layout>
+            <Switch>
+              <Route path="/" component={Home} />
+              <Route path="/home" component={Home} />
+              <Route path="/login" component={Login} />
+              <Route path="/dashboard" component={Home} />
+              <Route>
+                <div className="flex items-center justify-center h-64">
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold mb-2">Page Not Found</h2>
+                    <p className="text-muted-foreground">The page you're looking for doesn't exist.</p>
+                  </div>
+                </div>
+              </Route>
+            </Switch>
+          </Layout>
+        </Router>
+        <Toaster />
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}</new_str>
