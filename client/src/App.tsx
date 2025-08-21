@@ -220,6 +220,7 @@ function Router() {
             <Route path="/ab-testing-demo" component={lazy(() => import("@/pages/ABTestingDemo"))} />
             <Route path="/roi-calculator" component={lazy(() => import("@/pages/ROICalculator"))} />
             <Route path="/company-setup" component={lazy(() => import("@/pages/CompanySetup"))} />
+            <Route path="/retrospective-mode-demo" component={lazy(() => import("@/pages/RetrospectiveModeDemo"))} />
             <Route component={NotFound} />
           </Switch>
         </Suspense>
@@ -352,6 +353,7 @@ function Router() {
             <Route path="/predictive-labor-costs" component={lazy(() => import("@/pages/PredictiveLaborCostsDemo"))} />
             <Route path="/compliance-risk-scoring" component={lazy(() => import("@/pages/ComplianceRiskScoringDemo"))} />
             <Route path="/webhook-system" component={lazy(() => import("@/pages/WebhookSystemDemo"))} />
+            <Route path="/retrospective-mode-demo" component={lazy(() => import("@/pages/RetrospectiveModeDemo"))} />
         <Route path="/s1-dashboard" component={S1Dashboard} />
         <Route path="/s1-metrics" component={S1MetricsPage} />
         <Route path="/s1-acceptance-testing" component={S1AcceptanceTesting} />

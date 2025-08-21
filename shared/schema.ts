@@ -2959,6 +2959,246 @@ export const digitalWorkCardAuditLog = pgTable("digital_work_card_audit_log", {
   index("idx_dwc_audit_log_immutable").on(table.isImmutable),
 ]);
 
+// ===============================================================================
+// COMPREHENSIVE RETROSPECTIVE MODE ARCHITECTURE (ΑΠΟΛΟΓΙΣΤΙΚΟ ΣΥΣΤΗΜΑ)
+// ===============================================================================
+
+// EntityMonthMode - Monthly operational mode declarations per company/tenant
+export const entityMonthMode = pgTable("entity_month_mode", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tenantId: varchar("tenant_id").notNull(), // Company/tenant identifier
+  companyId: varchar("company_id").notNull(), // Company identifier for grouping
+  
+  // Μήνας και τρόπος λειτουργίας - Month and operational mode
+  month: varchar("month", { length: 7 }).notNull(), // YYYY-MM format
+  mode: varchar("mode", { length: 20 }).notNull(), // 'retrospective' | 'preannounce'
+  
+  // Νομική τεκμηρίωση - Legal documentation
+  declaredAt: timestamp("declared_at").notNull(),
+  declaredBy: varchar("declared_by").notNull(), // User ID who made declaration
+  
+  // Validation and compliance
+  validationStatus: varchar("validation_status", { length: 20 }).default('pending'), // 'pending' | 'validated' | 'violation'
+  cannotMixModesInMonth: boolean("cannot_mix_modes_in_month").default(true), // Greek legal requirement
+  previousModeInMonth: varchar("previous_mode_in_month", { length: 20 }), // Track conflicts
+  
+  // Προθεσμίες - Deadlines
+  declarationDeadline: timestamp("declaration_deadline").notNull(),
+  complianceDeadline: timestamp("compliance_deadline").notNull(), // Final ERGANI submission deadline
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_entity_month_mode_tenant_month").on(table.tenantId, table.month),
+  index("idx_entity_month_mode_company_month").on(table.companyId, table.month),
+  index("idx_entity_month_mode_validation").on(table.validationStatus),
+  // Ensure unique constraint: one mode per company per month
+  unique("uk_entity_month_mode_company_month").on(table.companyId, table.month),
+]);
+
+// Employee Schedule Baselines - Contractual schedule patterns as comparison points
+export const employeeScheduleBaselines = pgTable("employee_schedule_baselines", {
+  baselineId: varchar("baseline_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  
+  // Συμβατικό ωράριο - Contractual schedule pattern
+  contractualPattern: jsonb("contractual_pattern").notNull(), // {monday: {start: "08:00", end: "16:00"}, tuesday: {...}}
+  weeklyHours: decimal("weekly_hours", { precision: 5, scale: 2 }).notNull(),
+  monthlyHours: decimal("monthly_hours", { precision: 6, scale: 2 }).notNull(),
+  
+  // Shift patterns
+  defaultShiftType: varchar("default_shift_type", { length: 30 }).default('regular'), // 'regular' | 'night' | 'split' | 'rotating'
+  
+  // Valid period for baseline
+  effectiveFrom: date("effective_from").notNull(),
+  effectiveTo: date("effective_to"), // null means current
+  
+  // Used as comparison point (not pre-announcement)
+  isComparisonBaseline: boolean("is_comparison_baseline").default(true),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_employee_baselines_employee_date").on(table.employeeId, table.effectiveFrom),
+  index("idx_employee_baselines_active").on(table.effectiveTo), // null = active
+]);
+
+// Enhanced Timeline Events - Comprehensive punch storage with hash/geo/method
+export const timelineEvents = pgTable("timeline_events", {
+  eventId: varchar("event_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  propertyId: varchar("property_id").references(() => properties.propertyId).notNull(),
+  
+  // Event details - Στοιχεία χτυπήματος
+  eventType: varchar("event_type", { length: 20 }).notNull(), // 'clock_in' | 'clock_out' | 'break_start' | 'break_end'
+  timestamp: timestamp("timestamp").notNull(),
+  
+  // Source and method - Πηγή και μέθοδος
+  source: varchar("source", { length: 20 }).notNull(), // 'device' | 'app' | 'api' | 'manual'
+  method: varchar("method", { length: 20 }).notNull(), // 'qr' | 'nfc' | 'biometric' | 'kiosk' | 'mobile' | 'web'
+  deviceId: varchar("device_id"),
+  deviceFingerprint: varchar("device_fingerprint"),
+  
+  // Location and geo - Τοποθεσία και γεωγραφικά δεδομένα
+  gpsCoordinates: jsonb("gps_coordinates"), // {lat: 37.9838, lng: 23.7275, accuracy: 5}
+  geoHash: varchar("geo_hash"), // Geohash for quick proximity queries
+  locationVerified: boolean("location_verified").default(false),
+  geofenceValidation: varchar("geofence_validation", { length: 20 }).default('pending'), // 'valid' | 'invalid' | 'warning'
+  
+  // Cryptographic integrity - Κρυπτογραφική ακεραιότητα
+  eventHash: varchar("event_hash").notNull(), // SHA-256 hash of event data
+  tamperProofSignature: text("tamper_proof_signature"), // Cryptographic signature
+  
+  // Near-real-time ingestion
+  ingestedAt: timestamp("ingested_at").defaultNow(),
+  syncStatus: varchar("sync_status", { length: 20 }).default('synced'), // 'pending' | 'synced' | 'failed'
+  
+  // Retrospective mode support
+  isRetrospectiveEntry: boolean("is_retrospective_entry").default(false),
+  reportingDelayMinutes: integer("reporting_delay_minutes").default(0),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_timeline_events_employee_timestamp").on(table.employeeId, table.timestamp),
+  index("idx_timeline_events_property_timestamp").on(table.propertyId, table.timestamp),
+  index("idx_timeline_events_geohash").on(table.geoHash),
+  index("idx_timeline_events_sync_status").on(table.syncStatus),
+  index("idx_timeline_events_retrospective").on(table.isRetrospectiveEntry),
+]);
+
+// Work Hour Change Items - Deviation detection engine results
+export const workHourChangeItems = pgTable("work_hour_change_items", {
+  changeId: varchar("change_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  baselineId: varchar("baseline_id").references(() => employeeScheduleBaselines.baselineId),
+  
+  // Change details - Στοιχεία αλλαγής
+  changeType: varchar("change_type", { length: 30 }).notNull(), // 'schedule_change' | 'overtime' | 'night' | 'sunday' | 'holiday'
+  workDate: date("work_date").notNull(),
+  fromTime: timestamp("from_time").notNull(),
+  toTime: timestamp("to_time").notNull(),
+  durationMinutes: integer("duration_minutes").notNull(),
+  
+  // Comparison with baseline
+  baselineFromTime: timestamp("baseline_from_time"),
+  baselineToTime: timestamp("baseline_to_time"),
+  baselineDurationMinutes: integer("baseline_duration_minutes"),
+  varianceMinutes: integer("variance_minutes").notNull(), // Actual - Baseline
+  
+  // Classification
+  reasonCode: varchar("reason_code", { length: 50 }), // 'business_need' | 'emergency' | 'employee_request'
+  evidenceRef: varchar("evidence_ref"), // Reference to evidence pack
+  
+  // Premium calculations
+  overtimeRate: decimal("overtime_rate", { precision: 4, scale: 2 }).default("1.00"),
+  nightPremiumApplicable: boolean("night_premium_applicable").default(false),
+  sundayPremiumApplicable: boolean("sunday_premium_applicable").default(false),
+  holidayPremiumApplicable: boolean("holiday_premium_applicable").default(false),
+  
+  // ERGANI submission tracking
+  includedInBatch: varchar("included_in_batch"), // Reference to ERGANI batch
+  submissionStatus: varchar("submission_status", { length: 20 }).default('pending'),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_work_hour_changes_employee_date").on(table.employeeId, table.workDate),
+  index("idx_work_hour_changes_type").on(table.changeType),
+  index("idx_work_hour_changes_variance").on(table.varianceMinutes),
+  index("idx_work_hour_changes_batch").on(table.includedInBatch),
+]);
+
+// ERGANI II Declaration Batches - Batch submission system
+export const erganiDeclarationBatches = pgTable("ergani_declaration_batches", {
+  batchId: varchar("batch_id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
+  monthPeriod: varchar("month_period", { length: 7 }).notNull(), // YYYY-MM
+  
+  // Batch organization
+  batchType: varchar("batch_type", { length: 30 }).notNull(), // 'monthly_retrospective' | 'weekly_regular' | 'emergency'
+  employeeGroup: jsonb("employee_group").notNull(), // Array of employee IDs in this batch
+  changeItemsIncluded: jsonb("change_items_included").notNull(), // Array of change item IDs
+  
+  // Submission details
+  createdAt: timestamp("created_at").defaultNow(),
+  finalizedAt: timestamp("finalized_at"),
+  submittedAt: timestamp("submitted_at"),
+  
+  // ERGANI response
+  submissionReference: varchar("submission_reference").unique(),
+  erganiReceiptId: varchar("ergani_receipt_id"),
+  submissionStatus: varchar("submission_status", { length: 20 }).default('draft'), // 'draft' | 'finalized' | 'submitted' | 'accepted' | 'rejected'
+  erganiResponse: jsonb("ergani_response"), // Full ERGANI API response
+  
+  // Compliance deadlines
+  internalDeadline: timestamp("internal_deadline"), // T+3 working days target
+  legalDeadline: timestamp("legal_deadline"), // Official regulatory deadline
+  deadlineMet: boolean("deadline_met").default(true),
+  
+  // Idempotency and retry
+  idempotencyKey: varchar("idempotency_key").notNull().unique(),
+  retryCount: integer("retry_count").default(0),
+  lastRetryAt: timestamp("last_retry_at"),
+  
+  // Error handling
+  errorDetails: jsonb("error_details"), // Detailed error information
+  requiresManualReview: boolean("requires_manual_review").default(false),
+  
+  createdBy: varchar("created_by").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_ergani_batches_company_month").on(table.companyId, table.monthPeriod),
+  index("idx_ergani_batches_status").on(table.submissionStatus),
+  index("idx_ergani_batches_deadline").on(table.legalDeadline, table.deadlineMet),
+  index("idx_ergani_batches_idempotency").on(table.idempotencyKey),
+]);
+
+// Work Card Evidence Packs - Evidence storage per change with 5-year retention
+export const workCardEvidencePacks = pgTable("work_card_evidence_packs", {
+  evidenceId: varchar("evidence_id").primaryKey().default(sql`gen_random_uuid()`),
+  changeItemId: varchar("change_item_id").references(() => workHourChangeItems.changeId).notNull(),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  
+  // Evidence snapshot - Στιγμιότυπο ωρομέτρησης
+  timesheetSnapshot: jsonb("timesheet_snapshot").notNull(), // Complete timesheet data at time of change
+  
+  // Location evidence - Αποδείξεις τοποθεσίας
+  gpsCoordinates: jsonb("gps_coordinates"), // GPS location data
+  locationMap: text("location_map"), // Map snapshot or geofence verification
+  proximityVerification: jsonb("proximity_verification"), // Distance to allowed work locations
+  
+  // Device and operator evidence
+  deviceId: varchar("device_id").notNull(),
+  deviceFingerprint: varchar("device_fingerprint"),
+  operatorId: varchar("operator_id"), // Who performed the action
+  operatorDetails: jsonb("operator_details"), // Operator context and verification
+  
+  // Cryptographic integrity
+  evidenceHash: varchar("evidence_hash").notNull(), // SHA-256 of complete evidence pack
+  digitalSignature: text("digital_signature"), // Cryptographic signature for legal validity
+  
+  // 5-year retention policy
+  retentionCategory: varchar("retention_category").default('employment_records'),
+  retentionStartDate: date("retention_start_date").defaultNow(),
+  retentionExpiryDate: date("retention_expiry_date").notNull(), // 5+ years from retention start
+  legalHoldStatus: varchar("legal_hold_status").default('none'), // 'none' | 'litigation_hold' | 'audit_hold'
+  
+  // Audit and compliance
+  complianceValidated: boolean("compliance_validated").default(false),
+  auditTrailRef: varchar("audit_trail_ref"), // Reference to audit trail
+  lastAccessedAt: timestamp("last_accessed_at"),
+  accessCount: integer("access_count").default(0),
+  
+  isImmutable: boolean("is_immutable").default(true), // Cannot be modified once created
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_evidence_packs_change_item").on(table.changeItemId),
+  index("idx_evidence_packs_employee").on(table.employeeId),
+  index("idx_evidence_packs_retention").on(table.retentionExpiryDate, table.legalHoldStatus),
+  index("idx_evidence_packs_device").on(table.deviceId),
+  index("idx_evidence_packs_immutable").on(table.isImmutable),
+]);
+
 // Insert schemas for additional compliance tables
 export const insertComplianceFilingsSchema = createInsertSchema(complianceFilings);
 export const insertErganiSubmissionsSchema = createInsertSchema(erganiSubmissions);
@@ -2988,6 +3228,41 @@ export const insertDigitalWorkCardAuditLogSchema = createInsertSchema(digitalWor
   createdAt: true 
 });
 
+// Insert schemas for comprehensive retrospective system
+export const insertEntityMonthModeSchema = createInsertSchema(entityMonthMode).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertEmployeeScheduleBaselinesSchema = createInsertSchema(employeeScheduleBaselines).omit({
+  baselineId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTimelineEventsSchema = createInsertSchema(timelineEvents).omit({
+  eventId: true,
+  createdAt: true,
+});
+
+export const insertWorkHourChangeItemsSchema = createInsertSchema(workHourChangeItems).omit({
+  changeId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertErganiDeclarationBatchesSchema = createInsertSchema(erganiDeclarationBatches).omit({
+  batchId: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertWorkCardEvidencePacksSchema = createInsertSchema(workCardEvidencePacks).omit({
+  evidenceId: true,
+  createdAt: true,
+});
+
 // Additional compliance type exports
 export type ComplianceFiling = typeof complianceFilings.$inferSelect;
 export type InsertComplianceFiling = z.infer<typeof insertComplianceFilingsSchema>;
@@ -3005,6 +3280,20 @@ export type RetrospectiveOvertimeEntry = typeof retrospectiveOvertimeEntries.$in
 export type InsertRetrospectiveOvertimeEntry = z.infer<typeof insertRetrospectiveOvertimeEntrySchema>;
 export type DigitalWorkCardAuditLog = typeof digitalWorkCardAuditLog.$inferSelect;
 export type InsertDigitalWorkCardAuditLog = z.infer<typeof insertDigitalWorkCardAuditLogSchema>;
+
+// Types for comprehensive retrospective system
+export type EntityMonthMode = typeof entityMonthMode.$inferSelect;
+export type InsertEntityMonthMode = z.infer<typeof insertEntityMonthModeSchema>;
+export type EmployeeScheduleBaselines = typeof employeeScheduleBaselines.$inferSelect;
+export type InsertEmployeeScheduleBaselines = z.infer<typeof insertEmployeeScheduleBaselinesSchema>;
+export type TimelineEvents = typeof timelineEvents.$inferSelect;
+export type InsertTimelineEvents = z.infer<typeof insertTimelineEventsSchema>;
+export type WorkHourChangeItems = typeof workHourChangeItems.$inferSelect;
+export type InsertWorkHourChangeItems = z.infer<typeof insertWorkHourChangeItemsSchema>;
+export type ErganiDeclarationBatches = typeof erganiDeclarationBatches.$inferSelect;
+export type InsertErganiDeclarationBatches = z.infer<typeof insertErganiDeclarationBatchesSchema>;
+export type WorkCardEvidencePacks = typeof workCardEvidencePacks.$inferSelect;
+export type InsertWorkCardEvidencePacks = z.infer<typeof insertWorkCardEvidencePacksSchema>;
 
 // Approval Context and Actions tables for Slack/Teams approvals
 export const approvalContexts = pgTable("approval_contexts", {
