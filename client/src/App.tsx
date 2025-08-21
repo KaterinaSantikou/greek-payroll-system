@@ -3,6 +3,7 @@ import { Router, Route, Switch } from 'wouter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from './contexts/ThemeProvider';
 import { AppProvider } from './contexts/AppContext';
+import { PropertyProvider } from './contexts/PropertyProvider';
 import { LocaleProvider } from './lib/i18n';
 import Layout from './components/Layout';
 
@@ -24,9 +25,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="payrollsync-theme">
         <LocaleProvider>
-          <AppProvider>
-            <Router>
-              <Layout>
+          <PropertyProvider>
+            <AppProvider>
+              <Router>
+                <Layout>
               <Switch>
                 <Route path="/" component={Home} />
                 <Route path="/dashboard">
@@ -71,9 +73,10 @@ function App() {
                   </div>
                 </Route>
               </Switch>
-              </Layout>
-            </Router>
-          </AppProvider>
+                </Layout>
+              </Router>
+            </AppProvider>
+          </PropertyProvider>
         </LocaleProvider>
       </ThemeProvider>
     </QueryClientProvider>

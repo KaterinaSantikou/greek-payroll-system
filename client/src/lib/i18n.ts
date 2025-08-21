@@ -451,7 +451,6 @@ const translations: Record<Locale, TranslationKeys> = {
     'errors.server_error': 'Server error occurred',
 
     // Comprehensive Rota System - English
-    'rota.title': 'Work Schedule Management',
     'rota.subtitle': 'Comprehensive team scheduling with Greek compliance',
     'rota.builder': 'Rota Builder',
     'rota.people': 'People & Availability',
@@ -621,7 +620,6 @@ const translations: Record<Locale, TranslationKeys> = {
     'chips.needs_approval': 'Απαιτεί έγκριση',
 
     // Comprehensive Rota System - Greek
-    'rota.title': 'Διαχείριση Ωραρίων Εργασίας',
     'rota.subtitle': 'Ολοκληρωμένος προγραμματισμός ομάδας με ελληνική συμμόρφωση',
     'rota.builder': 'Δημιουργός Ροτών',
     'rota.people': 'Άτομα & Διαθεσιμότητα',

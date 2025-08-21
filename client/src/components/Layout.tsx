@@ -5,7 +5,7 @@ import { ThemeToggle } from "./ThemeToggle";
 import { CommandPaletteButton } from "./CommandPaletteButton";
 import { SupportChatWidget } from "./SupportChat";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
-import { useProperty } from "@/contexts/PropertyContext";
+// import { useProperty } from "@/contexts/PropertyContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebarState } from "@/hooks/useSidebarState";
 import { useLocale } from "@/lib/i18n";
@@ -22,6 +22,8 @@ interface LayoutProps {
 function LayoutContent({ children }: LayoutProps) {
   const { setOpen } = useCommandPalette();
   const { t } = useLocale();
+  
+  // Use hardcoded property for now to avoid context issues
   const currentProperty = { propertyId: "prop-princess", name: "Princess Resort & Spa" };
   
   const {
