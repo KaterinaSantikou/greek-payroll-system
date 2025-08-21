@@ -48,6 +48,21 @@ if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
   allowedOrigins.push(`https://${process.env.REPL_SLUG}--${process.env.REPL_OWNER}.repl.co`);
 }
 
+// Add current Replit dev domain
+if (process.env.REPLIT_DEV_DOMAIN) {
+  allowedOrigins.push(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+  allowedOrigins.push(`http://${process.env.REPLIT_DEV_DOMAIN}`);
+}
+
+// Add all Replit domains from environment
+if (process.env.REPLIT_DOMAINS) {
+  const domains = process.env.REPLIT_DOMAINS.split(',');
+  domains.forEach(domain => {
+    allowedOrigins.push(`https://${domain.trim()}`);
+    allowedOrigins.push(`http://${domain.trim()}`);
+  });
+}
+
 // Initialize cache management, status monitoring, and performance optimization
 try {
   const cacheManager = new CacheManagerService();
