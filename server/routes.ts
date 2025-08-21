@@ -842,7 +842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             earningsCode: line.code,
             hours: line.hours,
             units: line.hours,
-            rateBasis: 'HOURLY',
+            rateBasis: 'HOURLY' as const,
             costCenterAllocations: [{
               costCenterId: line.cost_center,
               propertyId: payrollData.property_id,
@@ -1313,7 +1313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { alertId } = req.params;
       const { resolution } = req.body;
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       
       const { complianceGuardrails } = await import("./complianceGuardrails");
       const resolved = complianceGuardrails.resolveAlert(alertId, userId, resolution);
@@ -3669,7 +3669,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/apply-overtime-recommendation", isAuthenticated, async (req, res) => {
     try {
       const { recommendationId, notes } = req.body;
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       
       if (!recommendationId) {
         return res.status(400).json({ error: "recommendationId is required" });
@@ -3825,7 +3825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/approvals/:approvalId/approve', isAuthenticated, async (req, res) => {
     try {
       const { approvalId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { reason } = req.body;
 
       const { smartNotifications } = await import('./smartNotificationsService');
@@ -3850,7 +3850,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/approvals/:approvalId/reject', isAuthenticated, async (req, res) => {
     try {
       const { approvalId } = req.params;
-      const userId = req.user?.claims?.sub;
+      const userId = req.user?.id;
       const { reason } = req.body;
 
       const { smartNotifications } = await import('./smartNotificationsService');

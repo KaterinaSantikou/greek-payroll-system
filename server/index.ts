@@ -20,8 +20,10 @@ const envInfo = getEnvironmentInfo();
 if (envConfig.NODE_ENV === 'production' || process.env.ENABLE_MONITORING === 'true') {
   try {
     const errorTracking = ErrorTrackingService.getInstance();
-    app.use(errorTracking.getRequestHandler());
-    app.use(errorTracking.getTracingHandler());
+    const requestHandler = errorTracking.getRequestHandler();
+    const tracingHandler = errorTracking.getTracingHandler();
+    if (typeof requestHandler === 'function') app.use(requestHandler);
+    if (typeof tracingHandler === 'function') app.use(tracingHandler);
     console.log('✅ Error tracking enabled for production');
   } catch (error) {
     console.log('⚠️  Error tracking initialization failed:', error);
