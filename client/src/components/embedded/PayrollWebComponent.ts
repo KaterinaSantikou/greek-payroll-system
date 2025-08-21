@@ -1,1 +1,258 @@
-/**\n * Web Component wrapper for PayrollSync embedded surfaces\n * Usage: <payroll-surface surface=\"payroll_run\" token=\"...\" tenant-id=\"...\"></payroll-surface>\n */\n\nimport { PayrollSDK, type PayrollSDKConfig } from '@/lib/payrollSDK';\n\nclass PayrollSurfaceElement extends HTMLElement {\n  private sdk: PayrollSDK | null = null;\n  private container: HTMLDivElement | null = null;\n\n  static get observedAttributes() {\n    return [\n      'surface',\n      'token', \n      'tenant-id',\n      'locale',\n      'theme',\n      'base-url',\n      'run-id'\n    ];\n  }\n\n  constructor() {\n    super();\n    this.attachShadow({ mode: 'open' });\n  }\n\n  connectedCallback() {\n    this.render();\n    this.initializeSDK();\n  }\n\n  disconnectedCallback() {\n    if (this.sdk) {\n      this.sdk.destroy();\n      this.sdk = null;\n    }\n  }\n\n  attributeChangedCallback(name: string, oldValue: string, newValue: string) {\n    if (oldValue !== newValue) {\n      if (this.sdk) {\n        this.updateSDKConfig();\n      }\n    }\n  }\n\n  private render() {\n    if (!this.shadowRoot) return;\n\n    this.shadowRoot.innerHTML = `\n      <style>\n        :host {\n          display: block;\n          width: 100%;\n          min-height: 400px;\n        }\n        .container {\n          width: 100%;\n          height: 100%;\n          position: relative;\n        }\n        .loading {\n          display: flex;\n          align-items: center;\n          justify-content: center;\n          height: 400px;\n          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;\n        }\n        .loading-spinner {\n          width: 32px;\n          height: 32px;\n          border: 3px solid #f3f4f6;\n          border-top: 3px solid #3b82f6;\n          border-radius: 50%;\n          animation: spin 1s linear infinite;\n          margin-right: 12px;\n        }\n        @keyframes spin {\n          0% { transform: rotate(0deg); }\n          100% { transform: rotate(360deg); }\n        }\n        .error {\n          display: flex;\n          align-items: center;\n          justify-content: center;\n          height: 400px;\n          background-color: #fef2f2;\n          border: 1px solid #fecaca;\n          border-radius: 8px;\n          color: #dc2626;\n          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;\n          text-align: center;\n          padding: 20px;\n        }\n      </style>\n      <div class=\"container\">\n        <div class=\"loading\">\n          <div class=\"loading-spinner\"></div>\n          <span>Loading PayrollSync...</span>\n        </div>\n      </div>\n    `;\n\n    this.container = this.shadowRoot.querySelector('.container') as HTMLDivElement;\n  }\n\n  private async initializeSDK() {\n    if (!this.container) return;\n\n    try {\n      const config = this.getSDKConfig();\n      \n      if (!config.surface || !config.token || !config.tenantId) {\n        this.showError('Missing required attributes: surface, token, or tenant-id');\n        return;\n      }\n\n      this.sdk = new PayrollSDK(config);\n\n      // Setup event listeners for common events\n      this.setupEventListeners();\n\n      await this.sdk.init(this.container);\n      \n      // Fire custom event when initialized\n      this.dispatchEvent(new CustomEvent('payroll-initialized', {\n        detail: { surface: config.surface },\n        bubbles: true\n      }));\n    } catch (error) {\n      console.error('Failed to initialize PayrollSDK:', error);\n      this.showError(\n        error instanceof Error \n          ? error.message \n          : 'Failed to initialize embedded payroll surface'\n      );\n    }\n  }\n\n  private getSDKConfig(): PayrollSDKConfig {\n    return {\n      surface: this.getAttribute('surface') as any,\n      token: this.getAttribute('token') || '',\n      tenantId: this.getAttribute('tenant-id') || '',\n      locale: this.getAttribute('locale') || 'en',\n      theme: this.getAttribute('theme') as 'light' | 'dark' || 'light',\n      baseUrl: this.getAttribute('base-url') || window.location.origin,\n    };\n  }\n\n  private updateSDKConfig() {\n    if (this.sdk) {\n      const newConfig = this.getSDKConfig();\n      this.sdk.updateConfig(newConfig);\n    }\n  }\n\n  private setupEventListeners() {\n    if (!this.sdk) return;\n\n    // Forward all SDK events as custom events\n    const eventTypes = [\n      'payroll.run.opened',\n      'payroll.run.validated', \n      'payroll.run.finalized',\n      'payroll.run.posted',\n      'payroll.run.failed',\n      'exceptions.loaded',\n      'exceptions.resolved',\n      'exceptions.failed',\n      'filings.loaded',\n      'filing.submitted',\n      'filing.failed',\n      'payments.loaded',\n      'payment.sent',\n      'payment.failed'\n    ] as const;\n\n    eventTypes.forEach(eventType => {\n      this.sdk!.on(eventType as any, (event, data) => {\n        this.dispatchEvent(new CustomEvent(eventType.replace('.', '-'), {\n          detail: { event, data },\n          bubbles: true\n        }));\n      });\n    });\n  }\n\n  private showError(message: string) {\n    if (!this.container) return;\n\n    this.container.innerHTML = `\n      <div class=\"error\">\n        <div>\n          <strong>Error:</strong> ${message}\n        </div>\n      </div>\n    `;\n  }\n\n  // Public methods for external control\n  public sendAction(action: string, data?: any) {\n    if (this.sdk) {\n      this.sdk.sendAction(action, data);\n    }\n  }\n\n  public resize(width?: string, height?: string) {\n    if (this.sdk) {\n      this.sdk.resize(width, height);\n    }\n  }\n\n  public getSDKInstance(): PayrollSDK | null {\n    return this.sdk;\n  }\n}\n\n// Define the custom element\nif (!customElements.get('payroll-surface')) {\n  customElements.define('payroll-surface', PayrollSurfaceElement);\n}\n\n// TypeScript declaration for better IDE support\ndeclare global {\n  namespace JSX {\n    interface IntrinsicElements {\n      'payroll-surface': {\n        surface: 'payroll_run' | 'exceptions_review' | 'filings_panel' | 'payments_cockpit';\n        token: string;\n        'tenant-id': string;\n        locale?: string;\n        theme?: 'light' | 'dark';\n        'base-url'?: string;\n        'run-id'?: string;\n        onPayrollInitialized?: (event: CustomEvent) => void;\n        onPayrollRunOpened?: (event: CustomEvent) => void;\n        onPayrollRunValidated?: (event: CustomEvent) => void;\n        onPayrollRunFinalized?: (event: CustomEvent) => void;\n        onPayrollRunPosted?: (event: CustomEvent) => void;\n        onPayrollRunFailed?: (event: CustomEvent) => void;\n        onExceptionsLoaded?: (event: CustomEvent) => void;\n        onExceptionsResolved?: (event: CustomEvent) => void;\n        onExceptionsFailed?: (event: CustomEvent) => void;\n        onFilingsLoaded?: (event: CustomEvent) => void;\n        onFilingSubmitted?: (event: CustomEvent) => void;\n        onFilingFailed?: (event: CustomEvent) => void;\n        onPaymentsLoaded?: (event: CustomEvent) => void;\n        onPaymentSent?: (event: CustomEvent) => void;\n        onPaymentFailed?: (event: CustomEvent) => void;\n      };\n    }\n  }\n}\n\nexport { PayrollSurfaceElement };
+/**
+ * Web Component wrapper for PayrollSync embedded surfaces
+ * Usage: <payroll-surface surface="payroll_run" token="..." tenant-id="..."></payroll-surface>
+ */
+
+import { PayrollSDK, type PayrollSDKConfig } from '@/lib/payrollSDK';
+
+class PayrollSurfaceElement extends HTMLElement {
+  private sdk: PayrollSDK | null = null;
+  private container: HTMLDivElement | null = null;
+
+  static get observedAttributes() {
+    return [
+      'surface',
+      'token', 
+      'tenant-id',
+      'locale',
+      'theme',
+      'base-url',
+      'run-id'
+    ];
+  }
+
+  constructor() {
+    super();
+    this.attachShadow({ mode: 'open' });
+  }
+
+  connectedCallback() {
+    this.render();
+    this.initializeSDK();
+  }
+
+  disconnectedCallback() {
+    if (this.sdk) {
+      this.sdk.destroy();
+      this.sdk = null;
+    }
+  }
+
+  attributeChangedCallback(name: string, oldValue: string, newValue: string) {
+    if (oldValue !== newValue) {
+      if (this.sdk) {
+        this.updateSDKConfig();
+      }
+    }
+  }
+
+  private render() {
+    if (!this.shadowRoot) return;
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+          width: 100%;
+          min-height: 400px;
+        }
+        .container {
+          width: 100%;
+          height: 100%;
+          position: relative;
+        }
+        .loading {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 400px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .loading-spinner {
+          width: 32px;
+          height: 32px;
+          border: 3px solid #f3f4f6;
+          border-top: 3px solid #3b82f6;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-right: 12px;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .error {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 400px;
+          background-color: #fef2f2;
+          border: 1px solid #fecaca;
+          border-radius: 8px;
+          color: #dc2626;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          text-align: center;
+          padding: 20px;
+        }
+      </style>
+      <div class="container">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <span>Loading PayrollSync...</span>
+        </div>
+      </div>
+    `;
+
+    this.container = this.shadowRoot.querySelector('.container') as HTMLDivElement;
+  }
+
+  private async initializeSDK() {
+    if (!this.container) return;
+
+    try {
+      const config = this.getSDKConfig();
+      
+      if (!config.surface || !config.token || !config.tenantId) {
+        this.showError('Missing required attributes: surface, token, or tenant-id');
+        return;
+      }
+
+      this.sdk = new PayrollSDK(config);
+
+      // Setup event listeners for common events
+      this.setupEventListeners();
+
+      await this.sdk.init(this.container);
+      
+      // Fire custom event when initialized
+      this.dispatchEvent(new CustomEvent('payroll-initialized', {
+        detail: { surface: config.surface },
+        bubbles: true
+      }));
+    } catch (error) {
+      console.error('Failed to initialize PayrollSDK:', error);
+      this.showError(
+        error instanceof Error 
+          ? error.message 
+          : 'Failed to initialize embedded payroll surface'
+      );
+    }
+  }
+
+  private getSDKConfig(): PayrollSDKConfig {
+    return {
+      surface: this.getAttribute('surface') as any,
+      token: this.getAttribute('token') || '',
+      tenantId: this.getAttribute('tenant-id') || '',
+      locale: this.getAttribute('locale') || 'en',
+      theme: this.getAttribute('theme') as 'light' | 'dark' || 'light',
+      baseUrl: this.getAttribute('base-url') || window.location.origin,
+    };
+  }
+
+  private updateSDKConfig() {
+    if (this.sdk) {
+      const newConfig = this.getSDKConfig();
+      this.sdk.updateConfig(newConfig);
+    }
+  }
+
+  private setupEventListeners() {
+    if (!this.sdk) return;
+
+    // Forward all SDK events as custom events
+    const eventTypes = [
+      'payroll.run.opened',
+      'payroll.run.validated', 
+      'payroll.run.finalized',
+      'payroll.run.posted',
+      'payroll.run.failed',
+      'exceptions.loaded',
+      'exceptions.resolved',
+      'exceptions.failed',
+      'filings.loaded',
+      'filing.submitted',
+      'filing.failed',
+      'payments.loaded',
+      'payment.sent',
+      'payment.failed'
+    ] as const;
+
+    eventTypes.forEach(eventType => {
+      this.sdk!.on(eventType as any, (event, data) => {
+        this.dispatchEvent(new CustomEvent(eventType.replace('.', '-'), {
+          detail: { event, data },
+          bubbles: true
+        }));
+      });
+    });
+  }
+
+  private showError(message: string) {
+    if (!this.container) return;
+
+    this.container.innerHTML = `
+      <div class="error">
+        <div>
+          <strong>Error:</strong> ${message}
+        </div>
+      </div>
+    `;
+  }
+
+  // Public methods for external control
+  public sendAction(action: string, data?: any) {
+    if (this.sdk) {
+      this.sdk.sendAction(action, data);
+    }
+  }
+
+  public resize(width?: string, height?: string) {
+    if (this.sdk) {
+      this.sdk.resize(width, height);
+    }
+  }
+
+  public getSDKInstance(): PayrollSDK | null {
+    return this.sdk;
+  }
+}
+
+// Define the custom element
+if (!customElements.get('payroll-surface')) {
+  customElements.define('payroll-surface', PayrollSurfaceElement);
+}
+
+// TypeScript declaration for better IDE support
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'payroll-surface': {
+        surface: 'payroll_run' | 'exceptions_review' | 'filings_panel' | 'payments_cockpit';
+        token: string;
+        'tenant-id': string;
+        locale?: string;
+        theme?: 'light' | 'dark';
+        'base-url'?: string;
+        'run-id'?: string;
+        onPayrollInitialized?: (event: CustomEvent) => void;
+        onPayrollRunOpened?: (event: CustomEvent) => void;
+        onPayrollRunValidated?: (event: CustomEvent) => void;
+        onPayrollRunFinalized?: (event: CustomEvent) => void;
+        onPayrollRunPosted?: (event: CustomEvent) => void;
+        onPayrollRunFailed?: (event: CustomEvent) => void;
+        onExceptionsLoaded?: (event: CustomEvent) => void;
+        onExceptionsResolved?: (event: CustomEvent) => void;
+        onExceptionsFailed?: (event: CustomEvent) => void;
+        onFilingsLoaded?: (event: CustomEvent) => void;
+        onFilingSubmitted?: (event: CustomEvent) => void;
+        onFilingFailed?: (event: CustomEvent) => void;
+        onPaymentsLoaded?: (event: CustomEvent) => void;
+        onPaymentSent?: (event: CustomEvent) => void;
+        onPaymentFailed?: (event: CustomEvent) => void;
+      };
+    }
+  }
+}
+
+export { PayrollSurfaceElement };
