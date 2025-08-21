@@ -61,37 +61,3 @@ export function AppProvider({ children }: AppProviderProps) {
     </AppContext.Provider>
   );
 }
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-interface AppContextType {
-  viewingMode: 'normal' | 'demo' | 'preview';
-  setViewingMode: (mode: 'normal' | 'demo' | 'preview') => void;
-  currentProperty: string | null;
-  setCurrentProperty: (property: string | null) => void;
-}
-
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
-export function AppContextProvider({ children }: { children: ReactNode }) {
-  const [viewingMode, setViewingMode] = useState<'normal' | 'demo' | 'preview'>('normal');
-  const [currentProperty, setCurrentProperty] = useState<string | null>(null);
-
-  return (
-    <AppContext.Provider value={{
-      viewingMode,
-      setViewingMode,
-      currentProperty,
-      setCurrentProperty
-    }}>
-      {children}
-    </AppContext.Provider>
-  );
-}
-
-export function useAppContext() {
-  const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useAppContext must be used within an AppContextProvider');
-  }
-  return context;
-}

@@ -63,6 +63,9 @@ export class AuditService {
       const [logEntry] = await db
         .insert(hashChainedAuditLog)
         .values({
+          eventHash,
+          previousHash,
+          chainHash,
           eventType: event.eventType,
           eventCategory: event.eventCategory,
           eventAction: event.eventAction,
@@ -70,17 +73,10 @@ export class AuditService {
           partnerFirmId: event.partnerFirmId,
           userId: event.userId,
           eventData: event.eventData,
-          eventHash,
-          previousHash,
-          chainHash,
           ipAddress: event.ipAddress,
           userAgent: event.userAgent,
           sessionId: event.sessionId,
           requestId: event.requestId,
-          email: event.email,
-          result: event.result,
-          reason: event.reason,
-          metadata: event.metadata || {},
         })
         .returning();
 
