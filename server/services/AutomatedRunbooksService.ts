@@ -821,7 +821,7 @@ export class AutomatedRunbooksService extends EventEmitter {
     offset: number = 0
   ): Promise<any> {
     try {
-      let query = db
+      const baseQuery = db
         .select({
           execution: runbookExecutions,
           runbook: {
@@ -833,9 +833,9 @@ export class AutomatedRunbooksService extends EventEmitter {
         .from(runbookExecutions)
         .leftJoin(runbooks, eq(runbookExecutions.runbookId, runbooks.id));
 
-      if (runbookId) {
-        query = query.where(eq(runbookExecutions.runbookId, runbookId));
-      }
+      const query = runbookId 
+        ? baseQuery.where(eq(runbookExecutions.runbookId, runbookId))
+        : baseQuery;
 
       const executions = await query
         .orderBy(desc(runbookExecutions.startedAt))
