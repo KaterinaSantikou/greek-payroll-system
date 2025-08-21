@@ -21,6 +21,7 @@ import healthAPI from "./api/health";
 import securityAPI from "./api/security";
 import reportsAPI from "./api/reports";
 import { registerForecastingRoutes } from "./api/forecasting";
+import { registerProductionRoutes } from "./api/production";
 // Temporarily disabled for startup fix
 // import { 
 //   requestLoggingMiddleware, 
@@ -2994,6 +2995,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register forecasting API routes
   registerForecastingRoutes(app);
+  registerProductionRoutes(app);
   
   // Register Document AI API routes
   registerDocumentAIRoutes(app);

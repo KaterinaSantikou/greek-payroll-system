@@ -377,6 +377,7 @@ function Router() {
         <Route path="/super-admin-dashboard" component={lazy(() => import("@/pages/SuperAdminDashboard"))} />
         <Route path="/hr-manager-dashboard" component={lazy(() => import("@/pages/HRManagerDashboard"))} />
         <Route path="/payroll-manager-dashboard" component={lazy(() => import("@/pages/PayrollManagerDashboard"))} />
+        <Route path="/production-dashboard" component={lazy(() => import("@/pages/ProductionDashboard"))} />
         <Route path="/partner-console" component={PartnerConsole} />
         <Route path="/partner" nest>
           <Partner />

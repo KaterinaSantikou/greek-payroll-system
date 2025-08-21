@@ -5,12 +5,10 @@ import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { validateEnvironment, envConfig, getEnvironmentInfo } from "./lib/envConfig";
-// Temporarily disabled for startup fix
-// import { errorTrackingService } from "./services/ErrorTrackingService";
-// import { productionPerformanceService } from "./services/ProductionPerformanceService";
-// import { cdnService } from "./services/CDNService";
-// import { performanceMiddleware, errorTrackingMiddleware } from "./middleware/performanceMiddleware";
-// import { loadBalancerMiddleware, loadBalancerHeadersMiddleware } from './middleware/loadBalancerMiddleware';
+import { ErrorTrackingService } from "./services/ErrorTrackingService";
+import { StatusPageService } from "./services/StatusPageService";
+import { CacheManagerService } from "./services/CacheManagerService";
+import { PerformanceOptimizationService } from "./services/PerformanceOptimizationService";
 
 // Validate environment configuration at startup
 validateEnvironment();
@@ -18,14 +16,13 @@ validateEnvironment();
 const app = express();
 const envInfo = getEnvironmentInfo();
 
-// Initialize monitoring services early (temporarily disabled for startup fix)
-// if (envConfig.NODE_ENV === 'production') {
-//   app.use(errorTrackingService.getRequestHandler());
-//   app.use(errorTrackingService.getTracingHandler());
-// }
-// app.use(performanceMiddleware);
-// app.use(loadBalancerMiddleware);
-// app.use(loadBalancerHeadersMiddleware);
+// Initialize monitoring services for production readiness
+if (envConfig.NODE_ENV === 'production' || process.env.ENABLE_MONITORING === 'true') {
+  const errorTracking = ErrorTrackingService.getInstance();
+  app.use(errorTracking.getRequestHandler());
+  app.use(errorTracking.getTracingHandler());
+  console.log('✅ Error tracking enabled for production');
+}
 
 // Production Domain Configuration
 const isProduction = envInfo.isProduction;
@@ -44,8 +41,16 @@ if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
   allowedOrigins.push(`https://${process.env.REPL_SLUG}--${process.env.REPL_OWNER}.repl.co`);
 }
 
-// Configure CDN and static assets (temporarily disabled)
-// cdnService.configureApp(app);
+// Initialize cache management, status monitoring, and performance optimization
+try {
+  const cacheManager = CacheManagerService.getInstance();
+  const performanceService = PerformanceOptimizationService.getInstance();
+  performanceService.configureApp(app);
+  StatusPageService.initialize();
+  console.log('✅ Production monitoring and performance optimization initialized');
+} catch (error) {
+  console.log('⚠️  Production services partially initialized:', error);
+}
 
 // CORS Configuration for Production Domains
 app.use((req, res, next) => {
