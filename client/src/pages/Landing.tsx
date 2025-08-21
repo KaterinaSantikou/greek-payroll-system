@@ -40,7 +40,8 @@ interface LandingPageProps {
   initialLocale?: 'en' | 'el';
 }
 
-export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
+export default function Landing(props: any = {}) {
+  const { initialLocale = 'en' } = props;
   const { t, locale, changeLanguage } = useTranslation();
   const [, setLocation] = useLocation();
   const [currentLocale, setCurrentLocale] = useState<'en' | 'el'>(initialLocale);
@@ -73,7 +74,7 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
         if (element && !viewedSections.has(sectionId)) {
           const rect = element.getBoundingClientRect();
           if (rect.top < window.innerHeight && rect.bottom > 0) {
-            setViewedSections(prev => new Set([...prev, sectionId]));
+            setViewedSections(prev => new Set(Array.from(prev).concat(sectionId)));
             trackEvent('section_view', { section: sectionId, locale: currentLocale });
           }
         }
