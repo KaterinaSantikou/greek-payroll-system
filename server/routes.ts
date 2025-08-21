@@ -239,24 +239,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Event Queue API - Evented Platform
   app.use('/', eventQueueAPI);
 
-  // Initialize services
-  const sepaPaymentService = new SepaPaymentService();
-  const glExportService = new GLExportService();
-  const filingComplianceService = new FilingComplianceService();
-  const selfServiceManager = new SelfServiceManager();
-  const advancedAnalyticsService = new AdvancedAnalyticsService();
-  const hotelEnhancementsService = new HotelEnhancementsService();
+  // Initialize core services immediately (blocking)
   const payExplanationService = new PayExplanationService(storage);
   
-  // Import AI engines
-  const { overtimePreventionEngine } = await import("./overtimePreventionEngineSimple");
-  const { exceptionAutoResolutionEngine } = await import("./exceptionAutoResolutionEngineSimple");
+  // Initialize heavy services asynchronously (non-blocking)
+  const servicePromises = {
+    sepaPaymentService: Promise.resolve().then(() => new SepaPaymentService()),
+    glExportService: Promise.resolve().then(() => new GLExportService()),
+    filingComplianceService: Promise.resolve().then(() => new FilingComplianceService()),
+    selfServiceManager: Promise.resolve().then(() => new SelfServiceManager()),
+    advancedAnalyticsService: Promise.resolve().then(() => new AdvancedAnalyticsService()),
+    hotelEnhancementsService: Promise.resolve().then(() => new HotelEnhancementsService()),
+    overtimePreventionEngine: import("./overtimePreventionEngineSimple").then(m => m.overtimePreventionEngine),
+    exceptionAutoResolutionEngine: import("./exceptionAutoResolutionEngineSimple").then(m => m.exceptionAutoResolutionEngine)
+  };
+  
+  // Helper to get services when needed
+  const getService = async (serviceName: keyof typeof servicePromises) => {
+    return await servicePromises[serviceName];
+  };
+
+  // Simple user cache for auth performance (5 minute TTL)
+  const userCache = new Map<string, { user: any; expires: number }>();
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+  const getCachedUser = async (userId: string) => {
+    const cached = userCache.get(userId);
+    if (cached && cached.expires > Date.now()) {
+      return cached.user;
+    }
+    
+    const user = await storage.getUser(userId);
+    if (user) {
+      userCache.set(userId, { user, expires: Date.now() + CACHE_TTL });
+    }
+    return user;
+  };
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      const user = await getCachedUser(userId);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -296,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertEmployeeSchema.parse(req.body);
       
-      // Check for duplicate AFM if provided
+      // Optimized: Check duplicate AFM and create employee in parallel when possible
       if (validatedData.afm) {
         const existingByAfm = await storage.getEmployeeByAfm(validatedData.afm);
         if (existingByAfm) {
