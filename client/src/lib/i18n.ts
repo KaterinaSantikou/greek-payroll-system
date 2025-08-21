@@ -839,7 +839,7 @@ const LocaleContext = React.createContext<LocaleContextType | undefined>(undefin
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   // Initialize with persisted locale before first paint
-  const [locale, setLocale] = React.useState<Locale>(() => {
+  const [locale, setLocaleState] = React.useState<Locale>(() => {
     // This runs only once during initialization, before first paint
     if (typeof window === 'undefined') return 'en'; // SSR fallback
     
@@ -866,6 +866,27 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     return 'en';
   });
 
+  // Wrapper for setLocale that persists changes
+  const setLocale = React.useCallback((newLocale: Locale) => {
+    if (typeof window !== 'undefined') {
+      // Update localStorage for persistence
+      localStorage.setItem('preferred_locale', newLocale);
+      
+      // Update cookie for SSR support
+      document.cookie = `lang=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}`; // 1 year
+      
+      // Broadcast language change event for third-party widgets
+      window.dispatchEvent(new CustomEvent('langChanged', { 
+        detail: { locale: newLocale, previousLocale: locale }
+      }));
+      
+      // Log for debugging
+      console.log(`Language changed from ${locale} to ${newLocale}`);
+    }
+    
+    setLocaleState(newLocale);
+  }, [locale]);
+
   const t = React.useCallback((key: keyof TranslationKeys): string => {
     return translations[locale][key] || key;
   }, [locale]);
@@ -874,7 +895,7 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     locale,
     setLocale,
     t,
-  }), [locale, t]);
+  }), [locale, setLocale, t]);
 
   return React.createElement(
     LocaleContext.Provider,

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu,
@@ -17,55 +17,9 @@ const languages = [
 export default function LanguageSwitcher() {
   const { locale, setLocale } = useLocale();
 
-  // Initialize locale on mount with persistence
-  useEffect(() => {
-    const getInitialLocale = (): Locale => {
-      // Check localStorage first
-      const storedLocale = localStorage.getItem('preferred_locale') as Locale;
-      if (storedLocale && ['en', 'el'].includes(storedLocale)) {
-        return storedLocale;
-      }
-
-      // Check cookie
-      const cookieMatch = document.cookie.match(/(?:^|; )lang=([^;]*)/);
-      const cookieLocale = cookieMatch?.[1] as Locale;
-      if (cookieLocale && ['en', 'el'].includes(cookieLocale)) {
-        return cookieLocale;
-      }
-
-      // Check browser language
-      const browserLang = navigator.language.toLowerCase();
-      if (browserLang.startsWith('el')) {
-        return 'el';
-      }
-
-      // Fallback to English
-      return 'en';
-    };
-
-    const initialLocale = getInitialLocale();
-    if (initialLocale !== locale) {
-      setLocale(initialLocale);
-    }
-  }, [locale, setLocale]);
-
   const handleLanguageChange = (newLocale: Locale) => {
-    // Update localStorage for persistence
-    localStorage.setItem('preferred_locale', newLocale);
-    
-    // Update cookie for SSR support
-    document.cookie = `lang=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}`; // 1 year
-    
-    // Update the locale in context
+    // The LocaleProvider now handles all persistence logic
     setLocale(newLocale);
-    
-    // Broadcast language change event for third-party widgets
-    window.dispatchEvent(new CustomEvent('langChanged', { 
-      detail: { locale: newLocale, previousLocale: locale }
-    }));
-    
-    // Log for debugging
-    console.log(`Language changed from ${locale} to ${newLocale}`);
   };
 
   const currentLanguage = languages.find(lang => lang.code === locale);
