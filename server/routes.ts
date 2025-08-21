@@ -109,7 +109,7 @@ import {
 } from "./api/dataImport";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
+  // Auth middleware - Primary Replit Auth (Enterprise OIDC)
   await setupAuth(app);
 
   // Initialize security enforcement components
