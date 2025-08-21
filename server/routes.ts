@@ -236,11 +236,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enhanced IBAN Validation API
   registerIbanValidationRoutes(app);
 
+  // Job Queue API
+  const { registerJobQueueRoutes } = await import("./api/jobQueue");
+  registerJobQueueRoutes(app);
+
   // Event Queue API - Evented Platform
   app.use('/', eventQueueAPI);
 
   // Initialize core services immediately (blocking)
   const payExplanationService = new PayExplanationService(storage);
+  
+  // Initialize job queue service
+  const { jobQueueService } = await import("./services/SimpleJobQueueService");
   
   // Initialize heavy services asynchronously (non-blocking)
   const servicePromises = {
@@ -1624,29 +1631,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Generate SEPA file for payroll run
-  app.get('/api/payroll/sepa/:runId', isAuthenticated, async (req, res) => {
+  // Queue SEPA file generation for payroll run (async with job queue)
+  app.post('/api/payroll/sepa/:runId', isAuthenticated, async (req, res) => {
     try {
-      const { SEPAFileGenerator } = await import('./sepaFileGenerator');
-      const sepaGenerator = new SEPAFileGenerator();
-      
       const { runId } = req.params;
-      const format = req.query.format as string || 'xml';
+      const userId = req.user?.claims?.sub;
+      const idempotencyKey = req.headers['idempotency-key'] as string || `sepa-${runId}-${Date.now()}`;
       
-      if (format === 'xml') {
-        const sepaXML = await (sepaGenerator as any).generateSEPAFile?.(runId) || `<xml>SEPA file for run ${runId}</xml>`;
-        res.setHeader('Content-Type', 'application/xml');
-        res.setHeader('Content-Disposition', `attachment; filename="SEPA_${runId}_${new Date().toISOString().split('T')[0]}.xml"`);
-        res.send(sepaXML);
-      } else {
-        // Return metadata only
-        const payments = await (sepaGenerator as any).getPayrollPayments(runId);
-        const metadata = (sepaGenerator as any).generateSEPAMetadata?.(runId, payments) || { runId, payments: payments?.length || 0 };
-        res.json(metadata);
+      // Add SEPA generation job to queue
+      const job = await jobQueueService.addSEPAGenerationJob({
+        payrollRunId: runId,
+        idempotencyKey,
+        userId,
+        timestamp: new Date()
+      });
+
+      if (!job) {
+        // Job already completed (idempotency check)
+        return res.json({ 
+          status: 'completed',
+          message: 'SEPA file already generated',
+          jobId: idempotencyKey 
+        });
       }
+
+      res.status(202).json({ 
+        status: 'processing',
+        jobId: job.id,
+        message: 'SEPA generation job queued',
+        checkStatusUrl: `/api/jobs/sepa-generation/${job.id}/status`
+      });
+      
     } catch (error) {
-      console.error('Error generating SEPA file:', error);
-      res.status(500).json({ message: 'Failed to generate SEPA file' });
+      console.error('Error queueing SEPA generation:', error);
+      res.status(500).json({ message: 'Failed to queue SEPA generation job' });
     }
   });
   
