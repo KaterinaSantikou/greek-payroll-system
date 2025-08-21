@@ -20,11 +20,11 @@ export function useAuth() {
     isAuthenticated: !!user,
     login: () => {
       // Redirect to login endpoint
-      window.location.href = "/api/auth/login";
+      window.location.href = "/api/login";
     },
     logout: () => {
       // Redirect to logout endpoint
-      window.location.href = "/api/auth/logout";
+      window.location.href = "/api/logout";
     },
   };
 }

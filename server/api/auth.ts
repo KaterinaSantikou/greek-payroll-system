@@ -7,20 +7,26 @@ const router = Router();
 // OIDC/SAML SSO endpoints are handled by replitAuth.ts
 // This file provides additional auth utilities and user management
 
-// Get current authenticated user
-router.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+// Get current authenticated user (with fallback for development)
+router.get('/api/auth/user', async (req: any, res) => {
   try {
-    const userId = req.user.claims.sub;
-    const user = {
-      id: userId,
-      email: req.user.claims.email,
-      firstName: req.user.claims.first_name,
-      lastName: req.user.claims.last_name,
-      profileImageUrl: req.user.claims.profile_image_url,
-      scopes: ["payroll:read", "payroll:write", "employees:read", "employees:write", "filings:write"]
-    };
+    // Check if user is authenticated via session
+    if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims) {
+      const userId = req.user.claims.sub;
+      const user = {
+        id: userId,
+        email: req.user.claims.email,
+        firstName: req.user.claims.first_name,
+        lastName: req.user.claims.last_name,
+        profileImageUrl: req.user.claims.profile_image_url,
+        scopes: ["payroll:read", "payroll:write", "employees:read", "employees:write", "filings:write"]
+      };
+      
+      return res.json(user);
+    }
     
-    res.json(user);
+    // For development/testing - return 401 as expected by the frontend
+    res.status(401).json({ message: "Unauthorized" });
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ message: "Failed to fetch user" });
