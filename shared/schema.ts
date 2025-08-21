@@ -2189,8 +2189,20 @@ export const payrollCalculations = pgTable("payroll_calculations", {
   
   // Benefits in Kind
   mealVouchers: decimal("meal_vouchers", { precision: 10, scale: 2 }).default("0.00"),
+  mealVouchersExempt: decimal("meal_vouchers_exempt", { precision: 10, scale: 2 }).default("0.00"), // Tax-free portion (up to €6/day)
+  mealVouchersTaxable: decimal("meal_vouchers_taxable", { precision: 10, scale: 2 }).default("0.00"), // Excess over €6/day
+  
+  // Travel Allowances
+  travelPerDiem: decimal("travel_per_diem", { precision: 10, scale: 2 }).default("0.00"),
+  travelPerDiemExempt: decimal("travel_per_diem_exempt", { precision: 10, scale: 2 }).default("0.00"), // Up to statutory limits
+  travelPerDiemTaxable: decimal("travel_per_diem_taxable", { precision: 10, scale: 2 }).default("0.00"), // Excess over limits
+  
+  // In-Kind Benefits
   companyCarBenefit: decimal("company_car_benefit", { precision: 10, scale: 2 }).default("0.00"),
-  imputedIncome: decimal("imputed_income", { precision: 10, scale: 2 }).default("0.00"),
+  accommodationBenefit: decimal("accommodation_benefit", { precision: 10, scale: 2 }).default("0.00"),
+  stockOptionsBenefit: decimal("stock_options_benefit", { precision: 10, scale: 2 }).default("0.00"),
+  otherInKindBenefits: decimal("other_in_kind_benefits", { precision: 10, scale: 2 }).default("0.00"),
+  imputedIncome: decimal("imputed_income", { precision: 10, scale: 2 }).default("0.00"), // Total imputed income for tax
   
   // Tips and Commissions
   tips: decimal("tips", { precision: 10, scale: 2 }).default("0.00"),

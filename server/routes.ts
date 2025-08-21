@@ -3746,6 +3746,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Greek Payroll Events Routes - Sick Leave, Maternity/Paternity, Unpaid Leave, Severance
   const { registerPayrollEventsRoutes } = await import("./routes/payrollEventsRoutes");
   registerPayrollEventsRoutes(app);
+  
+  // Greek Benefits & Allowances Routes - Meal Vouchers, Travel Per Diem, Tips, In-Kind Benefits
+  const { registerBenefitsAllowancesRoutes } = await import("./routes/benefitsAllowancesRoutes");
+  registerBenefitsAllowancesRoutes(app);
   registerAICopilotRoutes(app);
   registerLaborNewsfeedRoutes(app);
   registerInstantPaymentRoutes(app);
