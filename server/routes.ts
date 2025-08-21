@@ -237,6 +237,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Security compliance and audit routes (office network only)
   app.use('/api/security', adminNetworkSecurity, securityRoutes);
   
+  // Security monitoring API (office network only)
+  const securityMonitoringAPI = (await import("./api/securityMonitoring")).default;
+  app.use('/api/security', adminNetworkSecurity, securityMonitoringAPI);
+  
   // CBA & Sector Packs routes
   app.use('/api/cba-packs', cbaPackRoutes);
   
