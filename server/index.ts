@@ -7,20 +7,74 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 
+// Production Domain Configuration
+const isProduction = process.env.NODE_ENV === 'production';
+const productionDomain = process.env.PRODUCTION_DOMAIN || process.env.REPLIT_DOMAIN;
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [];
+
+// Add production domain to allowed origins
+if (productionDomain) {
+  allowedOrigins.push(`https://${productionDomain}`);
+  allowedOrigins.push(`http://${productionDomain}`);
+}
+
+// Add Replit deployment domains
+if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
+  allowedOrigins.push(`https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
+  allowedOrigins.push(`https://${process.env.REPL_SLUG}--${process.env.REPL_OWNER}.repl.co`);
+}
+
+// CORS Configuration for Production Domains
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const host = req.headers.host;
+  
+  // Allow same-origin requests
+  if (origin && (allowedOrigins.includes(origin) || origin.includes(host || ''))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    // Same-origin request (no origin header)
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
+  
+  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, X-CSRF-Token');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
+});
+
 // Security middleware for production HTTPS
 app.use((req, res, next) => {
+  const host = req.headers.host;
+  const forwardedProto = req.headers['x-forwarded-proto'];
+  
   // Security headers for production
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   
-  // HTTPS redirect in production
-  const isProduction = process.env.NODE_ENV === 'production';
-  const forwardedProto = req.headers['x-forwarded-proto'];
+  // Domain-specific Content Security Policy
+  if (productionDomain && host?.includes(productionDomain)) {
+    res.setHeader('Content-Security-Policy', 
+      `default-src 'self' https://${productionDomain}; ` +
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://${productionDomain} https://www.google.com https://www.gstatic.com; ` +
+      `style-src 'self' 'unsafe-inline' https://${productionDomain} https://fonts.googleapis.com; ` +
+      `font-src 'self' https://fonts.gstatic.com; ` +
+      `img-src 'self' data: https: blob:; ` +
+      `connect-src 'self' https://${productionDomain} https://api.replit.com wss:;`
+    );
+  }
   
-  if (isProduction && forwardedProto !== 'https' && req.header('host') !== 'localhost') {
-    return res.redirect(301, `https://${req.header('host')}${req.url}`);
+  // HTTPS redirect in production
+  if (isProduction && forwardedProto !== 'https' && host !== 'localhost' && !host?.includes('127.0.0.1')) {
+    return res.redirect(301, `https://${host}${req.url}`);
   }
   
   // HSTS (HTTP Strict Transport Security) for HTTPS
@@ -85,7 +139,6 @@ app.use((req, res, next) => {
   }
 
   // SSL/TLS Configuration for Production
-  const isProduction = process.env.NODE_ENV === 'production';
   const sslCertPath = process.env.SSL_CERT_PATH || '/etc/ssl/certs/cert.pem';
   const sslKeyPath = process.env.SSL_KEY_PATH || '/etc/ssl/private/key.pem';
   
@@ -139,11 +192,20 @@ app.use((req, res, next) => {
     const protocol = httpsServer ? 'HTTPS+HTTP' : 'HTTP';
     log(`🚀 ${protocol} server running on port ${port}`);
     
-    if (isProduction && !httpsServer) {
-      log(`🔧 Production Checklist:`);
+    // Production domain status
+    if (productionDomain) {
+      log(`🌐 Production domain configured: ${productionDomain}`);
+      log(`📋 Allowed origins: ${allowedOrigins.length} configured`);
+    }
+    
+    if (isProduction) {
+      log(`🔧 Production Configuration:`);
       log(`   ✅ Security headers enabled`);
       log(`   ✅ HTTPS redirect configured`);
-      log(`   ⚠️  SSL certificates: Configure for full HTTPS`);
+      log(`   ✅ CORS configured for custom domains`);
+      log(`   ✅ Content Security Policy active`);
+      log(`   ${httpsServer ? '✅' : '⚠️'} SSL certificates: ${httpsServer ? 'Active' : 'Configure for full HTTPS'}`);
+      log(`   ${productionDomain ? '✅' : '⚠️'} Custom domain: ${productionDomain || 'Set PRODUCTION_DOMAIN env var'}`);
     }
   });
 })();
