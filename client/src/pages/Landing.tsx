@@ -28,15 +28,12 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { initLandingOptimizations, trackConversion, initPerformanceTracking } from '@/utils/landingOptimizations';
+import { useABTest, AB_VARIANTS } from '@/utils/abTesting';
+import { trackCTAClick, trackFormSubmit, updateLeadIntent, advancedTracker } from '@/utils/advancedTracking';
 
-// Analytics tracking helper
+// Analytics tracking helper (enhanced)
 const trackEvent = (event: string, properties: Record<string, any> = {}) => {
-  // Integration with analytics service (GA4, Mixpanel, etc.)
-  if (typeof window !== 'undefined') {
-    console.log(`Analytics: ${event}`, properties);
-    // window.gtag?.('event', event, properties);
-    // window.mixpanel?.track(event, properties);
-  }
+  advancedTracker.trackEvent(event, properties);
 };
 
 interface LandingPageProps {
@@ -51,6 +48,13 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
   const [showExitIntent, setShowExitIntent] = useState(false);
   const [stickyCtaVisible, setStickyCtaVisible] = useState(false);
   const [viewedSections, setViewedSections] = useState<Set<string>>(new Set());
+  const [leadForm, setLeadForm] = useState({ email: '', company: '', employeeCount: '', industry: '' });
+  
+  // A/B test variants
+  const heroHeadlineTest = useABTest('heroHeadline');
+  const ctaCopyTest = useABTest('ctaCopy');
+  const proofPositionTest = useABTest('proofPosition');
+  const demoTypeTest = useABTest('demoType');
 
   useEffect(() => {
     // Initialize performance optimizations
@@ -76,11 +80,24 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
       });
     };
 
-    // Exit intent detection
+    // Exit intent detection with enhanced logic
     const handleMouseLeave = (e: MouseEvent) => {
       if (e.clientY <= 0 && !showExitIntent) {
-        setShowExitIntent(true);
-        trackEvent('exit_intent_triggered', { locale: currentLocale });
+        // Only show after user has been on page for at least 30 seconds
+        const timeOnPage = Date.now() - performance.timing.navigationStart;
+        if (timeOnPage > 30000) {
+          setShowExitIntent(true);
+          trackEvent('exit_intent_triggered', { 
+            locale: currentLocale, 
+            time_on_page: timeOnPage,
+            ab_variant: {
+              headline: heroHeadlineTest.variant,
+              cta_copy: ctaCopyTest.variant,
+              proof_position: proofPositionTest.variant,
+              demo_type: demoTypeTest.variant
+            }
+          });
+        }
       }
     };
 
@@ -101,11 +118,12 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
     trackEvent('language_changed', { from: currentLocale, to: newLocale });
   };
 
-  const handleCtaClick = (type: 'start_free' | 'demo' | 'pricing') => {
-    trackEvent('cta_click', { type, section: 'hero', locale: currentLocale });
-    trackConversion('cta_click', { type, section: 'hero', locale: currentLocale });
+  const handleCtaClick = (type: 'start_free' | 'demo' | 'pricing' | 'start_first_run', section: string = 'hero') => {
+    // Track with A/B test conversion
+    trackCTAClick(type, section, { locale: currentLocale, ab_variant: ctaCopyTest.variant });
+    ctaCopyTest.trackConversion('cta_click', 1);
     
-    if (type === 'start_free') {
+    if (type === 'start_free' || type === 'start_first_run') {
       setLocation('/auth/signup');
     } else if (type === 'demo') {
       setShowDemoModal(true);
@@ -114,6 +132,17 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
     }
   };
 
+  // Get A/B test content
+  const getHeroHeadline = () => {
+    const variant = heroHeadlineTest.variant;
+    return AB_VARIANTS.heroHeadline[variant as keyof typeof AB_VARIANTS.heroHeadline][currentLocale as 'en' | 'el'];
+  };
+  
+  const getCtaCopy = () => {
+    const variant = ctaCopyTest.variant;
+    return AB_VARIANTS.ctaCopy[variant as keyof typeof AB_VARIANTS.ctaCopy][currentLocale as 'en' | 'el'];
+  };
+  
   const translations = {
     en: {
       // Hero Section
@@ -247,8 +276,11 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
       // Exit Intent Modal
       exitIntent: {
         title: "Wait! Get our Greek Payroll Compliance Checklist",
-        subtitle: "Free guide covering ERGANI II, tax requirements, and common mistakes",
+        subtitle: "Free guide covering ERGANI II, tax requirements, and common mistakes to avoid",
         emailPlaceholder: "Enter your work email",
+        companyPlaceholder: "Company name",
+        employeesPlaceholder: "Number of employees",
+        industryPlaceholder: "Industry",
         cta: "Send me the checklist",
         close: "No thanks"
       }
@@ -385,8 +417,11 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
       // Exit Intent Modal
       exitIntent: {
         title: "Περιμένετε! Λάβετε τη Λίστα Ελέγχου Ελληνικής Συμμόρφωσης Μισθοδοσίας",
-        subtitle: "Δωρεάν οδηγός που καλύπτει ERGANI II, φορολογικές απαιτήσεις και συνήθη λάθη",
+        subtitle: "Δωρεάν οδηγός που καλύπτει ERGANI II, φορολογικές απαιτήσεις και συνήθη λάθη προς αποφυγή",
         emailPlaceholder: "Εισάγετε το email εργασίας σας",
+        companyPlaceholder: "Όνομα εταιρείας",
+        employeesPlaceholder: "Αριθμός εργαζομένων",
+        industryPlaceholder: "Κλάδος",
         cta: "Στείλτε μου τη λίστα",
         close: "Όχι ευχαριστώ"
       }
@@ -470,14 +505,14 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Zap className="h-5 w-5" />
-              <span className="font-medium">{text.hero.headline}</span>
+              <span className="font-medium">{getHeroHeadline()}</span>
             </div>
             <Button 
               variant="secondary"
-              onClick={() => handleCtaClick('start_free')}
+              onClick={() => handleCtaClick(ctaCopyTest.variant === 'start_first_run' ? 'start_first_run' : 'start_free', 'sticky_cta')}
               className="bg-white text-blue-600 hover:bg-gray-100"
             >
-              {text.hero.ctaPrimary}
+              {getCtaCopy()}
             </Button>
           </div>
         </div>
@@ -488,7 +523,7 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 dark:text-white mb-6 max-w-4xl mx-auto leading-tight">
-              {text.hero.headline}
+              {getHeroHeadline()}
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
               {text.hero.subline}
@@ -497,10 +532,10 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
               <Button 
                 size="lg" 
-                onClick={() => handleCtaClick('start_free')}
+                onClick={() => handleCtaClick(ctaCopyTest.variant === 'start_first_run' ? 'start_first_run' : 'start_free')}
                 className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-3 min-w-[200px]"
               >
-                {text.hero.ctaPrimary}
+                {getCtaCopy()}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               
@@ -528,9 +563,60 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
               <div className="hidden sm:block w-px h-4 bg-gray-300"></div>
               <span>{text.hero.trustStrip}</span>
             </div>
+
+            {/* Product Screenshot Mockup */}
+            <div className="mt-12 relative">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-4xl mx-auto">
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-700 dark:to-gray-600 rounded-xl p-8 text-center">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-6 mb-4 shadow-lg">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      </div>
+                      <div className="text-sm text-gray-500">PayrollSync Dashboard</div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="bg-green-100 dark:bg-green-900 p-3 rounded text-center">
+                        <div className="font-bold text-green-800 dark:text-green-200">✓ ERGANI II</div>
+                        <div className="text-green-600 dark:text-green-400">Synced</div>
+                      </div>
+                      <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded text-center">
+                        <div className="font-bold text-blue-800 dark:text-blue-200">€28,450</div>
+                        <div className="text-blue-600 dark:text-blue-400">This Month</div>
+                      </div>
+                      <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded text-center">
+                        <div className="font-bold text-purple-800 dark:text-purple-200">24 Employees</div>
+                        <div className="text-purple-600 dark:text-purple-400">Processed</div>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Live Greek payroll dashboard - see real compliance status</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
+
+      {/* Trust Strip with Social Proof (A/B Test Position) */}
+      {proofPositionTest.variant === 'above_fold' && (
+        <section className="py-8 bg-white dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">Trusted by leading Greek businesses</p>
+              <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
+                {customerLogos.map((logo, index) => (
+                  <div key={index} className="text-gray-600 dark:text-gray-400 font-medium px-4 py-2 bg-gray-50 dark:bg-gray-800 rounded">
+                    {logo}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Greek Compliance Bar */}
       <section id="compliance" className="py-12 bg-gray-50 dark:bg-gray-800" data-lazy-section>
@@ -541,17 +627,23 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { key: 'ergani', title: text.compliance.ergani, desc: text.compliance.erganiDesc, color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' },
-              { key: 'digitalCard', title: text.compliance.digitalCard, desc: text.compliance.digitalCardDesc, color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' },
-              { key: 'apdFmy', title: text.compliance.apdFmy, desc: text.compliance.apdFmyDesc, color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' },
-              { key: 'sepe', title: text.compliance.sepe, desc: text.compliance.sepeDesc, color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' }
+              { key: 'ergani', title: text.compliance.ergani, desc: text.compliance.erganiDesc, color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200', status: '✓ Active' },
+              { key: 'digitalCard', title: text.compliance.digitalCard, desc: text.compliance.digitalCardDesc, color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', status: '✓ Ready' },
+              { key: 'apdFmy', title: text.compliance.apdFmy, desc: text.compliance.apdFmyDesc, color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200', status: '✓ Connected' },
+              { key: 'sepe', title: text.compliance.sepe, desc: text.compliance.sepeDesc, color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200', status: '✓ Monitoring' }
             ].map((item) => (
-              <Card key={item.key} className="group hover:shadow-lg transition-shadow cursor-pointer">
+              <Card key={item.key} className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-l-4 border-green-500">
                 <CardContent className="p-6">
-                  <Badge className={`${item.color} mb-3`}>
-                    {item.title}
-                  </Badge>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{item.desc}</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <Badge className={`${item.color} text-xs font-semibold px-3 py-1 rounded-full`}>
+                      {item.title}
+                    </Badge>
+                    <span className="text-xs text-green-600 dark:text-green-400 font-medium">{item.status}</span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{item.desc}</p>
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button className="text-blue-600 dark:text-blue-400 text-sm font-medium hover:underline">Learn more →</button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
@@ -597,19 +689,30 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
             ))}
           </div>
 
-          {/* Integrations Row */}
+          {/* Works With Integrations - Enhanced */}
           <div className="mt-16">
             <h3 className="text-center text-lg font-semibold text-gray-900 dark:text-white mb-8">
-              Works with your favorite tools
+              Seamlessly connects with your existing tools
             </h3>
-            <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {integrationLogos.map((integration, index) => (
-                <div key={index} className="flex items-center space-x-2 bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-lg">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {integration.name}
-                  </span>
+                <div key={index} className="group bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all duration-300">
+                  <div className="text-center">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded-lg flex items-center justify-center mx-auto mb-2">
+                      <span className="text-blue-600 dark:text-blue-400 font-bold text-sm">{integration.name.charAt(0)}</span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 block">
+                      {integration.name}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{integration.category}</span>
+                  </div>
                 </div>
               ))}
+            </div>
+            <div className="text-center mt-8">
+              <button className="text-blue-600 dark:text-blue-400 font-medium hover:underline" onClick={() => trackCTAClick('demo', 'integrations')}>
+                View all integrations →
+              </button>
             </div>
           </div>
         </div>
@@ -790,6 +893,26 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
         </div>
       </section>
 
+      {/* Trust Strip with Social Proof (Below Fold) */}
+      {proofPositionTest.variant === 'below_fold' && (
+        <section className="py-12 bg-white dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-8">
+                Trusted by 500+ leading Greek businesses
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                {customerLogos.map((logo, index) => (
+                  <div key={index} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg text-center">
+                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{logo}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Final CTA */}
       <section className="py-20 bg-blue-600 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -802,7 +925,7 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
           
           <Button 
             size="lg"
-            onClick={() => handleCtaClick('start_free')}
+            onClick={() => handleCtaClick(ctaCopyTest.variant === 'start_first_run' ? 'start_first_run' : 'start_free', 'final_cta')}
             className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3 mb-4"
           >
             {text.finalCta.cta}
@@ -896,15 +1019,29 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
               </div>
               
               <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <Play className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400">Interactive demo coming soon</p>
-                  <p className="text-sm text-gray-500 mt-2">Book a live demo with our team</p>
-                  <Button className="mt-4 bg-blue-600 hover:bg-blue-700">
-                    <Calendar className="mr-2 h-4 w-4" />
-                    Schedule Demo Call
-                  </Button>
-                </div>
+                {demoTypeTest.variant === 'video' ? (
+                  <div className="text-center">
+                    <Play className="h-16 w-16 text-blue-600 mx-auto mb-4" />
+                    <p className="text-gray-600 dark:text-gray-400">Watch PayrollSync in Action</p>
+                    <p className="text-sm text-gray-500 mt-2">2-minute product walkthrough</p>
+                    <Button className="mt-4 bg-blue-600 hover:bg-blue-700" onClick={() => trackCTAClick('demo', 'video_modal')}>
+                      <Play className="mr-2 h-4 w-4" />
+                      Play Demo Video
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                      <span className="text-white text-2xl font-bold">💼</span>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-400">Interactive Demo Tour</p>
+                    <p className="text-sm text-gray-500 mt-2">Try PayrollSync with sample data</p>
+                    <Button className="mt-4 bg-blue-600 hover:bg-blue-700" onClick={() => trackCTAClick('demo', 'interactive_tour')}>
+                      <Calendar className="mr-2 h-4 w-4" />
+                      Start Interactive Tour
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -938,13 +1075,50 @@ export default function Landing({ initialLocale = 'en' }: LandingPageProps) {
                 <input
                   type="email"
                   placeholder={text.exitIntent.emailPlaceholder}
+                  value={leadForm.email}
+                  onChange={(e) => setLeadForm(prev => ({ ...prev, email: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
+                <input
+                  type="text"
+                  placeholder={text.exitIntent.companyPlaceholder}
+                  value={leadForm.company}
+                  onChange={(e) => setLeadForm(prev => ({ ...prev, company: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <select
+                    value={leadForm.employeeCount}
+                    onChange={(e) => setLeadForm(prev => ({ ...prev, employeeCount: e.target.value }))}
+                    className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  >
+                    <option value="">{text.exitIntent.employeesPlaceholder}</option>
+                    <option value="1-10">1-10</option>
+                    <option value="11-50">11-50</option>
+                    <option value="51-200">51-200</option>
+                    <option value="201-1000">201-1000</option>
+                    <option value="1000+">1000+</option>
+                  </select>
+                  <select
+                    value={leadForm.industry}
+                    onChange={(e) => setLeadForm(prev => ({ ...prev, industry: e.target.value }))}
+                    className="px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  >
+                    <option value="">{text.exitIntent.industryPlaceholder}</option>
+                    <option value="hospitality">Hotels & Tourism</option>
+                    <option value="retail">Retail</option>
+                    <option value="manufacturing">Manufacturing</option>
+                    <option value="technology">Technology</option>
+                    <option value="healthcare">Healthcare</option>
+                    <option value="finance">Finance</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
                 <div className="flex space-x-3">
                   <Button 
                     className="flex-1 bg-blue-600 hover:bg-blue-700"
                     onClick={() => {
-                      trackEvent('exit_intent_signup', { locale: currentLocale });
+                      trackFormSubmit('checklist', leadForm);
                       setShowExitIntent(false);
                     }}
                   >
