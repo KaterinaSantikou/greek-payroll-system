@@ -64,6 +64,7 @@ export interface StatusUpdate {
 
 export class StatusPageService extends EventEmitter {
   private static instance: StatusPageService;
+  private static initialized = false;
   private statusCache: Map<string, ComponentStatusInfo> = new Map();
   private lastCacheUpdate = 0;
   private cacheRefreshInterval = 30000; // 30 seconds
@@ -85,6 +86,10 @@ export class StatusPageService extends EventEmitter {
     return StatusPageService.instance;
   }
 
+  static isInitialized(): boolean {
+    return StatusPageService.initialized;
+  }
+
   private async initializeService(): Promise<void> {
     try {
       // Import RCA service dynamically to avoid circular dependency
@@ -97,9 +102,11 @@ export class StatusPageService extends EventEmitter {
       
       await this.createDefaultComponents();
       await this.startStatusMonitoring();
+      StatusPageService.initialized = true;
       console.log('📊 Status page service initialized');
     } catch (error) {
       console.error('Failed to initialize status page service:', error);
+      StatusPageService.initialized = false;
     }
   }
 
