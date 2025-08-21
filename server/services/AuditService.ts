@@ -78,6 +78,10 @@ export class AuditService {
           userAgent: event.userAgent,
           sessionId: event.sessionId,
           requestId: event.requestId,
+          email: event.email,
+          result: event.result,
+          reason: event.reason,
+          metadata: event.metadata || {},
         })
         .returning();
 
