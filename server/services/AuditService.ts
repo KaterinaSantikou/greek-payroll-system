@@ -63,7 +63,6 @@ export class AuditService {
       const [logEntry] = await db
         .insert(hashChainedAuditLog)
         .values({
-          sequenceNumber,
           eventType: event.eventType,
           eventCategory: event.eventCategory,
           eventAction: event.eventAction,
