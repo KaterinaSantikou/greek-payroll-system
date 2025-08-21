@@ -199,59 +199,24 @@ export const properties = pgTable("properties", {
   costCenterCode: varchar("cost_center_code", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  companyId: varchar("company_id").notNull(), // Company identifier
 });
 
 // Employee Master Data - Complete personal and employment details
 export const employees = pgTable("employees", {
   employeeId: varchar("employee_id").primaryKey().default(sql`gen_random_uuid()`),
-  employeeNumber: varchar("employee_number", { length: 50 }).unique().notNull(), // Internal employee number
-  
-  // Personal Data
-  personId: varchar("person_id", { length: 50 }).unique().notNull(), // Unique person identifier for ESRS S1
+  afm: varchar("afm", { length: 9 }), // Greek Tax ID
   name: varchar("name", { length: 200 }).notNull(), // Full name
-  afm: varchar("afm", { length: 9 }).unique(), // Greek Tax ID
-  amka: varchar("amka", { length: 11 }).unique(), // Social Security Number
-  paaypa: varchar("paaypa", { length: 20 }), // Unified Social Security Registry
-  bankIban: varchar("bank_iban", { length: 34 }), // Bank account for salary
-  dateOfBirth: date("date_of_birth"),
-  birthYear: integer("birth_year"), // Year of birth for ESRS S1 age segmentation
-  gender: varchar("gender", { length: 20 }), // M, F, Non-binary, Not disclosed - for pay gap analysis
-  nationalityCode: varchar("nationality_code", { length: 3 }).default("GRC"),
-  country: varchar("country", { length: 3 }).default("GRC"), // Country for ESRS S1 segmentation
-  
-  // Employment Contract Data & ESRS S1 Classification
-  employeeFlag: boolean("employee_flag").default(true), // True for employees, false for non-employees
-  nonEmployeeFlag: boolean("non_employee_flag").default(false), // Contractors, consultants
+  role: varchar("role").notNull(),
   employmentType: varchar("employment_type", { length: 50 }).notNull(), // indefinite, fixed-term, seasonal
-  contractType: varchar("contract_type", { length: 50 }).notNull(), // ESRS S1 contract type classification
-  ftePct: decimal("fte_pct", { precision: 5, scale: 2 }).default("100.00"), // FTE percentage (e.g., 100.00, 50.00)
-  grade: varchar("grade", { length: 50 }), // Job grade/level
-  unionCbaRef: varchar("union_cba_ref", { length: 100 }), // Collective Bargaining Agreement reference
   hireDate: date("hire_date").notNull(),
   termDate: date("term_date"), // Termination date, null if active
-  probationEndDate: date("probation_end_date"), // End of probation period
-  
-  // Multi-entity/Property Assignment
   defaultPropertyId: varchar("default_property_id").references(() => properties.propertyId),
-  multiPropertyAccess: jsonb("multi_property_access").default('[]'), // Array of property IDs
-  costCenterAllocations: jsonb("cost_center_allocations").default('[]'), // Default cost center splits
-  
-  // Personal Circumstances (affects allowances/taxes)
-  maritalStatus: varchar("marital_status", { length: 20 }), // single, married, divorced, widowed
-  dependents: integer("dependents").default(0), // Number of dependent children
-  disabilityPercentage: integer("disability_percentage").default(0), // For special tax/insurance treatment
-  
-  // Health & Safety Coverage for ESRS S1
-  hsCoverageFlag: boolean("hs_coverage_flag").default(true), // Covered by H&S management system
-  
-  // Emergency Contact
-  emergencyContactName: varchar("emergency_contact_name", { length: 255 }),
-  emergencyContactPhone: varchar("emergency_contact_phone", { length: 20 }),
-  
-  // System fields
-  isActive: boolean("is_active").default(true),
+  unionCbaRef: varchar("union_cba_ref", { length: 100 }), // Collective Bargaining Agreement reference
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  employeeNumber: varchar("employee_number", { length: 50 }), // Internal employee number
+  companyId: varchar("company_id").notNull(), // Company identifier
 });
 
 // Wage Components table - Base salary and allowances per employee
