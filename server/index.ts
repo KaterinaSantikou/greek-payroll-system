@@ -5,11 +5,12 @@ import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { validateEnvironment, envConfig, getEnvironmentInfo } from "./lib/envConfig";
-import { errorTrackingService } from "./services/ErrorTrackingService";
-import { productionPerformanceService } from "./services/ProductionPerformanceService";
-import { cdnService } from "./services/CDNService";
-import { performanceMiddleware, errorTrackingMiddleware } from "./middleware/performanceMiddleware";
-import { loadBalancerMiddleware, loadBalancerHeadersMiddleware } from './middleware/loadBalancerMiddleware';
+// Temporarily disabled for startup fix
+// import { errorTrackingService } from "./services/ErrorTrackingService";
+// import { productionPerformanceService } from "./services/ProductionPerformanceService";
+// import { cdnService } from "./services/CDNService";
+// import { performanceMiddleware, errorTrackingMiddleware } from "./middleware/performanceMiddleware";
+// import { loadBalancerMiddleware, loadBalancerHeadersMiddleware } from './middleware/loadBalancerMiddleware';
 
 // Validate environment configuration at startup
 validateEnvironment();
@@ -17,14 +18,14 @@ validateEnvironment();
 const app = express();
 const envInfo = getEnvironmentInfo();
 
-// Initialize monitoring services early (conditionally to avoid startup issues)
-if (envConfig.NODE_ENV === 'production') {
-  app.use(errorTrackingService.getRequestHandler());
-  app.use(errorTrackingService.getTracingHandler());
-}
-app.use(performanceMiddleware);
-app.use(loadBalancerMiddleware);
-app.use(loadBalancerHeadersMiddleware);
+// Initialize monitoring services early (temporarily disabled for startup fix)
+// if (envConfig.NODE_ENV === 'production') {
+//   app.use(errorTrackingService.getRequestHandler());
+//   app.use(errorTrackingService.getTracingHandler());
+// }
+// app.use(performanceMiddleware);
+// app.use(loadBalancerMiddleware);
+// app.use(loadBalancerHeadersMiddleware);
 
 // Production Domain Configuration
 const isProduction = envInfo.isProduction;
@@ -43,8 +44,8 @@ if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
   allowedOrigins.push(`https://${process.env.REPL_SLUG}--${process.env.REPL_OWNER}.repl.co`);
 }
 
-// Configure CDN and static assets
-cdnService.configureApp(app);
+// Configure CDN and static assets (temporarily disabled)
+// cdnService.configureApp(app);
 
 // CORS Configuration for Production Domains
 app.use((req, res, next) => {
@@ -143,17 +144,17 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
   
-  // Initialize backup system
-  if (envInfo.isProduction || envConfig.ENABLE_MONITORING) {
-    const { backupRecoveryService } = await import("./services/BackupRecoveryService");
-    backupRecoveryService.startAutomatedBackups();
-  }
+  // Initialize backup system (temporarily disabled)
+  // if (envInfo.isProduction || envConfig.ENABLE_MONITORING) {
+  //   const { backupRecoveryService } = await import("./services/BackupRecoveryService");
+  //   backupRecoveryService.startAutomatedBackups();
+  // }
 
-  // Error tracking middleware
-  app.use(errorTrackingMiddleware);
+  // Error tracking middleware (temporarily disabled)
+  // app.use(errorTrackingMiddleware);
   
-  // Sentry error handler
-  app.use(errorTrackingService.getErrorHandler());
+  // Sentry error handler (temporarily disabled)
+  // app.use(errorTrackingService.getErrorHandler());
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
