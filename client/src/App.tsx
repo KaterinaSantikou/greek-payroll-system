@@ -5,11 +5,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LocaleProvider } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import LandingPage from "@/pages/LandingPage";
 import MarketingLanding from "@/pages/MarketingLanding";
+import { initMobileOptimizations } from "@/utils/mobileOptimizations";
 // Aggressive lazy loading for sub-2s Greek internet speeds
 // Core pages - highest priority lazy loading
 const Home = lazy(() => import("@/pages/home"));
@@ -146,6 +147,11 @@ function Router() {
   const { isAuthenticated, isLoading } = useAuth();
   const { open, setOpen } = useCommandPalette();
   const [location] = useLocation();
+
+  // Initialize mobile optimizations
+  useEffect(() => {
+    initMobileOptimizations();
+  }, []);
   
   // Configure exit intent popup based on current page
   const getExitIntentConfig = () => {

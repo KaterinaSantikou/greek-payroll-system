@@ -86,11 +86,21 @@ function LayoutContent({ children }: LayoutProps) {
           variant="ghost"
           size="sm"
           onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 lg:hidden"
+          className="fixed top-4 left-4 z-50 lg:hidden touch-target"
         >
-          {isExpanded ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          {isExpanded ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
       )}
+
+      {/* Pull to refresh indicator */}
+      <div 
+        id="pull-to-refresh-indicator"
+        className="fixed top-0 left-1/2 transform -translate-x-1/2 z-30 opacity-0 transition-all duration-300"
+      >
+        <div className="bg-background border border-border rounded-full p-2 shadow-lg">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
       
       {/* Sidebar */}
       <motion.aside

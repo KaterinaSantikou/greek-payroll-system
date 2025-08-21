@@ -31,6 +31,35 @@
   transition-duration: 0s !important;
 }
 
+/* Mobile keyboard handling */
+.keyboard-open {
+  /* Prevent body scroll when keyboard is open */
+  position: fixed;
+  width: 100%;
+}
+
+/* Enhanced mobile interactions */
+.mobile-card {
+  @apply rounded-xl shadow-sm border border-border bg-card p-4 transition-all duration-200;
+}
+
+.mobile-card:active {
+  @apply scale-95;
+}
+
+/* Mobile-specific animations */
+@media (max-width: 768px) {
+  .animate-mobile-bounce {
+    animation: mobileBounce 0.3s ease-out;
+  }
+  
+  @keyframes mobileBounce {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+  }
+}
+
 @layer base {
   :root {
     /* Light theme colors */
@@ -112,9 +141,88 @@
   }
 }
 
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+  /* Larger touch targets for mobile */
+  button, a, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improved mobile form inputs */
+  input[type="text"], 
+  input[type="email"], 
+  input[type="password"],
+  input[type="number"],
+  select, 
+  textarea {
+    font-size: 16px; /* Prevents iOS zoom */
+    padding: 12px 16px;
+    border-radius: 8px;
+  }
+
+  /* Mobile-friendly spacing */
+  .mobile-padding {
+    padding: 16px;
+  }
+
+  .mobile-margin {
+    margin: 8px 0;
+  }
+
+  /* Touch-friendly cards */
+  .card-mobile {
+    padding: 20px;
+    margin: 8px 0;
+    border-radius: 12px;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1279px) {
+  /* Touch targets for tablet */
+  button, a {
+    min-height: 40px;
+    min-width: 40px;
+  }
+}
+
+/* Improved touch interactions */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile swipe indicators */
+.swipe-indicator {
+  position: relative;
+}
+
+.swipe-indicator::after {
+  content: '';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 2px;
+}
+
 /* Custom scrollbar for dark mode */
 ::-webkit-scrollbar {
   width: 8px;
+}
+
+/* Mobile scrollbar - thinner on mobile */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
 }
 
 ::-webkit-scrollbar-track {
