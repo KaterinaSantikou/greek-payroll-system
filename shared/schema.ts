@@ -2772,6 +2772,72 @@ export const erganiSubmissions = pgTable("ergani_submissions", {
   submittedAt: timestamp("submitted_at"),
 });
 
+// Company Digital Work Card Configuration - Απολογιστικό/Προαναγγελτικό Σύστημα
+export const companyDigitalWorkCardSettings = pgTable("company_digital_work_card_settings", {
+  settingId: varchar("setting_id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(), // Company identifier
+  
+  // Τρόπος λειτουργίας - Main operational mode
+  operationalMode: varchar("operational_mode", { length: 20 }).notNull().default('proactive'), // 'proactive' | 'retrospective'
+  
+  // Μηνιαίες ρυθμίσεις - Monthly settings
+  currentMonth: date("current_month").notNull(),
+  nextMonthMode: varchar("next_month_mode", { length: 20 }), // Pre-declared mode for next month
+  modeChangeRequestedAt: timestamp("mode_change_requested_at"),
+  
+  // Νομικό πλαίσιο - Legal framework settings  
+  erganiComplianceLevel: varchar("ergani_compliance_level", { length: 20 }).default('strict'), // 'strict' | 'standard'
+  auditRetentionYears: integer("audit_retention_years").default(5), // ≥5 έτη απαίτηση
+  
+  // Προθεσμίες απολογιστικού - Retrospective deadlines
+  maxRetrospectiveHours: integer("max_retrospective_hours").default(72), // Max hours to report retrospectively
+  overtimeReportingDeadline: integer("overtime_reporting_deadline").default(24), // Hours to report overtime
+  
+  // Compliance settings
+  strictTimestampValidation: boolean("strict_timestamp_validation").default(true),
+  mandatoryLocationVerification: boolean("mandatory_location_verification").default(true),
+  biometricVerificationRequired: boolean("biometric_verification_required").default(false),
+  
+  // Πρόστιμα και ειδοποιήσεις - Fines and notifications
+  penaltyThresholdEuros: decimal("penalty_threshold_euros").default("10500.00"), // €10,500/violation
+  warningBeforePenalty: boolean("warning_before_penalty").default(true),
+  automaticComplianceAlerts: boolean("automatic_compliance_alerts").default(true),
+  
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_company_dwc_settings_company_mode").on(table.companyId, table.operationalMode),
+  index("idx_company_dwc_settings_current_month").on(table.currentMonth),
+]);
+
+// Ιστορικό αλλαγών τρόπου λειτουργίας - Mode change history for audit
+export const workCardModeHistory = pgTable("work_card_mode_history", {
+  historyId: varchar("history_id").primaryKey().default(sql`gen_random_uuid()`),
+  companyId: varchar("company_id").notNull(),
+  
+  // Αλλαγή τρόπου - Mode transition details
+  fromMode: varchar("from_mode", { length: 20 }),
+  toMode: varchar("to_mode", { length: 20 }).notNull(),
+  effectiveMonth: date("effective_month").notNull(), // Month when change takes effect
+  
+  // Νομική τεκμηρίωση - Legal documentation
+  requestedAt: timestamp("requested_at").notNull(),
+  requestedBy: varchar("requested_by").notNull(), // User who requested change
+  justification: text("justification"), // Business reason for change
+  approvedAt: timestamp("approved_at"),
+  approvedBy: varchar("approved_by"),
+  
+  // Compliance validation
+  complianceChecked: boolean("compliance_checked").default(false),
+  violatesMonthlyRule: boolean("violates_monthly_rule").default(false), // Can't mix modes in same month
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_work_card_mode_history_company_month").on(table.companyId, table.effectiveMonth),
+  index("idx_work_card_mode_history_compliance").on(table.complianceChecked),
+]);
+
 export const digitalWorkCardEvents = pgTable("digital_work_card_events", {
   eventId: varchar("event_id").primaryKey().default(sql`gen_random_uuid()`),
   employeeId: varchar("employee_id").references(() => employees.employeeId),
@@ -2783,8 +2849,115 @@ export const digitalWorkCardEvents = pgTable("digital_work_card_events", {
   cardStatus: varchar("card_status"), // active, inactive, expired, pending
   submissionStatus: varchar("submission_status"), // pending, submitted, accepted, failed
   erganiSyncStatus: varchar("ergani_sync_status"), // synced, pending, failed
+  
+  // Απολογιστικό σύστημα - Retrospective system fields
+  isRetrospectiveEntry: boolean("is_retrospective_entry").default(false),
+  actualWorkTimestamp: timestamp("actual_work_timestamp"), // When work actually started/ended
+  reportedAt: timestamp("reported_at").defaultNow(), // When it was reported to system
+  reportingDelayHours: integer("reporting_delay_hours").default(0), // Calculated delay
+  
+  // Νομική συμμόρφωση - Legal compliance
+  complianceValidated: boolean("compliance_validated").default(false),
+  complianceIssues: jsonb("compliance_issues").default('[]'), // Array of issues
+  penaltyRisk: varchar("penalty_risk", { length: 10 }).default('none'), // 'none' | 'low' | 'medium' | 'high'
+  
+  // Enhanced audit trail για 5-ετή τεκμηρίωση
+  auditFingerprint: varchar("audit_fingerprint").notNull().default(sql`gen_random_uuid()`), // Immutable hash for audit
+  legalArchiveStatus: varchar("legal_archive_status").default('active'), // 'active' | 'archived' | 'expired'
+  retentionExpiryDate: date("retention_expiry_date"), // Date when can be deleted (5+ years)
+  
   createdAt: timestamp("created_at").defaultNow(),
-});
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_digital_work_card_events_employee_timestamp").on(table.employeeId, table.timestamp),
+  index("idx_digital_work_card_events_retrospective").on(table.isRetrospectiveEntry),
+  index("idx_digital_work_card_events_compliance").on(table.complianceValidated),
+  index("idx_digital_work_card_events_penalty_risk").on(table.penaltyRisk),
+  index("idx_digital_work_card_events_audit_retention").on(table.legalArchiveStatus, table.retentionExpiryDate),
+]);
+
+// Απολογιστικές καταχωρήσεις υπερωριών - Retrospective overtime entries
+export const retrospectiveOvertimeEntries = pgTable("retrospective_overtime_entries", {
+  entryId: varchar("entry_id").primaryKey().default(sql`gen_random_uuid()`),
+  employeeId: varchar("employee_id").references(() => employees.employeeId).notNull(),
+  companyId: varchar("company_id").notNull(),
+  
+  // Στοιχεία υπερωρίας - Overtime details
+  workDate: date("work_date").notNull(),
+  overtimeStartTime: timestamp("overtime_start_time").notNull(),
+  overtimeEndTime: timestamp("overtime_end_time").notNull(),
+  overtimeMinutes: integer("overtime_minutes").notNull(),
+  
+  // Τύπος υπερωρίας - Type of overtime
+  overtimeType: varchar("overtime_type", { length: 30 }).notNull(), // 'regular' | 'night' | 'holiday' | 'sunday'
+  overtimeRate: decimal("overtime_rate", { precision: 4, scale: 2 }).default("1.25"), // Multiplier (1.25, 1.5, etc.)
+  
+  // Απολογιστική καταχώρηση - Retrospective entry details
+  reportedAt: timestamp("reported_at").defaultNow(),
+  reportingDeadlineMet: boolean("reporting_deadline_met").default(true),
+  lateReportingReason: text("late_reporting_reason"),
+  
+  // Έγκριση - Approval workflow
+  requiresApproval: boolean("requires_approval").default(true),
+  approvedBy: varchar("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  status: varchar("status", { length: 20 }).default('pending'), // 'pending' | 'approved' | 'rejected'
+  
+  // Compliance και audit
+  erganiSubmitted: boolean("ergani_submitted").default(false),
+  erganiSubmissionId: varchar("ergani_submission_id"),
+  complianceNotes: text("compliance_notes"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("idx_retrospective_overtime_employee_date").on(table.employeeId, table.workDate),
+  index("idx_retrospective_overtime_status").on(table.status),
+  index("idx_retrospective_overtime_approval").on(table.requiresApproval, table.approvedAt),
+  index("idx_retrospective_overtime_ergani").on(table.erganiSubmitted),
+]);
+
+// Immutable audit log για 5-ετή τεκμηρίωση - 5-year legal archive
+export const digitalWorkCardAuditLog = pgTable("digital_work_card_audit_log", {
+  auditId: varchar("audit_id").primaryKey().default(sql`gen_random_uuid()`),
+  eventId: varchar("event_id").references(() => digitalWorkCardEvents.eventId),
+  
+  // Νομική τεκμηρίωση - Legal documentation
+  auditTimestamp: timestamp("audit_timestamp").defaultNow(),
+  auditAction: varchar("audit_action", { length: 50 }).notNull(), // 'created' | 'updated' | 'deleted' | 'compliance_check'
+  performedBy: varchar("performed_by").notNull(), // User ID or system
+  
+  // Snapshot του event - Event snapshot for immutability
+  eventSnapshot: jsonb("event_snapshot").notNull(), // Complete event data at time of audit
+  previousSnapshot: jsonb("previous_snapshot"), // Previous state if updated
+  
+  // Cryptographic integrity για legal compliance
+  dataHash: varchar("data_hash").notNull(), // SHA-256 hash of event data
+  chainHash: varchar("chain_hash").notNull(), // Hash linking to previous audit entry
+  digitalSignature: text("digital_signature"), // Optional cryptographic signature
+  
+  // Compliance context
+  complianceRulesetVersion: varchar("compliance_ruleset_version").default('2025.1'),
+  legalRequirements: jsonb("legal_requirements").default('{}'), // Applicable legal requirements
+  retentionCategory: varchar("retention_category").default('employment_records'), // For retention policy
+  
+  // 5-ετής διατήρηση - 5-year retention policy
+  retentionStartDate: date("retention_start_date").defaultNow(),
+  retentionExpiryDate: date("retention_expiry_date"), // Calculated: start + 5 years minimum
+  legalHoldStatus: varchar("legal_hold_status").default('none'), // 'none' | 'litigation_hold' | 'audit_hold'
+  
+  isImmutable: boolean("is_immutable").default(true), // Cannot be deleted or modified
+  archiveStatus: varchar("archive_status").default('active'), // 'active' | 'archived' | 'litigation_hold'
+  
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("idx_dwc_audit_log_event").on(table.eventId),
+  index("idx_dwc_audit_log_timestamp").on(table.auditTimestamp),
+  index("idx_dwc_audit_log_retention").on(table.retentionExpiryDate, table.archiveStatus),
+  index("idx_dwc_audit_log_legal_hold").on(table.legalHoldStatus),
+  index("idx_dwc_audit_log_immutable").on(table.isImmutable),
+]);
 
 // Insert schemas for additional compliance tables
 export const insertComplianceFilingsSchema = createInsertSchema(complianceFilings);
@@ -2792,6 +2965,27 @@ export const insertErganiSubmissionsSchema = createInsertSchema(erganiSubmission
 export const insertDigitalWorkCardEventsSchema = createInsertSchema(digitalWorkCardEvents).omit({
   eventId: true,
   createdAt: true,
+  updatedAt: true,
+});
+
+// New schemas for retrospective system
+export const insertCompanyDigitalWorkCardSettingsSchema = createInsertSchema(companyDigitalWorkCardSettings).omit({ 
+  settingId: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+export const insertWorkCardModeHistorySchema = createInsertSchema(workCardModeHistory).omit({ 
+  historyId: true, 
+  createdAt: true 
+});
+export const insertRetrospectiveOvertimeEntrySchema = createInsertSchema(retrospectiveOvertimeEntries).omit({ 
+  entryId: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+export const insertDigitalWorkCardAuditLogSchema = createInsertSchema(digitalWorkCardAuditLog).omit({ 
+  auditId: true, 
+  createdAt: true 
 });
 
 // Additional compliance type exports
@@ -2801,6 +2995,16 @@ export type ErganiSubmission = typeof erganiSubmissions.$inferSelect;
 export type InsertErganiSubmission = z.infer<typeof insertErganiSubmissionsSchema>;
 export type DigitalWorkCardEvent = typeof digitalWorkCardEvents.$inferSelect;
 export type InsertDigitalWorkCardEvent = z.infer<typeof insertDigitalWorkCardEventsSchema>;
+
+// New types for retrospective system
+export type CompanyDigitalWorkCardSettings = typeof companyDigitalWorkCardSettings.$inferSelect;
+export type InsertCompanyDigitalWorkCardSettings = z.infer<typeof insertCompanyDigitalWorkCardSettingsSchema>;
+export type WorkCardModeHistory = typeof workCardModeHistory.$inferSelect;
+export type InsertWorkCardModeHistory = z.infer<typeof insertWorkCardModeHistorySchema>;
+export type RetrospectiveOvertimeEntry = typeof retrospectiveOvertimeEntries.$inferSelect;
+export type InsertRetrospectiveOvertimeEntry = z.infer<typeof insertRetrospectiveOvertimeEntrySchema>;
+export type DigitalWorkCardAuditLog = typeof digitalWorkCardAuditLog.$inferSelect;
+export type InsertDigitalWorkCardAuditLog = z.infer<typeof insertDigitalWorkCardAuditLogSchema>;
 
 // Approval Context and Actions tables for Slack/Teams approvals
 export const approvalContexts = pgTable("approval_contexts", {
