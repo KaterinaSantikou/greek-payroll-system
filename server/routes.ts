@@ -2908,6 +2908,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Backup and Recovery API
   app.use("/api/backup", backupRoutes);
+  
+  // Performance & Monitoring API
+  const monitoringRoutes = (await import("./api/monitoring")).default;
+  app.use("/api/monitoring", monitoringRoutes);
 
   // Register automated runbooks routes
   try {

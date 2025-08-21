@@ -62,11 +62,14 @@ export default function BackupRecoveryPage() {
 
   // Create backup mutation
   const createBackupMutation = useMutation({
-    mutationFn: (type: 'manual' | 'pre-deployment') => 
-      apiRequest('/api/backup/create', {
+    mutationFn: async (type: 'manual' | 'pre-deployment') => {
+      const response = await fetch('/api/backup/create', {
         method: 'POST',
-        body: { type }
-      }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type })
+      });
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: 'Backup Created',
@@ -86,11 +89,14 @@ export default function BackupRecoveryPage() {
 
   // Restore backup mutation (dry run)
   const restoreBackupMutation = useMutation({
-    mutationFn: ({ backupId, dryRun }: { backupId: string; dryRun: boolean }) =>
-      apiRequest('/api/backup/restore', {
+    mutationFn: async ({ backupId, dryRun }: { backupId: string; dryRun: boolean }) => {
+      const response = await fetch('/api/backup/restore', {
         method: 'POST',
-        body: { backupId, dryRun }
-      }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backupId, dryRun })
+      });
+      return response.json();
+    },
     onSuccess: (_, variables) => {
       toast({
         title: variables.dryRun ? 'Restore Validated' : 'Restore Prepared',
@@ -108,8 +114,8 @@ export default function BackupRecoveryPage() {
     }
   });
 
-  const backups: BackupMetadata[] = backupsData?.backups || [];
-  const health: BackupHealth = healthData?.health || {
+  const backups: BackupMetadata[] = (backupsData as any)?.backups || [];
+  const health: BackupHealth = (healthData as any)?.health || {
     totalBackups: 0,
     lastBackupTime: null,
     totalSize: 0,

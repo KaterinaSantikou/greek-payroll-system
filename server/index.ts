@@ -5,12 +5,23 @@ import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { validateEnvironment, envConfig, getEnvironmentInfo } from "./lib/envConfig";
+import { errorTrackingService } from "./services/ErrorTrackingService";
+import { productionPerformanceService } from "./services/ProductionPerformanceService";
+import { cdnService } from "./services/CDNService";
+import { performanceMiddleware, errorTrackingMiddleware } from "./middleware/performanceMiddleware";
 
 // Validate environment configuration at startup
 validateEnvironment();
 
 const app = express();
 const envInfo = getEnvironmentInfo();
+
+// Initialize monitoring services early (conditionally to avoid startup issues)
+if (envConfig.NODE_ENV === 'production') {
+  app.use(errorTrackingService.getRequestHandler());
+  app.use(errorTrackingService.getTracingHandler());
+}
+app.use(performanceMiddleware);
 
 // Production Domain Configuration
 const isProduction = envInfo.isProduction;
@@ -28,6 +39,9 @@ if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
   allowedOrigins.push(`https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
   allowedOrigins.push(`https://${process.env.REPL_SLUG}--${process.env.REPL_OWNER}.repl.co`);
 }
+
+// Configure CDN and static assets
+cdnService.configureApp(app);
 
 // CORS Configuration for Production Domains
 app.use((req, res, next) => {
@@ -131,6 +145,12 @@ app.use((req, res, next) => {
     const { backupRecoveryService } = await import("./services/BackupRecoveryService");
     backupRecoveryService.startAutomatedBackups();
   }
+
+  // Error tracking middleware
+  app.use(errorTrackingMiddleware);
+  
+  // Sentry error handler
+  app.use(errorTrackingService.getErrorHandler());
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
