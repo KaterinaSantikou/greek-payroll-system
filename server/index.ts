@@ -16,125 +16,83 @@ validateEnvironment();
 const app = express();
 const envInfo = getEnvironmentInfo();
 
-// Initialize monitoring services for production readiness
-if (envConfig.NODE_ENV === 'production' || process.env.ENABLE_MONITORING === 'true') {
+const isProduction = envInfo.isProduction;
+
+// Initialize services based on environment
+if (isProduction) {
+  // Production: Full monitoring and error tracking
   try {
     const errorTracking = ErrorTrackingService.getInstance();
     const requestHandler = errorTracking.getRequestHandler();
     const tracingHandler = errorTracking.getTracingHandler();
     if (typeof requestHandler === 'function') app.use(requestHandler);
     if (typeof tracingHandler === 'function') app.use(tracingHandler);
-    console.log('✅ Error tracking enabled for production');
+    
+    const cacheManager = new CacheManagerService();
+    const performanceService = PerformanceOptimizationService.getInstance();
+    performanceService.configureApp(app);
+    const statusPageService = StatusPageService.getInstance();
+    console.log('✅ Production services initialized');
   } catch (error) {
-    console.log('⚠️  Error tracking initialization failed:', error);
-    // Continue without error tracking
+    console.log('⚠️  Production services failed:', error);
   }
+} else {
+  // Development: Minimal setup for speed
+  console.log('🔧 Development mode - minimal services loaded');
 }
 
-// Production Domain Configuration
-const isProduction = envInfo.isProduction;
-const productionDomain = envConfig.PRODUCTION_DOMAIN || envConfig.REPLIT_DOMAIN;
-const allowedOrigins = envConfig.ALLOWED_ORIGINS?.split(',') || [];
-
-// Add production domain to allowed origins
-if (productionDomain) {
-  allowedOrigins.push(`https://${productionDomain}`);
-  allowedOrigins.push(`http://${productionDomain}`);
-}
-
-// Add Replit deployment domains
-if (process.env.REPL_SLUG && process.env.REPL_OWNER) {
-  allowedOrigins.push(`https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`);
-  allowedOrigins.push(`https://${process.env.REPL_SLUG}--${process.env.REPL_OWNER}.repl.co`);
-}
-
-// Add current Replit dev domain
-if (process.env.REPLIT_DEV_DOMAIN) {
-  allowedOrigins.push(`https://${process.env.REPLIT_DEV_DOMAIN}`);
-  allowedOrigins.push(`http://${process.env.REPLIT_DEV_DOMAIN}`);
-}
-
-// Add all Replit domains from environment
-if (process.env.REPLIT_DOMAINS) {
-  const domains = process.env.REPLIT_DOMAINS.split(',');
-  domains.forEach(domain => {
-    allowedOrigins.push(`https://${domain.trim()}`);
-    allowedOrigins.push(`http://${domain.trim()}`);
+// Environment-specific middleware
+if (isProduction) {
+  // Production: Full CORS and security
+  const productionDomain = envConfig.PRODUCTION_DOMAIN || envConfig.REPLIT_DOMAIN;
+  const allowedOrigins = envConfig.ALLOWED_ORIGINS?.split(',') || [];
+  
+  if (productionDomain) {
+    allowedOrigins.push(`https://${productionDomain}`, `http://${productionDomain}`);
+  }
+  
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    const host = req.headers.host;
+    
+    if (origin && (allowedOrigins.includes(origin) || origin.includes(host || ''))) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    } else if (!origin) {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+    }
+    
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, X-CSRF-Token');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    
+    // Security headers
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
+    
+    next();
+  });
+} else {
+  // Development: Simple CORS - no security overhead
+  app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    
+    if (req.method === 'OPTIONS') {
+      return res.status(204).end();
+    }
+    
+    next();
   });
 }
-
-// Initialize cache management, status monitoring, and performance optimization
-try {
-  const cacheManager = new CacheManagerService();
-  const performanceService = PerformanceOptimizationService.getInstance();
-  performanceService.configureApp(app);
-  const statusPageService = StatusPageService.getInstance();
-  console.log('✅ Production monitoring and performance optimization initialized');
-} catch (error) {
-  console.log('⚠️  Production services partially initialized:', error);
-  // Don't throw error to allow app to continue with reduced functionality
-}
-
-// CORS Configuration for Production Domains
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const host = req.headers.host;
-  
-  // Allow same-origin requests
-  if (origin && (allowedOrigins.includes(origin) || origin.includes(host || ''))) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (!origin) {
-    // Same-origin request (no origin header)
-    res.setHeader('Access-Control-Allow-Origin', '*');
-  }
-  
-  res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, X-CSRF-Token');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Max-Age', '86400');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
-  
-  next();
-});
-
-// Security middleware for production HTTPS
-app.use((req, res, next) => {
-  const host = req.headers.host;
-  const forwardedProto = req.headers['x-forwarded-proto'];
-  
-  // Security headers for production
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
-  // Domain-specific Content Security Policy
-  if (productionDomain && host?.includes(productionDomain)) {
-    res.setHeader('Content-Security-Policy', 
-      `default-src 'self' https://${productionDomain}; ` +
-      `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://${productionDomain} https://www.google.com https://www.gstatic.com; ` +
-      `style-src 'self' 'unsafe-inline' https://${productionDomain} https://fonts.googleapis.com; ` +
-      `font-src 'self' https://fonts.gstatic.com; ` +
-      `img-src 'self' data: https: blob:; ` +
-      `connect-src 'self' https://${productionDomain} https://api.replit.com wss:;`
-    );
-  }
-  
-  // HTTPS redirect in production
-  if (isProduction && forwardedProto !== 'https' && host !== 'localhost' && !host?.includes('127.0.0.1')) {
-    return res.redirect(301, `https://${host}${req.url}`);
-  }
-  
-  // HSTS (HTTP Strict Transport Security) for HTTPS
-  if (isProduction || forwardedProto === 'https') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-  }
-  
-  next();
-});
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
