@@ -399,17 +399,15 @@ function App() {
           <UserRoleProvider>
             <PropertyProvider>
               <AppProvider>
-                <ABTestProvider>
-                  <TooltipProvider>
-                    <Toaster />
-                    <Router />
-                    
-                    {/* PWA Install Prompt */}
-                    {pwaState.canInstall && (
-                      <PWAInstallPrompt variant="banner" />
-                    )}
-                  </TooltipProvider>
-                </ABTestProvider>
+                <TooltipProvider>
+                  <Toaster />
+                  <Router />
+                  
+                  {/* PWA Install Prompt */}
+                  {pwaState.canInstall && (
+                    <PWAInstallPrompt variant="banner" />
+                  )}
+                </TooltipProvider>
               </AppProvider>
             </PropertyProvider>
           </UserRoleProvider>
