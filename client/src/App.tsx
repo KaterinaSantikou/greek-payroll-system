@@ -4,28 +4,52 @@ import { AppProvider } from "@/contexts/AppContext";
 import Home from "@/pages/home";
 import Login from "@/pages/auth/Login";
 import Layout from "@/components/Layout";
-import { ErrorBoundary } from "react-error-boundary";
+import { Component, ReactNode } from "react";
 
-function ErrorFallback({ error, resetErrorBoundary }: { error: Error; resetErrorBoundary: () => void }) {
-  return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="text-center p-8">
-        <h2 className="text-2xl font-bold mb-4 text-red-600">Something went wrong</h2>
-        <p className="text-gray-600 mb-4">{error.message}</p>
-        <button 
-          onClick={resetErrorBoundary}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Try again
-        </button>
-      </div>
-    </div>
-  );
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center p-8">
+            <h2 className="text-2xl font-bold mb-4 text-red-600">Something went wrong</h2>
+            <p className="text-gray-600 mb-4">{this.state.error?.message || 'An unexpected error occurred'}</p>
+            <button 
+              onClick={() => this.setState({ hasError: false, error: undefined })}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              Try again
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
 }
 
 export default function App() {
   return (
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <ErrorBoundary>
       <AppProviders>
         <AppProvider>
           <Layout>
