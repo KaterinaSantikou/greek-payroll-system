@@ -56,8 +56,8 @@ const idempotencyMiddleware = (req: any, res: any, next: any) => {
   next();
 };
 
-// GET /api/payroll/runs - List payroll runs
-router.get('/api/payroll/runs', isAuthenticated, async (req, res) => {
+// GET /runs - List payroll runs
+router.get('/runs', isAuthenticated, async (req, res) => {
   try {
     const { period, status, runType, limit = '20', offset = '0' } = req.query;
     
@@ -100,7 +100,7 @@ router.get('/api/payroll/runs', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/payroll/runs/:id - Get single payroll run with details
-router.get('/api/payroll/runs/:id', isAuthenticated, async (req, res) => {
+router.get('/runs/:id', isAuthenticated, async (req, res) => {
   try {
     const [run] = await db.select()
       .from(payrollRuns)
@@ -152,7 +152,7 @@ router.get('/api/payroll/runs/:id', isAuthenticated, async (req, res) => {
 });
 
 // POST /api/payroll/runs - Create new payroll run
-router.post('/api/payroll/runs', isAuthenticated, idempotencyMiddleware, async (req, res) => {
+router.post('/runs', isAuthenticated, idempotencyMiddleware, async (req, res) => {
   try {
     const runData = CreatePayrollRunSchema.parse(req.body);
     
@@ -225,7 +225,7 @@ router.post('/api/payroll/runs', isAuthenticated, idempotencyMiddleware, async (
 });
 
 // POST /api/payroll/runs/:id/finalize - Finalize payroll run
-router.post('/api/payroll/runs/:id/finalize', isAuthenticated, idempotencyMiddleware, async (req, res) => {
+router.post('/runs/:id/finalize', isAuthenticated, idempotencyMiddleware, async (req, res) => {
   try {
     const finalizeData = FinalizePayrollSchema.parse(req.body);
     
@@ -298,7 +298,7 @@ router.post('/api/payroll/runs/:id/finalize', isAuthenticated, idempotencyMiddle
 });
 
 // GET /api/payroll/runs/:id/audit - Get payroll audit information
-router.get('/api/payroll/runs/:id/audit', isAuthenticated, async (req, res) => {
+router.get('/runs/:id/audit', isAuthenticated, async (req, res) => {
   try {
     const [run] = await db.select()
       .from(payrollRuns)
@@ -420,7 +420,7 @@ function storeIdempotency(key: string, response: any): void {
 }
 
 // GET /api/payroll/pending-approvals - Mobile payroll approval dashboard
-router.get('/api/payroll/pending-approvals', isAuthenticated, async (req, res) => {
+router.get('/pending-approvals', isAuthenticated, async (req, res) => {
   try {
     // Mock data for mobile payroll approvals - in production this would query actual pending payroll runs
     const mockApprovals = [
@@ -503,7 +503,7 @@ router.get('/api/payroll/pending-approvals', isAuthenticated, async (req, res) =
 });
 
 // POST /api/payroll/approvals/:id - Approve or reject payroll run
-router.post('/api/payroll/approvals/:id', isAuthenticated, async (req, res) => {
+router.post('/approvals/:id', isAuthenticated, async (req, res) => {
   try {
     const { action, comment } = req.body;
     const approvalId = req.params.id;
@@ -539,7 +539,7 @@ router.post('/api/payroll/approvals/:id', isAuthenticated, async (req, res) => {
 // === SELECTIVE PAYROLL RUNS ENDPOINTS ===
 
 // GET /api/payroll/employees - Get filtered employees for selection
-router.get('/api/payroll/employees', isAuthenticated, async (req, res) => {
+router.get('/employees', isAuthenticated, async (req, res) => {
   try {
     const {
       period,
@@ -625,7 +625,7 @@ router.get('/api/payroll/employees', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/payroll/filter-options - Get filter dropdown options
-router.get('/api/payroll/filter-options', isAuthenticated, async (req, res) => {
+router.get('/filter-options', isAuthenticated, async (req, res) => {
   try {
     // Get all properties
     const propertiesResult = await db
@@ -662,7 +662,7 @@ router.get('/api/payroll/filter-options', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/payroll/scopes - Get existing payroll scopes
-router.get('/api/payroll/scopes', isAuthenticated, async (req, res) => {
+router.get('/scopes', isAuthenticated, async (req, res) => {
   try {
     const { period } = req.query;
 
@@ -699,7 +699,7 @@ router.get('/api/payroll/scopes', isAuthenticated, async (req, res) => {
 });
 
 // POST /api/payroll/scopes - Create new payroll scope
-router.post('/api/payroll/scopes', isAuthenticated, idempotencyMiddleware, async (req, res) => {
+router.post('/scopes', isAuthenticated, idempotencyMiddleware, async (req, res) => {
   try {
     const validatedData = insertPayrollScopeSchema.parse(req.body);
     const userId = (req.user as any)?.claims?.sub;
@@ -761,7 +761,7 @@ router.post('/api/payroll/scopes', isAuthenticated, idempotencyMiddleware, async
 });
 
 // GET /api/payroll/scopes/:scopeId - Get scope details
-router.get('/api/payroll/scopes/:scopeId', isAuthenticated, async (req, res) => {
+router.get('/scopes/:scopeId', isAuthenticated, async (req, res) => {
   try {
     const { scopeId } = req.params;
 
@@ -795,7 +795,7 @@ router.get('/api/payroll/scopes/:scopeId', isAuthenticated, async (req, res) => 
 });
 
 // PUT /api/payroll/scopes/:scopeId/status - Update scope status
-router.put('/api/payroll/scopes/:scopeId/status', isAuthenticated, async (req, res) => {
+router.put('/scopes/:scopeId/status', isAuthenticated, async (req, res) => {
   try {
     const { scopeId } = req.params;
     const { status, notes } = req.body;
@@ -853,7 +853,7 @@ router.put('/api/payroll/scopes/:scopeId/status', isAuthenticated, async (req, r
 });
 
 // GET /api/payroll/period-ledgers/:period - Get period consolidation status  
-router.get('/api/payroll/period-ledgers/:period', isAuthenticated, async (req, res) => {
+router.get('/period-ledgers/:period', isAuthenticated, async (req, res) => {
   try {
     const { period } = req.params;
     const { type = 'filings' } = req.query;
@@ -886,7 +886,7 @@ router.get('/api/payroll/period-ledgers/:period', isAuthenticated, async (req, r
 });
 
 // POST /api/payroll/period-ledgers/:period/consolidate - Consolidate period  
-router.post('/api/payroll/period-ledgers/:period/consolidate', isAuthenticated, async (req, res) => {
+router.post('/period-ledgers/:period/consolidate', isAuthenticated, async (req, res) => {
   try {
     const { period } = req.params;
     const { type = 'filings' } = req.body;
