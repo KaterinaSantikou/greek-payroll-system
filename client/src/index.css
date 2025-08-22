@@ -131,18 +131,11 @@
     transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  /* DEBUG: Ensure CSS is loading */
+  /* Root element styling */
   #root {
     min-height: 100vh;
     background: hsl(var(--background));
     color: hsl(var(--foreground));
-  }
-  
-  /* DEBUG: Visible test for CSS loading */
-  .debug-css-loading {
-    border: 2px solid red !important;
-    background: yellow !important;
-    padding: 10px !important;
   }
 
   /* Smooth transitions for theme switching */

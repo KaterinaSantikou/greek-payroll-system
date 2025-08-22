@@ -3,7 +3,7 @@ import { createServer } from "http";
 import { createServer as createSecureServer } from "https";
 import fs from "fs";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { log } from "./vite";
 import { validateEnvironment, envConfig, getEnvironmentInfo } from "./lib/envConfig";
 import { ErrorTrackingService } from "./services/ErrorTrackingService";
 import { StatusPageService } from "./services/StatusPageService";
@@ -81,9 +81,9 @@ if (isProduction) {
     next();
   });
 } else {
-  // Development: Simple CORS - no security overhead
+  // Development: CORS for frontend on port 5000
   app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5000');
     res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -183,16 +183,12 @@ process.on('SIGINT', () => {
 
   // This error handler was replaced above with better error handling
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // Backend API only - frontend served separately in development
   if (!isProduction) {
-    log("🎯 Setting up Vite development server...");
-    await setupVite(app, server);
-    log("✅ Vite development server configured");
+    log("🎯 Backend API server ready (frontend on separate port 5000)");
   } else {
-    log("📦 Setting up static file serving for production...");
-    serveStatic(app);
+    // In production, you would typically serve static files from a CDN or reverse proxy
+    log("📦 Backend API server ready for production");
   }
 
   // SSL/TLS Configuration for Production  
@@ -236,11 +232,8 @@ process.on('SIGINT', () => {
     log(`📝 For production deployment, ensure SSL certificates are configured`);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = envConfig.PORT;
+  // Backend API server port (3001 in development, PORT in production)
+  const port = isProduction ? envConfig.PORT : 3001;
   server.listen({
     port,
     host: "0.0.0.0",

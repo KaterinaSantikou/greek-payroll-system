@@ -1,0 +1,133 @@
+Run backend and frontend on separate ports (dev)
+
+Why: hot-reload speed, clearer logs, simpler debugging.
+Rule: only do this in development. In production, terminate to one origin/domain behind a reverse proxy.
+
+Backend (Express example, port 3001)
+
+server/package.json
+
+{
+  "scripts": {
+    "dev": "nodemon --watch src --ext ts,js --exec node ./src/index.js",
+    "start": "node ./dist/index.js"
+  }
+}
+
+
+server/src/index.js
+
+import express from "express";
+import cors from "cors";
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+app.use(cors({ origin: ["http://localhost:5000"], credentials: true })); // dev only
+app.get("/api/health", (_, res) => res.json({ ok: true }));
+
+app.listen(PORT, () => console.log(`API on http://localhost:${PORT}`));
+
+Frontend (Vite/React on port 5000)
+
+web/package.json
+
+{
+  "scripts": {
+    "dev": "vite --port 5000",
+    "build": "vite build",
+    "preview": "vite preview"
+  }
+}
+
+
+web/.env.development
+
+VITE_API_URL=http://localhost:3001
+
+
+Example call:
+
+// web/src/api.ts
+export const api = (path: string, init?: RequestInit) =>
+  fetch(`${import.meta.env.VITE_API_URL}${path}`, { credentials: "include", ...init });
+
+
+CRA alternative: add "proxy": "http://localhost:3001" to web/package.json and call fetch('/api/health')—no CORS needed in dev.
+
+Next.js alternative: run Next on 5000 and add a rewrite to avoid CORS:
+
+// next.config.js
+module.exports = {
+  async rewrites() {
+    return [{ source: "/api/:path*", destination: "http://localhost:3001/api/:path*" }];
+  }
+};
+
+2) Configure the frontend to call the API on the separate port
+
+Use an env var (VITE_API_URL or NEXT_PUBLIC_API_URL) for the base URL.
+
+Never hard-code localhost in code—read from env.
+
+In production, prefer relative calls (/api/...) and let the reverse proxy route to the backend.
+
+3) Start both with one command (concurrent dev)
+
+At the repo root:
+
+package.json
+
+{
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n WEB,API -c cyan,green \"npm:dev:web\" \"npm:dev:api\"",
+    "dev:web": "npm --prefix web run dev",
+    "dev:api": "npm --prefix server run dev",
+    "build": "npm --prefix web run build && npm --prefix server run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+
+
+Install:
+
+npm i -D concurrently
+npm i -D nodemon            # backend hot-reload
+
+
+Run:
+
+npm run dev
+
+Production notes (don’t skip)
+
+Single origin: serve FE at https://app.yourdomain.com and route /api/* to the backend (no CORS).
+
+NGINX example:
+
+location /api/ { proxy_pass http://backend:3001/; }
+location / { try_files $uri /index.html; }
+
+
+Config: inject API_URL via env at build/deploy (or expose a /config.json loaded at runtime).
+
+Security: use HTTPS everywhere; set SameSite=None; Secure if you use cookies.
+
+Scaling: keep app stateless; sessions in Redis; files in object storage (S3/Blob).
+
+DX: add npm run lint, npm run test, and a health endpoint for probes.
+
+Quick checklist
+
+ Backend on 3001, frontend on 5000 (dev only)
+
+ FE reads API base URL from env; uses proxy/rewrites in dev to avoid CORS (or enable CORS on API for dev)
+
+ Root npm run dev starts both via concurrently
+
+ Production served from one domain with reverse proxy to /api
+
+ Env-driven config; no hard-coded ports/hosts in code
