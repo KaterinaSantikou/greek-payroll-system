@@ -1,8 +1,24 @@
 /* Removed external font import for better performance - using system fonts */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Basic CSS for now - will add Tailwind later */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.app {
+  text-align: center;
+  padding: 20px;
+}
+
+.title {
+  color: #2563eb;
+  margin-bottom: 20px;
+}
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
