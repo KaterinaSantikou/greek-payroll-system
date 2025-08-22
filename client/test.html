@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayrollSync Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        .success {
+            background-color: #dcfce7;
+            color: #166534;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>PayrollSync Test Page</h1>
+    <p>If you can see this, the basic server is working.</p>
+    <div class="success">
+        <p>✅ HTML and CSS are loading</p>
+        <p id="js-test">⏳ Testing JavaScript...</p>
+    </div>
+    
+    <script>
+        console.log("🚀 JavaScript is executing");
+        document.getElementById('js-test').innerHTML = '✅ JavaScript is working';
+        
+        // Test if we can make a request to the backend
+        fetch('/api/health')
+            .then(response => response.json())
+            .then(data => {
+                console.log('✅ Backend API responding:', data);
+                const apiTest = document.createElement('p');
+                apiTest.innerHTML = '✅ Backend API is responding';
+                apiTest.style.color = '#166534';
+                document.body.appendChild(apiTest);
+            })
+            .catch(error => {
+                console.log('❌ Backend API error:', error);
+                const apiTest = document.createElement('p');
+                apiTest.innerHTML = '❌ Backend API not responding';
+                apiTest.style.color = '#dc2626';
+                document.body.appendChild(apiTest);
+            });
+    </script>
+</body>
+</html>

@@ -1,39 +1,42 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import SimpleApp from "./SimpleApp";
+import MinimalApp from "./MinimalApp";
 
-console.log("🚀 Client starting...");
-console.log("DOM loaded:", document.readyState);
+// Add window error listeners to catch any errors
+window.addEventListener('error', (e) => {
+  console.error('Window error:', e.error);
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('Unhandled promise rejection:', e.reason);
+});
+
+console.log("🚀 Starting minimal React app...");
 
 const root = document.getElementById("root");
-console.log("Root element found:", !!root);
-
 if (root) {
   try {
-    console.log("Creating React root...");
     const reactRoot = createRoot(root);
-    console.log("Rendering SimpleApp...");
     reactRoot.render(
       <StrictMode>
-        <SimpleApp />
+        <MinimalApp />
       </StrictMode>
     );
-    console.log("✅ SimpleApp rendered successfully");
+    console.log("✅ Minimal app rendered");
   } catch (error) {
-    console.error("❌ Error rendering SimpleApp:", error);
-    // Fallback render
+    console.error("❌ React render error:", error);
     root.innerHTML = `
-      <div style="padding: 20px; text-align: center;">
-        <h1>PayrollSync</h1>
-        <p>Loading error occurred. Check console for details.</p>
+      <div style="padding: 20px; text-align: center; background: #fee; border: 2px solid red;">
+        <h1>PayrollSync - React Error</h1>
         <p>Error: ${error instanceof Error ? error.message : 'Unknown error'}</p>
+        <p>Check browser console for details</p>
       </div>
     `;
   }
 } else {
-  console.error("❌ Root element not found! Make sure there's a div with id='root' in your HTML.");
+  console.error("❌ Root element not found");
   document.body.innerHTML = `
-    <div style="padding: 20px; text-align: center; color: red;">
+    <div style="padding: 20px; text-align: center; background: #fef; border: 2px solid purple;">
       <h1>PayrollSync - Setup Error</h1>
       <p>Root element not found in HTML</p>
     </div>
