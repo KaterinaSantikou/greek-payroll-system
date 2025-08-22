@@ -463,13 +463,15 @@ process.on('SIGINT', () => {
 
   // This error handler was replaced above with better error handling
 
-  // In development: backend only, frontend runs separately
-  if (isProduction) {
+  // Serve both API and frontend on port 5000
+  if (!isProduction) {
+    log("🎯 Setting up Vite development server with React...");
+    await setupVite(app, server);
+    log("✅ Vite development server with React configured");
+  } else {
     log("📦 Setting up static file serving for production...");
     serveStatic(app);
     log("✅ Static file serving configured");
-  } else {
-    log("🎯 Backend-only mode - frontend runs on separate Vite server");
   }
 
   // SSL/TLS Configuration for Production  
@@ -513,8 +515,8 @@ process.on('SIGINT', () => {
     log(`📝 For production deployment, ensure SSL certificates are configured`);
   }
 
-  // Backend on port 3000 in dev, 5000 in production  
-  const port = !isProduction ? 3000 : (envConfig.PORT || 5000);
+  // Use port 5000 for integrated frontend + backend
+  const port = envConfig.PORT || 5000;
   server.listen({
     port,
     host: "0.0.0.0",
