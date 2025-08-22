@@ -350,7 +350,7 @@ export class CookieConsentService {
     // Audit consent recording
     await AuditService.logEvent({
       action: 'consent.recorded',
-      userId: consentData.userId,
+      userId: consentData.userId || 'anonymous',
       resourceType: 'consent',
       resourceId: consentId,
       metadata: {
@@ -431,7 +431,7 @@ export class CookieConsentService {
     // Audit consent update
     await AuditService.logEvent({
       action: 'consent.updated',
-      userId: updatedRecord.userId,
+      userId: updatedRecord.userId || 'anonymous',
       resourceType: 'consent',
       resourceId: consentId,
       metadata: {
@@ -497,7 +497,7 @@ export class CookieConsentService {
     // Audit consent withdrawal
     await AuditService.logEvent({
       action: 'consent.withdrawn',
-      userId: record.userId,
+      userId: record.userId || 'anonymous',
       resourceType: 'consent',
       resourceId: consentId,
       metadata: {
@@ -654,7 +654,7 @@ export class CookieConsentService {
     const now = new Date();
     let cleaned = 0;
 
-    for (const [id, record] of this.consentRecords.entries()) {
+    for (const [id, record] of Array.from(this.consentRecords.entries())) {
       if (record.expiresAt < now) {
         this.consentRecords.delete(id);
         cleaned++;

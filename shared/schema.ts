@@ -13,6 +13,8 @@ import {
   uuid,
   serial,
   unique,
+  PgTableWithColumns,
+  AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -4461,14 +4463,12 @@ export type {
   PayrollSyncSDK
 } from './sdk-types';
 
-// Re-export payments schema types
+// Re-export payments schema types (skip duplicates defined locally)
 export type {
-  PaymentBatch,
   PaymentTransaction,
   BankProfile,
   BankMessage,
   PaymentException,
-  InsertPaymentBatch,
   InsertPaymentTransaction,
   InsertBankProfile,
   InsertBankMessage,
@@ -7021,7 +7021,7 @@ export type InsertDrTestingSchedule = typeof drTestingSchedule.$inferInsert;
 // Automated Runbooks System Schema
 
 // Runbook definitions and templates
-export const runbooks = pgTable("runbooks", {
+export const runbooks: PgTableWithColumns<any> = pgTable("runbooks", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name").notNull(),
   description: text("description"),
@@ -7029,7 +7029,7 @@ export const runbooks = pgTable("runbooks", {
   version: varchar("version").notNull().default('1.0.0'),
   isActive: boolean("is_active").default(true),
   isTemplate: boolean("is_template").default(false),
-  parentRunbookId: varchar("parent_runbook_id").references(() => runbooks.id), // For versioning
+  parentRunbookId: varchar("parent_runbook_id").references((): AnyPgColumn => runbooks.id), // For versioning
   
   // Trigger conditions
   triggerConditions: jsonb("trigger_conditions"), // Alert patterns, system states, incident types

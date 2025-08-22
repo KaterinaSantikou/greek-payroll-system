@@ -389,6 +389,7 @@ export class GovernmentSystemMonitoringService extends EventEmitter {
    * Check for status changes and create/resolve outages
    */
   private async checkForStatusChange(systemId: string, currentStatus: string, errorMessage?: string): Promise<void> {
+    const system = this.systemsCache.get(systemId); // Define at function level for scope access
     try {
       // Get the last few status checks to determine if this is a change
       const recentChecks = await db
@@ -411,7 +412,6 @@ export class GovernmentSystemMonitoringService extends EventEmitter {
         // Trigger on-call incident if OnCallRotaService is available
         if (OnCallRotaService) {
           try {
-            const system = this.systemsCache.get(systemId);
             const onCallService = OnCallRotaService.getInstance();
             
             await onCallService.triggerIncident({
