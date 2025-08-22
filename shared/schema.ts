@@ -95,6 +95,9 @@ export type ShiftTemplate = z.infer<typeof insertShiftTemplateSchema>;
 export type DeviceRegistry = z.infer<typeof insertDeviceRegistrySchema>;
 export type OvertimeRequest = z.infer<typeof insertOvertimeRequestSchema>;
 
+// Re-export the table as the expected name for backward compatibility
+export { overtimeRequestsTable as overtimeRequestsDb };
+
 // Additional exports that backend storage expects
 export const departments = insertDepartmentSchema;
 export const employees = insertEmployeeSchema; 
@@ -104,6 +107,22 @@ export const timesheets = insertTimesheetSchema;
 export const wageComponents = insertWageComponentSchema;
 export const punchEvents = insertPunchEventSchema;
 export const exceptions = insertExceptionSchema;
+export const overtimeRequests = insertOvertimeRequestSchema;
+
+// Temporary placeholder exports for missing tables
+export const availableResponders = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  role: z.string(),
+  isAvailable: z.boolean()
+});
+
+export const overtimeRequestsTable = z.object({
+  requestId: z.string(),
+  employeeId: z.string(),
+  status: z.string()
+});
 
 // User-related schemas
 export const users = z.object({

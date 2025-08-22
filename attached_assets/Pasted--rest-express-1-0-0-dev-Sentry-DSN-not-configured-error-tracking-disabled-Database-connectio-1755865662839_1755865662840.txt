@@ -1,0 +1,182 @@
+> rest-express@1.0.0 dev
+⚠️ Sentry DSN not configured - error tracking disabled
+✅ Database connection pool initialized { maxConnections: 10, minConnections: 2, environment: 'development' }
+⏰ Database connection pool monitoring started
+🚀 Redis cache service running in fallback mode (no Redis) - NODE_ENV: development
+✅ Cache strategies initialized
+🔒 Network security config loaded for environment: development
+   - Office networks: 4 ranges
+   - Trusted external: 0 ranges
+   - Blocked countries: 0 countries
+   - HTTPS enforcement: disabled
+   - Geo-blocking: disabled
+   - IP whitelisting: disabled
+✅ Network security configuration validated successfully
+Edge case handler initialized with bank data
+MyDATA credentials not configured. Electronic books transmission will not work.
+[EventQueue] Registered handler GLAutoPostHandler for payroll.run.finalized
+[EventQueue] Registered handler WebhookDeliveryHandler for *
+🔧 Environment: development
+🌐 Domain: localhost
+🔒 SSL: Not configured
+🔧 Development mode - minimal services loaded (no cache/Redis)
+🚀 Starting application initialization...
+🔧 Development mode - skipping heavy enterprise services
+🔒 Applying network security and firewall rules...
+✅ Network security firewall active
+🛡️  Applying DDoS protection middleware...
+✅ DDoS protection middleware active
+🚀 SimpleJobQueueService running in fallback mode (no Redis) - NODE_ENV: development
+Failed to load retention policies: error: syntax error at or near "$1"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async CentralLogAggregationService.loadRetentionPolicies (/home/runner/workspace/server/services/CentralLogAggregationService.ts:116:24) {
+  length: 91,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '14',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+Failed to load active subscriptions: error: syntax error at or near "$1"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async CentralLogAggregationService.loadActiveSubscriptions (/home/runner/workspace/server/services/CentralLogAggregationService.ts:142:29) {
+  length: 91,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '14',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+Initializing rotation timers...
+🔧 Load balancer running in development mode - minimal setup
+Failed to register automated runbooks routes: /home/runner/workspace/server/services/AutomatedRunbooksService.ts:13
+  runbookExecutionLogs,
+  ^
+
+SyntaxError: The requested module '@shared/schema' does not provide an export named 'runbookExecutionLogs'
+    at ModuleJob._instantiate (node:internal/modules/esm/module_job:175:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:258:5)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+    at async registerRoutes (/home/runner/workspace/server/routes.ts:3025:38)
+    at async <anonymous> (/home/runner/workspace/server/index.ts:441:20)
+Failed to initialize status page service: /home/runner/workspace/server/services/RootCauseAnalysisService.ts:10
+  rcaActionItems,
+  ^
+
+SyntaxError: The requested module '@shared/schema' does not provide an export named 'rcaActionItems'
+    at ModuleJob._instantiate (node:internal/modules/esm/module_job:175:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:258:5)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+    at async StatusPageService.initializeService (/home/runner/workspace/server/services/StatusPageService.ts:96:44)
+Failed to register RCA routes: node:internal/modules/esm/module_job:175
+        this.module.instantiate();
+                    ^
+Error: request for '../db' is not in cache
+    at ModuleJob._instantiate (node:internal/modules/esm/module_job:175:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:258:5)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+    at async registerRoutes (/home/runner/workspace/server/routes.ts:3049:24)
+    at async <anonymous> (/home/runner/workspace/server/index.ts:441:20) {
+  code: 'ERR_VM_MODULE_LINK_FAILURE'
+}
+Failed to register incident ownership routes: /home/runner/workspace/server/services/IncidentOwnershipService.ts:10
+  availableResponders,
+  ^
+
+SyntaxError: The requested module '@shared/schema' does not provide an export named 'availableResponders'
+    at ModuleJob._instantiate (node:internal/modules/esm/module_job:175:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:258:5)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+    at async registerRoutes (/home/runner/workspace/server/routes.ts:3057:38)
+    at async <anonymous> (/home/runner/workspace/server/index.ts:441:20)
+Failed to load government systems: error: syntax error at or near "$1"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async GovernmentSystemMonitoringService.loadSystems (/home/runner/workspace/server/services/GovernmentSystemMonitoringService.ts:201:23) {
+  length: 91,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '14',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+Notification routes not available: /home/runner/workspace/server/api/notifications.ts:9
+  overtimeRequests 
+  ^
+
+SyntaxError: The requested module '@shared/schema' does not provide an export named 'overtimeRequests'
+    at ModuleJob._instantiate (node:internal/modules/esm/module_job:175:21)
+    at async ModuleJob.run (node:internal/modules/esm/module_job:258:5)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:540:24)
+    at async registerRoutes (/home/runner/workspace/server/routes.ts:3908:44)
+    at async <anonymous> (/home/runner/workspace/server/index.ts:441:20)
+12:23:52 PM [express] 🎯 Backend-only mode - frontend runs on separate Vite dev server
+12:23:52 PM [express] 🚀 HTTP server running on port 3000
+12:23:52 PM [express] ✅ Application initialization completed successfully
+Error checking MFA requirement: error: syntax error at or near "$1"
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async DatabaseStorage.getUser (/home/runner/workspace/server/storage.ts:149:20)
+    at async MfaEnforcementMiddleware.isMfaRequired (/home/runner/workspace/server/middleware/mfaEnforcementMiddleware.ts:125:27)
+    at async <anonymous> (/home/runner/workspace/server/middleware/mfaEnforcementMiddleware.ts:74:29) {
+  length: 91,
+  severity: 'ERROR',
+  code: '42601',
+  detail: undefined,
+  hint: undefined,
+  position: '14',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'scan.l',
+  line: '1244',
+  routine: 'scanner_yyerror'
+}
+Error checking MFA status: TypeError: this.checkHasTotp is not a function
+    at MfaEnforcementMiddleware.checkMfaStatus (/home/runner/workspace/server/middleware/mfaEnforcementMiddleware.ts:168:34)
+    at <anonymous> (/home/runner/workspace/server/middleware/mfaEnforcementMiddleware.ts:81:38)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)

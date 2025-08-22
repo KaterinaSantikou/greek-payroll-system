@@ -13,7 +13,7 @@ import type {
 } from '@simplewebauthn/types';
 
 import { db } from '../db';
-import { mfaTotpSecrets, webauthnCredentials, users } from '@shared/schema';
+import { mfaTotpSecrets, webauthnCredentials, users } from '@shared/auth-schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { PasswordService } from './PasswordService';
 
