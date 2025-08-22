@@ -309,9 +309,9 @@ export class MfaService {
         expectedChallenge,
         expectedOrigin: this.WEBAUTHN_ORIGIN,
         expectedRPID: this.WEBAUTHN_RP_ID,
-        authenticator: {
-          credentialID: Buffer.from(credential.credentialId, 'base64url'),
-          credentialPublicKey: Buffer.from(credential.publicKey, 'base64url'),
+        credential: {
+          id: credential.credentialId,
+          publicKey: Buffer.from(credential.publicKey, 'base64url'),
           counter: credential.counter || 0,
         },
       });
