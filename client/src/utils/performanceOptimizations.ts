@@ -98,8 +98,18 @@ export const initGreekPerformanceOptimizations = () => {
   injectCriticalCSS();
   addResourceHints();
   
-  // Defer non-critical optimizations
-  requestIdleCallback(() => {
+  // Schedule non-critical optimizations with Safari compatibility
+  const scheduleNonCritical = (callback: () => void) => {
+    if (typeof requestIdleCallback !== 'undefined') {
+      // Use native API when available (Chrome, Firefox)
+      requestIdleCallback(callback);
+    } else {
+      // Fallback for Safari and unsupported browsers
+      setTimeout(callback, 100);
+    }
+  };
+
+  scheduleNonCritical(() => {
     registerGreekServiceWorker();
     
     const { isSlowConnection } = detectGreekConnection();
