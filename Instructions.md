@@ -12,22 +12,54 @@ After conducting a comprehensive codebase analysis of 7000+ lines across authent
 ## **🔍 Root Cause Analysis**
 
 ### **Issue #1: Authentication Flow Breakdown** ⚠️ CRITICAL
-**Status**: Users cannot login, receiving 401 Unauthorized errors
+**Status**: Users click "Sign In" → Approve on Replit → Return to login page instead of dashboard
 
 **Root Cause Deep Dive**:
-- **Frontend**: `useAuth()` hook in `client/src/hooks/useAuth.ts` queries `/api/auth/user` expecting user data
-- **Backend**: `/api/auth/user` endpoint exists in both `server/routes.ts:259` and `server/api/auth.ts:11`  
-- **Middleware**: Endpoint is protected by `isAuthenticated` middleware from `server/replitAuth.ts`
-- **Flow Problem**: Users must first authenticate via `/api/login` (Replit OpenID Connect) before accessing protected endpoints
-- **Browser Behavior**: App immediately tries to fetch user data before authentication, causing 401 loops
+
+#### **PRIMARY ISSUE: Dual Authentication System Conflict**
+The application has **TWO COMPETING** authentication systems:
+1. **Replit OIDC System**: `/api/login`, `/api/callback`, `/api/logout` (server/replitAuth.ts)
+2. **Custom Auth System**: `/auth/login`, `/auth/signup`, `/auth/sso` (server/routes/auth.ts)
+
+#### **SPECIFIC FAILURE POINTS**:
+
+**1. Cookie Security Setting** (CRITICAL):
+```javascript
+// server/replitAuth.ts:42
+cookie: {
+  secure: true,  // ❌ BLOCKS development cookies (non-HTTPS)
+}
+```
+This prevents session cookies from being set in development, breaking authentication state.
+
+**2. Route Mismatches**:
+- App.tsx redirects to `/api/login` ✅ (Replit auth - correct)
+- Login.tsx posts to `/api/auth/v2/login` ❌ (doesn't exist)
+- SSO.tsx redirects to `/api/auth/v2/sso/...` ❌ (doesn't exist)
+
+**3. SSO Page in Demo Mode**:
+```javascript
+// client/src/pages/auth/SSO.tsx:89
+alert(`Would redirect to: ${redirectUrl}`);  // ❌ Shows alert instead of redirecting
+// window.location.href = redirectUrl;        // ❌ Actual redirect commented out
+```
+
+#### **AUTHENTICATION FLOW FAILURE SEQUENCE**:
+1. User clicks "Sign In" → Redirects to `/api/login` ✅
+2. Replit auth page loads → User approves ✅ 
+3. Callback to `/api/callback` → Passport processes ✅
+4. **FAILURE**: Cookie not set due to `secure: true` in development ❌
+5. Frontend `useAuth` hook can't find `connect.sid` cookie ❌
+6. User redirected back to login page instead of dashboard ❌
 
 **Files Affected**:
-- `client/src/hooks/useAuth.ts` (lines 5-6)
-- `server/routes.ts` (line 259)
-- `server/api/auth.ts` (line 11) 
-- `server/replitAuth.ts` (lines 130-157)
+- `server/replitAuth.ts` (lines 42, 104-116) - Cookie config + routes
+- `client/src/pages/auth/SSO.tsx` (lines 86-91) - Demo mode + wrong routes  
+- `client/src/pages/auth/Login.tsx` (line 59) - Wrong endpoint
+- `client/src/hooks/useAuth.ts` (lines 5-10) - Cookie detection
+- `client/src/App.tsx` (line 149) - Redirect logic
 
-**Impact**: Complete authentication system failure, no users can access the application
+**Impact**: Authentication appears to work but users get stuck in redirect loop
 
 ---
 
@@ -147,61 +179,78 @@ npm run db:push --force
 
 ### **PHASE 2: Authentication Flow Restoration** 🔐 HIGH PRIORITY (ETA: 20 minutes)
 
-**Objective**: Restore proper Replit Auth integration
+**Objective**: Fix the dual authentication system conflict and cookie security issue
 
-**2.1 Fix Frontend Authentication Check**
+**2.1 CRITICAL FIX: Cookie Security Setting** ⚡ **IMMEDIATE**
 
-File: `client/src/hooks/useAuth.ts`
+File: `server/replitAuth.ts` (Line 42)
 ```typescript
-export function useAuth() {
-  const { data: user, isLoading, error } = useQuery<User>({
-    queryKey: ["/api/auth/user"],
-    retry: false,
-    retryOnMount: false,
-    // Add: Only query if we might be authenticated
-    enabled: typeof window !== 'undefined' && document.cookie.includes('connect.sid')
-  });
+// CHANGE FROM:
+cookie: {
+  httpOnly: true,
+  secure: true,        // ❌ Blocks development cookies  
+  maxAge: sessionTtl,
+}
 
-  return {
-    user,
-    isLoading,
-    isAuthenticated: !!user && !error,
-  };
+// CHANGE TO:
+cookie: {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',  // ✅ Only secure in production
+  maxAge: sessionTtl,
 }
 ```
 
-**2.2 Add Authentication State Check**
+**2.2 Fix SSO Page Demo Mode**
 
-File: `client/src/App.tsx` (modify Router function around line 137)
+File: `client/src/pages/auth/SSO.tsx` (Lines 86-91)
 ```typescript
-function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-  
-  // Add check for Replit session before querying user endpoint
-  useEffect(() => {
-    const hasSessionCookie = document.cookie.includes('connect.sid');
-    if (!hasSessionCookie && !isLoading) {
-      // Redirect to login if no session cookie
-      window.location.href = '/api/login';
-    }
-  }, [isLoading]);
+// CHANGE FROM:
+const redirectUrl = `/api/auth/v2/sso/${provider}...`;  // ❌ Wrong endpoint
+alert(`Would redirect to: ${redirectUrl}`);             // ❌ Demo mode
+// In production: window.location.href = redirectUrl;   // ❌ Commented out
 
-  // ... rest of Router logic
-}
+// CHANGE TO: 
+const redirectUrl = `/api/login?returnTo=/dashboard`;   // ✅ Use Replit auth
+window.location.href = redirectUrl;                     // ✅ Actually redirect
 ```
 
-**2.3 Verify Auth Endpoints Active**
+**2.3 Fix Login Form Endpoint**
+
+File: `client/src/pages/auth/Login.tsx` (Line 59)
+```typescript
+// CHANGE FROM:
+const response = await fetch('/api/auth/v2/login', {  // ❌ Doesn't exist
+
+// CHANGE TO OPTION 1 (Simplest):
+window.location.href = '/api/login';  // ✅ Use Replit auth directly
+
+// OR OPTION 2 (Keep form):
+const response = await fetch('/api/login', {  // ✅ Use existing Replit endpoint
+```
+
+**2.4 Authentication State Check** (Already correct in current App.tsx)
+
+The existing authentication check in App.tsx (line 149) is correct:
+```typescript
+// ✅ This is already correct:
+window.location.href = '/api/login';
+```
+
+**2.5 Test Authentication Flow**
 ```bash
-# Test authentication flow
-curl -I http://localhost:5000/api/auth/user  # Should return 401 (expected)
-curl -I http://localhost:5000/api/login      # Should return 302 (redirect to Replit Auth)
+# Test complete flow:
+# 1. Visit application → Should redirect to /api/login
+# 2. /api/login → Should redirect to Replit auth
+# 3. Approve on Replit → Should return to /api/callback  
+# 4. /api/callback → Should redirect to / with session cookie set
+# 5. / with cookie → Should load dashboard
 ```
 
 **Expected Results**:
-- ✅ Authentication flow respects Replit Auth requirement
-- ✅ Users properly redirected to `/api/login` when unauthenticated
-- ✅ `/api/auth/user` returns user data for authenticated users
-- ✅ No more 401 loops in browser console
+- ✅ **IMMEDIATE**: Session cookies set correctly in development
+- ✅ Complete authentication flow: Login → Replit → Approve → Dashboard
+- ✅ No more redirect loops back to login page
+- ✅ Users stay logged in across browser refreshes
 
 ---
 
@@ -423,6 +472,28 @@ curl -X POST http://localhost:5000/api/auth/logout  # Clear auth state
 - Documentation updates
 
 **Total Estimated Resolution Time**: 4 hours
+
+---
+
+## **🚀 IMMEDIATE QUICK FIX** (5 minutes)
+
+**For the specific login issue the user is experiencing:**
+
+**Step 1: Fix Cookie Security Setting**
+```bash
+# Edit server/replitAuth.ts line 42
+# Change: secure: true,
+# To: secure: process.env.NODE_ENV === 'production',
+```
+
+**Step 2: Restart Application**
+```bash
+# The workflow will automatically restart, or manually restart if needed
+```
+
+**Result**: Users will now successfully login and reach dashboard instead of being redirected back to login page.
+
+**This single change fixes the primary authentication issue.**
 
 ---
 
