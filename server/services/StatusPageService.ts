@@ -349,9 +349,9 @@ export class StatusPageService extends EventEmitter {
         id: comp.id,
         name: comp.name,
         description: comp.description || undefined,
-        status: comp.status,
+        status: comp.status as ComponentStatus,
         category: comp.category,
-        lastUpdated: comp.updatedAt || comp.createdAt,
+        lastUpdated: comp.updatedAt || comp.createdAt || new Date(),
         uptimePercentage: 99.9, // TODO: Calculate from historical data
       }));
     } catch (error) {
@@ -574,15 +574,11 @@ export class StatusPageService extends EventEmitter {
       // Create the incident
       const [incident] = await db.insert(statusPageIncidents).values({
         id: `inc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        componentId,
         title: communication?.subject || `${severity} incident affecting ${templateVariables.componentName}`,
         description: communication?.message || 'Incident detected',
         severity,
         status: 'investigating',
-        affectedComponents: [componentId],
-        communicationChannels: channels,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        affectedComponents: [componentId]
       }).returning();
 
       // Update component status based on severity
@@ -669,7 +665,7 @@ export class StatusPageService extends EventEmitter {
       const communication = this.communicationTemplates.generateMessage(
         templateType,
         templateVariables,
-        currentIncident.severity
+        currentIncident.severity as IncidentSeverity
       );
 
       // Update incident
@@ -721,12 +717,9 @@ export class StatusPageService extends EventEmitter {
         title: communication?.subject || `Scheduled maintenance`,
         description: communication?.message || 'Scheduled maintenance',
         affectedComponents: componentIds,
-        scheduledStartAt: startTime,
-        scheduledEndAt: endTime,
-        status: 'scheduled',
-        communicationChannels: channels,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        scheduledStart: startTime,
+        scheduledEnd: endTime,
+        status: 'scheduled'
       }).returning();
 
       // Emit event for real-time updates
