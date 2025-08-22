@@ -1750,3 +1750,646 @@ export type PayrollCalculation = {
   deductions: number;
   bonuses: number;
 };
+
+// Backup and restore testing schemas
+export const restoreTests = z.object({
+  id: z.string(),
+  testName: z.string(),
+  testType: z.enum(["full", "partial", "differential", "incremental"]),
+  backupSource: z.string(),
+  backupTimestamp: z.string(),
+  testEnvironment: z.enum(["production", "staging", "isolated"]),
+  automatedTestSuite: z.any(), // JSON array of test suite
+  scheduledAt: z.string(),
+  startedAt: z.string().optional(),
+  completedAt: z.string().optional(),
+  status: z.enum(["pending", "running", "passed", "failed", "error"]).default("pending"),
+  testResults: z.any().optional(), // JSON array of test results
+  validationChecks: z.any().optional(), // JSON array of validation checks
+  performanceMetrics: z.any().optional(), // JSON object of performance metrics
+  dataIntegrityScore: z.number().optional(),
+  actualRTO: z.number().optional(), // Recovery Time Objective in minutes
+  nextTestDate: z.string().optional(),
+  alertsSent: z.boolean().default(false),
+  errorLog: z.string().optional()
+});
+
+export const backupMonitoring = z.object({
+  id: z.string(),
+  backupName: z.string(),
+  backupType: z.enum(["full", "incremental", "differential"]),
+  backupSize: z.number(),
+  backupDuration: z.number(), // in minutes
+  backupStatus: z.enum(["success", "failed", "partial"]),
+  backupTimestamp: z.string(),
+  targetLocation: z.string(),
+  compressionRatio: z.number().optional(),
+  encryptionStatus: z.boolean().default(false),
+  verificationStatus: z.enum(["pending", "verified", "failed"]).default("pending"),
+  retentionPolicy: z.string(),
+  nextScheduledBackup: z.string().optional(),
+  errorDetails: z.string().optional()
+});
+
+// Disaster recovery SLA schemas
+export const drSLAs = z.object({
+  id: z.string(),
+  serviceName: z.string(),
+  slaType: z.enum(["RTO", "RPO", "availability", "recovery_capacity"]).optional(),
+  targetValue: z.number().optional(),
+  targetUnit: z.enum(["minutes", "hours", "days", "percentage"]).optional(),
+  description: z.string().optional(),
+  criticality: z.enum(["low", "medium", "high", "critical"]),
+  businessFunction: z.string(),
+  rtoMinutes: z.number(),
+  rpoMinutes: z.number(),
+  availabilityTarget: z.number(),
+  maxDowntimePerMonth: z.number(),
+  backupFrequency: z.string(),
+  testingFrequency: z.string(),
+  escalationContacts: z.any(), // JSON array of contacts
+  businessImpactStatement: z.string(),
+  isActive: z.boolean().default(true),
+  effectiveDate: z.string().optional(),
+  reviewDate: z.string().optional(),
+  complianceStatus: z.enum(["compliant", "at_risk", "non_compliant"]).default("compliant"),
+  lastTestedAt: z.string().optional(),
+  actualValue: z.number().optional(),
+  actualUnit: z.enum(["minutes", "hours", "days", "percentage"]).optional()
+});
+
+// Export types for restore tests
+export type RestoreTest = z.infer<typeof restoreTests>;
+export type InsertRestoreTest = z.infer<typeof restoreTests>;
+export type BackupMonitoring = z.infer<typeof backupMonitoring>;
+export type InsertBackupMonitoring = z.infer<typeof backupMonitoring>;
+
+// WORM (Write Once, Read Many) object storage schemas
+export const wormObjects = z.object({
+  id: z.string(),
+  objectPath: z.string(),
+  objectSize: z.number(),
+  objectHash: z.string(),
+  contentType: z.string(),
+  createdAt: z.string(),
+  retentionPeriod: z.number(), // in days
+  expiresAt: z.string(),
+  isLocked: z.boolean().default(false),
+  lockReason: z.string().optional(),
+  legalHoldActive: z.boolean().default(false),
+  accessLevel: z.enum(["public", "private", "restricted"]).default("private"),
+  encryptionStatus: z.boolean().default(false),
+  encryptionKeyId: z.string().optional(),
+  auditTrail: z.any(), // JSON array of access logs
+  tags: z.array(z.string()).optional(),
+  metadata: z.any().optional() // JSON object for additional metadata
+});
+
+// Export types for DR SLAs
+export type DRSLA = z.infer<typeof drSLAs>;
+export type InsertDRSLA = z.infer<typeof drSLAs>;
+
+// Insert schemas for disaster recovery
+export const insertDRExerciseSchema = z.object({
+  exerciseName: z.string(),
+  exerciseType: z.enum(["tabletop", "walkthrough", "simulation", "full_test"]),
+  scenarioDescription: z.string(),
+  plannedDate: z.string(),
+  duration: z.number(),
+  participants: z.array(z.string()),
+  facilitator: z.string(),
+  objectives: z.array(z.string()),
+  successCriteria: z.array(z.string()),
+  status: z.enum(["planned", "in_progress", "completed", "cancelled"]).default("planned")
+});
+
+export const insertRestoreTestSchema = z.object({
+  testName: z.string(),
+  testType: z.enum(["full", "partial", "differential", "incremental"]),
+  backupSource: z.string(),
+  backupTimestamp: z.string(),
+  testEnvironment: z.enum(["production", "staging", "isolated"]),
+  automatedTestSuite: z.any(),
+  scheduledAt: z.string()
+});
+
+export const insertDRSLASchema = z.object({
+  serviceName: z.string(),
+  criticality: z.enum(["low", "medium", "high", "critical"]),
+  businessFunction: z.string(),
+  rtoMinutes: z.number(),
+  rpoMinutes: z.number(),
+  availabilityTarget: z.number(),
+  maxDowntimePerMonth: z.number(),
+  backupFrequency: z.string(),
+  testingFrequency: z.string(),
+  escalationContacts: z.any(),
+  businessImpactStatement: z.string()
+});
+
+export const insertWORMObjectSchema = z.object({
+  objectPath: z.string(),
+  objectSize: z.number(),
+  objectHash: z.string(),
+  contentType: z.string(),
+  retentionPeriod: z.number(),
+  expiresAt: z.string(),
+  accessLevel: z.enum(["public", "private", "restricted"]).default("private"),
+  encryptionStatus: z.boolean().default(false),
+  encryptionKeyId: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  metadata: z.any().optional()
+});
+
+// Export types for WORM objects
+export type WORMObject = z.infer<typeof wormObjects>;
+export type InsertWORMObject = z.infer<typeof wormObjects>;
+
+// Log management schemas
+export const logEntries = z.object({
+  id: z.string(),
+  timestamp: z.string(),
+  level: z.enum(["debug", "info", "warn", "error", "fatal"]),
+  message: z.string(),
+  source: z.string(),
+  service: z.string(),
+  userId: z.string().optional(),
+  sessionId: z.string().optional(),
+  requestId: z.string().optional(),
+  metadata: z.any().optional(), // JSON object
+  tags: z.array(z.string()).optional(),
+  stackTrace: z.string().optional()
+});
+
+export const logSubscriptions = z.object({
+  id: z.string(),
+  logType: z.string(),
+  endpoint: z.string(),
+  filters: z.array(z.string()).optional(),
+  isActive: z.boolean().default(true),
+  createdAt: z.string()
+});
+
+export const logRetentionPolicies = z.object({
+  id: z.string(),
+  logType: z.string(),
+  retentionDays: z.number(),
+  compressionEnabled: z.boolean().default(true),
+  archiveLocation: z.string().optional(),
+  createdAt: z.string()
+});
+
+export const insertLogSubscriptionSchema = z.object({
+  logType: z.string(),
+  endpoint: z.string(),
+  filters: z.array(z.string()).optional(),
+  isActive: z.boolean().default(true)
+});
+
+export const insertLogRetentionPolicySchema = z.object({
+  logType: z.string(),
+  retentionDays: z.number(),
+  compressionEnabled: z.boolean().default(true),
+  archiveLocation: z.string().optional()
+});
+
+export const logMetrics = z.object({
+  id: z.string(),
+  metricName: z.string(),
+  metricValue: z.number(),
+  timestamp: z.string(),
+  service: z.string(),
+  level: z.enum(["debug", "info", "warn", "error", "fatal"]),
+  aggregationType: z.enum(["count", "average", "sum", "min", "max"]),
+  tags: z.array(z.string()).optional()
+});
+
+export const logSearchIndex = z.object({
+  id: z.string(),
+  indexName: z.string(),
+  searchQuery: z.string(),
+  results: z.any(), // JSON array
+  totalMatches: z.number(),
+  executionTime: z.number(),
+  createdAt: z.string(),
+  userId: z.string().optional()
+});
+
+export const logPatterns = z.object({
+  id: z.string(),
+  patternName: z.string(),
+  regex: z.string(),
+  description: z.string(),
+  severity: z.enum(["low", "medium", "high", "critical"]),
+  alertThreshold: z.number(),
+  isActive: z.boolean().default(true),
+  createdAt: z.string()
+});
+
+// Export log-related types
+export type LogEntry = z.infer<typeof logEntries>;
+export type InsertLogEntry = z.infer<typeof logEntries>;
+export type LogMetrics = z.infer<typeof logMetrics>;
+export type LogSubscription = z.infer<typeof logSubscriptions>;
+export type InsertLogSubscription = z.infer<typeof insertLogSubscriptionSchema>;
+export type LogRetentionPolicy = z.infer<typeof logRetentionPolicies>;
+export type InsertLogRetentionPolicy = z.infer<typeof insertLogRetentionPolicySchema>;
+export type LogPattern = z.infer<typeof logPatterns>;
+
+// Government systems monitoring schemas
+export const governmentSystems = z.object({
+  id: z.string(),
+  systemName: z.string(),
+  systemType: z.enum(["ERGANI", "e-EFKA", "AADE", "KEP", "GSIS"]),
+  baseUrl: z.string(),
+  status: z.enum(["operational", "degraded", "down", "maintenance"]).default("operational"),
+  lastChecked: z.string(),
+  responseTime: z.number().optional(), // in milliseconds
+  uptime: z.number().default(100), // percentage
+  errorRate: z.number().default(0), // percentage
+  monitoringEnabled: z.boolean().default(true),
+  alertThreshold: z.number().default(5000), // response time threshold in ms
+  description: z.string().optional(),
+  contactInfo: z.string().optional()
+});
+
+export const systemStatusChecks = z.object({
+  id: z.string(),
+  systemId: z.string(),
+  checkTime: z.string(),
+  status: z.enum(["success", "failure", "timeout"]),
+  responseTime: z.number(),
+  statusCode: z.number().optional(),
+  errorMessage: z.string().optional(),
+  details: z.any().optional() // JSON object
+});
+
+export const systemAlertSubscriptions = z.object({
+  id: z.string(),
+  systemId: z.string(),
+  userId: z.string(),
+  alertType: z.enum(["downtime", "slow_response", "error_rate", "maintenance"]),
+  notificationMethod: z.enum(["email", "sms", "webhook", "slack"]),
+  threshold: z.number().optional(),
+  isActive: z.boolean().default(true),
+  createdAt: z.string(),
+  lastNotified: z.string().optional()
+});
+
+export const systemMaintenanceWindows = z.object({
+  id: z.string(),
+  systemId: z.string(),
+  startTime: z.string(),
+  endTime: z.string(),
+  description: z.string(),
+  isRecurring: z.boolean().default(false),
+  recurringPattern: z.string().optional(),
+  createdAt: z.string(),
+  createdBy: z.string()
+});
+
+export const systemAvailabilityMetrics = z.object({
+  id: z.string(),
+  systemId: z.string(),
+  metricDate: z.string(),
+  uptimePercentage: z.number(),
+  downtimeMinutes: z.number(),
+  averageResponseTime: z.number(),
+  errorCount: z.number(),
+  totalRequests: z.number(),
+  slaCompliance: z.boolean().default(true)
+});
+
+export const systemIncidents = z.object({
+  id: z.string(),
+  systemId: z.string(),
+  incidentType: z.enum(["outage", "degradation", "error", "maintenance"]),
+  title: z.string(),
+  description: z.string(),
+  severity: z.enum(["low", "medium", "high", "critical"]),
+  status: z.enum(["open", "investigating", "resolved", "closed"]),
+  startTime: z.string(),
+  endTime: z.string().optional(),
+  affectedUsers: z.number().optional(),
+  rootCause: z.string().optional(),
+  resolution: z.string().optional(),
+  createdBy: z.string(),
+  assignedTo: z.string().optional()
+});
+
+export const systemOutages = z.object({
+  id: z.string(),
+  systemId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  severity: z.enum(["critical", "major", "minor", "maintenance"]),
+  startTime: z.string(),
+  endTime: z.string().optional(),
+  estimatedResolution: z.string().optional(),
+  affectedServices: z.array(z.string()),
+  status: z.enum(["active", "resolved", "monitoring"]).default("active"),
+  impact: z.string().optional(),
+  workaround: z.string().optional(),
+  updates: z.any().optional(), // JSON array of status updates
+  createdBy: z.string(),
+  resolvedBy: z.string().optional()
+});
+
+export const systemIntegrations = z.object({
+  id: z.string(),
+  systemId: z.string(),
+  integrationType: z.enum(["api", "webhook", "file_transfer", "database"]),
+  integrationName: z.string(),
+  endpoint: z.string(),
+  authMethod: z.enum(["none", "api_key", "oauth", "certificate"]),
+  isActive: z.boolean().default(true),
+  lastSyncTime: z.string().optional(),
+  syncStatus: z.enum(["success", "failure", "pending"]).optional(),
+  errorMessage: z.string().optional(),
+  configParams: z.any().optional(), // JSON object
+  createdAt: z.string()
+});
+
+// Export types for government systems
+export type GovernmentSystem = z.infer<typeof governmentSystems>;
+export type InsertGovernmentSystem = z.infer<typeof governmentSystems>;
+export type SystemOutage = z.infer<typeof systemOutages>;
+export type InsertSystemStatusCheck = z.infer<typeof systemStatusChecks>;
+export type InsertSystemOutage = z.infer<typeof systemOutages>;
+export type InsertSystemAvailabilityMetrics = z.infer<typeof systemAvailabilityMetrics>;
+export type SystemStatusCheck = z.infer<typeof systemStatusChecks>;
+export type SystemAlertSubscription = z.infer<typeof systemAlertSubscriptions>;
+export type SystemMaintenanceWindow = z.infer<typeof systemMaintenanceWindows>;
+
+// Insert schemas for government systems
+export const insertGovernmentSystemSchema = z.object({
+  systemName: z.string(),
+  systemType: z.enum(["ERGANI", "e-EFKA", "AADE", "KEP", "GSIS"]),
+  baseUrl: z.string(),
+  description: z.string().optional(),
+  contactInfo: z.string().optional(),
+  monitoringEnabled: z.boolean().default(true),
+  alertThreshold: z.number().default(5000)
+});
+
+export const insertSystemOutageSchema = z.object({
+  systemId: z.string(),
+  title: z.string(),
+  description: z.string(),
+  severity: z.enum(["critical", "major", "minor", "maintenance"]),
+  startTime: z.string(),
+  estimatedResolution: z.string().optional(),
+  affectedServices: z.array(z.string()),
+  impact: z.string().optional(),
+  workaround: z.string().optional(),
+  createdBy: z.string()
+});
+
+export const insertSystemIntegrationSchema = z.object({
+  systemId: z.string(),
+  integrationType: z.enum(["api", "webhook", "file_transfer", "database"]),
+  integrationName: z.string(),
+  endpoint: z.string(),
+  authMethod: z.enum(["none", "api_key", "oauth", "certificate"]),
+  configParams: z.any().optional()
+});
+
+export const insertSystemAlertSubscriptionSchema = z.object({
+  systemId: z.string(),
+  userId: z.string(),
+  alertType: z.enum(["downtime", "slow_response", "error_rate", "maintenance"]),
+  notificationMethod: z.enum(["email", "sms", "webhook", "slack"]),
+  threshold: z.number().optional(),
+  isActive: z.boolean().default(true)
+});
+
+export const insertSystemStatusCheckSchema = z.object({
+  systemId: z.string(),
+  status: z.enum(["success", "failure", "timeout"]),
+  responseTime: z.number(),
+  statusCode: z.number().optional(),
+  errorMessage: z.string().optional(),
+  details: z.any().optional()
+});
+
+// On-call rotation and escalation schemas
+export const escalationPolicies = z.object({
+  id: z.string(),
+  policyName: z.string(),
+  description: z.string(),
+  isActive: z.boolean().default(true),
+  escalationSteps: z.any(), // JSON array of escalation steps
+  timeoutMinutes: z.number().default(30),
+  autoEscalate: z.boolean().default(true),
+  createdAt: z.string(),
+  createdBy: z.string()
+});
+
+export const onCallSchedules = z.object({
+  id: z.string(),
+  scheduleName: z.string(),
+  description: z.string(),
+  timezone: z.string().default("Europe/Athens"),
+  rotationType: z.enum(["daily", "weekly", "monthly"]),
+  rotationStartDate: z.string(),
+  isActive: z.boolean().default(true),
+  participants: z.array(z.string()), // Array of user IDs
+  escalationPolicyId: z.string(),
+  createdAt: z.string()
+});
+
+export const onCallAssignments = z.object({
+  id: z.string(),
+  scheduleId: z.string(),
+  userId: z.string(),
+  startDate: z.string(),
+  endDate: z.string(),
+  isBackup: z.boolean().default(false),
+  contactMethod: z.enum(["email", "sms", "phone", "slack"]),
+  contactDetails: z.string(),
+  createdAt: z.string()
+});
+
+export const incidentResponses = z.object({
+  id: z.string(),
+  incidentId: z.string(),
+  responderId: z.string(),
+  responseType: z.enum(["acknowledged", "resolved", "escalated", "ignored"]),
+  responseTime: z.string(),
+  notes: z.string().optional(),
+  escalationLevel: z.number().default(0),
+  isAutomatic: z.boolean().default(false),
+  createdAt: z.string()
+});
+
+export const incidents = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  severity: z.enum(["low", "medium", "high", "critical"]),
+  status: z.enum(["open", "acknowledged", "investigating", "resolved", "closed"]),
+  source: z.string(), // system, manual, alert
+  assignedTo: z.string().optional(),
+  escalationPolicyId: z.string().optional(),
+  createdAt: z.string(),
+  acknowledgedAt: z.string().optional(),
+  resolvedAt: z.string().optional(),
+  metadata: z.any().optional()
+});
+
+export const onCallIncidents = z.object({
+  id: z.string(),
+  scheduleId: z.string(),
+  incidentId: z.string(),
+  currentOnCallUserId: z.string(),
+  escalationLevel: z.number().default(0),
+  status: z.enum(["active", "acknowledged", "resolved", "escalated"]),
+  createdAt: z.string(),
+  acknowledgedAt: z.string().optional(),
+  resolvedAt: z.string().optional(),
+  escalatedAt: z.string().optional(),
+  lastNotificationSent: z.string().optional()
+});
+
+export const rotaShifts = z.object({
+  id: z.string(),
+  scheduleId: z.string(),
+  userId: z.string(),
+  startTime: z.string(),
+  endTime: z.string(),
+  shiftType: z.enum(["regular", "overtime", "backup", "holiday"]),
+  isConfirmed: z.boolean().default(false),
+  swapRequestId: z.string().optional(),
+  notes: z.string().optional(),
+  createdAt: z.string()
+});
+
+export const shiftSwapRequests = z.object({
+  id: z.string(),
+  originalShiftId: z.string(),
+  requestedBy: z.string(),
+  requestedWith: z.string(),
+  status: z.enum(["pending", "approved", "rejected", "cancelled"]),
+  reason: z.string().optional(),
+  approvedBy: z.string().optional(),
+  createdAt: z.string(),
+  processedAt: z.string().optional()
+});
+
+export const onCallTeams = z.object({
+  id: z.string(),
+  teamName: z.string(),
+  description: z.string(),
+  isActive: z.boolean().default(true),
+  escalationPolicyId: z.string(),
+  timezone: z.string().default("Europe/Athens"),
+  createdBy: z.string(),
+  createdAt: z.string()
+});
+
+export const onCallTeamMembers = z.object({
+  id: z.string(),
+  teamId: z.string(),
+  userId: z.string(),
+  role: z.enum(["primary", "secondary", "backup", "observer"]),
+  contactMethods: z.any(), // JSON object with contact preferences
+  escalationOrder: z.number(),
+  isActive: z.boolean().default(true),
+  joinedAt: z.string()
+});
+
+export const escalationRules = z.object({
+  id: z.string(),
+  escalationPolicyId: z.string(),
+  stepNumber: z.number(),
+  timeoutMinutes: z.number(),
+  action: z.enum(["notify_user", "notify_team", "notify_external", "escalate"]),
+  targetId: z.string(), // userId or teamId or external contact
+  notificationMethods: z.array(z.string()), // ["email", "sms", "phone", "slack"]
+  isActive: z.boolean().default(true)
+});
+
+export const onCallAvailability = z.object({
+  id: z.string(),
+  userId: z.string(),
+  availabilityType: z.enum(["available", "unavailable", "limited"]),
+  startDate: z.string(),
+  endDate: z.string(),
+  reason: z.string().optional(),
+  recurrencePattern: z.string().optional(),
+  substituteUserId: z.string().optional(),
+  createdAt: z.string()
+});
+
+export const onCallMetrics = z.object({
+  id: z.string(),
+  teamId: z.string(),
+  userId: z.string().optional(),
+  metricType: z.enum(["response_time", "incident_count", "escalation_rate", "coverage_time"]),
+  metricValue: z.number(),
+  period: z.enum(["daily", "weekly", "monthly"]),
+  recordDate: z.string(),
+  metadata: z.any().optional()
+});
+
+// Export types for on-call systems
+export type OnCallTeam = z.infer<typeof onCallTeams>;
+export type OnCallIncident = z.infer<typeof onCallIncidents>;
+export type InsertOnCallIncident = z.infer<typeof onCallIncidents>;
+export type InsertIncidentResponse = z.infer<typeof incidentResponses>;
+export type InsertOnCallAssignment = z.infer<typeof onCallAssignments>;
+
+// Export types for DR exercises  
+export type DRExercise = z.infer<typeof drExercises>;
+export type InsertDRExercise = z.infer<typeof insertDRExerciseSchema>;
+
+// Insert schemas for on-call systems
+export const insertEscalationPolicySchema = z.object({
+  policyName: z.string(),
+  description: z.string(),
+  escalationSteps: z.any(), // JSON array of escalation steps
+  timeoutMinutes: z.number().default(30),
+  autoEscalate: z.boolean().default(true),
+  createdBy: z.string()
+});
+
+export const insertOnCallTeamSchema = z.object({
+  teamName: z.string(),
+  description: z.string(),
+  escalationPolicyId: z.string(),
+  timezone: z.string().default("Europe/Athens"),
+  createdBy: z.string()
+});
+
+export const insertOnCallScheduleSchema = z.object({
+  scheduleName: z.string(),
+  description: z.string(),
+  timezone: z.string().default("Europe/Athens"),
+  rotationType: z.enum(["daily", "weekly", "monthly"]),
+  rotationStartDate: z.string(),
+  participants: z.array(z.string()), // Array of user IDs
+  escalationPolicyId: z.string()
+});
+
+export const insertOnCallAvailabilitySchema = z.object({
+  userId: z.string(),
+  availabilityType: z.enum(["available", "unavailable", "limited"]),
+  startDate: z.string(),
+  endDate: z.string(),
+  reason: z.string().optional(),
+  recurrencePattern: z.string().optional(),
+  substituteUserId: z.string().optional()
+});
+
+export const insertOnCallIncidentSchema = z.object({
+  scheduleId: z.string(),
+  incidentId: z.string(),
+  currentOnCallUserId: z.string(),
+  escalationLevel: z.number().default(0),
+  status: z.enum(["active", "acknowledged", "resolved", "escalated"]).default("active")
+});
+
+// Export types for on-call systems
+export type EscalationPolicy = z.infer<typeof escalationPolicies>;
+export type OnCallSchedule = z.infer<typeof onCallSchedules>;
+export type OnCallAssignment = z.infer<typeof onCallAssignments>;
