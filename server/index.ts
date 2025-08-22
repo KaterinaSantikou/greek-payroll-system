@@ -3,7 +3,7 @@ import { createServer } from "http";
 import { createServer as createSecureServer } from "https";
 import fs from "fs";
 import { registerRoutes } from "./routes";
-import { log } from "./vite";
+import { setupVite, serveStatic, log } from "./vite";
 import { validateEnvironment, envConfig, getEnvironmentInfo } from "./lib/envConfig";
 import { ErrorTrackingService } from "./services/ErrorTrackingService";
 import { StatusPageService } from "./services/StatusPageService";
@@ -81,9 +81,9 @@ if (isProduction) {
     next();
   });
 } else {
-  // Development: CORS for frontend on port 5000
+  // Development: Simple CORS - no security overhead
   app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5000');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -183,12 +183,15 @@ process.on('SIGINT', () => {
 
   // This error handler was replaced above with better error handling
 
-  // Backend API only - frontend served separately in development
+  // Serve both API and frontend on port 5000
   if (!isProduction) {
-    log("🎯 Backend API server ready (frontend on separate port 5000)");
+    log("🎯 Setting up Vite development server...");
+    await setupVite(app, server);
+    log("✅ Vite development server configured");
   } else {
-    // In production, you would typically serve static files from a CDN or reverse proxy
-    log("📦 Backend API server ready for production");
+    log("📦 Setting up static file serving for production...");
+    serveStatic(app);
+    log("✅ Static file serving configured");
   }
 
   // SSL/TLS Configuration for Production  

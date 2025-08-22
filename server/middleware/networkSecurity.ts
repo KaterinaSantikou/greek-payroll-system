@@ -190,13 +190,34 @@ export const ipBlacklist = (req: Request, res: Response, next: NextFunction) => 
 export const userAgentValidation = (req: Request, res: Response, next: NextFunction) => {
   const userAgent = req.get('User-Agent') || '';
   const clientIP = req.ip || 'unknown';
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
-  // Allow empty user agent for API clients (but log it)
+  // In development, be more permissive for testing
+  if (isDevelopment) {
+    // Only block the most obvious attack tools
+    const dangerousPatterns = [
+      /sqlmap/i, /nikto/i, /metasploit/i, /burp.*intruder/i
+    ];
+    
+    const isDangerous = dangerousPatterns.some(pattern => pattern.test(userAgent));
+    if (isDangerous) {
+      console.warn(`🚨 Blocked dangerous tool: ${userAgent} from IP: ${clientIP}`);
+      return res.status(403).json({
+        error: 'Access denied',
+        code: 'USER_AGENT_BLOCKED',
+        message: 'Your client software is not permitted'
+      });
+    }
+    
+    // Allow everything else in development
+    return next();
+  }
+
+  // Production: Strict validation
   if (!userAgent) {
     console.warn(`⚠️  Empty User-Agent from IP: ${clientIP} on ${req.path}`);
   }
 
-  // Check against blocked user agents (security tools, bots)
   const isBlocked = NETWORK_POLICIES.BLOCKED_USER_AGENTS.some(pattern => pattern.test(userAgent));
   
   if (isBlocked) {
@@ -209,14 +230,12 @@ export const userAgentValidation = (req: Request, res: Response, next: NextFunct
     });
   }
 
-  // For browser access, validate against allowed patterns
   const isBrowserRequest = req.path.startsWith('/') && !req.path.startsWith('/api/');
   if (isBrowserRequest && userAgent) {
     const isAllowed = NETWORK_POLICIES.ALLOWED_USER_AGENTS.some(pattern => pattern.test(userAgent));
     
     if (!isAllowed) {
       console.warn(`⚠️  Suspicious User-Agent for browser access: ${userAgent} from IP: ${clientIP}`);
-      // Don't block, but log for analysis
     }
   }
 
