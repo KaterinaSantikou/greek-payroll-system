@@ -714,3 +714,4 @@ export function IncidentOwnershipManager() {
     </div>
   );
 }
+export default IncidentOwnershipManager;

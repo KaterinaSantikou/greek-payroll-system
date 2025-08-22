@@ -481,3 +481,4 @@ export function IncidentCommunicationManager() {
     </div>
   );
 }
+export default IncidentCommunicationManager;

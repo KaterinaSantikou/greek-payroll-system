@@ -563,3 +563,4 @@ export function PerformanceBudgetManager() {
     </div>
   );
 }
+export default PerformanceBudgetManager;

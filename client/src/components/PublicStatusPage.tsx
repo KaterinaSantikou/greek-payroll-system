@@ -382,3 +382,4 @@ export function PublicStatusPage() {
     </div>
   );
 }
+export default PublicStatusPage;

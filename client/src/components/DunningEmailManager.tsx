@@ -784,3 +784,4 @@ export function DunningEmailManager() {
     </div>
   );
 }
+export default DunningEmailManager;

@@ -5,6 +5,14 @@
 
 import { AuditService } from './AuditService';
 
+// Server environment safe domain helper
+const getServerDomain = () => {
+  if (typeof window !== 'undefined') {
+    return window.location?.hostname || 'payrollsync.com';
+  }
+  return process.env.REPLIT_DOMAINS?.split(',')[0] || 'payrollsync.com';
+};
+
 export interface ConsentRecord {
   id: string;
   userId?: string;
@@ -692,7 +700,7 @@ export class CookieConsentService {
               name: 'session_id',
               description: 'Session identifier for authentication',
               purpose: 'User authentication and session management',
-              domain: window.location?.hostname || 'payrollsync.com',
+              domain: getServerDomain(),
               duration: 'Session',
               type: 'session',
               sameSite: 'strict',
@@ -715,7 +723,7 @@ export class CookieConsentService {
               name: 'user_preferences',
               description: 'Stores user language and display preferences',
               purpose: 'Personalization and user experience',
-              domain: window.location?.hostname || 'payrollsync.com',
+              domain: getServerDomain(),
               duration: '1 year',
               type: 'persistent',
               sameSite: 'lax',
@@ -816,7 +824,7 @@ export class CookieConsentService {
               name: 'session_id',
               description: 'Αναγνωριστικό συνεδρίας για έλεγχο ταυτότητας',
               purpose: 'Έλεγχος ταυτότητας και διαχείριση συνεδρίας',
-              domain: window.location?.hostname || 'payrollsync.com',
+              domain: getServerDomain(),
               duration: 'Συνεδρία',
               type: 'session',
               sameSite: 'strict',
@@ -839,7 +847,7 @@ export class CookieConsentService {
               name: 'user_preferences',
               description: 'Αποθηκεύει προτιμήσεις γλώσσας και εμφάνισης',
               purpose: 'Εξατομίκευση και εμπειρία χρήστη',
-              domain: window.location?.hostname || 'payrollsync.com',
+              domain: getServerDomain(),
               duration: '1 έτος',
               type: 'persistent',
               sameSite: 'lax',

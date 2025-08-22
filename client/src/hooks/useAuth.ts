@@ -6,6 +6,8 @@ export function useAuth() {
     queryKey: ["/api/auth/user"],
     retry: false,
     retryOnMount: false,
+    // Only query if we might be authenticated
+    enabled: typeof window !== 'undefined' && document.cookie.includes('connect.sid')
   });
 
   return {

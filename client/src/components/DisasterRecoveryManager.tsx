@@ -886,3 +886,4 @@ export function DisasterRecoveryManager() {
     </div>
   );
 }
+export default DisasterRecoveryManager;

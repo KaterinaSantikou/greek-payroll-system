@@ -727,3 +727,4 @@ export function RootCauseAnalysisManager() {
     </div>
   );
 }
+export default RootCauseAnalysisManager;

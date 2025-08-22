@@ -123,6 +123,7 @@ import ExitIntentPopup from "@/components/ExitIntentPopup";
 import { useExitIntent } from "@/hooks/useExitIntent";
 import { ABTestProvider } from "@/components/ABTestProvider";
 import { useLocation } from "wouter";
+import { useEffect } from "react";
 
 // Authentication Pages
 import Login from "@/pages/auth/Login";
@@ -138,6 +139,17 @@ function Router() {
   const { isAuthenticated, isLoading } = useAuth();
   const { open, setOpen } = useCommandPalette();
   const [location] = useLocation();
+  
+  // Add check for Replit session before querying user endpoint
+  useEffect(() => {
+    const hasSessionCookie = document.cookie.includes('connect.sid');
+    if (!hasSessionCookie && !isLoading && !isAuthenticated) {
+      // Only redirect to login if we're on a protected route (not already on auth routes)
+      if (!location.includes('/auth') && !location.includes('/demo') && !location.includes('/marketing') && location !== '/' && location !== '/status') {
+        window.location.href = '/api/login';
+      }
+    }
+  }, [isLoading, isAuthenticated, location]);
   
   // Configure exit intent popup based on current page
   const getExitIntentConfig = () => {
