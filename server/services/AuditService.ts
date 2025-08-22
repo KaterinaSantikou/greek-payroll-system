@@ -268,11 +268,11 @@ export class AuditService {
 
     // Apply filters
     if (filters.userId) {
-      query = query.where(eq(authAuditLogs.userId, filters.userId));
+      query = query.where(eq(authAuditLogs.userId, filters.userId)) as any;
     }
     // Add more filters as needed...
 
-    return query.limit(filters.limit || 100);
+    return await query.limit(filters.limit || 100);
   }
 
   /**
@@ -337,6 +337,6 @@ export class AuditService {
       reason: event.reason
     };
 
-    return this.logEvent(generalEvent);
+    await this.logEvent(generalEvent);
   }
 }

@@ -97,11 +97,17 @@ router.post('/signup',
     if (existingUser.length > 0) {
       await AuditService.logEvent({
         eventType: 'signup_failed',
-        ipAddress,
-        userAgent,
-        email,
-        result: 'failure',
-        reason: 'Email already registered',
+        eventCategory: 'auth',
+        eventAction: 'signup',
+        tenantId: 'default',
+        userId: 'anonymous',
+        eventData: {
+          email,
+          result: 'failure',
+          reason: 'Email already registered',
+          ipAddress,
+          userAgent
+        }
       });
 
       // Return generic success to prevent email enumeration
@@ -138,13 +144,19 @@ router.post('/signup',
 
     // Audit log
     await AuditService.logEvent({
-      userId: newUser.id,
       eventType: 'signup',
-      ipAddress,
-      userAgent,
-      email: email.toLowerCase(),
-      result: 'success',
-      metadata: { locale, tos_accepted: true },
+      eventCategory: 'auth',
+      eventAction: 'signup',
+      tenantId: 'default',
+      userId: newUser.id,
+      eventData: {
+        email: email.toLowerCase(),
+        result: 'success',
+        locale,
+        tos_accepted: true,
+        ipAddress,
+        userAgent
+      }
     });
 
     // In a real app, send verification email here
@@ -183,11 +195,17 @@ router.post('/login', rateLimitMiddleware('login'), async (req, res) => {
     if (!user || !user.passwordHash) {
       await AuditService.logEvent({
         eventType: 'login_failed',
-        ipAddress,
-        userAgent,
-        email: email.toLowerCase(),
-        result: 'failure',
-        reason: 'Invalid credentials',
+        eventCategory: 'auth',
+        eventAction: 'login',
+        tenantId: 'default',
+        userId: 'anonymous',
+        eventData: {
+          email: email.toLowerCase(),
+          result: 'failure',
+          reason: 'Invalid credentials',
+          ipAddress,
+          userAgent
+        }
       });
 
       return res.status(401).json(createErrorResponse(req, 'INVALID_CREDENTIALS', 'Invalid email or password'));
@@ -231,14 +249,19 @@ router.post('/login', rateLimitMiddleware('login'), async (req, res) => {
         .where(eq(users.id, user.id));
 
       await AuditService.logEvent({
-        userId: user.id,
         eventType: shouldLock ? 'account_locked' : 'login_failed',
-        ipAddress,
-        userAgent,
-        email: email.toLowerCase(),
-        result: 'failure',
-        reason: 'Invalid credentials',
-        metadata: { attempts: newAttempts },
+        eventCategory: 'auth',
+        eventAction: 'login',
+        tenantId: 'default',
+        userId: user.id,
+        eventData: {
+          email: email.toLowerCase(),
+          result: 'failure',
+          reason: 'Invalid credentials',
+          attempts: newAttempts,
+          ipAddress,
+          userAgent
+        }
       });
 
       const retryAfter = shouldLock ? 15 * 60 : undefined;
@@ -334,13 +357,18 @@ router.post('/mfa/challenge', rateLimitMiddleware('mfa-verify'), async (req, res
 
     if (!mfaValid) {
       await AuditService.logEvent({
-        userId: user.id,
         eventType: 'mfa_failed',
-        ipAddress,
-        userAgent,
-        email: email.toLowerCase(),
-        result: 'failure',
-        reason: 'Invalid MFA token',
+        eventCategory: 'auth',
+        eventAction: 'mfa_verify',
+        tenantId: 'default',
+        userId: user.id,
+        eventData: {
+          email: email.toLowerCase(),
+          result: 'failure',
+          reason: 'Invalid MFA token',
+          ipAddress,
+          userAgent
+        }
       });
 
       return res.status(401).json(createErrorResponse(req, 'INVALID_CREDENTIALS', 'Invalid MFA code'));
@@ -465,11 +493,17 @@ router.post('/magic-link', rateLimitMiddleware('magic-link'), async (req, res) =
     if (!user) {
       await AuditService.logEvent({
         eventType: 'magic_link_requested',
-        ipAddress,
-        userAgent,
-        email: email.toLowerCase(),
-        result: 'failure',
-        reason: 'Email not found',
+        eventCategory: 'auth',
+        eventAction: 'magic_link_request',
+        tenantId: 'default',
+        userId: 'anonymous',
+        eventData: {
+          email: email.toLowerCase(),
+          result: 'failure',
+          reason: 'Email not found',
+          ipAddress,
+          userAgent
+        }
       });
       return; // Don't send email, but don't reveal this
     }
@@ -485,12 +519,17 @@ router.post('/magic-link', rateLimitMiddleware('magic-link'), async (req, res) =
 
     // Audit log
     await AuditService.logEvent({
-      userId: user.id,
       eventType: 'magic_link_requested',
-      ipAddress,
-      userAgent,
-      email: email.toLowerCase(),
-      result: 'success',
+      eventCategory: 'auth',
+      eventAction: 'magic_link_request',
+      tenantId: 'default',
+      userId: user.id,
+      eventData: {
+        email: email.toLowerCase(),
+        result: 'success',
+        ipAddress,
+        userAgent
+      }
     });
 
     // In a real app, send magic link email here
@@ -566,12 +605,17 @@ router.get('/magic-link/consume', async (req, res) => {
 
     // Audit log
     await AuditService.logEvent({
-      userId: payload.userId,
       eventType: 'magic_link_login',
-      ipAddress,
-      userAgent,
-      email: payload.email,
-      result: 'success',
+      eventCategory: 'auth',
+      eventAction: 'magic_link_login',
+      tenantId: 'default',
+      userId: payload.userId,
+      eventData: {
+        email: payload.email,
+        result: 'success',
+        ipAddress,
+        userAgent
+      }
     });
 
     // Redirect to app
@@ -610,11 +654,17 @@ router.post('/password/forgot', rateLimitMiddleware('forgot-password'), async (r
     if (!user) {
       await AuditService.logEvent({
         eventType: 'password_reset_requested',
-        ipAddress,
-        userAgent,
-        email: email.toLowerCase(),
-        result: 'failure',
-        reason: 'Email not found',
+        eventCategory: 'auth',
+        eventAction: 'password_reset_request',
+        tenantId: 'default',
+        userId: 'anonymous',
+        eventData: {
+          email: email.toLowerCase(),
+          result: 'failure',
+          reason: 'Email not found',
+          ipAddress,
+          userAgent
+        }
       });
 
       return res.json(successResponse);
@@ -631,12 +681,17 @@ router.post('/password/forgot', rateLimitMiddleware('forgot-password'), async (r
 
     // Audit log
     await AuditService.logEvent({
-      userId: user.id,
       eventType: 'password_reset_requested',
-      ipAddress,
-      userAgent,
-      email: email.toLowerCase(),
-      result: 'success',
+      eventCategory: 'auth',
+      eventAction: 'password_reset_request',
+      tenantId: 'default',
+      userId: user.id,
+      eventData: {
+        email: email.toLowerCase(),
+        result: 'success',
+        ipAddress,
+        userAgent
+      }
     });
 
     // In a real app, send reset email here
@@ -711,12 +766,17 @@ router.post('/password/reset', async (req, res) => {
 
     // Audit log
     await AuditService.logEvent({
-      userId: payload.userId,
       eventType: 'password_reset',
-      ipAddress,
-      userAgent,
-      email: payload.email,
-      result: 'success',
+      eventCategory: 'auth',
+      eventAction: 'password_reset',
+      tenantId: 'default',
+      userId: payload.userId,
+      eventData: {
+        email: payload.email,
+        result: 'success',
+        ipAddress,
+        userAgent
+      }
     });
 
     res.json({ message: 'Password reset successfully' });
@@ -910,12 +970,17 @@ router.post('/logout', async (req, res) => {
         
         // Audit log
         await AuditService.logEvent({
+          eventType: 'logout',
+          eventCategory: 'auth',
+          eventAction: 'logout',
+          tenantId: 'default',
           userId: session.userId,
           sessionId: session.sessionId,
-          eventType: 'logout',
-          ipAddress: getClientInfo(req).ipAddress,
-          userAgent: getClientInfo(req).userAgent,
-          result: 'success',
+          eventData: {
+            result: 'success',
+            ipAddress: getClientInfo(req).ipAddress,
+            userAgent: getClientInfo(req).userAgent
+          }
         });
       }
     }
