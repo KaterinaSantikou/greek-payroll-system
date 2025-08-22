@@ -232,8 +232,8 @@ process.on('SIGINT', () => {
     log(`📝 For production deployment, ensure SSL certificates are configured`);
   }
 
-  // Backend API server port (3001 in development, PORT in production)
-  const port = isProduction ? envConfig.PORT : 3001;
+  // Use port 5000 for HTTP traffic (Replit requirement)
+  const port = envConfig.PORT;
   server.listen({
     port,
     host: "0.0.0.0",
