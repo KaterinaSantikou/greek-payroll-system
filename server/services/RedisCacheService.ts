@@ -114,9 +114,11 @@ export class RedisCacheService {
         retryDelayOnFailover: this.config.retryDelayOnFailover,
         enableOfflineQueue: false, // Disable offline queue
         lazyConnect: true,
-        connectTimeout: 10000,
-        commandTimeout: 5000,
-        enableReadyCheck: true
+        connectTimeout: 2000,
+        commandTimeout: 2000,
+        enableReadyCheck: true,
+        maxRetriesPerRequest: 0, // Fail fast in development
+        retryDelayOnFailover: 100
       };
 
       this.redis = new Redis(redisOptions);
