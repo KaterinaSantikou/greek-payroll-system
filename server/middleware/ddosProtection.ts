@@ -117,10 +117,11 @@ export const payrollRateLimit = rateLimit({
 export const progressiveDelay = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
   delayAfter: 50, // Allow 50 requests per windowMs without delay
-  delayMs: 500, // Add 500ms delay per request after delayAfter
+  delayMs: () => 500, // Fixed: Use function form for v2 compatibility
   maxDelayMs: 20000, // Maximum delay of 20 seconds
   skipFailedRequests: false,
-  onLimitReached: (req: Request) => {
+  validate: { delayMs: false }, // Disable deprecation warning
+  onDelayReached: (req: Request) => { // Fixed: Use onDelayReached instead of deprecated onLimitReached
     const ip = req.ip || 'unknown';
     console.warn(`Progressive delay triggered for IP: ${ip} on ${req.path}`);
     trackSuspiciousIP(ip, 'RAPID_REQUESTS');

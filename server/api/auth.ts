@@ -8,7 +8,7 @@ const router = Router();
 // This file provides additional auth utilities and user management
 
 // Get current authenticated user (with fallback for development)
-router.get('/api/auth/user', async (req: any, res) => {
+router.get('/user', async (req: any, res) => {
   try {
     // Check if user is authenticated via session
     if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims) {
@@ -47,7 +47,7 @@ const SCIMUserSchema = z.object({
   active: z.boolean().default(true)
 });
 
-router.post('/api/scim/v2/Users', isAuthenticated, async (req, res) => {
+router.post('/scim/v2/Users', isAuthenticated, async (req, res) => {
   try {
     const userData = SCIMUserSchema.parse(req.body);
     
@@ -78,7 +78,7 @@ router.post('/api/scim/v2/Users', isAuthenticated, async (req, res) => {
 });
 
 // Get SCIM user
-router.get('/api/scim/v2/Users/:id', isAuthenticated, async (req, res) => {
+router.get('/scim/v2/Users/:id', isAuthenticated, async (req, res) => {
   try {
     // In production, fetch from user management system
     const user = {
