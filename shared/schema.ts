@@ -2389,7 +2389,80 @@ export const insertOnCallIncidentSchema = z.object({
   status: z.enum(["active", "acknowledged", "resolved", "escalated"]).default("active")
 });
 
+// Missing schemas that are imported by services
+export const escalationMatrix = z.object({
+  id: z.string(),
+  escalationLevel: z.number(),
+  roleName: z.string(),
+  contactMethod: z.enum(["email", "sms", "phone", "slack"]),
+  timeoutMinutes: z.number(),
+  isActive: z.boolean().default(true),
+  createdAt: z.string()
+});
+
+export const notificationPreferences = z.object({
+  id: z.string(),
+  userId: z.string(),
+  notificationType: z.enum(["email", "sms", "push", "slack"]),
+  enabled: z.boolean().default(true),
+  frequency: z.enum(["immediate", "hourly", "daily", "weekly"]),
+  quietHours: z.boolean().default(false),
+  quietStart: z.string().optional(),
+  quietEnd: z.string().optional(),
+  updatedAt: z.string()
+});
+
+export const notifications = z.object({
+  id: z.string(),
+  userId: z.string(),
+  title: z.string(),
+  message: z.string(),
+  type: z.enum(["info", "warning", "error", "success"]),
+  status: z.enum(["unread", "read", "archived"]),
+  createdAt: z.string(),
+  readAt: z.string().optional()
+});
+
+export const incidentResponseRoles = z.object({
+  id: z.string(),
+  roleName: z.string(),
+  description: z.string(),
+  responsibilities: z.array(z.string()),
+  requiredSkills: z.array(z.string()),
+  escalationLevel: z.number(),
+  responseTimeMinutes: z.number(),
+  isActive: z.boolean().default(true),
+  createdAt: z.string()
+});
+
+export const incidentResponseTeams = z.object({
+  id: z.string(),
+  teamName: z.string(),
+  description: z.string(),
+  teamType: z.enum(["primary", "escalation", "specialist", "executive"]),
+  isActive: z.boolean().default(true),
+  escalationPolicyId: z.string().optional(),
+  createdAt: z.string()
+});
+
+export const incidentRoleAssignments = z.object({
+  id: z.string(),
+  teamId: z.string(),
+  roleId: z.string(),
+  personId: z.string(),
+  isPrimary: z.boolean().default(false),
+  isActive: z.boolean().default(true),
+  assignedAt: z.string(),
+  assignedBy: z.string()
+});
+
 // Export types for on-call systems
 export type EscalationPolicy = z.infer<typeof escalationPolicies>;
 export type OnCallSchedule = z.infer<typeof onCallSchedules>;
 export type OnCallAssignment = z.infer<typeof onCallAssignments>;
+export type EscalationMatrix = z.infer<typeof escalationMatrix>;
+export type NotificationPreferences = z.infer<typeof notificationPreferences>;
+export type Notification = z.infer<typeof notifications>;
+export type IncidentResponseRole = z.infer<typeof incidentResponseRoles>;
+export type IncidentResponseTeam = z.infer<typeof incidentResponseTeams>;
+export type IncidentRoleAssignment = z.infer<typeof incidentRoleAssignments>;
