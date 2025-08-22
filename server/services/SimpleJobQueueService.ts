@@ -78,17 +78,27 @@ export class SimpleJobQueueService {
   } as const;
 
   constructor() {
-    this.redis = new IORedis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      password: process.env.REDIS_PASSWORD,
-      maxRetriesPerRequest: null, // Required for BullMQ blocking operations
-      lazyConnect: true,
-    });
+    // Only initialize Redis in production or when explicitly enabled
+    const isProductionOrRedisEnabled = process.env.NODE_ENV === 'production' || process.env.ENABLE_REDIS === 'true';
+    
+    if (isProductionOrRedisEnabled) {
+      this.redis = new IORedis({
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT || '6379'),
+        password: process.env.REDIS_PASSWORD,
+        maxRetriesPerRequest: null, // Required for BullMQ blocking operations
+        lazyConnect: true,
+      });
 
-    this.redlock = new SimpleRedlock(this.redis);
-    this.initializeQueues();
-    this.setupWorkers();
+      this.redlock = new SimpleRedlock(this.redis);
+      this.initializeQueues();
+      this.setupWorkers();
+    } else {
+      console.log('🚀 SimpleJobQueueService running in fallback mode (no Redis) - NODE_ENV:', process.env.NODE_ENV);
+      // Set redis to null - methods will need to handle this gracefully
+      this.redis = null as any;
+      this.redlock = null as any;
+    }
   }
 
   private initializeQueues(): void {

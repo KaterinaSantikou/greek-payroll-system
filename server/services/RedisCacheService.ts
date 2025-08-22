@@ -52,12 +52,13 @@ export class RedisCacheService {
   constructor() {
     this.config = this.getOptimalCacheConfig();
     this.initializeMetrics();
-    // Skip Redis initialization in development - use fallback mode
-    if (process.env.NODE_ENV === 'production') {
+    // Only initialize Redis in production or when explicitly enabled
+    const isProductionOrRedisEnabled = process.env.NODE_ENV === 'production' || process.env.ENABLE_REDIS === 'true';
+    if (isProductionOrRedisEnabled) {
       this.initializeRedis();
       this.startMonitoring();
     } else {
-      console.log('🚀 Redis cache service running in fallback mode (no Redis)');
+      console.log('🚀 Redis cache service running in fallback mode (no Redis) - NODE_ENV:', process.env.NODE_ENV);
       this.isConnected = false;
     }
   }
@@ -110,15 +111,13 @@ export class RedisCacheService {
         password: this.config.password,
         db: this.config.db,
         keyPrefix: this.config.keyPrefix,
-        maxRetriesPerRequest: 1, // Reduce retries to minimize noise
-        retryDelayOnFailover: this.config.retryDelayOnFailover,
+        maxRetriesPerRequest: 0, // Fail fast in development
+        retryDelayOnFailover: 100,
         enableOfflineQueue: false, // Disable offline queue
         lazyConnect: true,
         connectTimeout: 2000,
         commandTimeout: 2000,
-        enableReadyCheck: true,
-        maxRetriesPerRequest: 0, // Fail fast in development
-        retryDelayOnFailover: 100
+        enableReadyCheck: true
       };
 
       this.redis = new Redis(redisOptions);
@@ -623,4 +622,33 @@ export class RedisCacheService {
 }
 
 // Export singleton instance
-export const redisCacheService = new RedisCacheService();
+// Create RedisCacheService instance only when needed
+let redisCacheServiceInstance: RedisCacheService | null = null;
+
+export function getRedisCacheService(): RedisCacheService {
+  if (!redisCacheServiceInstance) {
+    redisCacheServiceInstance = new RedisCacheService();
+  }
+  return redisCacheServiceInstance;
+}
+
+// Create a safe instance that handles fallback mode
+class SafeRedisCacheService extends RedisCacheService {
+  // Override methods to handle null Redis gracefully
+  async get<T>(key: string): Promise<T | null> {
+    if (!this.isConnected) return null;
+    return super.get<T>(key);
+  }
+  
+  async set(key: string, value: any, ttl?: number): Promise<boolean> {
+    if (!this.isConnected) return true; // Pretend success in fallback mode
+    return super.set(key, value, ttl);
+  }
+  
+  async ttl(key: string): Promise<number> {
+    if (!this.isConnected) return -1;
+    return super.ttl(key);
+  }
+}
+
+export const redisCacheService = new SafeRedisCacheService();

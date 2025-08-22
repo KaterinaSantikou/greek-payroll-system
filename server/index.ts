@@ -37,8 +37,8 @@ if (isProduction) {
     console.log('⚠️  Production services failed:', error);
   }
 } else {
-  // Development: Minimal setup for speed
-  console.log('🔧 Development mode - minimal services loaded');
+  // Development: Minimal setup for speed - skip cache services
+  console.log('🔧 Development mode - minimal services loaded (no cache/Redis)');
 }
 
 // Get production domain for both environments (used for logging)

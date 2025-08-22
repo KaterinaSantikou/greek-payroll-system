@@ -505,7 +505,7 @@ export async function executeImport(req: Request, res: Response) {
           errorCount++;
           importErrors.push({
             rowIndex: dryRunResult.rowIndex,
-            error: error.message
+            error: error instanceof Error ? error.message : String(error)
           });
         }
       }
