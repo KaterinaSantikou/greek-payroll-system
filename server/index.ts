@@ -156,6 +156,11 @@ process.on('SIGINT', () => {
 
 // Main application startup with comprehensive error handling
 (async () => {
+  // Redirect main route to working app
+  app.get('/main-app', (req, res) => {
+    res.redirect('/app');
+  });
+
   // Add main app route that bypasses Vite compilation issues
   app.get('/app', (req, res) => {
     res.setHeader('Content-Type', 'text/html');
