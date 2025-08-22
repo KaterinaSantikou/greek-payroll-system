@@ -1,7 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./index.css";
+import SimpleApp from "./SimpleApp";
 
 console.log("🚀 Client starting...");
 console.log("DOM loaded:", document.readyState);
@@ -13,15 +12,15 @@ if (root) {
   try {
     console.log("Creating React root...");
     const reactRoot = createRoot(root);
-    console.log("Rendering App...");
+    console.log("Rendering SimpleApp...");
     reactRoot.render(
       <StrictMode>
-        <App />
+        <SimpleApp />
       </StrictMode>
     );
-    console.log("✅ App rendered successfully");
+    console.log("✅ SimpleApp rendered successfully");
   } catch (error) {
-    console.error("❌ Error rendering App:", error);
+    console.error("❌ Error rendering SimpleApp:", error);
     // Fallback render
     root.innerHTML = `
       <div style="padding: 20px; text-align: center;">
