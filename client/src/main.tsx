@@ -1,5 +1,19 @@
-// PayrollSync main entry - redirects to working app route
-console.log("🚀 PayrollSync starting - redirecting to working app...");
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import "./index.css";
 
-// Redirect to working app route that bypasses React compilation issues
-window.location.href = '/app';
+console.log("🚀 PayrollSync React app starting...");
+
+const root = document.getElementById("root");
+if (root) {
+  const reactRoot = createRoot(root);
+  reactRoot.render(
+    <StrictMode>
+      <App />
+    </StrictMode>
+  );
+  console.log("✅ React app rendered successfully");
+} else {
+  console.error("❌ Root element not found");
+}
