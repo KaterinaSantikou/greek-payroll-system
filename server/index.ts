@@ -156,6 +156,96 @@ process.on('SIGINT', () => {
 
 // Main application startup with comprehensive error handling
 (async () => {
+  // Add emergency test route that bypasses everything
+  app.get('/emergency-test', (req, res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PayrollSync Emergency Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 2px solid #22c55e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        .title { 
+            font-size: 2.5em; 
+            margin-bottom: 20px; 
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🚀 PayrollSync</h1>
+        <h2>Emergency Direct Route Test</h2>
+        
+        <div class="success">
+            <h3>✅ SUCCESS!</h3>
+            <p><strong>This page is served directly from Express</strong></p>
+            <p>Bypasses Vite, React, and all file serving</p>
+            <p id="status">⏳ Testing JavaScript...</p>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px;">
+            <p><strong>Server Status:</strong> ✅ Running</p>
+            <p><strong>Backend:</strong> ✅ Responding</p>
+            <p><strong>Route:</strong> /emergency-test</p>
+        </div>
+    </div>
+
+    <script>
+        console.log("🚀 Emergency test JavaScript executing");
+        
+        // Test JavaScript
+        setTimeout(() => {
+            document.getElementById('status').innerHTML = '<strong>✅ JavaScript Working!</strong>';
+            console.log("✅ JavaScript test completed");
+        }, 1000);
+        
+        // Test API
+        setTimeout(() => {
+            fetch('/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    console.log("✅ API test successful:", data);
+                    const container = document.querySelector('.container');
+                    const apiDiv = document.createElement('div');
+                    apiDiv.className = 'success';
+                    apiDiv.style.marginTop = '20px';
+                    apiDiv.innerHTML = '<h3>✅ API Working!</h3><p>Backend connection successful</p>';
+                    container.appendChild(apiDiv);
+                })
+                .catch(error => {
+                    console.error("❌ API test failed:", error);
+                });
+        }, 2000);
+    </script>
+</body>
+</html>
+    `);
+  });
+
   try {
     console.log('🚀 Starting application initialization...');
     const server = await registerRoutes(app);
