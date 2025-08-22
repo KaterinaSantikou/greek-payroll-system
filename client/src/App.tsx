@@ -52,6 +52,9 @@ export default function App() {
     <ErrorBoundary>
       <AppProviders>
         <AppProvider>
+          <div className="debug-css-loading" style={{margin: '10px', fontSize: '12px'}}>
+            🎨 CSS Loading Test - If you see yellow background, CSS is working!
+          </div>
           <Layout>
             <Switch>
               <Route path="/" component={Home} />
