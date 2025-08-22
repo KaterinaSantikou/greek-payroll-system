@@ -63,9 +63,7 @@ export class AuditService {
       const [logEntry] = await db
         .insert(hashChainedAuditLog)
         .values({
-          eventHash,
-          previousHash,
-          chainHash,
+          sequenceNumber,
           eventType: event.eventType,
           eventCategory: event.eventCategory,
           eventAction: event.eventAction,
@@ -73,6 +71,9 @@ export class AuditService {
           partnerFirmId: event.partnerFirmId,
           userId: event.userId,
           eventData: event.eventData,
+          eventHash,
+          previousHash,
+          chainHash,
           ipAddress: event.ipAddress,
           userAgent: event.userAgent,
           sessionId: event.sessionId,
@@ -263,11 +264,12 @@ export class AuditService {
     ipAddress?: string;
     limit?: number;
   }) {
-    const baseQuery = db.select().from(authAuditLogs);
-    
-    const query = filters.userId 
-      ? baseQuery.where(eq(authAuditLogs.userId, filters.userId))
-      : baseQuery;
+    let query = db.select().from(authAuditLogs);
+
+    // Apply filters
+    if (filters.userId) {
+      query = query.where(eq(authAuditLogs.userId, filters.userId));
+    }
     // Add more filters as needed...
 
     return query.limit(filters.limit || 100);
@@ -335,6 +337,6 @@ export class AuditService {
       reason: event.reason
     };
 
-    await this.logEvent(generalEvent);
+    return this.logEvent(generalEvent);
   }
 }

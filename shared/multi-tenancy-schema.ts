@@ -7,7 +7,7 @@ import { pgTable, varchar, text, jsonb, boolean, timestamp, integer, inet } from
 import { sql, relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { users } from "./auth-schema";
+import { users } from "./schema";
 
 // Companies (Tenants) - Each employer is a separate company
 export const companies = pgTable("companies", {

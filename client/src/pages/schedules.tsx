@@ -1,403 +1,743 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, Clock, Users, AlertTriangle, CheckCircle, Settings, Timer, Calculator, FileText, DollarSign } from "lucide-react";
 import { 
-  Calendar, 
-  Clock, 
-  Users, 
-  AlertTriangle, 
-  CheckCircle, 
-  DollarSign,
-  Shield,
-  Send,
-  ChevronRight,
-  Edit,
-  Eye,
-  Plus,
-  MoreHorizontal
-} from "lucide-react";
-import { useTranslation } from "@/hooks/useTranslation";
+  CONTRACT_TYPES,
+  SCHEDULE_TYPES,
+  WORKING_TIME_ARRANGEMENTS,
+  EU_WORKING_TIME_LIMITS,
+  GREEK_LABOR_REQUIREMENTS,
+  calculateTrialPeriod,
+  validateWorkingTimeCompliance,
+  generateWeeklySchedulePattern,
+  calculatePremiumRates,
+  getContractTypeOptions,
+  getScheduleTypeOptions,
+  getWorkingTimeArrangementOptions
+} from "@/lib/workingTimeCalculations";
 
-// Mock data following UX principles - summary level only
-const mockScheduleSummary = {
-  currentWeek: "Jan 20-26, 2025",
-  status: "draft",
-  coverage: 87.3,
-  budgetStatus: "under",
-  budgetPercent: 92.1,
-  staffCount: 4,
-  totalShifts: 28,
-  complianceIssues: 1,
-  pendingApprovals: 3
-};
+export default function SchedulesPage() {
+  const [scheduleData, setScheduleData] = useState({
+    // Employee Selection
+    employeeId: "",
+    
+    // Contract Information
+    contractType: "full-time",
+    contractStartDate: "",
+    contractEndDate: "",
+    
+    // Trial Period
+    trialPeriodRequired: true,
+    trialPeriodStartDate: "",
+    trialPeriodDuration: 6,
+    
+    // Working Time Arrangement
+    scheduleType: "predictable",
+    workingTimeArrangement: "standard",
+    standardWeeklyHours: 40,
+    contractedHours: 40,
+    maxWeeklyHours: 48,
+    
+    // Schedule Flexibility
+    flexibleWorkArrangement: false,
+    remoteWorkDays: 0,
+    flexibleStartTime: "",
+    flexibleEndTime: "",
+    coreWorkingHours: "10:00-15:00",
+    compressedWorkweek: false,
+    
+    // Daily Schedule
+    dailyHours: 8,
+    workDays: [1, 2, 3, 4, 5], // Monday-Friday
+    startTime: "09:00",
+    endTime: "17:00",
+    
+    // Breaks and Rest
+    lunchBreakDuration: 30,
+    shortBreakDuration: 15,
+    minRestPeriod: 11,
+    maxConsecutiveDays: 6,
+    
+    // Premium Conditions
+    nightWork: false,
+    weekendWork: false,
+    holidayWork: false,
+    hazardousWork: false
+  });
 
-const mockWeeklyShifts = [
-  { day: "Mon", shifts: 4, coverage: 100, cost: 320 },
-  { day: "Tue", shifts: 4, coverage: 100, cost: 320 },
-  { day: "Wed", shifts: 3, coverage: 75, cost: 240 },
-  { day: "Thu", shifts: 4, coverage: 100, cost: 320 },
-  { day: "Fri", shifts: 4, coverage: 100, cost: 320 },
-  { day: "Sat", shifts: 5, coverage: 125, cost: 400 },
-  { day: "Sun", shifts: 4, coverage: 100, cost: 380 }, // Sunday premium
-];
+  const [calculatedData, setCalculatedData] = useState<any>(null);
+  const [complianceCheck, setComplianceCheck] = useState<any>(null);
 
-export default function Schedules() {
-  const { t } = useTranslation();
-  const [selectedDetail, setSelectedDetail] = useState<string | null>(null);
+  const handleCalculateSchedule = () => {
+    // Calculate trial period if required
+    let trialPeriodData = null;
+    if (scheduleData.trialPeriodRequired && scheduleData.contractStartDate) {
+      trialPeriodData = calculateTrialPeriod(
+        scheduleData.contractType,
+        "General Position", // This would come from employee data
+        new Date(scheduleData.contractStartDate)
+      );
+    }
+
+    // Generate weekly schedule pattern
+    const schedulePattern = generateWeeklySchedulePattern(
+      scheduleData.scheduleType,
+      scheduleData.dailyHours,
+      scheduleData.workDays
+    );
+
+    // Calculate premium rates
+    const premiumData = calculatePremiumRates({
+      isNightWork: scheduleData.nightWork,
+      isWeekendWork: scheduleData.weekendWork,
+      isHolidayWork: scheduleData.holidayWork,
+      isHazardousWork: scheduleData.hazardousWork,
+      scheduleType: scheduleData.scheduleType
+    });
+
+    // Validate compliance
+    const compliance = validateWorkingTimeCompliance({
+      weeklyHours: scheduleData.standardWeeklyHours,
+      dailyHours: scheduleData.dailyHours,
+      consecutiveDays: scheduleData.maxConsecutiveDays,
+      restBetweenShifts: scheduleData.minRestPeriod,
+      weekendWork: scheduleData.weekendWork,
+      contractType: scheduleData.contractType
+    });
+
+    setCalculatedData({
+      trialPeriod: trialPeriodData,
+      schedulePattern,
+      premiums: premiumData
+    });
+
+    setComplianceCheck(compliance);
+  };
+
+  const contractTypeInfo = CONTRACT_TYPES[scheduleData.contractType as keyof typeof CONTRACT_TYPES];
+  const scheduleTypeInfo = SCHEDULE_TYPES[scheduleData.scheduleType as keyof typeof SCHEDULE_TYPES];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header with Primary Action */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-3 mb-6">
+        <Calendar className="h-8 w-8 text-blue-600" />
         <div>
-          <h1 className="text-3xl font-bold">{t('nav.schedules')}</h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            {mockScheduleSummary.currentWeek} • {mockScheduleSummary.staffCount} staff • {mockScheduleSummary.totalShifts} shifts
-          </p>
+          <h1 className="text-3xl font-bold">Διαχείριση Ωραρίων Εργασίας</h1>
+          <p className="text-gray-600">Ρύθμιση ωραρίων και συμβάσεων εργασίας σύμφωνα με το ελληνικό εργατικό δίκαιο</p>
         </div>
-        
-        {/* Single Primary Action */}
-        <Button size="lg" className="bg-green-600 hover:bg-green-700">
-          <Send className="h-5 w-5 mr-2" />
-          Publish Schedule
-        </Button>
       </div>
 
-      {/* Context Strip (1 only) */}
-      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-950/20 dark:to-green-950/20 rounded-lg">
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-green-600" />
-            <span className="text-sm font-medium">Greek Compliance</span>
-            {mockScheduleSummary.complianceIssues > 0 ? (
-              <Badge variant="secondary">{mockScheduleSummary.complianceIssues} issue</Badge>
-            ) : (
-              <Badge variant="default">✓ Clear</Badge>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-green-600" />
-            <span className="text-sm">Budget: {mockScheduleSummary.budgetPercent}%</span>
-            <Badge variant="default">Under Budget</Badge>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-orange-500" />
-            <span className="text-sm">{mockScheduleSummary.pendingApprovals} pending approvals</span>
-          </div>
-        </div>
-        
-        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-          DRAFT
-        </Badge>
-      </div>
+      <Tabs defaultValue="schedule" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="schedule">Ωράριο Εργασίας</TabsTrigger>
+          <TabsTrigger value="contract">Σύμβαση</TabsTrigger>
+          <TabsTrigger value="trial">Δοκιμαστική Περίοδος</TabsTrigger>
+          <TabsTrigger value="compliance">Συμμόρφωση</TabsTrigger>
+        </TabsList>
 
-      {/* 4 Cards Maximum - Core Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* Card 1: Schedule Overview */}
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedDetail('overview')}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-blue-600" />
-                Schedule Overview
-              </CardTitle>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Coverage</span>
-                <span className="font-semibold text-green-600">{mockScheduleSummary.coverage}%</span>
-              </div>
-              <Progress value={mockScheduleSummary.coverage} className="h-2" />
-              <div className="grid grid-cols-2 gap-2 text-sm">
+        {/* Schedule Configuration */}
+        <TabsContent value="schedule">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Διαμόρφωση Ωραρίου
+                </CardTitle>
+                <CardDescription>
+                  Ρυθμίστε το εβδομαδιαίο πρόγραμμα εργασίας
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Schedule Type */}
                 <div>
-                  <div className="text-gray-500">Shifts</div>
-                  <div className="font-medium">{mockScheduleSummary.totalShifts}</div>
+                  <Label>Τύπος Ωραρίου</Label>
+                  <Select 
+                    value={scheduleData.scheduleType} 
+                    onValueChange={(value) => setScheduleData({...scheduleData, scheduleType: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getScheduleTypeOptions().map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {scheduleTypeInfo && (
+                    <p className="text-sm text-gray-600 mt-1">{scheduleTypeInfo.description}</p>
+                  )}
                 </div>
+
+                {/* Working Time Arrangement */}
                 <div>
-                  <div className="text-gray-500">Staff</div>
-                  <div className="font-medium">{mockScheduleSummary.staffCount}</div>
+                  <Label>Διάταξη Εργασίας</Label>
+                  <Select 
+                    value={scheduleData.workingTimeArrangement} 
+                    onValueChange={(value) => setScheduleData({...scheduleData, workingTimeArrangement: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getWorkingTimeArrangementOptions().map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Card 2: People & Requests */}
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedDetail('people')}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Users className="h-5 w-5 text-purple-600" />
-                People & Requests
-              </CardTitle>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Pending Requests</span>
-                <Badge variant="secondary">{mockScheduleSummary.pendingApprovals}</Badge>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span>Time Off</span>
-                  <span className="text-orange-600">2</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Shift Swaps</span>
-                  <span className="text-blue-600">1</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Available Staff</span>
-                  <span className="text-green-600">4/4</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 3: Budget & Costs */}
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedDetail('budget')}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-green-600" />
-                Budget & Costs
-              </CardTitle>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Weekly Budget</span>
-                <span className="font-semibold text-green-600">{mockScheduleSummary.budgetPercent}%</span>
-              </div>
-              <Progress value={mockScheduleSummary.budgetPercent} className="h-2" />
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <div className="text-gray-500">Budgeted</div>
-                  <div className="font-medium">€2,800</div>
-                </div>
-                <div>
-                  <div className="text-gray-500">Forecast</div>
-                  <div className="font-medium text-green-600">€2,580</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Card 4: Compliance Status */}
-        <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelectedDetail('compliance')}>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Shield className="h-5 w-5 text-blue-600" />
-                Compliance Status
-              </CardTitle>
-              <ChevronRight className="h-4 w-4 text-gray-400" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span>Weekly Hours: ✓</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span>Rest Periods: ✓</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <AlertTriangle className="h-4 w-4 text-orange-500" />
-                <span>Night Shifts: Review</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <span>ERGANI II: Synced</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Progressive Disclosure - Detail Sheets */}
-      {/* Schedule Overview Detail */}
-      <Sheet open={selectedDetail === 'overview'} onOpenChange={() => setSelectedDetail(null)}>
-        <SheetContent className="w-[600px] sm:max-w-[600px]">
-          <SheetHeader>
-            <SheetTitle>Schedule Overview</SheetTitle>
-            <SheetDescription>{mockScheduleSummary.currentWeek}</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-4">
-            <div className="grid gap-4">
-              {mockWeeklyShifts.map((day) => (
-                <div key={day.day} className="flex items-center justify-between p-3 border rounded">
-                  <div className="flex items-center gap-3">
-                    <div className="font-medium w-8">{day.day}</div>
-                    <div className="text-sm text-gray-600">{day.shifts} shifts</div>
+                {/* Working Hours */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="standardWeeklyHours">Εβδομαδιαίες Ώρες</Label>
+                    <Input
+                      id="standardWeeklyHours"
+                      type="number"
+                      min="1"
+                      max="48"
+                      value={scheduleData.standardWeeklyHours}
+                      onChange={(e) => setScheduleData({...scheduleData, standardWeeklyHours: parseInt(e.target.value)})}
+                    />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge variant={day.coverage < 100 ? 'destructive' : day.coverage > 100 ? 'secondary' : 'default'}>
-                      {day.coverage}%
-                    </Badge>
-                    <span className="text-sm font-medium">€{day.cost}</span>
-                    <Button size="sm" variant="ghost">
-                      <Edit className="h-4 w-4" />
-                    </Button>
+
+                  <div>
+                    <Label htmlFor="dailyHours">Ημερήσιες Ώρες</Label>
+                    <Input
+                      id="dailyHours"
+                      type="number"
+                      min="1"
+                      max="12"
+                      step="0.5"
+                      value={scheduleData.dailyHours}
+                      onChange={(e) => setScheduleData({...scheduleData, dailyHours: parseFloat(e.target.value)})}
+                    />
+                  </div>
+                </div>
+
+                {/* Schedule Times */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="startTime">Ώρα Έναρξης</Label>
+                    <Input
+                      id="startTime"
+                      type="time"
+                      value={scheduleData.startTime}
+                      onChange={(e) => setScheduleData({...scheduleData, startTime: e.target.value})}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="endTime">Ώρα Λήξης</Label>
+                    <Input
+                      id="endTime"
+                      type="time"
+                      value={scheduleData.endTime}
+                      onChange={(e) => setScheduleData({...scheduleData, endTime: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                {/* Flexible Work Options */}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="flexibleWork"
+                      checked={scheduleData.flexibleWorkArrangement}
+                      onCheckedChange={(checked) => setScheduleData({...scheduleData, flexibleWorkArrangement: checked})}
+                    />
+                    <Label htmlFor="flexibleWork">Ευέλικτη Εργασία</Label>
+                  </div>
+
+                  {scheduleData.flexibleWorkArrangement && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="remoteWorkDays">Ημέρες Τηλεργασίας/Εβδομάδα</Label>
+                        <Input
+                          id="remoteWorkDays"
+                          type="number"
+                          min="0"
+                          max="5"
+                          value={scheduleData.remoteWorkDays}
+                          onChange={(e) => setScheduleData({...scheduleData, remoteWorkDays: parseInt(e.target.value)})}
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="coreWorkingHours">Κεντρικές Ώρες</Label>
+                        <Input
+                          id="coreWorkingHours"
+                          placeholder="10:00-15:00"
+                          value={scheduleData.coreWorkingHours}
+                          onChange={(e) => setScheduleData({...scheduleData, coreWorkingHours: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Special Conditions */}
+                <div className="space-y-3">
+                  <h4 className="font-medium">Ειδικές Συνθήκες Εργασίας</h4>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="nightWork"
+                        checked={scheduleData.nightWork}
+                        onCheckedChange={(checked) => setScheduleData({...scheduleData, nightWork: checked})}
+                      />
+                      <Label htmlFor="nightWork">Νυχτερινή Εργασία</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="weekendWork"
+                        checked={scheduleData.weekendWork}
+                        onCheckedChange={(checked) => setScheduleData({...scheduleData, weekendWork: checked})}
+                      />
+                      <Label htmlFor="weekendWork">Εργασία Σαββατοκύριακου</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="hazardousWork"
+                        checked={scheduleData.hazardousWork}
+                        onCheckedChange={(checked) => setScheduleData({...scheduleData, hazardousWork: checked})}
+                      />
+                      <Label htmlFor="hazardousWork">Επικίνδυνη Εργασία</Label>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="compressedWorkweek"
+                        checked={scheduleData.compressedWorkweek}
+                        onCheckedChange={(checked) => setScheduleData({...scheduleData, compressedWorkweek: checked})}
+                      />
+                      <Label htmlFor="compressedWorkweek">Τετραήμερη Εργασία</Label>
+                    </div>
+                  </div>
+                </div>
+
+                <Button onClick={handleCalculateSchedule} className="w-full" size="lg">
+                  <Calculator className="mr-2 h-4 w-4" />
+                  Υπολογισμός Ωραρίου
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* EU Working Time Limits */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Όρια Εργατικού Δικαίου
+                </CardTitle>
+                <CardDescription>
+                  Ευρωπαϊκή Οδηγία και Ελληνική Νομοθεσία
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium">Ευρωπαϊκή Οδηγία Χρόνου Εργασίας</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Μέγιστες εβδομαδιαίες ώρες</span>
+                      <Badge variant="outline">{EU_WORKING_TIME_LIMITS.MAX_WEEKLY_HOURS}h</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Μέγιστες ημερήσιες ώρες</span>
+                      <Badge variant="outline">{EU_WORKING_TIME_LIMITS.MAX_DAILY_HOURS}h</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Ελάχιστη ανάπαυση μεταξύ βαρδιών</span>
+                      <Badge variant="outline">{EU_WORKING_TIME_LIMITS.MIN_REST_BETWEEN_SHIFTS}h</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Μέγιστες συνεχόμενες ημέρες</span>
+                      <Badge variant="outline">{EU_WORKING_TIME_LIMITS.MAX_CONSECUTIVE_DAYS}</Badge>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="font-medium">Ελληνικές Απαιτήσεις</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Κατώτατος μισθός 2025</span>
+                      <Badge variant="secondary">€{GREEK_LABOR_REQUIREMENTS.MINIMUM_WAGE_2025}</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Ημέρες ετήσιας άδειας</span>
+                      <Badge variant="secondary">{GREEK_LABOR_REQUIREMENTS.ANNUAL_LEAVE_DAYS}</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Μέγιστη δοκιμαστική περίοδος</span>
+                      <Badge variant="secondary">{GREEK_LABOR_REQUIREMENTS.MAX_TRIAL_PERIOD_MONTHS} μήνες</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Επίδομα Κυριακής</span>
+                      <Badge variant="secondary">{(GREEK_LABOR_REQUIREMENTS.SUNDAY_WORK_PREMIUM * 100)}%</Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Contract Type Configuration */}
+        <TabsContent value="contract">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Τύπος Σύμβασης
+              </CardTitle>
+              <CardDescription>
+                Επιλέξτε και διαμορφώστε τον τύπο σύμβασης εργασίας
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Τύπος Σύμβασης</Label>
+                <Select 
+                  value={scheduleData.contractType} 
+                  onValueChange={(value) => setScheduleData({...scheduleData, contractType: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getContractTypeOptions().map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {contractTypeInfo && (
+                  <p className="text-sm text-gray-600 mt-2">{contractTypeInfo.description}</p>
+                )}
+              </div>
+
+              {contractTypeInfo && (
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Χαρακτηριστικά Σύμβασης</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm">Ελάχιστες εβδομαδιαίες ώρες</span>
+                        <Badge variant="outline">{contractTypeInfo.minWeeklyHours || 'Δ/Ι'}h</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Μέγιστες εβδομαδιαίες ώρες</span>
+                        <Badge variant="outline">{contractTypeInfo.maxWeeklyHours || 'Δ/Ι'}h</Badge>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm">Πλήρη παροχές</span>
+                        <Badge variant={contractTypeInfo.fullBenefits ? "default" : "secondary"}>
+                          {contractTypeInfo.fullBenefits ? 'Ναι' : 'Αναλογικά'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Δοκιμαστική Περίοδος</h4>
+                    <div className="space-y-2">
+                      {contractTypeInfo.trialPeriodMonths && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Ελάχιστη διάρκεια</span>
+                            <Badge variant="outline">{contractTypeInfo.trialPeriodMonths.min} μήνες</Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Μέγιστη διάρκεια</span>
+                            <Badge variant="outline">{contractTypeInfo.trialPeriodMonths.max} μήνες</Badge>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="contractStartDate">Ημερομηνία Έναρξης</Label>
+                  <Input
+                    id="contractStartDate"
+                    type="date"
+                    value={scheduleData.contractStartDate}
+                    onChange={(e) => setScheduleData({...scheduleData, contractStartDate: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="contractEndDate">Ημερομηνία Λήξης (για ορισμένου χρόνου)</Label>
+                  <Input
+                    id="contractEndDate"
+                    type="date"
+                    value={scheduleData.contractEndDate}
+                    onChange={(e) => setScheduleData({...scheduleData, contractEndDate: e.target.value})}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Trial Period Management */}
+        <TabsContent value="trial">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Timer className="h-5 w-5" />
+                Δοκιμαστική Περίοδος
+              </CardTitle>
+              <CardDescription>
+                Διαχείριση και παρακολούθηση δοκιμαστικής περιόδου
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="trialPeriodRequired"
+                  checked={scheduleData.trialPeriodRequired}
+                  onCheckedChange={(checked) => setScheduleData({...scheduleData, trialPeriodRequired: checked})}
+                />
+                <Label htmlFor="trialPeriodRequired">Απαιτείται δοκιμαστική περίοδος</Label>
+              </div>
+
+              {scheduleData.trialPeriodRequired && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="trialPeriodStartDate">Ημερομηνία Έναρξης</Label>
+                      <Input
+                        id="trialPeriodStartDate"
+                        type="date"
+                        value={scheduleData.trialPeriodStartDate}
+                        onChange={(e) => setScheduleData({...scheduleData, trialPeriodStartDate: e.target.value})}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="trialPeriodDuration">Διάρκεια (μήνες)</Label>
+                      <Input
+                        id="trialPeriodDuration"
+                        type="number"
+                        min="1"
+                        max="12"
+                        value={scheduleData.trialPeriodDuration}
+                        onChange={(e) => setScheduleData({...scheduleData, trialPeriodDuration: parseInt(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+
+                  {calculatedData?.trialPeriod && (
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-medium mb-2">Υπολογισμένη Δοκιμαστική Περίοδος</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-sm text-gray-600">Συνιστώμενη διάρκεια:</span>
+                          <p className="font-medium">{calculatedData.trialPeriod.recommendedDuration} μήνες</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Ημερομηνία λήξης:</span>
+                          <p className="font-medium">{calculatedData.trialPeriod.endDate.toLocaleDateString('el-GR')}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Παράταση επιτρέπεται:</span>
+                          <Badge variant={calculatedData.trialPeriod.extensionAllowed ? "default" : "secondary"}>
+                            {calculatedData.trialPeriod.extensionAllowed ? 'Ναι' : 'Όχι'}
+                          </Badge>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Αξιολογήσεις:</span>
+                          <p className="font-medium">{calculatedData.trialPeriod.reviewDates.length} προγραμματισμένες</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Compliance Check */}
+        <TabsContent value="compliance">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Compliance Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  {complianceCheck?.isCompliant ? (
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <AlertTriangle className="h-5 w-5 text-red-600" />
+                  )}
+                  Κατάσταση Συμμόρφωσης
+                </CardTitle>
+                <CardDescription>
+                  Έλεγχος συμμόρφωσης με το εργατικό δίκαιο
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {complianceCheck ? (
+                  <>
+                    <div className={`p-3 rounded-lg ${complianceCheck.isCompliant ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                      <div className="flex items-center gap-2">
+                        {complianceCheck.isCompliant ? (
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <AlertTriangle className="h-4 w-4 text-red-600" />
+                        )}
+                        <span className={`font-medium ${complianceCheck.isCompliant ? 'text-green-800' : 'text-red-800'}`}>
+                          {complianceCheck.isCompliant ? 'Συμμορφούται πλήρως' : 'Εντοπίστηκαν παραβάσεις'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {complianceCheck.violations.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-red-600">Παραβάσεις:</h4>
+                        {complianceCheck.violations.map((violation: string, index: number) => (
+                          <div key={index} className="flex items-start gap-2 text-sm">
+                            <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
+                            <span className="text-red-700">{violation}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {complianceCheck.warnings.length > 0 && (
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-orange-600">Προειδοποιήσεις:</h4>
+                        {complianceCheck.warnings.map((warning: string, index: number) => (
+                          <div key={index} className="flex items-start gap-2 text-sm">
+                            <AlertTriangle className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                            <span className="text-orange-700">{warning}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-gray-500">Κάντε υπολογισμό ωραρίου για έλεγχο συμμόρφωσης</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Premium Rates */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  Επιδόματα και Προσαυξήσεις
+                </CardTitle>
+                <CardDescription>
+                  Υπολογισμός επιδομάτων για ειδικές συνθήκες εργασίας
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {calculatedData?.premiums ? (
+                  <>
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {(calculatedData.premiums.totalPremiumRate * 100).toFixed(1)}%
+                      </div>
+                      <div className="text-sm text-gray-600">Συνολική Προσαύξηση</div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="font-medium">Ανάλυση Επιδομάτων:</h4>
+                      {calculatedData.premiums.premiumBreakdown.map((premium: any, index: number) => (
+                        <div key={index} className="flex justify-between items-center">
+                          <div>
+                            <span className="font-medium">{premium.type}</span>
+                            <p className="text-xs text-gray-600">{premium.description}</p>
+                          </div>
+                          <Badge variant="outline">
+                            {(premium.rate * 100).toFixed(1)}%
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-gray-500">Κάντε υπολογισμό ωραρίου για προβολή επιδομάτων</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Weekly Schedule Pattern */}
+      {calculatedData?.schedulePattern && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Εβδομαδιαίο Πρόγραμμα
+            </CardTitle>
+            <CardDescription>
+              Λεπτομερές ημερήσιο πρόγραμμα εργασίας
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-2">
+              {calculatedData.schedulePattern.pattern.map((day: any, index: number) => (
+                <div key={index} className={`p-3 rounded-lg border ${day.workHours > 0 ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+                  <div className="text-center">
+                    <div className="font-medium text-sm">{day.dayName}</div>
+                    {day.workHours > 0 ? (
+                      <>
+                        <div className="text-xs text-gray-600 mt-1">
+                          {day.startTime} - {day.endTime}
+                        </div>
+                        <div className="text-xs font-medium text-blue-600">
+                          {day.workHours}h
+                        </div>
+                        {day.breaks.length > 0 && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            {day.breaks.length} διάλειμμα
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-xs text-gray-400 mt-1">Ανάπαυση</div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-            <div className="pt-4">
-              <Button className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Shift
-              </Button>
+            <div className="mt-4 text-center">
+              <Badge variant="secondary" className="text-lg">
+                Σύνολο: {calculatedData.schedulePattern.totalWeeklyHours} ώρες/εβδομάδα
+              </Badge>
             </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* People & Requests Detail */}
-      <Sheet open={selectedDetail === 'people'} onOpenChange={() => setSelectedDetail(null)}>
-        <SheetContent className="w-[600px] sm:max-w-[600px]">
-          <SheetHeader>
-            <SheetTitle>People & Requests</SheetTitle>
-            <SheetDescription>Manage staff availability and requests</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-4">
-            <div className="space-y-3">
-              <h4 className="font-medium">Pending Approvals</h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 border rounded">
-                  <div>
-                    <div className="font-medium">Maria Papadaki</div>
-                    <div className="text-sm text-gray-600">Time off: Jan 25-27</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm">Approve</Button>
-                    <Button size="sm" variant="outline">Reject</Button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-3 border rounded">
-                  <div>
-                    <div className="font-medium">Nikos Dimitriou</div>
-                    <div className="text-sm text-gray-600">Shift swap with Sofia</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm">Approve</Button>
-                    <Button size="sm" variant="outline">Reject</Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Budget Detail */}
-      <Sheet open={selectedDetail === 'budget'} onOpenChange={() => setSelectedDetail(null)}>
-        <SheetContent className="w-[600px] sm:max-w-[600px]">
-          <SheetHeader>
-            <SheetTitle>Budget & Cost Analysis</SheetTitle>
-            <SheetDescription>Weekly budget tracking and forecasts</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Weekly Budget</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">€2,800</div>
-                  <Progress value={92.1} className="h-2 mt-2" />
-                  <div className="text-sm text-gray-600 mt-1">€2,580 used (92.1%)</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Cost by Role</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Front Desk</span>
-                    <span>€800</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>F&B</span>
-                    <span>€920</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Housekeeping</span>
-                    <span>€580</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Maintenance</span>
-                    <span>€280</span>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Compliance Detail */}
-      <Sheet open={selectedDetail === 'compliance'} onOpenChange={() => setSelectedDetail(null)}>
-        <SheetContent className="w-[600px] sm:max-w-[600px]">
-          <SheetHeader>
-            <SheetTitle>Greek Labor Compliance</SheetTitle>
-            <SheetDescription>Compliance status and violations</SheetDescription>
-          </SheetHeader>
-          <div className="mt-6 space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="font-medium">Weekly Hours (48h max)</span>
-                </div>
-                <Badge variant="default">✓ Compliant</Badge>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="font-medium">Rest Between Shifts (11h min)</span>
-                </div>
-                <Badge variant="default">✓ Compliant</Badge>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                  <span className="font-medium">Night Shifts (22:00-06:00)</span>
-                </div>
-                <Badge variant="secondary">Review Required</Badge>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="font-medium">ERGANI II Sync</span>
-                </div>
-                <Badge variant="default">✓ Up to Date</Badge>
-              </div>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

@@ -47,23 +47,21 @@ export class RateLimitService {
     const windowStart = new Date(now.getTime() - (config.windowMinutes * 60 * 1000));
 
     // Clean up expired entries
-    await db.delete(rateLimits).where(lt(rateLimits.windowStart, windowStart));
+    await db.delete(rateLimits).where(lt(rateLimits.resetAt, windowStart));
 
     // Get current rate limit record
     const [existing] = await db
       .select()
       .from(rateLimits)
-      .where(eq(rateLimits.identifier, key));
+      .where(eq(rateLimits.key, key));
 
     if (!existing) {
       // First attempt
       const resetAt = new Date(now.getTime() + (config.windowMinutes * 60 * 1000));
       await db.insert(rateLimits).values({
-        identifier: key,
-        endpoint,
-        count: 1,
-        windowStart: resetAt,
-        expiresAt: resetAt,
+        key,
+        attempts: 1,
+        resetAt,
       });
 
       return {
@@ -75,13 +73,13 @@ export class RateLimitService {
     }
 
     // Check if window has expired
-    if (existing.windowStart < now) {
+    if (existing.resetAt < now) {
       // Reset window
       const resetAt = new Date(now.getTime() + (config.windowMinutes * 60 * 1000));
       await db
         .update(rateLimits)
-        .set({ count: 1, windowStart: resetAt, expiresAt: resetAt })
-        .where(eq(rateLimits.identifier, key));
+        .set({ attempts: 1, resetAt })
+        .where(eq(rateLimits.key, key));
 
       return {
         allowed: true,
@@ -92,11 +90,11 @@ export class RateLimitService {
     }
 
     // Increment attempts
-    const newAttempts = existing.count + 1;
+    const newAttempts = existing.attempts + 1;
     await db
       .update(rateLimits)
-      .set({ count: newAttempts })
-      .where(eq(rateLimits.identifier, key));
+      .set({ attempts: newAttempts })
+      .where(eq(rateLimits.key, key));
 
     const remainingAttempts = Math.max(0, config.attempts - newAttempts);
     const allowed = newAttempts <= config.attempts;
@@ -104,7 +102,7 @@ export class RateLimitService {
     const result: RateLimitResult = {
       allowed,
       remainingAttempts,
-      resetAt: existing.windowStart,
+      resetAt: existing.resetAt,
       totalAttempts: newAttempts,
     };
 
@@ -117,8 +115,8 @@ export class RateLimitService {
       // Update reset time to block duration
       await db
         .update(rateLimits)
-        .set({ windowStart: blockUntil })
-        .where(eq(rateLimits.identifier, key));
+        .set({ resetAt: blockUntil })
+        .where(eq(rateLimits.key, key));
       
       result.resetAt = blockUntil;
     }
@@ -131,7 +129,7 @@ export class RateLimitService {
    */
   static async resetRateLimit(ipAddress: string, endpoint: string, email?: string): Promise<void> {
     const key = email ? `${email}:${endpoint}` : `${ipAddress}:${endpoint}`;
-    await db.delete(rateLimits).where(eq(rateLimits.identifier, key));
+    await db.delete(rateLimits).where(eq(rateLimits.key, key));
   }
 
   /**

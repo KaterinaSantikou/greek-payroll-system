@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import multer from 'multer';
-import * as ExcelJS from 'exceljs';
+import * as XLSX from 'xlsx';
 import { z } from 'zod';
 import { db } from '../db';
 import { employees, contracts, wageComponents, secureIbanVault } from '@shared/schema';
@@ -188,29 +188,23 @@ export async function uploadDataFile(req: Request, res: Response) {
           parsedData.push(row);
         }
       } else {
-        // Parse Excel using exceljs (secure alternative to xlsx)
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(req.file.buffer);
-        const worksheet = workbook.getWorksheet(1);
+        // Parse Excel
+        const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
         
-        if (!worksheet || worksheet.rowCount === 0) {
+        if (jsonData.length === 0) {
           return res.status(400).json({ error: 'Empty worksheet' });
         }
         
-        // Get headers from first row
-        const headerRow = worksheet.getRow(1);
-        headers = [];
-        headerRow.eachCell((cell, colNumber) => {
-          headers.push(String(cell.value || '').trim());
-        });
+        headers = (jsonData[0] as any[]).map(h => String(h || '').trim());
         
-        // Process data rows
-        for (let rowNumber = 2; rowNumber <= worksheet.rowCount; rowNumber++) {
-          const dataRow = worksheet.getRow(rowNumber);
+        for (let i = 1; i < jsonData.length; i++) {
+          const values = jsonData[i] as any[];
           const row: any = {};
           headers.forEach((header, index) => {
-            const cell = dataRow.getCell(index + 1);
-            row[header] = cell.value !== null && cell.value !== undefined ? String(cell.value) : '';
+            row[header] = values[index] !== undefined ? String(values[index]) : '';
           });
           parsedData.push(row);
         }
@@ -505,7 +499,7 @@ export async function executeImport(req: Request, res: Response) {
           errorCount++;
           importErrors.push({
             rowIndex: dryRunResult.rowIndex,
-            error: error instanceof Error ? error.message : String(error)
+            error: error.message
           });
         }
       }

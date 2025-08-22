@@ -1,50 +1,29 @@
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Calculator, FileText, Shield, ArrowRight, ChevronRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Users, Calculator, FileText, TrendingUp, Shield, CheckCircle, AlertTriangle, Sparkles, UserCog, Eye } from "lucide-react";
 import { Link } from "wouter";
+import GreekComplianceInfo from "@/components/GreekComplianceInfo";
+import ComplianceRecommendations from "@/components/ComplianceRecommendations";
+import LegalWatchNewsfeed from "@/components/LegalWatchNewsfeed";
 import { useAppContext } from "@/contexts/AppContext";
+import { CompliancePaymentsCues, EnhancedKPICard } from "@/components/CompliancePaymentsCues";
 
 export default function Home() {
-  const { user, isLoading, isAuthenticated, login } = useAuth();
+  const { user } = useAuth();
   const { viewingMode, setViewingMode } = useAppContext();
 
-  // Show loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-neutral-600 dark:text-neutral-300">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show login screen if not authenticated
-  if (!isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Welcome to Payroll System</CardTitle>
-            <p className="text-neutral-600 dark:text-neutral-300">
-              Please sign in to access your dashboard
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button 
-              onClick={login}
-              className="w-full flex items-center gap-2"
-            >
-              <Shield className="h-4 w-4" />
-              Sign In
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const toggleEmployeeView = () => {
+    if (viewingMode.type === "normal") {
+      setViewingMode({
+        type: "employee_view",
+        originalRole: user?.firstName || "Manager"
+      });
+    } else {
+      setViewingMode({ type: "normal" });
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -52,136 +31,153 @@ export default function Home() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
-            Welcome, {user?.firstName || 'User'}!
+            Καλώς ήρθατε, {user?.firstName || 'Χρήστη'}!
           </h1>
           <p className="text-neutral-600 dark:text-neutral-300">
-            Your comprehensive payroll management dashboard
+            Επισκόπηση του συστήματος διαχείρισης ανθρώπινων πόρων και μισθοδοσίας
           </p>
         </div>
-
-        {/* Quick Actions */}
+        
+        {/* Demo Context Controls */}
         <div className="flex items-center gap-3">
-          <Link href="/dashboard">
-            <Button className="flex items-center gap-2">
-              <ArrowRight className="h-4 w-4" />
-              Go to Dashboard
+          <Button
+            variant={viewingMode.type === "employee_view" ? "default" : "outline"}
+            size="sm"
+            onClick={toggleEmployeeView}
+            className="flex items-center gap-2"
+          >
+            <Eye className="h-4 w-4" />
+            {viewingMode.type === "employee_view" ? "Έξοδος Προβολής Εργαζομένου" : "Προβολή ως Εργαζόμενος"}
+          </Button>
+          
+          {viewingMode.type === "normal" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewingMode({
+                type: "impersonation",
+                originalRole: user?.firstName || "Manager",
+                targetEmployee: { id: "emp-123", name: "Μαρία Παπαδάκη" }
+              })}
+              className="flex items-center gap-2"
+            >
+              <UserCog className="h-4 w-4" />
+              Δοκιμαστική Προσομοίωση
             </Button>
-          </Link>
+          )}
         </div>
       </div>
 
-      {/* Quick Access Cards */}
+      {/* Compliance & Payment Cues */}
+      <CompliancePaymentsCues />
+
+      {/* Enhanced KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              <CardTitle className="text-base">Total Employees</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">147</div>
-            <p className="text-sm text-muted-foreground">Active employees</p>
-          </CardContent>
-        </Card>
+        <EnhancedKPICard
+          title="Σύνολο Εργαζομένων"
+          value="147"
+          description="Ενεργοί εργαζόμενοι"
+          icon={Users}
+          trend={{
+            value: "+12%",
+            isPositive: true
+          }}
+          lastUpdated="πριν 2 λεπτά"
+          ctaLabel="Διαχείριση"
+          ctaHref="/employee-master"
+          locale="el"
+        />
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Calculator className="h-5 w-5 text-green-500" />
-              <CardTitle className="text-base">Active Positions</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-sm text-muted-foreground">Open positions</p>
-          </CardContent>
-        </Card>
+        <EnhancedKPICard
+          title="Μηνιαία Μισθοδοσία"
+          value="€187.450,30"
+          description="Τρέχων μήνας"
+          icon={Calculator}
+          trend={{
+            value: "+8,5%",
+            isPositive: true
+          }}
+          lastUpdated="πριν 5 λεπτά"
+          ctaLabel="Εκτέλεση"
+          ctaHref="/payroll-processing"
+          locale="el"
+        />
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5 text-purple-500" />
-              <CardTitle className="text-base">Compliance</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">98%</div>
-            <p className="text-sm text-muted-foreground">Compliance rate</p>
-          </CardContent>
-        </Card>
+        <EnhancedKPICard
+          title="Ώρες Εργασίας"
+          value="5.673,5 ώρες"
+          description="Τρέχων μήνας"
+          icon={TrendingUp}
+          trend={{
+            value: "+156 ώρες",
+            isPositive: true
+          }}
+          lastUpdated="πριν 1 ώρα"
+          ctaLabel="Ανάλυση"
+          ctaHref="/analytics"
+          locale="el"
+        />
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Link href="/employees">
-          <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-blue-200 bg-blue-50/50">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="p-2 bg-blue-500 rounded-lg">
-                  <Users className="h-5 w-5 text-white" />
-                </div>
-                <ChevronRight className="h-4 w-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
+      {/* Greek Compliance Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-green-600" />
+            Κατάσταση Συμμόρφωσης Ελληνικού Δικαίου 2025
+          </CardTitle>
+          <CardDescription>
+            Ενημερωμένη συμμόρφωση με νόμο 4808/2021 και τελευταίες τροποποιήσεις
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <div>
+                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">Ελληνικές Ταυτοποιήσεις</p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-300">ΑΦΜ, ΑΜΚΑ, ΔΟΥ</p>
+                <Badge variant="outline" className="mt-1 text-xs">Ενεργό</Badge>
               </div>
-            </CardHeader>
-            <CardContent>
-              <h3 className="font-semibold text-gray-900 mb-1">Employee Management</h3>
-              <p className="text-sm text-gray-600">Add and edit employee information</p>
-            </CardContent>
-          </Card>
-        </Link>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <div>
+                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">Μισθοδοσία 2025</p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-300">€760 κατώτατος</p>
+                <Badge variant="outline" className="mt-1 text-xs">Ενημερωμένο</Badge>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <div>
+                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">ΕΦΚΑ Εισφορές</p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-300">16% / 24,78%</p>
+                <Badge variant="outline" className="mt-1 text-xs">Συμμορφή</Badge>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+              <div>
+                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">ERGANI II</p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-300">Αυτόματη υποβολή</p>
+                <Badge variant="outline" className="mt-1 text-xs">Συγχρονισμένο</Badge>
+              </div>
+            </div>
+          </div>
 
-        <Link href="/payroll">
-          <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-green-200 bg-green-50/50">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="p-2 bg-green-500 rounded-lg">
-                  <Calculator className="h-5 w-5 text-white" />
-                </div>
-                <ChevronRight className="h-4 w-4 text-green-600 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <h3 className="font-semibold text-gray-900 mb-1">Payroll Processing</h3>
-              <p className="text-sm text-gray-600">Automated calculations</p>
-            </CardContent>
-          </Card>
-        </Link>
+          <GreekComplianceInfo />
+        </CardContent>
+      </Card>
 
-        <Link href="/analytics">
-          <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-purple-200 bg-purple-50/50">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="p-2 bg-purple-500 rounded-lg">
-                  <FileText className="h-5 w-5 text-white" />
-                </div>
-                <ChevronRight className="h-4 w-4 text-purple-600 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <h3 className="font-semibold text-gray-900 mb-1">Reports & Analytics</h3>
-              <p className="text-sm text-gray-600">Generate reports</p>
-            </CardContent>
-          </Card>
-        </Link>
+      {/* Legal Watch & Newsfeed */}
+      <LegalWatchNewsfeed />
 
-        <Link href="/compliance">
-          <Card className="group hover:shadow-lg transition-all duration-200 cursor-pointer border-orange-200 bg-orange-50/50">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="p-2 bg-orange-500 rounded-lg">
-                  <Shield className="h-5 w-5 text-white" />
-                </div>
-                <ChevronRight className="h-4 w-4 text-orange-600 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <h3 className="font-semibold text-gray-900 mb-1">Compliance Management</h3>
-              <p className="text-sm text-gray-600">Automated compliance tracking</p>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
+      {/* AI Recommendations */}
+      <ComplianceRecommendations />
     </div>
   );
 }

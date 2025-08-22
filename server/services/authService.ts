@@ -487,9 +487,12 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + this.config.magicLinkTokenDuration * 1000);
 
     await db.insert(magicLinkTokens).values({
+      email,
       token,
       expiresAt,
       used: false,
+      ipAddress,
+      userAgent,
     });
 
     await this.logAuthEvent({
@@ -540,14 +543,21 @@ export class AuthService {
       used: true,
     }).where(eq(magicLinkTokens.id, magicLinkRecord.id));
 
-    // Find user by userId from magic link
-    let user = magicLinkRecord.userId 
-      ? await db.select().from(users).where(eq(users.id, magicLinkRecord.userId))
-      : [];
+    // Find or create user
+    let user = await db.select().from(users).where(eq(users.email, magicLinkRecord.email));
     let isNewUser = false;
 
     if (user.length === 0) {
-      throw new Error('User not found for magic link');
+      // Create new user
+      const [newUser] = await db.insert(users).values({
+        email: magicLinkRecord.email,
+        emailVerified: true,
+        emailVerifiedAt: new Date(),
+        lastLoginAt: new Date(),
+      }).returning();
+      
+      user = [newUser];
+      isNewUser = true;
     } else {
       // Update existing user
       await db.update(users).set({

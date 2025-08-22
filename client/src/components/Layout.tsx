@@ -5,10 +5,10 @@ import { ThemeToggle } from "./ThemeToggle";
 import { CommandPaletteButton } from "./CommandPaletteButton";
 import { SupportChatWidget } from "./SupportChat";
 import { useCommandPalette } from "@/hooks/useCommandPalette";
-// import { useProperty } from "@/contexts/PropertyContext";
+import { useProperty } from "@/contexts/PropertyContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebarState } from "@/hooks/useSidebarState";
-import { useLocale } from "@/hooks/useLocale";
+import { useLocale } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,6 @@ interface LayoutProps {
 function LayoutContent({ children }: LayoutProps) {
   const { setOpen } = useCommandPalette();
   const { t } = useLocale();
-  
-  // Use hardcoded property for now to avoid context issues
   const currentProperty = { propertyId: "prop-princess", name: "Princess Resort & Spa" };
   
   const {
@@ -88,21 +86,11 @@ function LayoutContent({ children }: LayoutProps) {
           variant="ghost"
           size="sm"
           onClick={toggleSidebar}
-          className="fixed top-4 left-4 z-50 lg:hidden touch-target"
+          className="fixed top-4 left-4 z-50 lg:hidden"
         >
-          {isExpanded ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {isExpanded ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
       )}
-
-      {/* Pull to refresh indicator */}
-      <div 
-        id="pull-to-refresh-indicator"
-        className="fixed top-0 left-1/2 transform -translate-x-1/2 z-30 opacity-0 transition-all duration-300"
-      >
-        <div className="bg-background border border-border rounded-full p-2 shadow-lg">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      </div>
       
       {/* Sidebar */}
       <motion.aside

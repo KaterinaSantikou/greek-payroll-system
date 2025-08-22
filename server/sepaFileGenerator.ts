@@ -755,10 +755,3 @@ export const GREEK_PAYROLL_POLICY = {
     { min: 40000, max: Infinity, rate: 0.44 } // 44% above €40,000
   ]
 };
-
-// SEPA File Generator Class
-export class SEPAFileGenerator {
-  static generateSepaFile(payments: SEPAPayment[], metadata: SEPAFileMetadata): string {
-    return generateSEPAFile(payments, metadata);
-  }
-}

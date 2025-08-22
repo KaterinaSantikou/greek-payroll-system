@@ -81,9 +81,10 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
-        serif: ["Georgia", "Cambria", "Times New Roman", "Times", "serif"],
-        mono: ["Consolas", "Monaco", "Courier New", "monospace"],
+        sans: ["var(--font-sans)"],
+        serif: ["var(--font-serif)"],
+        mono: ["var(--font-mono)"],
+        inter: ["Inter", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {

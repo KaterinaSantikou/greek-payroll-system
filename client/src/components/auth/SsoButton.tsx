@@ -50,32 +50,17 @@ const providerColors = {
 };
 
 const providerLabels = {
-  en: {
-    google: 'Continue with Google',
-    microsoft: 'Continue with Microsoft',
-    github: 'Continue with GitHub',
-    linkedin: 'Continue with LinkedIn',
-    apple: 'Continue with Apple',
-    amazon: 'Continue with Amazon',
-    okta: 'Continue with Okta',
-    auth0: 'Continue with Auth0',
-    onelogin: 'Continue with OneLogin',
-    oidc: 'Continue with SSO',
-    saml: 'Continue with SAML',
-  },
-  el: {
-    google: 'Συνέχεια με Google',
-    microsoft: 'Συνέχεια με Microsoft',
-    github: 'Συνέχεια με GitHub',
-    linkedin: 'Συνέχεια με LinkedIn',
-    apple: 'Συνέχεια με Apple',
-    amazon: 'Συνέχεια με Amazon',
-    okta: 'Συνέχεια με Okta',
-    auth0: 'Συνέχεια με Auth0',
-    onelogin: 'Συνέχεια με OneLogin',
-    oidc: 'Συνέχεια με SSO',
-    saml: 'Συνέχεια με SAML',
-  },
+  google: 'Continue with Google',
+  microsoft: 'Continue with Microsoft',
+  github: 'Continue with GitHub',
+  linkedin: 'Continue with LinkedIn',
+  apple: 'Continue with Apple',
+  amazon: 'Continue with Amazon',
+  okta: 'Continue with Okta',
+  auth0: 'Continue with Auth0',
+  onelogin: 'Continue with OneLogin',
+  oidc: 'Continue with SSO',
+  saml: 'Continue with SAML',
 };
 
 export type SsoProvider = keyof typeof providerIcons;
@@ -89,7 +74,6 @@ interface SsoButtonProps {
   children?: React.ReactNode;
   size?: 'default' | 'sm' | 'lg';
   variant?: 'default' | 'outline';
-  locale?: 'en' | 'el';
 }
 
 export function SsoButton({
@@ -101,11 +85,10 @@ export function SsoButton({
   children,
   size = 'default',
   variant = 'outline',
-  locale = 'en',
 }: SsoButtonProps) {
   const IconComponent = providerIcons[provider];
   const colorClass = providerColors[provider] || 'hover:bg-gray-50 border-gray-200 text-gray-600';
-  const label = children || providerLabels[locale][provider];
+  const label = children || providerLabels[provider];
 
   return (
     <Button
@@ -124,7 +107,7 @@ export function SsoButton({
         {loading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : IconComponent ? (
-          <IconComponent />
+          <IconComponent className="h-4 w-4" />
         ) : null}
         <span>{label}</span>
       </div>
@@ -142,7 +125,6 @@ interface SsoButtonGroupProps {
   className?: string;
   title?: string;
   divider?: boolean;
-  locale?: 'en' | 'el';
 }
 
 export function SsoButtonGroup({
@@ -150,7 +132,6 @@ export function SsoButtonGroup({
   className,
   title = 'Or continue with',
   divider = true,
-  locale = 'en',
 }: SsoButtonGroupProps) {
   if (providers.length === 0) {
     return null;
@@ -179,7 +160,6 @@ export function SsoButtonGroup({
             onClick={onClick}
             loading={loading}
             disabled={disabled}
-            locale={locale}
           />
         ))}
       </div>
@@ -197,7 +177,6 @@ interface SsoDiscoveryButtonProps {
   availableProviders?: SsoProvider[];
   loading?: boolean;
   className?: string;
-  locale?: 'en' | 'el';
 }
 
 export function SsoDiscoveryButton({
@@ -206,7 +185,6 @@ export function SsoDiscoveryButton({
   availableProviders = ['google', 'microsoft', 'oidc'],
   loading = false,
   className,
-  locale = 'en',
 }: SsoDiscoveryButtonProps) {
   // Domain to provider mapping
   const domainProviderMap: Record<string, SsoProvider> = {
@@ -241,9 +219,8 @@ export function SsoDiscoveryButton({
         onClick={() => onSsoClick(suggestedProvider)}
         loading={loading}
         className={className}
-        locale={locale}
       >
-        Continue with {providerLabels[locale][suggestedProvider].split(' ').pop()}
+        Continue with {providerLabels[suggestedProvider].split(' ').pop()}
       </SsoButton>
     );
   }
@@ -256,7 +233,6 @@ export function SsoDiscoveryButton({
         onClick={() => onSsoClick(availableProviders[0])}
         loading={loading}
         className={className}
-        locale={locale}
       />
     );
   }
@@ -269,7 +245,6 @@ export function SsoDiscoveryButton({
         loading,
       }))}
       className={className}
-      locale={locale}
     />
   );
 }

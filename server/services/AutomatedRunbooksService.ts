@@ -78,17 +78,12 @@ export class AutomatedRunbooksService extends EventEmitter {
    * Initialize the runbooks service
    */
   async initializeService(): Promise<void> {
-    // Only initialize in production
-    if (process.env.NODE_ENV === 'production') {
-      try {
-        await this.createDefaultRunbooks();
-        await this.initializeTriggerMonitoring();
-        console.log('📚 Automated runbooks service initialized');
-      } catch (error) {
-        console.error('Failed to initialize automated runbooks service:', error);
-      }
-    } else {
-      console.log('🔧 Automated runbooks service - development mode (minimal setup)');
+    try {
+      await this.createDefaultRunbooks();
+      await this.initializeTriggerMonitoring();
+      console.log('📚 Automated runbooks service initialized');
+    } catch (error) {
+      console.error('Failed to initialize automated runbooks service:', error);
     }
   }
 
@@ -826,7 +821,7 @@ export class AutomatedRunbooksService extends EventEmitter {
     offset: number = 0
   ): Promise<any> {
     try {
-      const baseQuery = db
+      let query = db
         .select({
           execution: runbookExecutions,
           runbook: {
@@ -838,9 +833,9 @@ export class AutomatedRunbooksService extends EventEmitter {
         .from(runbookExecutions)
         .leftJoin(runbooks, eq(runbookExecutions.runbookId, runbooks.id));
 
-      const query = runbookId 
-        ? baseQuery.where(eq(runbookExecutions.runbookId, runbookId))
-        : baseQuery;
+      if (runbookId) {
+        query = query.where(eq(runbookExecutions.runbookId, runbookId));
+      }
 
       const executions = await query
         .orderBy(desc(runbookExecutions.startedAt))

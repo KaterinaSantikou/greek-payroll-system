@@ -21,6 +21,11 @@ interface PayrollCue {
   isOverdue: boolean;
 }
 
+interface PaymentCue {
+  isPastCutoff: boolean;
+  nextCutoffTime: string;
+  bank: string;
+}
 
 export function CompliancePaymentsCues() {
   const [payrollCue] = useState<PayrollCue>({
@@ -29,10 +34,16 @@ export function CompliancePaymentsCues() {
     isOverdue: false
   });
 
+  const [paymentCue] = useState<PaymentCue>({
+    isPastCutoff: true,
+    nextCutoffTime: "14:30",
+    bank: "Alpha Bank"
+  });
 
   const shouldShowPayrollCue = payrollCue.daysUntilDue <= 5 || payrollCue.isOverdue;
+  const shouldShowPaymentCue = paymentCue.isPastCutoff;
 
-  if (!shouldShowPayrollCue) {
+  if (!shouldShowPayrollCue && !shouldShowPaymentCue) {
     return null;
   }
 
@@ -79,6 +90,29 @@ export function CompliancePaymentsCues() {
         </Alert>
       )}
 
+      {/* Payment Past SCT Cutoff */}
+      {shouldShowPaymentCue && (
+        <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
+          <Zap className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-800 dark:text-blue-200">
+            Άμεσες Πληρωμές Διαθέσιμες
+          </AlertTitle>
+          <AlertDescription className="flex items-center justify-between text-blue-700 dark:text-blue-300">
+            <div>
+              <div>Πέρασε το cut-off {paymentCue.bank} ({paymentCue.nextCutoffTime})</div>
+              <div className="text-sm mt-1">Χρησιμοποιήστε SCT Instant για άμεσες μεταφορές</div>
+            </div>
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="ml-4 border-blue-600 text-blue-700 hover:bg-blue-100"
+            >
+              <Zap className="mr-2 h-4 w-4" />
+              Χρήση SCT Inst
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }

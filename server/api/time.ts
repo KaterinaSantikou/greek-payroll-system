@@ -33,8 +33,8 @@ const idempotencyMiddleware = (req: any, res: any, next: any) => {
   next();
 };
 
-// POST /punches - Create punch with idempotency
-router.post('/punches', isAuthenticated, idempotencyMiddleware, async (req, res) => {
+// POST /api/punches - Create punch with idempotency
+router.post('/api/punches', isAuthenticated, idempotencyMiddleware, async (req, res) => {
   try {
     const punchData = CreatePunchSchema.parse(req.body);
     
@@ -111,7 +111,7 @@ router.post('/punches', isAuthenticated, idempotencyMiddleware, async (req, res)
 });
 
 // GET /api/timesheets - Get timesheets for period
-router.get('/timesheets', isAuthenticated, async (req, res) => {
+router.get('/api/timesheets', isAuthenticated, async (req, res) => {
   try {
     const { period, employeeId, status } = req.query;
     
@@ -175,7 +175,7 @@ router.get('/timesheets', isAuthenticated, async (req, res) => {
 });
 
 // POST /api/timesheets/lock - Lock timesheet for payroll
-router.post('/timesheets/lock', isAuthenticated, async (req, res) => {
+router.post('/api/timesheets/lock', isAuthenticated, async (req, res) => {
   try {
     const { timesheetIds, period } = req.body;
     

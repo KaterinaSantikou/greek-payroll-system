@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useTranslation } from "@/hooks/useTranslation";
 import { 
   UserPlus, 
   Clock, 
@@ -16,8 +15,6 @@ import {
 } from "lucide-react";
 
 export default function Onboarding() {
-  const { t } = useTranslation();
-  
   const onboardingCases = [
     {
       id: 1,
@@ -67,17 +64,17 @@ export default function Onboarding() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('onboarding.title')}</h1>
-          <p className="text-gray-600 dark:text-gray-400">{t('onboarding.description')}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Employee Onboarding</h1>
+          <p className="text-gray-600 dark:text-gray-400">Quick hire, bulk seasonal rehires, checklists</p>
         </div>
         <div className="flex gap-2">
           <Button>
             <UserPlus className="h-4 w-4 mr-2" />
-            {t('onboarding.quick_hire')}
+            Quick Hire
           </Button>
           <Button variant="outline">
             <Users className="h-4 w-4 mr-2" />
-            {t('onboarding.seasonal_batch')}
+            Bulk Import
           </Button>
         </div>
       </div>
@@ -121,7 +118,7 @@ export default function Onboarding() {
 
       {/* Individual Onboarding Cases */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">{t('onboarding.active_cases')}</h2>
+        <h2 className="text-lg font-semibold">Active Onboarding Cases</h2>
         {onboardingCases.map((employee) => (
           <Card key={employee.id}>
             <CardContent className="p-6">
@@ -135,11 +132,11 @@ export default function Onboarding() {
                     employee.status === 'pending_docs' ? 'destructive' :
                     employee.status === 'awaiting_contract' ? 'default' : 'secondary'
                   }>
-                    {t(`status.${employee.status}`)}
+                    {employee.status.replace('_', ' ').toUpperCase()}
                   </Badge>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium">{t('onboarding.start_date')}</p>
+                  <p className="text-sm font-medium">Start Date</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{employee.startDate}</p>
                 </div>
               </div>
@@ -147,15 +144,15 @@ export default function Onboarding() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium">{t('onboarding.completion_progress')}</span>
-                    <span className="text-sm text-gray-500">{employee.completedSteps}/{employee.totalSteps} {t('onboarding.steps')}</span>
+                    <span className="text-sm font-medium">Completion Progress</span>
+                    <span className="text-sm text-gray-500">{employee.completedSteps}/{employee.totalSteps} steps</span>
                   </div>
                   <Progress value={employee.progress} className="h-2 mb-3" />
                   
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-red-700 dark:text-red-400 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
-                      {t('onboarding.missing_items')}
+                      Missing Items
                     </h4>
                     <ul className="text-xs space-y-1">
                       {employee.missingItems.map((item, index) => (
@@ -170,24 +167,24 @@ export default function Onboarding() {
 
                 <div className="flex flex-col justify-between">
                   <div className="space-y-2 mb-4">
-                    <h4 className="text-sm font-medium">{t('onboarding.quick_actions')}</h4>
+                    <h4 className="text-sm font-medium">Quick Actions</h4>
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" className="h-7 text-xs">
                         <FileText className="h-3 w-3 mr-1" />
-                        {t('onboarding.view_checklist')}
+                        View Checklist
                       </Button>
                       <Button size="sm" variant="outline" className="h-7 text-xs">
                         <Upload className="h-3 w-3 mr-1" />
-                        {t('onboarding.upload_docs')}
+                        Upload Docs
                       </Button>
                       <Button size="sm" variant="outline" className="h-7 text-xs">
                         <Clock className="h-3 w-3 mr-1" />
-                        {t('onboarding.schedule_interview')}
+                        Schedule Interview
                       </Button>
                     </div>
                   </div>
                   <Button className="w-full">
-                    {t('onboarding.continue_onboarding')}
+                    Continue Onboarding
                   </Button>
                 </div>
               </div>
@@ -205,9 +202,9 @@ export default function Onboarding() {
                 <UserPlus className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium">{t('onboarding.this_week')}</p>
+                <p className="text-sm font-medium">This Week</p>
                 <p className="text-2xl font-bold">3</p>
-                <p className="text-xs text-gray-500">{t('onboarding.new_hires_started')}</p>
+                <p className="text-xs text-gray-500">New hires started</p>
               </div>
             </div>
           </CardContent>
@@ -220,9 +217,9 @@ export default function Onboarding() {
                 <Clock className="h-5 w-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-sm font-medium">{t('onboarding.avg_time')}</p>
+                <p className="text-sm font-medium">Avg. Time</p>
                 <p className="text-2xl font-bold">4.2</p>
-                <p className="text-xs text-gray-500">{t('onboarding.days_to_complete')}</p>
+                <p className="text-xs text-gray-500">Days to complete</p>
               </div>
             </div>
           </CardContent>
@@ -235,9 +232,9 @@ export default function Onboarding() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium">{t('onboarding.success_rate')}</p>
+                <p className="text-sm font-medium">Success Rate</p>
                 <p className="text-2xl font-bold">94%</p>
-                <p className="text-xs text-gray-500">{t('onboarding.completed_on_time')}</p>
+                <p className="text-xs text-gray-500">Completed on time</p>
               </div>
             </div>
           </CardContent>

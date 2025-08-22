@@ -16,9 +16,7 @@ import {
   type InsertLogEntry,
   type LogMetrics as LogMetricsType,
   type LogSubscription,
-  type InsertLogSubscription,
   type LogRetentionPolicy,
-  type InsertLogRetentionPolicy,
   type LogPattern
 } from '@shared/schema';
 import { eq, desc, and, gte, lte, or, sql, count, avg, max } from 'drizzle-orm';
@@ -77,7 +75,7 @@ export interface AggregationOptions {
 
 export class CentralLogAggregationService extends EventEmitter {
   private static instance: CentralLogAggregationService;
-  private logLevels: Map<string, LogLevel> = new Map();
+  private logLevels: Map<string, LogLevel>;
   private retentionPolicies: Map<string, LogRetentionPolicy> = new Map();
   private activeSubscriptions: Map<string, LogSubscription> = new Map();
 
@@ -126,7 +124,7 @@ export class CentralLogAggregationService extends EventEmitter {
       });
     } catch (error) {
       // Gracefully handle missing tables during initialization
-      if ((error as any)?.code === '42P01') { // Table doesn't exist
+      if (error?.code === '42P01') { // Table doesn't exist
         console.log('Log retention policies table not yet created - using defaults');
       } else {
         console.error('Failed to load retention policies:', error);
@@ -150,7 +148,7 @@ export class CentralLogAggregationService extends EventEmitter {
       });
     } catch (error) {
       // Gracefully handle missing tables during initialization
-      if ((error as any)?.code === '42P01') { // Table doesn't exist
+      if (error?.code === '42P01') { // Table doesn't exist
         console.log('Log subscriptions table not yet created - using empty subscriptions');
       } else {
         console.error('Failed to load active subscriptions:', error);
@@ -234,7 +232,7 @@ export class CentralLogAggregationService extends EventEmitter {
       return insertedEntry;
     } catch (error) {
       // Gracefully handle missing tables during initialization
-      if ((error as any)?.code === '42P01') { // Table doesn't exist
+      if (error?.code === '42P01') { // Table doesn't exist
         console.log(`Log entry not stored - tables not yet created: ${level} ${message}`);
         
         // Return a mock entry for now
@@ -472,8 +470,8 @@ export class CentralLogAggregationService extends EventEmitter {
       if (filters.services?.length && !filters.services.includes(entry.service)) return;
       if (filters.categories?.length && entry.category && !filters.categories.includes(entry.category)) return;
       if (filters.userId && entry.userId !== filters.userId) return;
-      if (filters.severity?.min !== undefined && entry.severity && entry.severity < filters.severity.min) return;
-      if (filters.severity?.max !== undefined && entry.severity && entry.severity > filters.severity.max) return;
+      if (filters.severity?.min !== undefined && entry.severity < filters.severity.min) return;
+      if (filters.severity?.max !== undefined && entry.severity > filters.severity.max) return;
       
       stream.emit('log', entry);
     };
@@ -526,13 +524,13 @@ export class CentralLogAggregationService extends EventEmitter {
     let archivedCount = 0;
     let processedPolicies = 0;
 
-    for (const [key, policy] of this.retentionPolicies.entries()) {
+    for (const [key, policy] of this.retentionPolicies) {
       try {
         const retentionDate = new Date();
         retentionDate.setDate(retentionDate.getDate() - policy.retentionDays);
 
         const archiveDate = new Date();
-        archiveDate.setDate(archiveDate.getDate() - (policy.archiveAfterDays || 30));
+        archiveDate.setDate(archiveDate.getDate() - policy.archiveAfterDays);
 
         // Build conditions for this policy
         const conditions = [lte(logEntries.timestamp, retentionDate)];
@@ -722,7 +720,7 @@ export class CentralLogAggregationService extends EventEmitter {
   }
 
   private async checkSubscriptionMatches(entry: LogEntry): Promise<void> {
-    for (const [id, subscription] of this.activeSubscriptions.entries()) {
+    for (const [id, subscription] of this.activeSubscriptions) {
       try {
         const filters = subscription.filters as LogSearchQuery;
         let matches = true;
@@ -732,8 +730,8 @@ export class CentralLogAggregationService extends EventEmitter {
         if (filters.services?.length && !filters.services.includes(entry.service)) matches = false;
         if (filters.categories?.length && entry.category && !filters.categories.includes(entry.category)) matches = false;
         if (filters.userId && entry.userId !== filters.userId) matches = false;
-        if (filters.severity?.min !== undefined && entry.severity && entry.severity < filters.severity.min) matches = false;
-        if (filters.severity?.max !== undefined && entry.severity && entry.severity > filters.severity.max) matches = false;
+        if (filters.severity?.min !== undefined && entry.severity < filters.severity.min) matches = false;
+        if (filters.severity?.max !== undefined && entry.severity > filters.severity.max) matches = false;
 
         if (matches) {
           this.emit('subscription_match', { subscription, entry });

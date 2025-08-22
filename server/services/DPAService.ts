@@ -244,13 +244,11 @@ export class DPAService {
 
     // Audit DPA creation
     await AuditService.logEvent({
-      eventType: 'gdpr_compliance',
-      eventCategory: 'dpa',
-      eventAction: 'dpa_created',
-      tenantId: 'system',
+      action: 'dpa.created',
       userId: createdBy,
-      eventData: {
-        dpaId,
+      resourceType: 'dpa',
+      resourceId: dpaId,
+      metadata: {
         controller: controllerInfo.name,
         processor: processorInfo.name,
         template: templateId
@@ -294,13 +292,11 @@ export class DPAService {
 
     // Audit DPA update
     await AuditService.logEvent({
-      eventType: 'gdpr_compliance',
-      eventCategory: 'dpa',
-      eventAction: 'dpa_updated',
-      tenantId: 'system',
+      action: 'dpa.updated',
       userId: updatedBy,
-      eventData: {
-        dpaId,
+      resourceType: 'dpa',
+      resourceId: dpaId,
+      metadata: {
         updatedFields: Object.keys(updates),
         version: newVersion,
         significantChange: isSignificantChange
@@ -334,13 +330,11 @@ export class DPAService {
 
     // Audit sub-processor addition
     await AuditService.logEvent({
-      eventType: 'gdpr_compliance',
-      eventCategory: 'dpa',
-      eventAction: 'subprocessor_added',
-      tenantId: 'system',
+      action: 'dpa.subprocessor.added',
       userId: addedBy,
-      eventData: {
-        dpaId,
+      resourceType: 'dpa',
+      resourceId: dpaId,
+      metadata: {
         subProcessor: subProcessor.name,
         location: subProcessor.location,
         services: subProcessor.services
@@ -392,13 +386,11 @@ export class DPAService {
 
     // Audit signature
     await AuditService.logEvent({
-      eventType: 'gdpr_compliance',
-      eventCategory: 'dpa',
-      eventAction: 'dpa_signed',
-      tenantId: 'system',
+      action: 'dpa.signed',
       userId: signedBy,
-      eventData: {
-        dpaId,
+      resourceType: 'dpa',
+      resourceId: dpaId,
+      metadata: {
         party,
         signatureMethod,
         fullyExecuted: updates.status === 'active'

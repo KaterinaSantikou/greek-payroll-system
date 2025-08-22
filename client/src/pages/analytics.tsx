@@ -352,9 +352,9 @@ export default function AnalyticsPage() {
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
+                      <div>
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Current Month</p>
-                        <p className="text-2xl font-bold truncate">€{laborForecast.totalForecast.currentMonth.toLocaleString()}</p>
+                        <p className="text-2xl font-bold">€{laborForecast.totalForecast.currentMonth.toLocaleString()}</p>
                       </div>
                       <DollarSign className="h-8 w-8 text-blue-600" />
                     </div>
@@ -363,9 +363,9 @@ export default function AnalyticsPage() {
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
+                      <div>
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Projected</p>
-                        <p className="text-2xl font-bold truncate">€{laborForecast.totalForecast.projected.toLocaleString()}</p>
+                        <p className="text-2xl font-bold">€{laborForecast.totalForecast.projected.toLocaleString()}</p>
                       </div>
                       <TrendingUp className="h-8 w-8 text-green-600" />
                     </div>
@@ -374,9 +374,9 @@ export default function AnalyticsPage() {
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
+                      <div>
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Variance</p>
-                        <p className={`text-2xl font-bold truncate ${laborForecast.totalForecast.variance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        <p className={`text-2xl font-bold ${laborForecast.totalForecast.variance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                           {laborForecast.totalForecast.variance > 0 ? '+' : ''}€{laborForecast.totalForecast.variance.toLocaleString()}
                         </p>
                       </div>
@@ -426,23 +426,23 @@ export default function AnalyticsPage() {
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                           <div>
                             <p className="text-gray-600 dark:text-gray-400">Base Salary</p>
-                            <p className="font-medium truncate">€{dept.breakdown.baseSalary.toLocaleString()}</p>
+                            <p className="font-medium">€{dept.breakdown.baseSalary.toLocaleString()}</p>
                           </div>
                           <div>
                             <p className="text-gray-600 dark:text-gray-400">Overtime</p>
-                            <p className="font-medium truncate">€{dept.breakdown.overtime.toLocaleString()}</p>
+                            <p className="font-medium">€{dept.breakdown.overtime.toLocaleString()}</p>
                           </div>
                           <div>
                             <p className="text-gray-600 dark:text-gray-400">Allowances</p>
-                            <p className="font-medium truncate">€{dept.breakdown.allowances.toLocaleString()}</p>
+                            <p className="font-medium">€{dept.breakdown.allowances.toLocaleString()}</p>
                           </div>
                           <div>
                             <p className="text-gray-600 dark:text-gray-400">Bonuses</p>
-                            <p className="font-medium truncate">€{dept.breakdown.bonuses.toLocaleString()}</p>
+                            <p className="font-medium">€{dept.breakdown.bonuses.toLocaleString()}</p>
                           </div>
                           <div>
                             <p className="text-gray-600 dark:text-gray-400">Contributions</p>
-                            <p className="font-medium truncate">€{dept.breakdown.employerContributions.toLocaleString()}</p>
+                            <p className="font-medium">€{dept.breakdown.employerContributions.toLocaleString()}</p>
                           </div>
                         </div>
                       </div>
@@ -473,7 +473,7 @@ export default function AnalyticsPage() {
                         <AlertDescription className="mt-2">
                           <p>{rec.description}</p>
                           <p className="font-medium text-green-600 mt-1">
-                            <span className="break-all">Potential saving: €{rec.potentialSaving.toLocaleString()}</span>
+                            Potential saving: €{rec.potentialSaving.toLocaleString()}
                           </p>
                         </AlertDescription>
                       </Alert>
@@ -509,9 +509,9 @@ export default function AnalyticsPage() {
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
+                      <div>
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total OT Cost</p>
-                        <p className="text-2xl font-bold truncate">€{overtimeHeatmap.summary.totalOvertimeCost.toLocaleString()}</p>
+                        <p className="text-2xl font-bold">€{overtimeHeatmap.summary.totalOvertimeCost.toLocaleString()}</p>
                       </div>
                       <DollarSign className="h-8 w-8 text-red-600" />
                     </div>
@@ -707,9 +707,9 @@ export default function AnalyticsPage() {
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
+                      <div>
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Labor Cost/Room</p>
-                        <p className="text-2xl font-bold truncate">€{productivityMetrics.hotelMetrics.laborCostPerOccupiedRoom.toFixed(2)}</p>
+                        <p className="text-2xl font-bold">€{productivityMetrics.hotelMetrics.laborCostPerOccupiedRoom.toFixed(2)}</p>
                       </div>
                       <Building2 className="h-8 w-8 text-blue-600" />
                     </div>
@@ -719,9 +719,9 @@ export default function AnalyticsPage() {
                 <Card>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
+                      <div>
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Labor Cost/Cover</p>
-                        <p className="text-2xl font-bold truncate">€{productivityMetrics.hotelMetrics.laborCostPerCover.toFixed(2)}</p>
+                        <p className="text-2xl font-bold">€{productivityMetrics.hotelMetrics.laborCostPerCover.toFixed(2)}</p>
                       </div>
                       <Users className="h-8 w-8 text-green-600" />
                     </div>
@@ -783,7 +783,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div className="pt-4 border-t">
                       <p className="text-sm text-gray-600 dark:text-gray-400">Cost of Turnover</p>
-                      <p className="text-2xl font-bold text-red-600 break-all">€{productivityMetrics.turnoverAnalysis.costOfTurnover.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-red-600">€{productivityMetrics.turnoverAnalysis.costOfTurnover.toLocaleString()}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -816,7 +816,7 @@ export default function AnalyticsPage() {
                     </div>
                     <div className="pt-4 border-t">
                       <p className="text-sm text-gray-600 dark:text-gray-400">Cost of Absenteeism</p>
-                      <p className="text-2xl font-bold text-red-600 break-all">€{productivityMetrics.absenteeismMetrics.costOfAbsenteeism.toLocaleString()}</p>
+                      <p className="text-2xl font-bold text-red-600">€{productivityMetrics.absenteeismMetrics.costOfAbsenteeism.toLocaleString()}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -848,7 +848,7 @@ export default function AnalyticsPage() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
                             <p className="text-gray-600 dark:text-gray-400">Labor Cost/Hour</p>
-                            <p className="font-medium truncate">€{dept.metrics.laborCostPerHour.toFixed(2)}</p>
+                            <p className="font-medium">€{dept.metrics.laborCostPerHour.toFixed(2)}</p>
                           </div>
                           <div>
                             <p className="text-gray-600 dark:text-gray-400">Total Staff</p>

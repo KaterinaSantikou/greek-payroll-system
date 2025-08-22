@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ViewingMode {
   type: "normal" | "impersonation" | "employee_view";
@@ -35,6 +36,7 @@ interface AppProviderProps {
 }
 
 export function AppProvider({ children }: AppProviderProps) {
+  const { user } = useAuth();
   const [viewingMode, setViewingMode] = useState<ViewingMode>({ type: "normal" });
   const [currentProperty, setCurrentProperty] = useState({
     propertyId: "prop-princess",

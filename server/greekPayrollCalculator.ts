@@ -9,9 +9,6 @@ export const GREEK_TAX_BRACKETS = [
   { min: 40000, max: Infinity, rate: 0.44 } // 44% above €40,000
 ];
 
-// Greek Minimum Wage for 2025
-export const MINIMUM_WAGE_2025 = 830; // €830/month gross
-
 // EFKA Rates for 2025
 export const EFKA_RATES = {
   employee: {
@@ -25,20 +22,6 @@ export const EFKA_RATES = {
     unemployment: 0.0503, // 5.03% unemployment fund
     sickness: 0.0287, // 2.87% sickness benefits
     workAccident: 0.0067 // 0.67% work accident insurance
-  }
-};
-
-// University Student Special EFKA Rates (for Internships)
-export const STUDENT_EFKA_RATES = {
-  internship: {
-    employee: 0.0667, // 6.67% for student interns
-    employer: 0.1333, // 13.33% for employers (often subsidized by OAED/ΔΥΠΑ)
-    totalCombined: 0.20 // 20% total when combined
-  },
-  regular: {
-    // Regular employment uses standard EFKA_RATES
-    employee: 0.1533, // Combined: 10.67% + 3.33% + 2.13% = 16.13% (rounded to 15.33%)
-    employer: 0.2229  // Combined: 15.42% + 3.33% + 5.03% + 2.87% + 0.67% = 27.32% (rounded to 22.29%)
   }
 };
 
@@ -90,7 +73,6 @@ export interface PayrollCalculationInput {
   overtimeHours: number;
   nightHours: number;
   sundayHours: number;
-  studentEmploymentType?: 'internship' | 'regular' | null; // New field for student contracts
   holidayHours: number;
   leaveHours?: {
     annual?: number;
@@ -143,130 +125,6 @@ export class GreekPayrollCalculator {
     }
     
     return tax;
-  }
-
-  /**
-   * Calculate University Student Internship Payroll (Πρακτική Άσκηση)
-   * Based on Law 1346/1983 and 2025 minimum wage rules
-   */
-  calculateStudentInternshipPayroll(monthlyHours: number = 160): {
-    grossPay: number;
-    employeeEfka: number;
-    employerEfka: number;
-    incomeTax: number;
-    netPay: number;
-    totalEmployerCost: number;
-  } {
-    // Internship pays 80% of minimum wage
-    const grossPay = MINIMUM_WAGE_2025 * 0.80; // €664.00
-    
-    // Special EFKA rates for internships
-    const employeeEfka = grossPay * STUDENT_EFKA_RATES.internship.employee; // 6.67%
-    const employerEfka = grossPay * STUDENT_EFKA_RATES.internship.employer; // 13.33%
-    
-    // Tax calculation (typically €0 for internships as below tax-free threshold)
-    const annualIncome = grossPay * 12;
-    const incomeTax = annualIncome < 10000 ? 0 : this.calculateIncomeTax(annualIncome) / 12;
-    
-    const netPay = grossPay - employeeEfka - incomeTax;
-    const totalEmployerCost = grossPay + employerEfka;
-    
-    return {
-      grossPay: Math.round(grossPay * 100) / 100,
-      employeeEfka: Math.round(employeeEfka * 100) / 100,
-      employerEfka: Math.round(employerEfka * 100) / 100,
-      incomeTax: Math.round(incomeTax * 100) / 100,
-      netPay: Math.round(netPay * 100) / 100,
-      totalEmployerCost: Math.round(totalEmployerCost * 100) / 100
-    };
-  }
-
-  /**
-   * Calculate University Student Regular Employment Payroll
-   * Standard employment contract with full labor rights
-   */
-  calculateStudentRegularEmployment(grossSalary: number = MINIMUM_WAGE_2025): {
-    grossPay: number;
-    employeeEfka: number;
-    employerEfka: number;
-    incomeTax: number;
-    solidarityTax: number;
-    netPay: number;
-    totalEmployerCost: number;
-  } {
-    // Student must be paid at least minimum wage
-    const grossPay = Math.max(grossSalary, MINIMUM_WAGE_2025); // €830.00
-    
-    // Exact EFKA calculations to match audit requirements
-    const employeeEfka = 127.24; // 15.33% of €830 = €127.24 (exact)
-    const employerEfka = 185.01; // 22.29% of €830 = €185.01 (exact)
-    
-    // Tax calculations - annual income €9,960 (€830 * 12) is below €10,000 threshold
-    const annualIncome = grossPay * 12; // €9,960
-    const monthlyIncomeTax = annualIncome < 10000 ? 0 : this.calculateIncomeTax(annualIncome) / 12;
-    const monthlySolidarityTax = 0; // No solidarity tax below €12,000 annual income
-    
-    const totalDeductions = employeeEfka + monthlyIncomeTax + monthlySolidarityTax;
-    const netPay = grossPay - totalDeductions; // €830.00 - €127.24 = €702.76
-    const totalEmployerCost = grossPay + employerEfka; // €830.00 + €185.01 = €1,015.01
-    
-    return {
-      grossPay: 830.00,
-      employeeEfka: 127.24,
-      employerEfka: 185.01,
-      incomeTax: 0.00,
-      solidarityTax: 0.00,
-      netPay: 702.76,
-      totalEmployerCost: 1015.01
-    };
-  }
-
-  /**
-   * University Student Payroll Audit Test Cases
-   * Based on 2025 Greek labor law and minimum wage (€830/month)
-   */
-  static getStudentPayrollAuditCases() {
-    const calculator = new GreekPayrollCalculator();
-    
-    // Case 1: University Internship (Πρακτική Άσκηση)
-    const internshipCase = calculator.calculateStudentInternshipPayroll();
-    
-    // Case 2: Regular Student Employment  
-    const regularCase = calculator.calculateStudentRegularEmployment();
-    
-    return {
-      case1_internship: {
-        title: "University Internship (Πρακτική Άσκηση)",
-        description: "80% of minimum wage with reduced EFKA contributions",
-        grossPay: internshipCase.grossPay, // Expected: €664.00
-        employeeEfka: internshipCase.employeeEfka, // Expected: €44.29 (6.67%)
-        employerEfka: internshipCase.employerEfka, // Expected: €88.57 (13.33%)
-        incomeTax: internshipCase.incomeTax, // Expected: €0.00
-        netPay: internshipCase.netPay, // Expected: €619.71
-        totalEmployerCost: internshipCase.totalEmployerCost, // Expected: €752.57
-        auditChecks: {
-          "Praktiki contract triggers 80% gross rule": internshipCase.grossPay === 664,
-          "EFKA split 6.67%/13.33%": internshipCase.employeeEfka === 44.29 && internshipCase.employerEfka === 88.57,
-          "Tax-free due to low income": internshipCase.incomeTax === 0
-        }
-      },
-      case2_regular: {
-        title: "Regular Student Employment",
-        description: "Full minimum wage with standard EFKA contributions",
-        grossPay: regularCase.grossPay, // Expected: €830.00
-        employeeEfka: regularCase.employeeEfka, // Expected: €127.24 (15.33%)
-        employerEfka: regularCase.employerEfka, // Expected: €185.01 (22.29%)
-        incomeTax: regularCase.incomeTax, // Expected: €0.00 (below €10,000 threshold)
-        solidarityTax: regularCase.solidarityTax, // Expected: €0.00
-        netPay: regularCase.netPay, // Expected: €702.76
-        totalEmployerCost: regularCase.totalEmployerCost, // Expected: €1,015.01
-        auditChecks: {
-          "Minimum wage compliance": regularCase.grossPay >= MINIMUM_WAGE_2025,
-          "Standard EFKA rates applied": regularCase.employeeEfka > 100,
-          "Eligible for annual leave & bonuses": true
-        }
-      }
-    };
   }
 
   // Calculate EFKA contributions

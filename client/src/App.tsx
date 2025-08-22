@@ -1,361 +1,402 @@
-import React, { useState, useEffect } from 'react';
+import { Switch, Route } from "wouter";
+import { queryClient } from "./lib/queryClient";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { LocaleProvider } from "@/lib/i18n";
+import { useAuth } from "@/hooks/useAuth";
+import { lazy, Suspense } from "react";
+import NotFound from "@/pages/not-found";
+import Landing from "@/pages/landing";
+import LandingPage from "@/pages/LandingPage";
+import MarketingLanding from "@/pages/MarketingLanding";
+// Aggressive lazy loading for sub-2s Greek internet speeds
+// Core pages - highest priority lazy loading
+const Home = lazy(() => import("@/pages/home"));
 
-// PayrollSync Frontend with Backend Integration
-export default function App() {
-  const [backendStatus, setBackendStatus] = useState<string>('checking...');
-  const [healthData, setHealthData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState('dashboard');
+// Critical Greek payroll pages - medium priority
+const Employees = lazy(() => import("@/pages/employees"));
+const Payroll = lazy(() => import("@/pages/payroll"));
+const ErganiCompliance = lazy(() => import("@/pages/erganiCompliance"));
 
-  // Check backend connectivity
-  useEffect(() => {
-    const checkBackend = async () => {
-      try {
-        const response = await fetch('/api/health');
-        const data = await response.json();
-        setHealthData(data);
-        setBackendStatus(data.status === 'healthy' ? '✅ Connected' : '⚠️ Issues');
-      } catch (error) {
-        setBackendStatus('❌ Disconnected');
-        console.error('Backend connection failed:', error);
-      }
-    };
+// Feature pages - low priority lazy loading with chunk optimization
+const EmployeeMaster = lazy(() => import("@/pages/employeeMaster"));
+const Schedules = lazy(() => import("@/pages/schedules"));
+const Allowances = lazy(() => import("@/pages/allowances"));
+const Overtime = lazy(() => import("@/pages/overtime"));
+const Leave = lazy(() => import("@/pages/leave"));
+const Legal = lazy(() => import("@/pages/legal"));
 
-    checkBackend();
-    const interval = setInterval(checkBackend, 30000); // Check every 30s
-    return () => clearInterval(interval);
-  }, []);
+// Advanced features - lowest priority, load on demand
+const DigitalWorkCard = lazy(() => import("@/pages/digitalWorkCard"));
+const AdvancedTimeCapture = lazy(() => import("@/pages/advancedTimeCapture"));
+const EnterpriseArchitecture = lazy(() => import("@/pages/enterpriseArchitecture"));
+const PayrollIntegration = lazy(() => import("@/pages/payrollIntegration"));
+const ManagerWorkflows = lazy(() => import("@/pages/managerWorkflows"));
+const HotelOperations = lazy(() => import("@/pages/hotelOperations"));
 
-  const tabs = [
-    { id: 'dashboard', label: '📊 Dashboard', desc: 'Overview & Analytics' },
-    { id: 'employees', label: '👥 Employees', desc: 'Employee Management' },
-    { id: 'payroll', label: '💰 Payroll', desc: 'Payroll Processing' },
-    { id: 'compliance', label: '📋 Compliance', desc: 'Greek HR Compliance' },
-    { id: 'analytics', label: '📈 Analytics', desc: 'Business Intelligence' },
-    { id: 'payments', label: '🏦 Payments', desc: 'SEPA & Bank Integration' }
-  ];
+// Non-critical pages - keep non-lazy for now but consider lazy loading
+const HotelEnhancements = lazy(() => import("@/pages/hotelEnhancements"));
+const HotelTipPooling = lazy(() => import("@/pages/hotelTipPooling"));
+const UXArchitecture = lazy(() => import("@/pages/uxArchitecture"));
+const Compliance = lazy(() => import("@/pages/compliance"));
 
-  return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
-      {/* Header */}
-      <header style={{ 
-        background: 'rgba(255,255,255,0.1)', 
-        backdropFilter: 'blur(10px)',
-        padding: '1rem 2rem',
-        borderBottom: '1px solid rgba(255,255,255,0.2)'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h1 style={{ margin: 0, color: 'white', fontSize: '28px', fontWeight: 'bold' }}>
-              PayrollSync
-            </h1>
-            <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>
-              Greek HR & Payroll Management System
-            </span>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ 
-              color: 'white', 
-              fontSize: '14px', 
-              background: backendStatus.includes('✅') ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)',
-              padding: '4px 12px',
-              borderRadius: '20px',
-              border: `1px solid ${backendStatus.includes('✅') ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`
-            }}>
-              Backend: {backendStatus}
-            </div>
-            {healthData && (
-              <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', marginTop: '4px' }}>
-                Uptime: {Math.floor(healthData.uptime)}s | Env: {healthData.environment}
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+// Status page components
+const PublicStatus = lazy(() => import("@/pages/public-status"));
 
-      {/* Navigation */}
-      <nav style={{ 
-        background: 'rgba(255,255,255,0.05)', 
-        padding: '1rem 2rem',
-        borderBottom: '1px solid rgba(255,255,255,0.1)'
-      }}>
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          {tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              data-testid={`nav-${tab.id}`}
-              style={{
-                background: activeTab === tab.id 
-                  ? 'rgba(255,255,255,0.2)' 
-                  : 'rgba(255,255,255,0.05)',
-                border: activeTab === tab.id 
-                  ? '1px solid rgba(255,255,255,0.3)' 
-                  : '1px solid rgba(255,255,255,0.1)',
-                color: 'white',
-                padding: '8px 16px',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '2px',
-                transition: 'all 0.2s'
-              }}
-            >
-              <span style={{ fontWeight: 'bold' }}>{tab.label}</span>
-              <span style={{ fontSize: '11px', opacity: 0.8 }}>{tab.desc}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
+// Analytics and reporting - lazy load with chunking
+const Analytics = lazy(() => import("@/pages/analytics"));
+const Deployment = lazy(() => import("@/pages/deployment"));
+const SuccessMetrics = lazy(() => import("@/pages/successMetrics"));
+const KPIDashboard = lazy(() => import("@/pages/kpiDashboard"));
+const ModernPayrollEngine = lazy(() => import("@/pages/modernPayrollEngine"));
+const ProductVision = lazy(() => import("@/pages/productVision"));
 
-      {/* Main Content */}
-      <main style={{ padding: '2rem' }}>
-        <div style={{
-          background: 'rgba(255,255,255,0.95)',
-          borderRadius: '12px',
-          padding: '2rem',
-          minHeight: '600px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-        }}>
-          {activeTab === 'dashboard' && <DashboardView healthData={healthData} />}
-          {activeTab === 'employees' && <EmployeesView />}
-          {activeTab === 'payroll' && <PayrollView />}
-          {activeTab === 'compliance' && <ComplianceView />}
-          {activeTab === 'analytics' && <AnalyticsView />}
-          {activeTab === 'payments' && <PaymentsView />}
-        </div>
-      </main>
-    </div>
-  );
-}
+// Data Import - for CSV/Excel import with Greek compliance validation
+const DataImport = lazy(() => import("@/pages/DataImport"));
 
-// Dashboard Component
-function DashboardView({ healthData }: { healthData: any }) {
-  return (
-    <div>
-      <h2 style={{ margin: '0 0 1.5rem 0', color: '#1f2937', fontSize: '24px' }}>
-        📊 PayrollSync Dashboard
-      </h2>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-        <div style={{ 
-          background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-          color: 'white',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ margin: '0 0 1rem 0', fontSize: '18px' }}>🔧 System Health</h3>
-          {healthData ? (
-            <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
-              <p><strong>Status:</strong> {healthData.status}</p>
-              <p><strong>Environment:</strong> {healthData.environment}</p>
-              <p><strong>Version:</strong> {healthData.version}</p>
-              <p><strong>Database:</strong> {healthData.checks?.database ? '✅' : '❌'}</p>
-              <p><strong>Memory:</strong> {healthData.checks?.memory ? '✅' : '⚠️'}</p>
-              <p><strong>Response Time:</strong> {healthData.responseTime}ms</p>
-            </div>
-          ) : (
-            <p style={{ opacity: 0.8 }}>Loading health data...</p>
-          )}
-        </div>
+// Payment features - critical for Greek business, medium priority
+const Payments = lazy(() => import("@/pages/payments"));
+const SepaPayments = lazy(() => import("@/pages/sepaPayments"));
+const SepaEngineDemo = lazy(() => import("@/pages/sepaEngineDemo"));
+const PaymentOpsChecklist = lazy(() => import("@/pages/paymentOpsChecklist"));
 
-        <div style={{ 
-          background: 'linear-gradient(135deg, #10b981, #047857)',
-          color: 'white',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ margin: '0 0 1rem 0', fontSize: '18px' }}>🚀 Available Features</h3>
-          <ul style={{ margin: 0, padding: '0 0 0 1rem', fontSize: '14px', lineHeight: '1.8' }}>
-            <li>✅ Employee Management</li>
-            <li>✅ Greek Payroll Processing</li>
-            <li>✅ SEPA Payments Integration</li>
-            <li>✅ ERGANI Compliance</li>
-            <li>✅ Analytics & Reporting</li>
-            <li>✅ Hotel Operations Support</li>
-          </ul>
-        </div>
+// Employee and management features
+const EmployeeSelfService = lazy(() => import("@/pages/employeeSelfService"));
+const RulesEngine = lazy(() => import("@/pages/rulesEngine"));
+const ManagerDashboard = lazy(() => import("@/pages/managerDashboard"));
+const Forecasting = lazy(() => import("@/pages/forecasting"));
+const DocumentAI = lazy(() => import("@/pages/documentAI"));
+const ChangeLogLegalWatch = lazy(() => import("@/pages/changeLogLegalWatch"));
+import { Navigation } from "@/components/Navigation";
+import Layout from "@/components/Layout";
+import { PropertyProvider } from "@/contexts/PropertyContext";
+import { UserRoleProvider } from "@/contexts/UserRoleContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AppProvider } from "@/contexts/AppContext";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+// Mobile and template features - chunked loading
+const MobilePayroll = lazy(() => import("@/pages/MobilePayroll"));
+const IndustryTemplates = lazy(() => import("@/pages/IndustryTemplates"));
+const IntegrationMarketplacePage = lazy(() => import("@/pages/IntegrationMarketplacePage"));
+import { usePWA } from "@/hooks/usePWA";
+import "@/utils/performanceOptimizations";
 
-        <div style={{ 
-          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-          color: 'white',
-          padding: '1.5rem',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          <h3 style={{ margin: '0 0 1rem 0', fontSize: '18px' }}>🔗 Backend APIs</h3>
-          <p style={{ fontSize: '14px', marginBottom: '1rem', opacity: 0.9 }}>
-            Your backend has extensive functionality including:
-          </p>
-          <ul style={{ margin: '0 0 1rem 0', padding: '0 0 0 1rem', fontSize: '14px', lineHeight: '1.6' }}>
-            <li>📊 Analytics endpoints</li>
-            <li>💳 Payment processing (SEPA)</li>
-            <li>📄 Filing & compliance</li>
-            <li>🏨 Hotel operations</li>
-            <li>📈 Performance metrics</li>
-          </ul>
-          <button 
-            onClick={() => window.open('/api/health', '_blank')}
-            data-testid="button-test-api"
-            style={{
-              background: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              border: '1px solid rgba(255,255,255,0.3)',
-              padding: '8px 16px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}
-          >
-            Test API Health →
-          </button>
+// Demo and specialized features - lazy load for performance
+const PaymentsCockpitDemo = lazy(() => import('./pages/PaymentsCockpitDemo').then(m => ({ default: m.PaymentsCockpitDemo })));
+const SmartNotifications = lazy(() => import("@/pages/smartNotifications"));
+const VisualAnalytics = lazy(() => import("@/pages/visualAnalytics"));
+const PropertyDashboard = lazy(() => import("@/pages/propertyDashboard"));
+const RoleBasedDashboard = lazy(() => import("@/components/RoleBasedDashboard"));
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const AICopilot = lazy(() => import("@/components/AICopilot").then(m => ({ default: m.AICopilot })));
+
+// Mobile and preview features
+const MobilePunch = lazy(() => import("@/pages/mobilePunch"));
+const PayrollPreview = lazy(() => import("@/pages/payrollPreview"));
+const PayExplanationDemo = lazy(() => import("@/pages/payExplanationDemo"));
+const AIEnginesDemo = lazy(() => import("@/pages/aiEnginesDemo"));
+const ExplanationDemo = lazy(() => import("@/pages/ExplanationDemo").then(m => ({ default: m.ExplanationDemo })));
+
+// Command and workflow features
+const CommandPaletteDemo = lazy(() => import("@/pages/commandPaletteDemo"));
+const Onboarding = lazy(() => import("@/pages/onboarding"));
+const Exits = lazy(() => import("@/pages/exits"));
+const ZeroTrustSecurityPage = lazy(() => import("@/pages/ZeroTrustSecurityPage"));
+const TeamsRoles = lazy(() => import("@/pages/teamsRoles"));
+// Specialized features and testing - aggressive lazy loading
+const S1Dashboard = lazy(() => import("@/pages/S1Dashboard"));
+const S1MetricsPage = lazy(() => import("@/pages/S1MetricsPage"));
+const S1AcceptanceTesting = lazy(() => import("@/pages/S1AcceptanceTesting"));
+const EmbeddedPayroll = lazy(() => import("@/pages/EmbeddedPayroll"));
+const EmbedPage = lazy(() => import("@/pages/EmbedPage"));
+const SeverancePage = lazy(() => import("@/pages/SeverancePage").then(m => ({ default: m.SeverancePage })));
+const SeveranceTestPage = lazy(() => import("@/pages/SeveranceTestPage"));
+const GarnishmentPage = lazy(() => import("@/pages/GarnishmentPage"));
+const SimpleIbanTest = lazy(() => import("@/pages/SimpleIbanTest"));
+const PartnerConsole = lazy(() => import("@/pages/PartnerConsole"));
+const Partner = lazy(() => import("@/pages/Partner"));
+import { OboProvider } from "@/contexts/OboContext";
+import { CommandPalette } from "@/components/CommandPalette";
+import { useCommandPalette } from "@/hooks/useCommandPalette";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
+import { useExitIntent } from "@/hooks/useExitIntent";
+import { ABTestProvider } from "@/components/ABTestProvider";
+import { useLocation } from "wouter";
+
+// Authentication Pages
+import Login from "@/pages/auth/Login";
+import Signup from "@/pages/auth/Signup";
+import VerifyEmail from "@/pages/auth/VerifyEmail";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
+import ResetPassword from "@/pages/auth/ResetPassword";
+import SSO from "@/pages/auth/SSO";
+
+const GRCCompliance = lazy(() => import("./pages/GRCCompliance"));
+
+function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const { open, setOpen } = useCommandPalette();
+  const [location] = useLocation();
+  
+  // Configure exit intent popup based on current page
+  const getExitIntentConfig = () => {
+    if (location === '/' || location === '/landing' || location === '/marketing') {
+      return { variant: 'trial' as const, enabled: !isAuthenticated };
+    }
+    if (location.includes('/demo') || location.includes('/preview')) {
+      return { variant: 'demo' as const, enabled: true };
+    }
+    if (location.includes('/pricing') || location.includes('/plans')) {
+      return { variant: 'discount' as const, enabled: !isAuthenticated };
+    }
+    if (location.includes('/support') || location.includes('/help')) {
+      return { variant: 'support' as const, enabled: true };
+    }
+    // Default for authenticated users on internal pages
+    return { variant: 'newsletter' as const, enabled: isAuthenticated, delay: 30 };
+  };
+
+  const exitIntentConfig = getExitIntentConfig();
+  const exitIntent = useExitIntent({
+    ...exitIntentConfig,
+    excludePages: ['/auth/login', '/auth/signup', '/auth', '/api', '/embed'],
+    locale: 'en' // Could be dynamic based on user preference
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
-    </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen">
+        {/* Exit Intent for unauthenticated users */}
+        <ExitIntentPopup 
+          enabled={exitIntent.shouldShow}
+          variant={exitIntent.variant}
+          locale={exitIntent.locale}
+          onCapture={exitIntent.onCapture}
+        />
+        
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+          <Switch>
+            <Route path="/" component={Landing} />
+            <Route path="/marketing" component={LandingPage} />
+            <Route path="/property-dashboard" component={PropertyDashboard} />
+            {/* Authentication Routes */}
+            <Route path="/auth/login" component={Login} />
+            <Route path="/auth/signup" component={Signup} />
+            <Route path="/auth/verify-email" component={VerifyEmail} />
+            <Route path="/auth/forgot-password" component={ForgotPassword} />
+            <Route path="/auth/reset-password" component={ResetPassword} />
+            <Route path="/auth/sso" component={SSO} />
+            
+            {/* Public status page - accessible without authentication */}
+            <Route path="/status" component={PublicStatus} />
+            
+            {/* Demo pages accessible without authentication */}
+            <Route path="/onboarding-chatbot" component={lazy(() => import("@/pages/OnboardingChatbotDemo"))} />
+            <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo"))} />
+            <Route path="/churn-prevention" component={lazy(() => import("@/pages/ChurnPreventionDemo"))} />
+            <Route path="/ergani-validation" component={lazy(() => import("@/pages/ERGANIValidationDemo"))} />
+            <Route path="/cba-updates" component={lazy(() => import("@/pages/CBAUpdatesDemo"))} />
+            <Route path="/tax-law-alerts" component={lazy(() => import("@/pages/TaxLawAlertsDemo"))} />
+            <Route path="/digital-inspector-portal" component={lazy(() => import("@/pages/DigitalInspectorPortalDemo"))} />
+            <Route path="/cost-benchmarking" component={lazy(() => import("@/pages/CostBenchmarkingDemo"))} />
+            <Route path="/predictive-labor-costs" component={lazy(() => import("@/pages/PredictiveLaborCostsDemo"))} />
+            <Route path="/compliance-risk-scoring" component={lazy(() => import("@/pages/ComplianceRiskScoringDemo"))} />
+            <Route path="/webhook-system" component={lazy(() => import("@/pages/WebhookSystemDemo"))} />
+            <Route path="/exit-intent-demo" component={lazy(() => import("@/pages/ExitIntentDemo"))} />
+            <Route path="/ab-testing-dashboard" component={lazy(() => import("@/pages/ABTestingDashboard"))} />
+            <Route path="/ab-testing-demo" component={lazy(() => import("@/pages/ABTestingDemo"))} />
+            <Route path="/roi-calculator" component={lazy(() => import("@/pages/ROICalculator"))} />
+            <Route path="/company-setup" component={lazy(() => import("@/pages/CompanySetup"))} />
+            <Route component={NotFound} />
+          </Switch>
+        </Suspense>
+      </div>
+    );
+  }
+
+  return (
+    <OboProvider>
+      <Layout>
+        <CommandPalette open={open} onOpenChange={setOpen} />
+        
+        {/* Exit Intent Popup */}
+        <ExitIntentPopup 
+          enabled={exitIntent.shouldShow}
+          variant={exitIntent.variant}
+          locale={exitIntent.locale}
+          onCapture={exitIntent.onCapture}
+        />
+        
+        <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
+        <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/dashboard" component={Home} />
+        <Route path="/marketing" component={MarketingLanding} />
+        <Route path="/property-dashboard" component={PropertyDashboard} />
+        <Route path="/mobile-payroll" component={MobilePayroll} />
+        <Route path="/industry-templates" component={IndustryTemplates} />
+        <Route path="/integration-marketplace" component={IntegrationMarketplacePage} />
+        
+        {/* People Section */}
+        <Route path="/employees" component={Employees} />
+        <Route path="/employee-master" component={EmployeeMaster} />
+        <Route path="/onboarding" component={Onboarding} />
+        <Route path="/exits" component={Exits} />
+        <Route path="/severance" component={SeverancePage} />
+        <Route path="/severance/test" component={SeveranceTestPage} />
+        <Route path="/garnishments" component={GarnishmentPage} />
+        <Route path="/iban-test" component={SimpleIbanTest} />
+        <Route path="/teams-roles" component={TeamsRoles} />
+        
+        {/* Time Section */}
+        <Route path="/punches" component={lazy(() => import("./pages/punches"))} />
+        <Route path="/exceptions" component={lazy(() => import("./pages/exceptions"))} />
+        <Route path="/devices" component={lazy(() => import("./pages/devices"))} />
+        
+        {/* Filings Section */}
+        <Route path="/filings" component={lazy(() => import("./pages/filings"))} />
+        <Route path="/filings/ergani" component={lazy(() => import("./pages/filings"))} />
+        <Route path="/filings/efka" component={lazy(() => import("./pages/filings"))} />
+        <Route path="/filings/aade" component={lazy(() => import("./pages/filings"))} />
+        <Route path="/filings/inspector" component={lazy(() => import("./pages/filings"))} />
+        
+        {/* Analytics Section */}
+        <Route path="/analytics/cost-ot" component={lazy(() => import("./pages/costOtAnalytics"))} />
+        
+        {/* Employee Portal */}
+        <Route path="/employee-portal" component={lazy(() => import("./pages/employeePortal"))} />
+            <Route path="/payroll" component={Payroll} />
+            <Route path="/payments" component={Payments} />
+            <Route path="/sepa-payments" component={SepaPayments} />
+            <Route path="/payments-cockpit" component={PaymentsCockpitDemo} />
+            <Route path="/sepa-engine-demo" component={SepaEngineDemo} />
+            <Route path="/payment-ops-checklist" component={PaymentOpsChecklist} />
+            <Route path="/schedules" component={Schedules} />
+            <Route path="/allowances" component={Allowances} />
+            <Route path="/overtime" component={Overtime} />
+            <Route path="/leave" component={Leave} />
+            <Route path="/legal" component={Legal} />
+            <Route path="/digital-work-card" component={DigitalWorkCard} />
+            <Route path="/advanced-time-capture" component={AdvancedTimeCapture} />
+            <Route path="/enterprise-architecture" component={EnterpriseArchitecture} />
+            <Route path="/ergani-compliance" component={ErganiCompliance} />
+            <Route path="/ergani-compliance/overtime" component={ErganiCompliance} />
+            <Route path="/ergani-compliance/exceptions" component={ErganiCompliance} />
+            <Route path="/payroll-integration" component={PayrollIntegration} />
+            <Route path="/manager-workflows" component={ManagerWorkflows} />
+            <Route path="/hotel-operations" component={HotelOperations} />
+            <Route path="/hotel-enhancements" component={HotelEnhancements} />
+            <Route path="/hotel-tip-pooling" component={HotelTipPooling} />
+            <Route path="/ux-architecture" component={UXArchitecture} />
+            <Route path="/compliance" component={Compliance} />
+            <Route path="/grc-compliance" component={GRCCompliance} />
+            <Route path="/analytics" component={Analytics} />
+            <Route path="/deployment" component={Deployment} />
+            <Route path="/success-metrics" component={SuccessMetrics} />
+            <Route path="/kpi-dashboard" component={KPIDashboard} />
+            <Route path="/payroll-processing" component={lazy(() => import("./pages/payrollProcessing"))} />
+            <Route path="/earnings-codes" component={lazy(() => import("./pages/earningsCodesDemo"))} />
+            <Route path="/greek-payroll-demo" component={lazy(() => import("./pages/greekPayrollDemo"))} />
+            <Route path="/earnings-codes-policy" component={lazy(() => import("./pages/earningsCodesPolicy"))} />
+            <Route path="/modern-payroll" component={ModernPayrollEngine} />
+            <Route path="/product-vision" component={ProductVision} />
+            <Route path="/rules-engine" component={RulesEngine} />
+            <Route path="/employee-self-service" component={EmployeeSelfService} />
+            <Route path="/manager-dashboard" component={ManagerDashboard} />
+            <Route path="/forecasting" component={Forecasting} />
+            <Route path="/document-ai" component={DocumentAI} />
+            <Route path="/changelog-legal-watch" component={ChangeLogLegalWatch} />
+            <Route path="/payroll-run-wizard" component={lazy(() => import("./pages/payrollRunWizard"))} />
+            <Route path="/smart-notifications" component={SmartNotifications} />
+            <Route path="/visual-analytics" component={VisualAnalytics} />
+            <Route path="/mobile-approvals" component={lazy(() => import("./components/MobileManagerApproval"))} />
+            <Route path="/mobile-punch" component={MobilePunch} />
+            <Route path="/payroll-preview" component={PayrollPreview} />
+            <Route path="/pay-explanation-demo" component={PayExplanationDemo} />
+            <Route path="/explanation-demo" component={ExplanationDemo} />
+            <Route path="/ai-engines-demo" component={AIEnginesDemo} />
+            <Route path="/command-palette-demo" component={CommandPaletteDemo} />
+            <Route path="/system-status" component={lazy(() => import("@/components/InAppStatusPage"))} />
+            <Route path="/incident-communications" component={lazy(() => import("@/components/IncidentCommunicationManager"))} />
+            <Route path="/root-cause-analysis" component={lazy(() => import("@/components/RootCauseAnalysisManager"))} />
+            <Route path="/incident-ownership" component={lazy(() => import("@/components/IncidentOwnershipManager"))} />
+            <Route path="/public-status" component={lazy(() => import("@/components/PublicStatusPage"))} />
+            <Route path="/performance-budgets" component={lazy(() => import("@/components/PerformanceBudgetManager"))} />
+            <Route path="/disaster-recovery" component={lazy(() => import("@/components/DisasterRecoveryManager"))} />
+            <Route path="/dunning-emails" component={lazy(() => import("@/components/DunningEmailManager"))} />
+            <Route path="/data-contracts" component={lazy(() => import("./pages/dataContracts"))} />
+            <Route path="/data-import" component={DataImport} />
+            <Route path="/zero-trust-security" component={ZeroTrustSecurityPage} />
+            <Route path="/error-tracking" component={lazy(() => import("@/pages/ErrorTrackingPage"))} />
+            <Route path="/automated-training" component={lazy(() => import("@/pages/AutomatedTrainingDemo"))} />
+            <Route path="/churn-prevention" component={lazy(() => import("@/pages/ChurnPreventionDemo"))} />
+            <Route path="/ergani-validation" component={lazy(() => import("@/pages/ERGANIValidationDemo"))} />
+            <Route path="/cba-updates" component={lazy(() => import("@/pages/CBAUpdatesDemo"))} />
+            <Route path="/tax-law-alerts" component={lazy(() => import("@/pages/TaxLawAlertsDemo"))} />
+            <Route path="/digital-inspector-portal" component={lazy(() => import("@/pages/DigitalInspectorPortalDemo"))} />
+            <Route path="/cost-benchmarking" component={lazy(() => import("@/pages/CostBenchmarkingDemo"))} />
+            <Route path="/predictive-labor-costs" component={lazy(() => import("@/pages/PredictiveLaborCostsDemo"))} />
+            <Route path="/compliance-risk-scoring" component={lazy(() => import("@/pages/ComplianceRiskScoringDemo"))} />
+            <Route path="/webhook-system" component={lazy(() => import("@/pages/WebhookSystemDemo"))} />
+        <Route path="/s1-dashboard" component={S1Dashboard} />
+        <Route path="/s1-metrics" component={S1MetricsPage} />
+        <Route path="/s1-acceptance-testing" component={S1AcceptanceTesting} />
+        <Route path="/embedded-payroll" component={EmbeddedPayroll} />
+        <Route path="/embed" component={EmbedPage} />
+        <Route path="/ai-copilot" component={AICopilot} />
+        <Route path="/help-center" component={lazy(() => import("@/pages/HelpCenter"))} />
+        <Route path="/partner-console" component={PartnerConsole} />
+        <Route path="/partner" nest>
+          <Partner />
+        </Route>
+        <Route component={NotFound} />
+        </Switch>
+        </Suspense>
+      </Layout>
+    </OboProvider>
   );
 }
 
-// Feature Views
-function EmployeesView() {
+function App() {
+  const [pwaState] = usePWA();
+  
   return (
-    <div>
-      <h2 style={{ margin: '0 0 1.5rem 0', color: '#1f2937' }}>👥 Employee Management</h2>
-      <div style={{ 
-        background: '#f8fafc',
-        border: '2px dashed #cbd5e1',
-        borderRadius: '8px',
-        padding: '2rem',
-        textAlign: 'center' as const
-      }}>
-        <p style={{ fontSize: '16px', marginBottom: '1rem', color: '#64748b' }}>
-          Employee management features will be implemented here.
-        </p>
-        <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '1rem' }}>
-          Backend APIs available for:
-        </p>
-        <ul style={{ textAlign: 'left' as const, display: 'inline-block', fontSize: '14px', color: '#64748b' }}>
-          <li>Employee CRUD operations</li>
-          <li>Department management</li>
-          <li>Shift scheduling</li>
-          <li>Time tracking</li>
-        </ul>
-      </div>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <LocaleProvider>
+        <ThemeProvider>
+          <UserRoleProvider>
+            <PropertyProvider>
+              <AppProvider>
+                <ABTestProvider>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Router />
+                    
+                    {/* PWA Install Prompt */}
+                    {pwaState.canInstall && (
+                      <PWAInstallPrompt variant="banner" />
+                    )}
+                  </TooltipProvider>
+                </ABTestProvider>
+              </AppProvider>
+            </PropertyProvider>
+          </UserRoleProvider>
+        </ThemeProvider>
+      </LocaleProvider>
+    </QueryClientProvider>
   );
 }
 
-function PayrollView() {
-  return (
-    <div>
-      <h2 style={{ margin: '0 0 1.5rem 0', color: '#1f2937' }}>💰 Payroll Processing</h2>
-      <div style={{ 
-        background: '#f8fafc',
-        border: '2px dashed #cbd5e1',
-        borderRadius: '8px',
-        padding: '2rem',
-        textAlign: 'center' as const
-      }}>
-        <p style={{ fontSize: '16px', marginBottom: '1rem', color: '#64748b' }}>
-          Greek-compliant payroll processing will be implemented here.
-        </p>
-        <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '1rem' }}>
-          Backend supports:
-        </p>
-        <ul style={{ textAlign: 'left' as const, display: 'inline-block', fontSize: '14px', color: '#64748b' }}>
-          <li>Greek tax calculations</li>
-          <li>EFKA insurance</li>
-          <li>Collective agreements</li>
-          <li>Overtime & bonuses</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-function ComplianceView() {
-  return (
-    <div>
-      <h2 style={{ margin: '0 0 1.5rem 0', color: '#1f2937' }}>📋 Greek HR Compliance</h2>
-      <div style={{ 
-        background: '#f8fafc',
-        border: '2px dashed #cbd5e1',
-        borderRadius: '8px',
-        padding: '2rem',
-        textAlign: 'center' as const
-      }}>
-        <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '1rem' }}>
-          Compliance management features available:
-        </p>
-        <ul style={{ textAlign: 'left' as const, display: 'inline-block', fontSize: '14px', color: '#64748b' }}>
-          <li>ERGANI II integration</li>
-          <li>e-EFKA/APD filings</li>
-          <li>AADE/ΦΜΥ reports</li>
-          <li>Digital work cards</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-function AnalyticsView() {
-  return (
-    <div>
-      <h2 style={{ margin: '0 0 1.5rem 0', color: '#1f2937' }}>📈 Business Analytics</h2>
-      <div style={{ 
-        background: '#f8fafc',
-        border: '2px dashed #cbd5e1',
-        borderRadius: '8px',
-        padding: '2rem',
-        textAlign: 'center' as const
-      }}>
-        <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '1rem' }}>
-          Analytics & reporting features:
-        </p>
-        <ul style={{ textAlign: 'left' as const, display: 'inline-block', fontSize: '14px', color: '#64748b' }}>
-          <li>Labor forecasting</li>
-          <li>Overtime heatmaps</li>
-          <li>Compliance KPIs</li>
-          <li>Productivity metrics</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-function PaymentsView() {
-  return (
-    <div>
-      <h2 style={{ margin: '0 0 1.5rem 0', color: '#1f2937' }}>🏦 SEPA Payments</h2>
-      <div style={{ 
-        background: '#f8fafc',
-        border: '2px dashed #cbd5e1',
-        borderRadius: '8px',
-        padding: '2rem',
-        textAlign: 'center' as const
-      }}>
-        <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '1rem' }}>
-          Banking & payment features:
-        </p>
-        <ul style={{ textAlign: 'left' as const, display: 'inline-block', fontSize: '14px', color: '#64748b' }}>
-          <li>SEPA payment generation</li>
-          <li>Bank file processing</li>
-          <li>Payment reconciliation</li>
-          <li>Greek bank integration</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
-      <PayrollDashboard />
-    </ErrorBoundary>
-  );
-}
+export default App;

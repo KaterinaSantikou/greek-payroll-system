@@ -7,26 +7,20 @@ const router = Router();
 // OIDC/SAML SSO endpoints are handled by replitAuth.ts
 // This file provides additional auth utilities and user management
 
-// Get current authenticated user (with fallback for development)
-router.get('/user', async (req: any, res) => {
+// Get current authenticated user
+router.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
   try {
-    // Check if user is authenticated via session
-    if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims) {
-      const userId = req.user.claims.sub;
-      const user = {
-        id: userId,
-        email: req.user.claims.email,
-        firstName: req.user.claims.first_name,
-        lastName: req.user.claims.last_name,
-        profileImageUrl: req.user.claims.profile_image_url,
-        scopes: ["payroll:read", "payroll:write", "employees:read", "employees:write", "filings:write"]
-      };
-      
-      return res.json(user);
-    }
+    const userId = req.user.claims.sub;
+    const user = {
+      id: userId,
+      email: req.user.claims.email,
+      firstName: req.user.claims.first_name,
+      lastName: req.user.claims.last_name,
+      profileImageUrl: req.user.claims.profile_image_url,
+      scopes: ["payroll:read", "payroll:write", "employees:read", "employees:write", "filings:write"]
+    };
     
-    // For development/testing - return 401 as expected by the frontend
-    res.status(401).json({ message: "Unauthorized" });
+    res.json(user);
   } catch (error) {
     console.error("Error fetching user:", error);
     res.status(500).json({ message: "Failed to fetch user" });
@@ -47,7 +41,7 @@ const SCIMUserSchema = z.object({
   active: z.boolean().default(true)
 });
 
-router.post('/scim/v2/Users', isAuthenticated, async (req, res) => {
+router.post('/api/scim/v2/Users', isAuthenticated, async (req, res) => {
   try {
     const userData = SCIMUserSchema.parse(req.body);
     
@@ -78,7 +72,7 @@ router.post('/scim/v2/Users', isAuthenticated, async (req, res) => {
 });
 
 // Get SCIM user
-router.get('/scim/v2/Users/:id', isAuthenticated, async (req, res) => {
+router.get('/api/scim/v2/Users/:id', isAuthenticated, async (req, res) => {
   try {
     // In production, fetch from user management system
     const user = {

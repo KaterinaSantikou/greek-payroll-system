@@ -32,7 +32,11 @@ export class PasswordService {
     const passwordWithPepper = password + this.GLOBAL_PEPPER;
     
     // Derive key using scrypt
-    const derivedKey = await scrypt(passwordWithPepper, salt, this.KEY_LENGTH) as Buffer;
+    const derivedKey = await scrypt(passwordWithPepper, salt, this.KEY_LENGTH, {
+      N: this.SCRYPT_COST,
+      r: this.SCRYPT_BLOCK_SIZE,
+      p: this.SCRYPT_PARALLELIZATION,
+    }) as Buffer;
 
     // Create hash string with parameters for verification
     const hashWithParams = `scrypt$${this.SCRYPT_COST}$${this.SCRYPT_BLOCK_SIZE}$${this.SCRYPT_PARALLELIZATION}$${salt.toString('base64')}$${derivedKey.toString('base64')}`;
@@ -65,7 +69,9 @@ export class PasswordService {
       const passwordWithPepper = password + this.GLOBAL_PEPPER;
 
       // Derive key with same parameters
-      const derivedKey = await scrypt(passwordWithPepper, salt, expectedHash.length) as Buffer;
+      const derivedKey = await scrypt(passwordWithPepper, salt, expectedHash.length, {
+        N, r, p
+      }) as Buffer;
 
       // Constant-time comparison
       return crypto.timingSafeEqual(expectedHash, derivedKey);

@@ -4,8 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import ImpersonationBanner, { useImpersonation, DisabledDuringImpersonation } from '@/components/ImpersonationBanner';
-import PIIMasking from '@/lib/piiMasking';
 import { 
   Euro, 
   Clock,
@@ -19,19 +17,13 @@ import {
   Eye,
   Send,
   CheckCircle,
-  AlertCircle,
-  TrendingUp,
-  Shield,
-  Mail,
-  Phone
+  AlertCircle
 } from "lucide-react";
 import { useLocale } from "@/lib/i18n";
 import { formatCurrency } from "@/lib/i18n";
 
 export default function EmployeePortal() {
   const { t, locale } = useLocale();
-  const impersonation = useImpersonation();
-  
   const employee = {
     name: "Katerina Santikos",
     id: "EMP-001234",
@@ -92,20 +84,7 @@ export default function EmployeePortal() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Impersonation Banner */}
-      {impersonation.isActive && (
-        <ImpersonationBanner
-          impersonatorName={impersonation.impersonatorName || 'Admin User'}
-          targetEmployeeName={employee.name}
-          reason={impersonation.reason || 'Employee portal support'}
-          startTime={impersonation.startTime || new Date().toISOString()}
-          duration={impersonation.duration || 60}
-          onExitImpersonation={impersonation.exitImpersonation}
-        />
-      )}
-      
-      <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6">
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 p-6 rounded-lg">
         <div className="flex items-center justify-between">
@@ -188,91 +167,44 @@ export default function EmployeePortal() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Enhanced Latest Payslip Card */}
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800">
+        {/* Latest Payslip */}
+        <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <Euro className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl">Latest Payslip</CardTitle>
-                  <p className="text-sm text-muted-foreground">{payslipData.period}</p>
-                </div>
-              </div>
-              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                Available
-              </Badge>
-            </div>
+            <CardTitle className="flex items-center gap-2">
+              <Euro className="h-5 w-5" />
+              Latest Payslip
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Net Pay Highlight */}
-            <div className="text-center p-4 bg-white dark:bg-gray-900/50 rounded-lg border">
-              <p className="text-sm text-muted-foreground mb-1">Net Pay</p>
-              <p className="text-3xl font-bold text-green-600 flex items-center justify-center gap-1">
-                <Euro className="h-8 w-8" />
-                {payslipData.netPay.toLocaleString()}
-              </p>
-              <div className="flex items-center justify-center gap-1 mt-1">
-                <TrendingUp className="h-4 w-4 text-green-500" />
-                <span className="text-xs text-green-600">Available for download</span>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Period</span>
+                <span className="font-medium">{payslipData.period}</span>
               </div>
-            </div>
-            
-            {/* Payslip Breakdown */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Gross Pay</span>
-                  <span className="font-medium">€{payslipData.grossPay.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Deductions</span>
-                  <span className="font-medium text-red-600">-€{payslipData.deductions.toLocaleString()}</span>
-                </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Gross Pay</span>
+                <span className="font-medium">€{payslipData.grossPay}</span>
               </div>
-              <div className="flex items-center justify-center">
-                <div className="relative w-16 h-16">
-                  <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 32 32">
-                    <circle cx="16" cy="16" r="12" fill="none" className="stroke-gray-200 dark:stroke-gray-700" strokeWidth="4" />
-                    <circle cx="16" cy="16" r="12" fill="none" className="stroke-green-500" strokeWidth="4" 
-                      strokeDasharray={`${(payslipData.netPay/payslipData.grossPay) * 75.4} 75.4`} strokeLinecap="round" />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-xs font-medium text-green-600">
-                      {Math.round((payslipData.netPay/payslipData.grossPay) * 100)}%
-                    </span>
-                  </div>
-                </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Deductions</span>
+                <span className="font-medium text-red-600">-€{payslipData.deductions}</span>
+              </div>
+              <Separator />
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Net Pay</span>
+                <span className="font-bold text-green-600 text-lg">€{payslipData.netPay}</span>
               </div>
             </div>
             
             <div className="flex gap-2">
-              {impersonation.isActive ? (
-                <DisabledDuringImpersonation tooltip="Payslip actions are view-only during administrative sessions">
-                  <Button className="flex-1" disabled>
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Details
-                  </Button>
-                  <Button variant="outline" className="flex-1" disabled>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download PDF
-                  </Button>
-                </DisabledDuringImpersonation>
-              ) : (
-                <>
-                  <Button className="flex-1">
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Details
-                  </Button>
-                  <Button variant="outline" className="flex-1">
-                    <Download className="h-4 w-4 mr-2" />
-                    Download PDF
-                  </Button>
-                </>
-              )}
+              <Button className="flex-1">
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </Button>
+              <Button variant="outline" className="flex-1">
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -431,7 +363,6 @@ export default function EmployeePortal() {
           <span className="text-xs">Update Profile</span>
         </Button>
       </div>
-    </div>
     </div>
   );
 }

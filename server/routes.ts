@@ -21,14 +21,12 @@ import healthAPI from "./api/health";
 import securityAPI from "./api/security";
 import reportsAPI from "./api/reports";
 import { registerForecastingRoutes } from "./api/forecasting";
-import { registerProductionRoutes } from "./api/production";
-// Temporarily disabled for startup fix
-// import { 
-//   requestLoggingMiddleware, 
-//   errorLoggingMiddleware, 
-//   performanceLoggingMiddleware, 
-//   securityLoggingMiddleware 
-// } from "./middleware/loggingMiddleware";
+import { 
+  requestLoggingMiddleware, 
+  errorLoggingMiddleware, 
+  performanceLoggingMiddleware, 
+  securityLoggingMiddleware 
+} from "./middleware/loggingMiddleware";
 import { registerDocumentAIRoutes } from "./api/documentAI";
 import { registerChangeLogLegalWatchRoutes } from "./api/changeLogLegalWatch";
 import { 
@@ -44,29 +42,6 @@ import {
   insertDeviceRegistrySchema,
   insertOvertimeRequestSchema
 } from "@shared/schema";
-import {
-  basicRateLimit,
-  authRateLimit,
-  apiRateLimit,
-  payrollRateLimit,
-  progressiveDelay,
-  requestSizeLimit,
-  suspiciousPatternDetection,
-  ipBlockingMiddleware,
-  connectionLimiter,
-  securityHeaders,
-  exemptHealthCheck
-} from './middleware/ddosProtection';
-import {
-  geoBlocking,
-  ipWhitelist,
-  ipBlacklist,
-  userAgentValidation,
-  protocolSecurity,
-  adminNetworkSecurity,
-  financialNetworkSecurity,
-  networkRequestValidation
-} from './middleware/networkSecurity';
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { erganiConnector } from "./erganiConnector";
@@ -90,7 +65,6 @@ import { registerExplanationRoutes } from "./api/explanations";
 import { instantReissueRoutes } from "./api/instantReissue";
 import securityRoutes from "./routes/securityRoutes";
 import cbaPackRoutes from "./routes/cbaPackRoutes";
-import backupRoutes from "./api/backup";
 import { embeddedPayrollRoutes } from "./api/embedded";
 import { glGenericRoutes } from "./api/glGeneric";
 import { nativeConnectorRoutes } from "./api/nativeConnectors";
@@ -112,7 +86,6 @@ import { registerBillingRoutes } from "./routes/billing";
 import { reissueAlgorithmRoutes } from "./api/reissueAlgorithm";
 import { oneClickFlowRoutes } from "./api/oneClickFlow";
 import eventQueueAPI from "./api/eventQueue";
-import { registerMinorLaborRoutes } from "./routes/minorLaborRoutes";
 // ibanValidationRoutes already imported on line 5
 import { AdvancedAnalyticsService } from "./advancedAnalyticsService";
 import { HotelEnhancementsService } from "./hotelEnhancementsService";
@@ -132,86 +105,74 @@ import {
 } from "./api/dataImport";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware - Primary Replit Auth (Enterprise OIDC)
+  // Auth middleware
   await setupAuth(app);
 
-  // Production-only enterprise services
-  if (process.env.NODE_ENV === 'production') {
-    console.log('🔧 Initializing production enterprise services...');
-    
-    // Initialize security enforcement components
-    try {
-      await SecurityEnforcementInitializer.initialize();
-      console.log('✅ Security enforcement components initialized');
-    } catch (error) {
-      console.error('❌ Security enforcement initialization failed:', error);
+  // Initialize security enforcement components
+  try {
+    await SecurityEnforcementInitializer.initialize();
+    console.log('✅ Security enforcement components initialized');
+  } catch (error) {
+    console.error('❌ Security enforcement initialization failed:', error);
+    // Continue with reduced security in development
+    if (process.env.NODE_ENV === 'production') {
       throw error; // Fail hard in production
     }
-
-    // Initialize GDPR compliance framework
-    try {
-      const { GDPRComplianceInitializer } = await import('./services/GDPRComplianceInitializer');
-      await GDPRComplianceInitializer.initialize();
-      console.log('🛡️  GDPR compliance framework initialized');
-    } catch (error) {
-      console.error('❌ GDPR compliance initialization failed:', error);
-      throw error; // Fail hard in production
-    }
-
-    // Initialize Disaster Recovery systems
-    try {
-      const { DisasterRecoveryInitializer } = await import('./services/DisasterRecoveryInitializer');
-      await DisasterRecoveryInitializer.initializeDRSystem();
-      console.log('🆘 Disaster Recovery systems initialized');
-    } catch (error) {
-      console.error('❌ Disaster Recovery initialization failed:', error);
-      throw error; // Fail hard in production
-    }
-
-    // Initialize Government System Monitoring
-    try {
-      const { GovernmentSystemMonitoringService } = await import('./services/GovernmentSystemMonitoringService');
-      const monitoringService = GovernmentSystemMonitoringService.getInstance();
-      await monitoringService.initializeMonitoring();
-      console.log('🏛️  Government system monitoring initialized');
-    } catch (error) {
-      console.error('❌ Government system monitoring initialization failed:', error);
-      throw error; // Fail hard in production
-    }
-
-    // Initialize On-Call Rota System
-    try {
-      const { OnCallRotaService } = await import('./services/OnCallRotaService');
-      const onCallService = OnCallRotaService.getInstance();
-      await onCallService.initializeOnCallSystem();
-      console.log('🚨 On-call rota system initialized');
-    } catch (error) {
-      console.error('❌ On-call rota system initialization failed:', error);
-      throw error; // Fail hard in production
-    }
-  } else {
-    console.log('🔧 Development mode - skipping heavy enterprise services');
   }
 
-  // Network Security & Firewall - Apply first for maximum protection
-  console.log('🔒 Applying network security and firewall rules...');
-  app.use(exemptHealthCheck);
-  app.use(ipBlacklist);
-  app.use(geoBlocking);
-  app.use(userAgentValidation);
-  app.use(protocolSecurity);
-  app.use(networkRequestValidation);
-  console.log('✅ Network security firewall active');
+  // Initialize GDPR compliance framework
+  try {
+    const { GDPRComplianceInitializer } = await import('./services/GDPRComplianceInitializer');
+    await GDPRComplianceInitializer.initialize();
+    console.log('🛡️  GDPR compliance framework initialized');
+  } catch (error) {
+    console.error('❌ GDPR compliance initialization failed:', error);
+    // Continue with reduced compliance in development
+    if (process.env.NODE_ENV === 'production') {
+      throw error; // Fail hard in production
+    }
+  }
 
-  // DDoS Protection - Apply after network security
-  console.log('🛡️  Applying DDoS protection middleware...');
-  app.use(ipBlockingMiddleware);
-  app.use(securityHeaders);
-  app.use(connectionLimiter);
-  app.use(suspiciousPatternDetection);
-  app.use(requestSizeLimit);
-  app.use(progressiveDelay);
-  console.log('✅ DDoS protection middleware active');
+  // Initialize Disaster Recovery systems
+  try {
+    const { DisasterRecoveryInitializer } = await import('./services/DisasterRecoveryInitializer');
+    await DisasterRecoveryInitializer.initializeDRSystem();
+    console.log('🆘 Disaster Recovery systems initialized');
+  } catch (error) {
+    console.error('❌ Disaster Recovery initialization failed:', error);
+    // Continue with reduced DR capabilities in development
+    if (process.env.NODE_ENV === 'production') {
+      throw error; // Fail hard in production
+    }
+  }
+
+  // Initialize Government System Monitoring
+  try {
+    const { GovernmentSystemMonitoringService } = await import('./services/GovernmentSystemMonitoringService');
+    const monitoringService = GovernmentSystemMonitoringService.getInstance();
+    await monitoringService.initializeMonitoring();
+    console.log('🏛️  Government system monitoring initialized');
+  } catch (error) {
+    console.error('❌ Government system monitoring initialization failed:', error);
+    // Continue with reduced monitoring in development
+    if (process.env.NODE_ENV === 'production') {
+      throw error; // Fail hard in production
+    }
+  }
+
+  // Initialize On-Call Rota System
+  try {
+    const { OnCallRotaService } = await import('./services/OnCallRotaService');
+    const onCallService = OnCallRotaService.getInstance();
+    await onCallService.initializeOnCallSystem();
+    console.log('🚨 On-call rota system initialized');
+  } catch (error) {
+    console.error('❌ On-call rota system initialization failed:', error);
+    // Continue with reduced on-call capabilities in development
+    if (process.env.NODE_ENV === 'production') {
+      throw error; // Fail hard in production
+    }
+  }
 
   // Apply global MFA enforcement middleware (after auth but before other routes)
   app.use(mfaEnforcement.enforce());
@@ -223,23 +184,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(oboMiddleware);
 
   // Apply central logging middleware to all routes
-  // Temporarily disabled for startup fix
-  // app.use(requestLoggingMiddleware('payroll-sync'));
-  // app.use(performanceLoggingMiddleware('payroll-sync'));
-  // app.use(securityLoggingMiddleware('payroll-sync-security'));
+  app.use(requestLoggingMiddleware('payroll-sync'));
+  app.use(performanceLoggingMiddleware('payroll-sync'));
+  app.use(securityLoggingMiddleware('payroll-sync-security'));
 
   // Comprehensive Authentication Routes
   app.use('/api/auth/v2', authRoutes);
   
-  // Authentication routes with API contract compliance (strict rate limiting)
-  app.use('/auth', authRateLimit, authAPIRoutes);
+  // Authentication routes with API contract compliance
+  app.use('/auth', authAPIRoutes);
   
-  // Security compliance and audit routes (office network only)
-  app.use('/api/security', adminNetworkSecurity, securityRoutes);
-  
-  // Security monitoring API (office network only)
-  const securityMonitoringAPI = (await import("./api/securityMonitoring")).default;
-  app.use('/api/security', adminNetworkSecurity, securityMonitoringAPI);
+  // Security compliance and audit routes
+  app.use('/api/security', securityRoutes);
   
   // CBA & Sector Packs routes
   app.use('/api/cba-packs', cbaPackRoutes);
@@ -248,9 +204,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const cbaPacksApi = (await import("./api/cbaPacksApi")).default;
   app.use('/api/cba-packs-api', cbaPacksApi);
   
-  // Payroll Calculation Engine API (financial network security + strict rate limiting)
+  // Payroll Calculation Engine API
   const payrollCalculationApi = (await import("./api/payrollCalculationApi")).default;
-  app.use('/api/payroll-engine', financialNetworkSecurity, payrollRateLimit, payrollCalculationApi);
+  app.use('/api/payroll-engine', payrollCalculationApi);
   
   // CBA Governance API
   const cbaGovernanceApi = (await import("./api/cbaGovernanceApi")).default;
@@ -283,58 +239,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enhanced IBAN Validation API
   registerIbanValidationRoutes(app);
 
-  // Job Queue API
-  const { registerJobQueueRoutes } = await import("./api/jobQueue");
-  registerJobQueueRoutes(app);
-
   // Event Queue API - Evented Platform
   app.use('/', eventQueueAPI);
 
-  // Initialize core services immediately (blocking)
+  // Initialize services
+  const sepaPaymentService = new SepaPaymentService();
+  const glExportService = new GLExportService();
+  const filingComplianceService = new FilingComplianceService();
+  const selfServiceManager = new SelfServiceManager();
+  const advancedAnalyticsService = new AdvancedAnalyticsService();
+  const hotelEnhancementsService = new HotelEnhancementsService();
   const payExplanationService = new PayExplanationService(storage);
   
-  // Initialize job queue service
-  const { jobQueueService } = await import("./services/SimpleJobQueueService");
-  
-  // Initialize heavy services asynchronously (non-blocking)
-  const servicePromises = {
-    sepaPaymentService: Promise.resolve().then(() => new SepaPaymentService()),
-    glExportService: Promise.resolve().then(() => new GLExportService()),
-    filingComplianceService: Promise.resolve().then(() => new FilingComplianceService()),
-    selfServiceManager: Promise.resolve().then(() => new SelfServiceManager()),
-    advancedAnalyticsService: Promise.resolve().then(() => new AdvancedAnalyticsService()),
-    hotelEnhancementsService: Promise.resolve().then(() => new HotelEnhancementsService()),
-    overtimePreventionEngine: import("./overtimePreventionEngineSimple").then(m => m.overtimePreventionEngine),
-    exceptionAutoResolutionEngine: import("./exceptionAutoResolutionEngineSimple").then(m => m.exceptionAutoResolutionEngine)
-  };
-  
-  // Helper to get services when needed
-  const getService = async (serviceName: keyof typeof servicePromises) => {
-    return await servicePromises[serviceName];
-  };
-
-  // Simple user cache for auth performance (5 minute TTL)
-  const userCache = new Map<string, { user: any; expires: number }>();
-  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
-  const getCachedUser = async (userId: string) => {
-    const cached = userCache.get(userId);
-    if (cached && cached.expires > Date.now()) {
-      return cached.user;
-    }
-    
-    const user = await storage.getUser(userId);
-    if (user) {
-      userCache.set(userId, { user, expires: Date.now() + CACHE_TTL });
-    }
-    return user;
-  };
+  // Import AI engines
+  const { overtimePreventionEngine } = await import("./overtimePreventionEngineSimple");
+  const { exceptionAutoResolutionEngine } = await import("./exceptionAutoResolutionEngineSimple");
 
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const user = await getCachedUser(userId);
+      const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -374,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertEmployeeSchema.parse(req.body);
       
-      // Optimized: Check duplicate AFM and create employee in parallel when possible
+      // Check for duplicate AFM if provided
       if (validatedData.afm) {
         const existingByAfm = await storage.getEmployeeByAfm(validatedData.afm);
         if (existingByAfm) {
@@ -912,7 +837,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             earningsCode: line.code,
             hours: line.hours,
             units: line.hours,
-            rateBasis: 'HOURLY' as const,
+            rateBasis: 'HOURLY',
             costCenterAllocations: [{
               costCenterId: line.cost_center,
               propertyId: payrollData.property_id,
@@ -1383,7 +1308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { alertId } = req.params;
       const { resolution } = req.body;
-      const userId = (req.user as any)?.id || (req.user as any)?.claims?.sub || 'system';
+      const userId = req.user?.claims?.sub;
       
       const { complianceGuardrails } = await import("./complianceGuardrails");
       const resolved = complianceGuardrails.resolveAlert(alertId, userId, resolution);
@@ -1678,40 +1603,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Queue SEPA file generation for payroll run (financial network security + async with job queue)
-  app.post('/api/payroll/sepa/:runId', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
+  // Generate SEPA file for payroll run
+  app.get('/api/payroll/sepa/:runId', isAuthenticated, async (req, res) => {
     try {
+      const { SEPAFileGenerator } = await import('./sepaFileGenerator');
+      const sepaGenerator = new SEPAFileGenerator();
+      
       const { runId } = req.params;
-      const userId = req.user?.claims?.sub;
-      const idempotencyKey = req.headers['idempotency-key'] as string || `sepa-${runId}-${Date.now()}`;
+      const format = req.query.format as string || 'xml';
       
-      // Add SEPA generation job to queue
-      const job = await jobQueueService.addSEPAGenerationJob({
-        payrollRunId: runId,
-        idempotencyKey,
-        userId,
-        timestamp: new Date()
-      });
-
-      if (!job) {
-        // Job already completed (idempotency check)
-        return res.json({ 
-          status: 'completed',
-          message: 'SEPA file already generated',
-          jobId: idempotencyKey 
-        });
+      if (format === 'xml') {
+        const sepaXML = await sepaGenerator.generateSEPAFile(runId);
+        res.setHeader('Content-Type', 'application/xml');
+        res.setHeader('Content-Disposition', `attachment; filename="SEPA_${runId}_${new Date().toISOString().split('T')[0]}.xml"`);
+        res.send(sepaXML);
+      } else {
+        // Return metadata only
+        const payments = await (sepaGenerator as any).getPayrollPayments(runId);
+        const metadata = sepaGenerator.generateSEPAMetadata(runId, payments);
+        res.json(metadata);
       }
-
-      res.status(202).json({ 
-        status: 'processing',
-        jobId: job.id,
-        message: 'SEPA generation job queued',
-        checkStatusUrl: `/api/jobs/sepa-generation/${job.id}/status`
-      });
-      
     } catch (error) {
-      console.error('Error queueing SEPA generation:', error);
-      res.status(500).json({ message: 'Failed to queue SEPA generation job' });
+      console.error('Error generating SEPA file:', error);
+      res.status(500).json({ message: 'Failed to generate SEPA file' });
     }
   });
   
@@ -1815,7 +1729,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { successMetricsService } = await import('./successMetricsService');
       const alertId = req.params.alertId;
-      const userId = (req.user as any)?.claims?.sub || (req.user as any)?.id || 'system';
+      const userId = req.user?.claims?.sub || 'system';
       await successMetricsService.resolveAlert(alertId, userId);
       res.json({ success: true, message: 'Alert resolved' });
     } catch (error) {
@@ -2231,7 +2145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payment Services Routes
 
   // Generate SEPA payment file
-  app.post('/api/payments/sepa/generate', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/generate', isAuthenticated, async (req, res) => {
     try {
       const payrollPeriodId = req.body.payrollPeriodId;
       const propertyId = req.body.propertyId;
@@ -2240,7 +2154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Payroll period ID is required" });
       }
       
-      const result = await (sepaPaymentService as any).generateSepaFile?.(payrollPeriodId, propertyId) || { fileId: 'pending', status: 'generated' };
+      const result = await sepaPaymentService.generateSepaFile(payrollPeriodId, propertyId);
       res.json(result);
     } catch (error) {
       console.error("Error generating SEPA file:", error);
@@ -2252,7 +2166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/payments/sepa/:fileId/download', isAuthenticated, async (req, res) => {
     try {
       const fileId = req.params.fileId;
-      const sepaFile = await (sepaPaymentService as any).downloadSepaFile?.(fileId) || null;
+      const sepaFile = await sepaPaymentService.downloadSepaFile(fileId);
       
       if (!sepaFile) {
         return res.status(404).json({ error: "SEPA file not found" });
@@ -2268,7 +2182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Piraeus Bank encrypted SEPA file generation with e-PPS Mass Payments
-  app.post('/api/payments/sepa/generate-encrypted', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/generate-encrypted', isAuthenticated, async (req, res) => {
     try {
       const { payrollRunId, encryptionKey, ePPSMode = true } = req.body;
       
@@ -2280,7 +2194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sepaFileGenerator = new SEPAFileGenerator();
       
       // Validate Piraeus Bank capabilities for e-PPS Mass Payments
-      const validation = (sepaFileGenerator as any).validateBankCapabilities?.('piraeus', {
+      const validation = sepaFileGenerator.validateBankCapabilities('piraeus', {
         painVersion: 'pain.001.001.03',
         hostToHostEncryption: !!encryptionKey,
         ePPSMassPayments: ePPSMode
@@ -2294,9 +2208,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Generate encrypted SEPA file with e-PPS format
-      const result = await (sepaFileGenerator as any).generateEncryptedSEPAFile?.(payrollRunId, encryptionKey) || { fileId: 'encrypted_' + payrollRunId, status: 'generated' };
-      const ePPSFormat = (sepaFileGenerator as any).getPiraeusePPSFormat?.(payrollRunId) || { format: 'ePPS', version: '1.0' };
-      const bankProfile = (sepaFileGenerator as any).getBankProfileInfo?.('piraeus') || { bank: 'piraeus', capabilities: [] };
+      const result = await sepaFileGenerator.generateEncryptedSEPAFile(payrollRunId, encryptionKey);
+      const ePPSFormat = sepaFileGenerator.getPiraeusePPSFormat(payrollRunId);
+      const bankProfile = sepaFileGenerator.getBankProfileInfo('piraeus');
       
       res.json({
         ...result,
@@ -2313,7 +2227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // NBG SEPA Instant file generation (off-cycle urgent corrections)
-  app.post('/api/payments/sepa/generate-instant', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/generate-instant', isAuthenticated, async (req, res) => {
     try {
       const { payrollRunId, isOffCycle = true, urgentCorrections = true } = req.body;
       
@@ -2325,7 +2239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sepaFileGenerator = new SEPAFileGenerator();
       
       // Validate NBG capabilities for SEPA Instant
-      const validation = (sepaFileGenerator as any).validateBankCapabilities?.('nbg', {
+      const validation = sepaFileGenerator.validateBankCapabilities('nbg', {
         painVersion: 'pain.001.001.03',
         statusReporting: true,
         reconciliation: true
@@ -2338,9 +2252,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const sepaFile = await (sepaFileGenerator as any).generateSEPAFile?.(payrollRunId, 'nbg') || `<xml>NBG SEPA file for ${payrollRunId}</xml>`;
-      const specs = (sepaFileGenerator as any).getNBGBulkFileSpecs?.(payrollRunId, isOffCycle) || { processingMode: 'bulk', sepaInstantSupport: true, urgentCorrections: isOffCycle, bulkFileManagement: true };
-      const bankProfile = (sepaFileGenerator as any).getBankProfileInfo?.('nbg') || { bank: 'nbg', capabilities: [] };
+      const sepaFile = await sepaFileGenerator.generateSEPAFile(payrollRunId, 'nbg');
+      const specs = sepaFileGenerator.getNBGBulkFileSpecs(payrollRunId, isOffCycle);
+      const bankProfile = sepaFileGenerator.getBankProfileInfo('nbg');
       
       res.json({
         success: true,
@@ -2363,7 +2277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Comprehensive engine validation endpoint
-  app.post('/api/payments/sepa/validate-engine', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/validate-engine', isAuthenticated, async (req, res) => {
     try {
       const { bankProfile, payments, requestedExecutionDate } = req.body;
       
@@ -2393,7 +2307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // pain.002 status processing and reject surfacing
-  app.post('/api/payments/sepa/process-status', financialNetworkSecurity, payrollRateLimit, isAuthenticated, async (req, res) => {
+  app.post('/api/payments/sepa/process-status', isAuthenticated, async (req, res) => {
     try {
       const { pain002Response, correlationId } = req.body;
       
@@ -2501,7 +2415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
       const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
       
-      const history = await (sepaPaymentService as any).getPaymentHistory?.(propertyId, startDate, endDate) || [];
+      const history = await sepaPaymentService.getPaymentHistory(propertyId, startDate, endDate);
       res.json(history);
     } catch (error) {
       console.error("Error fetching payment history:", error);
@@ -2532,7 +2446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/gl-export/:exportId/download', isAuthenticated, async (req, res) => {
     try {
       const exportId = req.params.exportId;
-      const glExport = await (glExportService as any).downloadGLExport?.(exportId) || null;
+      const glExport = await glExportService.downloadGLExport(exportId);
       
       if (!glExport) {
         return res.status(404).json({ error: "GL export not found" });
@@ -2557,7 +2471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const propertyId = req.query.propertyId as string;
       const erpSystem = req.query.erpSystem as string;
       
-      const history = await (glExportService as any).getGLExportHistory?.(propertyId, erpSystem) || [];
+      const history = await glExportService.getGLExportHistory(propertyId, erpSystem);
       res.json(history);
     } catch (error) {
       console.error("Error fetching GL export history:", error);
@@ -2847,16 +2761,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { propertyId, poolName, distributionMethod } = req.body;
       const tipPool = await hotelEnhancementsService.createTipPoolingEngine(propertyId, {
         poolName,
-        configuration: { 
-          distributionMethod,
-          roleWeights: [],
-          distributionRules: {
-            shiftBased: { enabled: false, shiftWeights: {} },
-            hoursBased: { enabled: false },
-            guestFeedbackMultiplier: { enabled: false }
-          },
-          poolingPeriod: 'daily' as 'daily' | 'weekly'
-        }
+        configuration: { distributionMethod }
       });
       res.json(tipPool);
     } catch (error) {
@@ -2965,14 +2870,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Comprehensive API Routes
   app.use(authAPI);
-  app.use('/api/employees', apiRateLimit, employeesAPI);
-  app.use('/api/time', apiRateLimit, timeAPI);
-  app.use('/api/payroll', financialNetworkSecurity, payrollRateLimit, payrollAPI);
+  app.use(employeesAPI);
+  app.use(timeAPI);
+  app.use(payrollAPI);
   app.use(filingsAPI);
-
-  // RBAC API for user management and employee self-service
-  const rbacAPI = (await import("./api/rbac")).default;
-  app.use("/api", rbacAPI);
   // V1 Payments API
   paymentsRoutes(app);
   app.use(webhooksAPI);
@@ -2995,30 +2896,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // On-Call Rota API
   const onCallRotaAPI = (await import("./api/onCallRota")).default;
   app.use("/api/on-call", onCallRotaAPI);
-  
-  // Employee Portal API
-  const portalAPI = (await import("./api/portal")).default;
-  app.use("/api/portal", portalAPI);
-  
-  // Backup and Recovery API
-  app.use("/api/backup", backupRoutes);
-  
-  // Performance & Monitoring API
-  // Temporarily disabled for startup fix due to compilation errors
-  // const monitoringRoutes = (await import("./api/monitoring")).default;
-  // app.use("/api/monitoring", monitoringRoutes);
-  
-  // Database Connection Pool API
-  const databasePoolRoutes = (await import("./api/database-pool")).default;
-  app.use("/api/database-pool", databasePoolRoutes);
-  
-  // Redis Cache Management API
-  const cacheRoutes = (await import("./api/cache")).default;
-  app.use("/api/cache", cacheRoutes);
-  
-  // Load Balancer Management API
-  const loadBalancerRoutes = (await import("./api/load-balancer")).default;
-  app.use("/api/load-balancer", loadBalancerRoutes);
 
   // Register automated runbooks routes
   try {
@@ -3086,7 +2963,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register forecasting API routes
   registerForecastingRoutes(app);
-  registerProductionRoutes(app);
   
   // Register Document AI API routes
   registerDocumentAIRoutes(app);
@@ -3549,7 +3425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action,
         comment,
         processedAt: new Date().toISOString(),
-        processedBy: (req.user as any)?.claims?.sub || (req.user as any)?.id || 'system'
+        processedBy: req.user?.claims?.sub
       };
       
       res.json(result);
@@ -3564,14 +3440,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertPunchEventSchema.parse({
         ...req.body,
-        userId: (req.user as any)?.claims?.sub || (req.user as any)?.id || 'system'
+        userId: req.user?.claims?.sub
       });
       
       const punchEvent = await storage.createPunchEvent(validatedData);
       
       // Trigger ERGANI sync if online (non-blocking)
       if (!req.body.offlineFlag) {
-        (erganiConnector as any).syncPunchEvent?.(punchEvent).catch((error: any) => {
+        erganiConnector.syncPunchEvent(punchEvent).catch(error => {
           console.error("ERGANI sync failed:", error);
         });
       }
@@ -3676,8 +3552,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const netPay = grossPay - deductions;
         
         employeeData.push({
-          employeeId: employee.employeeId,
-          employeeName: employee.name || `Employee ${employee.employeeId}`,
+          employeeId: employee.id,
+          employeeName: `${employee.firstName} ${employee.lastName}`,
           regularHours,
           overtimeHours,
           grossPay,
@@ -3759,7 +3635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai/apply-overtime-recommendation", isAuthenticated, async (req, res) => {
     try {
       const { recommendationId, notes } = req.body;
-      const userId = (req.user as any)?.id || (req.user as any)?.claims?.sub || 'system';
+      const userId = req.user?.claims?.sub;
       
       if (!recommendationId) {
         return res.status(400).json({ error: "recommendationId is required" });
@@ -3825,29 +3701,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerSelfServiceRoutes(app);
   registerPropertiesRoutes(app);
   registerUserProfileRoutes(app);
-  
-  // Minor Labor Protection Routes - Greek Law Compliance for workers under 18
-  registerMinorLaborRoutes(app);
-  
-  // Greek Employment Types Routes - Apprenticeships, Variable Hours, Seasonal, Multiple Employers
-  const { registerEmploymentTypesRoutes } = await import("./routes/employmentTypesRoutes");
-  registerEmploymentTypesRoutes(app);
-  
-  // Greek Payroll Events Routes - Sick Leave, Maternity/Paternity, Unpaid Leave, Severance
-  const { registerPayrollEventsRoutes } = await import("./routes/payrollEventsRoutes");
-  registerPayrollEventsRoutes(app);
-  
-  // Greek Benefits & Allowances Routes - Meal Vouchers, Travel Per Diem, Tips, In-Kind Benefits
-  const { registerBenefitsAllowancesRoutes } = await import("./routes/benefitsAllowancesRoutes");
-  registerBenefitsAllowancesRoutes(app);
-  
-  // Greek Payroll Mechanics Routes - Rounding, Negative Net Pay, Property Allocation, CBAs
-  const { registerPayrollMechanicsRoutes } = await import("./routes/payrollMechanicsRoutes");
-  registerPayrollMechanicsRoutes(app);
-  
-  // Enhanced Greek Labor Compliance Routes - Missing Law Components
-  const { registerEnhancedLaborComplianceRoutes } = await import("./routes/enhancedLaborComplianceRoutes");
-  registerEnhancedLaborComplianceRoutes(app);
   registerAICopilotRoutes(app);
   registerLaborNewsfeedRoutes(app);
   registerInstantPaymentRoutes(app);
@@ -3915,7 +3768,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/approvals/:approvalId/approve', isAuthenticated, async (req, res) => {
     try {
       const { approvalId } = req.params;
-      const userId = (req.user as any)?.id || (req.user as any)?.claims?.sub || 'system';
+      const userId = req.user?.claims?.sub;
       const { reason } = req.body;
 
       const { smartNotifications } = await import('./smartNotificationsService');
@@ -3940,7 +3793,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/approvals/:approvalId/reject', isAuthenticated, async (req, res) => {
     try {
       const { approvalId } = req.params;
-      const userId = (req.user as any)?.id || (req.user as any)?.claims?.sub || 'system';
+      const userId = req.user?.claims?.sub;
       const { reason } = req.body;
 
       const { smartNotifications } = await import('./smartNotificationsService');

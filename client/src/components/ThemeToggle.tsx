@@ -1,4 +1,4 @@
-// import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -10,10 +10,7 @@ import { Moon, Sun, Monitor } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function ThemeToggle() {
-  // Temporary hardcoded values to prevent context errors
-  const theme = "light";
-  const setTheme = (t: string) => console.log("Theme changed to:", t);
-  const actualTheme = "light";
+  const { theme, setTheme, actualTheme } = useTheme();
 
   return (
     <DropdownMenu>

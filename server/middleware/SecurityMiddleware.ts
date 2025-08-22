@@ -19,17 +19,6 @@ declare module 'express-session' {
   }
 }
 
-// Export individual middleware functions for backward compatibility
-export const csrfProtection = () => SecurityMiddleware.initializeCSRF();
-export const generateCSRFToken = () => SecurityMiddleware.initializeCSRF(); 
-export const cspHeaders = () => (req: any, res: any, next: any) => {
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'");
-  next();
-};
-export const bruteForceProtection = () => SecurityMiddleware.rateLimitAuth();
-export const resetBruteForceOnSuccess = () => (req: any, res: any, next: any) => next(); // Pass-through
-export const getSecureCookieOptions = () => ({ httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' as const });
-
 export class SecurityMiddleware {
   /**
    * Initialize CSRF token for session

@@ -13,7 +13,7 @@ import type {
 } from '@simplewebauthn/types';
 
 import { db } from '../db';
-import { mfaTotpSecrets, webauthnCredentials, users } from '@shared/auth-schema';
+import { mfaTotpSecrets, webauthnCredentials, users } from '@shared/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { PasswordService } from './PasswordService';
 
@@ -309,9 +309,9 @@ export class MfaService {
         expectedChallenge,
         expectedOrigin: this.WEBAUTHN_ORIGIN,
         expectedRPID: this.WEBAUTHN_RP_ID,
-        credential: {
-          id: credential.credentialId,
-          publicKey: Buffer.from(credential.publicKey, 'base64url'),
+        authenticator: {
+          credentialID: Buffer.from(credential.credentialId, 'base64url'),
+          credentialPublicKey: Buffer.from(credential.publicKey, 'base64url'),
           counter: credential.counter || 0,
         },
       });
