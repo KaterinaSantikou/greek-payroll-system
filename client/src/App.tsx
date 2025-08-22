@@ -1,9 +1,3 @@
-import { Route, Switch } from "wouter";
-import { AppProviders } from "@/providers/AppProviders";
-import { AppProvider } from "@/contexts/AppContext";
-import Home from "@/pages/home";
-import Login from "@/pages/auth/Login";
-import Layout from "@/components/Layout";
 import { Component, ReactNode } from "react";
 
 interface ErrorBoundaryState {
@@ -50,26 +44,15 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 export default function App() {
   return (
     <ErrorBoundary>
-      <AppProviders>
-        <AppProvider>
-          <Layout>
-            <Switch>
-              <Route path="/" component={Home} />
-              <Route path="/home" component={Home} />
-              <Route path="/login" component={Login} />
-              <Route path="/dashboard" component={Home} />
-              <Route>
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold mb-2">Page Not Found</h2>
-                    <p className="text-muted-foreground">The page you're looking for doesn't exist.</p>
-                  </div>
-                </div>
-              </Route>
-            </Switch>
-          </Layout>
-        </AppProvider>
-      </AppProviders>
+      <div className="p-8 text-center">
+        <h1 className="text-3xl font-bold text-blue-600 mb-4">PayrollSync</h1>
+        <h2 className="text-xl mb-4">Greek HR & Payroll Management System</h2>
+        <p className="text-gray-600 mb-4">✅ App is loading successfully!</p>
+        <div className="bg-green-100 p-4 rounded-lg">
+          <p className="text-green-800">Frontend is working - no more crashes!</p>
+          <p className="text-sm text-green-600 mt-2">Ready to add back components step by step</p>
+        </div>
+      </div>
     </ErrorBoundary>
   );
 }
