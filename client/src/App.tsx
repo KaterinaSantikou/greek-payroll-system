@@ -44,13 +44,13 @@ class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryStat
 export default function App() {
   return (
     <ErrorBoundary>
-      <div className="p-8 text-center">
-        <h1 className="text-3xl font-bold text-blue-600 mb-4">PayrollSync</h1>
-        <h2 className="text-xl mb-4">Greek HR & Payroll Management System</h2>
-        <p className="text-gray-600 mb-4">✅ App is loading successfully!</p>
-        <div className="bg-green-100 p-4 rounded-lg">
-          <p className="text-green-800">Frontend is working - no more crashes!</p>
-          <p className="text-sm text-green-600 mt-2">Ready to add back components step by step</p>
+      <div style={{ padding: '32px', textAlign: 'center' }}>
+        <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#2563eb', marginBottom: '16px' }}>PayrollSync</h1>
+        <h2 style={{ fontSize: '20px', marginBottom: '16px' }}>Greek HR & Payroll Management System</h2>
+        <p style={{ color: '#6b7280', marginBottom: '16px' }}>✅ App is loading successfully!</p>
+        <div style={{ backgroundColor: '#dcfce7', padding: '16px', borderRadius: '8px' }}>
+          <p style={{ color: '#166534' }}>Frontend is working - no more crashes!</p>
+          <p style={{ fontSize: '14px', color: '#16a34a', marginTop: '8px' }}>Ready to add back components step by step</p>
         </div>
       </div>
     </ErrorBoundary>
