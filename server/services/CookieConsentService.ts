@@ -349,11 +349,13 @@ export class CookieConsentService {
 
     // Audit consent recording
     await AuditService.logEvent({
-      action: 'consent.recorded',
+      eventType: 'consent_recorded',
+      eventCategory: 'consent',
+      eventAction: 'recorded',
+      tenantId: 'default',
       userId: consentData.userId || 'anonymous',
-      resourceType: 'consent',
-      resourceId: consentId,
-      metadata: {
+      eventData: {
+        resourceId: consentId,
         language: consentData.language,
         functional: consentData.functionalCookies,
         analytics: consentData.analyticsCookies,
@@ -430,11 +432,13 @@ export class CookieConsentService {
 
     // Audit consent update
     await AuditService.logEvent({
-      action: 'consent.updated',
+      eventType: 'consent_updated',
+      eventCategory: 'consent',
+      eventAction: 'updated',
+      tenantId: 'default',
       userId: updatedRecord.userId || 'anonymous',
-      resourceType: 'consent',
-      resourceId: consentId,
-      metadata: {
+      eventData: {
+        resourceId: consentId,
         changes,
         ipAddress
       }
@@ -496,11 +500,13 @@ export class CookieConsentService {
 
     // Audit consent withdrawal
     await AuditService.logEvent({
-      action: 'consent.withdrawn',
+      eventType: 'consent_withdrawn',
+      eventCategory: 'consent',
+      eventAction: 'withdrawn',
+      tenantId: 'default',
       userId: record.userId || 'anonymous',
-      resourceType: 'consent',
-      resourceId: consentId,
-      metadata: {
+      eventData: {
+        resourceId: consentId,
         withdrawnBy,
         ipAddress
       }
