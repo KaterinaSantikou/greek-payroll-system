@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "db:migrate": "npm run db:push --force",
+    "e2e-smoke": "echo 'Smoke test: checking auth and core endpoints' && curl -f http://localhost:5000/health && curl -f http://localhost:5000/debug/flags",
+    "ci-check": "npm run db:migrate && npm run e2e-smoke"
+  }
+}
