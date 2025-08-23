@@ -106,9 +106,31 @@ export async function setupAuth(app: Express) {
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
-  app.get("/api/login", passport.authenticate("replitauth"));
+  app.get("/api/login", (req, res, next) => {
+    // Safety assertion: prevent hosted/localhost mismatch
+    const host = req.get('host') || req.hostname;
+    if (/\.replit\.(dev|app)$/.test(host) && CALLBACK.startsWith('http://localhost')) {
+      console.error(`🚨 SAFETY ASSERTION FAILED: hosted/localhost mismatch`);
+      console.error(`   Host: ${host}`);
+      console.error(`   Callback: ${CALLBACK}`);
+      return res.status(500).json({ error: 'hosted/localhost mismatch' });
+    }
 
-  app.all("/oauth2callback", (req, res, next) => {
+    // Log authentication attempt
+    console.log(`🔐 Auth attempt: {host: "${host}", redirect_uri: "${CALLBACK}", client_id: "${process.env.REPL_ID}"}`);
+
+    passport.authenticate("replitauth")(req, res, next);
+  });
+
+  // Explicit GET and POST routes for /oauth2callback
+  app.get("/oauth2callback", (req, res, next) => {
+    passport.authenticate("replitauth", {
+      successReturnToOrRedirect: "/dashboard", 
+      failureRedirect: "/api/login?error=auth",
+    })(req, res, next);
+  });
+
+  app.post("/oauth2callback", (req, res, next) => {
     passport.authenticate("replitauth", {
       successReturnToOrRedirect: "/dashboard", 
       failureRedirect: "/api/login?error=auth",
