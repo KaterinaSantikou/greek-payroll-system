@@ -1,0 +1,160 @@
+“invalid_redirect_uri” means the redirect_uri your app is sending to the IdP doesn’t exactly match what’s whitelisted. Fix = (a) print the exact URI your app is sending, (b) make it identical to an allowed value (scheme/host/port/path), or (c) change code to use a single canonical callback per env.
+
+Here’s a crisp plan.
+
+1) Print the exact redirect_uri your app is sending
+
+Server-side (no code changes):
+
+# Replit domain path – shows the 302 Location with redirect_uri
+curl -I "https://<YOUR-REPLIT-DOMAIN>/api/login" \
+  -H "X-Forwarded-Host: <YOUR-REPLIT-DOMAIN>" | grep -i location
+
+
+Local dev:
+
+curl -I "http://localhost:3001/api/login" -H "Host: localhost:3001" | grep -i location
+
+
+You’ll see:
+
+Location: https://<issuer>/authorize?...&redirect_uri=https%3A%2F%2F<host>%2Fapi%2Fcallback&...
+
+
+Copy the decoded redirect_uri and compare to your IdP allowlist.
+
+2) Common mismatches & quick fixes
+
+Host mismatch: Using localhost:3001 but only <replit-subdomain>.replit.dev is whitelisted, or vice versa.
+➜ Add both exact URIs to your IdP (Replit Auth) or stick to one per environment.
+
+Scheme mismatch: http:// vs https://
+➜ On Replit it must be https. If your Location shows http://, your req.protocol is wrong.
+
+Path mismatch: /api/callback/ (trailing slash) vs /api/callback
+➜ Must match exactly, including trailing slash (or lack of).
+
+Port shown in redirect: localhost:5000 vs localhost:3001
+➜ Whitelist the exact one you use in dev, or update your code to the right port.
+
+Multiple strategies/instances: If you still see the wrong URI after your change, you may be hitting a different server instance or strategy. Use the singleton/passport fix from earlier.
+
+3) Make callback deterministic (production) + flexible (dev)
+A) Production: hard-set one canonical callback (no surprises)
+// server/replitAuth.ts (production path)
+const PROD_CALLBACK = `https://<YOUR-REPLIT-DOMAIN>/api/callback`;
+
+const strategy = new Strategy({
+  name: "replitauth",
+  callbackURL: PROD_CALLBACK,      // exact string whitelisted at IdP
+  config,
+  scope: "openid email profile offline_access"
+}, verify);
+passport.use(strategy);
+
+B) Development: dynamic callback, but force https/http correctly
+
+If you kept the host-agnostic approach and dynamic override middleware:
+
+function withDynamicCallback(req, _res, next) {
+  const xfHost = req.get("x-forwarded-host");
+  const host = xfHost || req.get("host") || req.hostname;
+
+  // Use https on Replit (production), http on local dev
+  const isProd = process.env.NODE_ENV === "production";
+  const proto = isProd ? "https" : "http";
+  const cb = `${proto}://${host}/api/callback`;
+
+  // @ts-ignore – set at runtime for openid-client/passport
+  const strat: any = (passport as any)._strategies["replitauth"];
+  if (strat && strat._options) strat._options.callbackURL = cb;
+  if (strat && "_callbackURL" in strat) strat._callbackURL = cb;
+
+  return next();
+}
+
+// Apply to login route
+app.get("/api/login", withDynamicCallback, (req, res, next) => {
+  passport.authenticate("replitauth", {
+    prompt: "login consent",
+    scope: ["openid", "email", "profile", "offline_access"],
+  })(req, res, next);
+});
+
+
+You already have app.set('trust proxy', 1). Keep it.
+
+4) Fix cookie/env so dev works reliably
+app.use(session({
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
++   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: sessionTtl
+  },
+  ...
+}))
+
+
+Add the env:
+
+NODE_ENV=development
+
+5) Re-verify (copy/paste)
+# Show the exact redirect we emit (must match allowlist exactly)
+curl -I "https://<YOUR-REPLIT-DOMAIN>/api/login" \
+  -H "X-Forwarded-Host: <YOUR-REPLIT-DOMAIN>" | grep -i location
+
+# Local dev (only if you whitelisted localhost callback):
+curl -I "http://localhost:3001/api/login" -H "Host: localhost:3001" | grep -i location
+
+
+If still failing:
+
+Compare the decoded redirect_uri against the IdP console. Add it verbatim.
+
+Ensure no trailing slash discrepancy.
+
+Ensure your Replit IdP has both:
+
+https://<YOUR-REPLIT-DOMAIN>/api/callback
+
+http://localhost:3001/api/callback (only if you want local login)
+
+6) One-line fallback to prove the point (debug mode)
+
+If you need to quickly unblock, bypass dynamic logic entirely:
+
+// TEMP: force the redirect_uri you’ve whitelisted in IdP
+const FORCED_CB = process.env.FORCED_CALLBACK_URL; // set to the exact allowed URL
+// Before authenticate():
+const strat: any = (passport as any)._strategies["replitauth"];
+if (strat && strat._options) strat._options.callbackURL = FORCED_CB;
+
+
+Set:
+
+FORCED_CALLBACK_URL=https://<YOUR-REPLIT-DOMAIN>/api/callback
+
+
+If that works, the problem was purely mismatch; then revert to the cleaner approach above.
+
+7) IdP allowlist checklist (Replit Auth)
+
+ Exact https://<YOUR-REPLIT-DOMAIN>/api/callback
+
+ (Optional dev) http://localhost:3001/api/callback
+
+ If you changed to /auth/callback, update both code & allowlist
+
+ No wildcard support—must be exact.
+
+ If you use Deployments vs workspace, the domain might differ—add that too.
+
+TL;DR
+
+Print the redirect_uri from the 302 Location.
+
+Make it exactly equal to an IdP-allowed URI.
+
+In prod, hard-set the callback; in dev, build it deterministically and set NODE_ENV + sameSite.

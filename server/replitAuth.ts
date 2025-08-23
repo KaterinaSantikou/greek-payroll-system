@@ -85,15 +85,17 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Register one host-agnostic strategy with proper callback URL
+  // Register strategy with production Replit domain callback URL
   const domain = process.env.REPLIT_DOMAINS!.split(",")[0];
-  const callbackURL = `https://${domain}/api/callback`;
+  const PROD_CALLBACK = `https://${domain}/api/callback`;
+  
+  // Register strategy with proper redirect_uri parameter
   const baseStrategy = new Strategy(
     {
       name: "replitauth",
-      callbackURL: callbackURL,
       config,
-      scope: "openid email profile offline_access"
+      scope: "openid email profile offline_access",
+      redirect_uri: PROD_CALLBACK,  // This is what openid-client/passport expects
     },
     verify
   );
@@ -102,27 +104,7 @@ export async function setupAuth(app: Express) {
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
-  // Dynamic callback override middleware
-  function withDynamicCallback(req: any, _res: any, next: any) {
-    const host =
-      (req.headers["x-forwarded-host"] as string) ||
-      (req.headers.host as string) ||
-      req.hostname;
-    const protocol = req.protocol === 'http' && host.includes('localhost') ? 'http' : 'https';
-    const cb = `${protocol}://${host}/api/callback`;
-
-    // Reach inside strategy and set callback for this request
-    const strat: any = (passport as any)._strategies["replitauth"];
-    if (strat) {
-      if (strat._options) strat._options.callbackURL = cb;
-      if (strat._callbackURL) strat._callbackURL = cb;
-      // Also try setting on the config directly
-      if (strat._config) strat._config.redirect_uris = [cb];
-    }
-    return next();
-  }
-
-  app.get("/api/login", withDynamicCallback, (req, res, next) => {
+  app.get("/api/login", (req, res, next) => {
     passport.authenticate("replitauth", {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
@@ -147,16 +129,6 @@ export async function setupAuth(app: Express) {
     });
   });
 
-  // Debug route to verify strategy registration
-  app.get("/debug/passport", (_req, res) => {
-    const names = Object.keys((passport as any)._strategies);
-    res.json({ 
-      pid: process.pid, 
-      strategies: names, 
-      singleton: !!(global as any).__passport_singleton,
-      nodeEnv: process.env.NODE_ENV
-    });
-  });
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
