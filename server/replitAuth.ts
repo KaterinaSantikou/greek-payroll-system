@@ -1,7 +1,7 @@
 import * as client from "openid-client";
 import { Strategy, type VerifyFunction } from "openid-client/passport";
 
-import passport from "passport";
+import passport from "./lib/passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
@@ -39,6 +39,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: sessionTtl,
     },
   });
@@ -84,34 +85,54 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
-    const strategy = new Strategy(
-      {
-        name: `replitauth:${domain}`,
-        config,
-        scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
-      },
-      verify,
-    );
-    passport.use(strategy);
-  }
+  // Register one host-agnostic strategy with proper callback URL
+  const domain = process.env.REPLIT_DOMAINS!.split(",")[0];
+  const callbackURL = `https://${domain}/api/callback`;
+  const baseStrategy = new Strategy(
+    {
+      name: "replitauth",
+      callbackURL: callbackURL,
+      config,
+      scope: "openid email profile offline_access"
+    },
+    verify
+  );
+  passport.use(baseStrategy);
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
-  app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+  // Dynamic callback override middleware
+  function withDynamicCallback(req: any, _res: any, next: any) {
+    const host =
+      (req.headers["x-forwarded-host"] as string) ||
+      (req.headers.host as string) ||
+      req.hostname;
+    const protocol = req.protocol === 'http' && host.includes('localhost') ? 'http' : 'https';
+    const cb = `${protocol}://${host}/api/callback`;
+
+    // Reach inside strategy and set callback for this request
+    const strat: any = (passport as any)._strategies["replitauth"];
+    if (strat) {
+      if (strat._options) strat._options.callbackURL = cb;
+      if (strat._callbackURL) strat._callbackURL = cb;
+      // Also try setting on the config directly
+      if (strat._config) strat._config.redirect_uris = [cb];
+    }
+    return next();
+  }
+
+  app.get("/api/login", withDynamicCallback, (req, res, next) => {
+    passport.authenticate("replitauth", {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
+    passport.authenticate("replitauth", {
+      successReturnToOrRedirect: "/dashboard",
+      failureRedirect: "/api/login?error=auth",
     })(req, res, next);
   });
 
@@ -123,6 +144,17 @@ export async function setupAuth(app: Express) {
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
         }).href
       );
+    });
+  });
+
+  // Debug route to verify strategy registration
+  app.get("/debug/passport", (_req, res) => {
+    const names = Object.keys((passport as any)._strategies);
+    res.json({ 
+      pid: process.pid, 
+      strategies: names, 
+      singleton: !!(global as any).__passport_singleton,
+      nodeEnv: process.env.NODE_ENV
     });
   });
 }
