@@ -1,0 +1,107 @@
+Great work—your triage is spot-on and your proposed diff is conceptually correct: the fix is to pass an openid-client Client instance to the Strategy and include the callback in params.redirect_uri (or in the client’s redirect_uris). A couple of precise tweaks will make this bulletproof.
+
+✅ Key corrections before you apply
+
+Build the Client from an Issuer, not from a generic config object
+Your getOidcConfig() must return an Issuer (from openid-client). The idiomatic pattern is:
+
+import { Issuer } from "openid-client";
+const issuer = await Issuer.discover(process.env.ISSUER_URL || "https://replit.com/oidc");
+const client = new issuer.Client({ ... });
+
+
+Public client (no client_secret) unless you truly need one
+Replit OIDC supports token_endpoint_auth_method: "none" for workspace apps. If you don’t explicitly use a confidential client, omit client_secret.
+
+const client = new issuer.Client({
+  client_id: process.env.REPL_ID!,
+  token_endpoint_auth_method: "none",
+  redirect_uris: [CALLBACK],
+  response_types: ["code"]
+});
+
+
+Use params.redirect_uri (and ensure it matches redirect_uris[0])
+The Strategy reads params.redirect_uri; if unset, it falls back to client.metadata.redirect_uris[0]. We’ll set both to the same exact URL.
+
+Pin callback path to /oauth2callback in prod
+Replit’s Auth auto-allows the workspace domain callback when you use the standard path. Keep /oauth2callback for production; use http://localhost:3001/oauth2callback for local dev (only if you actually log in locally).
+
+🔧 Minimal, production-safe refactor (drop-in)
+
+server/replitAuth.ts (essential parts)
+
+import { Issuer } from "openid-client";
+import { Strategy } from "openid-client/passport";
+import passport from "./lib/passport"; // your singleton
+// ... other imports
+
+export async function setupAuth(app: Express) {
+  app.set("trust proxy", 1);
+
+  // Session config (ensure sameSite is set)
+  app.use(session({
+    name: "sid",
+    secret: process.env.SESSION_SECRET!,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: sessionTtl
+    },
+    store
+  }));
+
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  // --- OIDC Client ---
+  const issuer = await Issuer.discover(process.env.ISSUER_URL || "https://replit.com/oidc");
+
+  const isProd = process.env.NODE_ENV === "production";
+  const domain = (process.env.REPLIT_DOMAINS || "").split(",")[0];
+  const PROD_CALLBACK = `https://${domain}/oauth2callback`;
+  const DEV_CALLBACK  = `http://localhost:3001/oauth2callback`;
+  const CALLBACK = isProd ? PROD_CALLBACK : DEV_CALLBACK;
+
+  const client = new issuer.Client({
+    client_id: process.env.REPL_ID!,
+    token_endpoint_auth_method: "none",
+    redirect_uris: [CALLBACK],
+    response_types: ["code"]
+  });
+
+  const strategy = new Strategy(
+    {
+      client,
+      params: {
+        redirect_uri: CALLBACK,
+        scope: "openid email profile offline_access",
+        prompt: "login consent"
+      }
+      // usePKCE defaults to true for code flow with openid-client; no need to force unless you want to
+    },
+    verify // your existing verify(tokens, userCb)
+  );
+  passport.use("replitauth", strategy);
+
+  // --- Routes ---
+  app.get("/api/login",
+    (req, _res, next) => {
+      // (Optional) log what we’re about to use for callback_uri
+      // console.log("Auth login using callback:", CALLBACK);
+      next();
+    },
+    passport.authenticate("replitauth")
+  );
+
+  app.get("/oauth2callback", passport.authenticate("replitauth", {
+    successReturnToOrRedirect: "/dashboard",
+    failureRedirect: "/api/login?error=auth"
+  }));
+}
+
+
+If you also want to support logging in on your Replit deployment domain (different from workspace) add that exact https domain to REPLIT_DOMAINS and use it to compute PROD_CALLBACK.

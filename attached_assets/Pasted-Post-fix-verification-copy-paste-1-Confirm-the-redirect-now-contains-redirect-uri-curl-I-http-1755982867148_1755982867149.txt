@@ -1,0 +1,55 @@
+Post-fix verification (copy/paste)
+
+1) Confirm the redirect now contains redirect_uri
+
+curl -I "https://<YOUR-REPLIT-DOMAIN>/api/login" \
+  -H "X-Forwarded-Host: <YOUR-REPLIT-DOMAIN>" | grep -i location
+# Expect: Location: https://replit.com/oidc/auth?...&redirect_uri=https%3A%2F%2F<YOUR-REPLIT-DOMAIN>%2Foauth2callback&...
+
+
+2) Decode to verify byte-for-byte
+
+LOC=$(curl -sI "https://<YOUR-REPLIT-DOMAIN>/api/login" -H "X-Forwarded-Host: <YOUR-REPLIT-DOMAIN>" | tr -d '\r' | awk '/^Location:/ {print $2}')
+python - <<'PY'
+import sys, urllib.parse as u
+loc=sys.stdin.read().strip()
+q=u.urlparse(loc).query
+params=dict(u.parse_qsl(q))
+print("redirect_uri (decoded):", params.get("redirect_uri"))
+PY <<< "$LOC"
+# Expect: https://<YOUR-REPLIT-DOMAIN>/oauth2callback
+
+
+3) Callback route exists
+
+curl -i "https://<YOUR-REPLIT-DOMAIN>/oauth2callback" -H "X-Forwarded-Host: <YOUR-REPLIT-DOMAIN>" | head -n1
+# Expect 400 or 302 depending on session state, but NOT 404.
+
+
+4) Single passport instance
+
+# temporary debug endpoint you added earlier
+curl -s "https://<YOUR-REPLIT-DOMAIN>/debug/passport" -H "X-Forwarded-Host: <YOUR-REPLIT-DOMAIN>" | jq
+# Expect: strategies include "replitauth" and "session"
+
+
+5) Local dev (only if you plan to log in locally)
+
+Make sure NODE_ENV=development
+
+Confirm:
+
+curl -I "http://localhost:3001/api/login" -H "Host: localhost:3001" | grep -i location
+# Expect redirect_uri=http://localhost:3001/oauth2callback
+
+🧯 If invalid_redirect_uri still appears
+
+Print decoded redirect_uri from step 2 and confirm it exactly equals your CALLBACK (scheme/host/path).
+
+Ensure REPL_ID is correct for this project.
+
+Ensure no trailing slash mismatch (/oauth2callback vs /oauth2callback/).
+
+Recheck trust proxy and that production path uses https (it will, since we hardcode https:// for prod callback).
+
+Construct a manual authorize URL using the discovery authorization_endpoint with your exact params and open it—if manual works, your code now matches and any remaining error is an issuer allowlist quirk (rare on Replit when using the standard path).

@@ -85,31 +85,27 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Register strategy with production Replit domain callback URL  
-  const domain = process.env.REPLIT_DOMAINS!.split(",")[0];
+  // Production-safe callback URL setup
+  const isProd = process.env.NODE_ENV === "production";
+  const domain = (process.env.REPLIT_DOMAINS || "").split(",")[0];
   const PROD_CALLBACK = `https://${domain}/oauth2callback`;
-  
-  // Register strategy with proper redirect_uri parameter
-  const baseStrategy = new Strategy(
+  const DEV_CALLBACK = `http://localhost:5000/oauth2callback`;
+  const CALLBACK = isProd ? PROD_CALLBACK : DEV_CALLBACK;
+
+  const strategy = new Strategy(
     {
-      name: "replitauth",
       config,
       scope: "openid email profile offline_access",
-      redirect_uri: PROD_CALLBACK,  // This is what openid-client/passport expects
+      callbackURL: new URL(CALLBACK),
     },
     verify
   );
-  passport.use(baseStrategy);
+  passport.use("replitauth", strategy);
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
-  app.get("/api/login", (req, res, next) => {
-    passport.authenticate("replitauth", {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
-  });
+  app.get("/api/login", passport.authenticate("replitauth"));
 
   app.get("/oauth2callback", (req, res, next) => {
     passport.authenticate("replitauth", {
@@ -118,7 +114,8 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.get("/api/logout", (req, res) => {
+  app.get("/api/logout", async (req, res) => {
+    const config = await getOidcConfig();
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
