@@ -15,7 +15,15 @@ const router = Router();
 // All log routes require authentication
 router.use(isAuthenticated);
 
-const logService = CentralLogAggregationService.getInstance();
+// Feature gate: only initialize log service if enabled
+let logService: any = null;
+if (process.env.ENABLE_LOGGING !== 'false') {
+  try {
+    logService = CentralLogAggregationService.getInstance();
+  } catch (error) {
+    console.error('❌ Failed to initialize CentralLogAggregationService:', error.message);
+  }
+}
 
 // ========================================
 // LOG SEARCH AND RETRIEVAL
@@ -25,6 +33,14 @@ const logService = CentralLogAggregationService.getInstance();
  * Search logs with advanced filtering and pagination
  */
 router.get('/search', async (req, res) => {
+  // Feature gate check
+  if (!logService) {
+    return res.status(503).json({ 
+      error: 'Central logging service is not available',
+      reason: 'Service disabled or schema missing'
+    });
+  }
+  
   try {
     const query: LogSearchQuery = {
       levels: req.query.levels ? (req.query.levels as string).split(',') : undefined,

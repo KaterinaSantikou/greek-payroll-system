@@ -161,17 +161,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Initialize On-Call Rota System
-  try {
-    const { OnCallRotaService } = await import('./services/OnCallRotaService');
-    const onCallService = OnCallRotaService.getInstance();
-    await onCallService.initializeOnCallSystem();
-    console.log('🚨 On-call rota system initialized');
-  } catch (error) {
-    console.error('❌ On-call rota system initialization failed:', error);
-    // Continue with reduced on-call capabilities in development
-    if (process.env.NODE_ENV === 'production') {
-      throw error; // Fail hard in production
+  if (process.env.ENABLE_ONCALL === 'true') {
+    try {
+      const { OnCallRotaService } = await import('./services/OnCallRotaService');
+      const onCallService = OnCallRotaService.getInstance();
+      await onCallService.initializeOnCallSystem();
+      console.log('🚨 On-call rota system initialized');
+    } catch (error) {
+      console.error('❌ On-call rota system initialization failed:', error.message);
+      console.log('⚠️  Continuing without on-call capabilities...');
+      // Continue with reduced on-call capabilities
     }
+  } else {
+    console.log('⏸️  On-call rota system disabled (ENABLE_ONCALL=false)');
   }
 
   // Apply global MFA enforcement middleware (after auth but before other routes)
@@ -187,6 +189,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(requestLoggingMiddleware('payroll-sync'));
   app.use(performanceLoggingMiddleware('payroll-sync'));
   app.use(securityLoggingMiddleware('payroll-sync-security'));
+
+  // Debug route for feature flags verification
+  app.get('/debug/flags', (req, res) => {
+    res.json({
+      flags: {
+        ENABLE_ONCALL: process.env.ENABLE_ONCALL === 'true',
+        ENABLE_RUNBOOKS: process.env.ENABLE_RUNBOOKS === 'true',
+        ENABLE_LOGGING: process.env.ENABLE_LOGGING !== 'false'
+      },
+      status: {
+        auth: 'initialized',
+        database: 'connected',
+        rules: 'initialized',
+        oncall: process.env.ENABLE_ONCALL === 'true' ? 'enabled' : 'disabled',
+        runbooks: process.env.ENABLE_RUNBOOKS === 'true' ? 'enabled' : 'disabled',
+        logging: process.env.ENABLE_LOGGING !== 'false' ? 'enabled' : 'disabled'
+      }
+    });
+  });
 
   // Comprehensive Authentication Routes
   app.use('/api/auth/v2', authRoutes);

@@ -431,11 +431,13 @@ export class GovernmentSystemMonitoringService extends EventEmitter {
 
         // Trigger automated runbooks for incident response
         try {
-          const { AutomatedRunbooksService } = await import('./AutomatedRunbooksService');
-          const runbooksService = AutomatedRunbooksService.getInstance();
+          // Feature gate: only trigger runbooks if enabled
+          if (process.env.ENABLE_RUNBOOKS === 'true') {
+            const { AutomatedRunbooksService } = await import('./AutomatedRunbooksService');
+            const runbooksService = AutomatedRunbooksService.getInstance();
           
-          // Create alert data for runbook triggering
-          const alertData = {
+            // Create alert data for runbook triggering
+            const alertData = {
             systemId,
             status: currentStatus,
             message: errorMessage || `${systemId} system outage detected`,
@@ -446,29 +448,32 @@ export class GovernmentSystemMonitoringService extends EventEmitter {
             systemCode: system?.systemCode || systemId,
           };
 
-          // Check for matching runbooks and trigger them
-          const matchingRunbooks = await runbooksService.checkTriggerConditions(alertData);
-          
-          for (const runbookId of matchingRunbooks) {
-            try {
-              await runbooksService.executeRunbook(runbookId, {
-                systemId,
-                alertId: `alert_${systemId}_${Date.now()}`,
-                variables: { 
-                  systemId, 
-                  status: currentStatus, 
-                  errorMessage,
-                  alertData 
-                },
-                environment: process.env.NODE_ENV as any || 'development',
-                triggeredBy: 'system',
-                priority: this.determineSeverity(currentStatus, system) as any,
-              });
+            // Check for matching runbooks and trigger them
+            const matchingRunbooks = await runbooksService.checkTriggerConditions(alertData);
+            
+            for (const runbookId of matchingRunbooks) {
+              try {
+                await runbooksService.executeRunbook(runbookId, {
+                  systemId,
+                  alertId: `alert_${systemId}_${Date.now()}`,
+                  variables: { 
+                    systemId, 
+                    status: currentStatus, 
+                    errorMessage,
+                    alertData 
+                  },
+                  environment: process.env.NODE_ENV as any || 'development',
+                  triggeredBy: 'system',
+                  priority: this.determineSeverity(currentStatus, system) as any,
+                });
 
-              console.log(`📚 Triggered automated runbook ${runbookId} for ${systemId} outage`);
-            } catch (runbookError) {
-              console.error(`Failed to trigger runbook ${runbookId}:`, runbookError);
+                console.log(`📚 Triggered automated runbook ${runbookId} for ${systemId} outage`);
+              } catch (runbookError) {
+                console.error(`Failed to trigger runbook ${runbookId}:`, runbookError);
+              }
             }
+          } else {
+            console.log('⏸️  Automated runbooks disabled, skipping incident response');
           }
         } catch (error) {
           console.error('Failed to trigger automated runbooks:', error);

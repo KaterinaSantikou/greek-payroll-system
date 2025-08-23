@@ -31,7 +31,15 @@ const router = Router();
 // All runbook routes require authentication
 router.use(isAuthenticated);
 
-const runbooksService = AutomatedRunbooksService.getInstance();
+// Feature gate: only initialize runbooks service if enabled
+let runbooksService: any = null;
+if (process.env.ENABLE_RUNBOOKS === 'true') {
+  try {
+    runbooksService = AutomatedRunbooksService.getInstance();
+  } catch (error) {
+    console.error('❌ Failed to initialize AutomatedRunbooksService:', error.message);
+  }
+}
 
 // ========================================
 // RUNBOOK MANAGEMENT
@@ -41,6 +49,14 @@ const runbooksService = AutomatedRunbooksService.getInstance();
  * List all runbooks with filtering
  */
 router.get('/runbooks', async (req, res) => {
+  // Feature gate check
+  if (!runbooksService) {
+    return res.status(503).json({ 
+      error: 'Automated runbooks service is not available',
+      reason: 'Service disabled or schema missing'
+    });
+  }
+  
   try {
     const {
       category,

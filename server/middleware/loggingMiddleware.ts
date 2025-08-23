@@ -31,6 +31,17 @@ export interface LoggerInstance {
  * Creates a logger instance bound to request context
  */
 function createRequestLogger(req: Request, service: string = 'api'): LoggerInstance {
+  // Feature gate: only use central logging if enabled
+  if (process.env.ENABLE_LOGGING === 'false') {
+    return {
+      debug: async (message: string) => console.debug(`[${service}] ${message}`),
+      info: async (message: string) => console.info(`[${service}] ${message}`),
+      warn: async (message: string) => console.warn(`[${service}] ${message}`),
+      error: async (message: string) => console.error(`[${service}] ${message}`),
+      fatal: async (message: string) => console.error(`[${service}] FATAL: ${message}`)
+    };
+  }
+  
   const logger = CentralLogAggregationService.getInstance();
   
   const baseContext = {
