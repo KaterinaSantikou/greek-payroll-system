@@ -137,6 +137,7 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
+
   app.get("/api/logout", async (req, res) => {
     const config = await getOidcConfig();
     req.logout(() => {
