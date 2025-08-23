@@ -85,9 +85,9 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Register strategy with production Replit domain callback URL
+  // Register strategy with production Replit domain callback URL  
   const domain = process.env.REPLIT_DOMAINS!.split(",")[0];
-  const PROD_CALLBACK = `https://${domain}/api/callback`;
+  const PROD_CALLBACK = `https://${domain}/oauth2callback`;
   
   // Register strategy with proper redirect_uri parameter
   const baseStrategy = new Strategy(
@@ -111,9 +111,9 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.get("/api/callback", (req, res, next) => {
+  app.get("/oauth2callback", (req, res, next) => {
     passport.authenticate("replitauth", {
-      successReturnToOrRedirect: "/dashboard",
+      successReturnToOrRedirect: "/dashboard", 
       failureRedirect: "/api/login?error=auth",
     })(req, res, next);
   });
