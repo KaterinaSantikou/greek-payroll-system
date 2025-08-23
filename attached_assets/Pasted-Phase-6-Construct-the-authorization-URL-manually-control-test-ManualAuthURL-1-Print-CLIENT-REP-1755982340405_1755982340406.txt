@@ -1,0 +1,47 @@
+Phase 6 — Construct the authorization URL manually (control test)
+ManualAuthURL:
+1) Print CLIENT/REPL_ID being used and scope, response_type.
+2) Using the discovered authorization_endpoint, construct a URL manually with:
+   response_type=code
+   client_id=<REPL_ID>
+   redirect_uri=<the exact decoded redirect_uri we intend to use>
+   scope=openid email profile offline_access
+   state=random
+3) Output the final URL. Open it in a browser. Report the IdP’s error exactly.
+
+
+If manual URL works but your app does not, your app’s redirect_uri differs (scheme/host/path/encoding) at runtime.
+
+Phase 7 — Decide & fix (two safe options; agent to propose diff)
+
+Ask the agent to produce one of the following diff plans (no auto-apply):
+
+Option A — Prod-canonical callback (stable)
+FixPlan:ProdCanonicalCallback
+- Set a single constant: const PROD_CALLBACK="https://<REPLIT_DOMAIN>/oauth2callback";
+- Use that as the Strategy callbackURL (no per-request override) when NODE_ENV=production.
+- Keep /oauth2callback route handler wired to passport.authenticate('replitauth', ...).
+- Show unified diff for replitAuth.ts and routes, no other files.
+- Risk: low. Rollback: revert commit.
+
+Option B — Dynamic callback with enforced https in prod
+FixPlan:DynamicCallback
+- Keep one strategy "replitauth".
+- In /api/login middleware, compute host from X-Forwarded-Host || Host.
+- Force protocol = 'https' when NODE_ENV=production, else 'http' for localhost.
+- Set strategy._options.callbackURL to `${proto}://${host}/oauth2callback`.
+- Show unified diff. No other changes.
+
+
+Important: whichever you choose, keep only one strategy instance and ensure all imports use the same passport singleton.
+
+Phase 8 — Re-run final verification
+PostFixVerification:
+1) curl -I "https://<REPLIT_DOMAIN>/api/login" -H "X-Forwarded-Host: <REPLIT_DOMAIN>" | grep -i location
+   - Confirm redirect_uri EXACT match to allowed callback.
+2) Hit /debug/passport and confirm "replitauth" strategy is registered.
+3) Complete the full browser flow and report success or the exact error page text.
+
+If it still fails
+
+Have the agent paste the exact decoded redirect_uri from the Location header and the exact issuer. The fix is then trivial: match the issuer’s allowed value byte-for-byte (including scheme, host, port, and trailing slash).
