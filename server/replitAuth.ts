@@ -85,12 +85,13 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  // Production-safe callback URL setup
-  const isProd = process.env.NODE_ENV === "production";
+  // Replit environment detection - use HTTPS callback when REPLIT_DOMAINS exists
+  const isReplitHosted = !!process.env.REPLIT_DOMAINS;
   const domain = (process.env.REPLIT_DOMAINS || "").split(",")[0];
-  const PROD_CALLBACK = `https://${domain}/oauth2callback`;
+  const REPLIT_CALLBACK = `https://${domain}/oauth2callback`;
   const DEV_CALLBACK = `http://localhost:5000/oauth2callback`;
-  const CALLBACK = isProd ? PROD_CALLBACK : DEV_CALLBACK;
+  const CALLBACK = isReplitHosted ? REPLIT_CALLBACK : DEV_CALLBACK;
+
 
   const strategy = new Strategy(
     {
@@ -107,7 +108,7 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/login", passport.authenticate("replitauth"));
 
-  app.get("/oauth2callback", (req, res, next) => {
+  app.all("/oauth2callback", (req, res, next) => {
     passport.authenticate("replitauth", {
       successReturnToOrRedirect: "/dashboard", 
       failureRedirect: "/api/login?error=auth",
