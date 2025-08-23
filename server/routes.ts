@@ -103,10 +103,53 @@ import {
   executeImport, 
   getImportSession 
 } from "./api/dataImport";
+import { db } from "./db";
+
+// Track core services state  
+export let coreServices = {
+  auth: false,
+  database: false,
+  rules: false
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health endpoints (add early before auth middleware)
+  app.get('/health', (req, res) => {
+    res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      version: process.env.npm_package_version || '1.0.0'
+    });
+  });
+  
+  app.get('/ready', (req, res) => {
+    const allCoreReady = Object.values(coreServices).every(Boolean);
+    if (allCoreReady) {
+      res.status(200).json({
+        status: 'ready',
+        services: coreServices,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(503).json({
+        status: 'not_ready',
+        services: coreServices,
+        timestamp: new Date().toISOString(),
+        message: 'Some core services are not ready'
+      });
+    }
+  });
+
   // Auth middleware
-  await setupAuth(app);
+  try {
+    await setupAuth(app);
+    coreServices.auth = true;
+    console.log('[Core] ✅ Auth service ready');
+  } catch (error) {
+    console.error('[Core] ❌ Auth service failed:', error.message);
+    throw error; // Auth is core - fail startup
+  }
 
   // Initialize security enforcement components
   try {
@@ -168,8 +211,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await onCallService.initializeOnCallSystem();
       console.log('🚨 On-call rota system initialized');
     } catch (error) {
-      console.error('❌ On-call rota system initialization failed:', error.message);
-      console.log('⚠️  Continuing without on-call capabilities...');
+      console.error('[OnCall] ❌ Initialization failed:', error.message);
+      console.warn('[OnCall] ⚠️  Continuing without on-call rota capabilities');
       // Continue with reduced on-call capabilities
     }
   } else {
@@ -180,7 +223,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(mfaEnforcement.enforce());
 
   // Initialize rules engine
-  await initializeRulesEngine();
+  try {
+    await initializeRulesEngine();
+    coreServices.rules = true;
+    console.log('[Core] ✅ Rules engine ready');
+  } catch (error) {
+    console.error('[Core] ❌ Rules engine failed:', error.message);
+    throw error; // Rules engine is core - fail startup
+  }
+
+  // Database connectivity check
+  try {
+    const result = await db.execute("SELECT 1 as health_check");
+    if (result.rows?.[0]?.health_check === 1) {
+      coreServices.database = true;
+      console.log('[Core] ✅ Database connection ready');
+    } else {
+      throw new Error('Database health check failed');
+    }
+  } catch (error) {
+    console.error('[Core] ❌ Database connectivity failed:', error.message);
+    throw error; // Database is core - fail startup
+  }
 
   // Add OBO middleware for tenant context injection
   app.use(oboMiddleware);
@@ -198,10 +262,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ENABLE_RUNBOOKS: process.env.ENABLE_RUNBOOKS === 'true',
         ENABLE_LOGGING: process.env.ENABLE_LOGGING !== 'false'
       },
-      status: {
-        auth: 'initialized',
-        database: 'connected',
-        rules: 'initialized',
+      coreServices,
+      optionalServices: {
         oncall: process.env.ENABLE_ONCALL === 'true' ? 'enabled' : 'disabled',
         runbooks: process.env.ENABLE_RUNBOOKS === 'true' ? 'enabled' : 'disabled',
         logging: process.env.ENABLE_LOGGING !== 'false' ? 'enabled' : 'disabled'
