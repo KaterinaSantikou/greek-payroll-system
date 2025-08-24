@@ -212,7 +212,6 @@ app.use((req, res, next) => {
     const port = parseInt(process.env.PORT || '5000', 10);
     const host = "0.0.0.0";
     
-    app.get('/', (_req, res) => res.status(200).send('OK - Server running'));
     app.get('/health', (_req, res) => res.status(503).json({
       status: 'error',
       message: 'Authentication setup failed',
