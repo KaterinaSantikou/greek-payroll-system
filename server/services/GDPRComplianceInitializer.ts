@@ -11,6 +11,9 @@ import { CookieConsentService } from './CookieConsentService';
 import { RTBFService } from './RTBFService';
 import { AuditService } from './AuditService';
 
+// Singleton guard to prevent duplicate initializations
+let _initialized = false;
+
 export interface GDPRComplianceStatus {
   initialized: boolean;
   services: {
@@ -82,6 +85,10 @@ export class GDPRComplianceInitializer {
    * Initialize all GDPR compliance services
    */
   static async initialize(): Promise<GDPRComplianceStatus> {
+    if (_initialized) {
+      console.info('[GDPR] initialize() skipped (already initialized)');
+      return this.getComplianceStatus();
+    }
     if (this.initialized) {
       return this.getComplianceStatus();
     }
@@ -150,6 +157,7 @@ export class GDPRComplianceInitializer {
       }
 
       this.initialized = true;
+      _initialized = true;
 
       // Audit initialization
       if (this.config.enableAuditLogging) {

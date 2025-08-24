@@ -9,6 +9,9 @@ import { RPOandRTOSLAService } from './RPOandRTOSLAService';
 import { ObjectStorageWORMService } from './ObjectStorageWORMService';
 import type { InsertDRSLA, InsertDRExercise, InsertRestoreTest } from '@shared/schema';
 
+// Singleton guard to prevent duplicate initializations
+let _drInitialized = false;
+
 export interface DRSystemStatus {
   tabletopExercises: {
     total: number;
@@ -48,6 +51,10 @@ export class DisasterRecoveryInitializer {
     restoreTests: number;
     wormObjects: number;
   }> {
+    if (_drInitialized) {
+      console.info('[DR] initializeDRSystem() skipped (already initialized)');
+      return { slas: 0, exercises: 0, restoreTests: 0, wormObjects: 0 };
+    }
     console.log('Initializing Disaster Recovery System...');
 
     let createdSLAs = 0;
@@ -156,6 +163,8 @@ export class DisasterRecoveryInitializer {
         - Exercises scheduled: ${createdExercises} 
         - Restore tests scheduled: ${createdRestoreTests}
         - WORM objects created: ${createdWORMObjects}`);
+      
+      _drInitialized = true;
 
       return {
         slas: createdSLAs,

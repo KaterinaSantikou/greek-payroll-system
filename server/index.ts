@@ -53,12 +53,12 @@ const ipAllowlistMiddleware = (req: Request, res: Response, next: NextFunction) 
 const authRateLimit = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
   max: 5, // 5 requests per minute per IP
-  message: { error: 'Too many authentication attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
-  onLimitReached: (req) => {
-    console.log(`[AUTH_RATE_LIMIT] ⚠️ Rate limit exceeded for IP: ${req.ip}`);
-  }
+  handler: (req, res /* , next, options */) => {
+    console.warn('[RateLimit] 429', req.ip, req.method, req.originalUrl);
+    res.status(429).json({ error: 'rate_limited', retryAfter: 60 });
+  },
 });
 
 // Whitelist auth endpoints from any guards

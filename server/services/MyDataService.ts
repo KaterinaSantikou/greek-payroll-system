@@ -132,7 +132,7 @@ export class MyDataService {
     this.subscriptionKey = process.env.MYDATA_SUBSCRIPTION_KEY || '';
     
     if (!this.userId || !this.subscriptionKey) {
-      console.warn('MyDATA credentials not configured. Electronic books transmission will not work.');
+      console.info('[Integrations] MyDATA not configured (ok in dev).');
     }
   }
 
