@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import path from "node:path";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { mfaEnforcement, MfaEnforcementMiddleware } from "./middleware/mfaEnforcementMiddleware";
@@ -4232,6 +4233,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register billing routes
   registerBillingRoutes(app);
+
+  // Server fallback for dashboard route - redirect to root for SPA handling
+  app.get('/dashboard', (_req, res) => {
+    res.redirect('/#/dashboard');
+  });
 
   const httpServer = createServer(app);
   return httpServer;

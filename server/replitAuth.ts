@@ -185,7 +185,12 @@ export async function setupAuth(app: Express) {
       });
       if (err) return res.status(500).json({ step: 'authenticate', err: String(err) });
       if (!user) return res.status(401).json({ step: 'authenticate', user: false, info });
-      req.logIn(user, (e: any) => e ? res.status(500).json({ step: 'login', err: String(e) }) : res.json({ step: 'ok', user }));
+      req.logIn(user, (e: any) => {
+        if (e) return res.status(500).json({ step: 'login', err: String(e) });
+        // Success: redirect to dashboard
+        console.log('[AUTH][cb] Login successful, redirecting to /dashboard');
+        return res.redirect('/dashboard');
+      });
     })(req, res, next);
   }
   
