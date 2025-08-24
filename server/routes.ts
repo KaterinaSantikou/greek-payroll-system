@@ -4259,10 +4259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     req.logout?.(e => e ? next(e) : req.session?.destroy?.(() => res.status(204).end()));
   });
 
-  // Root route for connectivity checks
-  app.get('/', (_req, res) => {
-    res.status(200).send('OK - PayrollSync Server Running');
-  });
+  // Root route removed - will be handled by SPA fallback in production
 
   // Server fallback for dashboard route - redirect to root for SPA handling
   app.get('/dashboard', (_req, res) => {

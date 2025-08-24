@@ -1,0 +1,77 @@
+seeing that “OK – PayrollSync Server Running” because your backend is returning a plain text handler on /, and your frontend is not being built/served in production. In dev you likely used Vite middleware, but in deploy there’s no dev server. Fix = build SPA + serve the built files + SPA fallback routing.
+
+Here’s the minimal, surgical set of changes.
+
+1) Build the frontend in CI/Deploy
+package.json (scripts)
+
+Add a build for the SPA and ensure start serves the Node app (not Vite dev):
+
+{
+  "scripts": {
+    "dev": "tsx server/index.ts",
+    "build:client": "vite build",              // adjust if CRA/Next
+    "build:server": "tsc -p tsconfig.server.json",
+    "build": "npm run build:client && npm run build:server",
+    "start": "node dist/server/index.js",
+    "serve": "node dist/server/index.js"
+  }
+}
+
+
+If your frontend is in a subfolder (e.g., client/), change to:
+
+"build:client": "cd client && npm ci && npm run build"
+and note outDir below accordingly.
+
+vite.config.ts (optional)
+
+If your server also compiles to dist/, avoid clobbering by giving the SPA its own output folder:
+
+export default defineConfig({
+  build: { outDir: "public" } // or "client-dist"
+});
+
+
+Remember this path for step 2.
+
+2) Serve the built SPA from Express (and stop sending “OK”)
+
+In server/index.ts (or your main server file):
+
+import path from "node:path";
+import express from "express";
+
+const app = express();
+
+/** ... your API, auth, and other middlewares/routes FIRST ... **/
+
+// 1) Static assets (adjust folder to your SPA outDir)
+const FRONTEND_DIR = path.join(process.cwd(), "public"); // or "client-dist" / "client/dist"
+app.use(express.static(FRONTEND_DIR, {
+  index: false,
+  maxAge: "1h",
+}));
+
+// 2) SPA fallback for any non-API route
+app.get(/^\/(?!api\/).*/, (_req, res) => {
+  res.sendFile(path.join(FRONTEND_DIR, "index.html"));
+});
+
+// 3) REMOVE (or move) any plain text “OK” root handler that was here
+// e.g. delete: app.get("/", (_req,res)=> res.send("OK - PayrollSync Server Running"));
+
+// listen
+const PORT = Number(process.env.PORT) || 5000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`[express] serving on 0.0.0.0:${PORT}`);
+});
+
+
+Order matters:
+
+All /api/* routes defined before the SPA fallback.
+
+Static middleware before SPA fallback.
+
+No “OK” handler on /—the SPA will serve index.html now.
