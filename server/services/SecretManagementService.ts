@@ -153,9 +153,9 @@ export class SecretManagementService {
     }
 
     try {
-      const fetch = (await import('node-fetch')).default;
+      const fetchFn: typeof fetch = (globalThis as any).fetch ?? (await import('node-fetch')).default;
       
-      const response = await fetch(
+      const response = await fetchFn(
         `${this.vaultConfig.endpoint}/v1/${this.vaultConfig.mountPath}/${key}`,
         {
           method: 'POST',
@@ -202,13 +202,13 @@ export class SecretManagementService {
     }
 
     try {
-      const fetch = (await import('node-fetch')).default;
+      const fetchFn: typeof fetch = (globalThis as any).fetch ?? (await import('node-fetch')).default;
       
       const url = version 
         ? `${this.vaultConfig.endpoint}/v1/${this.vaultConfig.mountPath}/${key}?version=${version}`
         : `${this.vaultConfig.endpoint}/v1/${this.vaultConfig.mountPath}/${key}`;
 
-      const response = await fetch(url, {
+      const response = await fetchFn(url, {
         headers: {
           'X-Vault-Token': this.vaultConfig.token,
         },
@@ -285,9 +285,9 @@ export class SecretManagementService {
       secretData = (global as any).localSecrets.get(storageKey);
     } else {
       // Find latest version
-      const keys = Array.from((global as any).localSecrets.keys()).filter((k: string) => 
-        k.startsWith(`local_secret_${key}_`)
-      );
+      const keys = Array.from((global as any).localSecrets.keys()).filter((k: any) => 
+        typeof k === 'string' && k.startsWith(`local_secret_${key}_`)
+      ) as string[];
       
       if (keys.length === 0) {
         return { success: false, error: 'Secret not found' };
@@ -468,4 +468,21 @@ export class SecretManagementService {
       usingVault,
     };
   }
+
+  // --- Back-compat adapter methods ---
+
+  /** BACK-COMPAT: return just the plaintext value or null */
+  static async getSecret(key: string): Promise<string | null> {
+    const r = await this.retrieveSecret(key);
+    return r.success ? (r.value ?? null) : null;
+  }
+
+  /** BACK-COMPAT: return metadata (or null) */
+  static async getSecretMetadata(key: string): Promise<SecretMetadata | null> {
+    const r = await this.retrieveSecret(key);
+    return r.success ? (r.metadata ?? null) : null;
+  }
 }
+
+// add default export so default imports work too
+export default SecretManagementService;

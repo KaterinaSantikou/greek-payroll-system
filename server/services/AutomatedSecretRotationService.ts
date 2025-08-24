@@ -458,10 +458,30 @@ export class AutomatedSecretRotationService {
    * Schedule periodic rotation checks (safely)
    */
   private static scheduleRotationChecks(): void {
+    // Environment gate and runtime safety check
+    if (process.env.ENABLE_SECRET_ROTATION !== 'true') {
+      console.log('[secrets] rotation disabled by env (ENABLE_SECRET_ROTATION=false)');
+      return;
+    }
+
+    // Runtime method availability check
+    console.log('[secrets] methods:', {
+      getSecret: typeof SecretManagementService.getSecret,
+      getSecretMetadata: typeof SecretManagementService.getSecretMetadata,
+      retrieveSecret: typeof SecretManagementService.retrieveSecret,
+    });
+
+    // Verify required methods exist before starting schedulers
+    if (typeof SecretManagementService.getSecret !== 'function' || 
+        typeof SecretManagementService.getSecretMetadata !== 'function') {
+      console.error('[secrets] Required methods not available - skipping rotation setup');
+      return;
+    }
+
     // Check for pending rotations every hour (safely)
     import('../utils/safeScheduler').then(({ createSafeInterval }) => {
       createSafeInterval(async () => {
-        await this.executeAutomaticRotations();
+        await this.rotateSafely();
       }, {
         name: 'Secret Rotation Check',
         enableEnvVar: 'ENABLE_SECRET_ROTATION',
@@ -479,6 +499,17 @@ export class AutomatedSecretRotationService {
         runImmediately: false
       });
     });
+  }
+
+  /**
+   * Safe wrapper for rotation operations
+   */
+  private static async rotateSafely(): Promise<void> {
+    try {
+      await this.executeAutomaticRotations();
+    } catch (error) {
+      console.warn('[secrets] rotation error:', error instanceof Error ? error.message : error);
+    }
   }
 
   /**
