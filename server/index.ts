@@ -1,3 +1,7 @@
+// Initialize Sentry FIRST (before any other imports)
+import { initializeSentry } from './observability/sentry.js';
+initializeSentry();
+
 import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import compression from "compression";
@@ -10,6 +14,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import { logEnvironmentStatus, validateEnvironmentVariables } from "./utils/envValidation";
 import history from "connect-history-api-fallback";
 import { db } from "./db";
+import { logger, requestIdMiddleware, requestLoggingMiddleware } from './observability/logging.js';
+import { createSentryRequestHandler, setupSentryErrorHandler } from './observability/sentry.js';
 
 // Core readiness tracking for health checks
 let coreReady = false;
@@ -670,6 +676,20 @@ app.use((req, res, next) => {
       console.info('[Boot] ENABLE_LOGGING enabled - full logging active');
     }
 
+    // Add observability middleware BEFORE route registration
+    logger.info('Adding observability middleware', {
+      sentryEnabled: !!process.env.SENTRY_DSN,
+      logLevel: process.env.LOG_LEVEL || 'info'
+    });
+    
+    app.use(createSentryRequestHandler()); // Sentry request tracking (first)
+    app.use(requestIdMiddleware);  // Add request IDs
+    app.use(requestLoggingMiddleware); // Request/response logging
+    
+    // Add metrics middleware
+    const { metricsMiddleware } = await import('./observability/metrics.js');
+    app.use(metricsMiddleware);
+    
     console.log('[Boot] 🚀 About to call registerRoutes...');
     const server = await registerRoutes(app);
     console.log('[Boot] ✅ registerRoutes completed!');
@@ -686,13 +706,29 @@ app.use((req, res, next) => {
     // Run sanity check to verify everything is visible to migrator
     await sanitycheckTables();
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  // Enhanced error handling with Sentry integration
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
+    const requestId = (req as any).requestId;
 
-    res.status(status).json({ message });
-    throw err;
+    logger.error('Express error handler triggered', {
+      error: err.message,
+      stack: err.stack,
+      status,
+      method: req.method,
+      url: req.url
+    }, requestId);
+
+    res.status(status).json({ 
+      message,
+      requestId,
+      timestamp: new Date().toISOString()
+    });
   });
+
+  // Add Sentry error handler (MUST be after all routes)
+  setupSentryErrorHandler(app);
 
   // SMART SPA ROUTING: Proper route order to prevent asset interference
   if (app.get("env") === "development") {

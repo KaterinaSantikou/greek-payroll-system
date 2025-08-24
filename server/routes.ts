@@ -115,16 +115,11 @@ export let coreServices = {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log('[ROUTES] 🚀 registerRoutes function started!');
-  // Health endpoints (add early before auth middleware)
-  app.get('/health', (req, res) => {
-    res.status(200).json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      version: process.env.npm_package_version || '1.0.0'
-    });
-  });
+  // Enhanced health checks - liveness vs readiness separation
+  const healthChecksRouter = (await import('./observability/healthChecks.js')).default;
+  app.use('/health', healthChecksRouter);
   
+  // Legacy readiness endpoint (replaced by /health/ready)
   app.get('/ready', (req, res) => {
     const allCoreReady = Object.values(coreServices).every(Boolean);
     if (allCoreReady) {
@@ -2981,7 +2976,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // V1 Payments API
   paymentsRoutes(app);
   app.use(webhooksAPI);
-  app.use(healthAPI);
+  // NOTE: healthAPI removed - using new observability health checks instead
+  // app.use(healthAPI);
   app.use(securityAPI);
   app.use(reportsAPI);
   
@@ -3056,6 +3052,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('[ROUTES] ✅ Background jobs monitoring API registered');
   } catch (error) {
     console.error('[ROUTES] ❌ Failed to register background jobs routes:', error);
+  }
+
+  // Register metrics and monitoring endpoints
+  try {
+    const metricsRouter = (await import('./observability/metrics')).default;
+    app.use('/api', metricsRouter);
+    console.log('[ROUTES] ✅ Metrics API registered');
+  } catch (error) {
+    console.error('[ROUTES] ❌ Failed to register metrics routes:', error);
   }
 
   // Register disaster recovery routes

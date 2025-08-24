@@ -1,3 +1,7 @@
+// Initialize client-side Sentry (MUST be first import)
+import { initializeClientSentry } from "@/observability/sentry-client";
+initializeClientSentry();
+
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
