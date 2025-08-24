@@ -211,8 +211,8 @@ export async function setupAuth(app: Express) {
             console.error('[AUTH][cb] Session save error:', saveErr);
             return next(saveErr);
           }
-          console.log('[AUTH][cb] Session saved successfully, redirecting to dashboard');
-          return res.redirect("/dashboard");
+          console.log('[AUTH][cb] Session saved successfully, redirecting to home');
+          return res.redirect("/");
         });
       });
     })(req, res, next);

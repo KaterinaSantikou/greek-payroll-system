@@ -1,0 +1,100 @@
+Redirect path mismatch — your SPA doesn’t have a /dashboard route (or uses a different base like /app/dashboard).
+
+SPA catch-all order — server isn’t serving index.html for non-file routes (so the client router never gets a chance).
+
+Let’s make the agent prove which one it is, then apply the smallest fix.
+
+A) Prove the frontend route contract (read-only)
+FE-Routes-Scan:
+1) grep -RIn --include='*.tsx' --include='*.ts' "Route" "createBrowserRouter" "createRoutesFromElements" "path=" src
+2) Print the exact route that should render the post-login dashboard.
+3) In browser console after login:
+   console.log('path:', window.location.pathname)
+
+
+If there’s no <Route path="/dashboard" ...>, you’re redirecting to a non-existent route.
+
+B) Quick back-end test to isolate
+
+Temporarily redirect to home (which you know exists) and see if 404 disappears.
+
+ApplyFix:RedirectToHome
+Target: server/replitAuth.ts (/oauth2callback handlers)
+Change:
+  successReturnToOrRedirect: "/"
+(only this line)
+Show unified diff first, then test the full flow.
+
+
+If this fixes the 404 → your SPA simply doesn’t have /dashboard (or it’s named differently).
+
+C) Make /dashboard always load the SPA (even if FE route exists later)
+
+Add a server fallback so /dashboard serves index.html (client router can render the page). This prevents 404s during rollout.
+
+ApplyFix:SpaFallbackForDashboard
+Target: server/routes.ts (or your server index where static is mounted)
+1) Ensure static/SPA middleware is mounted AFTER auth routes.
+2) Add before the '*' catch-all:
+
+   import path from "node:path";
+   const publicDir = path.join(process.cwd(), "dist"); // adjust to your build dir
+
+   app.get("/dashboard", (_req, res) => {
+     res.sendFile(path.join(publicDir, "index.html"));
+   });
+
+3) Verify GET /dashboard returns index.html (200).
+Show unified diff.
+
+
+If you’re using Vite dev server instead of build output, ensure your dev proxy sends /dashboard to the FE dev server (or have Node serve the HTML during dev too).
+
+D) Align FE ↔ BE session check (optional but helpful)
+
+Your FE calls /api/auth/user; you added it. Confirm it reports authenticated after login:
+
+FE-Session-Proof (in browser console post-login):
+fetch('/api/auth/user', { credentials: 'include' }).then(r=>r.json()).then(console.log)
+# Expect: { authenticated: true, user: {...} }
+
+
+If this returns true but the page still 404s, it’s purely a routing target issue.
+
+E) Clean up noisy logs (not a blocker)
+
+Those “Log entry not stored – tables not yet created” lines are from your logging service. Keep it gated:
+
+ENV:
+ENABLE_LOGGING=false
+
+
+(or ensure your CentralLogAggregationService is behind the feature flag you added earlier).
+
+Likely one-line fixes (pick one)
+
+Rename redirect
+Change:
+
+successReturnToOrRedirect: "/"
+
+
+or to your real route, e.g. "/app/dashboard".
+
+Add server fallback to always serve SPA on /dashboard so it never 404s:
+
+app.get("/dashboard", (_req, res) => res.sendFile(path.join(publicDir, "index.html")));
+
+Success criteria to confirm
+
+After login, the browser lands on / (or your real dashboard route) without a 404 screen.
+
+fetch('/api/auth/user', { credentials: 'include' }) returns { authenticated: true }.
+
+Any subsequent API (/api/properties) returns 200 (not 401), proving the cookie is sent.
+
+Paste back:
+
+Your FE routes scan snippet (the <Route ...> for the dashboard), and
+
+Whether changing the redirect to / removes the 404,
