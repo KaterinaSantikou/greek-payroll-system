@@ -1,0 +1,73 @@
+OIDC/Auth flow inconsistencies (root cause of 401/redirect loops)
+
+Symptoms found
+
+Strategy name mismatch (replitauth vs oidc).
+
+serializeUser/deserializeUser initially wrong.
+
+/api/login sometimes 401 due to guards running before Passport.
+
+Callback host/redirect path mismatches.
+
+Verify & fix
+
+1A. Strategy name consistency
+# Verify registered strategies
+node -e "const p=require('passport');console.log(Object.keys(p._strategies))"
+
+
+Prompt (unified diff)
+“Ensure passport.use('<NAME>', strategy) and all passport.authenticate('<NAME>') use the same <NAME> (‘oidc’ recommended). Show diff.”
+
+1B. Session + Passport wiring
+# Prove order (should be session → init → session)
+rg -n "app\.use\(.*session" server | cat
+rg -n "passport\.initialize" server | cat
+rg -n "passport\.session" server | cat
+
+
+Prompt
+“If order is wrong, reorder to: session(), passport.initialize(), passport.session(). Show diff.”
+
+1C. Serialize/Deserialize correctness
+rg -n "serializeUser|deserializeUser" server/replitAuth.ts
+
+
+Prompt (diff)
+“Set:
+
+passport.serializeUser((u:any,d)=>d(null,String(u.id||u.sub)));
+passport.deserializeUser(async (id,d)=>{const u=await Users.findById?.(id);d(null,u??{id});});
+
+
+Place before passport.session(). Show diff.”
+
+1D. Whitelist auth endpoints from guards
+# Does an auth guard hit /api/login? (tap)
+node -e "const {app}=require('./dist/index.js'); app && console.log('OK');"
+
+
+Prompt (diff)
+“Add allowlist middleware so no auth/MFA/CSRF guard runs on:
+/api/login, /oauth2callback (GET/POST), /api/auth/user, /api/whoami, /api/auth/logout.
+Show diff that wraps guard with an allowlist check.”
+
+1E. Custom callback to surface failures (temporary)
+
+Prompt (diff)
+“Replace /oauth2callback handlers with a custom callback:
+
+function authCb(req,res,next){
+  return passport.authenticate('oidc',(err,user,info)=>{
+    console.error('[AUTH][cb]',{err:err?.message,hasUser:!!user,info, sid:req.sessionID});
+    if(err) return res.status(500).json({step:'authenticate',err:String(err)});
+    if(!user) return res.status(401).json({step:'authenticate',user:false,info});
+    req.logIn(user,(e)=> e?res.status(500).json({step:'login',err:String(e)}):res.json({step:'ok',user}));
+  })(req,res,next);
+}
+app.get('/oauth2callback',authCb);
+app.post('/oauth2callback',authCb);
+
+
+After root cause is fixed, restore redirects.”
