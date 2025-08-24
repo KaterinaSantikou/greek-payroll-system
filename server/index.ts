@@ -15,7 +15,6 @@ import path from "path";
 import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { validateEnvironmentVariables } from "./utils/envValidation";
 import history from "connect-history-api-fallback";
 import { db } from "./db";
 import { logger, requestIdMiddleware, requestLoggingMiddleware } from './observability/logging.js';
@@ -24,6 +23,12 @@ import { createSentryRequestHandler, setupSentryErrorHandler } from './observabi
 // Core readiness tracking for health checks
 let coreReady = false;
 const __root = path.resolve(import.meta.dirname, "..");
+
+// PRODUCTION BUILD FILE VERIFICATION
+console.log('📦 Checking production build files...');
+console.log('Has index?', fs.existsSync(path.join(__root, 'dist', 'public', 'index.html')));
+console.log('Has assets?', fs.existsSync(path.join(__root, 'dist', 'public', 'assets')));
+console.log('Build files at:', path.join(__root, 'dist', 'public'));
 
 // DEPLOYMENT BOOTSTRAP: Ensure core tables exist BEFORE migrator runs
 async function ensureCoreTables() {
