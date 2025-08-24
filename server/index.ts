@@ -35,6 +35,9 @@ async function ensureCoreTables() {
     `);
     console.log('[BOOTSTRAP] ✅ Extensions verified:', extensionTest.rows[0]);
     
+    // MIGRATION SAFETY: Check for long-running operations and table locks
+    await checkMigrationSafety(pool);
+    
     // RLS SAFEGUARDS: Disable RLS on critical tables to prevent production access issues
     const criticalTables = [
       'oncall_teams', 'status_page_subscriptions', 'status_page_incidents', 
@@ -120,6 +123,90 @@ async function ensureCoreTables() {
     throw error;
   } finally {
     await pool.end();
+  }
+}
+
+// MIGRATION SAFETY: Check for blocking operations before proceeding
+async function checkMigrationSafety(pool: any) {
+  try {
+    console.log('[MIGRATION_SAFETY] 🔍 Checking for table locks and long-running operations...');
+    
+    // 1. Check for active table locks that could block migrations
+    const lockCheck = await pool.query(`
+      SELECT 
+        pl.pid,
+        pl.locktype,
+        pl.mode,
+        pl.granted,
+        psa.query,
+        psa.state,
+        NOW() - psa.query_start as duration,
+        pc.relname as table_name
+      FROM pg_locks pl
+      LEFT JOIN pg_stat_activity psa ON pl.pid = psa.pid
+      LEFT JOIN pg_class pc ON pl.relation = pc.oid
+      WHERE pl.locktype = 'relation' 
+        AND pl.mode LIKE '%ExclusiveLock%'
+        AND pl.granted = true
+        AND psa.state = 'active'
+        AND psa.pid != pg_backend_pid()
+      ORDER BY duration DESC NULLS LAST
+    `);
+    
+    if (lockCheck.rows.length > 0) {
+      console.warn('[MIGRATION_SAFETY] ⚠️  Found active table locks:', lockCheck.rows);
+      
+      // Check if any locks are long-running (>30 seconds)
+      const longLocks = lockCheck.rows.filter(lock => 
+        lock.duration && lock.duration.seconds && lock.duration.seconds > 30
+      );
+      
+      if (longLocks.length > 0) {
+        console.error('[MIGRATION_SAFETY] 🚨 DANGER: Long-running table locks detected!');
+        console.error('[MIGRATION_SAFETY] 🚨 These could cause deployment hangs:', longLocks);
+        
+        // In production, you might want to delay startup or alert ops team
+        if (process.env.NODE_ENV === 'production') {
+          console.error('[MIGRATION_SAFETY] 🚨 Consider delaying deployment until locks clear');
+        }
+      }
+    } else {
+      console.log('[MIGRATION_SAFETY] ✅ No blocking table locks detected');
+    }
+    
+    // 2. Check for long-running queries that could interfere
+    const queryCheck = await pool.query(`
+      SELECT 
+        pid,
+        state,
+        NOW() - query_start as duration,
+        LEFT(query, 100) as query_preview
+      FROM pg_stat_activity 
+      WHERE state = 'active'
+        AND pid != pg_backend_pid()
+        AND NOW() - query_start > INTERVAL '10 seconds'
+      ORDER BY query_start ASC
+    `);
+    
+    if (queryCheck.rows.length > 0) {
+      console.warn('[MIGRATION_SAFETY] ⚠️  Found long-running queries:', queryCheck.rows);
+    } else {
+      console.log('[MIGRATION_SAFETY] ✅ No long-running queries detected');
+    }
+    
+    // 3. Check current time for off-hours deployment recommendation
+    const currentHour = new Date().getUTCHours();
+    const isBusinessHours = currentHour >= 9 && currentHour <= 17; // 9 AM - 5 PM UTC
+    
+    if (isBusinessHours && process.env.NODE_ENV === 'production') {
+      console.warn('[MIGRATION_SAFETY] ⚠️  Deploying during business hours (9AM-5PM UTC)');
+      console.warn('[MIGRATION_SAFETY] 💡 Consider scheduling heavy migrations for off-hours');
+    } else {
+      console.log('[MIGRATION_SAFETY] ✅ Deployment timing looks good (off-hours or non-production)');
+    }
+    
+  } catch (error) {
+    console.error('[MIGRATION_SAFETY] ❌ Safety check failed (continuing anyway):', error);
   }
 }
 
