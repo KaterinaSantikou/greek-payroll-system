@@ -209,6 +209,27 @@ function LayoutContent({ children }: LayoutProps) {
               <LanguageSwitcher />
               <PropertySwitcher />
               <ThemeToggle />
+              
+              {/* User section - show username when authenticated */}
+              {user ? (
+                <div className="flex items-center space-x-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs text-white font-semibold">
+                    {user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {user.name || user.email || 'User'}
+                  </span>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.location.href = '/api/login'}
+                  data-testid="button-signin"
+                >
+                  Sign In
+                </Button>
+              )}
             </div>
           </div>
         </motion.div>

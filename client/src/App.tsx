@@ -122,8 +122,8 @@ import { useCommandPalette } from "@/hooks/useCommandPalette";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
 import { useExitIntent } from "@/hooks/useExitIntent";
 import { ABTestProvider } from "@/components/ABTestProvider";
-import { useLocation } from "wouter";
-import { useEffect } from "react";
+import { useLocation, useRouter } from "wouter";
+import { useEffect, useState } from "react";
 
 // Authentication Pages
 import Login from "@/pages/auth/Login";
@@ -135,8 +135,50 @@ import SSO from "@/pages/auth/SSO";
 
 const GRCCompliance = lazy(() => import("./pages/GRCCompliance"));
 
+// Auth Bootstrap Component
+function AuthBootstrap({ children }: { children: React.ReactNode }) {
+  const [authState, setAuthState] = useState<{
+    authenticated: boolean;
+    user: any;
+    loading: boolean;
+  }>({ authenticated: false, user: null, loading: true });
+  const [location] = useLocation();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Auth bootstrap: fetch user auth status
+    const bootstrap = async () => {
+      try {
+        const response = await fetch('/api/auth/user', {
+          credentials: 'include',
+        });
+        const data = await response.json();
+        
+        setAuthState({
+          authenticated: data.authenticated,
+          user: data.user,
+          loading: false
+        });
+
+        // Navigate to dashboard if authenticated and on login page
+        if (data.authenticated && location === '/login') {
+          router('/dashboard');
+        }
+      } catch (error) {
+        console.error('Auth bootstrap failed:', error);
+        setAuthState({ authenticated: false, user: null, loading: false });
+      }
+    };
+
+    bootstrap();
+  }, [location, router]);
+
+  // Pass auth state to children via context or props
+  return children;
+}
+
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const { open, setOpen } = useCommandPalette();
   const [location] = useLocation();
   
@@ -393,13 +435,15 @@ function App() {
               <AppProvider>
                 <ABTestProvider>
                   <TooltipProvider>
-                    <Toaster />
-                    <Router />
-                    
-                    {/* PWA Install Prompt */}
-                    {pwaState.canInstall && (
-                      <PWAInstallPrompt variant="banner" />
-                    )}
+                    <AuthBootstrap>
+                      <Toaster />
+                      <Router />
+                      
+                      {/* PWA Install Prompt */}
+                      {pwaState.canInstall && (
+                        <PWAInstallPrompt variant="banner" />
+                      )}
+                    </AuthBootstrap>
                   </TooltipProvider>
                 </ABTestProvider>
               </AppProvider>

@@ -32,6 +32,8 @@ export function getSession() {
     tableName: "sessions",
   });
   
+  // Dynamic session configuration based on environment
+  const isReplitHosted = !!process.env.REPLIT_DOMAINS;
   const sessionOpts = {
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
@@ -40,8 +42,8 @@ export function getSession() {
     name: 'connect.sid', // Explicit session cookie name
     cookie: {
       httpOnly: true,
-      secure: false, // Force false for Replit hosted environment
-      sameSite: 'lax' as const, // Always use lax for OAuth redirects
+      secure: isReplitHosted, // Secure cookies in hosted mode
+      sameSite: (isReplitHosted ? 'none' : 'lax') as const, // none for hosted, lax for dev
       maxAge: sessionTtl,
       path: '/', // Ensure cookie works for all paths
     },
