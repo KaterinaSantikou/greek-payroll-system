@@ -4234,6 +4234,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register billing routes
   registerBillingRoutes(app);
 
+  // API aliases for frontend contract compatibility
+  app.get('/api/me', (req, res) => {
+    res.json({
+      authenticated: !!req.isAuthenticated?.() && !!req.user,
+      user: req.user ?? null
+    });
+  });
+
+  app.post('/api/auth/logout', (req, res, next) => {
+    req.logout?.(e => e ? next(e) : req.session?.destroy?.(() => res.status(204).end()));
+  });
+
   // Server fallback for dashboard route - redirect to root for SPA handling
   app.get('/dashboard', (_req, res) => {
     res.redirect('/#/dashboard');

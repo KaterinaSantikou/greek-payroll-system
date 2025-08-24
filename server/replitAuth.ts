@@ -168,10 +168,10 @@ export async function setupAuth(app: Express) {
       user: req.user 
     });
     
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Not authenticated' });
-    }
-    res.json(req.user);
+    res.json({
+      authenticated: !!req.isAuthenticated?.() && !!req.user,
+      user: req.user ?? null
+    });
   });
 
   // Custom callback to surface failures (temporary debugging)
