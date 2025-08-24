@@ -61,9 +61,9 @@ export class SecurityService {
       maxAge: 60 * 60 * 1000, // 1 hour
     },
     cookies: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: !!process.env.REPLIT_DOMAINS || process.env.NODE_ENV === 'production',
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: (!!process.env.REPLIT_DOMAINS || process.env.NODE_ENV === 'production') ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
     webauthn: {
@@ -135,7 +135,7 @@ export class SecurityService {
     domain?: string;
     path: string;
   } {
-    return {
+    const options = {
       secure: this.config.cookies.secure, // true in production
       httpOnly: this.config.cookies.httpOnly, // prevents XSS
       sameSite: this.config.cookies.sameSite, // CSRF protection
@@ -143,7 +143,23 @@ export class SecurityService {
       path: '/',
       ...(process.env.COOKIE_DOMAIN && { domain: process.env.COOKIE_DOMAIN }),
     };
+    
+    // Production debugging: Log cookie config on first call
+    if (!this._cookieConfigLogged && (this.config.cookies.secure || process.env.REPLIT_DOMAINS)) {
+      console.info('[SECURITY] Production cookie config:', {
+        secure: options.secure,
+        sameSite: options.sameSite,
+        httpOnly: options.httpOnly,
+        isReplit: !!process.env.REPLIT_DOMAINS,
+        NODE_ENV: process.env.NODE_ENV
+      });
+      this._cookieConfigLogged = true;
+    }
+    
+    return options;
   }
+  
+  private static _cookieConfigLogged = false;
 
   /**
    * 3. CSRF Protection Middleware
@@ -494,7 +510,7 @@ export class SecurityService {
   }> {
     const checklist = {
       argon2id_strong_params: this.config.argon2.memory >= 65536 && this.config.argon2.iterations >= 3,
-      secure_cookies: this.config.cookies.secure && this.config.cookies.httpOnly && this.config.cookies.sameSite === 'lax',
+      secure_cookies: this.config.cookies.secure && this.config.cookies.httpOnly && (this.config.cookies.sameSite === 'lax' || this.config.cookies.sameSite === 'none'),
       csrf_protection: true, // Implemented in middleware
       email_enumeration_protection: true, // Implemented in generic responses
       brute_force_throttling: true, // Implemented in rate limiting
