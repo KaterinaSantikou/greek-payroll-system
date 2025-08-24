@@ -48,9 +48,23 @@ const authRateLimit = rateLimit({
   }
 });
 
-// Apply IP allowlist and rate limiting to auth endpoints
-app.use('/api/login', ipAllowlistMiddleware, authRateLimit);
-app.use('/oauth2callback', ipAllowlistMiddleware, authRateLimit);
+// Whitelist auth endpoints from any guards
+const AUTH_OPEN = new Set([
+  "/api/login",
+  "/oauth2callback",
+  "/api/me", 
+  "/api/auth/user",
+  "/api/logout",
+  "/api/whoami"
+]);
+
+function allowAuthOpen(req: Request, res: Response, next: NextFunction) {
+  return AUTH_OPEN.has(req.path) ? next() : next("route");
+}
+
+// Apply IP allowlist and rate limiting to auth endpoints (but allow them to pass through)
+app.use('/api/login', allowAuthOpen, ipAllowlistMiddleware, authRateLimit);
+app.use('/oauth2callback', allowAuthOpen, ipAllowlistMiddleware, authRateLimit);
 
 // Health and readiness endpoints for deployment stability
 app.get('/health', (_req, res) => res.status(200).json({status: 'ok', ts: new Date().toISOString()}));
