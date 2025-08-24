@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import cors from "cors";
 import path from "path";
 import fs from "fs";
 import { registerRoutes } from "./routes";
@@ -249,6 +250,10 @@ const app = express();
 
 // Trust proxy for accurate IP detection behind load balancers
 app.set('trust proxy', 1);
+
+// CORS Configuration: Handle preflight requests and allow credentials
+app.options('/api/*', cors({ origin: true, credentials: true }));
+app.use('/api', cors({ origin: true, credentials: true }));
 
 // Security: Helmet middleware with comprehensive CSP and security headers
 app.use(helmet({
