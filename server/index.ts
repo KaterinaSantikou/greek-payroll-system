@@ -147,6 +147,17 @@ app.use((req, res, next) => {
     console.log('Build path:', buildIndexPath);
     console.log('Vite outDir aligns with server path:', buildIndexPath.includes('dist/public'));
     
+    // DATABASE: Verify connection details before migration
+    const pg = (await import('pg')).default;
+    const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+    try {
+      const result = await pool.query(`SELECT current_database() db, current_user usr, current_schema schema, current_setting('search_path') sp, inet_server_addr() host`);
+      console.log('[DB] Connection verified:', result.rows[0]);
+      pool.end();
+    } catch (e) {
+      console.error('[DB] Probe failed:', e);
+    }
+
     // SECURITY: Validate critical secrets at boot
     console.log('[Boot] Validating critical secrets...');
     if (!process.env.REPL_ID) {
