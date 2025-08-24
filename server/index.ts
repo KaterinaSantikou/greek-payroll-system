@@ -134,12 +134,18 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    // BUILD CHECK: Verify React build exists
+    // BUILD CHECK: Verify React build exists and paths align
     const __root = path.resolve(import.meta.dirname, "..");
     const buildIndexPath = path.join(__root, 'dist', 'public', 'index.html');
+    const buildAssetsPath = path.join(__root, 'dist', 'public', 'assets');
+    const serverStaticPath = path.join(import.meta.dirname, 'public');
+    
     console.log('[Boot] Checking build files...');
     console.log('index.html exists:', fs.existsSync(buildIndexPath));
+    console.log('assets dir exists:', fs.existsSync(buildAssetsPath));
+    console.log('server static symlink exists:', fs.existsSync(serverStaticPath));
     console.log('Build path:', buildIndexPath);
+    console.log('Vite outDir aligns with server path:', buildIndexPath.includes('dist/public'));
     
     // SECURITY: Validate critical secrets at boot
     console.log('[Boot] Validating critical secrets...');
@@ -195,6 +201,12 @@ app.use((req, res, next) => {
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
   if (app.get("env") === "development") {
+    // In development, serve built assets from dist/public before Vite handles page routes
+    const devAssetsPath = path.join(import.meta.dirname, "public", "assets");
+    if (fs.existsSync(devAssetsPath)) {
+      console.log('[Boot] 🎯 Serving dev assets from:', devAssetsPath);
+      app.use('/assets', express.static(devAssetsPath));
+    }
     await setupVite(app, server);
   } else {
     serveStatic(app);
