@@ -2,6 +2,10 @@
 import { initializeSentry } from './observability/sentry.js';
 initializeSentry();
 
+// VALIDATE ENVIRONMENT VARIABLES EARLY (fail fast if misconfigured)
+import { validateEnvironmentVariables, getClientSafeConfig, verifySensitiveKeysNotExposed } from './utils/envValidation';
+const envConfig = validateEnvironmentVariables();
+
 import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import compression from "compression";
@@ -11,7 +15,7 @@ import path from "path";
 import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { logEnvironmentStatus, validateEnvironmentVariables } from "./utils/envValidation";
+import { validateEnvironmentVariables } from "./utils/envValidation";
 import history from "connect-history-api-fallback";
 import { db } from "./db";
 import { logger, requestIdMiddleware, requestLoggingMiddleware } from './observability/logging.js';

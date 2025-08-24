@@ -6,6 +6,7 @@ import {
 } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { getClientSafeConfig, verifySensitiveKeysNotExposed } from "./utils/envValidation";
 
 // Enhanced registerRoutes function with object storage support
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -173,6 +174,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         error: "Cleanup failed",
         message: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Client-safe configuration endpoint (no sensitive data exposed)
+  app.get('/api/config', (req: Request, res: Response) => {
+    try {
+      const clientConfig = getClientSafeConfig();
+      
+      // Verify no sensitive keys are being exposed
+      verifySensitiveKeysNotExposed(clientConfig);
+      
+      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minute cache
+      res.json({
+        success: true,
+        config: clientConfig,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Error getting client config:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to get configuration',
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });
