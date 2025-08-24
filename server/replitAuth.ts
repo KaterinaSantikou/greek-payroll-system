@@ -122,7 +122,7 @@ export async function setupAuth(app: Express) {
     },
     verify
   );
-  passport.use("replitauth", strategy);
+  passport.use("oidc", strategy);
 
   passport.serializeUser((user: any, done) => {
     try {
@@ -153,7 +153,8 @@ export async function setupAuth(app: Express) {
     // Log authentication attempt
     console.log(`🔐 Auth attempt: {host: "${host}", redirect_uri: "${CALLBACK}", client_id: "${process.env.REPL_ID}"}`);
 
-    passport.authenticate("replitauth")(req, res, next);
+    console.log('[AUTH][login] Starting passport authentication...');
+    passport.authenticate("oidc")(req, res, next);
   });
 
   // Authentication status endpoint
@@ -184,7 +185,7 @@ export async function setupAuth(app: Express) {
     console.log('[AUTH][cb] OAuth callback hit - query params:', req.query);
     console.log('[AUTH][cb] Session before auth:', { sessionID: req.sessionID, isAuth: req.isAuthenticated() });
     
-    passport.authenticate("replitauth", {
+    passport.authenticate("oidc", {
       successReturnToOrRedirect: "/dashboard", 
       failureRedirect: "/api/login?error=auth",
     }, (err: any, user: any, info: any) => {
@@ -219,7 +220,7 @@ export async function setupAuth(app: Express) {
   });
 
   app.post("/oauth2callback", (req, res, next) => {
-    passport.authenticate("replitauth", {
+    passport.authenticate("oidc", {
       successReturnToOrRedirect: "/dashboard", 
       failureRedirect: "/api/login?error=auth",
     })(req, res, next);
