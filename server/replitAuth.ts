@@ -79,20 +79,27 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
+    console.log('[AUTH][verify] VERIFY FUNCTION CALLED!');
     try {
+      console.log('[AUTH][verify] Processing tokens...');
       const claims = tokens.claims();
+      console.log('[AUTH][verify] Claims:', claims);
+      
       const user = {
         id: claims.sub,
         email: claims.email,
         name: claims.first_name || claims.name || claims.username || claims.email
       };
       
+      console.log('[AUTH][verify] Created user object:', user);
+      
       updateUserSession(user, tokens);
       await upsertUser(claims);
       
+      console.log('[AUTH][verify] Calling verified callback with user');
       verified(null, user);
     } catch (error) {
-      console.error('[AUTH] Verification failed:', error);
+      console.error('[AUTH][verify] Verification failed:', error);
       verified(error as any);
     }
   };
@@ -166,9 +173,30 @@ export async function setupAuth(app: Express) {
   // Explicit GET and POST routes for /oauth2callback
   app.get("/oauth2callback", (req, res, next) => {
     console.log('[AUTH][cb] OAuth callback hit - query params:', req.query);
+    console.log('[AUTH][cb] Session before auth:', { sessionID: req.sessionID, isAuth: req.isAuthenticated() });
+    
     passport.authenticate("replitauth", {
       successReturnToOrRedirect: "/dashboard", 
       failureRedirect: "/api/login?error=auth",
+    }, (err: any, user: any, info: any) => {
+      console.log('[AUTH][cb] Auth callback result:', { err: !!err, user: !!user, info });
+      if (err) {
+        console.error('[AUTH][cb] Authentication error:', err);
+        return next(err);
+      }
+      if (!user) {
+        console.log('[AUTH][cb] No user returned, redirecting to failure');
+        return res.redirect("/api/login?error=auth");
+      }
+      
+      req.logIn(user, (err) => {
+        if (err) {
+          console.error('[AUTH][cb] Login error:', err);
+          return next(err);
+        }
+        console.log('[AUTH][cb] User logged in successfully:', { userId: user.id, isAuth: req.isAuthenticated() });
+        return res.redirect("/dashboard");
+      });
     })(req, res, next);
   });
 
