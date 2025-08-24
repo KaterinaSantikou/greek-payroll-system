@@ -381,49 +381,24 @@ async function setupDevSPA(app: express.Express, server: any) {
   await setupVite(app, server);
 }
 
-// PRODUCTION SPA SETUP: Static assets + smart catch-all
+// PRODUCTION SPA SETUP: Proper Express static serving order
 function setupProdSPA(app: express.Express) {
   const distDir = path.join(__root, 'dist', 'public');
-  const assetsDir = path.join(distDir, 'assets');
   
-  // 1) Static assets BEFORE catch-all (with aggressive caching)
-  app.use('/assets', express.static(assetsDir, { 
+  // API routes are already mounted via registerRoutes() BEFORE this function
+  
+  // 1) /assets route - fingerprinted assets with long-term caching
+  app.use('/assets', express.static(path.join(distDir, 'assets'), { 
     maxAge: '1y', 
-    immutable: true,
-    setHeaders: (res, path) => {
-      // Fingerprinted assets get long-term cache with immutable
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    }
+    immutable: true 
   }));
   
-  // 2) All other static files (including index.html) with no-cache
-  app.use(express.static(distDir, { 
-    maxAge: '0',
-    setHeaders: (res, path, stat) => {
-      if (path.endsWith('index.html')) {
-        // Force browsers to always check for fresh index.html
-        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.setHeader('Pragma', 'no-cache');
-        res.setHeader('Expires', '0');
-      }
-    }
-  }));
+  // 2) General static files (index.html with no-cache)
+  app.use(express.static(distDir));
   
-  // 2) Smart catch-all: serve index.html for SPA routes ONLY with no-cache headers
-  // Exclude: API, assets, health, static files
-  app.get(/^\/(?!api\/|assets\/|health$|ready$|favicon\.ico$|robots\.txt$|manifest\.json$).*/, (req, res) => {
-    const indexPath = path.join(distDir, 'index.html');
-    if (!fs.existsSync(indexPath)) {
-      console.error('[PROD] Missing index.html at:', indexPath);
-      return res.status(500).send('index.html missing in dist');
-    }
-    console.log('[PROD] Serving SPA route:', req.path, '→ index.html');
-    
-    // Critical: Always serve fresh index.html to prevent chunk 404s
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.sendFile(indexPath);
+  // 3) SPA fallback - serve index.html for non-API, non-asset routes
+  app.get(/^\/(?!api\/|assets\/|health$|favicon\.ico$|robots\.txt$).*/, (_req, res) => {
+    res.sendFile(path.join(distDir, 'index.html'));
   });
 }
 
