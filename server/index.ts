@@ -7,6 +7,14 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// TAP middleware to debug /api/login 
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/login')) {
+    console.log('[TAP] /api/login hit:', { method: req.method, path: req.path });
+  }
+  next();
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -41,6 +49,7 @@ app.use((req, res, next) => {
   // PREFLIGHT: Run DDL checks before starting services
   console.log('[Boot] Running preflight DDL checks...');
   await preflightDDLCheck();
+  console.log('[Boot] ✅ Preflight checks completed!');
   
   // Set environment variables if not set (for development)
   if (!process.env.ENABLE_ONCALL) process.env.ENABLE_ONCALL = 'true';
@@ -53,7 +62,9 @@ app.use((req, res, next) => {
     ENABLE_LOGGING: process.env.ENABLE_LOGGING
   });
 
+  console.log('[Boot] 🚀 About to call registerRoutes...');
   const server = await registerRoutes(app);
+  console.log('[Boot] ✅ registerRoutes completed!');
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

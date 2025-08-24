@@ -1,0 +1,233 @@
+here’s a safe, idempotent migration pack you can run on Neon (PostgreSQL 16) to eliminate the “tables not yet created” messages and let you re-enable those optional modules.
+
+1) Plain SQL migration (single file)
+
+Save as migrations/2025-08-setup-optional-services.sql and run it against your Neon DB.
+
+-- === Optional services bootstrap (idempotent) ===
+-- Target: Neon / PostgreSQL 16
+
+BEGIN;
+
+-- Some objects below use gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- 1) LOGGING: ensure priority column exists on log_retention_policies
+ALTER TABLE IF EXISTS public.log_retention_policies
+  ADD COLUMN IF NOT EXISTS priority integer;
+
+-- backfill + constraint safely
+UPDATE public.log_retention_policies
+SET priority = 0
+WHERE priority IS NULL;
+
+ALTER TABLE public.log_retention_policies
+  ALTER COLUMN priority SET NOT NULL,
+  ALTER COLUMN priority SET DEFAULT 0;
+
+-- 2) RUNBOOKS: ensure dependencies jsonb on runbooks
+ALTER TABLE IF EXISTS public.runbooks
+  ADD COLUMN IF NOT EXISTS dependencies jsonb;
+
+-- backfill + default
+UPDATE public.runbooks
+SET dependencies = '[]'::jsonb
+WHERE dependencies IS NULL;
+
+ALTER TABLE public.runbooks
+  ALTER COLUMN dependencies SET DEFAULT '[]'::jsonb;
+
+-- Optional: enforce NOT NULL if your service expects it
+-- ALTER TABLE public.runbooks ALTER COLUMN dependencies SET NOT NULL;
+
+-- helpful GIN index if you query dependencies content
+CREATE INDEX IF NOT EXISTS idx_runbooks_dependencies_gin
+  ON public.runbooks USING gin ((coalesce(dependencies, '[]'::jsonb)));
+
+-- 3) ON-CALL: create oncall_rotas table if missing
+CREATE TABLE IF NOT EXISTS public.oncall_rotas (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  team_id uuid NOT NULL,
+  name text NOT NULL,
+  timezone text NOT NULL DEFAULT 'Europe/Athens',
+  starts_at timestamptz NOT NULL,
+  rotation_length_days integer NOT NULL DEFAULT 7,
+  escalation_policy jsonb NOT NULL DEFAULT '[]'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_oncall_rotas_team_id
+  ON public.oncall_rotas(team_id);
+
+CREATE INDEX IF NOT EXISTS idx_oncall_rotas_starts_at
+  ON public.oncall_rotas(starts_at);
+
+-- 4) AUTOMATED RUNBOOKS: create table if your service expects it
+CREATE TABLE IF NOT EXISTS public.automated_runbooks (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  description text,
+  active boolean NOT NULL DEFAULT true,
+  trigger_type text NOT NULL DEFAULT 'manual', -- manual|schedule|event
+  schedule_cron text,                          -- if trigger_type='schedule'
+  dependencies jsonb NOT NULL DEFAULT '[]'::jsonb,
+  owner_user_id uuid,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_automated_runbooks_active
+  ON public.automated_runbooks(active);
+
+CREATE INDEX IF NOT EXISTS idx_automated_runbooks_owner
+  ON public.automated_runbooks(owner_user_id);
+
+COMMIT;
+
+How to run (any one of these)
+
+Neon SQL console: paste and run.
+
+psql:
+
+psql "$DATABASE_URL" -f migrations/2025-08-setup-optional-services.sql
+
+2) Quick verification queries
+-- Columns present?
+SELECT table_name, column_name, data_type
+FROM information_schema.columns
+WHERE table_name IN ('runbooks','automated_runbooks','log_retention_policies','oncall_rotas')
+ORDER BY table_name, ordinal_position;
+
+-- Row counts (should not error)
+SELECT 'runbooks' t, count(*) FROM public.runbooks
+UNION ALL SELECT 'automated_runbooks', count(*) FROM public.automated_runbooks
+UNION ALL SELECT 'oncall_rotas', count(*) FROM public.oncall_rotas;
+
+-- JSON validity (defensive)
+SELECT id
+FROM public.runbooks
+WHERE dependencies IS NOT NULL
+  AND jsonb_typeof(dependencies) NOT IN ('array','object')
+LIMIT 5;
+
+3) Re-enable features gradually
+
+After the migration succeeds:
+
+ENABLE_LOGGING=true
+ENABLE_RUNBOOKS=true
+ENABLE_ONCALL=true
+
+
+Restart the app and confirm logs no longer show “tables not yet created”. If anything still complains, paste the exact SQL error and the table/column name; I’ll adjust the migration.
+
+(Optional) Prisma schema (if you use Prisma)
+model Runbook {
+  id           String   @id @default(uuid())
+  name         String
+  description  String?
+  active       Boolean  @default(true)
+  dependencies Json?    @default("[]")
+  ownerUserId  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model AutomatedRunbook {
+  id           String   @id @default(uuid())
+  name         String
+  description  String?
+  active       Boolean  @default(true)
+  triggerType  String   @default("manual")
+  scheduleCron String?
+  dependencies Json     @default("[]")
+  ownerUserId  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model LogRetentionPolicy {
+  id        String   @id @default(uuid())
+  name      String
+  priority  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OncallRota {
+  id                 String   @id @default(uuid())
+  teamId             String
+  name               String
+  timezone           String   @default("Europe/Athens")
+  startsAt           DateTime
+  rotationLengthDays Int      @default(7)
+  escalationPolicy   Json     @default("[]")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+
+Then:
+
+npx prisma migrate dev --name optional_services_bootstrap
+
+(Optional) TypeORM migration snippet
+export class OptionalServicesBootstrap1700000000000 implements MigrationInterface {
+  public async up(qr: QueryRunner): Promise<void> {
+    await qr.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto`);
+    await qr.query(`ALTER TABLE IF EXISTS "log_retention_policies" ADD COLUMN IF NOT EXISTS "priority" integer`);
+    await qr.query(`UPDATE "log_retention_policies" SET "priority"=0 WHERE "priority" IS NULL`);
+    await qr.query(`ALTER TABLE "log_retention_policies" ALTER COLUMN "priority" SET NOT NULL`);
+    await qr.query(`ALTER TABLE "log_retention_policies" ALTER COLUMN "priority" SET DEFAULT 0`);
+
+    await qr.query(`ALTER TABLE IF EXISTS "runbooks" ADD COLUMN IF NOT EXISTS "dependencies" jsonb`);
+    await qr.query(`UPDATE "runbooks" SET "dependencies"='[]'::jsonb WHERE "dependencies" IS NULL`);
+    await qr.query(`CREATE INDEX IF NOT EXISTS "idx_runbooks_dependencies_gin" ON "runbooks" USING gin ((coalesce("dependencies", '[]'::jsonb)))`);
+
+    await qr.query(`
+      CREATE TABLE IF NOT EXISTS "oncall_rotas" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "team_id" uuid NOT NULL,
+        "name" text NOT NULL,
+        "timezone" text NOT NULL DEFAULT 'Europe/Athens',
+        "starts_at" timestamptz NOT NULL,
+        "rotation_length_days" integer NOT NULL DEFAULT 7,
+        "escalation_policy" jsonb NOT NULL DEFAULT '[]'::jsonb,
+        "created_at" timestamptz NOT NULL DEFAULT now(),
+        "updated_at" timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+
+    await qr.query(`
+      CREATE TABLE IF NOT EXISTS "automated_runbooks" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        "name" text NOT NULL,
+        "description" text,
+        "active" boolean NOT NULL DEFAULT true,
+        "trigger_type" text NOT NULL DEFAULT 'manual',
+        "schedule_cron" text,
+        "dependencies" jsonb NOT NULL DEFAULT '[]'::jsonb,
+        "owner_user_id" uuid,
+        "created_at" timestamptz NOT NULL DEFAULT now(),
+        "updated_at" timestamptz NOT NULL DEFAULT now()
+      )
+    `);
+  }
+
+  public async down(qr: QueryRunner): Promise<void> {
+    await qr.query(`DROP TABLE IF EXISTS "automated_runbooks"`);
+    await qr.query(`DROP TABLE IF EXISTS "oncall_rotas"`);
+    await qr.query(`ALTER TABLE IF EXISTS "runbooks" DROP COLUMN IF EXISTS "dependencies"`);
+    await qr.query(`ALTER TABLE IF EXISTS "log_retention_policies" DROP COLUMN IF EXISTS "priority"`);
+  }
+}
+
+Final notes
+
+These migrations won’t affect the auth/session logic you’ve fixed.
+
+After applying, the “Log entry not stored – tables not yet created” lines should disappear once you flip the feature flags back on.
+
+If your services expect additional columns (e.g., retention policy foreign keys, runbook ownership rules), send me the exact errors and I’ll extend the migration with those fields too.

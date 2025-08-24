@@ -70,11 +70,13 @@ async function upsertUser(
 }
 
 export async function setupAuth(app: Express) {
+  console.log('[AUTH][setup] Setting up authentication...');
   app.set("trust proxy", 1);
   app.use(getSession());
   app.use(passport.initialize());
   app.use(passport.session());
 
+  console.log('[AUTH][setup] Getting OIDC config...');
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (
@@ -122,7 +124,9 @@ export async function setupAuth(app: Express) {
     },
     verify
   );
+  console.log('[AUTH][setup] Registering OIDC strategy...');
   passport.use("oidc", strategy);
+  console.log('[AUTH][setup] OIDC strategy registered successfully!');
 
   passport.serializeUser((user: any, done) => {
     try {

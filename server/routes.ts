@@ -113,6 +113,7 @@ export let coreServices = {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  console.log('[ROUTES] 🚀 registerRoutes function started!');
   // Health endpoints (add early before auth middleware)
   app.get('/health', (req, res) => {
     res.status(200).json({
@@ -141,13 +142,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  console.log('[ROUTES] Reached auth middleware section!');
+
   // Auth middleware
   try {
+    console.log('[ROUTES] About to call setupAuth...');
     await setupAuth(app);
     coreServices.auth = true;
     console.log('[Core] ✅ Auth service ready');
   } catch (error) {
     console.error('[Core] ❌ Auth service failed:', error.message);
+    console.error('[Core] ❌ Full error stack:', error);
     throw error; // Auth is core - fail startup
   }
 
@@ -219,8 +224,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('⏸️  On-call rota system disabled (ENABLE_ONCALL=false)');
   }
 
+  // Whitelist auth paths from MFA enforcement
+  const AUTH_OPEN_PATHS = new Set([
+    '/api/login',
+    '/oauth2callback', 
+    '/api/auth/user',
+    '/api/whoami'
+  ]);
+  
+  function allowlist(paths: Set<string>) {
+    return (req: any, res: any, next: any) => {
+      if (paths.has(req.path)) return next();
+      return next('route');
+    };
+  }
+
   // Apply global MFA enforcement middleware (after auth but before other routes)
-  app.use(mfaEnforcement.enforce());
+  app.use(allowlist(AUTH_OPEN_PATHS), mfaEnforcement.enforce());
 
   // Initialize rules engine
   try {
