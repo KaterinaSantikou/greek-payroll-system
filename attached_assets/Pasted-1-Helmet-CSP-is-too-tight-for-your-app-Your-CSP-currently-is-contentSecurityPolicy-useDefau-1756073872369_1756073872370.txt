@@ -1,0 +1,69 @@
+1) Helmet CSP is too tight for your app
+
+Your CSP currently is:
+
+contentSecurityPolicy: {
+  useDefaults: true,
+  directives: {
+    "default-src": ["'self'"],
+    "script-src": ["'self'"],
+    "style-src": ["'self'", "'unsafe-inline'"],
+    "img-src": ["'self'", "data:"],
+    "connect-src": ["'self'"],
+  },
+}
+
+
+Problems:
+
+No font-src → fonts from /assets (self) get blocked.
+
+No script-src-elem → some browsers treat module scripts under script-src-elem.
+
+No connect-src to your APIs (Supabase/analytics/etc.) → fetch/XHR/WebSocket blocked → app may fail early.
+
+If you do dynamic import() chunk loading, some setups need script-src 'self' (ok) but also worker-src (if using web workers).
+
+In dev, React/Vite need 'unsafe-eval' (not in prod).
+
+Fix (safe, environment-aware)
+
+Replace your Helmet block with this:
+
+const isProd = process.env.NODE_ENV === 'production';
+
+app.use(helmet({
+  frameguard: { action: "deny" },
+  referrerPolicy: { policy: "no-referrer" },
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      // Allow normal and module scripts; in dev allow eval for Vite/React refresh
+      "script-src": isProd ? ["'self'"] : ["'self'", "'unsafe-eval'"],
+      "script-src-elem": isProd ? ["'self'"] : ["'self'", "'unsafe-eval'"],
+      // Vite injects inline <style> tags; keep 'unsafe-inline'
+      "style-src": ["'self'", "'unsafe-inline'"],
+      // Fonts and images from your own host; allow data: and blob: for inlined assets
+      "font-src": ["'self'", "data:"],
+      "img-src": ["'self'", "data:", "blob:"],
+      // Add the exact backends your frontend calls in PROD (examples below)
+      // e.g., Supabase, Sentry, analytics, maps, etc.
+      "connect-src": [
+        "'self'",
+        ...(process.env.CSP_CONNECT_SRC?.split(",").map(s => s.trim()).filter(Boolean) ?? [])
+      ],
+      // If you use web workers (e.g., some libs or Supabase realtime), add:
+      "worker-src": ["'self'", "blob:"],
+      // If you embed iframes (likely no): "frame-src": ["'self'"],
+    },
+  },
+}));
+
+
+Then set a single env var with your external hosts (no wildcards if possible):
+
+CSP_CONNECT_SRC=https://your-supabase-project.supabase.co,https://sentry.io,https://api.example.com
+
+
+What to look for in the browser Console now: any “Refused to load … violates Content Security Policy” should disappear. If you still see CSP errors, copy the exact error and add that origin to connect-src/img-src/font-src as appropriate.

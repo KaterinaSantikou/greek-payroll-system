@@ -1,0 +1,57 @@
+2) Verify the build is actually being served
+
+You already log this—keep it in for now:
+
+index.html exists: true
+assets dir exists: true
+
+
+And run these canaries from your machine:
+
+# Should be HTML
+curl -sI https://hr-master-katerina43.replit.app/ | grep -i "HTTP\|content-type"
+curl -sI https://hr-master-katerina43.replit.app/dashboard | grep -i "HTTP\|content-type"
+
+# Pick a real asset filename you see in dist/public/assets and test it:
+curl -sI https://hr-master-katerina43.replit.app/assets/<one-of-your-js-files>.js | grep -i "HTTP\|content-type"
+
+
+Expected: assets → application/javascript (NOT text/html). If it’s HTML, the catch-all is still catching it; but with your regex it shouldn’t.
+
+3) Two small fixes I recommend in your code
+
+Your SQL in sanitycheckTables() mixes AND/OR without parentheses, which can give misleading results. Change to:
+
+WHERE table_schema='public'
+  AND (lower(table_name) LIKE '%oncall%' OR lower(table_name) LIKE '%status_page%')
+
+
+Consider moving await ensureCoreTables() before registerRoutes(app) if your route registration runs any schema diffs on import; that ensures tables exist prior to any comparison.
+
+4) Things that commonly still bite
+
+Service worker from an older build serving stale assets. If you ever had one, open DevTools → Application → Service Workers → Unregister + hard reload.
+
+Wrong deploy command order. Your deploy must do: npm --prefix client run build → then start server. If the image reuses an old build cache, you’ll serve old index.html that points to missing chunk files → blank screen with Unexpected token '<' in console.
+
+React Router basename mis-set (not visible in your snippets). If you set one, ensure it’s /.
+
+External APIs blocked by CSP (see #1). The app might render a loader then fail silently when the first fetch is blocked.
+
+5) Quick checklist to finish
+
+ Replace Helmet CSP with the environment-aware version above.
+
+ Set CSP_CONNECT_SRC to include every external API domain you call from the browser.
+
+ Re-deploy ensuring the client build runs before server start.
+
+ In DevTools on the live site, verify:
+
+No red CSP errors.
+
+/assets/*.js 200 + “application/javascript”.
+
+No localhost calls in Network.
+
+ If still blank, paste the first red error line from Console and the failing Network request details (URL + status + content-type). That pinpoints the last blocker fast.
