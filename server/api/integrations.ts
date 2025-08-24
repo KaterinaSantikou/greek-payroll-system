@@ -11,7 +11,15 @@ const router = Router();
  * GET /api/integrations/status
  * Check status of external integrations (MyDATA, ERGANI, Banking)
  */
-router.get('/status', isAuthenticated, (req, res) => {
+router.get('/status', (req, res) => {
+  if (!req.isAuthenticated?.()) {
+    return res.status(401).json({ 
+      error: "unauthorized", 
+      hint: "Please sign in to access integration status.",
+      login_url: "/api/login"
+    });
+  }
+  
   try {
     const integrationStatus = {
       mydata: { 
@@ -96,5 +104,47 @@ function generateWarnings(integrations: any): string[] {
   
   return warnings;
 }
+
+/**
+ * GET /api/integrations/debug
+ * Debug endpoint to check current session and authentication state (protected)
+ */
+router.get('/debug', (req, res) => {
+  if (!req.isAuthenticated?.()) {
+    return res.status(401).json({ 
+      error: "unauthorized", 
+      hint: "Please sign in to access debug information.",
+      login_url: "/api/login"
+    });
+  }
+
+  try {
+    const sessionId = (req as any).sessionID || 'no_session_id';
+    const user = (req as any).user || {};
+    
+    res.json({
+      status: 'authenticated',
+      timestamp: new Date().toISOString(),
+      session_id: sessionId,
+      user: {
+        id: user.id || 'no_id',
+        email: user.email || 'no_email',
+        name: user.name || 'no_name'
+      },
+      roles: user.roles || [],
+      session_info: {
+        has_session: !!(req as any).session,
+        session_cookie: (req as any).session?.cookie || {},
+        authenticated: req.isAuthenticated?.() || false
+      }
+    });
+  } catch (error) {
+    console.error('[DEBUG] Error getting debug info:', error);
+    res.status(500).json({
+      error: 'debug_error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
 
 export default router;
