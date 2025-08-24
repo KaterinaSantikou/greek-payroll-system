@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
+import { createSafeInterval } from '../utils/safeScheduler';
 
 /**
  * CSRF Protection Middleware
@@ -253,5 +254,11 @@ export function cleanupBruteForceEntries() {
   }
 }
 
-// Run cleanup every hour
-setInterval(cleanupBruteForceEntries, 60 * 60 * 1000);
+// Run cleanup every hour (safely)
+
+createSafeInterval(cleanupBruteForceEntries, {
+  name: 'Brute Force Cleanup',
+  enableEnvVar: 'ENABLE_SECURITY_CLEANUP', 
+  intervalMs: 60 * 60 * 1000,
+  runImmediately: false
+});

@@ -160,8 +160,15 @@ export class EventQueueService {
       }
     };
 
-    // Process events every second
-    setInterval(processEvents, 1000);
+    // Process events every second (safely)
+    import('../utils/safeScheduler').then(({ createSafeInterval }) => {
+      createSafeInterval(processEvents, {
+        name: 'Event Queue Processor',
+        enableEnvVar: 'ENABLE_EVENT_QUEUE',
+        intervalMs: 1000,
+        runImmediately: false
+      });
+    });
   }
 
   /**

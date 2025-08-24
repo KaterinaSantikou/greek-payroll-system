@@ -21,6 +21,7 @@ import type {
 import { db } from '../db';
 import { webauthnCredentials } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
+import { createSafeInterval } from '../utils/safeScheduler';
 
 export interface WebAuthnCredential {
   id: string;
@@ -376,7 +377,13 @@ export class WebAuthnService {
   }
 }
 
-// Clean up expired challenges every minute
-setInterval(() => {
+// Clean up expired challenges every minute (safely)
+
+createSafeInterval(() => {
   WebAuthnService.cleanupExpiredChallenges();
-}, 60 * 1000);
+}, {
+  name: 'WebAuthn Challenge Cleanup',
+  enableEnvVar: 'ENABLE_WEBAUTHN_CLEANUP',
+  intervalMs: 60 * 1000,
+  runImmediately: false
+});

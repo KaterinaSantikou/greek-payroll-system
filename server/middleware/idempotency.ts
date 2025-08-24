@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { nanoid } from "nanoid";
+import { createSafeInterval } from '../utils/safeScheduler';
 
 interface IdempotencyCache {
   [key: string]: {
@@ -85,5 +86,11 @@ export const cleanupIdempotencyCache = () => {
   });
 };
 
-// Run cleanup every hour
-setInterval(cleanupIdempotencyCache, 60 * 60 * 1000);
+// Run cleanup every hour (safely)
+
+createSafeInterval(cleanupIdempotencyCache, {
+  name: 'Idempotency Cache Cleanup',
+  enableEnvVar: 'ENABLE_CACHE_CLEANUP',
+  intervalMs: 60 * 60 * 1000,
+  runImmediately: false
+});

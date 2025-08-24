@@ -455,26 +455,30 @@ export class AutomatedSecretRotationService {
   }
 
   /**
-   * Schedule periodic rotation checks
+   * Schedule periodic rotation checks (safely)
    */
   private static scheduleRotationChecks(): void {
-    // Check for pending rotations every hour
-    setInterval(async () => {
-      try {
+    // Check for pending rotations every hour (safely)
+    import('../utils/safeScheduler').then(({ createSafeInterval }) => {
+      createSafeInterval(async () => {
         await this.executeAutomaticRotations();
-      } catch (error) {
-        console.error('Scheduled rotation check failed:', error);
-      }
-    }, 60 * 60 * 1000); // 1 hour
+      }, {
+        name: 'Secret Rotation Check',
+        enableEnvVar: 'ENABLE_SECRET_ROTATION',
+        intervalMs: 60 * 60 * 1000,
+        runImmediately: false
+      });
 
-    // Send warning notifications daily
-    setInterval(async () => {
-      try {
+      // Send warning notifications daily (safely)
+      createSafeInterval(async () => {
         await this.sendWarningNotifications();
-      } catch (error) {
-        console.error('Warning notification failed:', error);
-      }
-    }, 24 * 60 * 60 * 1000); // 24 hours
+      }, {
+        name: 'Secret Rotation Warnings',
+        enableEnvVar: 'ENABLE_SECRET_ROTATION',
+        intervalMs: 24 * 60 * 60 * 1000,
+        runImmediately: false
+      });
+    });
   }
 
   /**

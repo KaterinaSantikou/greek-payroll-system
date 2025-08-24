@@ -216,7 +216,14 @@ export class PerformanceMonitoringService {
   }
 }
 
-// Cleanup job - run every hour
-setInterval(() => {
+// Cleanup job - run every hour (safely)
+import { createSafeInterval } from '../utils/safeScheduler';
+
+createSafeInterval(() => {
   PerformanceMonitoringService.clearOldMetrics(168); // Keep 7 days
-}, 60 * 60 * 1000);
+}, {
+  name: 'Performance Metrics Cleanup',
+  enableEnvVar: 'ENABLE_PERF_CLEANUP',
+  intervalMs: 60 * 60 * 1000,
+  runImmediately: false
+});

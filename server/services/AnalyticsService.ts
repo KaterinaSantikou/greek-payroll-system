@@ -3,6 +3,8 @@
  * Tracks user behavior and authentication flow analytics
  */
 
+import { createSafeInterval } from '../utils/safeScheduler';
+
 export interface AnalyticsEvent {
   event: string;
   userId?: string;
@@ -252,7 +254,13 @@ export class AnalyticsService {
   }
 }
 
-// Cleanup job - run every hour
-setInterval(() => {
+// Cleanup job - run every hour (safely)
+
+createSafeInterval(() => {
   AnalyticsService.clearOldEvents(168); // Keep 7 days
-}, 60 * 60 * 1000);
+}, {
+  name: 'Analytics Cleanup',
+  enableEnvVar: 'ENABLE_ANALYTICS_CLEANUP',
+  intervalMs: 60 * 60 * 1000,
+  runImmediately: false
+});

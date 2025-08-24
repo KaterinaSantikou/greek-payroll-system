@@ -22,6 +22,7 @@ import {
 import { eq, desc, and, gte, lte, sql, count, or, isNull, not } from 'drizzle-orm';
 import { EventEmitter } from 'events';
 import { IncidentCommunicationTemplates, type IncidentCommunication, type CommunicationTemplateType } from './IncidentCommunicationTemplates';
+import { createSafeInterval } from '../utils/safeScheduler';
 
 export type ComponentStatus = 'operational' | 'degraded_performance' | 'partial_outage' | 'major_outage' | 'under_maintenance';
 export type IncidentSeverity = 'minor' | 'major' | 'critical';
@@ -193,16 +194,18 @@ export class StatusPageService extends EventEmitter {
     if (process.env.DISABLE_GOV_STATUS !== 'false') {
       console.log('[status] Government status updater disabled by env');
       
-      // Only start infrastructure monitoring
-      this.monitoringInterval = setInterval(async () => {
-        try {
-          await this.updateInfrastructureStatuses();
-          this.lastCacheUpdate = Date.now();
-          this.emit('status_updated');
-        } catch (error) {
-          console.warn('[status] Failed to update infrastructure statuses:', error);
-        }
-      }, 30000);
+      // Only start infrastructure monitoring (safely)
+      
+      this.monitoringInterval = createSafeInterval(async () => {
+        await this.updateInfrastructureStatuses();
+        this.lastCacheUpdate = Date.now();
+        this.emit('status_updated');
+      }, {
+        name: 'Infrastructure Status Monitor',
+        enableEnvVar: 'ENABLE_STATUS_MONITORING',
+        intervalMs: 30000,
+        runImmediately: true
+      });
       
       // Initial infrastructure update
       try {
@@ -228,24 +231,23 @@ export class StatusPageService extends EventEmitter {
       console.log('[status] GovernmentSystemMonitoringService import failed:', error?.message);
     }
 
-    // Monitor status with configurable interval (default 30 seconds)
+    // Monitor status with configurable interval (default 30 seconds) - safely
+    
     const intervalMs = Number(process.env.STATUS_POLL_INTERVAL_MS ?? 30000);
-    this.monitoringInterval = setInterval(async () => {
-      try {
-        // Update government system statuses (with safety guards)
-        await this.updateGovernmentSystemStatusesSafe();
-        
-        // Update infrastructure statuses
-        await this.updateInfrastructureStatuses();
-        
-        // Update cache
-        this.lastCacheUpdate = Date.now();
-        this.emit('status_updated');
-        
-      } catch (error) {
-        console.warn('[status] Failed to update component statuses:', error);
-      }
-    }, intervalMs);
+    this.monitoringInterval = createSafeInterval(async () => {
+      // Update government system statuses (with safety guards)
+      await this.updateGovernmentSystemStatusesSafe();
+      
+      // Update infrastructure statuses
+      await this.updateInfrastructureStatuses();
+      this.lastCacheUpdate = Date.now();
+      this.emit('status_updated');
+    }, {
+      name: 'Full Status Monitor (Gov + Infrastructure)',
+      enableEnvVar: 'ENABLE_STATUS_MONITORING',
+      intervalMs: intervalMs,
+      runImmediately: true
+    });
 
     // Initial update (with safety guards)
     try {
