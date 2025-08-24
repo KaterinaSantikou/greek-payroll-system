@@ -131,7 +131,8 @@ export class DisasterRecoveryInitializer {
         },
       ];
 
-      for (const [index, policy] of wormPolicyTemplates.entries()) {
+      for (let index = 0; index < wormPolicyTemplates.length; index++) {
+        const policy = wormPolicyTemplates[index];
         try {
           const mockAuditData = Buffer.from(JSON.stringify({
             type: 'system_initialization',

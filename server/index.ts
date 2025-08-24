@@ -195,7 +195,7 @@ app.use((req, res, next) => {
     }, () => {
       log(`serving on ${host}:${port}`);
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[STARTUP] ❌ Failed to register routes:', error.message);
     console.error('[STARTUP] Full error stack:', error);
     
@@ -237,7 +237,7 @@ async function preflightDDLCheck() {
         WHERE table_name = '${table}' AND column_name = '${column}'
       `);
       
-      const exists = result.rows[0]?.count > 0;
+      const exists = (result.rows[0] as any)?.count > 0;
       if (!exists) {
         console.error(`[DDL_CHECK] ❌ Missing column: ${table}.${column} (required by ${module} module)`);
         console.error(`[DDL_CHECK] 🔧 Action: Run 'npm run db:push --force' to sync schema`);
@@ -248,7 +248,7 @@ async function preflightDDLCheck() {
       } else {
         console.log(`[DDL_CHECK] ✅ ${table}.${column} exists`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error(`[DDL_CHECK] Failed to check ${table}.${column}:`, error.message);
     }
   }

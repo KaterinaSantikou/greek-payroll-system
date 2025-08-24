@@ -162,7 +162,7 @@ export class GDPRComplianceInitializer {
       // Audit initialization
       if (this.config.enableAuditLogging) {
         await AuditService.logEvent({
-          resourceType: 'system',
+          // resourceType: 'system', // Commented out as not in GeneralAuditEvent type
           metadata: {
             action: 'gdpr.compliance.initialized',
             services: Object.keys(results).filter(key => results[key as keyof typeof results]),
@@ -318,10 +318,11 @@ export class GDPRComplianceInitializer {
     }
 
     // Calculate scores
+    const activeBreaches = BreachResponseService.getActiveBreaches();
     const categories = {
       dataGovernance: ropaCompliance.compliant ? 100 : 70,
       subjectRights: overdueErasures.length === 0 ? 100 : 80,
-      security: breaches.length === 0 ? 100 : 60,
+      security: activeBreaches.length === 0 ? 100 : 60,
       documentation: overdueDPIAs.length === 0 ? 100 : 85,
       processes: expiredDPAs.length === 0 ? 100 : 90
     };

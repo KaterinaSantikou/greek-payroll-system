@@ -1,0 +1,229 @@
+You’ve got three classes of problems in those logs: a deprecated config (easy), schema mismatches (causing throws), and unhandled logging/audit errors that crash the process. Here’s a precise, production-safe fix set you can apply now.
+
+1) Patch express-rate-limit v7 deprecation (warning cleanup)
+
+Replace onLimitReached with handler + headers.
+
+- const limiter = rateLimit({
+-   windowMs: 60_000,
+-   max: 5,
+-   onLimitReached: (req,res,opts)=>console.warn('[RateLimit]', req.ip, req.path),
+- });
++ const limiter = rateLimit({
++   windowMs: 60_000,
++   max: 5,
++   standardHeaders: true,
++   legacyHeaders: false,
++   handler: (req, res) => {
++     console.warn('[RateLimit] 429', req.ip, req.method, req.originalUrl);
++     res.status(429).json({ error: 'rate_limited', retryAfter: 60 });
++   },
++ });
+
+2) One SQL migration to fix all missing columns (idempotent)
+
+Create and run migrations/2025-08-optional-systems-fix-02.sql:
+
+BEGIN;
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- A) AUDIT SERVICE: ensure table exists & has sequence_number
+DO $$
+DECLARE
+  t regclass;
+BEGIN
+  -- Try common audit tables; create 'audit_events' if none exist
+  SELECT 'public.audit_events'::regclass INTO t
+  WHERE to_regclass('public.audit_events') IS NOT NULL;
+  IF t IS NULL THEN
+    CREATE TABLE IF NOT EXISTS public.audit_events (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      sequence_number bigserial UNIQUE,          -- required
+      actor_id uuid,
+      actor_email text,
+      action text NOT NULL,
+      entity_type text,
+      entity_id text,
+      details jsonb DEFAULT '{}'::jsonb,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  END IF;
+END$$;
+
+ALTER TABLE IF EXISTS public.audit_events
+  ADD COLUMN IF NOT EXISTS sequence_number bigserial;
+
+-- B) DR: required columns
+CREATE TABLE IF NOT EXISTS public.dr_slas (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  service_name text,
+  business_function text,                        -- NEW
+  rto_minutes integer,
+  rpo_minutes integer,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.dr_slas
+  ADD COLUMN IF NOT EXISTS service_name text,
+  ADD COLUMN IF NOT EXISTS business_function text;
+
+CREATE TABLE IF NOT EXISTS public.restore_tests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  test_name text,
+  backup_source text,                            -- NEW
+  schedule_cron text,
+  last_run_at timestamptz,
+  status text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.restore_tests
+  ADD COLUMN IF NOT EXISTS test_name text,
+  ADD COLUMN IF NOT EXISTS backup_source text;
+
+CREATE TABLE IF NOT EXISTS public.worm_objects (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  bucket_name text,                              -- NEW
+  object_path text,
+  retention_until timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.worm_objects
+  ADD COLUMN IF NOT EXISTS bucket_name text,
+  ADD COLUMN IF NOT EXISTS object_path text;
+
+-- C) On-call defaults dependency
+CREATE TABLE IF NOT EXISTS public.escalation_policies (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  system_id uuid,                                -- NEW
+  team_id uuid,
+  name text NOT NULL,
+  rules jsonb NOT NULL DEFAULT '[]'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.escalation_policies
+  ADD COLUMN IF NOT EXISTS system_id uuid;
+
+-- D) Automated runbooks triggers naming
+CREATE TABLE IF NOT EXISTS public.runbook_triggers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text,                                     -- NEW
+  runbook_id uuid NOT NULL,
+  trigger_type text NOT NULL, -- 'schedule'|'event'|'manual'
+  schedule_cron text,
+  event_key text,
+  active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.runbook_triggers
+  ADD COLUMN IF NOT EXISTS name text;
+
+-- E) Central logging sink expects "service" column
+CREATE TABLE IF NOT EXISTS public.log_entries (
+  id bigserial PRIMARY KEY,
+  ts timestamptz NOT NULL DEFAULT now(),
+  level text NOT NULL,
+  service text,                                  -- NEW
+  method text,
+  path text,
+  ip inet,
+  msg text,
+  meta jsonb DEFAULT '{}'::jsonb
+);
+ALTER TABLE public.log_entries
+  ADD COLUMN IF NOT EXISTS service text;
+
+CREATE INDEX IF NOT EXISTS idx_log_entries_ts ON public.log_entries(ts);
+CREATE INDEX IF NOT EXISTS idx_log_entries_path ON public.log_entries(path);
+
+COMMIT;
+
+
+Run:
+
+psql "$DATABASE_URL" -f migrations/2025-08-optional-systems-fix-02.sql
+
+
+Quick checks:
+
+SELECT sequence_number FROM public.audit_events LIMIT 1;
+SELECT business_function FROM public.dr_slas LIMIT 1;
+SELECT backup_source FROM public.restore_tests LIMIT 1;
+SELECT bucket_name FROM public.worm_objects LIMIT 1;
+SELECT system_id FROM public.escalation_policies LIMIT 1;
+SELECT name FROM public.runbook_triggers LIMIT 1;
+SELECT service FROM public.log_entries LIMIT 1;
+
+3) Make logging/audit non-fatal (so missing fields never crash again)
+3a) CentralLogAggregationService: swallow DB write errors
+-  async log(entry: LogEntry): Promise<void> {
+-    await this.client.queryObject(`INSERT INTO log_entries (...) VALUES (...)`, [ ... ]);
+-  }
++  async log(entry: LogEntry): Promise<void> {
++    try {
++      await this.client.queryObject(`INSERT INTO log_entries (...) VALUES (...)`, [ ... ]);
++    } catch (e:any) {
++      console.warn('[Logging][soft-fail]', e.code || e.message, { path: entry.path, service: entry.service });
++      // Never throw – console is the fallback sink
++    }
++  }
+
+3b) AuditService.logEvent: soft-fail unless STRICT_AUDIT=true
+-  static async logEvent(ev: AuditEvent) {
+-    await db.queryObject(`INSERT INTO audit_events (...) VALUES (...)`);
+-  }
++  static async logEvent(ev: AuditEvent) {
++    try {
++      await db.queryObject(`INSERT INTO audit_events (...) VALUES (...)`);
++    } catch (e:any) {
++      const strict = process.env.STRICT_AUDIT === 'true';
++      const msg = e.code || e.message;
++      if (strict) throw new Error(`Audit hard-fail: ${msg}`);
++      console.warn('[Audit][soft-fail]', msg, { action: ev.action, entity: ev.entity_type });
++    }
++  }
+
+3c) GDPRComplianceInitializer: don’t abort boot on audit soft-fail
+- await AuditService.initialize(); // throws on failure
++ try {
++   await AuditService.initialize();
++ } catch (e:any) {
++   const strict = process.env.STRICT_GDPR_INIT === 'true';
++   if (strict) throw e;
++   console.warn('[GDPR][soft-fail] Audit init', e.message || e);
++ }
+
+
+These three prevent a single missing column from crashing the whole app again.
+
+4) Optional: de-duplicate “initialized” spam
+
+Guard each initializer with an idempotent flag:
+
+let _init = false;
+export async function initializeX() {
+  if (_init) return;
+  // ... do work ...
+  _init = true;
+}
+
+
+And ensure registerRoutes() is called once.
+
+5) Re-run and verify
+
+Boot should show:
+
+No rate-limit deprecation warning
+
+No sequence_number/business_function/backup_source/bucket_name/system_id/name/service errors
+
+If any insert still fails, you’ll see [soft-fail] warnings but no crash
+
+Sanity:
+
+curl -fsS "http://127.0.0.1:${PORT:-5000}/health"
+curl -fsS "http://127.0.0.1:${PORT:-5000}/ready"
