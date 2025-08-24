@@ -505,6 +505,11 @@ app.use((req, res, next) => {
     console.log('Build path:', buildIndexPath);
     console.log('Vite outDir aligns with server path:', buildIndexPath.includes('dist/public'));
     
+    // Temporary debugging logs
+    console.log('[Boot] NODE_ENV:', process.env.NODE_ENV, 'PORT:', process.env.PORT);
+    console.log('[Boot] CSP_CONNECT_SRC:', process.env.CSP_CONNECT_SRC);
+    console.log('[Boot] VITE_API_URL:', process.env.VITE_API_URL);
+    
     // DATABASE: Verify connection details and table visibility for migrator
     const pg = (await import('pg')).default;
     const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
