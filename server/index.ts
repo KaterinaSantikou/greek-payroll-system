@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { logEnvironmentStatus, validateEnvironmentVariables } from "./utils/envValidation";
 import history from "connect-history-api-fallback";
 import { db } from "./db";
 
@@ -534,6 +535,22 @@ app.use((req, res, next) => {
       throw new Error('SECURITY ERROR: SESSION_SECRET environment variable is required but not set');
     }
     console.log('[Boot] ✅ Critical secrets validated');
+    
+    // COMPREHENSIVE: Validate all environment variables and log warnings
+    console.log('[Boot] 🔧 Running comprehensive environment validation...');
+    try {
+      const envValidation = validateEnvironmentVariables();
+      logEnvironmentStatus();
+      
+      // Note: We already checked critical secrets above, so just log warnings for optional ones
+      if (envValidation.warnings.length > 0) {
+        console.warn('[Boot] ⚠️  Some optional environment variables are missing');
+        console.warn('   Services may have reduced functionality. Check .env.example for full configuration.');
+      }
+    } catch (envError) {
+      console.error('[Boot] Environment validation failed:', envError);
+      // Continue boot process but log the issue
+    }
     
     // PREFLIGHT: Run DDL checks before starting services
     console.log('[Boot] Running preflight DDL checks...');

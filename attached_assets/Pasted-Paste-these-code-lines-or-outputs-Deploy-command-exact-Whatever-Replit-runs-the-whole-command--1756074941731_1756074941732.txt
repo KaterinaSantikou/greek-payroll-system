@@ -1,0 +1,67 @@
+Paste these code lines or outputs
+
+Deploy command (exact)
+
+Whatever Replit runs (the whole command). I need to confirm the client build runs before the server starts.
+
+Runtime canaries (from your deployed logs)
+
+The 5 “[Boot] Checking build files…” lines you already log:
+
+index.html exists:
+
+assets dir exists:
+
+server static symlink exists:
+
+Build path:
+
+Vite outDir aligns with server path:
+
+And this one new log (add temporarily, then paste its line):
+
+console.log('[Boot] NODE_ENV:', process.env.NODE_ENV, 'PORT:', process.env.PORT);
+console.log('[Boot] CSP_CONNECT_SRC:', process.env.CSP_CONNECT_SRC);
+console.log('[Boot] VITE_API_URL:', process.env.VITE_API_URL);
+
+
+index.html script tags from the built file
+
+Open dist/public/index.html and paste just the lines that include <script ... src="/assets/..."> (so I can grab a real asset name).
+
+Two curl headers (from your live URL)
+
+# HTML page headers
+curl -sI https://hr-master-katerina43.replit.app/ | sed -n '1,12p'
+
+# Replace <ASSET> with a real file from index.html (e.g. assets/index-ABC123.js)
+curl -sI https://hr-master-katerina43.replit.app/<ASSET> | sed -n '1,20p'
+
+
+I’m checking HTTP/1.1 200, correct Content-Type (text/html vs application/javascript), and CSP/Cache-Control headers.
+
+React Router line
+
+Paste the line where you create the router:
+
+e.g. <BrowserRouter basename="/"> (or confirm no basename). Wrong basename = blank page on refresh.
+
+Service worker registration (if any)
+
+If you have serviceWorker.register() or similar, paste that snippet or confirm “none”.
+
+If one exists, please unregister it in DevTools → Application → Service Workers (old SWs often serve stale assets).
+
+First red error in the Browser Console + the failing Network request
+
+In DevTools on the live site, copy the first red error line.
+
+Click the first failing request in Network and paste:
+
+URL, Status, Content-Type, and first 1–2 lines of Response.
+
+If you see Unexpected token '<', your JS request is getting HTML → we’ll know exactly where to adjust.
+
+Helmet CSP (confirm updated)
+
+You implemented the CSP update, right? If not, paste your current helmet({ contentSecurityPolicy: ... }) block. CSP blocking connect-src/font-src is a common “blank UI” cause.
