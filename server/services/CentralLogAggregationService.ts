@@ -230,25 +230,24 @@ export class CentralLogAggregationService extends EventEmitter {
       await this.queueForIndexing(insertedEntry);
 
       return insertedEntry;
-    } catch (error) {
-      // Gracefully handle missing tables during initialization
-      if (error?.code === '42P01') { // Table doesn't exist
-        console.log(`Log entry not stored - tables not yet created: ${level} ${message}`);
-        
-        // Return a mock entry for now
-        return {
-          id: 'temp-' + Date.now(),
-          timestamp: new Date(),
-          level,
-          service: context.service,
-          message,
-          severity: logLevel.severity,
-          ...logEntry,
-        } as LogEntry;
-      } else {
-        console.error('Failed to store log entry:', error);
-        throw error;
-      }
+    } catch (error: any) {
+      // Make logging non-fatal - console is the fallback sink
+      console.warn('[Logging][soft-fail]', error.code || error.message, { 
+        level, 
+        service: context.service, 
+        message: message.substring(0, 100) 
+      });
+      
+      // Return a mock entry so callers don't break
+      return {
+        id: 'temp-' + Date.now(),
+        timestamp: new Date(),
+        level,
+        service: context.service,
+        message,
+        severity: logLevel.severity,
+        ...logEntry,
+      } as LogEntry;
     }
   }
 

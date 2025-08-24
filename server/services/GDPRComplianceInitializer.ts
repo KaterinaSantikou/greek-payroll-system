@@ -161,15 +161,24 @@ export class GDPRComplianceInitializer {
 
       // Audit initialization
       if (this.config.enableAuditLogging) {
-        await AuditService.logEvent({
-          // resourceType: 'system', // Commented out as not in GeneralAuditEvent type
-          metadata: {
-            action: 'gdpr.compliance.initialized',
-            services: Object.keys(results).filter(key => results[key as keyof typeof results]),
-            bilingual: this.config.bilinguralSupport,
-            greekEnhanced: this.config.greekComplianceEnhanced
-          }
-        });
+        try {
+          await AuditService.logEvent({
+            eventType: 'system',
+            eventCategory: 'gdpr',
+            eventAction: 'compliance.initialized',
+            tenantId: 'system',
+            userId: 'system',
+            eventData: {
+              services: Object.keys(results).filter(key => results[key as keyof typeof results]),
+              bilingual: this.config.bilinguralSupport,
+              greekEnhanced: this.config.greekComplianceEnhanced
+            }
+          });
+        } catch (error: any) {
+          const strict = process.env.STRICT_GDPR_INIT === 'true';
+          if (strict) throw error;
+          console.warn('[GDPR][soft-fail] Audit init', error.message || error);
+        }
       }
 
       console.log('🎯 GDPR Compliance Framework initialization complete');

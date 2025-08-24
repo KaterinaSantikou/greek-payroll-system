@@ -83,9 +83,16 @@ export class AuditService {
 
       return logEntry.id;
 
-    } catch (error) {
-      console.error('Error logging audit event:', error);
-      throw new Error('Failed to log audit event');
+    } catch (error: any) {
+      const strict = process.env.STRICT_AUDIT === 'true';
+      const msg = error.code || error.message;
+      if (strict) throw new Error(`Audit hard-fail: ${msg}`);
+      console.warn('[Audit][soft-fail]', msg, { 
+        eventType: event.eventType, 
+        eventAction: event.eventAction, 
+        userId: event.userId 
+      });
+      return 'soft-fail-' + Date.now();
     }
   }
 
