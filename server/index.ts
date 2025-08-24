@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import path from "path";
+import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "./db";
@@ -132,6 +134,13 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    // BUILD CHECK: Verify React build exists
+    const __root = path.resolve(import.meta.dirname, "..");
+    const buildIndexPath = path.join(__root, 'dist', 'public', 'index.html');
+    console.log('[Boot] Checking build files...');
+    console.log('index.html exists:', fs.existsSync(buildIndexPath));
+    console.log('Build path:', buildIndexPath);
+    
     // SECURITY: Validate critical secrets at boot
     console.log('[Boot] Validating critical secrets...');
     if (!process.env.REPL_ID) {
