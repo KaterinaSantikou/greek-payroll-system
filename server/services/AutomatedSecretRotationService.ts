@@ -3,9 +3,25 @@
  * Handles automatic rotation of secrets with KMS integration and zero-downtime updates
  */
 
-import { SecretManagementService } from './SecretManagementService';
+// Use defensive import pattern to prevent runtime crashes
+import * as SecretModule from './SecretManagementService';
 import { AuditService } from './AuditService';
 import crypto from 'crypto';
+
+// Defensive shim to handle any export/import mismatches
+const getSecret = 
+  (SecretModule as any).getSecret ??
+  (typeof (SecretModule as any).default === 'function' ? (SecretModule as any).default
+   : (SecretModule as any).default?.getSecret);
+
+const getSecretMetadata =
+  (SecretModule as any).getSecretMetadata ??
+  (SecretModule as any).default?.getSecretMetadata;
+
+// Additional fallbacks for class-based access
+const SecretManagementService = 
+  (SecretModule as any).SecretManagementService ?? 
+  (SecretModule as any).default;
 
 export interface RotationPolicy {
   secretId: string;
@@ -112,8 +128,8 @@ export class AutomatedSecretRotationService {
       // Generate new secret value based on type
       const newSecretValue = await this.generateNewSecretValue(secretId);
       
-      // Get current version
-      const currentSecret = await SecretManagementService.getSecret(secretId);
+      // Get current version using defensive wrapper
+      const currentSecret = await getSecret(secretId);
       const oldVersion = currentSecret?.version || '1';
       const newVersion = this.generateNewVersion(oldVersion);
 
@@ -411,7 +427,7 @@ export class AutomatedSecretRotationService {
    */
   private static async getLastRotationDate(secretId: string): Promise<Date> {
     try {
-      const metadata = await SecretManagementService.getSecretMetadata(secretId);
+      const metadata = await getSecretMetadata(secretId);
       return metadata?.rotationDate || metadata?.createdAt || new Date(0);
     } catch (error) {
       console.error(`Failed to get last rotation date for ${secretId}:`, error);
@@ -455,33 +471,35 @@ export class AutomatedSecretRotationService {
   }
 
   /**
-   * Schedule periodic rotation checks (safely)
+   * Schedule periodic rotation checks with full crash protection
    */
   private static scheduleRotationChecks(): void {
-    // Environment gate and runtime safety check
+    // A) Feature flag gate - disable the whole subsystem in prod
     if (process.env.ENABLE_SECRET_ROTATION !== 'true') {
-      console.log('[secrets] rotation disabled by env (ENABLE_SECRET_ROTATION=false)');
+      console.log('[secrets] Secret rotation disabled by env');
       return;
     }
 
-    // Runtime method availability check
-    console.log('[secrets] methods:', {
-      getSecret: typeof SecretManagementService.getSecret,
-      getSecretMetadata: typeof SecretManagementService.getSecretMetadata,
-      retrieveSecret: typeof SecretManagementService.retrieveSecret,
-    });
+    // C) Defensive runtime validation
+    const methodStatus = {
+      getSecret: typeof getSecret,
+      getSecretMetadata: typeof getSecretMetadata,
+      classGetSecret: typeof SecretManagementService?.getSecret,
+      classGetSecretMetadata: typeof SecretManagementService?.getSecretMetadata,
+      retrieveSecret: typeof SecretManagementService?.retrieveSecret,
+    };
 
-    // Verify required methods exist before starting schedulers
-    if (typeof SecretManagementService.getSecret !== 'function' || 
-        typeof SecretManagementService.getSecretMetadata !== 'function') {
-      console.error('[secrets] Required methods not available - skipping rotation setup');
+    console.log('[secrets] method availability:', methodStatus);
+
+    if (typeof getSecret !== 'function' || typeof getSecretMetadata !== 'function') {
+      console.warn('[secrets] getSecret/getSecretMetadata not available — rotation will be skipped');
       return;
     }
 
-    // Check for pending rotations every hour (safely)
+    // Only start schedulers if all methods are available
     import('../utils/safeScheduler').then(({ createSafeInterval }) => {
       createSafeInterval(async () => {
-        await this.rotateSafely();
+        await this.safeRotateSecrets();
       }, {
         name: 'Secret Rotation Check',
         enableEnvVar: 'ENABLE_SECRET_ROTATION',
@@ -489,11 +507,10 @@ export class AutomatedSecretRotationService {
         runImmediately: false
       });
 
-      // Send warning notifications daily (safely)
       createSafeInterval(async () => {
         await this.sendWarningNotifications();
       }, {
-        name: 'Secret Rotation Warnings',
+        name: 'Secret Rotation Warnings', 
         enableEnvVar: 'ENABLE_SECRET_ROTATION',
         intervalMs: 24 * 60 * 60 * 1000,
         runImmediately: false
@@ -502,15 +519,17 @@ export class AutomatedSecretRotationService {
   }
 
   /**
-   * Safe wrapper for rotation operations
+   * Crash-proof rotation wrapper
    */
-  private static async rotateSafely(): Promise<void> {
+  private static async safeRotateSecrets(): Promise<void> {
     try {
+      if (typeof getSecret !== 'function') return;
       await this.executeAutomaticRotations();
-    } catch (error) {
-      console.warn('[secrets] rotation error:', error instanceof Error ? error.message : error);
+    } catch (e: any) {
+      console.warn('[secrets] rotation failed:', e?.message || e);
     }
   }
+
 
   /**
    * Send rotation completion notification
