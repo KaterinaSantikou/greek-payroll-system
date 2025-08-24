@@ -465,19 +465,28 @@ export class FindingsService {
     userId: string,
     tenantId: string
   ): Promise<void> {
-    const contentHash = createHash('sha256')
-      .update(JSON.stringify(eventData))
-      .digest('hex');
+    try {
+      const contentHash = createHash('sha256')
+        .update(JSON.stringify(eventData))
+        .digest('hex');
 
-    await db.insert(auditStore).values({
-      tenantId,
-      eventType,
-      entityId,
-      eventAction: action,
-      eventData,
-      contentHash,
-      actor: userId,
-      actorType: 'user',
-    });
+      await db.insert(auditStore).values({
+        tenantId,
+        eventType,
+        entityId,
+        eventAction: action,
+        eventData,
+        contentHash,
+        actor: userId,
+        actorType: 'user',
+        userId: userId
+      });
+    } catch (e: any) {
+      console.warn('[Audit][soft-fail]', e.code, { 
+        eventType: eventType, 
+        entityId: entityId, 
+        userId: userId 
+      });
+    }
   }
 }

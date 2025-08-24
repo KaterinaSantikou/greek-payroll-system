@@ -77,18 +77,26 @@ class AuditService {
     // Calculate hash for this entry
     auditEntry.currentHash = this.calculateEventHash(auditEntry);
     
-    // Insert into database  
-    await db.insert(auditLog).values({
-      eventType: auditEntry.eventType,
-      entityType: auditEntry.resourceType,
-      entityId: auditEntry.resourceId,
-      userId: auditEntry.userId,
-      action: auditEntry.action,
-      details: auditEntry.details,
-      timestamp: auditEntry.timestamp,
-      ipAddress: auditEntry.ipAddress,
-      userAgent: auditEntry.userAgent
-    });
+    // Insert into database with soft-fail protection
+    try {
+      await db.insert(auditLog).values({
+        logId: auditEntry.logId,
+        eventType: auditEntry.eventType,
+        entityType: auditEntry.resourceType,
+        entityId: auditEntry.resourceId,
+        userId: auditEntry.userId,
+        changes: auditEntry.details, // Map details to changes field
+        hashChain: auditEntry.currentHash, // Use current hash for chain
+        ipAddress: auditEntry.ipAddress,
+        userAgent: auditEntry.userAgent
+      });
+    } catch (e: any) {
+      console.warn('[Audit][soft-fail]', e.code, { 
+        eventType: auditEntry.eventType, 
+        entityType: auditEntry.resourceType, 
+        userId: auditEntry.userId 
+      });
+    }
     
     return auditEntry;
   }

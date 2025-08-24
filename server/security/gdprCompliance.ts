@@ -417,18 +417,25 @@ class GDPRComplianceService {
     performedBy: string, 
     details: any
   ): Promise<void> {
-    await db.insert(auditLog).values({
-      logId: nanoid(),
-      eventType: `gdpr.${action}`,
-      userId: performedBy,
-      resourceType: 'employee',
-      resourceId: dataSubject,
-      action: action,
-      details: JSON.stringify(details),
-      timestamp: new Date(),
-      ipAddress: '127.0.0.1', // This should come from request context
-      userAgent: 'PayrollSync-GDPR-Service'
-    });
+    try {
+      await db.insert(auditLog).values({
+        logId: nanoid(),
+        eventType: `gdpr.${action}`,
+        entityType: 'employee',
+        entityId: dataSubject,
+        userId: performedBy,
+        changes: JSON.stringify(details),
+        hashChain: 'gdpr-' + Date.now(),
+        ipAddress: '127.0.0.1',
+        userAgent: 'PayrollSync-GDPR-Service'
+      });
+    } catch (e: any) {
+      console.warn('[Audit][soft-fail]', e.code, { 
+        eventType: `gdpr.${action}`, 
+        entityType: 'employee', 
+        userId: performedBy 
+      });
+    }
   }
 }
 

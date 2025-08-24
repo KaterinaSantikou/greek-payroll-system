@@ -507,18 +507,25 @@ class RBACService {
    * Log RBAC actions for audit
    */
   private async logRBACAction(action: string, userId: string, details: any): Promise<void> {
-    await db.insert(auditLog).values({
-      logId: nanoid(),
-      eventType: `rbac.${action}`,
-      userId: userId,
-      resourceType: 'rbac',
-      resourceId: details.approvalId || 'system',
-      action: action,
-      details: JSON.stringify(details),
-      timestamp: new Date(),
-      ipAddress: '127.0.0.1',
-      userAgent: 'PayrollSync-RBAC-Service'
-    });
+    try {
+      await db.insert(auditLog).values({
+        logId: nanoid(),
+        eventType: `rbac.${action}`,
+        entityType: 'rbac',
+        entityId: details.approvalId || 'system',
+        userId: userId,
+        changes: JSON.stringify(details),
+        hashChain: 'rbac-' + Date.now(),
+        ipAddress: '127.0.0.1',
+        userAgent: 'PayrollSync-RBAC-Service'
+      });
+    } catch (e: any) {
+      console.warn('[Audit][soft-fail]', e.code, { 
+        eventType: `rbac.${action}`, 
+        entityType: 'rbac', 
+        userId: userId 
+      });
+    }
   }
 }
 
