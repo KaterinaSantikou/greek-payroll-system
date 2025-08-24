@@ -36,11 +36,13 @@ export function getSession() {
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    name: 'connect.sid', // Explicit session cookie name
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      secure: false, // Force false for Replit hosted environment
+      sameSite: 'lax', // Always use lax for OAuth redirects
       maxAge: sessionTtl,
+      path: '/', // Ensure cookie works for all paths
     },
   });
 }
