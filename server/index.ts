@@ -327,6 +327,24 @@ async function setupDevSPA(app: express.Express, server: any) {
     }));
   }
   
+  // Cache headers middleware - BEFORE history to set proper caching
+  app.use((req, res, next) => {
+    // HTML files - no cache to ensure fresh meta tags and app updates
+    if (req.url.endsWith('.html') || req.url === '/' || (!req.url.includes('.') && !req.url.startsWith('/api'))) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      res.setHeader('ETag', `"${Date.now()}"`); // Force revalidation
+    }
+    // Static files like robots.txt - moderate cache
+    else if (!req.url.startsWith('/api/') && !req.url.startsWith('/assets/')) {
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // 1 hour
+      res.setHeader('Expires', new Date(Date.now() + 3600000).toUTCString());
+    }
+    
+    next();
+  });
+
   // 2) History fallback for SPA routes only (excludes assets, API, health)
   app.use(
     history({
@@ -433,13 +451,19 @@ app.use(helmet({
   noSniff: true,
   referrerPolicy: { policy: "no-referrer" },
   contentSecurityPolicy: {
-    useDefaults: true,
+    useDefaults: false,
     directives: {
       "default-src": ["'self'"],
-      "script-src": ["'self'"],
-      "style-src": ["'self'", "'unsafe-inline'"],
-      "img-src": ["'self'", "data:"],
-      "connect-src": ["'self'"],
+      "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://fonts.googleapis.com", "https://replit.com"],
+      "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
+      "font-src": ["'self'", "https://fonts.gstatic.com"],
+      "img-src": ["'self'", "data:", "blob:", "https:"],
+      "connect-src": ["'self'", "ws:", "wss:", "https:"],
+      "worker-src": ["'self'", "blob:"],
+      "object-src": ["'none'"],
+      "base-uri": ["'self'"],
+      "form-action": ["'self'"],
+      "frame-ancestors": ["'none'"],
     },
   },
 }));
@@ -691,7 +715,7 @@ app.use((req, res, next) => {
     app.use(metricsMiddleware);
     
     console.log('[Boot] 🚀 About to call registerRoutes...');
-    const server = await registerRoutes(app);
+    await registerRoutes(app);
     console.log('[Boot] ✅ registerRoutes completed!');
     
     // Set coreReady after successful initialization of auth, db, and rules
@@ -733,7 +757,7 @@ app.use((req, res, next) => {
   // SMART SPA ROUTING: Proper route order to prevent asset interference
   if (app.get("env") === "development") {
     console.log('[Boot] 🎯 Setting up development SPA routing with Vite');
-    await setupDevSPA(app, server);
+    await setupDevSPA(app, null);
   } else {
     console.log('[Boot] 🎯 Setting up production SPA routing with static assets');
     setupProdSPA(app);
@@ -746,17 +770,19 @@ app.use((req, res, next) => {
     const port = parseInt(process.env.PORT || '5000', 10);
     const host = "0.0.0.0";
     
-    // Keep-alive timeouts: Tune for Replit proxy to avoid sporadic 502s
-    server.keepAliveTimeout = 61000; // 61 seconds (longer than typical proxy timeout)
-    server.headersTimeout = 62000;   // 62 seconds (must be > keepAliveTimeout)
+    // Keep-alive timeouts: will be set after server.listen() creates the server object
     
-    server.listen({
+    const httpServer = app.listen({
       port,
       host,
       reusePort: true,
     }, () => {
       log(`serving on ${host}:${port}`);
     });
+    
+    // Set timeouts after server is created
+    httpServer.keepAliveTimeout = 61000; // 61 seconds
+    httpServer.headersTimeout = 62000;   // 62 seconds
   } catch (error: any) {
     console.error('[STARTUP] ❌ Failed to register routes:', error.message);
     console.error('[STARTUP] Full error stack:', error);
