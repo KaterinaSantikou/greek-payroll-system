@@ -1,0 +1,266 @@
+ou’re seeing the same “rename vs create” prompt for other optional modules (e.g., automated_runbooks). The clean way to stop these prompts is to add a one-time bootstrap migration that:
+
+Detects which expected tables are missing, and
+
+Creates them safely (idempotent), without renaming anything that already exists.
+
+Below is a drop-in PostgreSQL script you can run once (Supabase SQL editor / psql / migration file). It will:
+
+List the missing tables from a set you define
+
+Create minimal, future-proof schemas for them
+
+Keep existing tables untouched
+
+Be safe to re-run
+
+1) One-time bootstrap (PostgreSQL)
+
+Add this as a migration (e.g., 2025_08_25_bootstrap_missing_tables.sql) and deploy.
+Adjust the expected tables list and column sets as needed.
+
+-- 1) Helper: create uuid extension if not present
+create extension if not exists pgcrypto;
+
+-- 2) Function: ensure a table exists by running provided DDL only when missing
+create or replace function public.ensure_table(p_table_name text, p_create_sql text)
+returns void language plpgsql as $$
+begin
+  if not exists (
+    select 1
+    from information_schema.tables
+    where table_schema = 'public' and table_name = p_table_name
+  ) then
+    execute p_create_sql;
+  end if;
+end $$;
+
+-- 3) Ensure status_page_incidents
+select public.ensure_table(
+  'status_page_incidents',
+  $SQL$
+  create table public.status_page_incidents (
+    id uuid primary key default gen_random_uuid(),
+    title text not null,
+    description text,
+    severity text not null default 'info' check (severity in ('info','minor','major','critical')),
+    status text not null default 'investigating' check (status in ('investigating','identified','monitoring','resolved')),
+    started_at timestamptz not null default now(),
+    resolved_at timestamptz,
+    created_by uuid,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+  );
+  create index if not exists idx_spi_started_at on public.status_page_incidents (started_at desc);
+  $SQL$
+);
+
+-- 4) Ensure automated_runbooks
+select public.ensure_table(
+  'automated_runbooks',
+  $SQL$
+  create table public.automated_runbooks (
+    id uuid primary key default gen_random_uuid(),
+    name text not null,
+    slug text unique,
+    description text,
+    is_active boolean not null default true,
+    triggers jsonb default '[]'::jsonb,         -- e.g., {type:'webhook'|'schedule'|'alert', ...}
+    steps jsonb not null default '[]'::jsonb,   -- array of typed step definitions
+    created_by uuid,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+  );
+  create index if not exists idx_runbooks_active on public.automated_runbooks (is_active);
+  $SQL$
+);
+
+-- 5) Ensure oncall_teams
+select public.ensure_table(
+  'oncall_teams',
+  $SQL$
+  create table public.oncall_teams (
+    id uuid primary key default gen_random_uuid(),
+    name text not null,
+    escalation_policy jsonb default '{}'::jsonb,
+    members jsonb not null default '[]'::jsonb,   -- [{user_id, role, schedule}]
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+  );
+  create index if not exists idx_oncall_name on public.oncall_teams (name);
+  $SQL$
+);
+
+-- 6) Keep legacy telemetry tables if they already exist; only create if truly missing
+select public.ensure_table(
+  'system_outages',
+  $SQL$
+  create table public.system_outages (
+    id uuid primary key default gen_random_uuid(),
+    title text not null,
+    details text,
+    impact text,                                  -- 'low'|'medium'|'high'
+    started_at timestamptz not null default now(),
+    ended_at timestamptz,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+  );
+  create index if not exists idx_outages_started_at on public.system_outages (started_at desc);
+  $SQL$
+);
+
+select public.ensure_table(
+  'system_status_checks',
+  $SQL$
+  create table public.system_status_checks (
+    id uuid primary key default gen_random_uuid(),
+    service text not null,
+    endpoint text,
+    ok boolean not null default false,
+    latency_ms integer,
+    checked_at timestamptz not null default now()
+  );
+  create index if not exists idx_status_checks_service_time on public.system_status_checks (service, checked_at desc);
+  $SQL$
+);
+
+-- 7) Optional: a single updated_at trigger function reused by tables
+create or replace function public.tg_set_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at := now();
+  return new;
+end $$;
+
+-- Attach to tables that have updated_at (safe if it’s already attached)
+do $$
+begin
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='status_page_incidents' and column_name='updated_at') then
+    if not exists (select 1 from pg_trigger where tgname='tr_spi_updated_at') then
+      execute 'create trigger tr_spi_updated_at before update on public.status_page_incidents for each row execute function public.tg_set_updated_at()';
+    end if;
+  end if;
+
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='automated_runbooks' and column_name='updated_at') then
+    if not exists (select 1 from pg_trigger where tgname='tr_runbooks_updated_at') then
+      execute 'create trigger tr_runbooks_updated_at before update on public.automated_runbooks for each row execute function public.tg_set_updated_at()';
+    end if;
+  end if;
+
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='oncall_teams' and column_name='updated_at') then
+    if not exists (select 1 from pg_trigger where tgname='tr_oncall_updated_at') then
+      execute 'create trigger tr_oncall_updated_at before update on public.oncall_teams for each row execute function public.tg_set_updated_at()';
+    end if;
+  end if;
+
+  if exists (select 1 from information_schema.columns where table_schema='public' and table_name='system_outages' and column_name='updated_at') then
+    if not exists (select 1 from pg_trigger where tgname='tr_outages_updated_at') then
+      execute 'create trigger tr_outages_updated_at before update on public.system_outages for each row execute function public.tg_set_updated_at()';
+    end if;
+  end if;
+end $$;
+
+-- 8) Quick report: which expected tables were missing (for your logs)
+with expected as (
+  select unnest(array[
+    'status_page_incidents',
+    'automated_runbooks',
+    'oncall_teams',
+    'system_outages',
+    'system_status_checks'
+  ]) as table_name
+)
+select e.table_name as created_if_missing
+from expected e
+left join information_schema.tables t
+  on t.table_schema='public' and t.table_name=e.table_name
+order by e.table_name;
+
+
+How this helps: it eliminates the rename prompts by ensuring the destination tables already exist, so your migrator won’t try to “helpfully” rename partners or other unrelated tables into them.
+
+2) If you’re using Prisma or Drizzle (choose what applies)
+Prisma
+
+Set a baseline so migrations stop trying to rename existing tables:
+
+npx prisma db pull            # sync schema from DB
+npx prisma migrate diff \
+  --from-empty \
+  --to-schema-datamodel schema.prisma \
+  --script > prisma/migrations/000_init/migration.sql
+
+npx prisma migrate resolve --applied 000_init
+npx prisma migrate deploy
+
+
+Now add your new models (e.g., StatusPageIncident, AutomatedRunbook) and run:
+
+npx prisma migrate dev --name add_status_page_and_runbooks
+
+
+Because the bootstrap already created the tables, Prisma will generate only the needed changes (or no-ops).
+
+Drizzle
+
+Pull current DB to avoid rename heuristics:
+
+drizzle-kit introspect
+
+
+Ensure your schema definitions match the (now-existing) tables, then:
+
+drizzle-kit generate
+drizzle-kit push
+
+
+If Drizzle still offers renames, delete the offending rename step in the generated SQL and keep only create if not exists/alter statements.
+
+3) App-level guard (optional, nice to have)
+
+Add a startup hook that asserts core tables exist (no-op if they do). For example, with Node + pg:
+
+// db/bootstrap.ts
+import { sql } from './db'; // however you execute SQL
+
+export async function ensureCoreTables() {
+  await sql`create extension if not exists pgcrypto;`;
+
+  await sql`create table if not exists status_page_incidents (
+    id uuid primary key default gen_random_uuid(),
+    title text not null,
+    description text,
+    severity text not null default 'info',
+    status text not null default 'investigating',
+    started_at timestamptz not null default now(),
+    resolved_at timestamptz,
+    created_by uuid,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+  )`;
+
+  await sql`create table if not exists automated_runbooks (
+    id uuid primary key default gen_random_uuid(),
+    name text not null,
+    slug text unique,
+    description text,
+    is_active boolean not null default true,
+    triggers jsonb default '[]'::jsonb,
+    steps jsonb not null default '[]'::jsonb,
+    created_by uuid,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+  )`;
+
+  await sql`create table if not exists oncall_teams (
+    id uuid primary key default gen_random_uuid(),
+    name text not null,
+    escalation_policy jsonb default '{}'::jsonb,
+    members jsonb not null default '[]'::jsonb,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+  )`;
+}
+
+
+Call ensureCoreTables() once on server boot. It’s idempotent.
