@@ -200,37 +200,43 @@ export async function setupAuth(app: Express) {
   // Import the strict rate limiter from main server
   const { loginLimiter } = await import("./index.js");
 
-  // Pure redirect to IdP (works in CI without a browser) with strict rate limiting
-  app.get("/api/login", loginLimiter, (req, res, next) => {
-    // Optional: CI "smoke mode" that always 302s  
-    const AUTH_SMOKE = process.env.AUTH_SMOKE === "true";
-    if (AUTH_SMOKE) {
-      // Fake an IdP redirect location; CI only checks for 302 presence
-      const fake = "https://idp.example/auth?client_id=TEST&redirect_uri=http://localhost:5000/oauth2callback&response_type=code";
-      return res.redirect(302, fake);
-    }
-    
-    // Safety assertion: prevent hosted/localhost mismatch
-    const host = req.get('host') || req.hostname;
-    if (/\.replit\.(dev|app)$/.test(host) && CALLBACK.startsWith('http://localhost')) {
-      console.error(`🚨 SAFETY ASSERTION FAILED: hosted/localhost mismatch`);
-      console.error(`   Host: ${host}`);
-      console.error(`   Callback: ${CALLBACK}`);
-      return res.status(500).json({ error: 'hosted/localhost mismatch' });
-    }
+  // Rate limiter MUST run first - no auth logic until rate limit passes
+  app.get("/api/login", (req, res, next) => {
+    // Apply rate limiter first, before any auth logic
+    loginLimiter(req, res, (err) => {
+      if (err) return; // Rate limit exceeded, response already sent
+      
+      // Only run auth logic if rate limit passes
+      // Optional: CI "smoke mode" that always 302s  
+      const AUTH_SMOKE = process.env.AUTH_SMOKE === "true";
+      if (AUTH_SMOKE) {
+        // Fake an IdP redirect location; CI only checks for 302 presence
+        const fake = "https://idp.example/auth?client_id=TEST&redirect_uri=http://localhost:5000/oauth2callback&response_type=code";
+        return res.redirect(302, fake);
+      }
+      
+      // Safety assertion: prevent hosted/localhost mismatch
+      const host = req.get('host') || req.hostname;
+      if (/\.replit\.(dev|app)$/.test(host) && CALLBACK.startsWith('http://localhost')) {
+        console.error(`🚨 SAFETY ASSERTION FAILED: hosted/localhost mismatch`);
+        console.error(`   Host: ${host}`);
+        console.error(`   Callback: ${CALLBACK}`);
+        return res.status(500).json({ error: 'hosted/localhost mismatch' });
+      }
 
-    // Structured logging for observability (PII-safe)
-    console.info('[AUTH][login]', { 
-      host, 
-      redirect_uri: CALLBACK, 
-      client_id: maskSecret(process.env.REPL_ID)
+      // Structured logging for observability (PII-safe)
+      console.info('[AUTH][login]', { 
+        host, 
+        redirect_uri: CALLBACK, 
+        client_id: maskSecret(process.env.REPL_ID)
+      });
+
+      console.log('[AUTH][login] Starting passport authentication...');
+      passport.authenticate("oidc", {
+        scope: ["openid", "email", "profile", "offline_access"],
+        prompt: "login consent",
+      })(req, res, next);
     });
-
-    console.log('[AUTH][login] Starting passport authentication...');
-    passport.authenticate("oidc", {
-      scope: ["openid", "email", "profile", "offline_access"],
-      prompt: "login consent",
-    })(req, res, next);
   });
 
   // Authentication status endpoint

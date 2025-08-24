@@ -419,8 +419,13 @@ const loginLimiter = rateLimit({
     || "unknown",
   // Count *every* request as an attempt (even 302s)
   requestWasSuccessful: () => false,
+  // Skip successful requests so limit only applies to failures
+  skipSuccessfulRequests: false,
+  // Skip failed requests so we count everything
+  skipFailedRequests: false,
   handler: (req, res) => {
     console.warn('[RateLimit] 429', req.ip, req.method, req.originalUrl);
+    // Important: Set status BEFORE any auth logic can redirect
     res.status(429).json({ error: "rate_limited", retryAfterSec: 60 });
   },
 });
