@@ -1,0 +1,91 @@
+What’s still missing (from your logs)
+
+dr_slas.last_tested_at
+
+restore_tests.started_at
+
+worm_objects.compliance_policy
+
+escalation_policies.escalation_steps
+
+runbook_triggers.system_states
+
+🔧 One migration to fix all (copy-paste)
+
+Save as migrations/2025-08-optional-systems-fix-03.sql and run it.
+
+BEGIN;
+
+-- Disaster Recovery additions
+ALTER TABLE IF EXISTS public.dr_slas
+  ADD COLUMN IF NOT EXISTS last_tested_at timestamptz;
+
+ALTER TABLE IF EXISTS public.restore_tests
+  ADD COLUMN IF NOT EXISTS started_at timestamptz;
+
+ALTER TABLE IF EXISTS public.worm_objects
+  ADD COLUMN IF NOT EXISTS compliance_policy jsonb;
+
+-- Backfill sensible defaults where null to satisfy code paths
+UPDATE public.worm_objects
+SET compliance_policy = '{}'::jsonb
+WHERE compliance_policy IS NULL;
+
+-- On-call / Policies
+ALTER TABLE IF EXISTS public.escalation_policies
+  ADD COLUMN IF NOT EXISTS escalation_steps jsonb;
+
+UPDATE public.escalation_policies
+SET escalation_steps = '[]'::jsonb
+WHERE escalation_steps IS NULL;
+
+-- Automated runbooks / trigger state
+ALTER TABLE IF EXISTS public.runbook_triggers
+  ADD COLUMN IF NOT EXISTS system_states jsonb;
+
+UPDATE public.runbook_triggers
+SET system_states = '{}'::jsonb
+WHERE system_states IS NULL;
+
+-- Helpful GIN indexes for JSON lookups (safe if unused)
+CREATE INDEX IF NOT EXISTS idx_escalation_policies_steps_gin
+  ON public.escalation_policies USING gin (coalesce(escalation_steps, '[]'::jsonb));
+
+CREATE INDEX IF NOT EXISTS idx_runbook_triggers_states_gin
+  ON public.runbook_triggers USING gin (coalesce(system_states, '{}'::jsonb));
+
+COMMIT;
+
+Run it
+psql "$DATABASE_URL" -f migrations/2025-08-optional-systems-fix-03.sql
+
+Quick verify
+SELECT last_tested_at      FROM public.dr_slas           LIMIT 1;
+SELECT started_at          FROM public.restore_tests     LIMIT 1;
+SELECT compliance_policy   FROM public.worm_objects      LIMIT 1;
+SELECT escalation_steps    FROM public.escalation_policies LIMIT 1;
+SELECT system_states       FROM public.runbook_triggers  LIMIT 1;
+
+After applying
+
+The DR initializer should stop complaining about last_tested_at, started_at, and compliance_policy.
+
+On-call defaults should no longer error on escalation_steps.
+
+Automated runbooks trigger monitoring should stop erroring on system_states.
+
+Bonus cleanups (optional, low risk)
+
+You still see some “initialized” lines twice (e.g., DPIA/DPA/ROPA). Wrap each initializer with a simple idempotent guard:
+
+let _init = false;
+export async function initialize() {
+  if (_init) return;
+  // work...
+  _init = true;
+}
+
+
+Keep STRICT_AUDIT=false in non-prod so audit insert hiccups won’t fail boot; flip to true once schema is stable.
+
+If any new column errors pop up after this (different names), paste the exact error and I’ll extend the migration accordingly
