@@ -393,8 +393,8 @@ function setupProdSPA(app: express.Express) {
     immutable: true 
   }));
   
-  // 2) General static files (index.html with no-cache)
-  app.use(express.static(distDir));
+  // 2) General static files (index.html and root files with no-cache)
+  app.use(express.static(distDir, { maxAge: '0' }));
   
   // 3) SPA fallback - serve index.html for non-API, non-asset routes
   app.get(/^\/(?!api\/|assets\/|health$|favicon\.ico$|robots\.txt$).*/, (_req, res) => {
