@@ -164,6 +164,13 @@ export async function setupAuth(app: Express) {
 
   // Frontend expects this endpoint
   app.get('/api/auth/user', (req, res) => {
+    console.log('[AUTH][user] User endpoint called:', { 
+      isAuth: req.isAuthenticated(), 
+      hasUser: !!req.user,
+      sessionID: req.sessionID,
+      user: req.user 
+    });
+    
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
@@ -195,7 +202,16 @@ export async function setupAuth(app: Express) {
           return next(err);
         }
         console.log('[AUTH][cb] User logged in successfully:', { userId: user.id, isAuth: req.isAuthenticated() });
-        return res.redirect("/dashboard");
+        
+        // Force session save before redirect
+        req.session.save((saveErr) => {
+          if (saveErr) {
+            console.error('[AUTH][cb] Session save error:', saveErr);
+            return next(saveErr);
+          }
+          console.log('[AUTH][cb] Session saved successfully, redirecting to dashboard');
+          return res.redirect("/dashboard");
+        });
       });
     })(req, res, next);
   });
