@@ -1,0 +1,124 @@
+That error means Replit can’t connect to your app’s HTTP server. 99% of the time it’s one (or more) of these:
+
+You’re listening on the wrong port (hard-coded 5000 instead of process.env.PORT) or on localhost instead of 0.0.0.0.
+
+The server never starts (dies on startup, awaits a failing init, or exits).
+
+You’re running a dev server (Vite/React HMR) in a deployment instead of serving a built app.
+
+The process is up but no route returns 200 for the deployment health probe (e.g., /).
+
+Below are copy-paste steps for your agent to diagnose quickly and then a minimal code diff to make your server reachable in Replit.
+
+Phase 1 — Prove the server is listening on the right port/host
+ConnectivityProbe (read-only)
+1) Print env + start command:
+   node -e "console.log({ PORT: process.env.PORT, NODE_ENV: process.env.NODE_ENV })"
+   cat package.json | sed -n '1,120p' | sed -n 's/.*\"start\".*/&/p'
+
+2) Show what’s actually listening:
+   node -e "require('child_process').exec('lsof -i -P -n | grep LISTEN || ss -ltnp || netstat -ltnp', (e,o)=>console.log(o||e))"
+
+3) Try curling locally using the *env* port:
+   export P=${PORT:-5000}; echo "PORT=$P"
+   curl -sv "http://127.0.0.1:$P/health" || curl -sv "http://127.0.0.1:$P/"
+
+
+What we want: a process listening on 0.0.0.0:<PORT> and curl returns 200.
+
+Phase 2 — Make the server bind correctly (one tiny diff)
+
+Ensure you always bind to the env port and 0.0.0.0.
+
+Unified diff (server/index.ts or wherever you call app.listen)
+
+-const PORT = 5000;
+-const server = app.listen(PORT, () => {
+-  console.log(`[express] serving on port ${PORT}`);
+-});
++const PORT = Number(process.env.PORT) || 5000;
++const HOST = "0.0.0.0";
++const server = app.listen(PORT, HOST, () => {
++  console.log(`[express] serving on ${HOST}:${PORT}`);
++});
+
+
+Also make sure only one app.listen exists.
+
+Phase 3 — Don’t block startup on optional inits
+
+If any async init throws during bootstrap, deployments never open the port.
+
+StartupGuard (read-only)
+1) Confirm registerRoutes is inside try/catch and doesn’t rethrow on optional services.
+2) Check logs: any “[STARTUP] Failed to register routes” or thrown errors before listen?
+
+
+If needed, ensure optional modules (logging/runbooks/oncall) are feature-flagged off until migrations are applied:
+
+ENABLE_LOGGING=false
+ENABLE_RUNBOOKS=false
+ENABLE_ONCALL=false
+
+Phase 4 — Deployment vs dev server
+
+If you’re serving the SPA via Vite dev server, that won’t run in Deployments. You must build and serve static files from Node.
+
+package.json (scripts)
+
+{
+  "scripts": {
+    "build": "vite build",              // or react-scripts build / next build
+    "start": "node dist/index.js",      // your compiled server
+    "start:dev": "vite",                // dev only
+    "serve": "node dist/index.js"
+  }
+}
+
+
+server static hosting snippet (if not present):
+
+import path from "node:path";
+const publicDir = path.join(process.cwd(), "dist/client"); // adjust to your FE build output
+app.use(express.static(publicDir));
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(publicDir, "index.html"));
+});
+
+
+(Make sure this static catch-all is mounted after your auth/API routes.)
+
+Phase 5 — Ensure the deployment health check has a 200
+
+Some Replit deploys expect / to return 200 quickly.
+
+You already added /health. Add a trivial / too:
+
++app.get("/", (_req, res) => res.status(200).send("ok"));
+
+
+Then verify:
+
+curl -sS "http://127.0.0.1:$PORT/" ; echo
+curl -sS "http://127.0.0.1:$PORT/health" ; echo
+
+Phase 6 — Re-run connectivity proof
+PostFixProof:
+1) node -e "console.log({ PORT:process.env.PORT })"
+2) lsof/ss/netstat check again for 0.0.0.0:PORT
+3) curl -sv "http://127.0.0.1:$PORT/health"
+4) From your browser, open the deployment URL again.
+
+Common gotchas checklist
+
+ Hard-coded 5000 or localhost in app.listen → must use process.env.PORT and 0.0.0.0.
+
+ Dev server (Vite/Next) used in production → build and serve static.
+
+ App crashes before listen due to optional modules → feature-flag off.
+
+ No 200 on / → add a simple handler or serve SPA index.
+
+ Multiple listen() calls causing port conflict.
+
+ Start command in package.json runs a dev script instead of the server.

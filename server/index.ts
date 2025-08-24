@@ -46,25 +46,26 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // PREFLIGHT: Run DDL checks before starting services
-  console.log('[Boot] Running preflight DDL checks...');
-  await preflightDDLCheck();
-  console.log('[Boot] ✅ Preflight checks completed!');
-  
-  // Set environment variables if not set (for development)
-  if (!process.env.ENABLE_ONCALL) process.env.ENABLE_ONCALL = 'true';
-  if (!process.env.ENABLE_RUNBOOKS) process.env.ENABLE_RUNBOOKS = 'true';  
-  if (!process.env.ENABLE_LOGGING) process.env.ENABLE_LOGGING = 'true';
-  
-  console.log('[Boot] Feature flags:', {
-    ENABLE_ONCALL: process.env.ENABLE_ONCALL,
-    ENABLE_RUNBOOKS: process.env.ENABLE_RUNBOOKS, 
-    ENABLE_LOGGING: process.env.ENABLE_LOGGING
-  });
+  try {
+    // PREFLIGHT: Run DDL checks before starting services
+    console.log('[Boot] Running preflight DDL checks...');
+    await preflightDDLCheck();
+    console.log('[Boot] ✅ Preflight checks completed!');
+    
+    // Set environment variables if not set (for development)
+    if (!process.env.ENABLE_ONCALL) process.env.ENABLE_ONCALL = 'true';
+    if (!process.env.ENABLE_RUNBOOKS) process.env.ENABLE_RUNBOOKS = 'true';  
+    if (!process.env.ENABLE_LOGGING) process.env.ENABLE_LOGGING = 'true';
+    
+    console.log('[Boot] Feature flags:', {
+      ENABLE_ONCALL: process.env.ENABLE_ONCALL,
+      ENABLE_RUNBOOKS: process.env.ENABLE_RUNBOOKS, 
+      ENABLE_LOGGING: process.env.ENABLE_LOGGING
+    });
 
-  console.log('[Boot] 🚀 About to call registerRoutes...');
-  const server = await registerRoutes(app);
-  console.log('[Boot] ✅ registerRoutes completed!');
+    console.log('[Boot] 🚀 About to call registerRoutes...');
+    const server = await registerRoutes(app);
+    console.log('[Boot] ✅ registerRoutes completed!');
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -83,18 +84,38 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+    // ALWAYS serve the app on the port specified in the environment variable PORT
+    // Other ports are firewalled. Default to 5000 if not specified.
+    // this serves both the API and the client.
+    // It is the only port that is not firewalled.
+    const port = parseInt(process.env.PORT || '5000', 10);
+    const host = "0.0.0.0";
+    server.listen({
+      port,
+      host,
+      reusePort: true,
+    }, () => {
+      log(`serving on ${host}:${port}`);
+    });
+  } catch (error) {
+    console.error('[STARTUP] ❌ Failed to register routes:', error.message);
+    console.error('[STARTUP] Full error stack:', error);
+    
+    // For deployment health checks, still start a minimal server
+    const port = parseInt(process.env.PORT || '5000', 10);
+    const host = "0.0.0.0";
+    
+    app.get('/', (_req, res) => res.status(503).send('Server starting up - authentication not ready'));
+    app.get('/health', (_req, res) => res.status(503).json({
+      status: 'error',
+      message: 'Authentication setup failed',
+      timestamp: new Date().toISOString()
+    }));
+    
+    const server = app.listen(port, host, () => {
+      console.log(`[STARTUP] ⚠️ Minimal server running on ${host}:${port} (degraded mode)`);
+    });
+  }
 })();
 
 /**
