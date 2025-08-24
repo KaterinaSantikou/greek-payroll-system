@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
+import compression from "compression";
 import rateLimit from "express-rate-limit";
 import cors from "cors";
 import path from "path";
@@ -396,6 +397,23 @@ const app = express();
 // Trust proxy for accurate IP detection behind load balancers
 app.set('trust proxy', 1);
 
+// Compression: Enable gzip/brotli compression for fast bundle delivery
+app.use(compression({
+  // Enable for all responses
+  filter: (req, res) => {
+    // Don't compress responses with this request header
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    // Compress everything else
+    return compression.filter(req, res);
+  },
+  // Compression level (6 = balanced speed/compression)
+  level: 6,
+  // Minimum size to compress (1KB)
+  threshold: 1024,
+}));
+
 // CORS Configuration: Handle preflight requests and allow credentials
 app.options('/api/*', cors({ origin: true, credentials: true }));
 app.use('/api', cors({ origin: true, credentials: true }));
@@ -689,6 +707,11 @@ app.use((req, res, next) => {
     // It is the only port that is not firewalled.
     const port = parseInt(process.env.PORT || '5000', 10);
     const host = "0.0.0.0";
+    
+    // Keep-alive timeouts: Tune for Replit proxy to avoid sporadic 502s
+    server.keepAliveTimeout = 61000; // 61 seconds (longer than typical proxy timeout)
+    server.headersTimeout = 62000;   // 62 seconds (must be > keepAliveTimeout)
+    
     server.listen({
       port,
       host,
@@ -714,6 +737,61 @@ app.use((req, res, next) => {
       console.log(`[STARTUP] ⚠️ Minimal server running on ${host}:${port} (degraded mode)`);
     });
   }
+
+  // Graceful shutdown: Close DB pools and timers on SIGTERM to avoid half-applied jobs
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`\n[SHUTDOWN] 🚨 Received ${signal}, starting graceful shutdown...`);
+    
+    try {
+      // 1. Stop accepting new requests
+      if (server) {
+        console.log('[SHUTDOWN] 🔄 Closing HTTP server...');
+        await new Promise<void>((resolve) => {
+          server.close(() => {
+            console.log('[SHUTDOWN] ✅ HTTP server closed');
+            resolve();
+          });
+        });
+      }
+
+      // 2. Close database connections
+      console.log('[SHUTDOWN] 🔄 Closing database connections...');
+      if (db && typeof db.close === 'function') {
+        await db.close();
+        console.log('[SHUTDOWN] ✅ Database connections closed');
+      }
+
+      // 3. Clear any active timers/intervals
+      console.log('[SHUTDOWN] 🔄 Clearing active timers...');
+      // Clear any global timers if they exist
+      const timers = (global as any).__activeTimers || [];
+      timers.forEach((timer: NodeJS.Timeout) => clearTimeout(timer));
+      const intervals = (global as any).__activeIntervals || [];
+      intervals.forEach((interval: NodeJS.Timeout) => clearInterval(interval));
+      console.log('[SHUTDOWN] ✅ Active timers cleared');
+
+      console.log('[SHUTDOWN] 🎉 Graceful shutdown completed');
+      process.exit(0);
+    } catch (error) {
+      console.error('[SHUTDOWN] ❌ Error during shutdown:', error);
+      process.exit(1);
+    }
+  };
+
+  // Register shutdown handlers
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+  // Handle uncaught exceptions and unhandled rejections
+  process.on('uncaughtException', (error) => {
+    console.error('[FATAL] Uncaught exception:', error);
+    gracefulShutdown('uncaughtException');
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('[FATAL] Unhandled rejection at:', promise, 'reason:', reason);
+    gracefulShutdown('unhandledRejection');
+  });
 })();
 
 /**
