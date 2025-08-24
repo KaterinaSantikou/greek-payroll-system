@@ -1,0 +1,184 @@
+stellar work — that’s a production-grade auth surface with CI, observability, and guardrails. Since you’ve closed the big gaps, here’s a tight list of remaining high-impact hardening items with copy-paste prompts to finish the job.
+
+1) Security headers & CSP (clickjacking, XSS, MIME sniffing)
+
+Prompt (diff):
+
++ import helmet from "helmet";
++ app.use(helmet({
++   xssFilter: true,
++   frameguard: { action: "deny" },
++   noSniff: true,
++   referrerPolicy: { policy: "no-referrer" },
++   contentSecurityPolicy: {
++     useDefaults: true,
++     directives: {
++       "default-src": ["'self'"],
++       "script-src": ["'self'"],
++       "style-src": ["'self'","'unsafe-inline'"],
++       "img-src": ["'self'","data:"],
++       "connect-src": ["'self'"],   // add external APIs if any
++     },
++   },
++ }));
+
+2) Harden session cookies & secret rotation
+
+Prompt (diff):
+
+// session config
+- name: "connect.sid",
++ name: "__Host-psid", // host-only, secure-by-default prefix
+  cookie: {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    maxAge: 1000*60*60*24*7,
++   path: "/",
++   // domain: omit to enforce host-only cookie (__Host-)
+  },
+
+
+CI check (add to workflow):
+
+curl -sI http://127.0.0.1:${PORT:-5000}/api/login | grep -i 'set-cookie' || true
+# Assert cookie name starts with __Host-
+
+
+Rotation policy (runbook line): rotate SESSION_SECRET quarterly; invalidate old sessions via store purge.
+
+3) CSRF defense for state-changing routes (keep auth routes exempt)
+
+Prompt (diff):
+
++ import csurf from "csurf";
++ const csrf = csurf({ cookie: false });
++ const CSRF_EXEMPT = new Set(["/api/login","/oauth2callback","/api/auth/logout","/health","/ready"]);
++ app.use((req,res,next)=> CSRF_EXEMPT.has(req.path) ? next() : csrf(req,res,next));
+
+
+FE bootstrap: include X-CSRF-Token header from /api/csrf endpoint if you expose one.
+
+4) MFA hooks & brute-force protections (beyond basic rate limit)
+
+Prompt (diff):
+
+// After successful login, mark account risk score (stub)
++ app.post("/api/auth/mark-risk", requireAuth, (req,res)=>{ /* TODO: write risk marker */ res.sendStatus(204) });
+
+
+CI (optional): add test ensuring repeated /api/login from single IP hits 429, and 5-minute cooldown resets counter.
+
+5) RBAC/Scopes: enforce on API, not only UI
+
+Prompt (policy file):
+
+// rbac/policies.ts
+export const Policies = {
+  "payroll:run:read": ["admin","payroll_mgr","auditor"],
+  "payroll:run:execute": ["admin","payroll_mgr"],
+  "filings:submit": ["admin","accountant"],
+};
+// middleware
+export const requireScope = (scope:string) => (req,res,next)=>{
+  const roles = req.user?.roles || [];
+  return Policies[scope]?.some(r=>roles.includes(r)) ? next() : res.sendStatus(403);
+};
+
+
+Usage:
+
+app.get("/api/payroll/runs", requireAuth, requireScope("payroll:run:read"), handler);
+
+6) Token & session lifecycle (logout everywhere + refresh hygiene)
+
+Prompts:
+
+Global logout: on /api/auth/logout, revoke refresh tokens (if any) + destroy session + clear cookie.
+
+Idle timeout: implement server-side idle TTL shorter than cookie maxAge (e.g., 12h) and refresh on activity.
+
+Session fixation: on login, regenerate session:
+
+req.session.regenerate(err => { if (err) return next(err); req.logIn(user, next); });
+
+7) Pen-test & dependency hygiene
+
+Prompts for CI:
+
+- name: Dependency Audit
+  run: npm audit --omit=dev || true
+- name: Snyk (optional)
+  run: snyk test || true
+- name: Secret Scan
+  run: gitleaks detect --no-banner --redact
+
+8) Load & resilience checks (basic)
+
+k6 script (save as load.js):
+
+import http from 'k6/http'; import { sleep, check } from 'k6';
+export let options = { vus: 20, duration: '1m' };
+export default function() {
+  const r = http.get(`${__ENV.BASE}/health`);
+  check(r, { '200': (res)=> res.status === 200 });
+  sleep(0.3);
+}
+
+
+Run:
+
+BASE=http://127.0.0.1:${PORT:-5000} k6 run load.js
+
+9) MyDATA & ERGANI readiness (graceful)
+
+You already log: MyDATA credentials not configured. Good! Add a /api/integrations/status endpoint.
+
+Prompt (route):
+
+app.get("/api/integrations/status", requireAuth, (req,res)=>{
+  res.json({
+    mydata: { configured: !!process.env.MYDATA_CLIENT_ID && !!process.env.MYDATA_SECRET },
+    ergani: { configured: !!process.env.ERGANI_USERNAME && !!process.env.ERGANI_PASSWORD },
+    banking: { profiles: /* count from DB or 0 */ 0 },
+  });
+});
+
+
+Add UI nags only for admins.
+
+10) Observability dashboards (quick wins)
+
+Prompts:
+
+Expose /metrics (Prometheus) for basics (HTTP codes, latency).
+
+Log auth events as structured JSON lines; build a lightweight Kibana/Grafana or Logtail sink later.
+
+11) Backups & recovery drills (auth + sessions)
+
+Prompts:
+
+If using Redis/DB for sessions, enable persistence and nightly backups.
+
+Add a runbook: simulate session store wipe → verify graceful re-login path, no server crash.
+
+12) Frontend guard: authenticated gate & signed-out UX
+
+FE Prompt:
+
+In useAuth bootstrap, if { authenticated: true } and route is /login, redirect to /dashboard.
+
+If { authenticated: false } and route is a protected page, redirect to /login (don’t show NotFound).
+
+“Do it now” command bundle (lowest effort, highest payoff)
+
+Add Helmet + CSP
+
+Rename cookie to __Host-psid and keep secure/none flags
+
+Add CSRF except on auth open paths
+
+Add /api/integrations/status
+
+Add /metrics or keep /api/auth/metrics and chart it

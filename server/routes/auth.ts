@@ -28,23 +28,14 @@ if (typeof process.env.SESSION_SECRET === 'undefined') {
   throw new Error('SESSION_SECRET environment variable is required');
 }
 
-// Session middleware
-const sessionMiddleware = session({
-  secret: process.env.SESSION_SECRET!,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-  },
-});
+// Note: Session middleware is configured in server/replitAuth.ts with proper hosted mode detection
+// This local sessionMiddleware is NOT used - keeping for potential future local auth routes
 
 const router = express.Router();
 
 // Apply security middleware
 router.use(cspHeaders());
-router.use(sessionMiddleware);
+// Note: sessionMiddleware is already configured globally in server/replitAuth.ts
 router.use(csrfProtection());
 router.use(resetBruteForceOnSuccess());
 

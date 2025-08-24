@@ -23,7 +23,7 @@ const getOidcConfig = memoize(
 );
 
 export function getSession() {
-  const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
+  const sessionTtl = 1000 * 60 * 60 * 24 * 7; // 7 days
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
@@ -32,39 +32,40 @@ export function getSession() {
     tableName: "sessions",
   });
   
-  // Dynamic session configuration based on environment
-  const isReplitHosted = !!process.env.REPLIT_DOMAINS;
+  // Hosted when Replit provides public domains
+  const isHosted = !!process.env.REPLIT_DOMAINS;
+  // Fallback to production heuristic, but prefer hosted flag
+  const isProd = isHosted || process.env.NODE_ENV === 'production';
+  
   const sessionOpts = {
     secret: process.env.SESSION_SECRET!,
-    store: sessionStore,
     resave: false,
     saveUninitialized: false,
-    name: 'connect.sid', // Explicit session cookie name
     cookie: {
       httpOnly: true,
-      secure: isReplitHosted, // Secure cookies in hosted mode
-      sameSite: (isReplitHosted ? 'none' : 'lax') as const, // none for hosted, lax for dev
+      secure: isProd,                     // MUST be true on hosted (HTTPS)
+      sameSite: isProd ? 'none' : 'lax',  // MUST be 'none' on hosted
       maxAge: sessionTtl,
-      path: '/', // Ensure cookie works for all paths
     },
+    store: sessionStore,
+    name: 'connect.sid',
   };
   
   // Log session configuration at startup
   console.info('[SESSION]', { 
     secure: !!sessionOpts.cookie?.secure, 
     sameSite: sessionOpts.cookie?.sameSite, 
-    name: sessionOpts.name 
+    name: sessionOpts.name,
+    isHosted,
+    isProd
   });
   
-  // Security guardrail: Assert cookie flags in hosted mode
-  if (process.env.REPLIT_DOMAINS && sessionOpts.cookie) {
-    if (!sessionOpts.cookie.secure || sessionOpts.cookie.sameSite !== 'none') {
-      throw new Error(
-        `Hosted mode requires secure session cookies. ` +
-        `Expected: {secure: true, sameSite: 'none'}, ` +
-        `Got: {secure: ${sessionOpts.cookie.secure}, sameSite: '${sessionOpts.cookie.sameSite}'}`
-      );
-    }
+  // Safety guard (adjusted to use isHosted)
+  const { secure, sameSite } = sessionOpts.cookie ?? {};
+  if (isHosted && (!secure || String(sameSite).toLowerCase() !== 'none')) {
+    throw new Error(
+      `Hosted mode requires secure session cookies. Expected {secure:true, sameSite:'none'}, got {secure:${!!secure}, sameSite:'${sameSite}'}`
+    );
   }
   
   return session(sessionOpts);
@@ -137,6 +138,16 @@ export async function setupAuth(app: Express) {
   const REPLIT_CALLBACK = `https://${domain}/oauth2callback`;
   const DEV_CALLBACK = `http://localhost:5000/oauth2callback`;
   const CALLBACK = isReplitHosted ? REPLIT_CALLBACK : DEV_CALLBACK;
+  
+  // Optional: enforce hosted callback & cookie parity
+  
+  // 1) Callback host parity (hosted)
+  if (process.env.REPLIT_DOMAINS) {
+    console.info('[Auth] Hosted mode, CALLBACK:', CALLBACK);
+    if (!CALLBACK.startsWith('https://')) {
+      throw new Error('Hosted mode requires https callback');
+    }
+  }
   
   // Security guardrail: Deny localhost callback in hosted mode
   if (process.env.REPLIT_DOMAINS && CALLBACK.startsWith('http://localhost')) {
