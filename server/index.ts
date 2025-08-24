@@ -40,12 +40,14 @@ async function ensureCoreTables() {
     // MIGRATION SAFETY: Check for long-running operations and table locks
     await checkMigrationSafety(pool);
     
-    // RLS SAFEGUARDS: Disable RLS on critical tables to prevent production access issues
+    // RLS SETUP: Proper order - create table → seed policies → enable RLS
+    // NOTE: RLS is disabled during bootstrap and enabled later with proper policies
     const criticalTables = [
       'oncall_teams', 'status_page_subscriptions', 'status_page_incidents', 
       'automated_runbooks', 'employees', 'users', 'sessions'
     ];
     
+    // Temporarily disable RLS during table creation to prevent access issues
     for (const tableName of criticalTables) {
       try {
         await pool.query(`ALTER TABLE IF EXISTS public.${tableName} DISABLE ROW LEVEL SECURITY`);
@@ -53,7 +55,7 @@ async function ensureCoreTables() {
         // Table might not exist yet, that's OK
       }
     }
-    console.log('[BOOTSTRAP] 🔧 RLS safeguards applied to critical tables');
+    console.log('[BOOTSTRAP] 🔧 RLS temporarily disabled for safe table creation');
 
     // Create all "problem" tables that cause rename prompts
     const bootstrapSQL = `

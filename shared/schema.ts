@@ -15,9 +15,29 @@ import {
   unique,
   PgTableWithColumns,
   AnyPgColumn,
+  pgEnum,
+  check,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// =============================================================================
+// POSTGRESQL ENUMS FOR TYPE SAFETY
+// =============================================================================
+
+// Event processing status enums (replaces Zod-only validation)
+export const eventQueueStatusEnum = pgEnum('event_queue_status', ['pending', 'processing', 'completed', 'failed', 'dead_letter']);
+export const eventProcessingStatusEnum = pgEnum('event_processing_status', ['started', 'completed', 'failed', 'timeout']);
+export const deadLetterStatusEnum = pgEnum('dead_letter_status', ['pending', 'investigating', 'resolved', 'discarded']);
+
+// Employment and payroll enums
+export const employmentTypeEnum = pgEnum('employment_type', ['full_time', 'part_time', 'contract', 'temporary', 'seasonal']);
+export const payrollStatusEnum = pgEnum('payroll_status', ['draft', 'calculated', 'approved', 'paid', 'cancelled']);
+export const auditResultEnum = pgEnum('audit_result', ['success', 'failure', 'blocked']);
+export const authMethodEnum = pgEnum('auth_method', ['password', 'sso', 'magic_link', 'mfa', 'webauthn']);
+
+// Custom timestamp type that enforces timestamptz
+const timestamptz = (name: string) => timestamp(name, { withTimezone: true });
 
 // Session storage table for Replit Auth
 export const sessions = pgTable(
@@ -25,7 +45,7 @@ export const sessions = pgTable(
   {
     sid: varchar("sid").primaryKey(),
     sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
+    expire: timestamptz("expire").notNull(),
   },
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
@@ -33,9 +53,9 @@ export const sessions = pgTable(
 // Enhanced User authentication table (backward compatible with Replit Auth)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique().notNull(),
+  email: varchar("email").notNull(),
   emailVerified: boolean("email_verified").default(false),
-  emailVerifiedAt: timestamp("email_verified_at"),
+  emailVerifiedAt: timestamptz("email_verified_at"),
   passwordHash: varchar("password_hash"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
@@ -43,16 +63,22 @@ export const users = pgTable("users", {
   locale: varchar("locale").default('en').notNull(), // 'en' or 'el' (Greek)
   timezone: varchar("timezone").default('Europe/Athens'),
   mfaEnabled: boolean("mfa_enabled").default(false),
-  lastLoginAt: timestamp("last_login_at"),
+  lastLoginAt: timestamptz("last_login_at"),
   loginAttempts: integer("login_attempts").default(0),
-  lockedUntil: timestamp("locked_until"),
-  gdprConsentAt: timestamp("gdpr_consent_at"),
-  tosAcceptedAt: timestamp("tos_accepted_at"),
-  privacyAcceptedAt: timestamp("privacy_accepted_at"),
+  lockedUntil: timestamptz("locked_until"),
+  gdprConsentAt: timestamptz("gdpr_consent_at"),
+  tosAcceptedAt: timestamptz("tos_accepted_at"),
+  privacyAcceptedAt: timestamptz("privacy_accepted_at"),
   isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+  createdAt: timestamptz("created_at").defaultNow(),
+  updatedAt: timestamptz("updated_at").defaultNow(),
+}, (table) => [
+  // Case-insensitive unique constraint on email to prevent duplicates
+  unique("users_email_unique").on(sql`LOWER(${table.email})`),
+  // Additional indexes for performance
+  index("users_email_lower_idx").on(sql`LOWER(${table.email})`),
+  index("users_created_at_idx").on(table.createdAt),
+]);
 
 // Email verification tokens
 export const emailVerificationTokens = pgTable("email_verification_tokens", {
@@ -60,8 +86,8 @@ export const emailVerificationTokens = pgTable("email_verification_tokens", {
   userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
   email: varchar("email").notNull(),
   token: varchar("token").notNull().unique(),
-  expiresAt: timestamp("expires_at").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamptz("expires_at").notNull(),
+  createdAt: timestamptz("created_at").defaultNow(),
 });
 
 // Password reset tokens
@@ -69,9 +95,9 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
   token: varchar("token").notNull().unique(),
-  expiresAt: timestamp("expires_at").notNull(),
+  expiresAt: timestamptz("expires_at").notNull(),
   used: boolean("used").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamptz("created_at").defaultNow(),
 });
 
 // Magic link tokens
@@ -79,9 +105,9 @@ export const magicLinkTokens = pgTable("magic_link_tokens", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
   token: varchar("token").notNull().unique(),
-  expiresAt: timestamp("expires_at").notNull(),
+  expiresAt: timestamptz("expires_at").notNull(),
   used: boolean("used").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
+  createdAt: timestamptz("created_at").defaultNow(),
 });
 
 // MFA TOTP secrets
@@ -91,8 +117,8 @@ export const mfaTotpSecrets = pgTable("mfa_totp_secrets", {
   secret: varchar("secret").notNull(),
   backupCodes: jsonb("backup_codes"), // Array of hashed backup codes
   enabled: boolean("enabled").default(false),
-  lastUsedAt: timestamp("last_used_at"),
-  createdAt: timestamp("created_at").defaultNow(),
+  lastUsedAt: timestamptz("last_used_at"),
+  createdAt: timestamptz("created_at").defaultNow(),
 });
 
 // MFA backup codes (separate table for better management)
@@ -101,8 +127,8 @@ export const mfaBackupCodes = pgTable("mfa_backup_codes", {
   userId: varchar("user_id").references(() => users.id, { onDelete: 'cascade' }),
   codeHash: varchar("code_hash").notNull(),
   used: boolean("used").default(false),
-  createdAt: timestamp("created_at").defaultNow(),
-  usedAt: timestamp("used_at"),
+  createdAt: timestamptz("created_at").defaultNow(),
+  usedAt: timestamptz("used_at"),
 });
 
 // WebAuthn credentials (passkeys)
@@ -115,8 +141,8 @@ export const webauthnCredentials = pgTable("webauthn_credentials", {
   transports: text("transports"), // JSON array of transports
   name: varchar("name"), // User-friendly name
   deviceName: varchar("device_name"), // Keep backward compatibility
-  lastUsedAt: timestamp("last_used_at"),
-  createdAt: timestamp("created_at").defaultNow(),
+  lastUsedAt: timestamptz("last_used_at"),
+  createdAt: timestamptz("created_at").defaultNow(),
 });
 
 // SSO providers configuration
