@@ -3049,6 +3049,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error('Failed to register incident response ownership routes:', error);
   }
 
+  // Register background jobs monitoring and control routes
+  try {
+    const backgroundJobsRoutes = (await import('./routes/backgroundJobs')).default;
+    app.use('/api/background-jobs', backgroundJobsRoutes);
+    console.log('[ROUTES] ✅ Background jobs monitoring API registered');
+  } catch (error) {
+    console.error('[ROUTES] ❌ Failed to register background jobs routes:', error);
+  }
+
   // Register disaster recovery routes
   try {
     const disasterRecoveryRoutes = (await import('./api/disasterRecovery')).default;
