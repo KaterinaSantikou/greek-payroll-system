@@ -3,9 +3,16 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "./db";
 
+// Core readiness tracking for health checks
+let coreReady = false;
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Health and readiness endpoints for deployment stability
+app.get('/health', (_req, res) => res.status(200).json({status: 'ok', ts: new Date().toISOString()}));
+app.get('/ready', (_req, res) => res.status(coreReady ? 200 : 503).json({status: coreReady ? 'ready' : 'not_ready'}));
 
 // TAP middleware to debug /api/login 
 app.use((req, res, next) => {
@@ -66,6 +73,10 @@ app.use((req, res, next) => {
     console.log('[Boot] 🚀 About to call registerRoutes...');
     const server = await registerRoutes(app);
     console.log('[Boot] ✅ registerRoutes completed!');
+    
+    // Set coreReady after successful initialization of auth, db, and rules
+    coreReady = true;
+    console.log('[Boot] ✅ Core systems ready - health checks will now return 200');
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
