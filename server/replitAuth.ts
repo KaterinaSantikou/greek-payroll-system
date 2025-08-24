@@ -128,20 +128,10 @@ export async function setupAuth(app: Express) {
   passport.use("oidc", strategy);
   console.log('[AUTH][setup] OIDC strategy registered successfully!');
 
-  passport.serializeUser((user: any, done) => {
-    try {
-      const id = user?.id || user?.sub || user?.user_id;
-      if (!id) return done(new Error('No user ID to serialize'));
-      done(null, String(id));
-    } catch (e) { done(e as any); }
-  });
-
-  passport.deserializeUser(async (id: string, done) => {
-    try {
-      // Minimal fallback - keeps session "authenticated" with basic user data
-      const user = { id };
-      done(null, user);
-    } catch (e) { done(e as any); }
+  passport.serializeUser((u: any, d) => d(null, String(u.id || u.sub)));
+  passport.deserializeUser(async (id, d) => {
+    const u = await storage.findUserById?.(id);
+    d(null, u ?? { id });
   });
 
   app.get("/api/login", (req, res, next) => {
@@ -184,51 +174,23 @@ export async function setupAuth(app: Express) {
     res.json(req.user);
   });
 
-  // Explicit GET and POST routes for /oauth2callback
-  app.get("/oauth2callback", (req, res, next) => {
-    console.log('[AUTH][cb] OAuth callback hit - query params:', req.query);
-    console.log('[AUTH][cb] Session before auth:', { sessionID: req.sessionID, isAuth: req.isAuthenticated() });
-    
-    passport.authenticate("oidc", {
-      successReturnToOrRedirect: "/dashboard", 
-      failureRedirect: "/api/login?error=auth",
-    }, (err: any, user: any, info: any) => {
-      console.log('[AUTH][cb] Auth callback result:', { err: !!err, user: !!user, info });
-      if (err) {
-        console.error('[AUTH][cb] Authentication error:', err);
-        return next(err);
-      }
-      if (!user) {
-        console.log('[AUTH][cb] No user returned, redirecting to failure');
-        return res.redirect("/api/login?error=auth");
-      }
-      
-      req.logIn(user, (err) => {
-        if (err) {
-          console.error('[AUTH][cb] Login error:', err);
-          return next(err);
-        }
-        console.log('[AUTH][cb] User logged in successfully:', { userId: user.id, isAuth: req.isAuthenticated() });
-        
-        // Force session save before redirect
-        req.session.save((saveErr) => {
-          if (saveErr) {
-            console.error('[AUTH][cb] Session save error:', saveErr);
-            return next(saveErr);
-          }
-          console.log('[AUTH][cb] Session saved successfully, redirecting to home');
-          return res.redirect("/");
-        });
+  // Custom callback to surface failures (temporary debugging)
+  function authCb(req: any, res: any, next: any) {
+    return passport.authenticate('oidc', (err: any, user: any, info: any) => {
+      console.error('[AUTH][cb]', { 
+        err: err?.message, 
+        hasUser: !!user, 
+        info, 
+        sid: req.sessionID 
       });
+      if (err) return res.status(500).json({ step: 'authenticate', err: String(err) });
+      if (!user) return res.status(401).json({ step: 'authenticate', user: false, info });
+      req.logIn(user, (e: any) => e ? res.status(500).json({ step: 'login', err: String(e) }) : res.json({ step: 'ok', user }));
     })(req, res, next);
-  });
-
-  app.post("/oauth2callback", (req, res, next) => {
-    passport.authenticate("oidc", {
-      successReturnToOrRedirect: "/dashboard", 
-      failureRedirect: "/api/login?error=auth",
-    })(req, res, next);
-  });
+  }
+  
+  app.get('/oauth2callback', authCb);
+  app.post('/oauth2callback', authCb);
 
 
   app.get("/api/logout", async (req, res) => {
