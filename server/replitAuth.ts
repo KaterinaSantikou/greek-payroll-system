@@ -31,7 +31,8 @@ export function getSession() {
     ttl: sessionTtl,
     tableName: "sessions",
   });
-  return session({
+  
+  const sessionOpts = {
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
     resave: false,
@@ -40,11 +41,31 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: false, // Force false for Replit hosted environment
-      sameSite: 'lax', // Always use lax for OAuth redirects
+      sameSite: 'lax' as const, // Always use lax for OAuth redirects
       maxAge: sessionTtl,
       path: '/', // Ensure cookie works for all paths
     },
+  };
+  
+  // Log session configuration at startup
+  console.info('[SESSION]', { 
+    secure: !!sessionOpts.cookie?.secure, 
+    sameSite: sessionOpts.cookie?.sameSite, 
+    name: sessionOpts.name 
   });
+  
+  // Security guardrail: Assert cookie flags in hosted mode
+  if (process.env.REPLIT_DOMAINS && sessionOpts.cookie) {
+    if (!sessionOpts.cookie.secure || sessionOpts.cookie.sameSite !== 'none') {
+      throw new Error(
+        `Hosted mode requires secure session cookies. ` +
+        `Expected: {secure: true, sameSite: 'none'}, ` +
+        `Got: {secure: ${sessionOpts.cookie.secure}, sameSite: '${sessionOpts.cookie.sameSite}'}`
+      );
+    }
+  }
+  
+  return session(sessionOpts);
 }
 
 function updateUserSession(
@@ -114,6 +135,11 @@ export async function setupAuth(app: Express) {
   const REPLIT_CALLBACK = `https://${domain}/oauth2callback`;
   const DEV_CALLBACK = `http://localhost:5000/oauth2callback`;
   const CALLBACK = isReplitHosted ? REPLIT_CALLBACK : DEV_CALLBACK;
+  
+  // Security guardrail: Deny localhost callback in hosted mode
+  if (process.env.REPLIT_DOMAINS && CALLBACK.startsWith('http://localhost')) {
+    throw new Error('Hosted mode forbids localhost redirect_uri');
+  }
   
   console.log(`[AUTH][setup] Chosen CALLBACK: ${CALLBACK} (isReplitHosted: ${isReplitHosted}, domain: ${domain})`);
 
