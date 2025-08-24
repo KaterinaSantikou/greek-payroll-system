@@ -51,6 +51,50 @@ jobs:
     - name: Run database migrations
       run: npm run db:push --force
       
+    - name: Verify database migrations (DB sanity check)
+      run: |
+        set -e
+        echo "🔍 Running post-migration DB sanity checks..."
+        
+        # Install PostgreSQL client for psql
+        sudo apt-get update && sudo apt-get install -y postgresql-client
+        
+        # Test 1: Verify required tables exist and are accessible
+        echo "Testing table accessibility..."
+        psql $DATABASE_URL -c "
+        SELECT 'runbooks' t, COUNT(*) FROM public.runbooks
+        UNION ALL SELECT 'automated_runbooks', COUNT(*) FROM public.automated_runbooks  
+        UNION ALL SELECT 'oncall_rotas', COUNT(*) FROM public.oncall_rotas;" || {
+          echo "❌ FAIL: Required tables missing or inaccessible"
+          exit 1
+        }
+        echo "✅ PASS: All required tables accessible"
+        
+        # Test 2: Verify runbooks.dependencies column exists
+        echo "Testing runbooks.dependencies column..."
+        DEPS_COL=$(psql $DATABASE_URL -t -c "
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name='runbooks' AND column_name='dependencies';")
+        if [[ -z "$DEPS_COL" ]]; then
+          echo "❌ FAIL: runbooks.dependencies column missing"
+          exit 1
+        fi
+        echo "✅ PASS: runbooks.dependencies column exists"
+        
+        # Test 3: Verify log_retention_policies.priority column exists  
+        echo "Testing log_retention_policies.priority column..."
+        PRIO_COL=$(psql $DATABASE_URL -t -c "
+        SELECT column_name FROM information_schema.columns
+        WHERE table_name='log_retention_policies' AND column_name='priority';")
+        if [[ -z "$PRIO_COL" ]]; then
+          echo "❌ FAIL: log_retention_policies.priority column missing"
+          exit 1
+        fi
+        echo "✅ PASS: log_retention_policies.priority column exists"
+        
+        echo ""
+        echo "🎉 ALL DB MIGRATION CHECKS PASSED!"
+      
     - name: Start server in background
       run: |
         npm run dev &
