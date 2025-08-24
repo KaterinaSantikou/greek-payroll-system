@@ -1,0 +1,124 @@
+You’re hitting the same migrator “rename vs create” heuristic—this time for status_page_subscriptions. The safe fix is to pre-create the exact table (idempotently) so the tool stops offering to rename partners.
+
+Do this once (SQL — Postgres/Supabase)
+
+Run in your SQL editor or as a migration file.
+
+create extension if not exists pgcrypto;
+
+-- Generic helper to avoid rename prompts
+create or replace function public.ensure_table(p_table text, p_sql text)
+returns void language plpgsql as $$
+begin
+  if not exists (
+    select 1 from information_schema.tables
+    where table_schema='public' and table_name=p_table
+  ) then
+    execute p_sql;
+  end if;
+end $$;
+
+-- Create the subscriptions table if missing
+select public.ensure_table(
+  'status_page_subscriptions',
+  $SQL$
+  create table public.status_page_subscriptions (
+    id uuid primary key default gen_random_uuid(),
+    email text not null,
+    component_slug text,               -- subscribe to specific component (nullable = all)
+    is_verified boolean not null default false,
+    verify_token uuid default gen_random_uuid(),
+    created_at timestamptz not null default now(),
+    verified_at timestamptz,
+    unsubscribed_at timestamptz
+  );
+
+  create unique index if not exists uniq_status_subscriptions_email_component
+    on public.status_page_subscriptions (lower(email), coalesce(component_slug,''));
+
+  create index if not exists idx_status_subscriptions_created_at
+    on public.status_page_subscriptions (created_at desc);
+  $SQL$
+);
+
+
+Then re-run deploy and, in the dialog, choose:
+
+✅ Create new status_page_subscriptions table
+
+❌ Do not rename/move partners
+
+Make it future-proof (optional but recommended)
+
+Add any other “missing” tables to the same bootstrap so conflicts never appear again:
+
+-- Repeat pattern for other tables you’ve been prompted for
+select public.ensure_table('status_page_incidents', $$ create table ... $$);
+select public.ensure_table('automated_runbooks',   $$ create table ... $$);
+select public.ensure_table('oncall_teams',         $$ create table ... $$);
+-- etc.
+
+
+If you’re on Supabase and want row-level security:
+
+alter table public.status_page_subscriptions enable row level security;
+
+create policy "allow_anonymous_insert_subscriptions"
+on public.status_page_subscriptions for insert
+to anon
+with check (true);
+
+create policy "allow_owner_read_update_delete"
+on public.status_page_subscriptions
+for select using (true)
+for update using (false)  -- tighten as needed
+for delete using (false); -- tighten as needed
+
+
+(Tune policies to your app’s auth model.)
+
+If you use an ORM
+Prisma
+
+Add the model:
+
+model status_page_subscriptions {
+  id             String   @id @default(uuid())
+  email          String
+  component_slug String?
+  is_verified    Boolean  @default(false)
+  verify_token   String?  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at     DateTime @default(now())
+  verified_at    DateTime?
+  unsubscribed_at DateTime?
+
+  @@unique([email, component_slug], map: "uniq_status_subscriptions_email_component")
+}
+
+
+Pull current DB first so Prisma doesn’t try a rename:
+
+npx prisma db pull
+npx prisma migrate dev --name add_status_page_subscriptions
+
+Drizzle
+export const statusPageSubscriptions = pgTable('status_page_subscriptions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  email: text('email').notNull(),
+  componentSlug: text('component_slug'),
+  isVerified: boolean('is_verified').notNull().default(false),
+  verifyToken: uuid('verify_token').defaultRandom(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  verifiedAt: timestamp('verified_at', { withTimezone: true }),
+  unsubscribedAt: timestamp('unsubscribed_at', { withTimezone: true }),
+}, (t) => ({
+  uniqEmailComponent: uniqueIndex('uniq_status_subscriptions_email_component')
+    .on(sql`lower(${t.email})`, sql`coalesce(${t.componentSlug}, '')`),
+}));
+
+
+Then drizzle-kit generate && drizzle-kit push.
+
+Why it keeps suggesting partners → status_page_subscriptions
+
+Your migrator sees a table expected by code that doesn’t exist and tries to be “helpful” by proposing renames from existing tables. Because partners happens to be present, it’s offered as a candidate. By ensuring the correct table already exists, the rename option disappears.

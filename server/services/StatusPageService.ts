@@ -188,8 +188,9 @@ export class StatusPageService extends EventEmitter {
   }
 
   private async startStatusMonitoring(): Promise<void> {
-    // Feature flag to disable government status monitoring in production
-    if (process.env.DISABLE_GOV_STATUS === 'true') {
+    // Feature flag to disable government status monitoring in production 
+    // Default to disabled until schema is properly aligned
+    if (process.env.DISABLE_GOV_STATUS !== 'false') {
       console.log('[status] Government status updater disabled by env');
       
       // Only start infrastructure monitoring
