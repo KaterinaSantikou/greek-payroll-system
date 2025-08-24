@@ -114,13 +114,24 @@ export async function setupAuth(app: Express) {
   const REPLIT_CALLBACK = `https://${domain}/oauth2callback`;
   const DEV_CALLBACK = `http://localhost:5000/oauth2callback`;
   const CALLBACK = isReplitHosted ? REPLIT_CALLBACK : DEV_CALLBACK;
+  
+  console.log(`[AUTH][setup] Chosen CALLBACK: ${CALLBACK} (isReplitHosted: ${isReplitHosted}, domain: ${domain})`);
 
+
+  // Ensure client and strategy use consistent redirect_uri
+  const clientConfig = {
+    ...config,
+    redirect_uris: [CALLBACK],
+  };
 
   const strategy = new Strategy(
     {
-      config,
+      config: clientConfig,
       scope: "openid email profile offline_access",
       callbackURL: new URL(CALLBACK),
+      params: {
+        redirect_uri: CALLBACK,
+      },
     },
     verify
   );
