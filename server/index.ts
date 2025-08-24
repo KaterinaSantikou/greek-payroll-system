@@ -10,9 +10,22 @@ let coreReady = false;
 
 const app = express();
 
-// Security: Helmet middleware with referrer policy
-app.use(helmet({ 
-  referrerPolicy: { policy: 'no-referrer' } 
+// Security: Helmet middleware with comprehensive CSP and security headers
+app.use(helmet({
+  xssFilter: true,
+  frameguard: { action: "deny" },
+  noSniff: true,
+  referrerPolicy: { policy: "no-referrer" },
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": ["'self'"],
+      "style-src": ["'self'", "'unsafe-inline'"],
+      "img-src": ["'self'", "data:"],
+      "connect-src": ["'self'"],
+    },
+  },
 }));
 
 app.use(express.json());

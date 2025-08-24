@@ -4227,6 +4227,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth Status API (observability)
   const authStatusAPI = (await import("./api/authStatus")).default;
   app.use("/api/auth", authStatusAPI);
+  
+  // Integrations Status API
+  const integrationsAPI = (await import("./api/integrations")).default;
+  app.use("/api/integrations", integrationsAPI);
 
   // PWA notification subscription endpoint
   app.post('/api/notifications/subscribe', (req, res) => {

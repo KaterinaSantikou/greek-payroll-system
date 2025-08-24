@@ -46,9 +46,11 @@ export function getSession() {
       secure: isProd,                     // MUST be true on hosted (HTTPS)
       sameSite: isProd ? 'none' : 'lax',  // MUST be 'none' on hosted
       maxAge: sessionTtl,
+      path: "/",
+      // domain: omit to enforce host-only cookie (__Host-)
     },
     store: sessionStore,
-    name: 'connect.sid',
+    name: '__Host-psid', // host-only, secure-by-default prefix
   };
   
   // Log session configuration at startup
