@@ -79,10 +79,22 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
+    try {
+      const claims = tokens.claims();
+      const user = {
+        id: claims.sub,
+        email: claims.email,
+        name: claims.first_name || claims.name || claims.username || claims.email
+      };
+      
+      updateUserSession(user, tokens);
+      await upsertUser(claims);
+      
+      verified(null, user);
+    } catch (error) {
+      console.error('[AUTH] Verification failed:', error);
+      verified(error as any);
+    }
   };
 
   // Replit environment detection - use HTTPS callback when REPLIT_DOMAINS exists
@@ -103,8 +115,21 @@ export async function setupAuth(app: Express) {
   );
   passport.use("replitauth", strategy);
 
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+  passport.serializeUser((user: any, done) => {
+    try {
+      const id = user?.id || user?.sub || user?.user_id;
+      if (!id) return done(new Error('No user ID to serialize'));
+      done(null, String(id));
+    } catch (e) { done(e as any); }
+  });
+
+  passport.deserializeUser(async (id: string, done) => {
+    try {
+      // Minimal fallback - keeps session "authenticated" with basic user data
+      const user = { id };
+      done(null, user);
+    } catch (e) { done(e as any); }
+  });
 
   app.get("/api/login", (req, res, next) => {
     // Safety assertion: prevent hosted/localhost mismatch
@@ -120,6 +145,14 @@ export async function setupAuth(app: Express) {
     console.log(`🔐 Auth attempt: {host: "${host}", redirect_uri: "${CALLBACK}", client_id: "${process.env.REPL_ID}"}`);
 
     passport.authenticate("replitauth")(req, res, next);
+  });
+
+  // Authentication status endpoint
+  app.get('/api/whoami', (req, res) => {
+    res.json({
+      authenticated: req.isAuthenticated(),
+      user: req.user || null
+    });
   });
 
   // Explicit GET and POST routes for /oauth2callback
