@@ -4,7 +4,7 @@ import { db } from "../db";
 const router = Router();
 
 // System health check endpoint
-router.get('/api/health', async (req, res) => {
+router.get('/health', async (req, res) => {
   const startTime = Date.now();
   
   try {
@@ -45,7 +45,7 @@ router.get('/api/health', async (req, res) => {
 });
 
 // Performance metrics endpoint
-router.get('/api/metrics', async (req, res) => {
+router.get('/metrics', async (req, res) => {
   try {
     const metrics = {
       timestamp: new Date().toISOString(),

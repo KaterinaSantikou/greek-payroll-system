@@ -7,10 +7,15 @@ import {
 import { ObjectPermission } from "./objectAcl";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { getClientSafeConfig, verifySensitiveKeysNotExposed } from "./utils/envValidation";
+import healthRouter from "./api/health";
 
 // Enhanced registerRoutes function with object storage support
 export async function registerRoutes(app: Express): Promise<Server> {
   console.log('[ROUTES] 🚀 registerRoutes function started with object storage!');
+  
+  // Mount health endpoints FIRST - before auth to avoid conflicts
+  app.use('/api', healthRouter);
+  console.log('[ROUTES] ✅ Health endpoints mounted first');
   
   // Auth middleware setup - required for protected file operations
   try {
@@ -280,6 +285,8 @@ Crawl-delay: 10
       version: process.env.npm_package_version || '1.0.0'
     });
   });
+
+  // Health endpoints already mounted above
 
   // Enhanced health checks will be loaded by observability module
   console.log('[ROUTES] ✅ Basic routes registered');
