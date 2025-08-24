@@ -64,11 +64,19 @@ app.use((req, res, next) => {
     if (!process.env.ENABLE_RUNBOOKS) process.env.ENABLE_RUNBOOKS = 'true';  
     if (!process.env.ENABLE_LOGGING) process.env.ENABLE_LOGGING = 'true';
     
-    console.log('[Boot] Feature flags:', {
+    // Boot log summarizing all flags for observability
+    console.info('[Boot] Feature flags:', {
       ENABLE_ONCALL: process.env.ENABLE_ONCALL,
       ENABLE_RUNBOOKS: process.env.ENABLE_RUNBOOKS, 
       ENABLE_LOGGING: process.env.ENABLE_LOGGING
     });
+    
+    // Log sink configuration
+    if (process.env.ENABLE_LOGGING !== 'true') {
+      console.info('[Boot] ENABLE_LOGGING disabled - routing logs to console only');
+    } else {
+      console.info('[Boot] ENABLE_LOGGING enabled - full logging active');
+    }
 
     console.log('[Boot] 🚀 About to call registerRoutes...');
     const server = await registerRoutes(app);

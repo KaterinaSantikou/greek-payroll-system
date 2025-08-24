@@ -175,8 +175,8 @@ export async function setupAuth(app: Express) {
       return res.status(500).json({ error: 'hosted/localhost mismatch' });
     }
 
-    // Log authentication attempt
-    console.log(`🔐 Auth attempt: {host: "${host}", redirect_uri: "${CALLBACK}", client_id: "${process.env.REPL_ID}"}`);
+    // Structured logging for observability
+    console.info('[AUTH][login]', { host, redirect_uri: CALLBACK, client_id: process.env.REPL_ID });
 
     console.log('[AUTH][login] Starting passport authentication...');
     passport.authenticate("oidc")(req, res, next);
@@ -187,6 +187,14 @@ export async function setupAuth(app: Express) {
     res.json({
       authenticated: req.isAuthenticated(),
       user: req.user || null
+    });
+  });
+
+  // Lightweight auth status endpoint for observability
+  app.get('/api/auth/status', (req, res) => {
+    res.json({ 
+      authenticated: !!req.isAuthenticated?.(), 
+      user: req.user ?? null 
     });
   });
 
@@ -208,6 +216,10 @@ export async function setupAuth(app: Express) {
   // Custom callback to surface failures (temporary debugging)
   function authCb(req: any, res: any, next: any) {
     return passport.authenticate('oidc', (err: any, user: any, info: any) => {
+      if (err || !user) {
+        console.warn('[AUTH][fail]', { info: err?.message || info || 'OAuth callback failed', sid: req.sessionID });
+      }
+      
       console.error('[AUTH][cb]', { 
         err: err?.message, 
         hasUser: !!user, 
@@ -217,8 +229,12 @@ export async function setupAuth(app: Express) {
       if (err) return res.status(500).json({ step: 'authenticate', err: String(err) });
       if (!user) return res.status(401).json({ step: 'authenticate', user: false, info });
       req.logIn(user, (e: any) => {
-        if (e) return res.status(500).json({ step: 'login', err: String(e) });
+        if (e) {
+          console.warn('[AUTH][fail]', { info: `Login failed: ${e.message}`, sid: req.sessionID });
+          return res.status(500).json({ step: 'login', err: String(e) });
+        }
         // Success: redirect to dashboard
+        console.info('[AUTH][success]', { userId: user?.id, sid: req.sessionID });
         console.log('[AUTH][cb] Login successful, redirecting to /dashboard');
         return res.redirect('/dashboard');
       });
