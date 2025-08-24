@@ -225,20 +225,22 @@ export class StatusPageService extends EventEmitter {
       }
 
       const monitoringService = GovernmentSystemMonitoringService.getInstance();
-      const systemStatuses = await monitoringService.getSystemStatuses();
+      const statusDashboard = await monitoringService.getSystemStatusDashboard();
+      const systems = statusDashboard?.systems || [];
 
       const componentMapping = {
         'ergani_ii': 'comp_ergani_ii_integration',
-        'e_efka': 'comp_e_efka_integration',
+        'e_efka': 'comp_e_efka_integration', 
         'aade_fmy': 'comp_aade_fmy_integration',
         'mydata': 'comp_mydata_integration',
       };
 
-      for (const [systemId, componentId] of Object.entries(componentMapping)) {
-        const systemStatus = systemStatuses[systemId];
-        if (systemStatus) {
-          const status = this.mapSystemStatusToComponentStatus(systemStatus.status);
-          await this.updateComponentStatus(componentId, status, systemStatus.lastError);
+      for (const system of systems) {
+        const componentId = componentMapping[system.systemCode as keyof typeof componentMapping];
+        if (componentId) {
+          const status = this.mapSystemStatusToComponentStatus(system.currentStatus);
+          const errorMessage = system.lastCheck?.errorMessage;
+          await this.updateComponentStatus(componentId, status, errorMessage);
         }
       }
     } catch (error) {
