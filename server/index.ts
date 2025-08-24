@@ -400,6 +400,11 @@ function setupProdSPA(app: express.Express) {
   app.get(/^\/(?!api\/|assets\/|health$|favicon\.ico$|robots\.txt$).*/, (_req, res) => {
     res.sendFile(path.join(distDir, 'index.html'));
   });
+  
+  // 4) Asset 404 handler - prevent serving HTML for missing assets
+  app.get('/assets/*', (_req, res) => {
+    res.status(404).json({ error: 'Asset not found' });
+  });
 }
 
 const app = express();
