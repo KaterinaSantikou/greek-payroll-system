@@ -10,6 +10,9 @@ let coreReady = false;
 
 const app = express();
 
+// Trust proxy for accurate IP detection behind load balancers
+app.set('trust proxy', 1);
+
 // Security: Helmet middleware with comprehensive CSP and security headers
 app.use(helmet({
   xssFilter: true,
@@ -49,15 +52,22 @@ const ipAllowlistMiddleware = (req: Request, res: Response, next: NextFunction) 
   }
 };
 
-// Security: Rate limiting for authentication endpoints
-const authRateLimit = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 5, // 5 requests per minute per IP
+// Security: Strict rate limiting for authentication endpoints
+const loginLimiter = rateLimit({
+  windowMs: 60_000,          // 1 min
+  max: 5,                    // 5 attempts/min/IP
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (req, res /* , next, options */) => {
+  keyGenerator: (req, _res) =>
+    (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim()
+    || req.ip
+    || req.socket.remoteAddress
+    || "unknown",
+  // Count *every* request as an attempt (even 302s)
+  requestWasSuccessful: () => false,
+  handler: (req, res) => {
     console.warn('[RateLimit] 429', req.ip, req.method, req.originalUrl);
-    res.status(429).json({ error: 'rate_limited', retryAfter: 60 });
+    res.status(429).json({ error: "rate_limited", retryAfterSec: 60 });
   },
 });
 
@@ -75,9 +85,8 @@ function allowAuthOpen(req: Request, res: Response, next: NextFunction) {
   return AUTH_OPEN.has(req.path) ? next() : next("route");
 }
 
-// Apply IP allowlist and rate limiting to auth endpoints (but allow them to pass through)
-app.use('/api/login', allowAuthOpen, ipAllowlistMiddleware, authRateLimit);
-app.use('/oauth2callback', allowAuthOpen, ipAllowlistMiddleware, authRateLimit);
+// Apply IP allowlist to auth endpoints (rate limiting moved to individual routes)
+app.use('/oauth2callback', allowAuthOpen, ipAllowlistMiddleware);
 
 // Health and readiness endpoints for deployment stability
 app.get('/health', (_req, res) => res.status(200).json({status: 'ok', ts: new Date().toISOString()}));
@@ -254,5 +263,5 @@ async function preflightDDLCheck() {
   }
 }
 
-// Export app and db for testing
-export { app, db };
+// Export app, db, and rate limiter for testing and auth routes
+export { app, db, loginLimiter };

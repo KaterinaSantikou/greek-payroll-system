@@ -197,8 +197,11 @@ export async function setupAuth(app: Express) {
     d(null, u ?? { id });
   });
 
-  // Pure redirect to IdP (works in CI without a browser)
-  app.get("/api/login", (req, res, next) => {
+  // Import the strict rate limiter from main server
+  const { loginLimiter } = await import("./index.js");
+
+  // Pure redirect to IdP (works in CI without a browser) with strict rate limiting
+  app.get("/api/login", loginLimiter, (req, res, next) => {
     // Optional: CI "smoke mode" that always 302s  
     const AUTH_SMOKE = process.env.AUTH_SMOKE === "true";
     if (AUTH_SMOKE) {
