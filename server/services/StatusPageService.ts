@@ -215,7 +215,8 @@ export class StatusPageService extends EventEmitter {
     // Runtime verification log - one-time sanity check
     let GovernmentSystemMonitoringService: any;
     try {
-      GovernmentSystemMonitoringService = require('./GovernmentSystemMonitoringService').GovernmentSystemMonitoringService;
+      const module = await import('./GovernmentSystemMonitoringService.js');
+      GovernmentSystemMonitoringService = module.GovernmentSystemMonitoringService;
       console.log('[status] typeof GovernmentSystemMonitoringService =', typeof GovernmentSystemMonitoringService);
       
       if (GovernmentSystemMonitoringService) {
