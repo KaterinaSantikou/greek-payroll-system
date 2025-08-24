@@ -1,0 +1,171 @@
+This sticking around means your deploy is still comparing code → DB and not finding oncall_teams in the same place the migrator is looking. At this point it’s almost always one of these:
+
+You’re creating the table in a different DB / schema than the migrator uses (shadow DB, wrong DATABASE_URL, or search_path ≠ public).
+
+A lingering migration file still contains a rename step (partners → oncall_teams) so the UI keeps proposing it even if the table exists.
+
+Your bootstrap ran after the diff (i.e., wrong order in the deploy process).
+
+Here’s how to kill it—step by step, no guesswork.
+
+1) Prove what the migrator sees (from the deploy container)
+
+Add this tiny probe right before migrations run in your start script and redeploy:
+
+import pg from 'pg';
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+
+(async () => {
+  const r = await pool.query(`
+    select
+      current_database() as db,
+      current_user as usr,
+      current_schema as schema,
+      current_setting('search_path', true) as search_path,
+      to_regclass('public.oncall_teams') as reg_oncall,
+      to_regclass('public.partners')      as reg_partners
+  `);
+  console.log('[DB PROBE]', r.rows[0]);
+})();
+
+
+What you want to see:
+
+reg_oncall = public.oncall_teams (not null)
+
+search_path includes public
+
+If reg_oncall is null, the migrator truly can’t see it—move to step 2.
+
+2) Create it on the exact same connection before the diff
+
+Run an app-side bootstrap (not just manual SQL in a console) so it executes in the same DB/schema as your deploy:
+
+import { Pool } from 'pg';
+
+export async function ensureCoreTables(pool: Pool) {
+  await pool.query(`set search_path to public`);
+  await pool.query(`create extension if not exists pgcrypto`);
+
+  await pool.query(`
+    create table if not exists public.oncall_teams (
+      id uuid primary key default gen_random_uuid(),
+      name text not null,
+      escalation_policy jsonb default '{}'::jsonb,
+      members jsonb not null default '[]'::jsonb,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `);
+}
+
+
+Then call before migrations:
+
+await ensureCoreTables(pool);
+// now run your ORM migration command or load migration SQL
+
+
+If your pipeline runs “generate diff → ask UI”, this will ensure the table exists before that step, removing the rename option.
+
+3) Nuke the ghost “rename” in your migrations
+
+Search your repo for a rename step that keeps getting proposed:
+
+Look in your migrations folder for any SQL like:
+
+ALTER TABLE "partners" RENAME TO "oncall_teams";
+
+DROP TABLE "partners"; CREATE TABLE "oncall_teams"...
+
+If using Prisma:
+
+npx prisma db pull (sync to live)
+
+Generate a baseline:
+
+npx prisma migrate diff --from-empty --to-schema-datamodel schema.prisma --script > prisma/migrations/000_baseline/migration.sql
+npx prisma migrate resolve --applied 000_baseline
+
+
+Then add your models and run npx prisma migrate dev --name add_oncall_teams
+
+Ensure the generated migration creates oncall_teams and does not rename partners.
+
+If using Drizzle:
+
+drizzle-kit introspect
+
+Regenerate and delete any auto-generated rename from partners → oncall in the SQL before applying.
+
+4) Make schema explicit everywhere
+
+In DATABASE_URL, append schema if your driver supports it (some Postgres hosts use ?schema=public).
+
+On startup: SET search_path TO public;
+
+Always qualify as public.oncall_teams in bootstrap SQL.
+
+5) Quick sanity queries you can run from the same app connection
+-- does the migrator's connection see it?
+select to_regclass('public.oncall_teams');
+
+-- is there a quoting/case issue (a quoted table created accidentally)?
+select table_schema, table_name
+from information_schema.tables
+where table_schema in ('public')
+  and lower(table_name) like '%oncall%';
+
+-- owner/permissions (rare, but check)
+select
+  n.nspname as schema,
+  c.relname as table,
+  pg_get_userbyid(c.relowner) as owner
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+where n.nspname='public' and c.relname='oncall_teams';
+
+
+If you see "OnCall_Teams" or other quoted-case variants, drop/recreate in lowercase unquoted.
+
+6) If you’re on Prisma, watch for the shadow database
+
+Prisma uses a shadow DB during diffing. If SHADOW_DATABASE_URL points somewhere else (or isn’t set, so it silently creates one), your manual SQL won’t show up there and Prisma may still “infer” a rename.
+
+Fix:
+
+Set SHADOW_DATABASE_URL to a fresh database you control.
+
+Make sure your bootstrap runs for both the main and shadow DB before migrate diff/deploy, or switch to migrate deploy on pre-baked SQL migrations (no auto diff).
+
+7) Last-resort, guaranteed stopgap
+
+If you must deploy now and the UI still nags, add a throwaway view to satisfy the diff (so it “exists”), then replace with a real table in the next migration:
+
+-- temporary shim (same connection the migrator uses)
+create or replace view public.oncall_teams as
+select
+  gen_random_uuid()::uuid as id,
+  ''::text as name,
+  '{}'::jsonb as escalation_policy,
+  '[]'::jsonb as members,
+  now() as created_at,
+  now() as updated_at
+where false;
+
+
+Because a relation named oncall_teams exists, the rename suggestion disappears. Then in your real migration: drop view if exists public.oncall_teams; create table public.oncall_teams (...);
+
+(Use only if the above steps can’t be applied immediately.)
+
+TL;DR checklist
+
+ Log [DB PROBE] values in deploy to confirm DB/schema/search_path.
+
+ Run app-side ensureCoreTables(pool) before migrations.
+
+ Remove any rename from partners in migration files.
+
+ For Prisma, set/align SHADOW_DATABASE_URL or baseline with migrate resolve.
+
+ If desperate, create a temporary view named public.oncall_teams to unblock, then replace with the real table.

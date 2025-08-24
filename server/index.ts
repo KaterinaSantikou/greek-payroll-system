@@ -5,10 +5,70 @@ import path from "path";
 import fs from "fs";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import history from "connect-history-api-fallback";
 import { db } from "./db";
 
 // Core readiness tracking for health checks
 let coreReady = false;
+const __root = path.resolve(import.meta.dirname, "..");
+
+// DEVELOPMENT SPA SETUP: Direct asset serving + smart catch-all
+async function setupDevSPA(app: express.Express, server: any) {
+  // 1) Serve built assets directly FIRST (bypass Vite's catch-all)
+  const devAssetsPath = path.join(__root, "dist", "public", "assets");
+  if (fs.existsSync(devAssetsPath)) {
+    console.log('[DEV] 🎯 Serving dev assets from:', devAssetsPath);
+    app.use('/assets', express.static(devAssetsPath, { maxAge: '0' }));
+  }
+  
+  // 2) History fallback for SPA routes only (excludes assets, API, health)
+  app.use(
+    history({
+      htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
+      disableDotRule: true,
+      rewrites: [
+        // Keep these as real files - don't rewrite them
+        { from: /^\/assets\/.*$/, to: function(context: any) { 
+          return context.parsedUrl.pathname; 
+        } },
+        { from: /^\/api\/.*$/, to: function(context: any) { 
+          return context.parsedUrl.pathname; 
+        } },
+        { from: /^\/health$/, to: function(context: any) { 
+          return context.parsedUrl.pathname; 
+        } },
+        { from: /^\/ready$/, to: function(context: any) { 
+          return context.parsedUrl.pathname; 
+        } },
+      ],
+    })
+  );
+  
+  // 3) Vite middlewares AFTER static assets and history
+  await setupVite(app, server);
+}
+
+// PRODUCTION SPA SETUP: Static assets + smart catch-all
+function setupProdSPA(app: express.Express) {
+  const distDir = path.join(__root, 'dist', 'public');
+  const assetsDir = path.join(distDir, 'assets');
+  
+  // 1) Static assets BEFORE catch-all (with aggressive caching)
+  app.use('/assets', express.static(assetsDir, { maxAge: '1y', immutable: true }));
+  app.use(express.static(distDir, { maxAge: '0' })); // index.html: no-cache
+  
+  // 2) Smart catch-all: serve index.html for SPA routes ONLY
+  // Exclude: API, assets, health, static files
+  app.get(/^\/(?!api\/|assets\/|health$|ready$|favicon\.ico$|robots\.txt$|manifest\.json$).*/, (req, res) => {
+    const indexPath = path.join(distDir, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      console.error('[PROD] Missing index.html at:', indexPath);
+      return res.status(500).send('index.html missing in dist');
+    }
+    console.log('[PROD] Serving SPA route:', req.path, '→ index.html');
+    res.sendFile(indexPath);
+  });
+}
 
 const app = express();
 
@@ -208,19 +268,13 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // SMART SPA ROUTING: Proper route order to prevent asset interference
   if (app.get("env") === "development") {
-    // In development, serve built assets from dist/public before Vite handles page routes
-    const devAssetsPath = path.join(import.meta.dirname, "public", "assets");
-    if (fs.existsSync(devAssetsPath)) {
-      console.log('[Boot] 🎯 Serving dev assets from:', devAssetsPath);
-      app.use('/assets', express.static(devAssetsPath));
-    }
-    await setupVite(app, server);
+    console.log('[Boot] 🎯 Setting up development SPA routing with Vite');
+    await setupDevSPA(app, server);
   } else {
-    serveStatic(app);
+    console.log('[Boot] 🎯 Setting up production SPA routing with static assets');
+    setupProdSPA(app);
   }
 
     // ALWAYS serve the app on the port specified in the environment variable PORT
