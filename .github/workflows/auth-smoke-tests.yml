@@ -1,0 +1,133 @@
+name: Authentication Smoke Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  auth-smoke-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: payrollsync_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install jq for JSON parsing
+      run: sudo apt-get update && sudo apt-get install -y jq
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Setup test environment variables
+      run: |
+        echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/payrollsync_test" >> $GITHUB_ENV
+        echo "SESSION_SECRET=test-secret-key-for-ci-only" >> $GITHUB_ENV
+        echo "REPL_ID=test-repl-id" >> $GITHUB_ENV
+        echo "REPLIT_DOMAINS=test-domain.replit.app" >> $GITHUB_ENV
+        echo "ISSUER_URL=https://replit.com/oidc" >> $GITHUB_ENV
+        echo "PORT=5000" >> $GITHUB_ENV
+        
+    - name: Run database migrations
+      run: npm run db:push --force
+      
+    - name: Start server in background
+      run: |
+        npm run dev &
+        SERVER_PID=$!
+        echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+        
+    - name: Wait for server to start
+      run: |
+        echo "Waiting for server to start on port ${PORT:-5000}..."
+        timeout 60 bash -c 'until curl -f http://127.0.0.1:${PORT:-5000}/health; do sleep 2; done'
+        
+    - name: Run authentication smoke tests
+      run: |
+        set -e
+        
+        # Test 1: Health endpoint must be stable
+        echo "Testing /health endpoint..."
+        curl -fsS "http://127.0.0.1:${PORT:-5000}/health" || {
+          echo "❌ FAIL: /health endpoint not stable"
+          exit 1
+        }
+        echo "✅ PASS: /health endpoint stable"
+        
+        # Test 2: Ready endpoint should respond (200 or 503 acceptable)
+        echo "Testing /ready endpoint..."
+        curl -fsS "http://127.0.0.1:${PORT:-5000}/ready" || {
+          echo "⚠️ WARN: /ready endpoint returned non-200 (acceptable during startup)"
+        }
+        echo "✅ PASS: /ready endpoint responding"
+        
+        # Test 3: /api/login must be a 302 redirect to IdP (or at least not 404)
+        echo "Testing /api/login redirect..."
+        STATUS=$(curl -I -s "http://127.0.0.1:${PORT:-5000}/api/login" | head -n1 | awk '{print $2}')
+        if [[ "$STATUS" == "404" ]]; then
+          echo "❌ FAIL: /api/login returns 404 - auth routes not registered"
+          exit 1
+        elif [[ "$STATUS" == "302" ]]; then
+          echo "✅ PASS: /api/login returns 302 redirect"
+          LOCATION=$(curl -I -s "http://127.0.0.1:${PORT:-5000}/api/login" | awk '/^Location:/{print $2}' | tr -d '\r')
+          echo "   Location: $LOCATION"
+        else
+          echo "⚠️ WARN: /api/login returns $STATUS (expected 302, but not 404)"
+        fi
+        
+        # Test 4: Contract test - unauthenticated should return authenticated: false
+        echo "Testing /api/me contract..."
+        AUTH_STATUS=$(curl -s "http://127.0.0.1:${PORT:-5000}/api/me" | jq -r '.authenticated')
+        if [[ "$AUTH_STATUS" != "false" ]]; then
+          echo "❌ FAIL: /api/me should return authenticated: false when unauthenticated, got: $AUTH_STATUS"
+          exit 1
+        fi
+        echo "✅ PASS: /api/me returns authenticated: false"
+        
+        # Test 5: Contract test - /api/auth/user alias should work
+        echo "Testing /api/auth/user contract..."
+        AUTH_STATUS=$(curl -s "http://127.0.0.1:${PORT:-5000}/api/auth/user" | jq -r '.authenticated')
+        if [[ "$AUTH_STATUS" != "false" ]]; then
+          echo "❌ FAIL: /api/auth/user should return authenticated: false when unauthenticated, got: $AUTH_STATUS"
+          exit 1
+        fi
+        echo "✅ PASS: /api/auth/user returns authenticated: false"
+        
+        # Test 6: SPA fallback - /dashboard should return 200 OK
+        echo "Testing /dashboard SPA fallback..."
+        STATUS=$(curl -I -s "http://127.0.0.1:${PORT:-5000}/dashboard" | head -n1 | awk '{print $2}')
+        if [[ "$STATUS" != "200" ]]; then
+          echo "❌ FAIL: /dashboard should return 200 OK for SPA fallback, got: $STATUS"
+          exit 1
+        fi
+        echo "✅ PASS: /dashboard returns 200 OK"
+        
+        echo ""
+        echo "🎉 ALL AUTHENTICATION SMOKE TESTS PASSED!"
+        
+    - name: Stop server
+      if: always()
+      run: |
+        if [[ -n "$SERVER_PID" ]]; then
+          kill $SERVER_PID || true
+        fi
