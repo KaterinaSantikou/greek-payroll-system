@@ -155,8 +155,17 @@ export async function setupAuth(app: Express) {
     });
   });
 
+  // Frontend expects this endpoint
+  app.get('/api/auth/user', (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    res.json(req.user);
+  });
+
   // Explicit GET and POST routes for /oauth2callback
   app.get("/oauth2callback", (req, res, next) => {
+    console.log('[AUTH][cb] OAuth callback hit - query params:', req.query);
     passport.authenticate("replitauth", {
       successReturnToOrRedirect: "/dashboard", 
       failureRedirect: "/api/login?error=auth",
