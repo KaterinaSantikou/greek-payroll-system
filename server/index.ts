@@ -307,7 +307,15 @@ async function setupDevSPA(app: express.Express, server: any) {
   const devAssetsPath = path.join(__root, "dist", "public", "assets");
   if (fs.existsSync(devAssetsPath)) {
     console.log('[DEV] 🎯 Serving dev assets from:', devAssetsPath);
-    app.use('/assets', express.static(devAssetsPath, { maxAge: '0' }));
+    app.use('/assets', express.static(devAssetsPath, { 
+      maxAge: '0',
+      setHeaders: (res, path) => {
+        // In dev, disable all caching for assets to prevent stale chunks
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
+    }));
   }
   
   // 2) History fallback for SPA routes only (excludes assets, API, health)
@@ -343,10 +351,29 @@ function setupProdSPA(app: express.Express) {
   const assetsDir = path.join(distDir, 'assets');
   
   // 1) Static assets BEFORE catch-all (with aggressive caching)
-  app.use('/assets', express.static(assetsDir, { maxAge: '1y', immutable: true }));
-  app.use(express.static(distDir, { maxAge: '0' })); // index.html: no-cache
+  app.use('/assets', express.static(assetsDir, { 
+    maxAge: '1y', 
+    immutable: true,
+    setHeaders: (res, path) => {
+      // Fingerprinted assets get long-term cache with immutable
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }));
   
-  // 2) Smart catch-all: serve index.html for SPA routes ONLY
+  // 2) All other static files (including index.html) with no-cache
+  app.use(express.static(distDir, { 
+    maxAge: '0',
+    setHeaders: (res, path, stat) => {
+      if (path.endsWith('index.html')) {
+        // Force browsers to always check for fresh index.html
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      }
+    }
+  }));
+  
+  // 2) Smart catch-all: serve index.html for SPA routes ONLY with no-cache headers
   // Exclude: API, assets, health, static files
   app.get(/^\/(?!api\/|assets\/|health$|ready$|favicon\.ico$|robots\.txt$|manifest\.json$).*/, (req, res) => {
     const indexPath = path.join(distDir, 'index.html');
@@ -355,6 +382,11 @@ function setupProdSPA(app: express.Express) {
       return res.status(500).send('index.html missing in dist');
     }
     console.log('[PROD] Serving SPA route:', req.path, '→ index.html');
+    
+    // Critical: Always serve fresh index.html to prevent chunk 404s
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.sendFile(indexPath);
   });
 }
@@ -505,10 +537,6 @@ app.use((req, res, next) => {
     console.log('Build path:', buildIndexPath);
     console.log('Vite outDir aligns with server path:', buildIndexPath.includes('dist/public'));
     
-    // Temporary debugging logs
-    console.log('[Boot] NODE_ENV:', process.env.NODE_ENV, 'PORT:', process.env.PORT);
-    console.log('[Boot] CSP_CONNECT_SRC:', process.env.CSP_CONNECT_SRC);
-    console.log('[Boot] VITE_API_URL:', process.env.VITE_API_URL);
     
     // DATABASE: Verify connection details and table visibility for migrator
     const pg = (await import('pg')).default;

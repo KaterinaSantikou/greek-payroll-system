@@ -65,15 +65,10 @@ export const addResourceHints = () => {
 
 // Service Worker registration for Greek caching
 export const registerGreekServiceWorker = () => {
-  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
-  
-  navigator.serviceWorker.register('/sw.js')
-    .then(registration => {
-      console.log('Greek optimization SW registered:', registration.scope);
-    })
-    .catch(error => {
-      console.log('SW registration failed (expected in dev):', error);
-    });
+  // Service worker registration handled centrally in usePWA hook to prevent conflicts
+  // Multiple SW registrations can cause asset caching issues and chunk 404s
+  console.log('SW registration managed centrally to prevent cache conflicts');
+  return;
 };
 
 // Detect Greek connection speed

@@ -248,15 +248,10 @@ export function usePerformanceOptimization() {
 
   // Service Worker registration for caching
   const registerServiceWorker = useCallback(() => {
-    if ('serviceWorker' in navigator && 'caches' in window) {
-      navigator.serviceWorker.register('/sw.js')
-        .then(registration => {
-          console.log('SW registered for Greek performance optimization:', registration.scope);
-        })
-        .catch(error => {
-          console.log('SW registration failed (expected in dev):', error);
-        });
-    }
+    // Service worker registration handled centrally in usePWA hook to prevent conflicts
+    // Multiple SW registrations can cause asset caching issues and chunk 404s  
+    console.log('SW registration managed centrally to prevent cache conflicts');
+    return;
   }, []);
 
   // Apply all optimizations on mount
