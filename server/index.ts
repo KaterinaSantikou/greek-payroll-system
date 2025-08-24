@@ -205,3 +205,6 @@ async function preflightDDLCheck() {
     }
   }
 }
+
+// Export app and db for testing
+export { app, db };

@@ -4218,6 +4218,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/one-click-flow/download/:freezeId', isAuthenticated, oneClickFlowRoutes.downloadOfflineKit);
   app.post('/api/one-click-flow/reconcile/:freezeId', isAuthenticated, oneClickFlowRoutes.uploadReconciliation);
   app.get('/api/one-click-flow/pre-checks/:runId', isAuthenticated, oneClickFlowRoutes.performPreChecks);
+  
+  // Disaster Mode API (alias routes for testing compatibility)
+  app.post('/api/disaster/freeze', isAuthenticated, oneClickFlowRoutes.freezeRunAndGenerateKit);
+  app.post('/api/disaster/reconcile/:freezeId', isAuthenticated, oneClickFlowRoutes.uploadReconciliation);
+  app.get('/api/disaster/status/:runId', isAuthenticated, oneClickFlowRoutes.getDisasterModeStatus);
 
   // PWA notification subscription endpoint
   app.post('/api/notifications/subscribe', (req, res) => {
