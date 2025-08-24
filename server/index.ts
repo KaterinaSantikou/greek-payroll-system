@@ -1,4 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "./db";
@@ -7,8 +9,27 @@ import { db } from "./db";
 let coreReady = false;
 
 const app = express();
+
+// Security: Helmet middleware with referrer policy
+app.use(helmet({ 
+  referrerPolicy: { policy: 'no-referrer' } 
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Security: Rate limiting for authentication endpoints
+const authRateLimit = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 5, // 5 requests per minute per IP
+  message: { error: 'Too many authentication attempts, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to auth endpoints
+app.use('/api/login', authRateLimit);
+app.use('/oauth2callback', authRateLimit);
 
 // Health and readiness endpoints for deployment stability
 app.get('/health', (_req, res) => res.status(200).json({status: 'ok', ts: new Date().toISOString()}));
@@ -54,6 +75,16 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    // SECURITY: Validate critical secrets at boot
+    console.log('[Boot] Validating critical secrets...');
+    if (!process.env.REPL_ID) {
+      throw new Error('SECURITY ERROR: REPL_ID environment variable is required but not set');
+    }
+    if (!process.env.SESSION_SECRET) {
+      throw new Error('SECURITY ERROR: SESSION_SECRET environment variable is required but not set');
+    }
+    console.log('[Boot] ✅ Critical secrets validated');
+    
     // PREFLIGHT: Run DDL checks before starting services
     console.log('[Boot] Running preflight DDL checks...');
     await preflightDDLCheck();

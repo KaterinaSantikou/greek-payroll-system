@@ -155,6 +155,23 @@ export async function setupAuth(app: Express) {
     },
     verify
   );
+  // PII masking utilities for production security
+  function maskSecret(value: string | undefined): string {
+    if (!value || process.env.NODE_ENV !== 'production') return value || 'undefined';
+    return value.length > 8 ? `${value.slice(0, 4)}...${value.slice(-4)}` : '***';
+  }
+
+  function maskPII(value: string | undefined): string {
+    if (!value || process.env.NODE_ENV !== 'production') return value || 'undefined';
+    // Mask email: user@example.com -> u***@example.com
+    if (value.includes('@')) {
+      const [local, domain] = value.split('@');
+      return `${local.charAt(0)}***@${domain}`;
+    }
+    // Mask other PII: keep first char + length
+    return value.length > 1 ? `${value.charAt(0)}***` : '***';
+  }
+
   console.log('[AUTH][setup] Registering OIDC strategy...');
   passport.use("oidc", strategy);
   console.log('[AUTH][setup] OIDC strategy registered successfully!');
@@ -175,8 +192,12 @@ export async function setupAuth(app: Express) {
       return res.status(500).json({ error: 'hosted/localhost mismatch' });
     }
 
-    // Structured logging for observability
-    console.info('[AUTH][login]', { host, redirect_uri: CALLBACK, client_id: process.env.REPL_ID });
+    // Structured logging for observability (PII-safe)
+    console.info('[AUTH][login]', { 
+      host, 
+      redirect_uri: CALLBACK, 
+      client_id: maskSecret(process.env.REPL_ID)
+    });
 
     console.log('[AUTH][login] Starting passport authentication...');
     passport.authenticate("oidc")(req, res, next);
@@ -203,8 +224,8 @@ export async function setupAuth(app: Express) {
     console.log('[AUTH][user] User endpoint called:', { 
       isAuth: req.isAuthenticated(), 
       hasUser: !!req.user,
-      sessionID: req.sessionID,
-      user: req.user 
+      sessionID: maskSecret(req.sessionID),
+      user: req.user ? { id: maskPII(req.user.id), email: maskPII(req.user.email) } : null
     });
     
     res.json({
@@ -217,24 +238,24 @@ export async function setupAuth(app: Express) {
   function authCb(req: any, res: any, next: any) {
     return passport.authenticate('oidc', (err: any, user: any, info: any) => {
       if (err || !user) {
-        console.warn('[AUTH][fail]', { info: err?.message || info || 'OAuth callback failed', sid: req.sessionID });
+        console.warn('[AUTH][fail]', { info: err?.message || info || 'OAuth callback failed', sid: maskSecret(req.sessionID) });
       }
       
       console.error('[AUTH][cb]', { 
         err: err?.message, 
         hasUser: !!user, 
         info, 
-        sid: req.sessionID 
+        sid: maskSecret(req.sessionID) 
       });
       if (err) return res.status(500).json({ step: 'authenticate', err: String(err) });
       if (!user) return res.status(401).json({ step: 'authenticate', user: false, info });
       req.logIn(user, (e: any) => {
         if (e) {
-          console.warn('[AUTH][fail]', { info: `Login failed: ${e.message}`, sid: req.sessionID });
+          console.warn('[AUTH][fail]', { info: `Login failed: ${e.message}`, sid: maskSecret(req.sessionID) });
           return res.status(500).json({ step: 'login', err: String(e) });
         }
         // Success: redirect to dashboard
-        console.info('[AUTH][success]', { userId: user?.id, sid: req.sessionID });
+        console.info('[AUTH][success]', { userId: maskPII(user?.id), sid: maskSecret(req.sessionID) });
         console.log('[AUTH][cb] Login successful, redirecting to /dashboard');
         return res.redirect('/dashboard');
       });
