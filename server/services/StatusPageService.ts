@@ -188,13 +188,70 @@ export class StatusPageService extends EventEmitter {
   }
 
   private async startStatusMonitoring(): Promise<void> {
-    // Monitor status every 30 seconds
-    this.monitoringInterval = setInterval(async () => {
-      await this.updateComponentStatuses();
-    }, 30000);
+    // Feature flag to disable government status monitoring in production
+    if (process.env.DISABLE_GOV_STATUS === 'true') {
+      console.log('[status] Government status updater disabled by env');
+      
+      // Only start infrastructure monitoring
+      this.monitoringInterval = setInterval(async () => {
+        try {
+          await this.updateInfrastructureStatuses();
+          this.lastCacheUpdate = Date.now();
+          this.emit('status_updated');
+        } catch (error) {
+          console.warn('[status] Failed to update infrastructure statuses:', error);
+        }
+      }, 30000);
+      
+      // Initial infrastructure update
+      try {
+        await this.updateInfrastructureStatuses();
+      } catch (error) {
+        console.warn('[status] Failed initial infrastructure update:', error);
+      }
+      return;
+    }
 
-    // Initial update
-    await this.updateComponentStatuses();
+    // Runtime verification log - one-time sanity check
+    let GovernmentSystemMonitoringService: any;
+    try {
+      GovernmentSystemMonitoringService = require('./GovernmentSystemMonitoringService').GovernmentSystemMonitoringService;
+      console.log('[status] typeof GovernmentSystemMonitoringService =', typeof GovernmentSystemMonitoringService);
+      
+      if (GovernmentSystemMonitoringService) {
+        const instance = GovernmentSystemMonitoringService.getInstance();
+        console.log('[status] typeof getSystemStatusDashboard =', typeof instance?.getSystemStatusDashboard);
+      }
+    } catch (error) {
+      console.log('[status] GovernmentSystemMonitoringService import failed:', error?.message);
+    }
+
+    // Monitor status with configurable interval (default 30 seconds)
+    const intervalMs = Number(process.env.STATUS_POLL_INTERVAL_MS ?? 30000);
+    this.monitoringInterval = setInterval(async () => {
+      try {
+        // Update government system statuses (with safety guards)
+        await this.updateGovernmentSystemStatusesSafe();
+        
+        // Update infrastructure statuses
+        await this.updateInfrastructureStatuses();
+        
+        // Update cache
+        this.lastCacheUpdate = Date.now();
+        this.emit('status_updated');
+        
+      } catch (error) {
+        console.warn('[status] Failed to update component statuses:', error);
+      }
+    }, intervalMs);
+
+    // Initial update (with safety guards)
+    try {
+      await this.updateGovernmentSystemStatusesSafe();
+      await this.updateInfrastructureStatuses();
+    } catch (error) {
+      console.warn('[status] Failed initial status update:', error);
+    }
   }
 
   private async updateComponentStatuses(): Promise<void> {
@@ -219,7 +276,8 @@ export class StatusPageService extends EventEmitter {
       // Get government system statuses from monitoring service
       let GovernmentSystemMonitoringService: any;
       try {
-        GovernmentSystemMonitoringService = require('./GovernmentSystemMonitoringService').GovernmentSystemMonitoringService;
+        const module = await import('./GovernmentSystemMonitoringService.js');
+        GovernmentSystemMonitoringService = module.GovernmentSystemMonitoringService;
       } catch {
         return; // Service not available
       }
@@ -245,6 +303,35 @@ export class StatusPageService extends EventEmitter {
       }
     } catch (error) {
       console.error('Failed to update government system statuses:', error);
+    }
+  }
+
+  private async updateGovernmentSystemStatusesSafe(): Promise<void> {
+    try {
+      // Runtime verification of monitoring service
+      let GovernmentSystemMonitoringService: any;
+      try {
+        const module = await import('./GovernmentSystemMonitoringService.js');
+        GovernmentSystemMonitoringService = module.GovernmentSystemMonitoringService;
+      } catch {
+        console.warn('[status] GovernmentSystemMonitoringService not available, skipping run');
+        return;
+      }
+
+      if (typeof GovernmentSystemMonitoringService !== 'function') {
+        console.warn('[status] GovernmentSystemMonitoringService is not a constructor, skipping run');
+        return;
+      }
+
+      const monitoringService = GovernmentSystemMonitoringService.getInstance();
+      if (typeof monitoringService?.getSystemStatusDashboard !== 'function') {
+        console.warn('[status] getSystemStatusDashboard not available, skipping run');
+        return;
+      }
+
+      await this.updateGovernmentSystemStatuses();
+    } catch (err: any) {
+      console.warn('[status] Failed to update government system statuses:', err?.message || err);
     }
   }
 
