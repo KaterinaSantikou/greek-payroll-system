@@ -1,0 +1,148 @@
+migration tool detects a new model/table oncall_teams in code, but can’t find a clean history for it in the target DB. It’s asking whether oncall_teams is brand-new or a rename of an existing table (e.g., partners, system_status_checks, or system_outages). If you pick the wrong option, you’ll either duplicate data or drop the wrong table.
+
+Below is a safe, step-by-step way to resolve it.
+
+A) Decide: new table vs rename (quick forensic checks)
+
+Run these read-only queries on the target DB:
+
+-- 1) Does oncall_teams already exist?
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema='public' AND table_name='oncall_teams';
+
+-- 2) Inspect candidate tables that the tool suggested
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema='public'
+  AND table_name IN ('partners','system_status_checks','system_outages');
+
+-- 3) Peek columns to see which one matches an "on-call team" shape
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema='public'
+  AND table_name IN ('partners','system_status_checks','system_outages')
+ORDER BY table_name, ordinal_position;
+
+What to look for
+
+oncall_teams typically should have columns like:
+
+id (uuid), name (text), timezone (text), contact_channel (text/jsonb),
+
+maybe rotation_length_days (int), escalation_policy (jsonb),
+
+audit fields: created_at, updated_at.
+
+If none of the candidate tables matches that shape, it’s not a rename → choose “Create new ‘oncall_teams’ table.”
+
+If one candidate clearly contains historical “teams” data that should continue as oncall_teams, choose “Rename/move <candidate> to ‘oncall_teams’.”
+
+B) If it’s a new table (most likely) — create it explicitly
+
+Use an idempotent migration so deploys are repeatable:
+
+-- migrations/2025-08-oncall-teams.sql
+BEGIN;
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE IF NOT EXISTS public.oncall_teams (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  timezone text NOT NULL DEFAULT 'Europe/Athens',
+  contact_channel jsonb DEFAULT '{}'::jsonb, -- e.g. { "email":"...", "slack":"..." }
+  rotation_length_days integer NOT NULL DEFAULT 7,
+  escalation_policy jsonb NOT NULL DEFAULT '[]'::jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_oncall_teams_name ON public.oncall_teams (name);
+CREATE INDEX IF NOT EXISTS idx_oncall_teams_tz   ON public.oncall_teams (timezone);
+
+COMMIT;
+
+
+Then run:
+
+psql "$DATABASE_URL" -f migrations/2025-08-oncall-teams.sql
+
+
+When your deployment tool asks again, select “Create new ‘oncall_teams’ table.”
+
+C) If it’s a rename (you really have legacy teams in another table)
+Option 1 — Hard rename (fastest, but changes the old table’s name)
+BEGIN;
+ALTER TABLE public.partners RENAME TO oncall_teams;               -- if 'partners' is the right one
+ALTER INDEX IF EXISTS partners_pkey RENAME TO oncall_teams_pkey;  -- adjust index names if needed
+COMMIT;
+
+Option 2 — Create new + migrate data (safer if schemas differ)
+
+Create oncall_teams with the structure from section B (don’t drop old table).
+
+Map columns and copy data:
+
+INSERT INTO public.oncall_teams (id, name, timezone, contact_channel, rotation_length_days, escalation_policy, created_at, updated_at)
+SELECT
+  COALESCE(p.id, gen_random_uuid()),
+  p.partner_name,              -- map to your real column
+  COALESCE(p.timezone,'Europe/Athens'),
+  '{}'::jsonb,
+  7,
+  '[]'::jsonb,
+  COALESCE(p.created_at, now()),
+  COALESCE(p.updated_at, now())
+FROM public.partners p;
+
+
+Keep or drop the old table later (after verifying the app).
+
+When your tool prompts, choose “Rename/move <that table> to ‘oncall_teams’.” (This sets up the lineage so future diffs don’t try to recreate/drop unexpectedly.)
+
+D) Prevent repeat prompts (baseline & migration discipline)
+
+Ensure all schema changes land via migrations (SQL/Prisma/Drizzle/Flyway), not ad-hoc in prod.
+
+If you use Prisma:
+
+Add a model:
+
+model OncallTeam {
+  id                  String   @id @default(uuid())
+  name                String
+  timezone            String   @default("Europe/Athens")
+  contactChannel      Json?
+  rotationLengthDays  Int      @default(7)
+  escalationPolicy    Json     @default("[]")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+
+Create migration: npx prisma migrate dev --name add_oncall_teams
+
+Deploy: npx prisma migrate deploy
+
+If your tool supports rename mapping, record the mapping once so it stops asking.
+
+E) Sanity checks after deployment
+-- Table exists?
+SELECT table_name FROM information_schema.tables
+WHERE table_schema='public' AND table_name='oncall_teams';
+
+-- Minimal “shape” valid?
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_schema='public' AND table_name='oncall_teams';
+
+-- App initializer can write?
+INSERT INTO public.oncall_teams (name) VALUES ('Default On-call Team')
+RETURNING id, name;
+
+-- Read path works for the app’s queries?
+SELECT * FROM public.oncall_teams LIMIT 5;
+
+
+If you still get a prompt for other tables (e.g., oncall_rotas, escalation_policies, etc.), repeat the same approach: inspect → decide new vs rename → apply idempotent migration.
