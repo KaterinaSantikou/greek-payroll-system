@@ -524,6 +524,47 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
+    console.log('[Boot] 🚀 Starting PayrollSync application...');
+    
+    // NODE VERSION: Validate compatibility for Replit consistency
+    const nodeVersion = process.version;
+    const majorVersion = parseInt(nodeVersion.slice(1).split('.')[0]);
+    
+    if (majorVersion < 20) {
+      console.error(`❌ [Boot] Node version ${nodeVersion} is incompatible. Required: Node 20+`);
+      console.error('   💡 This app requires modern Node.js features:');
+      console.error('      • ES modules with import.meta');
+      console.error('      • Optional chaining (?.)');
+      console.error('      • Nullish coalescing (??)');
+      console.error('   🔧 Fix:');
+      console.error('      • Local: run `nvm use 20` or install Node 20+');
+      console.error('      • Replit: ensure nodejs-20 is in replit.nix');
+      process.exit(1);
+    }
+    
+    console.log(`✅ [Boot] Runtime: Node ${nodeVersion} (compatible)`);
+    
+    // FEATURE CHECK: Verify critical Node.js features are available
+    try {
+      // Test import.meta (Node 14.8+) 
+      if (typeof import.meta === 'undefined') {
+        throw new Error('import.meta not available - requires Node 14.8+');
+      }
+      
+      // Test optional chaining (Node 14+)
+      const testObj = { a: { b: 'test' } };
+      const _ = testObj.a?.b;
+      
+      // Test nullish coalescing (Node 14+)  
+      const testNull = null ?? 'default';
+      
+      console.log('✅ [Boot] Modern JavaScript features available');
+    } catch (err) {
+      console.error('❌ [Boot] Node compatibility test failed:', err);
+      console.error('   This usually indicates an outdated Node version');
+      process.exit(1);
+    }
+    
     // BUILD CHECK: Verify React build exists and paths align
     const __root = path.resolve(import.meta.dirname, "..");
     const buildIndexPath = path.join(__root, 'dist', 'public', 'index.html');
