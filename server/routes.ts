@@ -4223,6 +4223,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/disaster/freeze', isAuthenticated, oneClickFlowRoutes.freezeRunAndGenerateKit);
   app.post('/api/disaster/reconcile/:freezeId', isAuthenticated, oneClickFlowRoutes.uploadReconciliation);
   app.get('/api/disaster/status/:runId', isAuthenticated, oneClickFlowRoutes.getDisasterModeStatus);
+  
+  // Auth Status API (observability)
+  const authStatusAPI = (await import("./api/authStatus")).default;
+  app.use("/api/auth", authStatusAPI);
 
   // PWA notification subscription endpoint
   app.post('/api/notifications/subscribe', (req, res) => {

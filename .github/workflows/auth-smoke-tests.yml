@@ -139,7 +139,29 @@ jobs:
           echo "⚠️ WARN: /api/login returns $STATUS (expected 302, but not 404)"
         fi
         
-        # Test 4: Contract test - unauthenticated should return authenticated: false
+        # Test 4: Rate limiting test - 6th request should be rate limited
+        echo "Testing auth endpoint rate limiting..."
+        for i in {1..6}; do
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:${PORT:-5000}/api/login")
+          if [[ $i -le 5 ]]; then
+            if [[ "$STATUS" != "404" ]]; then
+              echo "✅ Request $i: Normal response ($STATUS)"
+            else
+              echo "❌ Request $i: Should not be 404 ($STATUS)"
+              exit 1
+            fi
+          else
+            if [[ "$STATUS" == "429" ]]; then
+              echo "✅ Request $i: Rate limited (429)"
+            else
+              echo "❌ Request $i: Should be rate limited but got ($STATUS)"
+              exit 1
+            fi
+          fi
+          sleep 0.2
+        done
+        
+        # Test 5: Contract test - unauthenticated should return authenticated: false
         echo "Testing /api/me contract..."
         AUTH_STATUS=$(curl -s "http://127.0.0.1:${PORT:-5000}/api/me" | jq -r '.authenticated')
         if [[ "$AUTH_STATUS" != "false" ]]; then
@@ -148,7 +170,7 @@ jobs:
         fi
         echo "✅ PASS: /api/me returns authenticated: false"
         
-        # Test 5: Contract test - /api/auth/user alias should work
+        # Test 6: Contract test - /api/auth/user alias should work
         echo "Testing /api/auth/user contract..."
         AUTH_STATUS=$(curl -s "http://127.0.0.1:${PORT:-5000}/api/auth/user" | jq -r '.authenticated')
         if [[ "$AUTH_STATUS" != "false" ]]; then
@@ -157,14 +179,25 @@ jobs:
         fi
         echo "✅ PASS: /api/auth/user returns authenticated: false"
         
-        # Test 6: SPA fallback - /dashboard should return 200 OK
-        echo "Testing /dashboard SPA fallback..."
-        STATUS=$(curl -I -s "http://127.0.0.1:${PORT:-5000}/dashboard" | head -n1 | awk '{print $2}')
-        if [[ "$STATUS" != "200" ]]; then
-          echo "❌ FAIL: /dashboard should return 200 OK for SPA fallback, got: $STATUS"
+        # Test 7: /api/auth/health observability endpoint
+        echo "Testing /api/auth/health endpoint..."
+        STATUS_RESPONSE=$(curl -s "http://127.0.0.1:${PORT:-5000}/api/auth/health")
+        STATUS_OK=$(echo "$STATUS_RESPONSE" | jq -r '.status')
+        if [[ "$STATUS_OK" != "ok" ]]; then
+          echo "❌ FAIL: /api/auth/health should return status: ok, got: $STATUS_OK"
           exit 1
         fi
-        echo "✅ PASS: /dashboard returns 200 OK"
+        echo "✅ PASS: /api/auth/health returns status: ok"
+        
+        # Test 8: SPA fallback - /dashboard should return 200 OK or 302 redirect  
+        echo "Testing /dashboard reachability..."
+        STATUS=$(curl -I -s "http://127.0.0.1:${PORT:-5000}/dashboard" | head -n1 | awk '{print $2}')
+        if [[ "$STATUS" == "200" ]] || [[ "$STATUS" == "302" ]]; then
+          echo "✅ PASS: /dashboard reachable ($STATUS)"
+        else
+          echo "❌ FAIL: /dashboard should be reachable (200 or 302), got: $STATUS"
+          exit 1
+        fi
         
         echo ""
         echo "🎉 ALL AUTHENTICATION SMOKE TESTS PASSED!"

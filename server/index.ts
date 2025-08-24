@@ -18,6 +18,24 @@ app.use(helmet({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Security: IP allowlisting for production (optional)
+const allowedIPs = process.env.AUTH_ALLOWED_IPS?.split(',') || [];
+const ipAllowlistMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  if (allowedIPs.length === 0) {
+    // No allowlist configured, allow all
+    return next();
+  }
+  
+  const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+  if (allowedIPs.includes(clientIP)) {
+    console.log(`[IP_ALLOWLIST] ✅ Allowed IP: ${clientIP}`);
+    next();
+  } else {
+    console.log(`[IP_ALLOWLIST] ❌ Blocked IP: ${clientIP}`);
+    res.status(403).json({ error: 'Access forbidden', ip: clientIP });
+  }
+};
+
 // Security: Rate limiting for authentication endpoints
 const authRateLimit = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 minute
@@ -25,11 +43,14 @@ const authRateLimit = rateLimit({
   message: { error: 'Too many authentication attempts, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  onLimitReached: (req) => {
+    console.log(`[AUTH_RATE_LIMIT] ⚠️ Rate limit exceeded for IP: ${req.ip}`);
+  }
 });
 
-// Apply rate limiting to auth endpoints
-app.use('/api/login', authRateLimit);
-app.use('/oauth2callback', authRateLimit);
+// Apply IP allowlist and rate limiting to auth endpoints
+app.use('/api/login', ipAllowlistMiddleware, authRateLimit);
+app.use('/oauth2callback', ipAllowlistMiddleware, authRateLimit);
 
 // Health and readiness endpoints for deployment stability
 app.get('/health', (_req, res) => res.status(200).json({status: 'ok', ts: new Date().toISOString()}));

@@ -213,8 +213,8 @@ export async function setupAuth(app: Express) {
     });
   });
 
-  // Lightweight auth status endpoint for observability
-  app.get('/api/auth/status', (req, res) => {
+  // Legacy lightweight auth status endpoint (keeping for compatibility)
+  app.get('/api/auth/legacy-status', (req, res) => {
     res.json({ 
       authenticated: !!req.isAuthenticated?.(), 
       user: req.user ?? null 
@@ -240,25 +240,30 @@ export async function setupAuth(app: Express) {
   function authCb(req: any, res: any, next: any) {
     return passport.authenticate('oidc', (err: any, user: any, info: any) => {
       if (err || !user) {
-        console.warn('[AUTH][fail]', { info: err?.message || info || 'OAuth callback failed', sid: maskSecret(req.sessionID) });
+        console.error(`[AUTH][oauth2callback] ❌ FAIL - Authentication failed - Session: ${maskSecret(req.sessionID)}, Error: ${err?.message || 'Unknown error'}, Info: ${info || 'No additional info'}`);
       }
       
-      console.error('[AUTH][cb]', { 
-        err: err?.message, 
-        hasUser: !!user, 
-        info, 
-        sid: maskSecret(req.sessionID) 
-      });
-      if (err) return res.status(500).json({ step: 'authenticate', err: String(err) });
-      if (!user) return res.status(401).json({ step: 'authenticate', user: false, info });
+      console.log(`[AUTH][oauth2callback] Processing callback - User present: ${!!user}, Session: ${maskSecret(req.sessionID)}`);
+      
+      if (err) {
+        console.error(`[AUTH][oauth2callback] ❌ FAIL - Passport error during authenticate step - Error: ${err.message}`);
+        return res.status(500).json({ step: 'authenticate', err: String(err) });
+      }
+      
+      if (!user) {
+        console.error(`[AUTH][oauth2callback] ❌ FAIL - No user returned from passport - Info: ${info}`);
+        return res.status(401).json({ step: 'authenticate', user: false, info });
+      }
+      
       req.logIn(user, (e: any) => {
         if (e) {
-          console.warn('[AUTH][fail]', { info: `Login failed: ${e.message}`, sid: maskSecret(req.sessionID) });
+          console.error(`[AUTH][oauth2callback] ❌ FAIL - req.logIn failed - Session: ${maskSecret(req.sessionID)}, Error: ${e.message}`);
           return res.status(500).json({ step: 'login', err: String(e) });
         }
+        
         // Success: redirect to dashboard
-        console.info('[AUTH][success]', { userId: maskPII(user?.id), sid: maskSecret(req.sessionID) });
-        console.log('[AUTH][cb] Login successful, redirecting to /dashboard');
+        console.log(`[AUTH][oauth2callback] ✅ SUCCESS - User logged in successfully - User: ${maskPII(user?.email)}, Session: ${maskSecret(req.sessionID)}`);
+        console.log(`[AUTH][oauth2callback] ✅ Redirecting authenticated user to /dashboard`);
         return res.redirect('/dashboard');
       });
     })(req, res, next);
