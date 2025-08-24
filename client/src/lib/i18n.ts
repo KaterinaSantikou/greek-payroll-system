@@ -658,7 +658,7 @@ export function createTranslator(locale: Locale) {
     let translation = translations[locale][key] || translations['en'][key] || key;
     
     // Warn in development for missing translations
-    if (process.env.NODE_ENV === 'development' && !translations[locale][key] && translations['en'][key]) {
+    if (import.meta.env.DEV && !translations[locale][key] && translations['en'][key]) {
       console.warn(`Missing translation for key "${key}" in locale "${locale}"`);
     }
     

@@ -120,7 +120,7 @@ export const HOTEL_WORK_PATTERNS = {
 
 // ERGANI II Integration Configuration
 export const ERGANI_II_CONFIG = {
-  apiEndpoint: 'https://ergani.gov.gr/api/v2',
+  apiEndpoint: import.meta.env.VITE_ERGANI_API_ENDPOINT || '/api/ergani',
   requiredFields: [
     'employee_afm',
     'employer_afm', 
@@ -463,7 +463,7 @@ export async function syncToERGANI(event: DigitalWorkCardEvent): Promise<{
     // Prepare ERGANI payload
     const erganiPayload = {
       employee_afm: event.employeeAFM,
-      employer_afm: process.env.COMPANY_AFM || 'COMPANY_AFM_REQUIRED',
+      employer_afm: import.meta.env.VITE_COMPANY_AFM || 'COMPANY_AFM_REQUIRED',
       workplace_id: event.location.workplaceId,
       event_type: WORK_CARD_EVENT_TYPES[event.eventType].erganiCode,
       timestamp: event.timestamp,
@@ -484,7 +484,7 @@ export async function syncToERGANI(event: DigitalWorkCardEvent): Promise<{
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.ERGANI_API_TOKEN}`,
+        'Authorization': `Bearer ${import.meta.env.VITE_ERGANI_API_TOKEN || ''}`,
       },
       body: JSON.stringify(erganiPayload),
       signal: AbortSignal.timeout(ERGANI_II_CONFIG.retryPolicy.timeoutMs)

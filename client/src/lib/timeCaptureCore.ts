@@ -369,7 +369,7 @@ export interface CBARule {
 
 // ERGANI II Integration with retry logic and error handling
 export class ErganiIIIntegration {
-  private static apiEndpoint = 'https://ergani.gov.gr/api/v2';
+  private static apiEndpoint = import.meta.env.VITE_ERGANI_API_ENDPOINT || '/api/ergani';
   private static maxRetries = 3;
   private static retryDelay = 5000; // 5 seconds
   
@@ -382,7 +382,7 @@ export class ErganiIIIntegration {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.ERGANI_API_KEY}`
+            'Authorization': `Bearer ${import.meta.env.VITE_ERGANI_API_KEY || ''}`
           },
           body: JSON.stringify(erganiPayload)
         });

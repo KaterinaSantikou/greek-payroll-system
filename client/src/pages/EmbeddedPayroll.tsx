@@ -73,7 +73,7 @@ export default function EmbeddedPayroll() {
       email: 'demo@example.com',
       clientId: 'demo_client_12345',
       clientSecret: 'demo_secret_abcdef123456',
-      allowedOrigins: ['https://demo-erp.com', 'https://localhost:3000'],
+      allowedOrigins: ['https://demo-erp.com', window.location.origin],
       scopes: ['payroll.runs:read', 'payroll.runs:finalize', 'gl.journals:write'],
       status: 'active',
       webhookUrl: 'https://demo-erp.com/webhooks/payroll',
