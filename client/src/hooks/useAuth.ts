@@ -7,7 +7,7 @@ export function useAuth() {
     retry: false,
     retryOnMount: false,
     // Only query if we might be authenticated
-    enabled: typeof window !== 'undefined' && document.cookie.includes('connect.sid')
+    enabled: typeof window !== 'undefined' && document.cookie.includes('__Host-psid')
   });
 
   return {
