@@ -8,6 +8,7 @@ import { ObjectPermission } from "./objectAcl";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { getClientSafeConfig, verifySensitiveKeysNotExposed } from "./utils/envValidation";
 import healthRouter from "./api/health";
+import { registerPropertiesRoutes } from "./api/properties";
 
 // Enhanced registerRoutes function with object storage support
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -288,6 +289,9 @@ Crawl-delay: 10
 
   // Health endpoints already mounted above
 
+  // Register properties routes
+  registerPropertiesRoutes(app);
+  
   // Enhanced health checks will be loaded by observability module
   console.log('[ROUTES] ✅ Basic routes registered');
   
