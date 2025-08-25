@@ -8,7 +8,7 @@ export function ProtectedRoute({ path, component: Component }: { path: string; c
     <Route path={path}>
       {() => {
         if (isLoading) return <div style={{ padding: 24 }}>Loading…</div>;
-        if (!isAuthenticated) return <Redirect to="/api/login" />;
+        if (!isAuthenticated) return <Redirect to="/" />;
         return <Component />;
       }}
     </Route>
