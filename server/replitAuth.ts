@@ -269,8 +269,8 @@ export async function setupAuth(app: Express) {
     });
   });
 
-  // Frontend expects this endpoint
-  app.get('/api/auth/user', (req, res) => {
+  // Rock-solid session endpoint
+  app.get("/api/auth/user", (req, res) => {
     console.log('[AUTH][user] User endpoint called:', { 
       isAuth: req.isAuthenticated(), 
       hasUser: !!req.user,
@@ -278,10 +278,11 @@ export async function setupAuth(app: Express) {
       user: req.user ? { id: maskPII(req.user.id), email: maskPII(req.user.email) } : null
     });
     
-    res.json({
-      authenticated: !!req.isAuthenticated?.() && !!req.user,
-      user: req.user ?? null
-    });
+    // express-session puts session on req.session; your OIDC attaches user info (e.g., req.user)
+    if (req.isAuthenticated?.() || (req.session && (req.session as any).passport?.user)) {
+      return res.json({ user: req.user ?? (req.session as any).passport?.user });
+    }
+    return res.status(401).json({ error: "unauthenticated" });
   });
 
   // Custom callback to surface failures (temporary debugging)
