@@ -300,8 +300,8 @@ function Router() {
         
         <Suspense fallback={<div className="flex items-center justify-center p-8">Loading...</div>}>
         <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/dashboard" component={Home} />
+        <Route path="/" component={Landing} />
+        <Route path="/dashboard" component={Dashboard} />
         <Route path="/marketing" component={MarketingLanding} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
         <Route path="/mobile-payroll" component={MobilePayroll} />
@@ -420,7 +420,9 @@ function Router() {
         <Route path="/partner" nest>
           <Partner />
         </Route>
-        <Route component={NotFound} />
+        <Route>
+          {() => <div style={{padding: 24}}><h1>404 - Page Not Found</h1><a href="/">Go home</a></div>}
+        </Route>
         </Switch>
         </Suspense>
       </Layout>
