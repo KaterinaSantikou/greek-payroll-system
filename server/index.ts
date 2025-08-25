@@ -9,7 +9,7 @@ const envConfig = validateEnvironmentVariables();
 import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
 import compression from "compression";
-import rateLimit from "express-rate-limit";
+import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import cors from "cors";
 import path from "path";
 import fs from "fs";
@@ -495,11 +495,11 @@ const loginLimiter = rateLimit({
   max: 5,                    // 5 attempts/min/IP
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req, _res) =>
-    (req.headers["x-forwarded-for"] as string)?.split(",")[0].trim()
-    || req.ip
-    || req.socket.remoteAddress
-    || "unknown",
+  keyGenerator: (req) => {
+    // Trust proxy is already set, so req.ip is good —
+    // but use ipKeyGenerator to satisfy IPv6 validation.
+    return ipKeyGenerator(req);
+  },
   // Count *every* request as an attempt (even 302s)
   requestWasSuccessful: () => false,
   // Skip successful requests so limit only applies to failures
