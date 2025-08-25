@@ -107,17 +107,8 @@ export default function KPIDashboardPage() {
     },
   });
 
-  // Redirect to home if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to access KPI dashboard.",
-        variant: "destructive",
-      });
-      setTimeout(() => window.location.href = "/api/login", 500);
-    }
-  }, [isAuthenticated, isLoading, toast]);
+  // Note: Authentication is handled by ProtectedRoute wrapper
+  // No need for component-level auth redirects
 
   if (isLoading) {
     return (
