@@ -766,6 +766,12 @@ app.use((req, res, next) => {
       reusePort: true,
     }, () => {
       log(`serving on ${host}:${port}`);
+    }).on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        console.error(`[PORT] ${port} already in use. Is the dev server running?`);
+        process.exit(1);
+      }
+      throw err;
     });
     
     // Set timeouts after server is created
