@@ -195,16 +195,16 @@ export default function AnalyticsPage() {
     queryKey: [`/api/analytics/labor-forecast/${selectedProperty}`],
     retry: false,
     onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      // }
     },
   });
 
@@ -213,16 +213,16 @@ export default function AnalyticsPage() {
     queryKey: [`/api/analytics/overtime-heatmap/${selectedProperty}`, dateRange.start, dateRange.end],
     retry: false,
     onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      // }
     },
   });
 
@@ -231,16 +231,16 @@ export default function AnalyticsPage() {
     queryKey: [`/api/analytics/compliance-kpis/${selectedProperty}`],
     retry: false,
     onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      // }
     },
   });
 
@@ -249,16 +249,16 @@ export default function AnalyticsPage() {
     queryKey: [`/api/analytics/productivity-metrics/${selectedProperty}`],
     retry: false,
     onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      // }
     },
   });
 

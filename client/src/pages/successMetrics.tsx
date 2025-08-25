@@ -122,17 +122,17 @@ export default function SuccessMetricsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/success-metrics"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      //   return;
+      // }
       toast({
         title: "Error",
         description: "Failed to generate demo data. Please try again.",
@@ -156,17 +156,17 @@ export default function SuccessMetricsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/success-metrics"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      //   return;
+      // }
       toast({
         title: "Error",
         description: "Failed to resolve alert. Please try again.",

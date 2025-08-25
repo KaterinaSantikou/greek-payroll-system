@@ -124,17 +124,17 @@ export default function ModernPayrollEnginePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/payroll/periods"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      //   return;
+      // }
       toast({
         title: "Error",
         description: "Failed to create payroll period. Please try again.",
@@ -156,17 +156,17 @@ export default function ModernPayrollEnginePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/payroll"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      //   return;
+      // }
       toast({
         title: "Error",
         description: "Failed to start payroll calculation. Please try again.",
@@ -200,17 +200,17 @@ export default function ModernPayrollEnginePage() {
       });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      //   return;
+      // }
       toast({
         title: "Export Failed",
         description: "Failed to export payroll data. Please try again.",
@@ -234,17 +234,17 @@ export default function ModernPayrollEnginePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/payroll-engine"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      //   return;
+      // }
       toast({
         title: "Error",
         description: "Failed to generate demo data. Please try again.",

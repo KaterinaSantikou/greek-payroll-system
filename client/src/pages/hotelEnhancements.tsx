@@ -99,16 +99,16 @@ export default function HotelEnhancementsPage() {
     queryKey: [`/api/hotel-enhancements/seasonal-analytics/${selectedProperty}`],
     retry: false,
     onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      // }
     },
   });
 
@@ -117,16 +117,16 @@ export default function HotelEnhancementsPage() {
     queryKey: [`/api/hotel-enhancements/tip-pool-analytics/${selectedProperty}`],
     retry: false,
     onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      // }
     },
   });
 
