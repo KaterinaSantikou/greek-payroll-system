@@ -90,15 +90,15 @@ export default function KPIDashboardPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/success-metrics"] });
     },
     onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "Session expired. Redirecting...",
-          variant: "destructive",
-        });
-        setTimeout(() => window.location.href = "/api/login", 500);
-        return;
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "Session expired. Redirecting...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => window.location.href = "/api/login", 500);
+      //   return;
+      // }
       toast({
         title: "Error",
         description: "Failed to generate KPI data. Please try again.",

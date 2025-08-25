@@ -36,17 +36,17 @@ export default function Employees() {
         credentials: "include",
       });
 
-      if (response.status === 401) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return [];
-      }
+      // if (response.status === 401) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      //   return [];
+      // }
 
       if (!response.ok) {
         throw new Error(`${response.status}: ${response.statusText}`);
@@ -59,17 +59,17 @@ export default function Employees() {
   // Handle query errors
   useEffect(() => {
     if (error) {
-      if (isUnauthorizedError(error as Error)) {
-        toast({
-          title: "Unauthorized", 
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+      // if (isUnauthorizedError(error as Error)) {
+      //   toast({
+      //     title: "Unauthorized", 
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      //   return;
+      // }
       toast({
         title: "Σφάλμα",
         description: "Αποτυχία φόρτωσης εργαζομένων",
