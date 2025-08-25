@@ -337,17 +337,35 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  console.log('[AUTH][middleware] isAuthenticated check:', {
+    isAuth: req.isAuthenticated(),
+    hasUser: !!user,
+    userKeys: user ? Object.keys(user) : [],
+    expires_at: user?.expires_at,
+    sessionID: maskSecret(req.sessionID)
+  });
+
+  if (!req.isAuthenticated() || !user) {
+    console.log('[AUTH][middleware] ❌ Failed - not authenticated or no user');
     return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  // Skip token expiration checks if no expires_at (fallback for session-based auth)
+  if (!user.expires_at) {
+    console.log('[AUTH][middleware] ✅ Passed - session-based auth (no token expiration)');
+    return next();
   }
 
   const now = Math.floor(Date.now() / 1000);
   if (now <= user.expires_at) {
+    console.log('[AUTH][middleware] ✅ Passed - token still valid');
     return next();
   }
 
+  console.log('[AUTH][middleware] Token expired, attempting refresh...');
   const refreshToken = user.refresh_token;
   if (!refreshToken) {
+    console.log('[AUTH][middleware] ❌ Failed - no refresh token');
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
@@ -356,8 +374,10 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     const config = await getOidcConfig();
     const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
     updateUserSession(user, tokenResponse);
+    console.log('[AUTH][middleware] ✅ Passed - token refreshed');
     return next();
   } catch (error) {
+    console.log('[AUTH][middleware] ❌ Failed - token refresh failed:', error);
     res.status(401).json({ message: "Unauthorized" });
     return;
   }
