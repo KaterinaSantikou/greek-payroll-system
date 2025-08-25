@@ -1,0 +1,84 @@
+2) Integration endpoints return {"message":"Unauthorized"}
+
+That’s expected for unauthenticated calls. To validate behavior:
+
+Auth flow smoke (browser preferred). CLI example using a session cookie after login:
+
+# After logging in via browser once:
+curl -s -c cookies.txt -b cookies.txt \
+  https://hr-master-katerina43.replit.app/api/auth/user | jq
+
+# Should show: { authenticated: true, user: {...} }
+
+# Now integrations:
+curl -s -c cookies.txt -b cookies.txt \
+  https://hr-master-katerina43.replit.app/api/integrations/status | jq
+
+
+If you want a friendlier unauth response (instead of generic 401), wrap those routes:
+
+app.get("/api/integrations/status", requireAuth, (req, res) => { ... });
+// Or:
+app.get("/api/integrations/status", (req,res)=>
+  req.isAuthenticated?.()
+    ? res.json({ ... })
+    : res.status(401).json({ error: "unauthorized", hint: "Please sign in." })
+);
+
+3) Optional subsystems: missing columns (non-fatal)
+
+You’ve still got schema gaps (e.g., last_rpo_breach, performance_metrics, weekend_escalation). Patch them idempotently.
+
+Migration (copy-paste)
+Create migrations/2025-08-enterprise-columns.sql:
+
+BEGIN;
+
+-- DR / SLA analytics
+ALTER TABLE IF EXISTS public.dr_slas
+  ADD COLUMN IF NOT EXISTS last_rpo_breach timestamptz,
+  ADD COLUMN IF NOT EXISTS performance_metrics jsonb;  -- e.g., {"rto_p50":..., "rto_p95":...}
+
+-- On-call escalation UX
+ALTER TABLE IF EXISTS public.escalation_policies
+  ADD COLUMN IF NOT EXISTS weekend_escalation boolean DEFAULT false;
+
+COMMIT;
+
+
+Run:
+
+psql "$DATABASE_URL" -f migrations/2025-08-enterprise-columns.sql
+
+
+Quick check:
+
+SELECT last_rpo_breach, performance_metrics FROM public.dr_slas LIMIT 1;
+SELECT weekend_escalation FROM public.escalation_policies LIMIT 1;
+
+
+(If logs mention more missing columns, send the exact names; I’ll extend the migration.)
+
+Bonus hardening (1-liners)
+
+Ensure Helmet + CSP are on to avoid blank-page CSP/JS issues:
+
+import helmet from "helmet";
+app.use(helmet({
+  noSniff: true,
+  frameguard: { action: "deny" },
+  referrerPolicy: { policy: "no-referrer" },
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": ["'self'"],
+      "style-src": ["'self'","'unsafe-inline'"],
+      "img-src": ["'self'","data:"],
+      "connect-src": ["'self'"],
+    }
+  }
+}));
+
+
+Add a /api/auth/debug (protected) that returns current sessionID and roles for quicker diagnostics.
