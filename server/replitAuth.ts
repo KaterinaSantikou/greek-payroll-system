@@ -285,41 +285,11 @@ export async function setupAuth(app: Express) {
     return res.status(401).json({ error: "unauthenticated" });
   });
 
-  // Custom callback to surface failures (temporary debugging)
-  function authCb(req: any, res: any, next: any) {
-    return passport.authenticate('oidc', (err: any, user: any, info: any) => {
-      if (err || !user) {
-        console.error(`[AUTH][oauth2callback] ❌ FAIL - Authentication failed - Session: ${maskSecret(req.sessionID)}, Error: ${err?.message || 'Unknown error'}, Info: ${info || 'No additional info'}`);
-      }
-      
-      console.log(`[AUTH][oauth2callback] Processing callback - User present: ${!!user}, Session: ${maskSecret(req.sessionID)}`);
-      
-      if (err) {
-        console.error(`[AUTH][oauth2callback] ❌ FAIL - Passport error during authenticate step - Error: ${err.message}`);
-        return res.status(500).json({ step: 'authenticate', err: String(err) });
-      }
-      
-      if (!user) {
-        console.error(`[AUTH][oauth2callback] ❌ FAIL - No user returned from passport - Info: ${info}`);
-        return res.status(401).json({ step: 'authenticate', user: false, info });
-      }
-      
-      req.logIn(user, (e: any) => {
-        if (e) {
-          console.error(`[AUTH][oauth2callback] ❌ FAIL - req.logIn failed - Session: ${maskSecret(req.sessionID)}, Error: ${e.message}`);
-          return res.status(500).json({ step: 'login', err: String(e) });
-        }
-        
-        // Success: redirect to dashboard
-        console.log(`[AUTH][oauth2callback] ✅ SUCCESS - User logged in successfully - User: ${maskPII(user?.email)}, Session: ${maskSecret(req.sessionID)}`);
-        console.log(`[AUTH][oauth2callback] ✅ Redirecting authenticated user to /dashboard`);
-        return res.redirect('/dashboard');
-      });
-    })(req, res, next);
-  }
-  
-  app.get('/oauth2callback', authCb);
-  app.post('/oauth2callback', authCb);
+  // OIDC callback & redirect - clean standard implementation
+  app.get("/oauth2callback", passport.authenticate("oidc", { failureRedirect: "/auth/error" }), (req, res) => {
+    // At this point session is established; send user to the app
+    res.redirect("/dashboard");
+  });
 
 
   app.get("/api/logout", async (req, res) => {
