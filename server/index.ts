@@ -433,7 +433,9 @@ app.use(compression({
 app.options('/api/*', cors({ origin: true, credentials: true }));
 app.use('/api', cors({ origin: true, credentials: true }));
 
-// Security: Helmet middleware with comprehensive CSP and security headers
+// Security: Helmet middleware with environment-aware CSP
+const isProd = process.env.NODE_ENV === 'production';
+
 app.use(helmet({
   xssFilter: true,
   frameguard: { action: "deny" },
@@ -443,11 +445,21 @@ app.use(helmet({
     useDefaults: false,
     directives: {
       "default-src": ["'self'"],
-      "script-src": ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://fonts.googleapis.com", "https://replit.com"],
+      // Allow normal and module scripts; in dev allow eval for Vite/React refresh
+      "script-src": isProd ? ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://replit.com"] : ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://fonts.googleapis.com", "https://replit.com"],
+      "script-src-elem": isProd ? ["'self'", "https://fonts.googleapis.com", "https://replit.com"] : ["'self'", "'unsafe-eval'", "https://fonts.googleapis.com", "https://replit.com"],
+      // Vite injects inline <style> tags; keep 'unsafe-inline'
       "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://fonts.gstatic.com"],
-      "font-src": ["'self'", "https://fonts.gstatic.com"],
+      // Fonts and images from your own host; allow data: and blob: for inlined assets
+      "font-src": ["'self'", "data:", "https://fonts.gstatic.com"],
       "img-src": ["'self'", "data:", "blob:", "https:"],
-      "connect-src": ["'self'", "ws:", "wss:", "https:"],
+      // Environment-configurable external backends (default allows broad access)
+      "connect-src": [
+        "'self'",
+        "ws:", "wss:", // WebSocket support for dev server
+        ...(process.env.CSP_CONNECT_SRC?.split(",").map(s => s.trim()).filter(Boolean) ?? ["https:"]) // Default to all https if not specified
+      ],
+      // Web workers for modern JS features
       "worker-src": ["'self'", "blob:"],
       "object-src": ["'none'"],
       "base-uri": ["'self'"],
