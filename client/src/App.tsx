@@ -139,6 +139,8 @@ import ResetPassword from "@/pages/auth/ResetPassword";
 import SSO from "@/pages/auth/SSO";
 
 const GRCCompliance = lazy(() => import("./pages/GRCCompliance"));
+const ManagerDashboard = lazy(() => import("./pages/managerDashboard"));
+const PropertyDashboard = lazy(() => import("./pages/propertyDashboard"));
 
 // Auth Bootstrap Component
 function AuthBootstrap({ children }: { children: React.ReactNode }) {
@@ -165,8 +167,8 @@ function AuthBootstrap({ children }: { children: React.ReactNode }) {
           loading: false
         });
 
-        // Navigate to dashboard if authenticated and on login page
-        if (data.authenticated && location === '/login') {
+        // Navigate to dashboard if authenticated and on login page, avoid dashboard bounce
+        if (data.authenticated && location === '/login' && location !== '/dashboard') {
           router('/dashboard');
         }
       } catch (error) {
@@ -302,6 +304,8 @@ function Router() {
         <Switch>
         <Route path="/" component={Landing} />
         <Route path="/dashboard" component={Dashboard} />
+        <Route path="/dashboard/manager" component={ManagerDashboard} />
+        <Route path="/dashboard/property" component={PropertyDashboard} />
         <Route path="/marketing" component={MarketingLanding} />
         <Route path="/property-dashboard" component={PropertyDashboard} />
         <Route path="/mobile-payroll" component={MobilePayroll} />
