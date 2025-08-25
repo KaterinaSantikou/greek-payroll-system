@@ -67,7 +67,6 @@ export interface ComplianceActivity {
 }
 
 export class GDPRComplianceInitializer {
-  private static initialized = false;
   private static config = {
     enableDPIA: true,
     enableDPA: true,
@@ -87,9 +86,6 @@ export class GDPRComplianceInitializer {
   static async initialize(): Promise<GDPRComplianceStatus> {
     if (_initialized) {
       console.info('[GDPR] initialize() skipped (already initialized)');
-      return this.getComplianceStatus();
-    }
-    if (this.initialized) {
       return this.getComplianceStatus();
     }
 

@@ -72,6 +72,9 @@ export interface RotationSchedule {
   };
 }
 
+// Singleton guard to prevent duplicate initializations
+let _onCallInitialized = false;
+
 export class OnCallRotaService extends EventEmitter {
   private static instance: OnCallRotaService;
   private escalationTimers: Map<string, NodeJS.Timeout> = new Map();
@@ -93,9 +96,15 @@ export class OnCallRotaService extends EventEmitter {
    * Initialize the on-call rota system
    */
   async initializeOnCallSystem(): Promise<void> {
+    if (_onCallInitialized) {
+      console.info('[OnCall] initializeOnCallSystem() skipped (already initialized)');
+      return;
+    }
+    
     try {
       await this.createDefaultTeamsAndPolicies();
       await this.initializeRotationTimers();
+      _onCallInitialized = true;
       console.log('🚨 On-call rota system initialized');
     } catch (error) {
       console.error('Failed to initialize on-call rota system:', error);

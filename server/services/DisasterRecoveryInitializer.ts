@@ -55,6 +55,14 @@ export class DisasterRecoveryInitializer {
       console.info('[DR] initializeDRSystem() skipped (already initialized)');
       return { slas: 0, exercises: 0, restoreTests: 0, wormObjects: 0 };
     }
+    
+    // Check if DR seeding is disabled via environment variable
+    if (process.env.ENABLE_DR_SEEDING === 'false') {
+      console.info('[DR] initializeDRSystem() skipped (ENABLE_DR_SEEDING=false)');
+      _drInitialized = true;
+      return { slas: 0, exercises: 0, restoreTests: 0, wormObjects: 0 };
+    }
+    
     console.log('Initializing Disaster Recovery System...');
 
     let createdSLAs = 0;
