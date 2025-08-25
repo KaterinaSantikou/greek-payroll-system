@@ -290,11 +290,33 @@ export async function setupAuth(app: Express) {
     return res.status(401).json({ error: "unauthenticated" });
   });
 
-  // OIDC callback & redirect - clean standard implementation
-  app.get("/oauth2callback", passport.authenticate("oidc", { failureRedirect: "/auth/error" }), (req, res) => {
-    // At this point session is established; send user to the app
-    res.redirect("/dashboard");
-  });
+  // OIDC callback & redirect - race-proof implementation
+  app.get(
+    "/oauth2callback",
+    passport.authenticate("oidc", { failureRedirect: "/auth/error" }),
+    (req, res, next) => {
+      // (A) rotate session id to prevent fixation
+      req.session.regenerate((err) => {
+        if (err) return next(err);
+
+        // (B) re-attach user to the new session
+        req.login(req.user, (err2) => {
+          if (err2) return next(err2);
+
+          // (C) persist any custom user fields you rely on
+          (req.session as any).passport = (req.session as any).passport || {};
+          (req.session as any).passport.user = req.user;
+
+          // (D) SAVE before redirecting to the SPA
+          req.session.save((err3) => {
+            if (err3) return next(err3);
+            // Use 303 to avoid caching oddities after POST->GET
+            res.redirect(303, "/dashboard");
+          });
+        });
+      });
+    }
+  );
 
 
   app.get("/api/logout", async (req, res) => {
