@@ -652,7 +652,6 @@ app.use((req, res, next) => {
     console.log('[Boot] 🔧 Running comprehensive environment validation...');
     try {
       const envValidation = validateEnvironmentVariables();
-      logEnvironmentStatus();
       
       // Note: We already checked critical secrets above, so just log warnings for optional ones
       if (envValidation.warnings.length > 0) {
