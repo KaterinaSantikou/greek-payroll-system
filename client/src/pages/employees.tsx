@@ -172,20 +172,20 @@ export default function Employees() {
   const departments = ['Front Office', 'Housekeeping', 'Food & Beverage', 'Maintenance']; // Static for now
   const positions = ['Manager', 'Supervisor', 'Staff', 'Intern']; // Static for now
 
-  useEffect(() => {
-    const userId = null; // This would be checked by the auth system
-    if (!userId) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [toast]);
+  // useEffect(() => {
+  //   const userId = null; // This would be checked by the auth system
+  //   if (!userId) {
+  //     toast({
+  //       title: "Unauthorized",
+  //       description: "You are logged out. Logging in again...",
+  //       variant: "destructive",
+  //     });
+  //     setTimeout(() => {
+  //       window.location.href = "/api/login";
+  //     }, 500);
+  //     return;
+  //   }
+  // }, [toast]);
 
   return (
     <div className="space-y-6">

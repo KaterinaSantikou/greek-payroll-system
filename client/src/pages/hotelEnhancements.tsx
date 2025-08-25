@@ -146,17 +146,17 @@ export default function HotelEnhancementsPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/hotel-enhancements/seasonal-analytics`] });
     },
     onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      //   return;
+      // }
       toast({
         title: "Error",
         description: "Failed to create batch hiring campaign",
@@ -181,17 +181,17 @@ export default function HotelEnhancementsPage() {
       queryClient.invalidateQueries({ queryKey: [`/api/hotel-enhancements/tip-pool-analytics`] });
     },
     onError: (error: Error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+      // if (isUnauthorizedError(error)) {
+      //   toast({
+      //     title: "Unauthorized",
+      //     description: "You are logged out. Logging in again...",
+      //     variant: "destructive",
+      //   });
+      //   setTimeout(() => {
+      //     window.location.href = "/api/login";
+      //   }, 500);
+      //   return;
+      // }
       toast({
         title: "Error",
         description: "Failed to configure tip pool",
