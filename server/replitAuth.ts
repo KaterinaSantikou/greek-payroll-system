@@ -94,10 +94,15 @@ function updateUserSession(
   user: any,
   tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
 ) {
-  user.claims = tokens.claims();
+  // Preserve original user properties (id, email, name) and add token data
+  const claims = tokens.claims();
   user.access_token = tokens.access_token;
   user.refresh_token = tokens.refresh_token;
-  user.expires_at = user.claims?.exp;
+  user.expires_at = claims?.exp;
+  user.claims = claims; // Keep for backward compatibility with existing API endpoints
+  
+  // Ensure core user properties are preserved from the original user object
+  // These were set in the verify function and should not be overwritten
 }
 
 async function upsertUser(
@@ -207,7 +212,7 @@ export async function setupAuth(app: Express) {
 
   passport.serializeUser((u: any, d) => d(null, String(u.id || u.sub)));
   passport.deserializeUser(async (id, d) => {
-    const u = await storage.findUserById?.(id);
+    const u = await storage.getUser(id);
     d(null, u ?? { id });
   });
 
