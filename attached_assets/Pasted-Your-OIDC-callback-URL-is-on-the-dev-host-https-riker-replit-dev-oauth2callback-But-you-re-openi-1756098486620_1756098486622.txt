@@ -1,0 +1,142 @@
+Your OIDC callback URL is on the dev host
+https://…riker.replit.dev/oauth2callback
+
+But you’re opening the production app (likely *.replit.app).
+
+Your session cookie is __Host-psid (Secure, SameSite=None). __Host-* cookies only work on the exact host that sets them (no Domain attribute allowed).
+
+Result: cookie set on riker.replit.dev ≠ sent to replit.app → the app thinks you’re not logged in → kicks you back to the provider’s Allow page. The ~2s delay is your SPA calling /api/auth/user, getting 401, and triggering the re-login.
+
+You also still start in dev mode ([Boot] Setting up development SPA routing with Vite), which tends to pick that riker.replit.dev callback automatically.
+
+Here’s how to stop the loop, step-by-step.
+
+1) Force a single canonical base URL (prod host) for auth
+
+Add an env like:
+
+APP_BASE_URL=https://hr-master-katerina43.replit.app   # your real prod URL
+
+
+Use it everywhere you compute URLs/callbacks:
+
+// server/auth/config.ts (or wherever you build OIDC/redirects)
+const BASE_URL = process.env.APP_BASE_URL ?? `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+export const OIDC_REDIRECT_URI = new URL('/oauth2callback', BASE_URL).toString();
+
+// passport/OpenID config:
+{
+  redirect_uri: OIDC_REDIRECT_URI,
+  // ...
+}
+
+
+Also make sure your provider’s allowed redirect URIs include that exact APP_BASE_URL/oauth2callback.
+
+Important: In prod, do not fall back to riker.replit.dev. The cookie won’t carry across hosts.
+
+2) Keep cookie scoped to that host & behind the proxy
+
+Your session config looks mostly right; keep:
+
+app.set('trust proxy', 1); // you already do this
+
+session({
+  name: '__Host-psid',
+  secret: process.env.SESSION_SECRET!,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    path: '/',      // required for __Host-*
+    // DO NOT set "domain" for __Host-* cookies
+  }
+})
+
+
+✅ __Host-* must be Secure + Path=/ and no Domain.
+
+3) Make the client call the same origin API
+
+Search the client for any absolute URLs (localhost, riker.replit.dev, etc.) and replace with relative:
+
+// before
+fetch('https://riker.replit.dev/api/auth/user', { credentials: 'include' });
+
+// after
+fetch('/api/auth/user', { credentials: 'include' }); // stays on the same host
+
+
+If you expose a VITE_API_URL, set it empty in prod or to window.location.origin.
+
+4) Switch the Deploy command to prod
+
+Replit logs show NODE_ENV=development tsx server/index.ts. For Deploy use:
+
+npm run build && npm run start
+
+
+With your package.json:
+
+build: builds Vite client to dist/public and bundles the server to dist/
+
+start: NODE_ENV=production node dist/index.js
+
+You should now see:
+
+[Boot] 🎯 Setting up production SPA routing with static assets
+
+5) Trim the service worker to avoid stale HTML/assets
+
+You register /sw.js in multiple places. That’s risky. Keep one guarded registration only:
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+
+Put sw.js under client/public/sw.js (so Vite copies it to dist/public/sw.js).
+
+For safety, use a minimal SW that does not cache HTML and busts old caches:
+
+// client/public/sw.js
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (e) => {
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+    await self.clients.claim();
+  })());
+});
+// no fetch handler = network default (no stale index.html)
+
+
+Ask users to hard reload once; or in DevTools → Application → Service Workers → Unregister then reload.
+
+6) Loosen CSP just enough
+
+Add font-src and allow any external API domains your client uses:
+
+const isProd = process.env.NODE_ENV === 'production';
+app.use(helmet({
+  frameguard: { action: 'deny' },
+  referrerPolicy: { policy: 'no-referrer' },
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "script-src": isProd ? ["'self'"] : ["'self'", "'unsafe-eval'"],
+      "script-src-elem": isProd ? ["'self'"] : ["'self'", "'unsafe-eval'"],
+      "style-src": ["'self'", "'unsafe-inline'"],
+      "img-src": ["'self'", "data:", "blob:"],
+      "font-src": ["'self'", "data:"],
+      "connect-src": ["'self'", ...(process.env.CSP_CONNECT_SRC?.split(',').map(s=>s.trim()).filter(Boolean) ?? [])],
+      "worker-src": ["'self'", "blob:"],
+    },
+  },
+}));
+
+
+Set CSP_CONNECT_SRC accordingly if you hit external APIs.

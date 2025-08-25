@@ -44,7 +44,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: isProd,                     // MUST be true on hosted (HTTPS)
-      sameSite: isProd ? 'none' : 'lax',  // MUST be 'none' on hosted
+      sameSite: isProd ? 'none' as const : 'lax' as const,  // MUST be 'none' on hosted
       maxAge: sessionTtl,
       path: "/",
       // domain: omit to enforce host-only cookie (__Host-)
@@ -112,7 +112,7 @@ export async function setupAuth(app: Express) {
     console.log('[AUTH][verify] VERIFY FUNCTION CALLED!');
     try {
       console.log('[AUTH][verify] Processing tokens...');
-      const claims = tokens.claims();
+      const claims = tokens.claims() ?? {};
       console.log('[AUTH][verify] Claims:', claims);
       
       const user = {
@@ -134,12 +134,25 @@ export async function setupAuth(app: Express) {
     }
   };
 
-  // Replit environment detection - use HTTPS callback when REPLIT_DOMAINS exists
+  // Force canonical base URL for production auth consistency
+  const APP_BASE_URL = process.env.APP_BASE_URL;
   const isReplitHosted = !!process.env.REPLIT_DOMAINS;
   const domain = (process.env.REPLIT_DOMAINS || "").split(",")[0];
-  const REPLIT_CALLBACK = `https://${domain}/oauth2callback`;
-  const DEV_CALLBACK = `http://localhost:5000/oauth2callback`;
-  const CALLBACK = isReplitHosted ? REPLIT_CALLBACK : DEV_CALLBACK;
+  
+  let CALLBACK: string;
+  if (APP_BASE_URL) {
+    // Production: use explicit APP_BASE_URL (e.g., https://hr-master-katerina43.replit.app)
+    CALLBACK = new URL('/oauth2callback', APP_BASE_URL).toString();
+    console.log(`[Auth] Using explicit APP_BASE_URL, CALLBACK: ${CALLBACK}`);
+  } else if (isReplitHosted) {
+    // Fallback to REPLIT_DOMAINS (dev/staging)
+    CALLBACK = `https://${domain}/oauth2callback`;
+    console.log(`[Auth] Fallback to REPLIT_DOMAINS, CALLBACK: ${CALLBACK}`);
+  } else {
+    // Local development
+    CALLBACK = `http://localhost:5000/oauth2callback`;
+    console.log(`[Auth] Local development, CALLBACK: ${CALLBACK}`);
+  }
   
   // Optional: enforce hosted callback & cookie parity
   
