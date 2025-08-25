@@ -670,10 +670,10 @@ app.use((req, res, next) => {
     await preflightDDLCheck();
     console.log('[Boot] ✅ Preflight checks completed!');
     
-    // Set environment variables if not set (for development)
-    if (!process.env.ENABLE_ONCALL) process.env.ENABLE_ONCALL = 'true';
-    if (!process.env.ENABLE_RUNBOOKS) process.env.ENABLE_RUNBOOKS = 'true';  
-    if (!process.env.ENABLE_LOGGING) process.env.ENABLE_LOGGING = 'true';
+    // Set environment variables if not set (DISABLED by default until UI confirmed working)
+    if (!process.env.ENABLE_ONCALL) process.env.ENABLE_ONCALL = 'false';
+    if (!process.env.ENABLE_RUNBOOKS) process.env.ENABLE_RUNBOOKS = 'false';  
+    if (!process.env.ENABLE_LOGGING) process.env.ENABLE_LOGGING = 'false';
     
     // Boot log summarizing all flags for observability
     console.info('[Boot] Feature flags:', {
