@@ -73,11 +73,8 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Handle API requests
-  if (url.pathname.startsWith('/api/')) {
-    event.respondWith(handleApiRequest(request));
-    return;
-  }
+  // NEVER intercept API calls - let network handle them for proper auth
+  if (url.pathname.startsWith('/api/')) return; 
 
   // Handle navigation requests
   if (request.mode === 'navigate') {
