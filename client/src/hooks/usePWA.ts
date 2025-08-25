@@ -85,21 +85,7 @@ export function usePWA(): [PWAState, PWAActions] {
       setNotificationPermission(Notification.permission);
     }
 
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
-        .then((registration) => {
-          console.log('PWA: Service Worker registered:', registration);
-          
-          // Check for updates
-          registration.addEventListener('updatefound', () => {
-            console.log('PWA: Update found, installing...');
-          });
-        })
-        .catch((error) => {
-          console.error('PWA: Service Worker registration failed:', error);
-        });
-    }
+    // Service Worker registration removed - now handled in main.tsx to prevent multi-registration
 
     // Cleanup
     return () => {
