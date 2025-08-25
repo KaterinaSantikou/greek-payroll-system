@@ -442,13 +442,14 @@ app.use(helmet({
     useDefaults: true,
     directives: {
       "default-src": ["'self'"],
-      "script-src": isProd ? ["'self'"] : ["'self'", "'unsafe-eval'"],
-      "script-src-elem": isProd ? ["'self'"] : ["'self'", "'unsafe-eval'"],
-      "style-src": ["'self'", "'unsafe-inline'"],
+      "script-src": isProd ? ["'self'"] : ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
+      "script-src-elem": isProd ? ["'self'"] : ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
+      "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       "img-src": ["'self'", "data:", "blob:"],
-      "font-src": ["'self'", "data:"],
+      "font-src": ["'self'", "data:", "https://fonts.gstatic.com"],
       "connect-src": [
         "'self'",
+        "ws:", "wss:", // Allow WebSocket connections for Vite HMR
         ...(process.env.CSP_CONNECT_SRC?.split(',').map(s => s.trim()).filter(Boolean) ?? []),
       ],
       "worker-src": ["'self'", "blob:"],

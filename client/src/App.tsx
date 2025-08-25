@@ -139,8 +139,6 @@ import ResetPassword from "@/pages/auth/ResetPassword";
 import SSO from "@/pages/auth/SSO";
 
 const GRCCompliance = lazy(() => import("./pages/GRCCompliance"));
-const ManagerDashboard = lazy(() => import("./pages/managerDashboard"));
-const PropertyDashboard = lazy(() => import("./pages/propertyDashboard"));
 
 // Auth Bootstrap Component
 function AuthBootstrap({ children }: { children: React.ReactNode }) {
