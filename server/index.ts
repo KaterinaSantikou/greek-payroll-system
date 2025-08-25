@@ -739,7 +739,11 @@ app.use((req, res, next) => {
   setupSentryErrorHandler(app);
 
   // SMART SPA ROUTING: Proper route order to prevent asset interference
-  if (app.get("env") === "development") {
+  // Force production mode - check if dist/public exists and prefer it
+  const distPublicExists = fs.existsSync(path.join(__root, 'dist', 'public', 'index.html'));
+  const forceProduction = distPublicExists || process.env.FORCE_PRODUCTION === "true";
+  
+  if (!forceProduction) {
     console.log('[Boot] 🎯 Setting up development SPA routing with Vite');
     await setupDevSPA(app, null);
   } else {
