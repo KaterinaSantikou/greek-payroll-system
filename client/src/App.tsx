@@ -187,10 +187,9 @@ function Router() {
   const { open, setOpen } = useCommandPalette();
   const [location] = useLocation();
   
-  // Add check for Replit session before querying user endpoint
+  // Redirect unauthenticated users to login (API-driven, no cookie sniffing)
   useEffect(() => {
-    const hasSessionCookie = document.cookie.includes('__Host-psid');
-    if (!hasSessionCookie && !isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       // Only redirect to login if we're on a protected route (not already on auth routes)
       if (!location.includes('/auth') && !location.includes('/demo') && !location.includes('/marketing') && location !== '/' && location !== '/status') {
         window.location.href = '/api/login';
