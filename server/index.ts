@@ -290,8 +290,7 @@ async function sanitycheckTables() {
       SELECT table_schema, table_name, table_type
       FROM information_schema.tables
       WHERE table_schema='public' 
-        AND lower(table_name) LIKE '%oncall%'
-        OR lower(table_name) LIKE '%status_page%'
+        AND (lower(table_name) LIKE '%oncall%' OR lower(table_name) LIKE '%status_page%')
       ORDER BY table_name
     `);
     
@@ -715,6 +714,11 @@ app.use((req, res, next) => {
     const { metricsMiddleware } = await import('./observability/metrics.js');
     app.use(metricsMiddleware);
     
+    // CRITICAL: Run bootstrap BEFORE route registration (prevents schema diff issues)
+    console.log('[Boot] 🚀 Running deployment bootstrap...');
+    await ensureCoreTables();
+    console.log('[Boot] ✅ Deployment bootstrap completed!');
+
     console.log('[Boot] 🚀 About to call registerRoutes...');
     await registerRoutes(app);
     console.log('[Boot] ✅ registerRoutes completed!');
@@ -722,11 +726,6 @@ app.use((req, res, next) => {
     // Set coreReady after successful initialization of auth, db, and rules
     coreReady = true;
     console.log('[Boot] ✅ Core systems ready - health checks will now return 200');
-
-    // CRITICAL: Run bootstrap BEFORE any migration or schema comparison
-    console.log('[Boot] 🚀 Running deployment bootstrap...');
-    await ensureCoreTables();
-    console.log('[Boot] ✅ Deployment bootstrap completed!');
     
     // Run sanity check to verify everything is visible to migrator
     await sanitycheckTables();
