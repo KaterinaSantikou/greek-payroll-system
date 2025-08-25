@@ -483,11 +483,7 @@ const loginLimiter = rateLimit({
   max: 5,                    // 5 attempts/min/IP
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
-    // Trust proxy is already set, so req.ip is good —
-    // but use ipKeyGenerator to satisfy IPv6 validation.
-    return ipKeyGenerator(req);
-  },
+  keyGenerator: ipKeyGenerator,
   // Count *every* request as an attempt (even 302s)
   requestWasSuccessful: () => false,
   // Skip successful requests so limit only applies to failures
