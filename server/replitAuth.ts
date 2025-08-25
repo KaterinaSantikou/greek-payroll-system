@@ -8,6 +8,23 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
+// PII masking utilities for production security
+function maskSecret(value: string | undefined): string {
+  if (!value || process.env.NODE_ENV !== 'production') return value || 'undefined';
+  return value.length > 8 ? `${value.slice(0, 4)}...${value.slice(-4)}` : '***';
+}
+
+function maskPII(value: string | undefined): string {
+  if (!value || process.env.NODE_ENV !== 'production') return value || 'undefined';
+  // Mask email: user@example.com -> u***@example.com
+  if (value.includes('@')) {
+    const [local, domain] = value.split('@');
+    return `${local.charAt(0)}***@${domain}`;
+  }
+  // Mask other PII: keep first char + length
+  return value.length > 1 ? `${value.charAt(0)}***` : '***';
+}
+
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
@@ -183,22 +200,6 @@ export async function setupAuth(app: Express) {
     },
     verify
   );
-  // PII masking utilities for production security
-  function maskSecret(value: string | undefined): string {
-    if (!value || process.env.NODE_ENV !== 'production') return value || 'undefined';
-    return value.length > 8 ? `${value.slice(0, 4)}...${value.slice(-4)}` : '***';
-  }
-
-  function maskPII(value: string | undefined): string {
-    if (!value || process.env.NODE_ENV !== 'production') return value || 'undefined';
-    // Mask email: user@example.com -> u***@example.com
-    if (value.includes('@')) {
-      const [local, domain] = value.split('@');
-      return `${local.charAt(0)}***@${domain}`;
-    }
-    // Mask other PII: keep first char + length
-    return value.length > 1 ? `${value.charAt(0)}***` : '***';
-  }
 
   console.log('[AUTH][setup] Registering OIDC strategy...');
   passport.use("oidc", strategy);
