@@ -25,6 +25,34 @@ console.log({
   MIGRATION_DATABASE_URL: maskUrl(process.env.MIGRATION_DATABASE_URL)
 });
 
+// Diagnostic: Prove what the migrator sees
+console.log('\n🔍 Migrator Database Probe:');
+try {
+  const pg = await import('pg');
+  const url = process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL;
+  const client = new pg.default.Client({ connectionString: url });
+  await client.connect();
+  
+  const result = await client.query(`
+    select current_database() db, current_schema() schema, current_setting('search_path',true) sp,
+           to_regclass('public.oncall_teams') as oncall,
+           to_regclass('public.partners') as partners;
+  `);
+  
+  console.log('[MIGRATOR PROBE]', result.rows[0]);
+  await client.end();
+  
+  // Validate expected tables exist
+  const probe = result.rows[0];
+  if (!probe.oncall) {
+    console.log('⚠️  WARNING: oncall_teams table not found - may be wrong database or need initial migration');
+  } else {
+    console.log('✅ oncall_teams table detected');
+  }
+} catch (error) {
+  console.error('❌ Migrator probe failed:', error.message);
+}
+
 if (!process.env.DATABASE_URL) {
   console.error('❌ DATABASE_URL is required');
   process.exit(1);
