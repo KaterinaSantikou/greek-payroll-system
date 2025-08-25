@@ -274,19 +274,24 @@ export async function setupAuth(app: Express) {
     });
   });
 
-  // Rock-solid session endpoint
-  app.get("/api/auth/user", (req, res) => {
-    console.log('[AUTH][user] User endpoint called:', { 
-      isAuth: req.isAuthenticated(), 
-      hasUser: !!req.user,
-      sessionID: maskSecret(req.sessionID),
-      user: req.user ? { id: maskPII(req.user.id), email: maskPII(req.user.email) } : null
-    });
-    
-    // express-session puts session on req.session; your OIDC attaches user info (e.g., req.user)
-    if (req.isAuthenticated?.() || (req.session && (req.session as any).passport?.user)) {
-      return res.json({ user: req.user ?? (req.session as any).passport?.user });
+  // Debug trace middleware to see what's happening
+  app.use((req, _res, next) => {
+    if (req.path === "/api/auth/user" || req.path === "/api/login" || req.path === "/oauth2callback") {
+      console.log("[AUTH TRACE]", req.method, req.path, {
+        cookieHeader: !!req.headers.cookie,
+        sessionId: req.sessionID,
+        hasSession: !!req.session,
+        passportUser: (req.session as any)?.passport?.user ? true : false,
+        isAuthenticated: req.isAuthenticated?.() ?? false,
+      });
     }
+    next();
+  });
+
+  // Rock-solid session endpoint  
+  app.get("/api/auth/user", (req, res) => {
+    const authed = req.isAuthenticated?.() || (req.session as any)?.passport?.user;
+    if (authed) return res.json({ user: req.user ?? (req.session as any).passport.user });
     return res.status(401).json({ error: "unauthenticated" });
   });
 
