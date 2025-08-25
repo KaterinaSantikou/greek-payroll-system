@@ -519,13 +519,6 @@ app.use('/oauth2callback', allowAuthOpen, ipAllowlistMiddleware);
 app.get('/health', (_req, res) => res.status(200).json({status: 'ok', ts: new Date().toISOString()}));
 app.get('/ready', (_req, res) => res.status(coreReady ? 200 : 503).json({status: coreReady ? 'ready' : 'not_ready'}));
 
-// TAP middleware to debug /api/login 
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api/login')) {
-    console.log('[TAP] /api/login hit:', { method: req.method, path: req.path });
-  }
-  next();
-});
 
 app.use((req, res, next) => {
   const start = Date.now();

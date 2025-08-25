@@ -295,28 +295,31 @@ export async function setupAuth(app: Express) {
     return res.status(401).json({ error: "unauthenticated" });
   });
 
-  // OIDC callback & redirect - race-proof implementation
+  // OIDC callback & redirect - clean session implementation
   app.get(
-    "/oauth2callback",
-    passport.authenticate("oidc", { failureRedirect: "/auth/error" }),
+    "/oauth2callback", 
     (req, res, next) => {
-      // (A) rotate session id to prevent fixation
+      // Clear any existing session data BEFORE OAuth processing to prevent conflicts
       req.session.regenerate((err) => {
         if (err) return next(err);
+        
+        // Now proceed with OAuth authentication on a clean session
+        passport.authenticate("oidc", { failureRedirect: "/auth/error" })(req, res, (authErr) => {
+          if (authErr) return next(authErr);
+          
+          // Fresh login with the authenticated user
+          req.login(req.user, (loginErr) => {
+            if (loginErr) return next(loginErr);
 
-        // (B) re-attach user to the new session
-        req.login(req.user, (err2) => {
-          if (err2) return next(err2);
+            // Persist user data to session
+            (req.session as any).passport = (req.session as any).passport || {};
+            (req.session as any).passport.user = req.user;
 
-          // (C) persist any custom user fields you rely on
-          (req.session as any).passport = (req.session as any).passport || {};
-          (req.session as any).passport.user = req.user;
-
-          // (D) SAVE before redirecting to the SPA
-          req.session.save((err3) => {
-            if (err3) return next(err3);
-            // Use 303 to avoid caching oddities after POST->GET
-            res.redirect(303, "/dashboard");
+            // Save session before redirect
+            req.session.save((saveErr) => {
+              if (saveErr) return next(saveErr);
+              res.redirect(303, "/dashboard");
+            });
           });
         });
       });
