@@ -156,44 +156,30 @@ export async function setupAuth(app: Express) {
     }
   };
 
-  // Force canonical base URL for production auth consistency
-  const APP_BASE_URL = process.env.APP_BASE_URL;
-  const isReplitHosted = !!process.env.REPLIT_DOMAINS;
-  const domain = (process.env.REPLIT_DOMAINS || "").split(",")[0];
+  // Production base URL configuration - force explicit URLs in production
+  const BASE_URL = process.env.APP_BASE_URL ?? 
+    (process.env.NODE_ENV === 'production' 
+      ? (() => { throw new Error('APP_BASE_URL required in production'); })()
+      : `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`);
+      
+  // OIDC redirect URI using proper base URL
+  const OIDC_REDIRECT_URI = new URL('/oauth2callback', BASE_URL).toString();
   
-  let CALLBACK: string;
-  if (APP_BASE_URL) {
-    // Production: use explicit APP_BASE_URL (e.g., https://hr-master-katerina43.replit.app)
-    CALLBACK = new URL('/oauth2callback', APP_BASE_URL).toString();
-    console.log(`[Auth] Using explicit APP_BASE_URL, CALLBACK: ${CALLBACK}`);
-  } else if (isReplitHosted) {
-    // Fallback to REPLIT_DOMAINS (dev/staging)
-    CALLBACK = `https://${domain}/oauth2callback`;
-    console.log(`[Auth] Fallback to REPLIT_DOMAINS, CALLBACK: ${CALLBACK}`);
-  } else {
-    // Local development
-    CALLBACK = `http://localhost:5000/oauth2callback`;
-    console.log(`[Auth] Local development, CALLBACK: ${CALLBACK}`);
-  }
+  console.log(`[Auth] Base URL: ${BASE_URL}`);
+  console.log(`[Auth] OIDC Redirect URI: ${OIDC_REDIRECT_URI}`);
   
-  // Optional: enforce hosted callback & cookie parity
-  
-  // 1) Callback host parity (hosted)
-  if (process.env.REPLIT_DOMAINS) {
-    console.info('[Auth] Hosted mode, CALLBACK:', CALLBACK);
-    if (!CALLBACK.startsWith('https://')) {
-      throw new Error('Hosted mode requires https callback');
-    }
-  }
-  
-  // Security guardrail: Deny localhost callback in hosted mode
-  if (process.env.REPLIT_DOMAINS && CALLBACK.startsWith('http://localhost')) {
-    throw new Error('Hosted mode forbids localhost redirect_uri');
-  }
-  
-  console.log(`[AUTH][setup] Chosen CALLBACK: ${CALLBACK} (isReplitHosted: ${isReplitHosted}, domain: ${domain})`);
+  // Development fallback for localhost
+  const CALLBACK = !process.env.REPLIT_DOMAINS && !process.env.APP_BASE_URL 
+    ? `http://localhost:5000/oauth2callback`
+    : OIDC_REDIRECT_URI;
 
-
+  console.log('[Auth] Final callback:', CALLBACK);
+  
+  // Production safety check
+  if (process.env.NODE_ENV === 'production' && CALLBACK.includes('localhost')) {
+    throw new Error('Production deployment cannot use localhost callback URLs');
+  }
+  
   const strategy = new Strategy(
     {
       config,
@@ -246,6 +232,7 @@ export async function setupAuth(app: Express) {
       // Structured logging for observability (PII-safe)
       console.info('[AUTH][login]', { 
         host, 
+        baseUrl: BASE_URL,
         redirect_uri: CALLBACK, 
         client_id: maskSecret(process.env.REPL_ID)
       });
