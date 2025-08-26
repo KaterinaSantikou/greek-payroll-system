@@ -269,19 +269,6 @@ export async function setupAuth(app: Express) {
     next();
   };
 
-  // Debug trace middleware to see what's happening
-  app.use((req, _res, next) => {
-    if (req.path === "/api/auth/user" || req.path === "/api/login" || req.path === "/oauth2callback") {
-      console.log("[AUTH TRACE]", req.method, req.path, {
-        cookieHeader: !!req.headers.cookie,
-        sessionId: req.sessionID,
-        hasSession: !!req.session,
-        passportUser: (req.session as any)?.passport?.user ? true : false,
-        isAuthenticated: req.isAuthenticated?.() ?? false,
-      });
-    }
-    next();
-  });
 
   // Rock-solid session endpoint with no-cache to prevent 304 responses
   app.get("/api/auth/user", noStore, (req, res) => {
