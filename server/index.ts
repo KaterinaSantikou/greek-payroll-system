@@ -644,7 +644,7 @@ app.use((req, res, next) => {
       const envValidation = validateEnvironmentVariables();
       
       // Note: We already checked critical secrets above, so just log warnings for optional ones
-      if (envValidation.warnings.length > 0) {
+      if (envValidation.warnings && envValidation.warnings.length > 0) {
         console.warn('[Boot] ⚠️  Some optional environment variables are missing');
         console.warn('   Services may have reduced functionality. Check .env.example for full configuration.');
       }
