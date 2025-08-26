@@ -274,6 +274,14 @@ export async function setupAuth(app: Express) {
     });
   });
 
+  // No-cache middleware for auth endpoints to prevent 304 responses
+  const noStore = (_req: any, res: any, next: any) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+  };
+
   // Debug trace middleware to see what's happening
   app.use((req, _res, next) => {
     if (req.path === "/api/auth/user" || req.path === "/api/login" || req.path === "/oauth2callback") {
@@ -288,10 +296,12 @@ export async function setupAuth(app: Express) {
     next();
   });
 
-  // Rock-solid session endpoint  
-  app.get("/api/auth/user", (req, res) => {
+  // Rock-solid session endpoint with no-cache to prevent 304 responses
+  app.get("/api/auth/user", noStore, (req, res) => {
     const authed = req.isAuthenticated?.() || (req.session as any)?.passport?.user;
-    if (authed) return res.json({ user: req.user ?? (req.session as any).passport.user });
+    if (authed) {
+      return res.status(200).json({ user: req.user ?? (req.session as any).passport.user });
+    }
     return res.status(401).json({ error: "unauthenticated" });
   });
 
