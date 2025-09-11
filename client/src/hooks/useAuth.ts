@@ -1,7 +1,12 @@
 import { useEffect, useState, useRef } from "react";
 
 type AuthState = "loading" | "authenticated" | "unauthenticated";
-export interface User { id: string; email?: string; name?: string; [k: string]: any; }
+export interface User {
+  id: string;
+  email?: string;
+  name?: string;
+  [k: string]: any;
+}
 
 export function useAuth() {
   const [state, setState] = useState<AuthState>("loading");
@@ -14,7 +19,11 @@ export function useAuth() {
     const ctrl = new AbortController();
     (async () => {
       try {
-        const res = await fetch("/api/auth/user", { credentials: "include", signal: ctrl.signal });
+        const res = await fetch("/api/auth/user", {
+          credentials: "include",
+          signal: ctrl.signal,
+        });
+        console.log("result of user", res);
         if (res.ok) {
           const data = await res.json();
           setUser(data?.user ?? null);

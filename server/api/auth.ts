@@ -8,7 +8,7 @@ const router = Router();
 // This file provides additional auth utilities and user management
 
 // Get current authenticated user
-router.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+router.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
   try {
     const userId = req.user.claims.sub;
     const user = {
@@ -17,9 +17,15 @@ router.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
       firstName: req.user.claims.first_name,
       lastName: req.user.claims.last_name,
       profileImageUrl: req.user.claims.profile_image_url,
-      scopes: ["payroll:read", "payroll:write", "employees:read", "employees:write", "filings:write"]
+      scopes: [
+        "payroll:read",
+        "payroll:write",
+        "employees:read",
+        "employees:write",
+        "filings:write",
+      ],
     };
-    
+
     res.json(user);
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -32,19 +38,21 @@ const SCIMUserSchema = z.object({
   userName: z.string(),
   name: z.object({
     givenName: z.string(),
-    familyName: z.string()
+    familyName: z.string(),
   }),
-  emails: z.array(z.object({
-    value: z.string().email(),
-    primary: z.boolean().optional()
-  })),
-  active: z.boolean().default(true)
+  emails: z.array(
+    z.object({
+      value: z.string().email(),
+      primary: z.boolean().optional(),
+    }),
+  ),
+  active: z.boolean().default(true),
 });
 
-router.post('/api/scim/v2/Users', isAuthenticated, async (req, res) => {
+router.post("/api/scim/v2/Users", isAuthenticated, async (req, res) => {
   try {
     const userData = SCIMUserSchema.parse(req.body);
-    
+
     // In production, this would create/provision user in your user management system
     const provisionedUser = {
       schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
@@ -56,23 +64,23 @@ router.post('/api/scim/v2/Users', isAuthenticated, async (req, res) => {
       meta: {
         resourceType: "User",
         created: new Date().toISOString(),
-        lastModified: new Date().toISOString()
-      }
+        lastModified: new Date().toISOString(),
+      },
     };
-    
+
     res.status(201).json(provisionedUser);
   } catch (error) {
     console.error("Error provisioning user:", error);
-    res.status(400).json({ 
+    res.status(400).json({
       schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
       detail: "Invalid user data",
-      status: "400"
+      status: "400",
     });
   }
 });
 
 // Get SCIM user
-router.get('/api/scim/v2/Users/:id', isAuthenticated, async (req, res) => {
+router.get("/api/scim/v2/Users/:id", isAuthenticated, async (req, res) => {
   try {
     // In production, fetch from user management system
     const user = {
@@ -83,16 +91,16 @@ router.get('/api/scim/v2/Users/:id', isAuthenticated, async (req, res) => {
       meta: {
         resourceType: "User",
         created: "2025-01-01T00:00:00Z",
-        lastModified: new Date().toISOString()
-      }
+        lastModified: new Date().toISOString(),
+      },
     };
-    
+
     res.json(user);
   } catch (error) {
     res.status(404).json({
       schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
       detail: "User not found",
-      status: "404"
+      status: "404",
     });
   }
 });
