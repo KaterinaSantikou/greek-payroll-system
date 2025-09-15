@@ -78,36 +78,36 @@ print(f"🔒 Agent lock acquired: {LOCKFILE}")
 try:
     while True:
         if backlog_empty() and not any(PENDING.glob("*.md")):
-        print("✅ All backlog tasks are complete. No tasks left to build. Exiting cleanly.")
-        sys.exit(0)
+            print("✅ All backlog tasks are complete. No tasks left to build. Exiting cleanly.")
+            sys.exit(0)
 
-    if any(PENDING.glob("*.md")):
-        print("🛠 Found a pending task — running agent...")
-        call_with_retry(run_once)
-    else:
-        # Pick from the first available backlog file
-        idea = None
-        label = "Analytical"
-        for backlog_file in BACKLOG_FILES:
-            idea = pop_first_idea(backlog_file)
-            if idea:
-                break
-
-        if idea:
-            print(f"📝 Creating {label} task from backlog idea: {idea}")
-            task_name = f"{int(time.time())}-{label.lower()}.md"
-            task_path = PENDING / task_name
-            task_path.write_text(
-                f"# Task: {idea}\n\n**Business Context:**\n{idea}\n\n**Acceptance Criteria:**\n- [ ] Agent decides details.\n",
-                encoding="utf-8"
-            )
-            print("🚀 Running agent immediately on new task...")
+        if any(PENDING.glob("*.md")):
+            print("🛠 Found a pending task — running agent...")
             call_with_retry(run_once)
         else:
-            print(f"💤 No {label} backlog ideas left.")
-            print("⏳ Waiting 10 seconds before checking again...")
-            time.sleep(10)
-            continue
+            # Pick from the first available backlog file
+            idea = None
+            label = "Analytical"
+            for backlog_file in BACKLOG_FILES:
+                idea = pop_first_idea(backlog_file)
+                if idea:
+                    break
+
+            if idea:
+                print(f"📝 Creating {label} task from backlog idea: {idea}")
+                task_name = f"{int(time.time())}-{label.lower()}.md"
+                task_path = PENDING / task_name
+                task_path.write_text(
+                    f"# Task: {idea}\n\n**Business Context:**\n{idea}\n\n**Acceptance Criteria:**\n- [ ] Agent decides details.\n",
+                    encoding="utf-8"
+                )
+                print("🚀 Running agent immediately on new task...")
+                call_with_retry(run_once)
+            else:
+                print(f"💤 No {label} backlog ideas left.")
+                print("⏳ Waiting 10 seconds before checking again...")
+                time.sleep(10)
+                continue
 
     # ---- Auto commit and push to GitHub ----
     task_title = get_last_done_task_title()
