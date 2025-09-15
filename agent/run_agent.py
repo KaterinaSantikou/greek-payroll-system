@@ -28,6 +28,26 @@ CONFIG = json.loads(json.dumps({}))  # placeholder if you expand
 FILE_BLOCK_START = "<<<FILE:"
 FILE_BLOCK_END = ">>>END"
 
+# ---- ARCHITECTURAL CONTEXT FILES ----
+ARCHITECTURE_PATH = ROOT / "context" / "architecture.md"
+SCHEMA_PATH = ROOT / "shared" / "schema.ts"
+PAYROLL_ENGINE_PATH = ROOT / "server" / "greekPayrollCalculator.ts"
+
+def safe_read(path: Path) -> str:
+    """Safely read a file, returning content or warning message"""
+    return path.read_text(encoding="utf-8") if path.exists() else f"⚠️ Missing: {path.name}"
+
+ARCHITECTURE_TEXT = safe_read(ARCHITECTURE_PATH)
+SCHEMA_TEXT = safe_read(SCHEMA_PATH)
+PAYROLL_ENGINE_TEXT = safe_read(PAYROLL_ENGINE_PATH)
+
+# Check for missing context files
+if "⚠️ Missing" in ARCHITECTURE_TEXT + SCHEMA_TEXT + PAYROLL_ENGINE_TEXT:
+    print("⚠️ Warning: One or more context files are missing. The agent may generate incorrect code.")
+    print(f"   Architecture: {'✅' if ARCHITECTURE_PATH.exists() else '❌'} {ARCHITECTURE_PATH}")
+    print(f"   Schema: {'✅' if SCHEMA_PATH.exists() else '❌'} {SCHEMA_PATH}")
+    print(f"   Payroll Engine: {'✅' if PAYROLL_ENGINE_PATH.exists() else '❌'} {PAYROLL_ENGINE_PATH}")
+
 def safe_run(cmd):
     """Run git command safely, masking tokens from error output"""
     try:
