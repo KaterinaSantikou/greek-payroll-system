@@ -2176,6 +2176,7 @@ def main():
         task_text = read_file(task_file)
         tree = repo_tree()
         knowledge = read_knowledge()
+        architecture_guide = read_architecture_guide()
         
         # Get dependency graph for architectural context
         dependency_graph = read_dependency_graph()
@@ -2192,7 +2193,7 @@ def main():
         # PHASE 1: PLANNING
         print("🎯 PHASE 1: Creating detailed implementation plan...")
         implementation_plan = execute_planning_phase(
-            task_text, tree, knowledge, dependency_summary, evolved_guidelines, impact_context
+            task_text, tree, knowledge, architecture_guide, dependency_summary, evolved_guidelines, impact_context
         )
         
         if not implementation_plan:
@@ -2299,7 +2300,7 @@ def main():
             
             print("🔨 PHASE 2: Implementing the approved plan...")
             resp = execute_implementation_phase(
-                task_text, tree, knowledge, dependency_summary, evolved_guidelines, implementation_plan, final_impact_context
+                task_text, tree, knowledge, architecture_guide, dependency_summary, evolved_guidelines, implementation_plan, final_impact_context
             )
             
             # Extract structured output flag from response
