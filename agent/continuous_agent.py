@@ -92,7 +92,7 @@ while True:
                 encoding="utf-8"
             )
             print("🚀 Running agent immediately on new task...")
-            run_once()
+            call_with_retry(run_once)
         else:
             print(f"💤 No {label} backlog ideas left.")
             print("⏳ Waiting 10 seconds before checking again...")
