@@ -2525,42 +2525,42 @@ def main():
         
             print("✅ All validation checks passed in sandbox!")
         
-        # Merge validated changes from sandbox to main repository
-        merge_success = merge_sandbox_changes(changed)
-        if not merge_success:
-            print("❌ Failed to merge changes from sandbox")
-            return
-        
-        # Create git checkpoint after merging (for continuous agent)
-        print("💾 Creating git checkpoint after merging validated changes...")
-        try:
-            safe_run(["git", "add", "."])
-            safe_run(["git", "commit", "-m", f"AI Agent: Completed task from sandbox"])
-            print("✅ Changes committed to main repository")
-        except subprocess.CalledProcessError:
-            print("⚠️ Could not commit merged changes")
-        
-        # Run quality critic evaluation on merged changes
-        task_title = pathlib.Path(task_file).stem
-        task_summary = task_text[:200] if task_text else "Task completed"
-        run_quality_critic(task_file, changed, task_summary)
-        
-        # Update knowledge base with task completion info
-        update_knowledge(task_title, changed, task_summary)
-        
-        # Move task to done
-        done_path = task_file.replace(str(ROOT / "tasks/pending"), str(ROOT / "tasks/done"))
-        pathlib.Path(done_path).parent.mkdir(parents=True, exist_ok=True)
-        pathlib.Path(task_file).rename(done_path)
+            # Merge validated changes from sandbox to main repository
+            merge_success = merge_sandbox_changes(changed)
+            if not merge_success:
+                print("❌ Failed to merge changes from sandbox")
+                return
+            
+            # Create git checkpoint after merging (for continuous agent)
+            print("💾 Creating git checkpoint after merging validated changes...")
+            try:
+                safe_run(["git", "add", "."])
+                safe_run(["git", "commit", "-m", f"AI Agent: Completed task from sandbox"])
+                print("✅ Changes committed to main repository")
+            except subprocess.CalledProcessError:
+                print("⚠️ Could not commit merged changes")
+            
+            # Run quality critic evaluation on merged changes
+            task_title = pathlib.Path(task_file).stem
+            task_summary = task_text[:200] if task_text else "Task completed"
+            run_quality_critic(task_file, changed, task_summary)
+            
+            # Update knowledge base with task completion info
+            update_knowledge(task_title, changed, task_summary)
+            
+            # Move task to done
+            done_path = task_file.replace(str(ROOT / "tasks/pending"), str(ROOT / "tasks/done"))
+            pathlib.Path(done_path).parent.mkdir(parents=True, exist_ok=True)
+            pathlib.Path(task_file).rename(done_path)
 
-        print("\n✅ Agent run complete with sandbox isolation.")
-        print(f"Changed files: {changed or 'None (review summary)'}")
-        print(f"Summary saved → {summary_path}")
-        print(f"Task moved to → {done_path}")
-        print("\nNext steps:")
-        print("1) Changes were validated in sandbox before merging to main repo.")
-        print("2) Open changed files to review the validated implementation.")
-        print("3) Run the app to verify everything works as expected.")
+            print("\n✅ Agent run complete with sandbox isolation.")
+            print(f"Changed files: {changed or 'None (review summary)'}")
+            print(f"Summary saved → {summary_path}")
+            print(f"Task moved to → {done_path}")
+            print("\nNext steps:")
+            print("1) Changes were validated in sandbox before merging to main repo.")
+            print("2) Open changed files to review the validated implementation.")
+            print("3) Run the app to verify everything works as expected.")
         
         except Exception as e:
             print(f"❌ Error during sandbox task execution: {e}")
