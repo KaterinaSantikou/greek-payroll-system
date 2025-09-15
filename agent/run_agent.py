@@ -2435,12 +2435,14 @@ def execute_implementation_phase(task_text, tree, knowledge, architecture_guide,
             ) + textwrap.dedent(f"""
             
             IMPLEMENTATION INSTRUCTIONS:
-            1. Follow the implementation plan EXACTLY as specified
-            2. Implement ALL steps from the plan in order
-            3. Create/modify ALL files listed in the plan
-            4. Maintain consistency with the planned architecture
-            5. Include all validation and testing as planned
-            6. Follow Greek payroll compliance requirements from the plan
+            1. Follow the NUMBERED IMPLEMENTATION ROUTINE from the plan EXACTLY as specified
+            2. Implement ALL steps from the routine in sequential order
+            3. Create/modify ALL files listed with exact names and paths from the plan
+            4. Implement exact function signatures specified in the plan
+            5. Create exact test functions and scenarios specified in the plan
+            6. Include all validation and error handling as specified in each step
+            7. Follow Greek payroll compliance requirements with exact rule references
+            8. Ensure each step's acceptance criteria are met before proceeding
             
             IMPORTANT RULES:
             - You MUST implement the complete plan, not just parts of it
