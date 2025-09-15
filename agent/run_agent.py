@@ -2487,41 +2487,41 @@ def main():
                 validation_failed = True
 
             if not validation_failed:
-            print("🧪 Running tests in sandbox...")
-            tests = subprocess.run(["npm", "test", "--", "--bail"], cwd=SANDBOX_DIR, capture_output=True)
-            if tests.returncode != 0:
-                print("❌ Tests failed in sandbox.")
-                validation_failed = True
-        
-            if not validation_failed:
-            print("🧮 Running payroll math validation in sandbox...")
-            # Temporarily switch context for validation
-            original_root = globals()['ROOT']
-            globals()['ROOT'] = SANDBOX_DIR
-            try:
-                payroll_valid = validate_payroll_math()
-                if not payroll_valid:
-                    print("❌ Payroll math validation failed in sandbox.")
+                print("🧪 Running tests in sandbox...")
+                tests = subprocess.run(["npm", "test", "--", "--bail"], cwd=SANDBOX_DIR, capture_output=True)
+                if tests.returncode != 0:
+                    print("❌ Tests failed in sandbox.")
                     validation_failed = True
-            finally:
-                globals()['ROOT'] = original_root
         
             if not validation_failed:
-            print("🗄️ Running schema migration validation in sandbox...")
-            # Note: Schema validation uses DATABASE_URL so it affects the real DB
-            # This is acceptable since it's testing the schema, not modifying data
-            schema_valid = validate_schema_migrations(changed)
-            if not schema_valid:
-                print("❌ Schema migration validation failed.")
-                validation_failed = True
+                print("🧮 Running payroll math validation in sandbox...")
+                # Temporarily switch context for validation
+                original_root = globals()['ROOT']
+                globals()['ROOT'] = SANDBOX_DIR
+                try:
+                    payroll_valid = validate_payroll_math()
+                    if not payroll_valid:
+                        print("❌ Payroll math validation failed in sandbox.")
+                        validation_failed = True
+                finally:
+                    globals()['ROOT'] = original_root
+        
+            if not validation_failed:
+                print("🗄️ Running schema migration validation in sandbox...")
+                # Note: Schema validation uses DATABASE_URL so it affects the real DB
+                # This is acceptable since it's testing the schema, not modifying data
+                schema_valid = validate_schema_migrations(changed)
+                if not schema_valid:
+                    print("❌ Schema migration validation failed.")
+                    validation_failed = True
         
             if validation_failed:
-            print("❌ Validation failed in sandbox environment.")
-            print("🗑️ Discarding sandbox changes (main repository unchanged).")
-            print("❌ Task validation failed. Task will remain in pending.")
-            print(f"Summary saved → {summary_path}")
-            print("Fix validation errors and run again.")
-            return
+                print("❌ Validation failed in sandbox environment.")
+                print("🗑️ Discarding sandbox changes (main repository unchanged).")
+                print("❌ Task validation failed. Task will remain in pending.")
+                print(f"Summary saved → {summary_path}")
+                print("Fix validation errors and run again.")
+                return
         
             print("✅ All validation checks passed in sandbox!")
         
