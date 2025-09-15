@@ -11,6 +11,8 @@ if not (ROOT / "tasks").exists() or not (ROOT / "agent").exists():
     raise RuntimeError(f"ROOT seems wrong: {ROOT}")
 
 AGENT_DIR = ROOT / "agent"
+CONTEXT_DIR = ROOT / "context"
+KNOWLEDGE_FILE = CONTEXT_DIR / "knowledge.md"
 CONFIG = json.loads(json.dumps({}))  # placeholder if you expand
 FILE_BLOCK_START = "<<<FILE:"
 FILE_BLOCK_END = ">>>END"
