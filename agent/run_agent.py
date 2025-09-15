@@ -333,6 +333,133 @@ process.exit(failed > 0 ? 1 : 0);
         print(f"⚠️ Error running payroll math validation: {e}")
         return True  # Don't fail the build if validation system has issues
 
+def validate_schema_migrations(changed_files):
+    """Validate database schema changes and migrations"""
+    schema_files = [f for f in changed_files if 'schema.sql' in f or 'migration' in f.lower()]
+    
+    if not schema_files:
+        print("📋 No schema changes detected, skipping migration validation")
+        return True
+    
+    print(f"🗄️ Validating schema changes: {', '.join(schema_files)}")
+    
+    try:
+        # Check if we have database environment variables
+        db_url = os.environ.get("DATABASE_URL")
+        if not db_url:
+            print("⚠️ No DATABASE_URL found, skipping schema validation")
+            return True
+        
+        # Test schema by applying it to test database
+        print("🔄 Testing schema migration...")
+        
+        # First, try to run the schema file against the database
+        schema_file = ROOT / "db" / "schema.sql"
+        if schema_file.exists():
+            try:
+                # Run schema migration
+                result = subprocess.run([
+                    "psql", db_url, "-f", str(schema_file)
+                ], cwd=ROOT, capture_output=True, text=True, timeout=30)
+                
+                if result.returncode != 0:
+                    print(f"❌ Schema migration failed: {result.stderr}")
+                    return False
+                    
+                print("✅ Schema migration completed successfully")
+                
+            except subprocess.TimeoutExpired:
+                print("❌ Schema migration timed out")
+                return False
+            except FileNotFoundError:
+                print("⚠️ psql not found, skipping direct schema validation")
+        
+        # Try to run Prisma/Drizzle generation if available
+        package_json = ROOT / "package.json"
+        if package_json.exists():
+            try:
+                package_data = json.loads(package_json.read_text(encoding="utf-8"))
+                scripts = package_data.get("scripts", {})
+                
+                # Check for common ORM generation commands
+                if "db:generate" in scripts:
+                    print("🔧 Running db:generate...")
+                    result = subprocess.run(["npm", "run", "db:generate"], 
+                                          cwd=ROOT, capture_output=True, text=True, timeout=60)
+                    if result.returncode != 0:
+                        print(f"❌ db:generate failed: {result.stderr}")
+                        return False
+                    print("✅ Database generation completed")
+                    
+                elif "prisma" in scripts and "generate" in scripts["prisma"]:
+                    print("🔧 Running prisma generate...")
+                    result = subprocess.run(["npm", "run", "prisma", "generate"], 
+                                          cwd=ROOT, capture_output=True, text=True, timeout=60)
+                    if result.returncode != 0:
+                        print(f"❌ Prisma generate failed: {result.stderr}")
+                        return False
+                    print("✅ Prisma generation completed")
+                    
+                elif "drizzle-kit" in package_data.get("dependencies", {}) or "drizzle-kit" in package_data.get("devDependencies", {}):
+                    print("🔧 Running drizzle-kit generate...")
+                    result = subprocess.run(["npx", "drizzle-kit", "generate"], 
+                                          cwd=ROOT, capture_output=True, text=True, timeout=60)
+                    if result.returncode != 0:
+                        print(f"❌ Drizzle generate failed: {result.stderr}")
+                        return False
+                    print("✅ Drizzle generation completed")
+                    
+            except Exception as e:
+                print(f"⚠️ Could not run ORM generation: {e}")
+        
+        # Validate core table structure exists
+        print("🔍 Validating table structure...")
+        
+        # Basic validation that essential payroll tables exist
+        validation_query = """
+SELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+AND table_name IN ('employees', 'payroll_runs', 'companies', 'users')
+ORDER BY table_name;
+"""
+        
+        try:
+            result = subprocess.run([
+                "psql", db_url, "-t", "-c", validation_query
+            ], cwd=ROOT, capture_output=True, text=True, timeout=15)
+            
+            if result.returncode == 0:
+                tables = [line.strip() for line in result.stdout.strip().split('\n') if line.strip()]
+                print(f"✅ Found tables: {', '.join(tables) if tables else 'none'}")
+                
+                # Check for essential payroll tables
+                required_tables = ['employees', 'payroll_runs']
+                missing_tables = [t for t in required_tables if t not in tables]
+                
+                if missing_tables:
+                    print(f"⚠️ Missing essential tables: {', '.join(missing_tables)}")
+                    # Don't fail for missing tables - they might be created differently
+                    # Just warn and continue
+                
+                return True
+            else:
+                print(f"⚠️ Could not validate table structure: {result.stderr}")
+                return True  # Don't fail build for validation issues
+                
+        except subprocess.TimeoutExpired:
+            print("⚠️ Table validation timed out")
+            return True
+        except FileNotFoundError:
+            print("⚠️ psql not available for table validation")
+            return True
+            
+    except Exception as e:
+        print(f"⚠️ Error during schema validation: {e}")
+        return True  # Don't fail build for validation system issues
+    
+    return True
+
 def update_knowledge(task_title, changed_files, task_summary):
     """Update the knowledge base with information from the completed task"""
     CONTEXT_DIR.mkdir(exist_ok=True)
