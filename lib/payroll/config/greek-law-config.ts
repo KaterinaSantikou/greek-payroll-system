@@ -461,11 +461,40 @@ class GreekLawConfigLoader {
   }
 
   /**
+   * Get legal references synchronously for config generation
+   */
+  private getLegalReferencesSync(version: string) {
+    try {
+      return legalDocumentTracker.getLegalReferencesForConfig(version);
+    } catch (error) {
+      console.warn('Could not load legal references, using defaults:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get compliance status for current configuration
+   */
+  async getComplianceStatus() {
+    try {
+      return legalDocumentTracker.checkComplianceStatus();
+    } catch (error) {
+      console.warn('Could not check compliance status:', error);
+      return {
+        status: 'WARNING' as const,
+        issues: ['Legal document registry not available'],
+        nextReviewDue: new Date().toISOString()
+      };
+    }
+  }
+
+  /**
    * Clear cache (useful for testing or config reloading)
    */
   clearCache(): void {
     this.configCache.clear();
     this.currentConfig = null;
+    legalDocumentTracker.clearCache();
   }
 }
 
