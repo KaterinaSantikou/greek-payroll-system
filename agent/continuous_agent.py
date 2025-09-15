@@ -109,46 +109,46 @@ try:
                 time.sleep(10)
                 continue
 
-    # ---- Auto commit and push to GitHub ----
-    task_title = get_last_done_task_title()
-    
-    token = os.environ.get("GITHUB_TOKEN")
-    if not token:
-        print("❌ No GITHUB_TOKEN found in Replit Secrets. Please add it first.")
-    else:
-        try:
-            print(f"💾 Committing and pushing changes to dev branch (task: {task_title})...")
-            safe_run(["git", "config", "--global", "user.name", "AI Dev Agent"])
-            safe_run(["git", "config", "--global", "user.email", "agent@localhost"])
-            
-            # Ensure dev branch exists and switch to it
-            safe_run(["git", "fetch"])
-            result = safe_run(["git", "branch", "--list", "dev"])
-            if "dev" not in result.stdout:
-                print("📝 Creating new dev branch...")
-                safe_run(["git", "checkout", "-b", "dev"])
-            else:
-                print("🔄 Switching to existing dev branch...")
-                safe_run(["git", "checkout", "dev"])
-            
-            safe_run(["git", "add", "."])
-            
-            # Check if there are actually changes to commit
-            diff_result = subprocess.run(["git", "diff", "--quiet", "--cached"], capture_output=True)
-            if diff_result.returncode == 0:
-                print("⚠️ No changes to commit, skipping.")
-                return
-            
-            safe_run(["git", "commit", "-m", f"AI Agent: Completed task — {task_title}"])
-            safe_run([
-                "git",
-                "push",
-                f"https://{os.environ.get('GITHUB_TOKEN')}@github.com/{GITHUB_REPO}.git",
-                "dev"
-            ])
-            print("✅ Pushed to dev branch.")
-        except subprocess.CalledProcessError:
-            print("⚠️ Git push failed (see error above)")  # Error already printed by safe_run
+        # ---- Auto commit and push to GitHub ----
+        task_title = get_last_done_task_title()
+        
+        token = os.environ.get("GITHUB_TOKEN")
+        if not token:
+            print("❌ No GITHUB_TOKEN found in Replit Secrets. Please add it first.")
+        else:
+            try:
+                print(f"💾 Committing and pushing changes to dev branch (task: {task_title})...")
+                safe_run(["git", "config", "--global", "user.name", "AI Dev Agent"])
+                safe_run(["git", "config", "--global", "user.email", "agent@localhost"])
+                
+                # Ensure dev branch exists and switch to it
+                safe_run(["git", "fetch"])
+                result = safe_run(["git", "branch", "--list", "dev"])
+                if "dev" not in result.stdout:
+                    print("📝 Creating new dev branch...")
+                    safe_run(["git", "checkout", "-b", "dev"])
+                else:
+                    print("🔄 Switching to existing dev branch...")
+                    safe_run(["git", "checkout", "dev"])
+                
+                safe_run(["git", "add", "."])
+                
+                # Check if there are actually changes to commit
+                diff_result = subprocess.run(["git", "diff", "--quiet", "--cached"], capture_output=True)
+                if diff_result.returncode == 0:
+                    print("⚠️ No changes to commit, skipping.")
+                    continue
+                
+                safe_run(["git", "commit", "-m", f"AI Agent: Completed task — {task_title}"])
+                safe_run([
+                    "git",
+                    "push",
+                    f"https://{os.environ.get('GITHUB_TOKEN')}@github.com/{GITHUB_REPO}.git",
+                    "dev"
+                ])
+                print("✅ Pushed to dev branch.")
+            except subprocess.CalledProcessError:
+                print("⚠️ Git push failed (see error above)")  # Error already printed by safe_run
 
         print("✅ Cycle complete — checking again immediately...\n")
         time.sleep(5)
