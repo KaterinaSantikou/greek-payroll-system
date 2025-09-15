@@ -1112,14 +1112,8 @@ def main():
             validation_failed = True
     
     if validation_failed:
-        if backup_created:
-            print("🔄 Rolling back changes due to validation failure...")
-            try:
-                safe_run(["git", "reset", "--hard", "HEAD"])
-                safe_run(["git", "stash", "pop"])
-                print("✅ Successfully rolled back to previous state")
-            except subprocess.CalledProcessError as e:
-                print(f"⚠️ Rollback failed: see error above")
+        print("❌ Validation failed in sandbox environment.")
+        print("🗑️ Discarding sandbox changes (main repository unchanged).")
         print("❌ Task validation failed. Task will remain in pending.")
         print(f"Summary saved → {summary_path}")
         print("Fix validation errors and run again.")
