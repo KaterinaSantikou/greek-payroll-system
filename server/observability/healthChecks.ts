@@ -215,7 +215,7 @@ router.get('/health/startup', async (req, res) => {
   const coreServices = {
     auth: true, // Assume initialized if we're handling requests
     database: false,
-    backgroundJobs: true
+    jobs: true
   };
   
   try {
