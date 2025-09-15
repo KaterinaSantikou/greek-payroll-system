@@ -1,45 +1,81 @@
 {
-  "description": "File paths that the AI agent is allowed to modify",
+  "description": "Restricted file paths that the AI agent is allowed to modify - SECURITY GUARDRAIL",
   "allowed_patterns": [
     "server/**/*.ts",
-    "server/**/*.js",
-    "client/**/*.ts",
-    "client/**/*.tsx",
-    "client/**/*.js",
-    "client/**/*.jsx",
+    "server/**/*.js", 
     "shared/**/*.ts",
     "shared/**/*.js",
-    "db/schema.sql",
-    "db/migrations/*.sql",
     "tests/**/*.ts",
     "tests/**/*.js",
-    "tests/**/*.json",
-    "docs/**/*.md",
-    "context/**/*.md",
-    "context/**/*.json",
-    "tasks/**/*.md"
+    "tests/**/*.json"
   ],
   "forbidden_patterns": [
+    "client/**/*",
     "package.json",
     "package-lock.json",
     "*.env*",
-    ".env*",
+    ".env*", 
     "secrets/**/*",
     "vite.config.ts",
-    "drizzle.config.ts", 
-    "tsconfig.json",
+    "drizzle.config.ts",
+    "tsconfig.json", 
     "tailwind.config.js",
     "postcss.config.js",
+    "eslint.config.js",
+    "jest.config.js",
+    "vitest.config.ts",
+    "components.json",
     "agent/**/*.py",
+    "agent/**/*.json",
+    "context/**/*",
+    "docs/**/*",
+    "tasks/**/*",
     ".git/**/*",
+    ".github/**/*",
     ".replit*",
     "replit.nix",
     "node_modules/**/*",
     "dist/**/*",
-    "build/**/*"
+    "build/**/*",
+    "coverage/**/*",
+    "migrations/**/*",
+    "scripts/**/*",
+    "public/**/*",
+    "attached_assets/**/*",
+    "evidence_exports/**/*",
+    "explanations/**/*",
+    "legal-docs/**/*",
+    "playwright-report/**/*",
+    "test-results/**/*",
+    "core/**/*",
+    "engine/**/*",
+    "lib/**/*",
+    "services/**/*",
+    "config/**/*"
   ],
-  "notes": {
-    "allowed": "Agent can modify application code, schemas, tests, and documentation",
-    "forbidden": "Agent cannot modify package configs, environment files, build configs, or the agent itself"
+  "validation_rules": {
+    "pre_commit_checks": [
+      "npm run build",
+      "npm test"
+    ],
+    "failure_action": "discard_commit",
+    "required_test_coverage": 80
+  },
+  "security_notes": {
+    "purpose": "Restrict agent modifications to core backend logic, shared schemas, and tests only",
+    "rationale": "Prevents accidental modification of build configs, frontend code, documentation, or agent infrastructure",
+    "enforcement": "File path validation occurs before any modifications are attempted"
+  },
+  "allowed_operations": {
+    "server/": "Backend business logic, API routes, services, middleware",
+    "shared/": "Database schemas, domain types, constants, validation",
+    "tests/": "Unit tests, integration tests, regression tests, test data"
+  },
+  "blocked_operations": {
+    "client/": "Frontend React code - requires manual review",
+    "config/": "Build and tooling configuration - affects entire project", 
+    "agent/": "AI agent code - prevents self-modification",
+    "docs/": "Documentation - requires human oversight",
+    "migrations/": "Database migrations - requires manual validation"
   }
 }
