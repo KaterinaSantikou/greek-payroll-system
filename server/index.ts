@@ -698,6 +698,23 @@ app.use((req, res, next) => {
     await ensureCoreTables();
     console.log('[Boot] ✅ Deployment bootstrap completed!');
 
+    // Initialize high-performance legal constants cache
+    console.log('[Boot] 🚀 Initializing legal constants cache system...');
+    try {
+      await initializeLegalConstantsCache();
+      logger.info('Legal constants cache system initialized successfully', {
+        component: 'LegalConstantsCache',
+        cacheStats: (await import('../lib/payroll/cache/LegalConstantsCache.js')).CachedConstants.getStats()
+      });
+      console.log('[Boot] ✅ Legal constants cache system ready!');
+    } catch (error: any) {
+      logger.error('Failed to initialize legal constants cache', {
+        error: error.message,
+        stack: error.stack
+      });
+      console.error('[Boot] ⚠️ Legal constants cache initialization failed, continuing with degraded performance');
+    }
+
     console.log('[Boot] 🚀 About to call registerRoutes...');
     await registerRoutes(app);
     console.log('[Boot] ✅ registerRoutes completed!');
