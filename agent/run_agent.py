@@ -2264,7 +2264,8 @@ def main():
                     "Here is the database schema you MUST respect:\n\n"
                     f"{SCHEMA_TEXT}\n\n"
                     "Here is the existing core payroll calculation logic you must improve and not break:\n\n"
-                    f"{PAYROLL_ENGINE_TEXT}\n\n"
+                    f"{PAYROLL_ENGINE_TEXT}"
+                ) + textwrap.dedent(f"""
                 
                 ARCHITECTURE RULES:
                 - Use Express/Node back-end with TypeScript
