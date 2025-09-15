@@ -329,15 +329,19 @@ export class PayrollCalculator {
 
     const now = new Date();
 
-    // Check for future dates when not allowed
-    if (!allowFutureDate && dateValue > now) {
+    // Check for future dates when not allowed (using Greek timezone)
+    const greekNow = GreekDateTimeFormatter.getCurrentGreekTime();
+    if (!allowFutureDate && dateValue > greekNow) {
       throw new PayrollCalculationError(
         'FUTURE_DATE_NOT_ALLOWED',
         fieldName,
         'BUSINESS_RULE_VIOLATION',
-        `${fieldName} cannot be in the future, got: ${dateValue.toISOString()}`,
-        `Η ημερομηνία ${fieldName} δεν μπορεί να είναι στο μέλλον, έλαβε: ${dateValue.toISOString()}`,
-        { providedValue: value, currentDate: now.toISOString() }
+        `${fieldName} cannot be in the future, got: ${GreekDateTimeFormatter.formatOfficialDate(dateValue)}`,
+        `Η ημερομηνία ${fieldName} δεν μπορεί να είναι στο μέλλον, έλαβε: ${GreekDateTimeFormatter.formatOfficialDate(dateValue)}`,
+        { 
+          providedValue: GreekDateTimeFormatter.formatOfficialDate(dateValue), 
+          currentDate: GreekDateTimeFormatter.formatOfficialDate(greekNow) 
+        }
       );
     }
 
