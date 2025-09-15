@@ -363,21 +363,42 @@ def main():
         return
     
     # Run validation checks before marking task complete
+    validation_failed = False
+    
     print("🔍 Running TypeScript validation...")
     result = subprocess.run(["npm", "run", "tsc", "--", "--noEmit"], cwd=ROOT, capture_output=True)
     if result.returncode != 0:
-        print("❌ TypeScript check failed. Task will remain in pending.")
-        print(f"Summary saved → {summary_path}")
-        print("Fix TypeScript errors and run again.")
-        return
+        print("❌ TypeScript check failed.")
+        validation_failed = True
 
-    print("🧪 Running tests...")
-    tests = subprocess.run(["npm", "test", "--", "--bail"], cwd=ROOT, capture_output=True)
-    if tests.returncode != 0:
-        print("❌ Tests failed. Task will remain in pending.")
+    if not validation_failed:
+        print("🧪 Running tests...")
+        tests = subprocess.run(["npm", "test", "--", "--bail"], cwd=ROOT, capture_output=True)
+        if tests.returncode != 0:
+            print("❌ Tests failed.")
+            validation_failed = True
+    
+    if validation_failed:
+        if backup_created:
+            print("🔄 Rolling back changes due to validation failure...")
+            try:
+                safe_run(["git", "reset", "--hard", "HEAD"])
+                safe_run(["git", "stash", "pop"])
+                print("✅ Successfully rolled back to previous state")
+            except subprocess.CalledProcessError as e:
+                print(f"⚠️ Rollback failed: see error above")
+        print("❌ Task validation failed. Task will remain in pending.")
         print(f"Summary saved → {summary_path}")
-        print("Fix failing tests and run again.")
+        print("Fix validation errors and run again.")
         return
+    
+    # Clear the backup stash since validation passed
+    if backup_created:
+        try:
+            safe_run(["git", "stash", "drop"])
+            print("🗑️ Removed git checkpoint (validation passed)")
+        except subprocess.CalledProcessError:
+            print("⚠️ Could not remove git checkpoint")
     
     print("✅ All validation checks passed!")
     
