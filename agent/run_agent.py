@@ -244,6 +244,11 @@ def main():
     
     print("✅ All validation checks passed!")
     
+    # Update knowledge base with task completion info
+    task_title = pathlib.Path(task_file).stem
+    task_summary = task_text[:200] if task_text else "Task completed"
+    update_knowledge(task_title, changed, task_summary)
+    
     # Move task to done
     done_path = task_file.replace(str(ROOT / "tasks/pending"), str(ROOT / "tasks/done"))
     pathlib.Path(done_path).parent.mkdir(parents=True, exist_ok=True)
