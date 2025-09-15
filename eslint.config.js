@@ -41,7 +41,8 @@ export default [
         sourceType: 'module',
         ecmaFeatures: {
           jsx: true
-        }
+        },
+        project: './tsconfig.json'
       },
       globals: {
         console: 'readonly',
