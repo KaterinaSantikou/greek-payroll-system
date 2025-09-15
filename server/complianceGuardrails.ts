@@ -17,6 +17,15 @@ import {
   timesheets,
   type PunchEvent,
 } from '@shared/schema';
+import { 
+  PayrollCalculationResult,
+  ValidationError 
+} from '@shared/payrollDomain';
+import { 
+  GreekLawConstants, 
+  lawRegistry 
+} from '@shared/law-constants';
+import { safeMultiply, safeDivide, safeAdd } from '@/lib/utils/safeMath';
 import { eq, and, gte, lte, desc } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
