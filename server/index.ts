@@ -20,6 +20,7 @@ import { db } from "./db";
 import { logger, requestIdMiddleware, requestLoggingMiddleware } from './observability/logging.js';
 import { createSentryRequestHandler, setupSentryErrorHandler } from './observability/sentry.js';
 import { SecurityBootstrapService } from './services/SecurityBootstrapService.js';
+import { initializeLegalConstantsCache } from '../lib/payroll/cache/LegalConstantsCache.js';
 
 // Core readiness tracking for health checks
 let coreReady = false;
