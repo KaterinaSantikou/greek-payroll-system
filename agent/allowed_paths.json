@@ -1,0 +1,45 @@
+{
+  "description": "File paths that the AI agent is allowed to modify",
+  "allowed_patterns": [
+    "server/**/*.ts",
+    "server/**/*.js",
+    "client/**/*.ts",
+    "client/**/*.tsx",
+    "client/**/*.js",
+    "client/**/*.jsx",
+    "shared/**/*.ts",
+    "shared/**/*.js",
+    "db/schema.sql",
+    "db/migrations/*.sql",
+    "tests/**/*.ts",
+    "tests/**/*.js",
+    "tests/**/*.json",
+    "docs/**/*.md",
+    "context/**/*.md",
+    "context/**/*.json",
+    "tasks/**/*.md"
+  ],
+  "forbidden_patterns": [
+    "package.json",
+    "package-lock.json",
+    "*.env*",
+    ".env*",
+    "secrets/**/*",
+    "vite.config.ts",
+    "drizzle.config.ts", 
+    "tsconfig.json",
+    "tailwind.config.js",
+    "postcss.config.js",
+    "agent/**/*.py",
+    ".git/**/*",
+    ".replit*",
+    "replit.nix",
+    "node_modules/**/*",
+    "dist/**/*",
+    "build/**/*"
+  ],
+  "notes": {
+    "allowed": "Agent can modify application code, schemas, tests, and documentation",
+    "forbidden": "Agent cannot modify package configs, environment files, build configs, or the agent itself"
+  }
+}
