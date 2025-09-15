@@ -954,13 +954,21 @@ def main():
         print("No tasks found in tasks/pending. Add a .md task and run again.")
         return
 
-    task_text = read_file(task_file)
-    tree = repo_tree()
-    knowledge = read_knowledge()
+    # Create sandbox environment for safe development
+    sandbox_created = create_sandbox_environment()
+    if not sandbox_created:
+        print("❌ Failed to create sandbox environment, aborting task")
+        return
     
-    # Get dependency graph for architectural context
-    dependency_graph = read_dependency_graph()
-    dependency_summary = format_dependency_summary(dependency_graph)
+    try:
+        # Read task and context information
+        task_text = read_file(task_file)
+        tree = repo_tree()
+        knowledge = read_knowledge()
+        
+        # Get dependency graph for architectural context
+        dependency_graph = read_dependency_graph()
+        dependency_summary = format_dependency_summary(dependency_graph)
 
     system = {
         "role":"system",
@@ -1052,7 +1060,8 @@ def main():
         print("⚠️ Could not create git checkpoint (no changes to stash)")
         backup_created = False
     
-    changed = apply_file_blocks(resp)
+    # Apply changes to sandbox environment
+    changed = apply_file_blocks(resp, SANDBOX_DIR)
 
     summary_path = f"agent/last_run_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
     pathlib.Path(summary_path).write_text(resp, encoding="utf-8")
