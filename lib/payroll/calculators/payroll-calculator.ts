@@ -1210,6 +1210,21 @@ export class PayrollCalculator {
         // Metadata
         calculationDate: new Date(),
         calculationVersion: '2025.1',
+        
+        // Greek Localized Formatted Values
+        formatted: {
+          baseSalary: GreekNumericFormatter.formatSalaryAmount(baseSalary),
+          netPay: GreekNumericFormatter.formatSalaryAmount(netPay),
+          grossTotal: GreekNumericFormatter.formatSalaryAmount(grossPay),
+          workingPeriod: GreekDateTimeFormatter.formatDateRange(periodStartDate, periodEndDate),
+          calculationDate: GreekDateTimeFormatter.formatOfficialDateTime(new Date()),
+          taxAmount: GreekNumericFormatter.formatSalaryAmount(monthlyIncomeTax + monthlySolidarityTax),
+          efkaAmount: GreekNumericFormatter.formatSalaryAmount(
+            efkaContributions.employee.main + 
+            efkaContributions.employee.auxiliary + 
+            efkaContributions.employee.unemployment
+          )
+        }
       };
 
     } catch (error) {
