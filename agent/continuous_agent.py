@@ -77,23 +77,34 @@ while True:
             continue
 
     # ---- Auto commit and push to GitHub ----
-    try:
-        task_title = get_last_done_task_title()
-        print(f"💾 Committing and pushing changes to dev branch (task: {task_title})...")
-        subprocess.run(["git", "config", "--global", "user.name", "AI Dev Agent"], check=True)
-        subprocess.run(["git", "config", "--global", "user.email", "agent@localhost"], check=True)
-        subprocess.run(["git", "checkout", "dev"], check=False)
-        subprocess.run(["git", "add", "."], check=True)
-        subprocess.run(["git", "commit", "-m", f"AI Agent: Completed task — {task_title}"], check=False)
-        subprocess.run([
-            "git",
-            "push",
-            f"https://{os.environ.get('GITHUB_TOKEN')}@github.com/{GITHUB_REPO}.git",
-            "dev"
-        ], check=True)
-        print("✅ Pushed to dev branch.")
-    except subprocess.CalledProcessError as e:
-        print(f"⚠️ Git push failed: {e}")
+    task_title = get_last_done_task_title()
+    print(f"💾 Committing and pushing changes to dev branch (task: {task_title})...")
+    
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        print("❌ No GITHUB_TOKEN found in Replit Secrets.")
+    else:
+        try:
+            subprocess.run([
+                "git", "config", "--global", "user.name", "AI Dev Agent"
+            ], check=True)
+            subprocess.run([
+                "git", "config", "--global", "user.email", "agent@localhost"
+            ], check=True)
+            subprocess.run(["git", "checkout", "dev"], check=False)
+            subprocess.run(["git", "add", "."], check=True)
+            subprocess.run([
+                "git", "commit", "-m", f"AI Agent: Completed task — {task_title}"
+            ], check=False)
+            subprocess.run([
+                "git",
+                "push",
+                f"https://{token}@github.com/KaterinaSantikou/greek-payroll-system.git",
+                "dev"
+            ], check=True)
+            print("✅ Pushed to dev branch.")
+        except subprocess.CalledProcessError as e:
+            print(f"⚠️ Git push failed: {e}")
 
     print("✅ Cycle complete — checking again immediately...\n")
     time.sleep(5)
