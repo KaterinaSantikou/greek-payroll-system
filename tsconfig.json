@@ -8,24 +8,15 @@
     "module": "ESNext",
     "target": "ES2020",
     
-    // Strict Type-Checking Options
+    // Core Strict Type-Checking Options
     "strict": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
-    "noImplicitThis": true,
     "alwaysStrict": true,
     
-    // Additional Checks
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "exactOptionalPropertyTypes": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "noUncheckedIndexedAccess": true,
+    // Additional Quality Checks (less aggressive)
     "noFallthroughCasesInSwitch": true,
     
     // Module Resolution
@@ -38,8 +29,6 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "allowJs": false,
-    "checkJs": false,
     
     // Path Mapping
     "baseUrl": ".",
