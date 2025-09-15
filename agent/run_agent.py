@@ -143,7 +143,7 @@ def main():
     }
 
     print("🤖 Thinking…")
-    resp = call_openai([system, user])
+    resp = call_with_retry(lambda: call_openai([system, user]))
     changed = apply_file_blocks(resp)
 
     summary_path = f"agent/last_run_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
