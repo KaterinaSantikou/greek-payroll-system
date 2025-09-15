@@ -1984,6 +1984,20 @@ def execute_implementation_phase(task_text, tree, knowledge, dependency_summary,
             return None
         
         print("✅ Implementation completed")
+        
+        # Store whether structured output was used for later processing
+        if hasattr(response, '__structured_output__'):
+            response.__structured_output__ = implementation_structured
+        else:
+            # Create a wrapper to carry the metadata
+            class ResponseWrapper:
+                def __init__(self, content, is_structured):
+                    self.content = content
+                    self.is_structured = is_structured
+                def __str__(self):
+                    return self.content
+            response = ResponseWrapper(response, implementation_structured)
+        
         return response
         
     except Exception as e:
@@ -2280,6 +2294,13 @@ def main():
             resp = execute_implementation_phase(
                 task_text, tree, knowledge, dependency_summary, evolved_guidelines, implementation_plan, final_impact_context
             )
+            
+            # Extract structured output flag from response
+            if hasattr(resp, 'is_structured'):
+                structured_output = resp.is_structured
+                resp = str(resp)  # Convert to string for processing
+            else:
+                structured_output = False
         
         if not resp:
             print("❌ Failed to get response from OpenAI")
