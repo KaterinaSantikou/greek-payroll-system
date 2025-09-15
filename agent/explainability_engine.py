@@ -481,7 +481,7 @@ def start_explanation(task_id: str, task_description: str):
         _explanation_engine = ExplainabilityEngine()
     _explanation_engine.start_task_explanation(task_id, task_description)
 
-def add_explanation(file_path: str, change_type: str, what_changed: str, why_changed: str, business_logic: str, legal_basis: str = None):
+def add_explanation(file_path: str, change_type: str, what_changed: str, why_changed: str, business_logic: str, legal_basis: Optional[str] = None):
     """Add an explanation for a specific change"""
     global _explanation_engine
     if '_explanation_engine' in globals():
