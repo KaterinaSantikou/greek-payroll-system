@@ -261,9 +261,8 @@ router.post('/api/payroll/runs/:id/finalize', isAuthenticated, idempotencyMiddle
 // GET /api/payroll/runs/:id/audit - Get payroll audit information
 router.get('/api/payroll/runs/:id/audit', isAuthenticated, async (req, res) => {
   try {
-    const [run] = await db.select()
-      .from(payrollRuns)
-      .where(eq(payrollRuns.id, req.params.id));
+    // Delegate to infrastructure layer
+    const { run } = await payrollRepository.getPayrollRunWithLines(req.params.id);
     
     if (!run) {
       return res.status(404).json({ error: "Payroll run not found" });
@@ -584,70 +583,18 @@ router.get('/api/payroll/employees', isAuthenticated, async (req, res) => {
       showOnlyApproved = 'true'
     } = req.query;
 
-    // Build the query
-    let query = db
-      .select({
-        employeeId: employees.employeeId,
-        employeeNumber: employees.employeeNumber,
-        name: employees.name,
-        afm: employees.afm,
-        isActive: employees.isActive,
-        propertyId: employees.defaultPropertyId,
-        propertyName: properties.name,
-        contractType: employees.contractType,
-        ftePct: employees.ftePct,
-        payCalendar: sql<string>`'monthly'`, // Default pay calendar
-        hasApprovedTimesheet: sql<boolean>`CASE WHEN ${timesheets.payrollStatus} = 'approved' THEN true ELSE false END`,
-        missingIban: sql<boolean>`CASE WHEN ${employees.bankIban} IS NULL OR ${employees.bankIban} = '' THEN true ELSE false END`,
-        missingAfm: sql<boolean>`CASE WHEN ${employees.afm} IS NULL OR ${employees.afm} = '' THEN true ELSE false END`,
-        capsWarning: sql<string | null>`NULL` // Placeholder for caps warnings
-      })
-      .from(employees)
-      .leftJoin(properties, eq(employees.defaultPropertyId, properties.propertyId))
-      .leftJoin(timesheets, and(
-        eq(timesheets.employeeId, employees.employeeId),
-        eq(timesheets.periodStart, sql`${period}-01`)
-      ));
-
-    // Apply filters
-    const conditions = [];
+    // Delegate to infrastructure layer for filtered employees
+    const filters = {
+      period: period as string,
+      search: search as string,
+      property: property as string,
+      status: status as string,
+      contractType: contractType as string,
+      showOnlyApproved: showOnlyApproved === 'true'
+    };
     
-    if (search) {
-      const searchTerm = `%${search}%`;
-      conditions.push(
-        sql`${employees.name} ILIKE ${searchTerm}
-         OR ${employees.employeeNumber} ILIKE ${searchTerm}
-         OR ${employees.afm} ILIKE ${searchTerm}`
-      );
-    }
-    
-    if (property && property !== 'all') {
-      conditions.push(eq(employees.defaultPropertyId, property as string));
-    }
-    
-    if (status && status !== 'all') {
-      if (status === 'active') {
-        conditions.push(eq(employees.isActive, true));
-      } else if (status === 'inactive') {
-        conditions.push(eq(employees.isActive, false));
-      }
-    }
-    
-    if (contractType && contractType !== 'all') {
-      conditions.push(eq(employees.contractType, contractType as string));
-    }
-
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    // Execute query
-    let result = await query.orderBy(asc(employees.name));
-
-    // Post-filter for approved timesheets if requested
-    if (showOnlyApproved === 'true') {
-      result = result.filter(emp => emp.hasApprovedTimesheet);
-    }
+    // Use repository method to get employee data
+    const result = await payrollRepository.getFilteredEmployeesForPayroll(filters);
 
     res.json(result);
   } catch (error) {
