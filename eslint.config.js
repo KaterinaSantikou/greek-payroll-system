@@ -75,7 +75,9 @@ export default [
       'react': react,
       'react-hooks': reactHooks,
       'jsx-a11y': jsxA11y,
-      'prettier': prettier
+      'prettier': prettier,
+      'security': security,
+      'node': nodePlugin
     },
     rules: {
       // Prettier integration
