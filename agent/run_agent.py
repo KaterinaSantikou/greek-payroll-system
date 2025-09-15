@@ -2009,6 +2009,7 @@ def main():
             print("📦 Task was split into subtasks. Current task completed.")
             print("✅ Subtasks created successfully. Run the agent again to process them.")
             return
+        else:
             # Fallback to old direct implementation
             system = {
                 "role":"system",
