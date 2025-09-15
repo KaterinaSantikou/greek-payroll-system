@@ -2757,12 +2757,19 @@ def main():
                     
                     OUTPUT REQUIREMENTS:
                     You must produce STRICTLY structured output:
-                    1) A brief plan (bullet points).
-                    2) A TEST PLAN describing how to verify locally.
+                    1) A DETAILED NUMBERED IMPLEMENTATION PLAN with exact steps, file paths, and function names.
+                    2) A TEST PLAN describing specific test functions and scenarios to implement.
                     3) One or more file blocks with FULL file contents using this exact format per file:
                        {FILE_BLOCK_START} relative/path/filename.ext
                        ...entire file content...
                        {FILE_BLOCK_END}
+                    
+                    PLANNING REQUIREMENTS:
+                    - Each step must specify exact file paths to edit
+                    - Each step must specify exact function names to create
+                    - Each step must specify expected outputs and acceptance criteria
+                    - Include specific TypeScript interfaces and type definitions
+                    - Reference exact Greek labor law rules and compliance requirements
                     
                     SAFETY RULES:
                     - Minimal, safe changes. Preserve code style and architecture.
