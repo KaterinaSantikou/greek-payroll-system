@@ -346,17 +346,22 @@ class GreekLawConfigLoader {
   }
 
   /**
-   * Default configuration fallback
+   * Default configuration fallback with legal document tracking
    */
   private getDefaultConfig(version: string): GreekLawConfig {
+    // Get legal references for this configuration version
+    const legalReferences = this.getLegalReferencesSync(version);
+    
     return {
       version,
       effectiveDate: '2024-12-01',
-      legalReferences: [
-        'Law 4808/2021 - Labor Relations Reform',
-        'Presidential Decree 81/2023 - EFKA Rates',
-        'Ministerial Decision A.1002/2024 - Minimum Wage'
-      ],
+      legalReferences: legalReferences.length > 0 ? 
+        legalReferences.map(ref => `${ref.documentId} v${ref.version}`) :
+        [
+          'Law 4808/2021 - Labor Relations Reform',
+          'Presidential Decree 81/2023 - EFKA Rates', 
+          'Ministerial Decision A.1002/2024 - Minimum Wage'
+        ],
       
       taxBrackets: [
         { min: 0, max: 10000, rate: 0.09 },
