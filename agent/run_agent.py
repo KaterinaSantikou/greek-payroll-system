@@ -1722,8 +1722,15 @@ def execute_planning_phase(task_text, tree, knowledge, architecture_guide, depen
         
         planning_system = {
             "role": "system",
-            "content": textwrap.dedent(f"""
-            You are a senior software architect specializing in Greek Payroll systems. Your job is to create a comprehensive implementation plan BEFORE any coding begins.
+            "content": (
+                "You are a senior software architect specializing in Greek Payroll systems.\n\n"
+                "Here is the full architecture and coding rules you MUST follow:\n\n"
+                f"{ARCHITECTURE_TEXT}\n\n"
+                "Here is the database schema you MUST respect:\n\n"
+                f"{SCHEMA_TEXT}\n\n"
+                "Here is the existing core payroll calculation logic you must improve and not break:\n\n"
+                f"{PAYROLL_ENGINE_TEXT}\n\n"
+                "Your job is to create a comprehensive implementation plan BEFORE any coding begins.\n\n"
             
             PLANNING INSTRUCTIONS:
             1. Analyze the task requirements thoroughly
@@ -1942,8 +1949,14 @@ def execute_implementation_phase(task_text, tree, knowledge, architecture_guide,
         
         implementation_system = {
             "role": "system",
-            "content": textwrap.dedent(f"""
-            You are a senior full-stack engineer implementing a pre-approved plan for a Greek Payroll SaaS system.
+            "content": (
+                "You are a senior full-stack engineer implementing a pre-approved plan for a Greek Payroll SaaS system.\n\n"
+                "Here is the full architecture and coding rules you MUST follow:\n\n"
+                f"{ARCHITECTURE_TEXT}\n\n"
+                "Here is the database schema you MUST respect:\n\n"
+                f"{SCHEMA_TEXT}\n\n"
+                "Here is the existing core payroll calculation logic you must improve and not break:\n\n"
+                f"{PAYROLL_ENGINE_TEXT}\n\n"
             
             IMPLEMENTATION INSTRUCTIONS:
             1. Follow the implementation plan EXACTLY as specified
@@ -2241,8 +2254,14 @@ def main():
             # Fallback to old direct implementation
             system = {
                 "role":"system",
-                "content": textwrap.dedent(f"""
-                You are a senior full-stack engineer working on a Greek Payroll SaaS for hospitality (EFKA, ΣΣΕ, Digital Work Card).
+                "content": (
+                    "You are a senior full-stack engineer working on a Greek Payroll SaaS for hospitality (EFKA, ΣΣΕ, Digital Work Card).\n\n"
+                    "Here is the full architecture and coding rules you MUST follow:\n\n"
+                    f"{ARCHITECTURE_TEXT}\n\n"
+                    "Here is the database schema you MUST respect:\n\n"
+                    f"{SCHEMA_TEXT}\n\n"
+                    "Here is the existing core payroll calculation logic you must improve and not break:\n\n"
+                    f"{PAYROLL_ENGINE_TEXT}\n\n"
                 
                 ARCHITECTURE RULES:
                 - Use Express/Node back-end with TypeScript
