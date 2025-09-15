@@ -1339,6 +1339,7 @@ def main():
         - Documentation: docs/, context/
         - Tasks: tasks/
         DO NOT attempt to modify package.json, config files, .env files, or the agent itself.
+        {evolved_guidelines}
         """).strip()
     }
 
