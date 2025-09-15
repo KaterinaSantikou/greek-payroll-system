@@ -185,7 +185,37 @@ export class SeveranceRulesService {
   }
 
   /**
-   * Calculate severance amount using specific rule version
+   * Calculate severance amount using Greek Labor Law bands (Ν. 4093/2012)
+   * 
+   * CALCULATION METHODOLOGY (Article 1, Ν. 4093/2012):
+   * Severance is calculated as multiples of the employee's last monthly salary
+   * based on total months of continuous service with the same employer.
+   * 
+   * SERVICE PERIOD CALCULATION:
+   * - Start date: First day of employment (including probationary period)
+   * - End date: Last working day (termination/resignation date)  
+   * - Continuous service: No breaks in employment contract
+   * - Multiple contracts: Combined if no gap between contracts
+   * - Part-time service: Counts as full months regardless of hours
+   * 
+   * SALARY BASE FOR CALCULATION:
+   * - Uses last monthly gross salary at termination date
+   * - Excludes overtime, bonuses, allowances, and benefits in kind
+   * - Based on contractual salary, not average historical earnings
+   * - No adjustment for inflation or salary increases during service
+   * 
+   * BAND BOUNDARY LOGIC:
+   * - Minimum threshold: 12 months for any severance entitlement
+   * - Exact boundaries: 24 months = 2 years exactly, 60 months = 5 years exactly
+   * - Upper boundary: 25+ years capped at maximum 17 months severance
+   * - Fractional service: Rounded down (35.9 months = 35 months = 2 years band)
+   * 
+   * PROGRESSIVE RATIONALE:
+   * The escalating scale reflects employment security principles:
+   * - Early years (1-5): Modest protection during career establishment  
+   * - Mid-career (5-15): Substantial protection during prime earning years
+   * - Senior years (15-25): High protection recognizing career investment
+   * - Veteran (25+): Maximum protection with legal cap to limit employer exposure
    */
   static calculateSeveranceAmount(
     monthsOfService: number, 
@@ -199,41 +229,59 @@ export class SeveranceRulesService {
   } {
     const bands = rules.bands as any[];
     
-    // Find applicable band
+    // BAND SELECTION ALGORITHM:
+    // Find the appropriate severance band based on months of continuous service
+    // Uses inclusive lower bound and exclusive upper bound (mathematical interval notation)
     let applicableBand = null;
     for (const band of bands) {
+      // Example: 25 months service matches band [24, 60) = 3 months severance
       if (monthsOfService >= band.minMonths && monthsOfService < band.maxMonths) {
         applicableBand = band;
         break;
       }
     }
     
-    // If no band found, use the highest band (25+ years)
+    // MAXIMUM PROTECTION FALLBACK:
+    // If service exceeds all defined bands (25+ years), apply maximum protection
+    // This handles edge cases with very long-term employees (30+ years service)
     if (!applicableBand) {
-      applicableBand = bands[bands.length - 1];
+      applicableBand = bands[bands.length - 1]; // 17 months maximum
     }
     
+    // SEVERANCE CALCULATION:
+    // Severance Amount = Months of Severance × Last Monthly Gross Salary
+    // Simple multiplication - no proration, no adjustments, no complex formulas
     const severanceMonths = applicableBand.severanceMonths;
     const severanceAmount = severanceMonths * monthlyWage;
     
+    // SERVICE PERIOD DISPLAY FORMATTING:
+    // Convert months to human-readable years and months format
+    // Used for employee communication and legal documentation
     const yearsOfService = Math.floor(monthsOfService / 12);
     const remainingMonths = monthsOfService % 12;
     
     let serviceDescription = '';
     let serviceDescriptionGr = '';
     
+    // Format service period in both languages for Greek legal requirements
     if (remainingMonths > 0) {
+      // Example: "5 years and 3 months" / "5 έτη και 3 μήνες"
       serviceDescription = `${yearsOfService} years and ${remainingMonths} months`;
       serviceDescriptionGr = `${yearsOfService} έτη και ${remainingMonths} μήνες`;
     } else {
+      // Example: "5 years" / "5 έτη" (no remaining months)
       serviceDescription = `${yearsOfService} years`;
       serviceDescriptionGr = `${yearsOfService} έτη`;
     }
     
     return {
-      severanceAmount,
-      severanceMonths,
+      severanceAmount,           // Final Euro amount to be paid
+      severanceMonths,          // Number of months of salary (for legal records)
+      
+      // ENGLISH FORMULA: For international documentation and system logs
       formula: `${serviceDescription} of service = ${severanceMonths} months salary = €${severanceAmount.toFixed(2)}`,
+      
+      // GREEK FORMULA: For employee communication and legal compliance
       formulaGr: `${serviceDescriptionGr} υπηρεσίας = ${severanceMonths} μήνες μισθού = €${severanceAmount.toFixed(2)}`
     };
   }
