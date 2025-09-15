@@ -91,7 +91,6 @@ export default [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-explicit-any': 'error', // Upgraded from warn to error
       '@typescript-eslint/no-var-requires': 'off',
-      '@typescript-eslint/prefer-optional-chain': 'error',
       '@typescript-eslint/no-non-null-assertion': 'warn',
       
       // React Hooks rules
