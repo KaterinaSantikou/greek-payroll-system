@@ -36,6 +36,7 @@ interface EnvConfig {
   
   // Security & service roles
   SERVICE_ROLE_KEY?: string;
+  DATA_ENCRYPTION_KEY?: string;
   AUTH_ALLOWED_IPS?: string;
   
   // Feature flags
@@ -141,6 +142,12 @@ export function validateEnvironmentVariables(): EnvConfig {
 
   if (!env.SERVICE_ROLE_KEY) {
     warnings.push(`⚠️ SERVICE_ROLE_KEY not set - RLS bypass functionality disabled`);
+  }
+
+  if (!env.DATA_ENCRYPTION_KEY) {
+    errors.push(`❌ DATA_ENCRYPTION_KEY is required for secure storage of sensitive employee data`);
+  } else if (env.DATA_ENCRYPTION_KEY.length !== 64) {
+    errors.push(`❌ DATA_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes)`);
   }
 
   // Print validation results
