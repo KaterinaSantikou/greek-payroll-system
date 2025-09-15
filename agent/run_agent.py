@@ -187,6 +187,12 @@ def main():
         - If DB migrations are needed, include a migration file and instructions.
         - If unsure about a Greek legal rule, add a TODO comment + assumption.
         - Test all changes against existing payroll calculation logic.
+        
+        IMPORTANT: Review the CURRENT SYSTEM KNOWLEDGE section below to:
+        - Avoid re-implementing existing features
+        - Build upon previous work instead of replacing it
+        - Maintain consistency with established patterns
+        - Reference existing modules and formulas when applicable
         """).strip()
     }
 
