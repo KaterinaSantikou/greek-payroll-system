@@ -829,27 +829,217 @@ export class PayrollCalculator {
   }
 
   /**
-   * Main payroll calculation method
+   * Main payroll calculation method with comprehensive input validation
+   * 
+   * VALIDATION APPROACH:
+   * - All inputs validated before calculations begin
+   * - Critical fields (employeeId, salaries, dates) are required
+   * - Numeric values checked for reasonable ranges and business rules
+   * - Fallback values applied for optional fields
+   * - Greek labor law compliance enforced (minimum wage, working time limits)
    */
   calculatePayroll(input: PayrollCalculationInput): PayrollCalculationResult {
-    const {
-      baseSalary,
-      hourlyRate,
-      regularHours,
-      overtimeHours,
-      nightHours,
-      sundayHours,
-      holidayHours,
-      leaveHours = {},
-      allowances = {},
-      tips = 0,
-      benefitsInKind = {},
-      contractType,
-      isFullTime,
-      employmentStartDate,
-      periodStartDate,
-      periodEndDate,
-    } = input;
+    try {
+      // VALIDATE REQUIRED IDENTIFIER FIELDS
+      const employeeId = this.validateStringInput(input.employeeId, 'employeeId', {
+        required: true,
+        minLength: 1,
+        maxLength: 50,
+        pattern: /^[A-Z0-9_-]+$/i  // Alphanumeric with underscores/dashes
+      });
+
+      const periodId = this.validateStringInput(input.periodId, 'periodId', {
+        required: true,
+        pattern: /^\d{4}-\d{2}$/  // YYYY-MM format
+      });
+
+      // VALIDATE CONTRACT INFORMATION  
+      const contractType = this.validateStringInput(input.contractType, 'contractType', {
+        required: true,
+        allowedValues: ['indefinite', 'fixed-term', 'seasonal']
+      }) as 'indefinite' | 'fixed-term' | 'seasonal';
+
+      // VALIDATE SALARY AND WAGE INPUTS
+      const baseSalary = this.validateNumericInput(input.baseSalary, 'baseSalary', {
+        required: true,
+        min: MINIMUM_WAGE.monthly * 0.5,  // Allow part-time below full minimum
+        max: 50000  // €50k monthly salary cap (extreme value check)
+      });
+
+      const hourlyRate = input.hourlyRate 
+        ? this.validateNumericInput(input.hourlyRate, 'hourlyRate', {
+            min: MINIMUM_WAGE.hourly,
+            max: 500  // €500/hour cap
+          })
+        : baseSalary / WORKING_TIME_LIMITS.standardMonthlyHours;
+
+      // VALIDATE WORKING HOURS WITH GREEK LABOR LAW LIMITS
+      const regularHours = this.validateNumericInput(input.regularHours, 'regularHours', {
+        required: true,
+        min: 0,
+        max: WORKING_TIME_LIMITS.standardMonthlyHours * 1.5  // 150% of standard
+      });
+
+      const overtimeHours = this.validateNumericInput(input.overtimeHours, 'overtimeHours', {
+        min: 0,
+        max: 100,  // Maximum 100 overtime hours per month (extreme value check)
+        fallback: 0
+      });
+
+      const nightHours = this.validateNumericInput(input.nightHours, 'nightHours', {
+        min: 0,
+        max: regularHours + overtimeHours,  // Cannot exceed total hours
+        fallback: 0
+      });
+
+      const sundayHours = this.validateNumericInput(input.sundayHours, 'sundayHours', {
+        min: 0,
+        max: 40,  // Maximum ~5 Sundays × 8 hours per month
+        fallback: 0
+      });
+
+      const holidayHours = this.validateNumericInput(input.holidayHours, 'holidayHours', {
+        min: 0,
+        max: 24,  // Maximum 3 holidays × 8 hours per month
+        fallback: 0
+      });
+
+      // VALIDATE EMPLOYMENT DATES
+      const employmentStartDate = this.validateDateInput(input.employmentStartDate, 'employmentStartDate', {
+        required: true,
+        allowFutureDate: false,
+        maxYearsInPast: 50
+      });
+
+      const periodStartDate = this.validateDateInput(input.periodStartDate, 'periodStartDate', {
+        required: true,
+        allowFutureDate: true,
+        maxYearsInPast: 10
+      });
+
+      const periodEndDate = this.validateDateInput(input.periodEndDate, 'periodEndDate', {
+        required: true,
+        allowFutureDate: true,
+        maxYearsInPast: 10
+      });
+
+      // VALIDATE OPTIONAL BENEFIT INPUTS
+      const tips = this.validateNumericInput(input.tips, 'tips', {
+        min: 0,
+        max: 10000,  // €10k tips cap per month
+        fallback: 0
+      });
+
+      // VALIDATE LEAVE HOURS
+      const leaveHours = {
+        annual: this.validateNumericInput(input.leaveHours?.annual, 'annualLeaveHours', {
+          min: 0,
+          max: 200,  // Maximum leave hours per month
+          fallback: 0
+        }),
+        sick: this.validateNumericInput(input.leaveHours?.sick, 'sickLeaveHours', {
+          min: 0,
+          max: 200,
+          fallback: 0
+        }),
+        maternity: this.validateNumericInput(input.leaveHours?.maternity, 'maternityLeaveHours', {
+          min: 0,
+          max: 200,
+          fallback: 0
+        }),
+        paternity: this.validateNumericInput(input.leaveHours?.paternity, 'paternityLeaveHours', {
+          min: 0,
+          max: 200,
+          fallback: 0
+        })
+      };
+
+      // VALIDATE ALLOWANCES WITH REASONABLE CAPS
+      const allowances = {
+        food: this.validateNumericInput(input.allowances?.food, 'foodAllowance', {
+          min: 0,
+          max: 1000,
+          fallback: 0
+        }),
+        transport: this.validateNumericInput(input.allowances?.transport, 'transportAllowance', {
+          min: 0,
+          max: 500,
+          fallback: 0
+        }),
+        housing: this.validateNumericInput(input.allowances?.housing, 'housingAllowance', {
+          min: 0,
+          max: 2000,
+          fallback: 0
+        }),
+        marriage: this.validateNumericInput(input.allowances?.marriage, 'marriageAllowance', {
+          min: 0,
+          max: 200,
+          fallback: 0
+        }),
+        family: this.validateNumericInput(input.allowances?.family, 'familyAllowance', {
+          min: 0,
+          max: 500,
+          fallback: 0
+        }),
+        education: this.validateNumericInput(input.allowances?.education, 'educationAllowance', {
+          min: 0,
+          max: 300,
+          fallback: 0
+        }),
+        experience: this.validateNumericInput(input.allowances?.experience, 'experienceAllowance', {
+          min: 0,
+          max: 1000,
+          fallback: 0
+        }),
+        position: this.validateNumericInput(input.allowances?.position, 'positionAllowance', {
+          min: 0,
+          max: 2000,
+          fallback: 0
+        })
+      };
+
+      // VALIDATE BENEFITS IN KIND
+      const benefitsInKind = {
+        mealVouchers: this.validateNumericInput(input.benefitsInKind?.mealVouchers, 'mealVouchers', {
+          min: 0,
+          max: 500,
+          fallback: 0
+        }),
+        companyCar: this.validateNumericInput(input.benefitsInKind?.companyCar, 'companyCarValue', {
+          min: 0,
+          max: 100000,  // €100k car value cap
+          fallback: 0
+        }),
+        housing: this.validateNumericInput(input.benefitsInKind?.housing, 'housingBenefit', {
+          min: 0,
+          max: 3000,
+          fallback: 0
+        })
+      };
+
+      const isFullTime = Boolean(input.isFullTime);
+
+      // Extract validated inputs for calculation
+      const validatedInput = {
+        employeeId,
+        periodId,
+        baseSalary,
+        hourlyRate,
+        regularHours,
+        overtimeHours,
+        nightHours,
+        sundayHours,
+        holidayHours,
+        leaveHours,
+        allowances,
+        tips,
+        benefitsInKind,
+        contractType,
+        isFullTime,
+        employmentStartDate,
+        periodStartDate,
+        periodEndDate,
+      };
 
     // Calculate hourly rate if not provided
     const effectiveHourlyRate =
