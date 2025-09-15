@@ -806,6 +806,107 @@ def run_quality_critic(task_file, changed_files, task_summary):
         print(f"⚠️ Error in quality critic: {e}")
         return False
 
+def create_sandbox_environment():
+    """Create isolated sandbox environment for safe development"""
+    try:
+        print("🏗️ Creating sandbox environment...")
+        
+        # Clean up any existing sandbox
+        if SANDBOX_DIR.exists():
+            shutil.rmtree(SANDBOX_DIR)
+        
+        # Create sandbox directory
+        SANDBOX_DIR.mkdir(parents=True, exist_ok=True)
+        
+        # Clone current repository state to sandbox
+        print("📂 Cloning repository to sandbox...")
+        result = subprocess.run([
+            "git", "clone", ".", str(SANDBOX_DIR)
+        ], cwd=ROOT, capture_output=True, text=True, timeout=60)
+        
+        if result.returncode != 0:
+            print(f"❌ Failed to clone repository: {result.stderr}")
+            return False
+        
+        # Ensure we're on the right branch in sandbox
+        subprocess.run([
+            "git", "checkout", "dev"
+        ], cwd=SANDBOX_DIR, capture_output=True)
+        
+        # Copy node_modules if it exists (for faster builds)
+        source_node_modules = ROOT / "node_modules"
+        target_node_modules = SANDBOX_DIR / "node_modules"
+        
+        if source_node_modules.exists() and not target_node_modules.exists():
+            print("📦 Copying node_modules to sandbox...")
+            try:
+                shutil.copytree(source_node_modules, target_node_modules)
+            except Exception as e:
+                print(f"⚠️ Could not copy node_modules: {e}")
+                # Not critical, npm install will handle it
+        
+        # Install dependencies in sandbox if needed
+        package_json = SANDBOX_DIR / "package.json"
+        if package_json.exists() and not target_node_modules.exists():
+            print("📦 Installing dependencies in sandbox...")
+            result = subprocess.run([
+                "npm", "install"
+            ], cwd=SANDBOX_DIR, capture_output=True, text=True, timeout=300)
+            
+            if result.returncode != 0:
+                print(f"⚠️ npm install failed in sandbox: {result.stderr}")
+                # Continue anyway, some validations might still work
+        
+        print(f"✅ Sandbox environment created: {SANDBOX_DIR}")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error creating sandbox environment: {e}")
+        return False
+
+def cleanup_sandbox():
+    """Clean up sandbox environment"""
+    try:
+        if SANDBOX_DIR.exists():
+            shutil.rmtree(SANDBOX_DIR)
+            print("🧹 Sandbox environment cleaned up")
+    except Exception as e:
+        print(f"⚠️ Error cleaning up sandbox: {e}")
+
+def merge_sandbox_changes(changed_files):
+    """Merge validated changes from sandbox back to main repository"""
+    try:
+        print("🔄 Merging validated changes from sandbox...")
+        
+        if not changed_files:
+            print("⚠️ No files to merge")
+            return True
+        
+        # Copy changed files from sandbox to main repo
+        for file_path in changed_files:
+            source_file = SANDBOX_DIR / file_path
+            target_file = ROOT / file_path
+            
+            if source_file.exists():
+                # Ensure target directory exists
+                target_file.parent.mkdir(parents=True, exist_ok=True)
+                
+                # Copy file content
+                target_file.write_text(
+                    source_file.read_text(encoding="utf-8"), 
+                    encoding="utf-8"
+                )
+                print(f"✅ Merged: {file_path}")
+            else:
+                print(f"⚠️ Source file not found in sandbox: {file_path}")
+        
+        print(f"✅ Successfully merged {len(changed_files)} files from sandbox")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error merging changes from sandbox: {e}")
+        return False
+
 def update_knowledge(task_title, changed_files, task_summary):
     """Update the knowledge base with information from the completed task"""
     CONTEXT_DIR.mkdir(exist_ok=True)
