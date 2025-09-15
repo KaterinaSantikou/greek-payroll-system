@@ -4,6 +4,18 @@ from pathlib import Path
 import threading
 from collections import deque
 
+# Import tool abstractions
+try:
+    from agent.tools import (
+        GitTool, BuildTool, TestTool, DatabaseTool, CodebaseTool,
+        ToolResult, run_full_validation, commit_with_validation
+    )
+except ImportError:
+    from tools import (
+        GitTool, BuildTool, TestTool, DatabaseTool, CodebaseTool,
+        ToolResult, run_full_validation, commit_with_validation
+    )
+
 # ---- CONFIG ----
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 MODEL = "gpt-4o"   # works well for code; you can change later
