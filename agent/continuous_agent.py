@@ -11,6 +11,21 @@ def safe_run(cmd):
         print(f"⚠️ Git error: {clean}")
         raise
 
+def call_with_retry(func, max_tries=3):
+    """Call function with exponential backoff retry logic"""
+    delay = 10
+    for attempt in range(max_tries):
+        try:
+            return func()
+        except Exception as e:
+            print(f"⚠️ Agent error: {e}")
+            if attempt < max_tries - 1:  # Don't sleep on last attempt
+                print(f"🔄 Retrying in {delay}s...")
+                time.sleep(delay)
+                delay *= 2 * (1 + random.random())
+            else:
+                print("❌ Max retries exceeded, continuing to next cycle")
+
 ROOT = pathlib.Path(".")
 BACKLOG_DIR = ROOT / "tasks" / "backlog"
 PENDING = ROOT / "tasks" / "pending"
@@ -58,7 +73,7 @@ while True:
 
     if any(PENDING.glob("*.md")):
         print("🛠 Found a pending task — running agent...")
-        run_once()
+        call_with_retry(run_once)
     else:
         # Pick from the first available backlog file
         idea = None
