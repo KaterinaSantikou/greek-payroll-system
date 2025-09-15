@@ -708,7 +708,7 @@ app.use((req, res, next) => {
     await sanitycheckTables();
 
   // Enhanced error handling with Sentry integration
-  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: { status?: number; statusCode?: number; message?: string; stack?: string }, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
     const requestId = (req as any).requestId;
