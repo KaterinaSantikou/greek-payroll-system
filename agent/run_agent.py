@@ -2319,7 +2319,7 @@ def main():
             )
             
             if not implementation_plan:
-            print("❌ Planning phase failed, falling back to direct implementation")
+                print("❌ Planning phase failed, falling back to direct implementation")
             # Fallback to old direct implementation
             system = {
                 "role":"system",
