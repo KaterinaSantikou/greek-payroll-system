@@ -304,6 +304,12 @@ def main():
         - Build upon previous work instead of replacing it
         - Maintain consistency with established patterns
         - Reference existing modules and formulas when applicable
+        
+        DEPENDENCY GUIDANCE: Use the DEPENDENCY ARCHITECTURE section to:
+        - Understand how files connect to each other
+        - Avoid creating orphan modules that nothing imports
+        - Prevent circular import dependencies
+        - Follow existing import patterns and file organization
         """).strip()
     }
 
@@ -317,6 +323,10 @@ def main():
         CURRENT SYSTEM KNOWLEDGE:
         ---
         {knowledge}
+
+        DEPENDENCY ARCHITECTURE:
+        ---
+        {dependency_summary}
 
         REPO TREE (truncated):
         ---
