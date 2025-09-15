@@ -1,9 +1,20 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUpIcon, BarChart3Icon, UsersIcon, ShieldCheckIcon } from "lucide-react";
-import { S1ReadinessTile } from "@/components/csrd/S1ReadinessTile";
-import { Link } from "wouter";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  TrendingUpIcon,
+  BarChart3Icon,
+  UsersIcon,
+  ShieldCheckIcon,
+} from 'lucide-react';
+import { S1ReadinessTile } from '@/components/csrd/S1ReadinessTile';
+import { Link } from 'wouter';
 
 const entities = [
   { id: 'hq-athens', name: 'HQ Athens' },
@@ -19,7 +30,9 @@ export default function S1Dashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">ESRS S1 Dashboard</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            ESRS S1 Dashboard
+          </h1>
           <p className="text-muted-foreground">
             Social sustainability readiness and metrics overview
           </p>
@@ -38,20 +51,22 @@ export default function S1Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Entities</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Entities
+            </CardTitle>
             <UsersIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{entities.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Across 4 countries
-            </p>
+            <p className="text-xs text-muted-foreground">Across 4 countries</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Readiness</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Avg. Readiness
+            </CardTitle>
             <TrendingUpIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -61,10 +76,12 @@ export default function S1Dashboard() {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Complete Metrics</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Complete Metrics
+            </CardTitle>
             <BarChart3Icon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -74,15 +91,19 @@ export default function S1Dashboard() {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliance Status</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Compliance Status
+            </CardTitle>
             <ShieldCheckIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <Badge variant="default" className="text-xs">Ready</Badge>
+              <Badge variant="default" className="text-xs">
+                Ready
+              </Badge>
               <span className="text-sm text-muted-foreground">2025 ESRS</span>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -105,7 +126,7 @@ export default function S1Dashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {entities.map((entity) => (
+            {entities.map(entity => (
               <S1ReadinessTile
                 key={entity.id}
                 entityId={entity.id}

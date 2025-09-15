@@ -1,71 +1,78 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { 
-  UserPlus, 
-  Clock, 
-  CheckCircle, 
-  AlertCircle, 
-  Users, 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import {
+  UserPlus,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Users,
   Calendar,
   FileText,
-  Upload
-} from "lucide-react";
+  Upload,
+} from 'lucide-react';
 
 export default function Onboarding() {
   const onboardingCases = [
     {
       id: 1,
-      employeeName: "Maria Konstantinopoulou",
-      position: "Front Desk Agent",
-      startDate: "2025-01-25",
+      employeeName: 'Maria Konstantinopoulou',
+      position: 'Front Desk Agent',
+      startDate: '2025-01-25',
       progress: 85,
-      status: "pending_docs",
-      missingItems: ["AMKA verification", "Bank account details"],
+      status: 'pending_docs',
+      missingItems: ['AMKA verification', 'Bank account details'],
       completedSteps: 6,
-      totalSteps: 8
+      totalSteps: 8,
     },
     {
       id: 2,
-      employeeName: "Dimitris Papadopoulos", 
-      position: "Housekeeping",
-      startDate: "2025-01-22",
+      employeeName: 'Dimitris Papadopoulos',
+      position: 'Housekeeping',
+      startDate: '2025-01-22',
       progress: 45,
-      status: "awaiting_contract",
-      missingItems: ["Contract signature", "Collective agreement acknowledgment"],
+      status: 'awaiting_contract',
+      missingItems: [
+        'Contract signature',
+        'Collective agreement acknowledgment',
+      ],
       completedSteps: 3,
-      totalSteps: 8
+      totalSteps: 8,
     },
     {
       id: 3,
-      employeeName: "Elena Georgiou",
-      position: "Restaurant Server",
-      startDate: "2025-01-30",
+      employeeName: 'Elena Georgiou',
+      position: 'Restaurant Server',
+      startDate: '2025-01-30',
       progress: 15,
-      status: "started",
-      missingItems: ["All documents pending", "Initial interview scheduled"],
+      status: 'started',
+      missingItems: ['All documents pending', 'Initial interview scheduled'],
       completedSteps: 1,
-      totalSteps: 8
-    }
+      totalSteps: 8,
+    },
   ];
 
   const seasonalBatch = {
-    title: "Summer 2025 Batch",
+    title: 'Summer 2025 Batch',
     totalPositions: 45,
     hired: 32,
     inProgress: 8,
     pending: 5,
-    deadline: "2025-02-15"
+    deadline: '2025-02-15',
   };
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Employee Onboarding</h1>
-          <p className="text-gray-600 dark:text-gray-400">Quick hire, bulk seasonal rehires, checklists</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Employee Onboarding
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Quick hire, bulk seasonal rehires, checklists
+          </p>
         </div>
         <div className="flex gap-2">
           <Button>
@@ -90,28 +97,58 @@ export default function Onboarding() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
-              <div className="text-2xl font-bold text-green-700 dark:text-green-400">{seasonalBatch.hired}</div>
-              <div className="text-sm text-green-600 dark:text-green-500">Completed</div>
+              <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+                {seasonalBatch.hired}
+              </div>
+              <div className="text-sm text-green-600 dark:text-green-500">
+                Completed
+              </div>
             </div>
             <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-              <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">{seasonalBatch.inProgress}</div>
-              <div className="text-sm text-blue-600 dark:text-blue-500">In Progress</div>
+              <div className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                {seasonalBatch.inProgress}
+              </div>
+              <div className="text-sm text-blue-600 dark:text-blue-500">
+                In Progress
+              </div>
             </div>
             <div className="text-center p-4 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
-              <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">{seasonalBatch.pending}</div>
-              <div className="text-sm text-orange-600 dark:text-orange-500">Pending</div>
+              <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">
+                {seasonalBatch.pending}
+              </div>
+              <div className="text-sm text-orange-600 dark:text-orange-500">
+                Pending
+              </div>
             </div>
             <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="text-2xl font-bold text-gray-700 dark:text-gray-300">{seasonalBatch.totalPositions}</div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">Total Positions</div>
+              <div className="text-2xl font-bold text-gray-700 dark:text-gray-300">
+                {seasonalBatch.totalPositions}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Total Positions
+              </div>
             </div>
           </div>
           <div className="mt-4">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">Overall Progress</span>
-              <span className="text-sm text-gray-500">{Math.round(((seasonalBatch.hired + seasonalBatch.inProgress) / seasonalBatch.totalPositions) * 100)}%</span>
+              <span className="text-sm text-gray-500">
+                {Math.round(
+                  ((seasonalBatch.hired + seasonalBatch.inProgress) /
+                    seasonalBatch.totalPositions) *
+                    100
+                )}
+                %
+              </span>
             </div>
-            <Progress value={((seasonalBatch.hired + seasonalBatch.inProgress) / seasonalBatch.totalPositions) * 100} className="h-3" />
+            <Progress
+              value={
+                ((seasonalBatch.hired + seasonalBatch.inProgress) /
+                  seasonalBatch.totalPositions) *
+                100
+              }
+              className="h-3"
+            />
           </div>
         </CardContent>
       </Card>
@@ -119,36 +156,51 @@ export default function Onboarding() {
       {/* Individual Onboarding Cases */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">Active Onboarding Cases</h2>
-        {onboardingCases.map((employee) => (
+        {onboardingCases.map(employee => (
           <Card key={employee.id}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{employee.employeeName}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{employee.position}</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                      {employee.employeeName}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {employee.position}
+                    </p>
                   </div>
-                  <Badge variant={
-                    employee.status === 'pending_docs' ? 'destructive' :
-                    employee.status === 'awaiting_contract' ? 'default' : 'secondary'
-                  }>
+                  <Badge
+                    variant={
+                      employee.status === 'pending_docs'
+                        ? 'destructive'
+                        : employee.status === 'awaiting_contract'
+                          ? 'default'
+                          : 'secondary'
+                    }
+                  >
                     {employee.status.replace('_', ' ').toUpperCase()}
                   </Badge>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-medium">Start Date</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{employee.startDate}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {employee.startDate}
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium">Completion Progress</span>
-                    <span className="text-sm text-gray-500">{employee.completedSteps}/{employee.totalSteps} steps</span>
+                    <span className="text-sm font-medium">
+                      Completion Progress
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {employee.completedSteps}/{employee.totalSteps} steps
+                    </span>
                   </div>
                   <Progress value={employee.progress} className="h-2 mb-3" />
-                  
+
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-red-700 dark:text-red-400 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
@@ -156,7 +208,10 @@ export default function Onboarding() {
                     </h4>
                     <ul className="text-xs space-y-1">
                       {employee.missingItems.map((item, index) => (
-                        <li key={index} className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                        <li
+                          key={index}
+                          className="flex items-center gap-2 text-gray-600 dark:text-gray-400"
+                        >
                           <div className="w-1 h-1 bg-red-500 rounded-full"></div>
                           {item}
                         </li>
@@ -169,23 +224,33 @@ export default function Onboarding() {
                   <div className="space-y-2 mb-4">
                     <h4 className="text-sm font-medium">Quick Actions</h4>
                     <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" className="h-7 text-xs">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                      >
                         <FileText className="h-3 w-3 mr-1" />
                         View Checklist
                       </Button>
-                      <Button size="sm" variant="outline" className="h-7 text-xs">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                      >
                         <Upload className="h-3 w-3 mr-1" />
                         Upload Docs
                       </Button>
-                      <Button size="sm" variant="outline" className="h-7 text-xs">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                      >
                         <Clock className="h-3 w-3 mr-1" />
                         Schedule Interview
                       </Button>
                     </div>
                   </div>
-                  <Button className="w-full">
-                    Continue Onboarding
-                  </Button>
+                  <Button className="w-full">Continue Onboarding</Button>
                 </div>
               </div>
             </CardContent>

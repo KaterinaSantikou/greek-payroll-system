@@ -1,15 +1,21 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Shield, 
-  Clock, 
-  Users, 
-  DollarSign, 
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Shield,
+  Clock,
+  Users,
+  DollarSign,
   AlertTriangle,
   CheckCircle,
   TrendingUp,
@@ -21,8 +27,8 @@ import {
   Timer,
   CreditCard,
   Gauge,
-  Target
-} from "lucide-react";
+  Target,
+} from 'lucide-react';
 
 interface ComplianceCard {
   id: string;
@@ -50,13 +56,13 @@ export default function ManagerDashboard() {
   // Live compliance data
   const { data: complianceData, isLoading: complianceLoading } = useQuery({
     queryKey: ['/api/compliance/live-status'],
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // KPI metrics
   const { data: kpiData, isLoading: kpiLoading } = useQuery({
     queryKey: ['/api/analytics/kpi-metrics'],
-    refetchInterval: 60000 // Refresh every minute
+    refetchInterval: 60000, // Refresh every minute
   });
 
   // Quick actions mutations
@@ -64,39 +70,45 @@ export default function ManagerDashboard() {
     mutationFn: async () => {
       const response = await fetch('/api/payroll/run-quick', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/analytics/kpi-metrics'] });
-    }
+      queryClient.invalidateQueries({
+        queryKey: ['/api/analytics/kpi-metrics'],
+      });
+    },
   });
 
   const approveOvertime = useMutation({
     mutationFn: async () => {
       const response = await fetch('/api/overtime/approve-pending', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/compliance/live-status'] });
-    }
+      queryClient.invalidateQueries({
+        queryKey: ['/api/compliance/live-status'],
+      });
+    },
   });
 
   const fileAPD = useMutation({
     mutationFn: async () => {
       const response = await fetch('/api/compliance/file-apd', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/compliance/live-status'] });
-    }
+      queryClient.invalidateQueries({
+        queryKey: ['/api/compliance/live-status'],
+      });
+    },
   });
 
   // Mock data with realistic Greek payroll metrics
@@ -107,7 +119,7 @@ export default function ManagerDashboard() {
       status: 'compliant',
       value: '45/45 Employees',
       description: 'All employee data synchronized with ERGANI II',
-      actionRequired: false
+      actionRequired: false,
     },
     {
       id: 'apd-deadline',
@@ -116,7 +128,7 @@ export default function ManagerDashboard() {
       value: '3 Days Remaining',
       description: 'Monthly APD filing due January 31st',
       deadline: '2025-01-31',
-      actionRequired: true
+      actionRequired: true,
     },
     {
       id: 'fmy-deadline',
@@ -125,7 +137,7 @@ export default function ManagerDashboard() {
       value: 'Overdue',
       description: 'Quarterly ΦΜΥ submission pending',
       deadline: '2025-01-15',
-      actionRequired: true
+      actionRequired: true,
     },
     {
       id: 'digital-cards',
@@ -133,8 +145,8 @@ export default function ManagerDashboard() {
       status: 'compliant',
       value: '100% Coverage',
       description: 'All active employees have digital work cards',
-      actionRequired: false
-    }
+      actionRequired: false,
+    },
   ];
 
   const mockKPIMetrics: KPIMetric[] = [
@@ -145,7 +157,7 @@ export default function ManagerDashboard() {
       change: -3.2,
       changeType: 'positive',
       target: '€145,000',
-      description: 'Monthly labor costs under budget'
+      description: 'Monthly labor costs under budget',
     },
     {
       id: 'overtime-variance',
@@ -154,7 +166,7 @@ export default function ManagerDashboard() {
       change: 5.1,
       changeType: 'negative',
       target: '±5%',
-      description: 'Above target variance range'
+      description: 'Above target variance range',
     },
     {
       id: 'staffing-forecast',
@@ -163,7 +175,7 @@ export default function ManagerDashboard() {
       change: 2.8,
       changeType: 'positive',
       target: '90-100%',
-      description: 'Near optimal staffing levels'
+      description: 'Near optimal staffing levels',
     },
     {
       id: 'compliance-score',
@@ -172,33 +184,44 @@ export default function ManagerDashboard() {
       change: -1.2,
       changeType: 'negative',
       target: '95%',
-      description: 'Minor compliance gaps detected'
-    }
+      description: 'Minor compliance gaps detected',
+    },
   ];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'compliant': return <CheckCircle className="w-5 h-5 text-green-600" />;
-      case 'warning': return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
-      case 'critical': return <AlertTriangle className="w-5 h-5 text-red-600" />;
-      default: return <Clock className="w-5 h-5 text-gray-600" />;
+      case 'compliant':
+        return <CheckCircle className="w-5 h-5 text-green-600" />;
+      case 'warning':
+        return <AlertTriangle className="w-5 h-5 text-yellow-600" />;
+      case 'critical':
+        return <AlertTriangle className="w-5 h-5 text-red-600" />;
+      default:
+        return <Clock className="w-5 h-5 text-gray-600" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'compliant': return 'border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800';
-      case 'warning': return 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800';
-      case 'critical': return 'border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800';
-      default: return 'border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800';
+      case 'compliant':
+        return 'border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800';
+      case 'warning':
+        return 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-800';
+      case 'critical':
+        return 'border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800';
+      default:
+        return 'border-gray-200 bg-white dark:bg-gray-900 dark:border-gray-800';
     }
   };
 
   const getChangeIcon = (changeType: string) => {
     switch (changeType) {
-      case 'positive': return <TrendingUp className="w-4 h-4 text-green-600" />;
-      case 'negative': return <TrendingDown className="w-4 h-4 text-red-600" />;
-      default: return <Gauge className="w-4 h-4 text-gray-600" />;
+      case 'positive':
+        return <TrendingUp className="w-4 h-4 text-green-600" />;
+      case 'negative':
+        return <TrendingDown className="w-4 h-4 text-red-600" />;
+      default:
+        return <Gauge className="w-4 h-4 text-gray-600" />;
     }
   };
 
@@ -209,7 +232,9 @@ export default function ManagerDashboard() {
           <Building2 className="w-8 h-8 text-blue-600" />
           <div>
             <h1 className="text-3xl font-bold">Executive Dashboard</h1>
-            <p className="text-muted-foreground">Real-time payroll and compliance overview</p>
+            <p className="text-muted-foreground">
+              Real-time payroll and compliance overview
+            </p>
           </div>
         </div>
         <div className="text-sm text-muted-foreground">
@@ -230,7 +255,7 @@ export default function ManagerDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button 
+            <Button
               onClick={() => runPayroll.mutate()}
               disabled={runPayroll.isPending}
               className="h-16 text-lg flex items-center gap-3 bg-green-600 hover:bg-green-700"
@@ -238,8 +263,8 @@ export default function ManagerDashboard() {
               <CreditCard className="w-6 h-6" />
               {runPayroll.isPending ? 'Processing...' : 'Run Payroll'}
             </Button>
-            
-            <Button 
+
+            <Button
               onClick={() => approveOvertime.mutate()}
               disabled={approveOvertime.isPending}
               variant="outline"
@@ -248,8 +273,8 @@ export default function ManagerDashboard() {
               <Timer className="w-6 h-6" />
               {approveOvertime.isPending ? 'Approving...' : 'Approve Overtime'}
             </Button>
-            
-            <Button 
+
+            <Button
               onClick={() => fileAPD.mutate()}
               disabled={fileAPD.isPending}
               variant="outline"
@@ -268,10 +293,13 @@ export default function ManagerDashboard() {
           <Shield className="w-6 h-6 text-green-600" />
           Live Compliance Status
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {mockComplianceCards.map((card) => (
-            <Card key={card.id} className={`${getStatusColor(card.status)} shadow-md hover:shadow-lg transition-shadow`}>
+          {mockComplianceCards.map(card => (
+            <Card
+              key={card.id}
+              className={`${getStatusColor(card.status)} shadow-md hover:shadow-lg transition-shadow`}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-lg">{card.title}</CardTitle>
@@ -280,15 +308,19 @@ export default function ManagerDashboard() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-2xl font-bold">{card.value}</div>
-                <p className="text-sm text-muted-foreground">{card.description}</p>
-                
+                <p className="text-sm text-muted-foreground">
+                  {card.description}
+                </p>
+
                 {card.deadline && (
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="w-4 h-4" />
-                    <span>Due: {new Date(card.deadline).toLocaleDateString('el-GR')}</span>
+                    <span>
+                      Due: {new Date(card.deadline).toLocaleDateString('el-GR')}
+                    </span>
                   </div>
                 )}
-                
+
                 {card.actionRequired && (
                   <Badge variant="destructive" className="text-xs">
                     Action Required
@@ -306,10 +338,13 @@ export default function ManagerDashboard() {
           <Target className="w-6 h-6 text-blue-600" />
           Key Performance Indicators
         </h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {mockKPIMetrics.map((metric) => (
-            <Card key={metric.id} className="shadow-md hover:shadow-lg transition-shadow">
+          {mockKPIMetrics.map(metric => (
+            <Card
+              key={metric.id}
+              className="shadow-md hover:shadow-lg transition-shadow"
+            >
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">{metric.title}</CardTitle>
               </CardHeader>
@@ -318,23 +353,31 @@ export default function ManagerDashboard() {
                   <div className="text-3xl font-bold">{metric.value}</div>
                   <div className="flex items-center gap-1">
                     {getChangeIcon(metric.changeType)}
-                    <span className={`text-sm font-medium ${
-                      metric.changeType === 'positive' ? 'text-green-600' : 
-                      metric.changeType === 'negative' ? 'text-red-600' : 'text-gray-600'
-                    }`}>
-                      {metric.change > 0 ? '+' : ''}{metric.change}%
+                    <span
+                      className={`text-sm font-medium ${
+                        metric.changeType === 'positive'
+                          ? 'text-green-600'
+                          : metric.changeType === 'negative'
+                            ? 'text-red-600'
+                            : 'text-gray-600'
+                      }`}
+                    >
+                      {metric.change > 0 ? '+' : ''}
+                      {metric.change}%
                     </span>
                   </div>
                 </div>
-                
+
                 {metric.target && (
                   <div className="text-sm text-muted-foreground">
                     <strong>Target:</strong> {metric.target}
                   </div>
                 )}
-                
-                <p className="text-sm text-muted-foreground">{metric.description}</p>
-                
+
+                <p className="text-sm text-muted-foreground">
+                  {metric.description}
+                </p>
+
                 {metric.id === 'labor-cost' && (
                   <Progress value={98.2} className="h-2" />
                 )}
@@ -356,20 +399,20 @@ export default function ManagerDashboard() {
       {/* Critical Alerts */}
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Priority Alerts</h2>
-        
+
         <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">
           <AlertTriangle className="h-4 w-4 text-red-600" />
           <AlertDescription className="text-red-800 dark:text-red-200">
-            <strong>ΦΜΥ Submission Overdue:</strong> Quarterly filing is past due. 
-            Complete submission immediately to avoid penalties.
+            <strong>ΦΜΥ Submission Overdue:</strong> Quarterly filing is past
+            due. Complete submission immediately to avoid penalties.
           </AlertDescription>
         </Alert>
-        
+
         <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
           <Clock className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-800 dark:text-yellow-200">
-            <strong>APD Filing Due Soon:</strong> Monthly APD filing due in 3 days. 
-            Review overtime approvals before submission.
+            <strong>APD Filing Due Soon:</strong> Monthly APD filing due in 3
+            days. Review overtime approvals before submission.
           </AlertDescription>
         </Alert>
       </div>

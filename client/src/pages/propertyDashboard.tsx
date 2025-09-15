@@ -1,12 +1,26 @@
-import { useProperty } from "@/contexts/PropertyContext";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Users, Building2, Euro, TrendingUp, Clock, AlertTriangle, 
-  BarChart3, MapPin, Calendar, Settings
-} from "lucide-react";
+import { useProperty } from '@/contexts/PropertyContext';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Users,
+  Building2,
+  Euro,
+  TrendingUp,
+  Clock,
+  AlertTriangle,
+  BarChart3,
+  MapPin,
+  Calendar,
+  Settings,
+} from 'lucide-react';
 
 interface PropertyStats {
   propertyId: string;
@@ -34,15 +48,16 @@ export default function PropertyDashboard() {
   const { selectedPropertyId, selectedProperty, isGroupView } = useProperty();
 
   // Property-specific stats
-  const { data: propertyStats, isLoading: statsLoading } = useQuery<PropertyStats>({
-    queryKey: ["/api/properties/stats", selectedPropertyId],
-    enabled: !isGroupView && selectedPropertyId !== 'group'
-  });
+  const { data: propertyStats, isLoading: statsLoading } =
+    useQuery<PropertyStats>({
+      queryKey: ['/api/properties/stats', selectedPropertyId],
+      enabled: !isGroupView && selectedPropertyId !== 'group',
+    });
 
   // Group view stats
   const { data: groupStats, isLoading: groupLoading } = useQuery<GroupStats>({
-    queryKey: ["/api/properties/group-stats"],
-    enabled: isGroupView
+    queryKey: ['/api/properties/group-stats'],
+    enabled: isGroupView,
   });
 
   if (isGroupView) {
@@ -50,7 +65,9 @@ export default function PropertyDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Group Overview</h2>
+            <h2 className="text-3xl font-bold tracking-tight">
+              Group Overview
+            </h2>
             <p className="text-muted-foreground">
               Consolidated view across all properties
             </p>
@@ -65,11 +82,15 @@ export default function PropertyDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Properties</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Properties
+                  </CardTitle>
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{groupStats.summary.totalProperties}</div>
+                  <div className="text-2xl font-bold">
+                    {groupStats.summary.totalProperties}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {groupStats.summary.propertiesWithEmployees} active
                   </p>
@@ -78,11 +99,15 @@ export default function PropertyDashboard() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Employees
+                  </CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{groupStats.summary.totalEmployees}</div>
+                  <div className="text-2xl font-bold">
+                    {groupStats.summary.totalEmployees}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     Across all properties
                   </p>
@@ -91,27 +116,36 @@ export default function PropertyDashboard() {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Monthly Labor Cost</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Monthly Labor Cost
+                  </CardTitle>
                   <Euro className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    €{Math.round(groupStats.totalMonthlyLabourCost).toLocaleString()}
+                    €
+                    {Math.round(
+                      groupStats.totalMonthlyLabourCost
+                    ).toLocaleString()}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Group total
-                  </p>
+                  <p className="text-xs text-muted-foreground">Group total</p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Avg Cost per Employee</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Avg Cost per Employee
+                  </CardTitle>
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    €{Math.round(groupStats.totalMonthlyLabourCost / groupStats.summary.totalEmployees).toLocaleString()}
+                    €
+                    {Math.round(
+                      groupStats.totalMonthlyLabourCost /
+                        groupStats.summary.totalEmployees
+                    ).toLocaleString()}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Per employee/month
@@ -130,8 +164,11 @@ export default function PropertyDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {groupStats.breakdown.map((property) => (
-                    <div key={property.propertyId} className="flex items-center justify-between p-4 border rounded-lg">
+                  {groupStats.breakdown.map(property => (
+                    <div
+                      key={property.propertyId}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
                       <div className="flex items-center space-x-4">
                         <Building2 className="w-5 h-5 text-muted-foreground" />
                         <div>
@@ -150,7 +187,11 @@ export default function PropertyDashboard() {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-medium">
-                            €{Math.round(property.employeeCount * 2500).toLocaleString()}/mo
+                            €
+                            {Math.round(
+                              property.employeeCount * 2500
+                            ).toLocaleString()}
+                            /mo
                           </div>
                         </div>
                       </div>
@@ -173,11 +214,11 @@ export default function PropertyDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">
-            {selectedProperty?.name || "Property Dashboard"}
+            {selectedProperty?.name || 'Property Dashboard'}
           </h2>
           <p className="text-muted-foreground flex items-center">
             <MapPin className="w-4 h-4 mr-1" />
-            {selectedProperty?.address || "Property overview and analytics"}
+            {selectedProperty?.address || 'Property overview and analytics'}
           </p>
         </div>
         <Badge variant="outline" className="text-blue-600">
@@ -193,11 +234,15 @@ export default function PropertyDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Employees</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Active Employees
+                </CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{propertyStats.activeEmployees}</div>
+                <div className="text-2xl font-bold">
+                  {propertyStats.activeEmployees}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Assigned to this property
                 </p>
@@ -206,7 +251,9 @@ export default function PropertyDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Monthly Labor Cost</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Monthly Labor Cost
+                </CardTitle>
                 <Euro className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -221,12 +268,18 @@ export default function PropertyDashboard() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Cost per Employee</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Cost per Employee
+                </CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  €{Math.round((propertyStats.monthlyLabourCost || 0) / Math.max(propertyStats.activeEmployees, 1)).toLocaleString()}
+                  €
+                  {Math.round(
+                    (propertyStats.monthlyLabourCost || 0) /
+                      Math.max(propertyStats.activeEmployees, 1)
+                  ).toLocaleString()}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   Average per employee/month
@@ -296,7 +349,8 @@ export default function PropertyDashboard() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Employee list and management features will be displayed here.
+                    Employee list and management features will be displayed
+                    here.
                   </p>
                 </CardContent>
               </Card>
@@ -307,12 +361,14 @@ export default function PropertyDashboard() {
                 <CardHeader>
                   <CardTitle>Property Analytics</CardTitle>
                   <CardDescription>
-                    Performance metrics and insights for {selectedProperty?.name}
+                    Performance metrics and insights for{' '}
+                    {selectedProperty?.name}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Property-specific analytics and reports will be displayed here.
+                    Property-specific analytics and reports will be displayed
+                    here.
                   </p>
                 </CardContent>
               </Card>
@@ -323,12 +379,14 @@ export default function PropertyDashboard() {
                 <CardHeader>
                   <CardTitle>Compliance Status</CardTitle>
                   <CardDescription>
-                    ERGANI, EFKA, and legal compliance for {selectedProperty?.name}
+                    ERGANI, EFKA, and legal compliance for{' '}
+                    {selectedProperty?.name}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Property-specific compliance monitoring will be displayed here.
+                    Property-specific compliance monitoring will be displayed
+                    here.
                   </p>
                 </CardContent>
               </Card>

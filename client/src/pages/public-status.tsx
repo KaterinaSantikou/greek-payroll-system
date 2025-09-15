@@ -4,18 +4,29 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, AlertCircle, XCircle, Clock, Wrench } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle, AlertCircle, XCircle, Clock, Wrench } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface SystemStatus {
-  overall: 'operational' | 'degraded_performance' | 'partial_outage' | 'major_outage' | 'under_maintenance';
+  overall:
+    | 'operational'
+    | 'degraded_performance'
+    | 'partial_outage'
+    | 'major_outage'
+    | 'under_maintenance';
   components: ComponentStatusInfo[];
   activeIncidents: StatusPageIncident[];
   upcomingMaintenance: StatusPageMaintenance[];
@@ -27,7 +38,12 @@ interface ComponentStatusInfo {
   id: string;
   name: string;
   description?: string;
-  status: 'operational' | 'degraded_performance' | 'partial_outage' | 'major_outage' | 'under_maintenance';
+  status:
+    | 'operational'
+    | 'degraded_performance'
+    | 'partial_outage'
+    | 'major_outage'
+    | 'under_maintenance';
   category: string;
   lastUpdated: string;
   uptimePercentage?: number;
@@ -79,7 +95,7 @@ const statusIcons = {
 const statusLabels = {
   operational: 'Operational',
   degraded_performance: 'Degraded Performance',
-  partial_outage: 'Partial Outage', 
+  partial_outage: 'Partial Outage',
   major_outage: 'Major Outage',
   under_maintenance: 'Under Maintenance',
 };
@@ -107,7 +123,7 @@ export default function PublicStatus() {
 
   useEffect(() => {
     fetchStatus();
-    
+
     // Refresh every 30 seconds
     const interval = setInterval(fetchStatus, 30000);
     return () => clearInterval(interval);
@@ -129,18 +145,18 @@ export default function PublicStatus() {
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!subscriberEmail) {
       toast({
-        title: "Error",
-        description: "Please enter your email address",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Please enter your email address',
+        variant: 'destructive',
       });
       return;
     }
 
     setSubscribing(true);
-    
+
     try {
       const response = await fetch('/api/status/public/subscribe', {
         method: 'POST',
@@ -152,8 +168,9 @@ export default function PublicStatus() {
 
       if (response.ok) {
         toast({
-          title: "Subscribed!",
-          description: "You'll receive email notifications about status updates.",
+          title: 'Subscribed!',
+          description:
+            "You'll receive email notifications about status updates.",
         });
         setSubscriberEmail('');
       } else {
@@ -161,9 +178,9 @@ export default function PublicStatus() {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to subscribe to notifications. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to subscribe to notifications. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setSubscribing(false);
@@ -238,8 +255,12 @@ export default function PublicStatus() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">PayrollSync Status</h1>
-          <p className="text-gray-600">Current system status and uptime information</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            PayrollSync Status
+          </h1>
+          <p className="text-gray-600">
+            Current system status and uptime information
+          </p>
         </div>
 
         {/* Overall Status */}
@@ -260,19 +281,27 @@ export default function PublicStatus() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{status.uptimeStats.overall}%</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {status.uptimeStats.overall}%
+                </div>
                 <div className="text-sm text-gray-600">Overall Uptime</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{status.uptimeStats.last24h}%</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {status.uptimeStats.last24h}%
+                </div>
                 <div className="text-sm text-gray-600">Last 24 hours</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{status.uptimeStats.last7d}%</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {status.uptimeStats.last7d}%
+                </div>
                 <div className="text-sm text-gray-600">Last 7 days</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{status.uptimeStats.last30d}%</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {status.uptimeStats.last30d}%
+                </div>
                 <div className="text-sm text-gray-600">Last 30 days</div>
               </div>
             </div>
@@ -289,12 +318,17 @@ export default function PublicStatus() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {status.activeIncidents.map((incident) => (
-                <div key={incident.id} className="border-l-4 border-red-500 pl-4 mb-4 last:mb-0">
+              {status.activeIncidents.map(incident => (
+                <div
+                  key={incident.id}
+                  className="border-l-4 border-red-500 pl-4 mb-4 last:mb-0"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold">{incident.title}</h3>
                     <div className="flex space-x-2">
-                      <Badge className={severityColors[incident.severity]}>{incident.severity}</Badge>
+                      <Badge className={severityColors[incident.severity]}>
+                        {incident.severity}
+                      </Badge>
                       <Badge variant="outline">{incident.status}</Badge>
                     </div>
                   </div>
@@ -321,15 +355,23 @@ export default function PublicStatus() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {status.upcomingMaintenance.map((maintenance) => (
-                <div key={maintenance.id} className="border-l-4 border-blue-500 pl-4 mb-4 last:mb-0">
+              {status.upcomingMaintenance.map(maintenance => (
+                <div
+                  key={maintenance.id}
+                  className="border-l-4 border-blue-500 pl-4 mb-4 last:mb-0"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold">{maintenance.title}</h3>
-                    <Badge className="bg-blue-100 text-blue-800">{maintenance.status}</Badge>
+                    <Badge className="bg-blue-100 text-blue-800">
+                      {maintenance.status}
+                    </Badge>
                   </div>
-                  <p className="text-gray-600 mb-2">{maintenance.description}</p>
+                  <p className="text-gray-600 mb-2">
+                    {maintenance.description}
+                  </p>
                   <p className="text-sm text-gray-500">
-                    Scheduled: {formatDate(maintenance.scheduledStart)} - {formatDate(maintenance.scheduledEnd)}
+                    Scheduled: {formatDate(maintenance.scheduledStart)} -{' '}
+                    {formatDate(maintenance.scheduledEnd)}
                   </p>
                 </div>
               ))}
@@ -343,41 +385,49 @@ export default function PublicStatus() {
             <CardTitle>System Components</CardTitle>
           </CardHeader>
           <CardContent>
-            {Object.entries(categorizedComponents).map(([category, components]) => (
-              <div key={category} className="mb-6 last:mb-0">
-                <h3 className="text-lg font-semibold mb-3 capitalize">
-                  {category.replace('_', ' ')} Systems
-                </h3>
-                <div className="space-y-2">
-                  {components.map((component) => (
-                    <div key={component.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        {statusIcons[component.status]}
-                        <div>
-                          <div className="font-medium">{component.name}</div>
-                          {component.description && (
-                            <div className="text-sm text-gray-600">{component.description}</div>
+            {Object.entries(categorizedComponents).map(
+              ([category, components]) => (
+                <div key={category} className="mb-6 last:mb-0">
+                  <h3 className="text-lg font-semibold mb-3 capitalize">
+                    {category.replace('_', ' ')} Systems
+                  </h3>
+                  <div className="space-y-2">
+                    {components.map(component => (
+                      <div
+                        key={component.id}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
+                        <div className="flex items-center space-x-3">
+                          {statusIcons[component.status]}
+                          <div>
+                            <div className="font-medium">{component.name}</div>
+                            {component.description && (
+                              <div className="text-sm text-gray-600">
+                                {component.description}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <Badge className={statusColors[component.status]}>
+                            {statusLabels[component.status]}
+                          </Badge>
+                          {component.uptimePercentage && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              {component.uptimePercentage}% uptime
+                            </div>
                           )}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <Badge className={statusColors[component.status]}>
-                          {statusLabels[component.status]}
-                        </Badge>
-                        {component.uptimePercentage && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            {component.uptimePercentage}% uptime
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                  {category !==
+                    Object.keys(categorizedComponents)[
+                      Object.keys(categorizedComponents).length - 1
+                    ] && <Separator className="mt-6" />}
                 </div>
-                {category !== Object.keys(categorizedComponents)[Object.keys(categorizedComponents).length - 1] && (
-                  <Separator className="mt-6" />
-                )}
-              </div>
-            ))}
+              )
+            )}
           </CardContent>
         </Card>
 
@@ -389,21 +439,33 @@ export default function PublicStatus() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {status.recentIncidents.map((incident) => (
-                  <div key={incident.id} className="border-l-4 border-gray-300 pl-4">
+                {status.recentIncidents.map(incident => (
+                  <div
+                    key={incident.id}
+                    className="border-l-4 border-gray-300 pl-4"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold">{incident.title}</h3>
                       <div className="flex space-x-2">
-                        <Badge className={severityColors[incident.severity]}>{incident.severity}</Badge>
-                        <Badge variant={incident.status === 'resolved' ? 'default' : 'destructive'}>
+                        <Badge className={severityColors[incident.severity]}>
+                          {incident.severity}
+                        </Badge>
+                        <Badge
+                          variant={
+                            incident.status === 'resolved'
+                              ? 'default'
+                              : 'destructive'
+                          }
+                        >
                           {incident.status}
                         </Badge>
                       </div>
                     </div>
                     <p className="text-gray-600 mb-2">{incident.description}</p>
                     <div className="text-xs text-gray-400">
-                      {formatDate(incident.createdAt)} 
-                      {incident.resolvedAt && ` - Resolved: ${formatDate(incident.resolvedAt)}`}
+                      {formatDate(incident.createdAt)}
+                      {incident.resolvedAt &&
+                        ` - Resolved: ${formatDate(incident.resolvedAt)}`}
                     </div>
                   </div>
                 ))}
@@ -426,7 +488,7 @@ export default function PublicStatus() {
                 type="email"
                 placeholder="Enter your email address"
                 value={subscriberEmail}
-                onChange={(e) => setSubscriberEmail(e.target.value)}
+                onChange={e => setSubscriberEmail(e.target.value)}
                 className="flex-1"
               />
               <Button type="submit" disabled={subscribing}>

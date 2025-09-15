@@ -1,30 +1,36 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
-import { 
-  CheckCircle, 
-  AlertTriangle, 
-  Clock, 
-  TrendingUp, 
-  TrendingDown, 
-  Download, 
-  Upload, 
-  FileText, 
-  Eye, 
-  Play, 
-  ArrowRight, 
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import {
+  CheckCircle,
+  AlertTriangle,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  Download,
+  Upload,
+  FileText,
+  Eye,
+  Play,
+  ArrowRight,
   ArrowLeft,
   RefreshCw,
   Calculator,
   DollarSign,
   Users,
-  Calendar
-} from "lucide-react";
+  Calendar,
+} from 'lucide-react';
 
 interface PayrollStep {
   id: string;
@@ -45,7 +51,11 @@ interface TimesheetData {
 interface TimesheetException {
   id: string;
   employeeName: string;
-  type: 'missing_punch' | 'overtime_approval' | 'schedule_conflict' | 'break_violation';
+  type:
+    | 'missing_punch'
+    | 'overtime_approval'
+    | 'schedule_conflict'
+    | 'break_violation';
   description: string;
   severity: 'high' | 'medium' | 'low';
   suggestedAction: string;
@@ -78,36 +88,40 @@ const payrollSteps: PayrollStep[] = [
     title: 'Import Timesheets',
     description: 'Automatically import and validate timesheet data',
     status: 'pending',
-    isActive: true
+    isActive: true,
   },
   {
     id: 'validate',
     title: 'Validate Exceptions',
     description: 'Review and resolve timesheet exceptions',
     status: 'pending',
-    isActive: false
+    isActive: false,
   },
   {
     id: 'preview',
     title: 'Preview Payroll',
     description: 'Review payroll totals and variance analysis',
     status: 'pending',
-    isActive: false
+    isActive: false,
   },
   {
     id: 'generate',
     title: 'Generate & Submit',
     description: 'Generate SEPA files, APD, and ΦΜΥ submissions',
     status: 'pending',
-    isActive: false
-  }
+    isActive: false,
+  },
 ];
 
 export default function PayrollRunWizard() {
   const [currentStep, setCurrentStep] = useState(0);
   const [steps, setSteps] = useState(payrollSteps);
-  const [timesheetData, setTimesheetData] = useState<TimesheetData | null>(null);
-  const [payrollPreview, setPayrollPreview] = useState<PayrollPreview | null>(null);
+  const [timesheetData, setTimesheetData] = useState<TimesheetData | null>(
+    null
+  );
+  const [payrollPreview, setPayrollPreview] = useState<PayrollPreview | null>(
+    null
+  );
   const queryClient = useQueryClient();
 
   // Import timesheets mutation
@@ -115,11 +129,11 @@ export default function PayrollRunWizard() {
     mutationFn: async () => {
       const response = await fetch('/api/payroll-wizard/import-timesheets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       setTimesheetData(data);
       updateStepStatus(0, 'completed');
       if (data.exceptions.length === 0) {
@@ -129,7 +143,7 @@ export default function PayrollRunWizard() {
       } else {
         setCurrentStep(1);
       }
-    }
+    },
   });
 
   // Generate payroll preview mutation
@@ -137,15 +151,15 @@ export default function PayrollRunWizard() {
     mutationFn: async () => {
       const response = await fetch('/api/payroll-wizard/generate-preview', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       setPayrollPreview(data);
       updateStepStatus(2, 'completed');
       setCurrentStep(3);
-    }
+    },
   });
 
   // Final payroll generation mutation
@@ -153,19 +167,24 @@ export default function PayrollRunWizard() {
     mutationFn: async () => {
       const response = await fetch('/api/payroll-wizard/generate-final', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
       return response.json();
     },
     onSuccess: () => {
       updateStepStatus(3, 'completed');
-    }
+    },
   });
 
-  const updateStepStatus = (stepIndex: number, status: PayrollStep['status']) => {
-    setSteps(prev => prev.map((step, index) => 
-      index === stepIndex ? { ...step, status } : step
-    ));
+  const updateStepStatus = (
+    stepIndex: number,
+    status: PayrollStep['status']
+  ) => {
+    setSteps(prev =>
+      prev.map((step, index) =>
+        index === stepIndex ? { ...step, status } : step
+      )
+    );
   };
 
   const handleStepClick = (stepIndex: number) => {
@@ -196,17 +215,26 @@ export default function PayrollRunWizard() {
     }
   };
 
-  const getVarianceDisplay = (variance: { amount: number; percentage: number }, label: string) => {
+  const getVarianceDisplay = (
+    variance: { amount: number; percentage: number },
+    label: string
+  ) => {
     const isIncrease = variance.amount > 0;
     const color = isIncrease ? 'text-red-600' : 'text-green-600';
-    const icon = isIncrease ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />;
-    
+    const icon = isIncrease ? (
+      <TrendingUp className="w-4 h-4" />
+    ) : (
+      <TrendingDown className="w-4 h-4" />
+    );
+
     return (
       <div className={`flex items-center gap-2 ${color}`}>
         {icon}
         <span className="font-medium">
-          {isIncrease ? '+' : ''}€{Math.abs(variance.amount).toLocaleString('el-GR')} 
-          ({isIncrease ? '+' : ''}{variance.percentage.toFixed(1)}% vs July)
+          {isIncrease ? '+' : ''}€
+          {Math.abs(variance.amount).toLocaleString('el-GR')}(
+          {isIncrease ? '+' : ''}
+          {variance.percentage.toFixed(1)}% vs July)
         </span>
       </div>
     );
@@ -233,7 +261,8 @@ export default function PayrollRunWizard() {
                     <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
                     <p className="text-lg">Importing timesheet data...</p>
                     <p className="text-sm text-muted-foreground">
-                      Connecting to ERGANI II, digital work cards, and manual entries
+                      Connecting to ERGANI II, digital work cards, and manual
+                      entries
                     </p>
                   </div>
                 </div>
@@ -242,26 +271,43 @@ export default function PayrollRunWizard() {
                   <Alert>
                     <CheckCircle className="h-4 w-4" />
                     <AlertDescription>
-                      Successfully imported timesheets for {timesheetData.employeesProcessed} employees
+                      Successfully imported timesheets for{' '}
+                      {timesheetData.employeesProcessed} employees
                     </AlertDescription>
                   </Alert>
-                  
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center p-4 bg-muted rounded-lg">
-                      <div className="text-2xl font-bold">{timesheetData.totalHours}</div>
-                      <div className="text-sm text-muted-foreground">Total Hours</div>
+                      <div className="text-2xl font-bold">
+                        {timesheetData.totalHours}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Total Hours
+                      </div>
                     </div>
                     <div className="text-center p-4 bg-muted rounded-lg">
-                      <div className="text-2xl font-bold">{timesheetData.regularHours}</div>
-                      <div className="text-sm text-muted-foreground">Regular Hours</div>
+                      <div className="text-2xl font-bold">
+                        {timesheetData.regularHours}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Regular Hours
+                      </div>
                     </div>
                     <div className="text-center p-4 bg-muted rounded-lg">
-                      <div className="text-2xl font-bold text-orange-600">{timesheetData.overtimeHours}</div>
-                      <div className="text-sm text-muted-foreground">Overtime Hours</div>
+                      <div className="text-2xl font-bold text-orange-600">
+                        {timesheetData.overtimeHours}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Overtime Hours
+                      </div>
                     </div>
                     <div className="text-center p-4 bg-muted rounded-lg">
-                      <div className="text-2xl font-bold text-red-600">{timesheetData.exceptions.length}</div>
-                      <div className="text-sm text-muted-foreground">Exceptions</div>
+                      <div className="text-2xl font-bold text-red-600">
+                        {timesheetData.exceptions.length}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Exceptions
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -279,19 +325,35 @@ export default function PayrollRunWizard() {
                 Validate Exceptions
               </CardTitle>
               <CardDescription>
-                Review and resolve timesheet exceptions before payroll processing
+                Review and resolve timesheet exceptions before payroll
+                processing
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {timesheetData?.exceptions.map((exception) => (
-                <div key={exception.id} className="border rounded-lg p-4 space-y-3">
+              {timesheetData?.exceptions.map(exception => (
+                <div
+                  key={exception.id}
+                  className="border rounded-lg p-4 space-y-3"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <Badge variant={exception.severity === 'high' ? 'destructive' : exception.severity === 'medium' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={
+                          exception.severity === 'high'
+                            ? 'destructive'
+                            : exception.severity === 'medium'
+                              ? 'default'
+                              : 'secondary'
+                        }
+                      >
                         {exception.severity.toUpperCase()}
                       </Badge>
-                      <span className="font-medium">{exception.employeeName}</span>
-                      <span className="text-sm text-muted-foreground">{exception.type.replace('_', ' ').toUpperCase()}</span>
+                      <span className="font-medium">
+                        {exception.employeeName}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {exception.type.replace('_', ' ').toUpperCase()}
+                      </span>
                     </div>
                     {exception.canAutoResolve && (
                       <Button size="sm" variant="outline">
@@ -301,16 +363,18 @@ export default function PayrollRunWizard() {
                   </div>
                   <p className="text-sm">{exception.description}</p>
                   <p className="text-sm text-muted-foreground">
-                    <strong>Suggested Action:</strong> {exception.suggestedAction}
+                    <strong>Suggested Action:</strong>{' '}
+                    {exception.suggestedAction}
                   </p>
                 </div>
               ))}
-              
+
               {timesheetData?.exceptions.length === 0 && (
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
                   <AlertDescription>
-                    No exceptions found. All timesheets are valid and ready for payroll processing.
+                    No exceptions found. All timesheets are valid and ready for
+                    payroll processing.
                   </AlertDescription>
                 </Alert>
               )}
@@ -327,7 +391,8 @@ export default function PayrollRunWizard() {
                 Preview Payroll Totals
               </CardTitle>
               <CardDescription>
-                Review payroll calculations and variance analysis vs previous month
+                Review payroll calculations and variance analysis vs previous
+                month
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -337,7 +402,8 @@ export default function PayrollRunWizard() {
                     <Calculator className="w-16 h-16 text-blue-600 animate-pulse" />
                     <p className="text-lg">Calculating payroll totals...</p>
                     <p className="text-sm text-muted-foreground">
-                      Processing Greek tax calculations, EFKA insurance, and collective agreements
+                      Processing Greek tax calculations, EFKA insurance, and
+                      collective agreements
                     </p>
                   </div>
                 </div>
@@ -348,30 +414,49 @@ export default function PayrollRunWizard() {
                     <Card className="border-2 border-blue-200">
                       <CardContent className="p-4 text-center">
                         <div className="text-3xl font-bold text-blue-600">
-                          €{payrollPreview.totalGrossPay.toLocaleString('el-GR')}
+                          €
+                          {payrollPreview.totalGrossPay.toLocaleString('el-GR')}
                         </div>
-                        <div className="text-sm text-muted-foreground">Total Gross Pay</div>
-                        {getVarianceDisplay(payrollPreview.variance.grossPay, 'Gross Pay')}
+                        <div className="text-sm text-muted-foreground">
+                          Total Gross Pay
+                        </div>
+                        {getVarianceDisplay(
+                          payrollPreview.variance.grossPay,
+                          'Gross Pay'
+                        )}
                       </CardContent>
                     </Card>
-                    
+
                     <Card className="border-2 border-green-200">
                       <CardContent className="p-4 text-center">
                         <div className="text-3xl font-bold text-green-600">
                           €{payrollPreview.totalNetPay.toLocaleString('el-GR')}
                         </div>
-                        <div className="text-sm text-muted-foreground">Total Net Pay</div>
-                        {getVarianceDisplay(payrollPreview.variance.netPay, 'Net Pay')}
+                        <div className="text-sm text-muted-foreground">
+                          Total Net Pay
+                        </div>
+                        {getVarianceDisplay(
+                          payrollPreview.variance.netPay,
+                          'Net Pay'
+                        )}
                       </CardContent>
                     </Card>
-                    
+
                     <Card className="border-2 border-orange-200">
                       <CardContent className="p-4 text-center">
                         <div className="text-3xl font-bold text-orange-600">
-                          €{payrollPreview.breakdown.overtimePay.toLocaleString('el-GR')}
+                          €
+                          {payrollPreview.breakdown.overtimePay.toLocaleString(
+                            'el-GR'
+                          )}
                         </div>
-                        <div className="text-sm text-muted-foreground">Overtime Pay</div>
-                        {getVarianceDisplay(payrollPreview.variance.overtime, 'Overtime')}
+                        <div className="text-sm text-muted-foreground">
+                          Overtime Pay
+                        </div>
+                        {getVarianceDisplay(
+                          payrollPreview.variance.overtime,
+                          'Overtime'
+                        )}
                       </CardContent>
                     </Card>
                   </div>
@@ -380,8 +465,13 @@ export default function PayrollRunWizard() {
                   <Alert className="border-red-200 bg-red-50 dark:bg-red-900/20">
                     <TrendingUp className="h-4 w-4 text-red-600" />
                     <AlertDescription className="text-red-800 dark:text-red-200">
-                      <strong>Variance Alert:</strong> Overtime costs increased by €{Math.abs(payrollPreview.variance.overtime.amount).toLocaleString('el-GR')} 
-                      (+{payrollPreview.variance.overtime.percentage.toFixed(1)}%) compared to July due to summer season staffing.
+                      <strong>Variance Alert:</strong> Overtime costs increased
+                      by €
+                      {Math.abs(
+                        payrollPreview.variance.overtime.amount
+                      ).toLocaleString('el-GR')}
+                      (+{payrollPreview.variance.overtime.percentage.toFixed(1)}
+                      %) compared to July due to summer season staffing.
                     </AlertDescription>
                   </Alert>
 
@@ -394,24 +484,49 @@ export default function PayrollRunWizard() {
                       <CardContent className="space-y-3">
                         <div className="flex justify-between">
                           <span>Regular Pay</span>
-                          <span className="font-medium">€{payrollPreview.breakdown.regularPay.toLocaleString('el-GR')}</span>
+                          <span className="font-medium">
+                            €
+                            {payrollPreview.breakdown.regularPay.toLocaleString(
+                              'el-GR'
+                            )}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Overtime Pay</span>
-                          <span className="font-medium text-orange-600">€{payrollPreview.breakdown.overtimePay.toLocaleString('el-GR')}</span>
+                          <span className="font-medium text-orange-600">
+                            €
+                            {payrollPreview.breakdown.overtimePay.toLocaleString(
+                              'el-GR'
+                            )}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Bonuses</span>
-                          <span className="font-medium">€{payrollPreview.breakdown.bonuses.toLocaleString('el-GR')}</span>
+                          <span className="font-medium">
+                            €
+                            {payrollPreview.breakdown.bonuses.toLocaleString(
+                              'el-GR'
+                            )}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Allowances</span>
-                          <span className="font-medium">€{payrollPreview.breakdown.allowances.toLocaleString('el-GR')}</span>
+                          <span className="font-medium">
+                            €
+                            {payrollPreview.breakdown.allowances.toLocaleString(
+                              'el-GR'
+                            )}
+                          </span>
                         </div>
                         <Separator />
                         <div className="flex justify-between font-bold">
                           <span>Gross Total</span>
-                          <span>€{payrollPreview.totalGrossPay.toLocaleString('el-GR')}</span>
+                          <span>
+                            €
+                            {payrollPreview.totalGrossPay.toLocaleString(
+                              'el-GR'
+                            )}
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
@@ -423,24 +538,47 @@ export default function PayrollRunWizard() {
                       <CardContent className="space-y-3">
                         <div className="flex justify-between">
                           <span>Income Tax</span>
-                          <span className="font-medium">€{(payrollPreview.totalTaxes * 0.6).toLocaleString('el-GR')}</span>
+                          <span className="font-medium">
+                            €
+                            {(payrollPreview.totalTaxes * 0.6).toLocaleString(
+                              'el-GR'
+                            )}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Solidarity Tax</span>
-                          <span className="font-medium">€{(payrollPreview.totalTaxes * 0.1).toLocaleString('el-GR')}</span>
+                          <span className="font-medium">
+                            €
+                            {(payrollPreview.totalTaxes * 0.1).toLocaleString(
+                              'el-GR'
+                            )}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span>EFKA Insurance</span>
-                          <span className="font-medium">€{payrollPreview.totalInsurance.toLocaleString('el-GR')}</span>
+                          <span className="font-medium">
+                            €
+                            {payrollPreview.totalInsurance.toLocaleString(
+                              'el-GR'
+                            )}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Other Deductions</span>
-                          <span className="font-medium">€{payrollPreview.breakdown.deductions.toLocaleString('el-GR')}</span>
+                          <span className="font-medium">
+                            €
+                            {payrollPreview.breakdown.deductions.toLocaleString(
+                              'el-GR'
+                            )}
+                          </span>
                         </div>
                         <Separator />
                         <div className="flex justify-between font-bold">
                           <span>Net Pay</span>
-                          <span className="text-green-600">€{payrollPreview.totalNetPay.toLocaleString('el-GR')}</span>
+                          <span className="text-green-600">
+                            €
+                            {payrollPreview.totalNetPay.toLocaleString('el-GR')}
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
@@ -471,7 +609,9 @@ export default function PayrollRunWizard() {
                       <FileText className="w-6 h-6 text-blue-600" />
                     </div>
                     <div className="font-medium">SEPA Files</div>
-                    <div className="text-sm text-muted-foreground">pain.001 payment files</div>
+                    <div className="text-sm text-muted-foreground">
+                      pain.001 payment files
+                    </div>
                     <Button className="mt-2 w-full" variant="outline" size="sm">
                       Generate SEPA
                     </Button>
@@ -484,7 +624,9 @@ export default function PayrollRunWizard() {
                       <Upload className="w-6 h-6 text-green-600" />
                     </div>
                     <div className="font-medium">APD Filing</div>
-                    <div className="text-sm text-muted-foreground">Monthly APD submission</div>
+                    <div className="text-sm text-muted-foreground">
+                      Monthly APD submission
+                    </div>
                     <Button className="mt-2 w-full" variant="outline" size="sm">
                       Submit APD
                     </Button>
@@ -497,7 +639,9 @@ export default function PayrollRunWizard() {
                       <Calendar className="w-6 h-6 text-orange-600" />
                     </div>
                     <div className="font-medium">ΦΜΥ Filing</div>
-                    <div className="text-sm text-muted-foreground">Tax authority submission</div>
+                    <div className="text-sm text-muted-foreground">
+                      Tax authority submission
+                    </div>
                     <Button className="mt-2 w-full" variant="outline" size="sm">
                       Submit ΦΜΥ
                     </Button>
@@ -509,7 +653,8 @@ export default function PayrollRunWizard() {
                 <Alert>
                   <CheckCircle className="h-4 w-4" />
                   <AlertDescription>
-                    ✅ Payroll processing completed successfully! All files generated and submissions completed.
+                    ✅ Payroll processing completed successfully! All files
+                    generated and submissions completed.
                   </AlertDescription>
                 </Alert>
               )}
@@ -527,7 +672,9 @@ export default function PayrollRunWizard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Payroll Run Wizard</h1>
-          <p className="text-muted-foreground">August 2025 Payroll Processing</p>
+          <p className="text-muted-foreground">
+            August 2025 Payroll Processing
+          </p>
         </div>
         <div className="text-sm text-muted-foreground">
           Step {currentStep + 1} of {steps.length}
@@ -543,10 +690,10 @@ export default function PayrollRunWizard() {
                 <button
                   onClick={() => handleStepClick(index)}
                   className={`w-10 h-10 rounded-full flex items-center justify-center border-2 mb-2 transition-colors ${
-                    step.status === 'completed' 
-                      ? 'bg-green-600 border-green-600 text-white' 
-                      : index === currentStep 
-                        ? 'bg-blue-600 border-blue-600 text-white' 
+                    step.status === 'completed'
+                      ? 'bg-green-600 border-green-600 text-white'
+                      : index === currentStep
+                        ? 'bg-blue-600 border-blue-600 text-white'
                         : 'border-gray-300 text-gray-400'
                   }`}
                 >
@@ -559,15 +706,22 @@ export default function PayrollRunWizard() {
                   )}
                 </button>
                 <div className="text-center">
-                  <div className={`text-sm font-medium ${index === currentStep ? 'text-blue-600' : 'text-gray-600'}`}>
+                  <div
+                    className={`text-sm font-medium ${index === currentStep ? 'text-blue-600' : 'text-gray-600'}`}
+                  >
                     {step.title}
                   </div>
-                  <div className="text-xs text-muted-foreground">{step.description}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {step.description}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-          <Progress value={((currentStep + 1) / steps.length) * 100} className="h-2" />
+          <Progress
+            value={((currentStep + 1) / steps.length) * 100}
+            className="h-2"
+          />
         </CardContent>
       </Card>
 
@@ -585,7 +739,7 @@ export default function PayrollRunWizard() {
           <ArrowLeft className="w-4 h-4" />
           Previous
         </Button>
-        
+
         <Button
           onClick={handleNext}
           disabled={

@@ -1,17 +1,17 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { 
-  Shield, 
-  Zap, 
-  Database, 
-  Smartphone, 
-  Timer, 
-  Key, 
-  Building, 
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import {
+  Shield,
+  Zap,
+  Database,
+  Smartphone,
+  Timer,
+  Key,
+  Building,
   ArrowRight,
   CheckCircle,
   Code,
@@ -23,102 +23,124 @@ import {
   Settings,
   FileText,
   CreditCard,
-  BarChart3
-} from "lucide-react";
+  BarChart3,
+} from 'lucide-react';
 
 export default function ProductVisionPage() {
-  const [selectedDemo, setSelectedDemo] = useState<string>("payroll-run");
+  const [selectedDemo, setSelectedDemo] = useState<string>('payroll-run');
 
   const principles = [
     {
-      title: "Compliance-first by design",
-      description: "Greek law encoded as machine-readable rules with automatic updates",
+      title: 'Compliance-first by design',
+      description:
+        'Greek law encoded as machine-readable rules with automatic updates',
       icon: Shield,
       features: [
-        "Machine-readable Greek labor law rules",
-        "Automatic regulatory updates with effective dates",
-        "Real-time compliance validation",
-        "ERGANI II, e-EFKA, AADE integration"
+        'Machine-readable Greek labor law rules',
+        'Automatic regulatory updates with effective dates',
+        'Real-time compliance validation',
+        'ERGANI II, e-EFKA, AADE integration',
       ],
-      status: "active"
+      status: 'active',
     },
     {
-      title: "Automation everywhere",
-      description: "From Digital Work Card to SEPA payments and GL postings",
+      title: 'Automation everywhere',
+      description: 'From Digital Work Card to SEPA payments and GL postings',
       icon: Zap,
       features: [
-        "Digital Work Card → timesheets",
-        "Timesheets → payroll calculations",
-        "Payroll → regulatory filings",
-        "Filings → SEPA payments",
-        "Payments → GL postings"
+        'Digital Work Card → timesheets',
+        'Timesheets → payroll calculations',
+        'Payroll → regulatory filings',
+        'Filings → SEPA payments',
+        'Payments → GL postings',
       ],
-      status: "active"
+      status: 'active',
     },
     {
-      title: "Single source of truth",
-      description: "One employee graph across entities, properties, and departments",
+      title: 'Single source of truth',
+      description:
+        'One employee graph across entities, properties, and departments',
       icon: Database,
       features: [
-        "Unified employee master data",
-        "Multi-property employee management",
-        "Cross-department cost center allocation",
-        "Centralized organizational hierarchy"
+        'Unified employee master data',
+        'Multi-property employee management',
+        'Cross-department cost center allocation',
+        'Centralized organizational hierarchy',
       ],
-      status: "active"
+      status: 'active',
     },
     {
-      title: "Opinionated UX",
-      description: "90-second payroll run for 150 employees, zero manual keying",
+      title: 'Opinionated UX',
+      description:
+        '90-second payroll run for 150 employees, zero manual keying',
       icon: Timer,
       features: [
-        "90-second payroll processing",
-        "Zero manual data entry",
-        "One-click recurring filings",
-        "Streamlined user workflows"
+        '90-second payroll processing',
+        'Zero manual data entry',
+        'One-click recurring filings',
+        'Streamlined user workflows',
       ],
-      status: "active"
+      status: 'active',
     },
     {
-      title: "Open, API-first",
-      description: "REST/GraphQL for HRIS, T&A, accounting/ERP, banks",
+      title: 'Open, API-first',
+      description: 'REST/GraphQL for HRIS, T&A, accounting/ERP, banks',
       icon: Code,
       features: [
-        "RESTful API architecture",
-        "GraphQL query capabilities",
-        "HRIS system integrations",
-        "Banking and ERP connectors"
+        'RESTful API architecture',
+        'GraphQL query capabilities',
+        'HRIS system integrations',
+        'Banking and ERP connectors',
       ],
-      status: "active"
+      status: 'active',
     },
     {
-      title: "Hotel-ready",
-      description: "Seasonal hires, split shifts, tip pooling, multi-property",
+      title: 'Hotel-ready',
+      description: 'Seasonal hires, split shifts, tip pooling, multi-property',
       icon: Building,
       features: [
-        "Seasonal workforce management",
-        "Split shift scheduling",
-        "Tip pooling calculations",
-        "Multi-property operations"
+        'Seasonal workforce management',
+        'Split shift scheduling',
+        'Tip pooling calculations',
+        'Multi-property operations',
       ],
-      status: "active"
-    }
+      status: 'active',
+    },
   ];
 
   const automationFlow = [
-    { step: "Digital Work Card", description: "Employee clock in/out", icon: Smartphone },
-    { step: "Timesheets", description: "Automated time capture", icon: Clock },
-    { step: "Payroll", description: "Greek law calculations", icon: BarChart3 },
-    { step: "Filings", description: "ERGANI/EFKA submissions", icon: FileText },
-    { step: "SEPA Payments", description: "Bank transfers", icon: CreditCard },
-    { step: "GL Postings", description: "Accounting entries", icon: Database }
+    {
+      step: 'Digital Work Card',
+      description: 'Employee clock in/out',
+      icon: Smartphone,
+    },
+    { step: 'Timesheets', description: 'Automated time capture', icon: Clock },
+    { step: 'Payroll', description: 'Greek law calculations', icon: BarChart3 },
+    { step: 'Filings', description: 'ERGANI/EFKA submissions', icon: FileText },
+    { step: 'SEPA Payments', description: 'Bank transfers', icon: CreditCard },
+    { step: 'GL Postings', description: 'Accounting entries', icon: Database },
   ];
 
   const uxMetrics = [
-    { metric: "Payroll Processing", target: "90 seconds", current: "75 seconds", progress: 95 },
-    { metric: "Manual Data Entry", target: "0%", current: "2%", progress: 98 },
-    { metric: "Filing Automation", target: "100%", current: "98%", progress: 98 },
-    { metric: "Employee Capacity", target: "150 employees", current: "200+ employees", progress: 100 }
+    {
+      metric: 'Payroll Processing',
+      target: '90 seconds',
+      current: '75 seconds',
+      progress: 95,
+    },
+    { metric: 'Manual Data Entry', target: '0%', current: '2%', progress: 98 },
+    {
+      metric: 'Filing Automation',
+      target: '100%',
+      current: '98%',
+      progress: 98,
+    },
+    {
+      metric: 'Employee Capacity',
+      target: '150 employees',
+      current: '200+ employees',
+      progress: 100,
+    },
   ];
 
   const getIcon = (IconComponent: any) => <IconComponent className="h-5 w-5" />;
@@ -204,8 +226,12 @@ export default function ProductVisionPage() {
                             <IconComponent className="h-8 w-8 text-primary" />
                           </div>
                           <div className="text-center">
-                            <div className="font-semibold text-sm">{step.step}</div>
-                            <div className="text-xs text-muted-foreground">{step.description}</div>
+                            <div className="font-semibold text-sm">
+                              {step.step}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {step.description}
+                            </div>
                           </div>
                         </div>
                         {index < automationFlow.length - 1 && (
@@ -288,17 +314,27 @@ export default function ProductVisionPage() {
               {uxMetrics.map((metric, index) => (
                 <Card key={index}>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium">{metric.metric}</CardTitle>
+                    <CardTitle className="text-sm font-medium">
+                      {metric.metric}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">Target</span>
-                        <span className="text-sm font-semibold">{metric.target}</span>
+                        <span className="text-xs text-muted-foreground">
+                          Target
+                        </span>
+                        <span className="text-sm font-semibold">
+                          {metric.target}
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">Current</span>
-                        <span className="text-sm font-semibold text-green-600">{metric.current}</span>
+                        <span className="text-xs text-muted-foreground">
+                          Current
+                        </span>
+                        <span className="text-sm font-semibold text-green-600">
+                          {metric.current}
+                        </span>
                       </div>
                       <Progress value={metric.progress} className="mt-2" />
                     </div>
@@ -314,27 +350,32 @@ export default function ProductVisionPage() {
                   90-Second Payroll Run Demo
                 </CardTitle>
                 <p className="text-muted-foreground">
-                  Experience the speed of our opinionated UX for 150-employee property
+                  Experience the speed of our opinionated UX for 150-employee
+                  property
                 </p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
-                    <Button 
-                      onClick={() => setSelectedDemo("payroll-run")}
-                      variant={selectedDemo === "payroll-run" ? "default" : "outline"}
+                    <Button
+                      onClick={() => setSelectedDemo('payroll-run')}
+                      variant={
+                        selectedDemo === 'payroll-run' ? 'default' : 'outline'
+                      }
                     >
                       Start Payroll Run
                     </Button>
-                    <Button 
-                      onClick={() => setSelectedDemo("filing")}
-                      variant={selectedDemo === "filing" ? "default" : "outline"}
+                    <Button
+                      onClick={() => setSelectedDemo('filing')}
+                      variant={
+                        selectedDemo === 'filing' ? 'default' : 'outline'
+                      }
                     >
                       Auto Filing Demo
                     </Button>
                   </div>
 
-                  {selectedDemo === "payroll-run" && (
+                  {selectedDemo === 'payroll-run' && (
                     <div className="space-y-4 p-4 border rounded-lg">
                       <div className="flex items-center justify-between">
                         <span>Loading employee data...</span>
@@ -359,13 +400,15 @@ export default function ProductVisionPage() {
                       <div className="border-t pt-4">
                         <div className="flex items-center justify-between font-semibold">
                           <span>Total Processing Time</span>
-                          <Badge className="bg-green-100 text-green-800">75 seconds</Badge>
+                          <Badge className="bg-green-100 text-green-800">
+                            75 seconds
+                          </Badge>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {selectedDemo === "filing" && (
+                  {selectedDemo === 'filing' && (
                     <div className="space-y-4 p-4 border rounded-lg">
                       <div className="flex items-center justify-between">
                         <span>Preparing ERGANI submissions...</span>
@@ -386,7 +429,9 @@ export default function ProductVisionPage() {
                       <div className="border-t pt-4">
                         <div className="flex items-center justify-between font-semibold">
                           <span>Manual Intervention Required</span>
-                          <Badge className="bg-green-100 text-green-800">0%</Badge>
+                          <Badge className="bg-green-100 text-green-800">
+                            0%
+                          </Badge>
                         </div>
                       </div>
                     </div>
@@ -492,14 +537,16 @@ export default function ProductVisionPage() {
                     <Users className="h-12 w-12 text-primary mx-auto mb-2" />
                     <h4 className="font-semibold">Employee Graph</h4>
                     <p className="text-sm text-muted-foreground">
-                      Unified employee master data across all properties and departments
+                      Unified employee master data across all properties and
+                      departments
                     </p>
                   </div>
                   <div className="text-center">
                     <Building className="h-12 w-12 text-primary mx-auto mb-2" />
                     <h4 className="font-semibold">Multi-Property</h4>
                     <p className="text-sm text-muted-foreground">
-                      Centralized management of multiple hotel properties and entities
+                      Centralized management of multiple hotel properties and
+                      entities
                     </p>
                   </div>
                   <div className="text-center">

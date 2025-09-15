@@ -10,16 +10,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useObo } from '@/contexts/OboContext';
-import { 
-  Building2, 
-  Users, 
-  FileText, 
-  Calculator, 
-  Shield, 
+import {
+  Building2,
+  Users,
+  FileText,
+  Calculator,
+  Shield,
   CheckSquare,
   Search,
   Star,
@@ -27,7 +33,7 @@ import {
   ChevronDown,
   Bell,
   LogOut,
-  Target
+  Target,
 } from 'lucide-react';
 
 // Import existing components (will reuse existing components when available)
@@ -67,7 +73,13 @@ interface ApprovalRequest {
 }
 
 function OboContextHeader() {
-  const { currentTenant, currentPartner, isOboActive, clearOboContext, securityMetadata } = useObo();
+  const {
+    currentTenant,
+    currentPartner,
+    isOboActive,
+    clearOboContext,
+    securityMetadata,
+  } = useObo();
 
   if (!isOboActive) {
     return (
@@ -75,8 +87,12 @@ function OboContextHeader() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Building2 className="h-5 w-5 text-blue-600" />
-            <span className="text-sm font-medium text-blue-900">Partner Console</span>
-            <Badge variant="outline" className="text-blue-700 border-blue-300">Native Context</Badge>
+            <span className="text-sm font-medium text-blue-900">
+              Partner Console
+            </span>
+            <Badge variant="outline" className="text-blue-700 border-blue-300">
+              Native Context
+            </Badge>
           </div>
         </div>
       </div>
@@ -92,9 +108,14 @@ function OboContextHeader() {
             <span className="text-sm font-medium text-green-900">
               Acting on behalf of tenant: <strong>{currentTenant}</strong>
             </span>
-            <Badge className="bg-green-100 text-green-800 border-green-300">OBO Active</Badge>
+            <Badge className="bg-green-100 text-green-800 border-green-300">
+              OBO Active
+            </Badge>
             {securityMetadata?.ttlEnforced && (
-              <Badge variant="outline" className="text-green-700 border-green-400">
+              <Badge
+                variant="outline"
+                className="text-green-700 border-green-400"
+              >
                 TTL: 10min
               </Badge>
             )}
@@ -103,13 +124,16 @@ function OboContextHeader() {
         <div className="flex items-center gap-2">
           {securityMetadata && (
             <div className="text-xs text-green-700">
-              {securityMetadata.rotatedTokens ? `Rotated ${securityMetadata.rotatedTokens} tokens` : ''}
-              {securityMetadata.responseTime && ` • ${securityMetadata.responseTime}ms`}
+              {securityMetadata.rotatedTokens
+                ? `Rotated ${securityMetadata.rotatedTokens} tokens`
+                : ''}
+              {securityMetadata.responseTime &&
+                ` • ${securityMetadata.responseTime}ms`}
             </div>
           )}
-          <Button 
-            onClick={clearOboContext} 
-            size="sm" 
+          <Button
+            onClick={clearOboContext}
+            size="sm"
             variant="outline"
             className="text-green-700 border-green-300 hover:bg-green-100"
           >
@@ -186,11 +210,16 @@ function FirmHome() {
             <CardTitle>Partner Firms</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {firms.map((firm) => (
-              <div key={firm.id} className="flex items-center justify-between p-3 border rounded-lg">
+            {firms.map(firm => (
+              <div
+                key={firm.id}
+                className="flex items-center justify-between p-3 border rounded-lg"
+              >
                 <div>
                   <div className="font-medium">{firm.displayName}</div>
-                  <div className="text-sm text-muted-foreground">Role: {firm.userRole}</div>
+                  <div className="text-sm text-muted-foreground">
+                    Role: {firm.userRole}
+                  </div>
                 </div>
                 <Badge>{firm.permissions.length} permissions</Badge>
               </div>
@@ -237,10 +266,11 @@ function ClientDirectory() {
   });
 
   const clients: ClientTenant[] = clientsData?.clients || [];
-  
+
   const filteredClients = clients.filter(client => {
-    const matchesSearch = client.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         client.afm?.includes(searchQuery);
+    const matchesSearch =
+      client.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.afm?.includes(searchQuery);
     const matchesFirm = !selectedFirm || client.partnerFirmId === selectedFirm;
     return matchesSearch && matchesFirm;
   });
@@ -263,7 +293,7 @@ function ClientDirectory() {
             <Input
               placeholder="Search clients..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="pl-10 w-64"
             />
           </div>
@@ -271,14 +301,21 @@ function ClientDirectory() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {filteredClients.map((client) => (
-          <Card key={client.clientTenantId} className={
-            currentTenant === client.clientTenantId ? 'border-green-500 bg-green-50' : ''
-          }>
+        {filteredClients.map(client => (
+          <Card
+            key={client.clientTenantId}
+            className={
+              currentTenant === client.clientTenantId
+                ? 'border-green-500 bg-green-50'
+                : ''
+            }
+          >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{client.clientName}</CardTitle>
-                {client.isFavorite && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
+                {client.isFavorite && (
+                  <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                )}
                 {currentTenant === client.clientTenantId && (
                   <Badge className="bg-green-100 text-green-800">Active</Badge>
                 )}
@@ -286,8 +323,12 @@ function ClientDirectory() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">AFM: {client.afm}</div>
-                <div className="text-sm text-muted-foreground">Type: {client.clientType}</div>
+                <div className="text-sm text-muted-foreground">
+                  AFM: {client.afm}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Type: {client.clientType}
+                </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     {client.makerCheckerMode}
@@ -297,15 +338,17 @@ function ClientDirectory() {
                   </Badge>
                 </div>
               </div>
-              
+
               <div className="pt-2">
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   size="sm"
                   onClick={() => handleSwitchTenant(client)}
                   disabled={currentTenant === client.clientTenantId}
                 >
-                  {currentTenant === client.clientTenantId ? 'Currently Active' : 'Switch Context'}
+                  {currentTenant === client.clientTenantId
+                    ? 'Currently Active'
+                    : 'Switch Context'}
                 </Button>
               </div>
             </CardContent>
@@ -315,7 +358,9 @@ function ClientDirectory() {
 
       {filteredClients.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-muted-foreground">No clients found matching your search.</div>
+          <div className="text-muted-foreground">
+            No clients found matching your search.
+          </div>
         </div>
       )}
     </div>
@@ -324,25 +369,25 @@ function ClientDirectory() {
 
 function ApprovalQueue() {
   const mockApprovals: ApprovalRequest[] = [
-    { 
-      id: '1', 
-      type: 'filing_submit', 
-      title: 'APD December 2024 Submission', 
-      requestedBy: 'K. Karteris', 
-      requestedAt: '2025-01-20T10:30:00Z', 
-      status: 'pending', 
+    {
+      id: '1',
+      type: 'filing_submit',
+      title: 'APD December 2024 Submission',
+      requestedBy: 'K. Karteris',
+      requestedAt: '2025-01-20T10:30:00Z',
+      status: 'pending',
       priority: 'high',
-      tenantName: 'Acme Corp'
+      tenantName: 'Acme Corp',
     },
-    { 
-      id: '2', 
-      type: 'payroll_finalize', 
-      title: 'January 2025 Payroll Finalization', 
-      requestedBy: 'M. Papadopoulos', 
-      requestedAt: '2025-01-19T16:45:00Z', 
-      status: 'pending', 
+    {
+      id: '2',
+      type: 'payroll_finalize',
+      title: 'January 2025 Payroll Finalization',
+      requestedBy: 'M. Papadopoulos',
+      requestedAt: '2025-01-19T16:45:00Z',
+      status: 'pending',
       priority: 'normal',
-      tenantName: 'Beta Ltd'
+      tenantName: 'Beta Ltd',
     },
   ];
 
@@ -354,18 +399,22 @@ function ApprovalQueue() {
       </div>
 
       <div className="space-y-4">
-        {mockApprovals.map((approval) => (
+        {mockApprovals.map(approval => (
           <Card key={approval.id}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
                     <h3 className="font-semibold">{approval.title}</h3>
-                    <Badge className={
-                      approval.priority === 'high' ? 'bg-red-100 text-red-800' :
-                      approval.priority === 'urgent' ? 'bg-red-200 text-red-900' :
-                      'bg-blue-100 text-blue-800'
-                    }>
+                    <Badge
+                      className={
+                        approval.priority === 'high'
+                          ? 'bg-red-100 text-red-800'
+                          : approval.priority === 'urgent'
+                            ? 'bg-red-200 text-red-900'
+                            : 'bg-blue-100 text-blue-800'
+                      }
+                    >
                       {approval.priority}
                     </Badge>
                   </div>
@@ -381,8 +430,12 @@ function ApprovalQueue() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline">Review</Button>
-                  <Button size="sm" className="bg-green-600 hover:bg-green-700">Approve</Button>
+                  <Button size="sm" variant="outline">
+                    Review
+                  </Button>
+                  <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                    Approve
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -407,7 +460,9 @@ function OboFilingsWrapper() {
     return (
       <div className="text-center py-12">
         <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <div className="text-muted-foreground">Switch to a client context to access filings</div>
+        <div className="text-muted-foreground">
+          Switch to a client context to access filings
+        </div>
       </div>
     );
   }
@@ -419,7 +474,7 @@ function OboFilingsWrapper() {
       <div className="text-sm text-muted-foreground">
         Viewing filings for tenant: {currentTenant}
       </div>
-      
+
       {/* Filing components will be added here */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
@@ -428,12 +483,16 @@ function OboFilingsWrapper() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-sm text-muted-foreground">APD - December 2024</div>
-              <Badge className="bg-yellow-100 text-yellow-800">Pending Approval</Badge>
+              <div className="text-sm text-muted-foreground">
+                APD - December 2024
+              </div>
+              <Badge className="bg-yellow-100 text-yellow-800">
+                Pending Approval
+              </Badge>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Payroll Runs</CardTitle>
@@ -456,7 +515,7 @@ export default function Partner() {
   return (
     <div className="min-h-screen bg-gray-50">
       <OboContextHeader />
-      
+
       <div className="flex">
         {/* Sidebar Navigation */}
         <div className="w-64 bg-white shadow-sm border-r min-h-screen">
@@ -464,8 +523,8 @@ export default function Partner() {
             <h2 className="text-lg font-semibold mb-6">Partner Console</h2>
             <nav className="space-y-2">
               <Link to="/partner">
-                <Button 
-                  variant={location === '/partner' ? 'default' : 'ghost'} 
+                <Button
+                  variant={location === '/partner' ? 'default' : 'ghost'}
                   className="w-full justify-start"
                 >
                   <Building2 className="h-4 w-4 mr-2" />
@@ -473,8 +532,10 @@ export default function Partner() {
                 </Button>
               </Link>
               <Link to="/partner/clients">
-                <Button 
-                  variant={location === '/partner/clients' ? 'default' : 'ghost'} 
+                <Button
+                  variant={
+                    location === '/partner/clients' ? 'default' : 'ghost'
+                  }
                   className="w-full justify-start"
                 >
                   <Users className="h-4 w-4 mr-2" />
@@ -482,8 +543,10 @@ export default function Partner() {
                 </Button>
               </Link>
               <Link to="/partner/approvals">
-                <Button 
-                  variant={location === '/partner/approvals' ? 'default' : 'ghost'} 
+                <Button
+                  variant={
+                    location === '/partner/approvals' ? 'default' : 'ghost'
+                  }
                   className="w-full justify-start"
                 >
                   <CheckSquare className="h-4 w-4 mr-2" />
@@ -491,8 +554,10 @@ export default function Partner() {
                 </Button>
               </Link>
               <Link to="/partner/filings">
-                <Button 
-                  variant={location === '/partner/filings' ? 'default' : 'ghost'} 
+                <Button
+                  variant={
+                    location === '/partner/filings' ? 'default' : 'ghost'
+                  }
                   className="w-full justify-start"
                 >
                   <FileText className="h-4 w-4 mr-2" />

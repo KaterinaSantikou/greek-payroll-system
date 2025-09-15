@@ -1,38 +1,57 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Calculator, DollarSign, FileText, TrendingUp, Users, AlertTriangle } from "lucide-react";
-import { 
-  calculateCompletePayroll, 
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import {
+  Calculator,
+  DollarSign,
+  FileText,
+  TrendingUp,
+  Users,
+  AlertTriangle,
+} from 'lucide-react';
+import {
+  calculateCompletePayroll,
   calculateCollectiveAgreementWage,
   COLLECTIVE_AGREEMENTS,
   getIndustrySectors,
   validateMinimumWage,
   GREEK_TAX_BRACKETS,
   EFKA_RATES,
-  TAX_FREE_ALLOWANCES 
-} from "@/lib/payrollCalculations";
+  TAX_FREE_ALLOWANCES,
+} from '@/lib/payrollCalculations';
 
 export default function PayrollPage() {
   const [payrollData, setPayrollData] = useState({
-    grossSalary: "",
-    annualIncome: "",
-    maritalStatus: "SINGLE",
+    grossSalary: '',
+    annualIncome: '',
+    maritalStatus: 'SINGLE',
     children: 0,
     hasDisability: false,
-    specialInsuranceCategory: "",
+    specialInsuranceCategory: '',
     overtimeHours: 0,
     sundayHours: 0,
     allowances: 0,
     bonuses: 0,
-    collectiveAgreement: "GENERAL",
+    collectiveAgreement: 'GENERAL',
     experienceYears: 0,
-    education: "HIGH_SCHOOL"
+    education: 'HIGH_SCHOOL',
   });
 
   const [calculation, setCalculation] = useState<any>(null);
@@ -42,7 +61,8 @@ export default function PayrollPage() {
     if (!payrollData.grossSalary) return;
 
     const grossSalary = parseFloat(payrollData.grossSalary);
-    const annualIncome = parseFloat(payrollData.annualIncome) || grossSalary * 12;
+    const annualIncome =
+      parseFloat(payrollData.annualIncome) || grossSalary * 12;
 
     // Calculate collective agreement wage
     const caWage = calculateCollectiveAgreementWage(
@@ -62,19 +82,23 @@ export default function PayrollPage() {
       maritalStatus: payrollData.maritalStatus,
       children: payrollData.children,
       hasDisability: payrollData.hasDisability,
-      specialInsuranceCategory: payrollData.specialInsuranceCategory || undefined,
+      specialInsuranceCategory:
+        payrollData.specialInsuranceCategory || undefined,
       overtimeHours: payrollData.overtimeHours,
       sundayHours: payrollData.sundayHours,
       allowances: payrollData.allowances,
-      bonuses: payrollData.bonuses
+      bonuses: payrollData.bonuses,
     });
 
     setCalculation(result);
     setCollectiveWage(caWage);
   };
 
-  const minimumWageCheck = payrollData.grossSalary 
-    ? validateMinimumWage(parseFloat(payrollData.grossSalary), payrollData.collectiveAgreement)
+  const minimumWageCheck = payrollData.grossSalary
+    ? validateMinimumWage(
+        parseFloat(payrollData.grossSalary),
+        payrollData.collectiveAgreement
+      )
     : null;
 
   return (
@@ -83,7 +107,9 @@ export default function PayrollPage() {
         <Calculator className="h-8 w-8 text-blue-600" />
         <div>
           <h1 className="text-3xl font-bold">Υπολογισμός Μισθοδοσίας</h1>
-          <p className="text-gray-600">Ελληνικό σύστημα φόρων και εργοδοτικών εισφορών 2025</p>
+          <p className="text-gray-600">
+            Ελληνικό σύστημα φόρων και εργοδοτικών εισφορών 2025
+          </p>
         </div>
       </div>
 
@@ -109,7 +135,12 @@ export default function PayrollPage() {
                   type="number"
                   placeholder="1200"
                   value={payrollData.grossSalary}
-                  onChange={(e) => setPayrollData({...payrollData, grossSalary: e.target.value})}
+                  onChange={e =>
+                    setPayrollData({
+                      ...payrollData,
+                      grossSalary: e.target.value,
+                    })
+                  }
                 />
                 {minimumWageCheck && !minimumWageCheck.isCompliant && (
                   <p className="text-red-500 text-sm mt-1">
@@ -125,7 +156,12 @@ export default function PayrollPage() {
                   type="number"
                   placeholder="14400"
                   value={payrollData.annualIncome}
-                  onChange={(e) => setPayrollData({...payrollData, annualIncome: e.target.value})}
+                  onChange={e =>
+                    setPayrollData({
+                      ...payrollData,
+                      annualIncome: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -133,15 +169,17 @@ export default function PayrollPage() {
             {/* Collective Agreement */}
             <div>
               <Label>Συλλογική Σύμβαση</Label>
-              <Select 
-                value={payrollData.collectiveAgreement} 
-                onValueChange={(value) => setPayrollData({...payrollData, collectiveAgreement: value})}
+              <Select
+                value={payrollData.collectiveAgreement}
+                onValueChange={value =>
+                  setPayrollData({ ...payrollData, collectiveAgreement: value })
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {getIndustrySectors().map((sector) => (
+                  {getIndustrySectors().map(sector => (
                     <SelectItem key={sector.value} value={sector.value}>
                       {sector.label}
                     </SelectItem>
@@ -154,9 +192,11 @@ export default function PayrollPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Οικογενειακή Κατάσταση</Label>
-                <Select 
-                  value={payrollData.maritalStatus} 
-                  onValueChange={(value) => setPayrollData({...payrollData, maritalStatus: value})}
+                <Select
+                  value={payrollData.maritalStatus}
+                  onValueChange={value =>
+                    setPayrollData({ ...payrollData, maritalStatus: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -178,7 +218,12 @@ export default function PayrollPage() {
                   min="0"
                   max="10"
                   value={payrollData.children}
-                  onChange={(e) => setPayrollData({...payrollData, children: parseInt(e.target.value) || 0})}
+                  onChange={e =>
+                    setPayrollData({
+                      ...payrollData,
+                      children: parseInt(e.target.value) || 0,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -193,22 +238,31 @@ export default function PayrollPage() {
                   min="0"
                   max="50"
                   value={payrollData.experienceYears}
-                  onChange={(e) => setPayrollData({...payrollData, experienceYears: parseInt(e.target.value) || 0})}
+                  onChange={e =>
+                    setPayrollData({
+                      ...payrollData,
+                      experienceYears: parseInt(e.target.value) || 0,
+                    })
+                  }
                 />
               </div>
 
               <div>
                 <Label>Επίπεδο Εκπαίδευσης</Label>
-                <Select 
-                  value={payrollData.education} 
-                  onValueChange={(value) => setPayrollData({...payrollData, education: value})}
+                <Select
+                  value={payrollData.education}
+                  onValueChange={value =>
+                    setPayrollData({ ...payrollData, education: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="HIGH_SCHOOL">Λύκειο</SelectItem>
-                    <SelectItem value="TECHNICAL">Τεχνική Εκπαίδευση</SelectItem>
+                    <SelectItem value="TECHNICAL">
+                      Τεχνική Εκπαίδευση
+                    </SelectItem>
                     <SelectItem value="UNIVERSITY">Πανεπιστήμιο</SelectItem>
                     <SelectItem value="MASTERS">Μεταπτυχιακό</SelectItem>
                     <SelectItem value="PHD">Διδακτορικό</SelectItem>
@@ -228,7 +282,12 @@ export default function PayrollPage() {
                   max="120"
                   step="0.5"
                   value={payrollData.overtimeHours}
-                  onChange={(e) => setPayrollData({...payrollData, overtimeHours: parseFloat(e.target.value) || 0})}
+                  onChange={e =>
+                    setPayrollData({
+                      ...payrollData,
+                      overtimeHours: parseFloat(e.target.value) || 0,
+                    })
+                  }
                 />
               </div>
 
@@ -241,7 +300,12 @@ export default function PayrollPage() {
                   max="40"
                   step="0.5"
                   value={payrollData.sundayHours}
-                  onChange={(e) => setPayrollData({...payrollData, sundayHours: parseFloat(e.target.value) || 0})}
+                  onChange={e =>
+                    setPayrollData({
+                      ...payrollData,
+                      sundayHours: parseFloat(e.target.value) || 0,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -254,7 +318,12 @@ export default function PayrollPage() {
                   type="number"
                   min="0"
                   value={payrollData.allowances}
-                  onChange={(e) => setPayrollData({...payrollData, allowances: parseFloat(e.target.value) || 0})}
+                  onChange={e =>
+                    setPayrollData({
+                      ...payrollData,
+                      allowances: parseFloat(e.target.value) || 0,
+                    })
+                  }
                 />
               </div>
 
@@ -265,12 +334,21 @@ export default function PayrollPage() {
                   type="number"
                   min="0"
                   value={payrollData.bonuses}
-                  onChange={(e) => setPayrollData({...payrollData, bonuses: parseFloat(e.target.value) || 0})}
+                  onChange={e =>
+                    setPayrollData({
+                      ...payrollData,
+                      bonuses: parseFloat(e.target.value) || 0,
+                    })
+                  }
                 />
               </div>
             </div>
 
-            <Button onClick={handleCalculatePayroll} className="w-full" size="lg">
+            <Button
+              onClick={handleCalculatePayroll}
+              className="w-full"
+              size="lg"
+            >
               <Calculator className="mr-2 h-4 w-4" />
               Υπολογισμός Μισθοδοσίας
             </Button>
@@ -290,23 +368,33 @@ export default function PayrollPage() {
             <CardContent>
               <div className="space-y-2">
                 {GREEK_TAX_BRACKETS.map((bracket, index) => (
-                  <div key={index} className="flex justify-between items-center">
+                  <div
+                    key={index}
+                    className="flex justify-between items-center"
+                  >
                     <span className="text-sm">
-                      €{bracket.min.toLocaleString()} - {bracket.max === Infinity ? '∞' : `€${bracket.max.toLocaleString()}`}
+                      €{bracket.min.toLocaleString()} -{' '}
+                      {bracket.max === Infinity
+                        ? '∞'
+                        : `€${bracket.max.toLocaleString()}`}
                     </span>
-                    <Badge variant="outline">{(bracket.rate * 100).toFixed(0)}%</Badge>
+                    <Badge variant="outline">
+                      {(bracket.rate * 100).toFixed(0)}%
+                    </Badge>
                   </div>
                 ))}
               </div>
-              
+
               <Separator className="my-4" />
-              
+
               <div className="space-y-2">
                 <h4 className="font-medium">Αφορολόγητα Όρια</h4>
                 <div className="text-sm space-y-1">
                   <div className="flex justify-between">
                     <span>Προσωπικό</span>
-                    <span>€{TAX_FREE_ALLOWANCES.personal.toLocaleString()}</span>
+                    <span>
+                      €{TAX_FREE_ALLOWANCES.personal.toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Έγγαμος/η</span>
@@ -318,7 +406,9 @@ export default function PayrollPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Αναπηρία</span>
-                    <span>€{TAX_FREE_ALLOWANCES.disability.toLocaleString()}</span>
+                    <span>
+                      €{TAX_FREE_ALLOWANCES.disability.toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -341,19 +431,27 @@ export default function PayrollPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Εργοδότης</span>
-                  <Badge variant="secondary">{(EFKA_RATES.employer.main * 100).toFixed(2)}%</Badge>
+                  <Badge variant="secondary">
+                    {(EFKA_RATES.employer.main * 100).toFixed(2)}%
+                  </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Ανεργία (Εργαζόμενος)</span>
-                  <Badge variant="outline">{(EFKA_RATES.employee.unemployment * 100).toFixed(1)}%</Badge>
+                  <Badge variant="outline">
+                    {(EFKA_RATES.employee.unemployment * 100).toFixed(1)}%
+                  </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Ανεργία (Εργοδότης)</span>
-                  <Badge variant="outline">{(EFKA_RATES.employer.unemployment * 100).toFixed(2)}%</Badge>
+                  <Badge variant="outline">
+                    {(EFKA_RATES.employer.unemployment * 100).toFixed(2)}%
+                  </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Οικογενειακά Επιδόματα</span>
-                  <Badge variant="outline">{(EFKA_RATES.employer.family * 100).toFixed(1)}%</Badge>
+                  <Badge variant="outline">
+                    {(EFKA_RATES.employer.family * 100).toFixed(1)}%
+                  </Badge>
                 </div>
               </div>
             </CardContent>
@@ -375,30 +473,40 @@ export default function PayrollPage() {
             <CardContent className="space-y-3">
               <div className="flex justify-between">
                 <span>Βασικός Μισθός</span>
-                <span className="font-medium">€{calculation.gross.salary.toFixed(2)}</span>
+                <span className="font-medium">
+                  €{calculation.gross.salary.toFixed(2)}
+                </span>
               </div>
               {calculation.gross.overtime > 0 && (
                 <div className="flex justify-between">
                   <span>Υπερεργασία</span>
-                  <span className="font-medium">€{calculation.gross.overtime.toFixed(2)}</span>
+                  <span className="font-medium">
+                    €{calculation.gross.overtime.toFixed(2)}
+                  </span>
                 </div>
               )}
               {calculation.gross.sunday > 0 && (
                 <div className="flex justify-between">
                   <span>Κυριακάτικα</span>
-                  <span className="font-medium">€{calculation.gross.sunday.toFixed(2)}</span>
+                  <span className="font-medium">
+                    €{calculation.gross.sunday.toFixed(2)}
+                  </span>
                 </div>
               )}
               {calculation.gross.allowances > 0 && (
                 <div className="flex justify-between">
                   <span>Επιδόματα</span>
-                  <span className="font-medium">€{calculation.gross.allowances.toFixed(2)}</span>
+                  <span className="font-medium">
+                    €{calculation.gross.allowances.toFixed(2)}
+                  </span>
                 </div>
               )}
               {calculation.gross.bonuses > 0 && (
                 <div className="flex justify-between">
                   <span>Μπόνους</span>
-                  <span className="font-medium">€{calculation.gross.bonuses.toFixed(2)}</span>
+                  <span className="font-medium">
+                    €{calculation.gross.bonuses.toFixed(2)}
+                  </span>
                 </div>
               )}
               <Separator />
@@ -420,21 +528,29 @@ export default function PayrollPage() {
             <CardContent className="space-y-3">
               <div className="flex justify-between">
                 <span>Φόρος Εισοδήματος</span>
-                <span className="font-medium">€{calculation.deductions.incomeTax.toFixed(2)}</span>
+                <span className="font-medium">
+                  €{calculation.deductions.incomeTax.toFixed(2)}
+                </span>
               </div>
               {calculation.deductions.solidarityTax > 0 && (
                 <div className="flex justify-between">
                   <span>Έκτακτη Εισφορά Αλληλεγγύης</span>
-                  <span className="font-medium">€{calculation.deductions.solidarityTax.toFixed(2)}</span>
+                  <span className="font-medium">
+                    €{calculation.deductions.solidarityTax.toFixed(2)}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span>Εισφορές ΕΦΚΑ</span>
-                <span className="font-medium">€{calculation.deductions.efkaEmployee.toFixed(2)}</span>
+                <span className="font-medium">
+                  €{calculation.deductions.efkaEmployee.toFixed(2)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Ανεργία</span>
-                <span className="font-medium">€{calculation.deductions.unemployment.toFixed(2)}</span>
+                <span className="font-medium">
+                  €{calculation.deductions.unemployment.toFixed(2)}
+                </span>
               </div>
               <Separator />
               <div className="flex justify-between font-bold text-lg">
@@ -459,26 +575,37 @@ export default function PayrollPage() {
                   <span>€{calculation.net.toFixed(2)}</span>
                 </div>
               </div>
-              
+
               <Separator />
-              
+
               <div className="space-y-2">
                 <h4 className="font-medium text-gray-700">Κόστος Εργοδότη</h4>
                 <div className="flex justify-between">
                   <span>Εισφορές ΕΦΚΑ</span>
-                  <span className="font-medium">€{calculation.employer.efkaEmployer.toFixed(2)}</span>
+                  <span className="font-medium">
+                    €{calculation.employer.efkaEmployer.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Ανεργία</span>
-                  <span className="font-medium">€{calculation.employer.unemployment.toFixed(2)}</span>
+                  <span className="font-medium">
+                    €{calculation.employer.unemployment.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span>Οικογενειακά</span>
-                  <span className="font-medium">€{calculation.employer.family.toFixed(2)}</span>
+                  <span className="font-medium">
+                    €{calculation.employer.family.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between font-bold border-t pt-2">
                   <span>Συνολικό Κόστος</span>
-                  <span>€{(calculation.gross.total + calculation.employer.total).toFixed(2)}</span>
+                  <span>
+                    €
+                    {(
+                      calculation.gross.total + calculation.employer.total
+                    ).toFixed(2)}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -495,32 +622,53 @@ export default function PayrollPage() {
               Προσαρμογές Συλλογικής Σύμβασης
             </CardTitle>
             <CardDescription>
-              Υπολογισμός βάσει {COLLECTIVE_AGREEMENTS[payrollData.collectiveAgreement as keyof typeof COLLECTIVE_AGREEMENTS]?.name}
+              Υπολογισμός βάσει{' '}
+              {
+                COLLECTIVE_AGREEMENTS[
+                  payrollData.collectiveAgreement as keyof typeof COLLECTIVE_AGREEMENTS
+                ]?.name
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">€{collectiveWage.baseWage}</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  €{collectiveWage.baseWage}
+                </div>
                 <div className="text-sm text-gray-600">Βασικός Μισθός</div>
               </div>
               <div className="text-center p-3 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">€{collectiveWage.experienceBonus}</div>
-                <div className="text-sm text-gray-600">Επίδομα Προϋπηρεσίας</div>
+                <div className="text-2xl font-bold text-green-600">
+                  €{collectiveWage.experienceBonus}
+                </div>
+                <div className="text-sm text-gray-600">
+                  Επίδομα Προϋπηρεσίας
+                </div>
               </div>
               <div className="text-center p-3 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">€{collectiveWage.educationBonus}</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  €{collectiveWage.educationBonus}
+                </div>
                 <div className="text-sm text-gray-600">Επίδομα Μόρφωσης</div>
               </div>
               <div className="text-center p-3 bg-orange-50 rounded-lg">
-                <div className="text-2xl font-bold text-orange-600">€{collectiveWage.maritalBonus}</div>
-                <div className="text-sm text-gray-600">Οικογενειακό Επίδομα</div>
+                <div className="text-2xl font-bold text-orange-600">
+                  €{collectiveWage.maritalBonus}
+                </div>
+                <div className="text-sm text-gray-600">
+                  Οικογενειακό Επίδομα
+                </div>
               </div>
             </div>
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center">
-                <span className="text-lg font-medium">Συνολικός Μισθός Συλλογικής Σύμβασης</span>
-                <span className="text-xl font-bold">€{collectiveWage.totalWage}</span>
+                <span className="text-lg font-medium">
+                  Συνολικός Μισθός Συλλογικής Σύμβασης
+                </span>
+                <span className="text-xl font-bold">
+                  €{collectiveWage.totalWage}
+                </span>
               </div>
             </div>
           </CardContent>

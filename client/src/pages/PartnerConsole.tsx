@@ -9,17 +9,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { 
-  Building2, 
-  Users, 
-  FileText, 
-  Calculator, 
-  Shield, 
+import {
+  Building2,
+  Users,
+  FileText,
+  Calculator,
+  Shield,
   FileDown,
   CheckSquare,
   Settings,
@@ -44,7 +50,7 @@ import {
   RefreshCw,
   TestTube,
   FileCheck,
-  Package
+  Package,
 } from 'lucide-react';
 
 interface PartnerFirm {
@@ -140,33 +146,97 @@ export default function PartnerConsole() {
   ];
 
   const mockFilings: FilingStatus[] = [
-    { id: '1', type: 'APD', status: 'pending_approval', dueDate: '2025-01-31', period: '12/2024', assignedTo: 'K. Karteris', lastModified: '2025-01-20T10:30:00Z' },
-    { id: '2', type: 'ΦΜΥ', status: 'draft', dueDate: '2025-02-15', period: '12/2024', assignedTo: 'M. Papadopoulos', lastModified: '2025-01-19T15:45:00Z' },
-    { id: '3', type: 'ERGANI', status: 'ready', dueDate: '2025-01-25', period: '01/2025', assignedTo: 'E. Dimitriou', lastModified: '2025-01-21T09:15:00Z' },
+    {
+      id: '1',
+      type: 'APD',
+      status: 'pending_approval',
+      dueDate: '2025-01-31',
+      period: '12/2024',
+      assignedTo: 'K. Karteris',
+      lastModified: '2025-01-20T10:30:00Z',
+    },
+    {
+      id: '2',
+      type: 'ΦΜΥ',
+      status: 'draft',
+      dueDate: '2025-02-15',
+      period: '12/2024',
+      assignedTo: 'M. Papadopoulos',
+      lastModified: '2025-01-19T15:45:00Z',
+    },
+    {
+      id: '3',
+      type: 'ERGANI',
+      status: 'ready',
+      dueDate: '2025-01-25',
+      period: '01/2025',
+      assignedTo: 'E. Dimitriou',
+      lastModified: '2025-01-21T09:15:00Z',
+    },
   ];
 
   const mockPayrollRuns: PayrollRun[] = [
-    { id: '1', period: '01/2025', status: 'validated', employeeCount: 45, totalGross: 125000, totalNet: 89500, createdBy: 'K. Karteris', lastModified: '2025-01-20T14:20:00Z' },
-    { id: '2', period: '12/2024', status: 'finalized', employeeCount: 43, totalGross: 118000, totalNet: 84600, createdBy: 'M. Papadopoulos', lastModified: '2025-01-15T11:30:00Z' },
+    {
+      id: '1',
+      period: '01/2025',
+      status: 'validated',
+      employeeCount: 45,
+      totalGross: 125000,
+      totalNet: 89500,
+      createdBy: 'K. Karteris',
+      lastModified: '2025-01-20T14:20:00Z',
+    },
+    {
+      id: '2',
+      period: '12/2024',
+      status: 'finalized',
+      employeeCount: 43,
+      totalGross: 118000,
+      totalNet: 84600,
+      createdBy: 'M. Papadopoulos',
+      lastModified: '2025-01-15T11:30:00Z',
+    },
   ];
 
   const mockApprovals: ApprovalRequest[] = [
-    { id: '1', type: 'filing_submit', title: 'APD December 2024 Submission', requestedBy: 'K. Karteris', requestedAt: '2025-01-20T10:30:00Z', status: 'pending', priority: 'high', changes: {}, diffs: {} },
-    { id: '2', type: 'payroll_finalize', title: 'January 2025 Payroll Finalization', requestedBy: 'M. Papadopoulos', requestedAt: '2025-01-19T16:45:00Z', status: 'pending', priority: 'normal', changes: {}, diffs: {} },
+    {
+      id: '1',
+      type: 'filing_submit',
+      title: 'APD December 2024 Submission',
+      requestedBy: 'K. Karteris',
+      requestedAt: '2025-01-20T10:30:00Z',
+      status: 'pending',
+      priority: 'high',
+      changes: {},
+      diffs: {},
+    },
+    {
+      id: '2',
+      type: 'payroll_finalize',
+      title: 'January 2025 Payroll Finalization',
+      requestedBy: 'M. Papadopoulos',
+      requestedAt: '2025-01-19T16:45:00Z',
+      status: 'pending',
+      priority: 'normal',
+      changes: {},
+      diffs: {},
+    },
   ];
 
   const firms: PartnerFirm[] = firmsData?.firms || [];
   const clients: ClientTenant[] = clientsData?.clients || [];
-  
+
   // Enhanced client filtering
   const filteredClients = clients.filter(client => {
-    const matchesSearch = client.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         client.afm?.includes(searchQuery);
+    const matchesSearch =
+      client.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      client.afm?.includes(searchQuery);
     const matchesFavorites = !showFavoritesOnly || client.isFavorite;
-    const matchesIndustry = !selectedIndustry || client.industry === selectedIndustry;
+    const matchesIndustry =
+      !selectedIndustry || client.industry === selectedIndustry;
     return matchesSearch && matchesFavorites && matchesIndustry;
   });
-  
+
   const currentClient = clients.find(c => c.clientTenantId === selectedTenant);
   const currentFirm = firms.find(f => f.id === selectedPartnerFirm);
 
@@ -180,7 +250,13 @@ export default function PartnerConsole() {
 
   // Switch tenant mutation
   const switchTenantMutation = useMutation({
-    mutationFn: async ({ tenantId, partnerFirmId }: { tenantId: string; partnerFirmId: string }) => {
+    mutationFn: async ({
+      tenantId,
+      partnerFirmId,
+    }: {
+      tenantId: string;
+      partnerFirmId: string;
+    }) => {
       await apiRequest({
         url: '/api/partners/switch-tenant',
         method: 'POST',
@@ -192,12 +268,15 @@ export default function PartnerConsole() {
         title: 'Tenant switched successfully',
         description: 'You are now working on behalf of the selected client.',
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/partners/current-context'] });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/partners/current-context'],
+      });
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: 'Failed to switch tenant',
-        description: error.message || 'Unable to switch to the selected tenant.',
+        description:
+          error.message || 'Unable to switch to the selected tenant.',
         variant: 'destructive',
       });
     },
@@ -205,14 +284,18 @@ export default function PartnerConsole() {
 
   // APD Filing preparation and approval (Flow 7.2)
   const prepareAPDMutation = useMutation({
-    mutationFn: async (params: { period: string, employeeData?: any[], validationOverrides?: any }) => {
+    mutationFn: async (params: {
+      period: string;
+      employeeData?: any[];
+      validationOverrides?: any;
+    }) => {
       return apiRequest({
         url: '/api/partners/filings/apd/prepare',
         method: 'POST',
         body: params,
       });
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
         title: 'APD Draft Prepared',
         description: `Period ${data.period} - ${data.canProceed ? 'Ready for approval' : 'Requires validation fixes'}`,
@@ -221,14 +304,20 @@ export default function PartnerConsole() {
   });
 
   const sendForApprovalMutation = useMutation({
-    mutationFn: async ({ filingId, comments }: { filingId: string, comments?: string }) => {
+    mutationFn: async ({
+      filingId,
+      comments,
+    }: {
+      filingId: string;
+      comments?: string;
+    }) => {
       return apiRequest({
         url: `/api/partners/filings/apd/${filingId}/send-for-approval`,
         method: 'POST',
         body: { comments },
       });
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
         title: 'Sent for Approval',
         description: data.message,
@@ -237,14 +326,22 @@ export default function PartnerConsole() {
   });
 
   const approvalDecisionMutation = useMutation({
-    mutationFn: async ({ approvalId, decision, comments }: { approvalId: string, decision: 'approve' | 'reject', comments?: string }) => {
+    mutationFn: async ({
+      approvalId,
+      decision,
+      comments,
+    }: {
+      approvalId: string;
+      decision: 'approve' | 'reject';
+      comments?: string;
+    }) => {
       return apiRequest({
         url: `/api/partners/approvals/${approvalId}/decision`,
         method: 'POST',
         body: { decision, comments },
       });
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
         title: data.decision === 'approve' ? 'Approved' : 'Rejected',
         description: data.message,
@@ -259,7 +356,7 @@ export default function PartnerConsole() {
         method: 'POST',
       });
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
         title: 'Submitted to AADE',
         description: data.message,
@@ -269,14 +366,18 @@ export default function PartnerConsole() {
 
   // Inspector/Audit Pack generation (Flow 7.3)
   const generateAuditPackMutation = useMutation({
-    mutationFn: async (params: { dateRange: string, contents?: string[], packType?: string }) => {
+    mutationFn: async (params: {
+      dateRange: string;
+      contents?: string[];
+      packType?: string;
+    }) => {
       return apiRequest({
         url: '/api/partners/audit-pack/generate',
         method: 'POST',
         body: params,
       });
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
         title: 'Audit Pack Queued',
         description: `Pack ID: ${data.packId} - Check status for progress`,
@@ -301,7 +402,10 @@ export default function PartnerConsole() {
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         {/* Firm Switcher */}
         <div className="p-4 border-b border-gray-200">
-          <Select value={selectedPartnerFirm} onValueChange={setSelectedPartnerFirm}>
+          <Select
+            value={selectedPartnerFirm}
+            onValueChange={setSelectedPartnerFirm}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select firm...">
                 {currentFirm && (
@@ -313,7 +417,7 @@ export default function PartnerConsole() {
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              {firms.map((firm) => (
+              {firms.map(firm => (
                 <SelectItem key={firm.id} value={firm.id}>
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
@@ -335,22 +439,25 @@ export default function PartnerConsole() {
             <Input
               placeholder="Search clients by name or AFM..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="pl-9"
             />
           </div>
-          
+
           <div className="flex gap-2">
             <Button
-              variant={showFavoritesOnly ? "default" : "outline"}
+              variant={showFavoritesOnly ? 'default' : 'outline'}
               size="sm"
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
             >
               <Star className="h-3 w-3 mr-1" />
               Favorites
             </Button>
-            
-            <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+
+            <Select
+              value={selectedIndustry}
+              onValueChange={setSelectedIndustry}
+            >
               <SelectTrigger className="w-24">
                 <SelectValue placeholder={<Tag className="h-3 w-3" />} />
               </SelectTrigger>
@@ -369,10 +476,15 @@ export default function PartnerConsole() {
 
         {/* Due Tiles */}
         <div className="p-4 border-b border-gray-200">
-          <h3 className="text-sm font-medium text-gray-900 mb-3">Due This Month</h3>
+          <h3 className="text-sm font-medium text-gray-900 mb-3">
+            Due This Month
+          </h3>
           <div className="space-y-2">
-            {dueTiles.map((tile) => (
-              <div key={tile.type} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+            {dueTiles.map(tile => (
+              <div
+                key={tile.type}
+                className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+              >
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4 text-blue-600" />
                   <span className="text-sm font-medium">{tile.type}</span>
@@ -396,7 +508,7 @@ export default function PartnerConsole() {
             Clients ({filteredClients.length})
           </h3>
           <div className="space-y-2">
-            {filteredClients.map((client) => (
+            {filteredClients.map(client => (
               <div
                 key={client.clientTenantId}
                 className={`p-3 rounded-lg cursor-pointer transition-colors ${
@@ -409,16 +521,24 @@ export default function PartnerConsole() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{client.clientName}</span>
-                      {client.isFavorite && <Star className="h-3 w-3 text-yellow-500 fill-current" />}
+                      <span className="text-sm font-medium">
+                        {client.clientName}
+                      </span>
+                      {client.isFavorite && (
+                        <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                      )}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
                       AFM: {client.afm || 'Not set'}
                     </div>
                     {client.tags && (
                       <div className="flex gap-1 mt-2">
-                        {client.tags.map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs px-1">
+                        {client.tags.map(tag => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="text-xs px-1"
+                          >
                             {tag}
                           </Badge>
                         ))}
@@ -445,23 +565,29 @@ export default function PartnerConsole() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500">Partner:</span>
-              <span className="font-medium">{currentFirm?.displayName || currentFirm?.name || 'Select Firm'}</span>
+              <span className="font-medium">
+                {currentFirm?.displayName || currentFirm?.name || 'Select Firm'}
+              </span>
               {currentClient && (
                 <>
                   <ArrowRight className="h-4 w-4 text-gray-400" />
                   <span className="text-sm text-gray-500">As Client:</span>
-                  <span className="font-medium">{currentClient.clientName}</span>
+                  <span className="font-medium">
+                    {currentClient.clientName}
+                  </span>
                   <Badge variant="outline" className="text-xs">
                     AFM {currentClient.afm || 'N/A'}
                   </Badge>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="ml-2"
-                    onClick={() => switchTenantMutation.mutate({ 
-                      tenantId: currentClient.clientTenantId, 
-                      partnerFirmId: currentClient.partnerFirmId 
-                    })}
+                    onClick={() =>
+                      switchTenantMutation.mutate({
+                        tenantId: currentClient.clientTenantId,
+                        partnerFirmId: currentClient.partnerFirmId,
+                      })
+                    }
                   >
                     <RefreshCw className="h-3 w-3 mr-1" />
                     Switch Context
@@ -469,19 +595,24 @@ export default function PartnerConsole() {
                 </>
               )}
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="text-xs">
-                {currentClient?.makerCheckerMode === 'client_checker' && '👤 Client Approval'}
-                {currentClient?.makerCheckerMode === 'partner_checker' && '🏢 Partner Review'}
-                {currentClient?.makerCheckerMode === 'dual' && '🤝 Dual Approval'}
+                {currentClient?.makerCheckerMode === 'client_checker' &&
+                  '👤 Client Approval'}
+                {currentClient?.makerCheckerMode === 'partner_checker' &&
+                  '🏢 Partner Review'}
+                {currentClient?.makerCheckerMode === 'dual' &&
+                  '🤝 Dual Approval'}
               </Badge>
-              
+
               {/* Test Flows Buttons */}
               {currentClient && (
                 <div className="flex items-center gap-2 ml-4 border-l pl-4">
-                  <Button 
-                    onClick={() => prepareAPDMutation.mutate({ period: '12/2024' })}
+                  <Button
+                    onClick={() =>
+                      prepareAPDMutation.mutate({ period: '12/2024' })
+                    }
                     size="sm"
                     disabled={prepareAPDMutation.isPending}
                     className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -493,9 +624,13 @@ export default function PartnerConsole() {
                     )}
                     APD Flow
                   </Button>
-                  
-                  <Button 
-                    onClick={() => generateAuditPackMutation.mutate({ dateRange: 'current_month' })}
+
+                  <Button
+                    onClick={() =>
+                      generateAuditPackMutation.mutate({
+                        dateRange: 'current_month',
+                      })
+                    }
                     size="sm"
                     disabled={generateAuditPackMutation.isPending}
                     className="bg-green-600 hover:bg-green-700 text-white"
@@ -509,7 +644,7 @@ export default function PartnerConsole() {
                   </Button>
                 </div>
               )}
-              
+
               <Button variant="ghost" size="sm">
                 <Bell className="h-4 w-4" />
               </Button>
@@ -521,9 +656,12 @@ export default function PartnerConsole() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Client</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Select a Client
+              </h3>
               <p className="text-sm text-gray-500">
-                Choose a client from the left sidebar to manage their Greek payroll and compliance
+                Choose a client from the left sidebar to manage their Greek
+                payroll and compliance
               </p>
             </div>
           </div>
@@ -542,7 +680,9 @@ export default function PartnerConsole() {
               {/* Filings Tab */}
               <TabsContent value="filings" className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">Greek Tax & Compliance Filings</h2>
+                  <h2 className="text-xl font-semibold">
+                    Greek Tax & Compliance Filings
+                  </h2>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
                       <Filter className="h-4 w-4 mr-2" />
@@ -560,38 +700,58 @@ export default function PartnerConsole() {
                   <Card>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium">APD Filings</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                          APD Filings
+                        </CardTitle>
                         <Badge variant="secondary">3 pending</Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {mockFilings.filter(f => f.type === 'APD').map((filing) => (
-                        <div key={filing.id} className="p-3 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">{filing.period}</span>
-                            <FilingStatusBadge status={filing.status} />
+                      {mockFilings
+                        .filter(f => f.type === 'APD')
+                        .map(filing => (
+                          <div
+                            key={filing.id}
+                            className="p-3 border rounded-lg"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium">
+                                {filing.period}
+                              </span>
+                              <FilingStatusBadge status={filing.status} />
+                            </div>
+                            <div className="text-xs text-gray-500 space-y-1">
+                              <div>
+                                Due:{' '}
+                                {new Date(filing.dueDate).toLocaleDateString()}
+                              </div>
+                              <div>Assigned: {filing.assignedTo}</div>
+                            </div>
+                            {filing.status === 'pending_approval' && (
+                              <Button
+                                size="sm"
+                                className="w-full mt-2"
+                                disabled
+                              >
+                                Awaiting Approval
+                              </Button>
+                            )}
+                            {filing.status === 'ready' && (
+                              <Button size="sm" className="w-full mt-2">
+                                Submit to AADE
+                              </Button>
+                            )}
+                            {filing.status === 'draft' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full mt-2"
+                              >
+                                Send for Approval
+                              </Button>
+                            )}
                           </div>
-                          <div className="text-xs text-gray-500 space-y-1">
-                            <div>Due: {new Date(filing.dueDate).toLocaleDateString()}</div>
-                            <div>Assigned: {filing.assignedTo}</div>
-                          </div>
-                          {filing.status === 'pending_approval' && (
-                            <Button size="sm" className="w-full mt-2" disabled>
-                              Awaiting Approval
-                            </Button>
-                          )}
-                          {filing.status === 'ready' && (
-                            <Button size="sm" className="w-full mt-2">
-                              Submit to AADE
-                            </Button>
-                          )}
-                          {filing.status === 'draft' && (
-                            <Button size="sm" variant="outline" className="w-full mt-2">
-                              Send for Approval
-                            </Button>
-                          )}
-                        </div>
-                      ))}
+                        ))}
                     </CardContent>
                   </Card>
 
@@ -599,28 +759,44 @@ export default function PartnerConsole() {
                   <Card>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium">ΦΜΥ Filings</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                          ΦΜΥ Filings
+                        </CardTitle>
                         <Badge variant="secondary">2 pending</Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {mockFilings.filter(f => f.type === 'ΦΜΥ').map((filing) => (
-                        <div key={filing.id} className="p-3 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">{filing.period}</span>
-                            <FilingStatusBadge status={filing.status} />
+                      {mockFilings
+                        .filter(f => f.type === 'ΦΜΥ')
+                        .map(filing => (
+                          <div
+                            key={filing.id}
+                            className="p-3 border rounded-lg"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium">
+                                {filing.period}
+                              </span>
+                              <FilingStatusBadge status={filing.status} />
+                            </div>
+                            <div className="text-xs text-gray-500 space-y-1">
+                              <div>
+                                Due:{' '}
+                                {new Date(filing.dueDate).toLocaleDateString()}
+                              </div>
+                              <div>Assigned: {filing.assignedTo}</div>
+                            </div>
+                            {filing.status === 'draft' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full mt-2"
+                              >
+                                Send for Approval
+                              </Button>
+                            )}
                           </div>
-                          <div className="text-xs text-gray-500 space-y-1">
-                            <div>Due: {new Date(filing.dueDate).toLocaleDateString()}</div>
-                            <div>Assigned: {filing.assignedTo}</div>
-                          </div>
-                          {filing.status === 'draft' && (
-                            <Button size="sm" variant="outline" className="w-full mt-2">
-                              Send for Approval
-                            </Button>
-                          )}
-                        </div>
-                      ))}
+                        ))}
                     </CardContent>
                   </Card>
 
@@ -628,28 +804,40 @@ export default function PartnerConsole() {
                   <Card>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-sm font-medium">ERGANI Filings</CardTitle>
+                        <CardTitle className="text-sm font-medium">
+                          ERGANI Filings
+                        </CardTitle>
                         <Badge variant="secondary">1 pending</Badge>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {mockFilings.filter(f => f.type === 'ERGANI').map((filing) => (
-                        <div key={filing.id} className="p-3 border rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium">{filing.period}</span>
-                            <FilingStatusBadge status={filing.status} />
+                      {mockFilings
+                        .filter(f => f.type === 'ERGANI')
+                        .map(filing => (
+                          <div
+                            key={filing.id}
+                            className="p-3 border rounded-lg"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium">
+                                {filing.period}
+                              </span>
+                              <FilingStatusBadge status={filing.status} />
+                            </div>
+                            <div className="text-xs text-gray-500 space-y-1">
+                              <div>
+                                Due:{' '}
+                                {new Date(filing.dueDate).toLocaleDateString()}
+                              </div>
+                              <div>Assigned: {filing.assignedTo}</div>
+                            </div>
+                            {filing.status === 'ready' && (
+                              <Button size="sm" className="w-full mt-2">
+                                Submit to ERGANI
+                              </Button>
+                            )}
                           </div>
-                          <div className="text-xs text-gray-500 space-y-1">
-                            <div>Due: {new Date(filing.dueDate).toLocaleDateString()}</div>
-                            <div>Assigned: {filing.assignedTo}</div>
-                          </div>
-                          {filing.status === 'ready' && (
-                            <Button size="sm" className="w-full mt-2">
-                              Submit to ERGANI
-                            </Button>
-                          )}
-                        </div>
-                      ))}
+                        ))}
                     </CardContent>
                   </Card>
                 </div>
@@ -658,7 +846,9 @@ export default function PartnerConsole() {
               {/* Payroll Runs Tab */}
               <TabsContent value="payroll" className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">Greek Payroll Processing</h2>
+                  <h2 className="text-xl font-semibold">
+                    Greek Payroll Processing
+                  </h2>
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
                       <Calendar className="h-4 w-4 mr-2" />
@@ -672,13 +862,15 @@ export default function PartnerConsole() {
                 </div>
 
                 <div className="space-y-4">
-                  {mockPayrollRuns.map((run) => (
+                  {mockPayrollRuns.map(run => (
                     <Card key={run.id}>
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between">
                           <div className="space-y-2">
                             <div className="flex items-center gap-3">
-                              <h3 className="text-lg font-medium">Payroll {run.period}</h3>
+                              <h3 className="text-lg font-medium">
+                                Payroll {run.period}
+                              </h3>
                               <PayrollStatusBadge status={run.status} />
                               <Badge variant="outline" className="text-xs">
                                 {run.employeeCount} employees
@@ -686,20 +878,34 @@ export default function PartnerConsole() {
                             </div>
                             <div className="grid grid-cols-3 gap-6 text-sm">
                               <div>
-                                <span className="text-gray-500">Gross Total:</span>
-                                <div className="font-medium">€{run.totalGross.toLocaleString()}</div>
+                                <span className="text-gray-500">
+                                  Gross Total:
+                                </span>
+                                <div className="font-medium">
+                                  €{run.totalGross.toLocaleString()}
+                                </div>
                               </div>
                               <div>
-                                <span className="text-gray-500">Net Total:</span>
-                                <div className="font-medium">€{run.totalNet.toLocaleString()}</div>
+                                <span className="text-gray-500">
+                                  Net Total:
+                                </span>
+                                <div className="font-medium">
+                                  €{run.totalNet.toLocaleString()}
+                                </div>
                               </div>
                               <div>
-                                <span className="text-gray-500">Last Modified:</span>
-                                <div className="font-medium">{new Date(run.lastModified).toLocaleDateString()}</div>
+                                <span className="text-gray-500">
+                                  Last Modified:
+                                </span>
+                                <div className="font-medium">
+                                  {new Date(
+                                    run.lastModified
+                                  ).toLocaleDateString()}
+                                </div>
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm">
                               <Eye className="h-4 w-4 mr-2" />
@@ -727,7 +933,9 @@ export default function PartnerConsole() {
               {/* Audit Packs Tab */}
               <TabsContent value="audit-packs" className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">Inspector & Audit Packs</h2>
+                  <h2 className="text-xl font-semibold">
+                    Inspector & Audit Packs
+                  </h2>
                   <Button size="sm">
                     <FileDown className="h-4 w-4 mr-2" />
                     Generate Pack
@@ -737,22 +945,34 @@ export default function PartnerConsole() {
                 <div className="grid gap-6 md:grid-cols-2">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Standard Audit Pack</CardTitle>
+                      <CardTitle className="text-lg">
+                        Standard Audit Pack
+                      </CardTitle>
                       <p className="text-sm text-gray-500">
                         Complete documentation package for labor inspections
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <div className="text-sm font-medium">Date Range Presets:</div>
+                        <div className="text-sm font-medium">
+                          Date Range Presets:
+                        </div>
                         <div className="grid grid-cols-2 gap-2">
-                          <Button variant="outline" size="sm">Current Month</Button>
-                          <Button variant="outline" size="sm">Last 3 Months</Button>
-                          <Button variant="outline" size="sm">Current Year</Button>
-                          <Button variant="outline" size="sm">Custom Range</Button>
+                          <Button variant="outline" size="sm">
+                            Current Month
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            Last 3 Months
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            Current Year
+                          </Button>
+                          <Button variant="outline" size="sm">
+                            Custom Range
+                          </Button>
                         </div>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="text-sm font-medium">Includes:</div>
                         <div className="text-xs text-gray-500 space-y-1">
@@ -763,7 +983,7 @@ export default function PartnerConsole() {
                           <div>✓ Work schedule documentation</div>
                         </div>
                       </div>
-                      
+
                       <Button className="w-full">
                         <Download className="h-4 w-4 mr-2" />
                         Download Latest Pack
@@ -773,30 +993,46 @@ export default function PartnerConsole() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Compliance Report</CardTitle>
+                      <CardTitle className="text-lg">
+                        Compliance Report
+                      </CardTitle>
                       <p className="text-sm text-gray-500">
                         Focused compliance status for client review
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2">
-                        <div className="text-sm font-medium">Quick Reports:</div>
+                        <div className="text-sm font-medium">
+                          Quick Reports:
+                        </div>
                         <div className="space-y-2">
-                          <Button variant="outline" size="sm" className="w-full justify-start">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start"
+                          >
                             <FileText className="h-4 w-4 mr-2" />
                             Filing Status Summary
                           </Button>
-                          <Button variant="outline" size="sm" className="w-full justify-start">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start"
+                          >
                             <AlertCircle className="h-4 w-4 mr-2" />
                             Outstanding Issues
                           </Button>
-                          <Button variant="outline" size="sm" className="w-full justify-start">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full justify-start"
+                          >
                             <Calculator className="h-4 w-4 mr-2" />
                             Payroll Variance Report
                           </Button>
                         </div>
                       </div>
-                      
+
                       <Button className="w-full">
                         <Eye className="h-4 w-4 mr-2" />
                         View Dashboard
@@ -811,7 +1047,9 @@ export default function PartnerConsole() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">Maker-Checker Queue</h2>
                   <div className="flex gap-2">
-                    <Badge variant="secondary">{mockApprovals.length} pending</Badge>
+                    <Badge variant="secondary">
+                      {mockApprovals.length} pending
+                    </Badge>
                     <Button variant="outline" size="sm">
                       <Filter className="h-4 w-4 mr-2" />
                       Filter
@@ -820,16 +1058,23 @@ export default function PartnerConsole() {
                 </div>
 
                 <div className="space-y-4">
-                  {mockApprovals.map((approval) => (
+                  {mockApprovals.map(approval => (
                     <Card key={approval.id}>
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between">
                           <div className="space-y-2">
                             <div className="flex items-center gap-3">
-                              <h3 className="text-lg font-medium">{approval.title}</h3>
-                              <Badge 
-                                variant={approval.priority === 'high' ? 'destructive' : 
-                                        approval.priority === 'urgent' ? 'destructive' : 'secondary'}
+                              <h3 className="text-lg font-medium">
+                                {approval.title}
+                              </h3>
+                              <Badge
+                                variant={
+                                  approval.priority === 'high'
+                                    ? 'destructive'
+                                    : approval.priority === 'urgent'
+                                      ? 'destructive'
+                                      : 'secondary'
+                                }
                                 className="text-xs"
                               >
                                 {approval.priority}
@@ -839,10 +1084,13 @@ export default function PartnerConsole() {
                               </Badge>
                             </div>
                             <div className="text-sm text-gray-500">
-                              Requested by {approval.requestedBy} • {new Date(approval.requestedAt).toLocaleDateString()}
+                              Requested by {approval.requestedBy} •{' '}
+                              {new Date(
+                                approval.requestedAt
+                              ).toLocaleDateString()}
                             </div>
                           </div>
-                          
+
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm">
                               <Eye className="h-4 w-4 mr-2" />
@@ -858,18 +1106,24 @@ export default function PartnerConsole() {
                             </Button>
                           </div>
                         </div>
-                        
+
                         {/* Diff Preview */}
                         <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                          <div className="text-xs font-medium text-gray-700 mb-2">Changes Preview:</div>
+                          <div className="text-xs font-medium text-gray-700 mb-2">
+                            Changes Preview:
+                          </div>
                           <div className="grid grid-cols-2 gap-4 text-xs">
                             <div>
-                              <div className="text-gray-500">Previous Total:</div>
+                              <div className="text-gray-500">
+                                Previous Total:
+                              </div>
                               <div className="font-mono">€118,750</div>
                             </div>
                             <div>
                               <div className="text-gray-500">New Total:</div>
-                              <div className="font-mono text-green-600">€125,200</div>
+                              <div className="font-mono text-green-600">
+                                €125,200
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -898,12 +1152,16 @@ export default function PartnerConsole() {
                 <div className="grid gap-6 md:grid-cols-3">
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium">Receipts & Invoices</CardTitle>
+                      <CardTitle className="text-sm font-medium">
+                        Receipts & Invoices
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="text-center py-8">
                         <FileText className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                        <div className="text-sm text-gray-500">12 documents</div>
+                        <div className="text-sm text-gray-500">
+                          12 documents
+                        </div>
                         <Button variant="outline" size="sm" className="mt-2">
                           Browse Files
                         </Button>
@@ -913,7 +1171,9 @@ export default function PartnerConsole() {
 
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium">Official Letters</CardTitle>
+                      <CardTitle className="text-sm font-medium">
+                        Official Letters
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="text-center py-8">
@@ -928,7 +1188,9 @@ export default function PartnerConsole() {
 
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium">Contracts & Forms</CardTitle>
+                      <CardTitle className="text-sm font-medium">
+                        Contracts & Forms
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       <div className="text-center py-8">
@@ -946,7 +1208,9 @@ export default function PartnerConsole() {
               {/* Settings Tab */}
               <TabsContent value="settings" className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold">Client Access Settings</h2>
+                  <h2 className="text-xl font-semibold">
+                    Client Access Settings
+                  </h2>
                   <Button variant="destructive" size="sm">
                     <Trash2 className="h-4 w-4 mr-2" />
                     Revoke Access
@@ -956,26 +1220,35 @@ export default function PartnerConsole() {
                 <div className="grid gap-6 md:grid-cols-2">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Granted Permissions</CardTitle>
+                      <CardTitle className="text-lg">
+                        Granted Permissions
+                      </CardTitle>
                       <p className="text-sm text-gray-500">
                         Scopes approved by client for this partnership
                       </p>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {currentClient?.grantedScopes?.map((scope) => (
-                        <div key={scope} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      {currentClient?.grantedScopes?.map(scope => (
+                        <div
+                          key={scope}
+                          className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                        >
                           <span className="text-sm font-medium">{scope}</span>
                           <CheckCircle className="h-4 w-4 text-green-600" />
                         </div>
                       )) || (
-                        <div className="text-sm text-gray-500">No permissions granted yet</div>
+                        <div className="text-sm text-gray-500">
+                          No permissions granted yet
+                        </div>
                       )}
                     </CardContent>
                   </Card>
 
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Maker-Checker Mode</CardTitle>
+                      <CardTitle className="text-lg">
+                        Maker-Checker Mode
+                      </CardTitle>
                       <p className="text-sm text-gray-500">
                         Current approval workflow configuration
                       </p>
@@ -983,20 +1256,42 @@ export default function PartnerConsole() {
                     <CardContent className="space-y-3">
                       <div className="p-4 border rounded-lg">
                         <div className="flex items-center gap-2 mb-2">
-                          {currentClient?.makerCheckerMode === 'client_checker' && (
-                            <><Users className="h-4 w-4 text-blue-600" /> <span className="font-medium">Client Approval Required</span></>
+                          {currentClient?.makerCheckerMode ===
+                            'client_checker' && (
+                            <>
+                              <Users className="h-4 w-4 text-blue-600" />{' '}
+                              <span className="font-medium">
+                                Client Approval Required
+                              </span>
+                            </>
                           )}
-                          {currentClient?.makerCheckerMode === 'partner_checker' && (
-                            <><Building2 className="h-4 w-4 text-green-600" /> <span className="font-medium">Partner Internal Review</span></>
+                          {currentClient?.makerCheckerMode ===
+                            'partner_checker' && (
+                            <>
+                              <Building2 className="h-4 w-4 text-green-600" />{' '}
+                              <span className="font-medium">
+                                Partner Internal Review
+                              </span>
+                            </>
                           )}
                           {currentClient?.makerCheckerMode === 'dual' && (
-                            <><Shield className="h-4 w-4 text-purple-600" /> <span className="font-medium">Dual Approval Required</span></>
+                            <>
+                              <Shield className="h-4 w-4 text-purple-600" />{' '}
+                              <span className="font-medium">
+                                Dual Approval Required
+                              </span>
+                            </>
                           )}
                         </div>
                         <div className="text-xs text-gray-500">
-                          {currentClient?.makerCheckerMode === 'client_checker' && 'Partner prepares; client approves and submits.'}
-                          {currentClient?.makerCheckerMode === 'partner_checker' && 'Partner staff prepares; partner reviewer approves and submits.'}
-                          {currentClient?.makerCheckerMode === 'dual' && 'Partner prepares; client approves; partner submits (or vice-versa).'}
+                          {currentClient?.makerCheckerMode ===
+                            'client_checker' &&
+                            'Partner prepares; client approves and submits.'}
+                          {currentClient?.makerCheckerMode ===
+                            'partner_checker' &&
+                            'Partner staff prepares; partner reviewer approves and submits.'}
+                          {currentClient?.makerCheckerMode === 'dual' &&
+                            'Partner prepares; client approves; partner submits (or vice-versa).'}
                         </div>
                       </div>
                     </CardContent>
@@ -1015,7 +1310,11 @@ export default function PartnerConsole() {
 function FilingStatusBadge({ status }: { status: string }) {
   const variants: Record<string, { variant: any; icon: any; label: string }> = {
     draft: { variant: 'secondary', icon: Edit, label: 'Draft' },
-    pending_approval: { variant: 'outline', icon: Clock, label: 'Pending Approval' },
+    pending_approval: {
+      variant: 'outline',
+      icon: Clock,
+      label: 'Pending Approval',
+    },
     ready: { variant: 'default', icon: CheckCircle, label: 'Ready' },
     submitted: { variant: 'default', icon: CheckCircle, label: 'Submitted' },
     failed: { variant: 'destructive', icon: XCircle, label: 'Failed' },

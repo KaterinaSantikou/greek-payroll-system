@@ -1,30 +1,42 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  FileText, 
-  AlertTriangle, 
-  CheckCircle, 
-  Calendar, 
-  Shield, 
-  Users, 
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  FileText,
+  AlertTriangle,
+  CheckCircle,
+  Calendar,
+  Shield,
+  Users,
   Clock,
   Scale,
   AlertCircle,
   FileCheck,
   UserX,
-  Briefcase
-} from "lucide-react";
-import { 
+  Briefcase,
+} from 'lucide-react';
+import {
   calculateLayoffNotice,
   checkDocumentCompliance,
   generateTerminationChecklist,
@@ -40,34 +52,42 @@ import {
   LAYOFF_NOTICE_PERIODS,
   TERMINATION_PROCEDURES,
   EU_PREDICTABLE_CONDITIONS_DIRECTIVE,
-  LABOR_RELATIONS_2025
-} from "@/lib/legalDocumentation";
+  LABOR_RELATIONS_2025,
+} from '@/lib/legalDocumentation';
 
 export default function LegalPage() {
   const [employeeData, setEmployeeData] = useState({
-    nationality: "greek",
+    nationality: 'greek',
     age: 30,
-    position: "developer",
-    workType: "standard",
+    position: 'developer',
+    workType: 'standard',
     hasDisability: false,
-    gender: "male",
-    startDate: "2020-03-15",
+    gender: 'male',
+    startDate: '2020-03-15',
     hasAssets: true,
-    hasPendingProjects: true
+    hasPendingProjects: true,
   });
 
   const [documents, setDocuments] = useState([
-    { type: "identity-card", expiryDate: "2025-12-31", status: "valid" as const },
-    { type: "afm-certificate", expiryDate: "", status: "valid" as const },
-    { type: "amka-certificate", expiryDate: "", status: "valid" as const },
-    { type: "medical-certificate", expiryDate: "2024-12-01", status: "valid" as const },
-    { type: "work-permit", expiryDate: "", status: "missing" as const }
+    {
+      type: 'identity-card',
+      expiryDate: '2025-12-31',
+      status: 'valid' as const,
+    },
+    { type: 'afm-certificate', expiryDate: '', status: 'valid' as const },
+    { type: 'amka-certificate', expiryDate: '', status: 'valid' as const },
+    {
+      type: 'medical-certificate',
+      expiryDate: '2024-12-01',
+      status: 'valid' as const,
+    },
+    { type: 'work-permit', expiryDate: '', status: 'missing' as const },
   ]);
 
   const [terminationData, setTerminationData] = useState({
-    type: "resignation" as const,
+    type: 'resignation' as const,
     terminationDate: new Date().toISOString().split('T')[0],
-    reason: ""
+    reason: '',
   });
 
   const [complianceResults, setComplianceResults] = useState<any>(null);
@@ -75,71 +95,76 @@ export default function LegalPage() {
   const [terminationChecklist, setTerminationChecklist] = useState<any>(null);
   const [healthSafetyResults, setHealthSafetyResults] = useState<any>(null);
   const [euDirectiveResults, setEuDirectiveResults] = useState<any>(null);
-  const [strikeAssessmentResults, setStrikeAssessmentResults] = useState<any>(null);
-  
+  const [strikeAssessmentResults, setStrikeAssessmentResults] =
+    useState<any>(null);
+
   // EU Directive compliance data
   const [contractData, setContractData] = useState({
     hasWrittenContract: true,
-    contractProvidedOn: "2024-01-02",
-    employmentStartDate: "2024-01-01",
+    contractProvidedOn: '2024-01-02',
+    employmentStartDate: '2024-01-01',
     probationPeriodMonths: 4,
     hasAllRequiredTerms: false,
-    missingTerms: ["training_entitlement", "collective_agreements"],
-    contractType: "permanent" as const
+    missingTerms: ['training_entitlement', 'collective_agreements'],
+    contractType: 'permanent' as const,
   });
 
   // Strike assessment data
   const [companyStrikeData, setCompanyStrikeData] = useState({
-    industry: "technology",
+    industry: 'technology',
     employeeCount: 150,
     unionizedEmployees: 45,
-    criticalOperations: ["server_maintenance", "customer_support", "production"],
+    criticalOperations: [
+      'server_maintenance',
+      'customer_support',
+      'production',
+    ],
     hasContingencyPlans: true,
     previousStrikeHistory: [
       {
-        date: "2023-05-15",
+        date: '2023-05-15',
         duration: 8,
         participationRate: 40,
-        impact: "medium" as const
-      }
-    ]
+        impact: 'medium' as const,
+      },
+    ],
   });
 
   const [currentStrikeData, setCurrentStrikeData] = useState({
-    type: "general_strike" as const,
+    type: 'general_strike' as const,
     expectedDuration: 24,
     expectedParticipation: 75,
-    affectedSectors: ["technology", "manufacturing", "education"],
-    demands: ["higher_minimum_wage", "collective_bargaining_restoration"]
+    affectedSectors: ['technology', 'manufacturing', 'education'],
+    demands: ['higher_minimum_wage', 'collective_bargaining_restoration'],
   });
 
   const [projectData, setProjectData] = useState({
-    type: "construction",
+    type: 'construction',
     value: 750000,
-    riskLevel: "high" as const,
-    duration: 8
+    riskLevel: 'high' as const,
+    duration: 8,
   });
   const [companyData, setCompanyData] = useState({
-    industry: "construction",
+    industry: 'construction',
     employeeCount: 150,
     hasConstructionProjects: true,
     hasHazardousWork: true,
     digitalCardImplemented: true,
     currentProjects: [
       {
-        type: "construction",
+        type: 'construction',
         value: 750000,
-        riskLevel: "high" as const,
-        duration: 8
-      }
-    ]
+        riskLevel: 'high' as const,
+        duration: 8,
+      },
+    ],
   });
   const [salaryProtectionData, setSalaryProtectionData] = useState({
     previousSalary: 2500,
     currentSalary: 2300,
-    digitalCardImplementationDate: "2025-01-01",
-    salaryChangeDate: "2025-02-15",
-    salaryChangeReason: "Αναδιοργάνωση λόγω ψηφιακής κάρτας εργασίας"
+    digitalCardImplementationDate: '2025-01-01',
+    salaryChangeDate: '2025-02-15',
+    salaryChangeReason: 'Αναδιοργάνωση λόγω ψηφιακής κάρτας εργασίας',
   });
 
   const legalRequirements = getLegalDocumentationRequirements();
@@ -167,29 +192,29 @@ export default function LegalPage() {
   };
 
   const handleHealthSafetyAnalysis = () => {
-    const coordinatorCheck = checkHealthSafetyCoordinatorRequirement(projectData);
+    const coordinatorCheck =
+      checkHealthSafetyCoordinatorRequirement(projectData);
     const firstAidTraining = generateFirstAidTrainingRequirements({
       totalEmployees: companyData.employeeCount,
       workplaceType: companyData.industry,
       hasRemoteWorkers: true,
-      hasHazardousWork: companyData.hasHazardousWork
+      hasHazardousWork: companyData.hasHazardousWork,
     });
-    const salaryProtection = validateDigitalWorkCardProtection(salaryProtectionData);
+    const salaryProtection =
+      validateDigitalWorkCardProtection(salaryProtectionData);
     const complianceReport = generateHealthSafetyComplianceReport(companyData);
 
     setHealthSafetyResults({
       coordinatorCheck,
       firstAidTraining,
       salaryProtection,
-      complianceReport
+      complianceReport,
     });
   };
 
   const updateDocumentStatus = (type: string, field: string, value: any) => {
-    setDocuments(docs => 
-      docs.map(doc => 
-        doc.type === type ? { ...doc, [field]: value } : doc
-      )
+    setDocuments(docs =>
+      docs.map(doc => (doc.type === type ? { ...doc, [field]: value } : doc))
     );
   };
 
@@ -209,7 +234,9 @@ export default function LegalPage() {
         <Scale className="h-8 w-8 text-purple-600" />
         <div>
           <h1 className="text-3xl font-bold">Νομική Τεκμηρίωση</h1>
-          <p className="text-gray-600">Διαχείριση νομικών εγγράφων και συμμόρφωση με το εργατικό δίκαιο</p>
+          <p className="text-gray-600">
+            Διαχείριση νομικών εγγράφων και συμμόρφωση με το εργατικό δίκαιο
+          </p>
         </div>
       </div>
 
@@ -239,9 +266,14 @@ export default function LegalPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="nationality">Εθνικότητα</Label>
-                      <Select 
-                        value={employeeData.nationality} 
-                        onValueChange={(value) => setEmployeeData({...employeeData, nationality: value})}
+                      <Select
+                        value={employeeData.nationality}
+                        onValueChange={value =>
+                          setEmployeeData({
+                            ...employeeData,
+                            nationality: value,
+                          })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -260,22 +292,31 @@ export default function LegalPage() {
                         id="age"
                         type="number"
                         value={employeeData.age}
-                        onChange={(e) => setEmployeeData({...employeeData, age: parseInt(e.target.value)})}
+                        onChange={e =>
+                          setEmployeeData({
+                            ...employeeData,
+                            age: parseInt(e.target.value),
+                          })
+                        }
                       />
                     </div>
                   </div>
 
                   <div>
                     <Label htmlFor="position">Θέση Εργασίας</Label>
-                    <Select 
-                      value={employeeData.position} 
-                      onValueChange={(value) => setEmployeeData({...employeeData, position: value})}
+                    <Select
+                      value={employeeData.position}
+                      onValueChange={value =>
+                        setEmployeeData({ ...employeeData, position: value })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="developer">Προγραμματιστής</SelectItem>
+                        <SelectItem value="developer">
+                          Προγραμματιστής
+                        </SelectItem>
                         <SelectItem value="manager">Διευθυντής</SelectItem>
                         <SelectItem value="accountant">Λογιστής</SelectItem>
                         <SelectItem value="sales">Πωλήσεις</SelectItem>
@@ -286,18 +327,28 @@ export default function LegalPage() {
 
                   <div>
                     <Label htmlFor="workType">Τύπος Εργασίας</Label>
-                    <Select 
-                      value={employeeData.workType} 
-                      onValueChange={(value) => setEmployeeData({...employeeData, workType: value})}
+                    <Select
+                      value={employeeData.workType}
+                      onValueChange={value =>
+                        setEmployeeData({ ...employeeData, workType: value })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="standard">Κανονικό Ωράριο</SelectItem>
-                        <SelectItem value="night_shift">Νυχτερινές Βάρδιες</SelectItem>
-                        <SelectItem value="hazardous">Επικίνδυνη Εργασία</SelectItem>
-                        <SelectItem value="food_handling">Χειρισμός Τροφίμων</SelectItem>
+                        <SelectItem value="standard">
+                          Κανονικό Ωράριο
+                        </SelectItem>
+                        <SelectItem value="night_shift">
+                          Νυχτερινές Βάρδιες
+                        </SelectItem>
+                        <SelectItem value="hazardous">
+                          Επικίνδυνη Εργασία
+                        </SelectItem>
+                        <SelectItem value="food_handling">
+                          Χειρισμός Τροφίμων
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -308,7 +359,12 @@ export default function LegalPage() {
                       id="startDate"
                       type="date"
                       value={employeeData.startDate}
-                      onChange={(e) => setEmployeeData({...employeeData, startDate: e.target.value})}
+                      onChange={e =>
+                        setEmployeeData({
+                          ...employeeData,
+                          startDate: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
@@ -316,14 +372,19 @@ export default function LegalPage() {
                     <Switch
                       id="hasDisability"
                       checked={employeeData.hasDisability}
-                      onCheckedChange={(checked) => setEmployeeData({...employeeData, hasDisability: checked})}
+                      onCheckedChange={checked =>
+                        setEmployeeData({
+                          ...employeeData,
+                          hasDisability: checked,
+                        })
+                      }
                     />
                     <Label htmlFor="hasDisability">Άτομο με Αναπηρία</Label>
                   </div>
 
-                  <Button 
-                    onClick={handleCheckCompliance} 
-                    className="w-full" 
+                  <Button
+                    onClick={handleCheckCompliance}
+                    className="w-full"
                     size="lg"
                   >
                     <FileCheck className="mr-2 h-4 w-4" />
@@ -342,19 +403,27 @@ export default function LegalPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {documents.map((doc, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border rounded"
+                    >
                       <div className="flex-1">
                         <div className="font-medium">{doc.type}</div>
                         {doc.expiryDate && (
                           <div className="text-sm text-gray-600">
-                            Λήγει: {new Date(doc.expiryDate).toLocaleDateString('el-GR')}
+                            Λήγει:{' '}
+                            {new Date(doc.expiryDate).toLocaleDateString(
+                              'el-GR'
+                            )}
                           </div>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <Select 
-                          value={doc.status} 
-                          onValueChange={(value) => updateDocumentStatus(doc.type, 'status', value)}
+                        <Select
+                          value={doc.status}
+                          onValueChange={value =>
+                            updateDocumentStatus(doc.type, 'status', value)
+                          }
                         >
                           <SelectTrigger className="w-32">
                             <SelectValue />
@@ -365,14 +434,20 @@ export default function LegalPage() {
                             <SelectItem value="missing">Απουσιάζει</SelectItem>
                           </SelectContent>
                         </Select>
-                        <Badge 
+                        <Badge
                           variant={
-                            doc.status === 'valid' ? 'default' :
-                            doc.status === 'expired' ? 'destructive' : 'secondary'
+                            doc.status === 'valid'
+                              ? 'default'
+                              : doc.status === 'expired'
+                                ? 'destructive'
+                                : 'secondary'
                           }
                         >
-                          {doc.status === 'valid' ? 'Έγκυρο' :
-                           doc.status === 'expired' ? 'Ληγμένο' : 'Απουσιάζει'}
+                          {doc.status === 'valid'
+                            ? 'Έγκυρο'
+                            : doc.status === 'expired'
+                              ? 'Ληγμένο'
+                              : 'Απουσιάζει'}
                         </Badge>
                       </div>
                     </div>
@@ -395,18 +470,35 @@ export default function LegalPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Status Summary */}
-                  <div className="text-center p-4 rounded-lg" style={{
-                    backgroundColor: complianceResults.compliance === 'compliant' ? '#f0f9ff' :
-                                    complianceResults.compliance === 'warnings' ? '#fffbeb' : '#fef2f2'
-                  }}>
-                    <div className={`text-2xl font-bold ${
-                      complianceResults.compliance === 'compliant' ? 'text-blue-600' :
-                      complianceResults.compliance === 'warnings' ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
-                      {complianceResults.compliance === 'compliant' ? 'Συμμορφούμενος' :
-                       complianceResults.compliance === 'warnings' ? 'Προειδοποιήσεις' : 'Μη Συμμορφούμενος'}
+                  <div
+                    className="text-center p-4 rounded-lg"
+                    style={{
+                      backgroundColor:
+                        complianceResults.compliance === 'compliant'
+                          ? '#f0f9ff'
+                          : complianceResults.compliance === 'warnings'
+                            ? '#fffbeb'
+                            : '#fef2f2',
+                    }}
+                  >
+                    <div
+                      className={`text-2xl font-bold ${
+                        complianceResults.compliance === 'compliant'
+                          ? 'text-blue-600'
+                          : complianceResults.compliance === 'warnings'
+                            ? 'text-yellow-600'
+                            : 'text-red-600'
+                      }`}
+                    >
+                      {complianceResults.compliance === 'compliant'
+                        ? 'Συμμορφούμενος'
+                        : complianceResults.compliance === 'warnings'
+                          ? 'Προειδοποιήσεις'
+                          : 'Μη Συμμορφούμενος'}
                     </div>
-                    <div className="text-sm text-gray-600">Κατάσταση Συμμόρφωσης</div>
+                    <div className="text-sm text-gray-600">
+                      Κατάσταση Συμμόρφωσης
+                    </div>
                   </div>
 
                   {/* Missing Documents */}
@@ -414,12 +506,16 @@ export default function LegalPage() {
                     <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <AlertTriangle className="h-5 w-5 text-red-600" />
-                        <span className="font-medium text-red-800">Απουσιάζουν Έγγραφα</span>
+                        <span className="font-medium text-red-800">
+                          Απουσιάζουν Έγγραφα
+                        </span>
                       </div>
                       <ul className="list-disc list-inside space-y-1 text-sm text-red-700">
-                        {complianceResults.missingDocuments.map((doc: string, index: number) => (
-                          <li key={index}>{doc}</li>
-                        ))}
+                        {complianceResults.missingDocuments.map(
+                          (doc: string, index: number) => (
+                            <li key={index}>{doc}</li>
+                          )
+                        )}
                       </ul>
                     </div>
                   )}
@@ -429,19 +525,25 @@ export default function LegalPage() {
                     <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <Calendar className="h-5 w-5 text-yellow-600" />
-                        <span className="font-medium text-yellow-800">Έγγραφα που Λήγουν</span>
+                        <span className="font-medium text-yellow-800">
+                          Έγγραφα που Λήγουν
+                        </span>
                       </div>
-                      {complianceResults.expiringDocuments.map((doc: any, index: number) => (
-                        <div key={index} className="flex justify-between text-sm text-yellow-700">
-                          <span>{doc.type}</span>
-                          <span>
-                            {doc.daysUntilExpiry > 0 ? 
-                              `Λήγει σε ${doc.daysUntilExpiry} ημέρες` : 
-                              `Έχει λήξει`
-                            }
-                          </span>
-                        </div>
-                      ))}
+                      {complianceResults.expiringDocuments.map(
+                        (doc: any, index: number) => (
+                          <div
+                            key={index}
+                            className="flex justify-between text-sm text-yellow-700"
+                          >
+                            <span>{doc.type}</span>
+                            <span>
+                              {doc.daysUntilExpiry > 0
+                                ? `Λήγει σε ${doc.daysUntilExpiry} ημέρες`
+                                : `Έχει λήξει`}
+                            </span>
+                          </div>
+                        )
+                      )}
                     </div>
                   )}
 
@@ -450,12 +552,16 @@ export default function LegalPage() {
                     <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <AlertCircle className="h-5 w-5 text-red-600" />
-                        <span className="font-medium text-red-800">Παραβάσεις Νομοθεσίας</span>
+                        <span className="font-medium text-red-800">
+                          Παραβάσεις Νομοθεσίας
+                        </span>
                       </div>
                       <ul className="list-disc list-inside space-y-1 text-sm text-red-700">
-                        {complianceResults.violations.map((violation: string, index: number) => (
-                          <li key={index}>{violation}</li>
-                        ))}
+                        {complianceResults.violations.map(
+                          (violation: string, index: number) => (
+                            <li key={index}>{violation}</li>
+                          )
+                        )}
                       </ul>
                     </div>
                   )}
@@ -492,32 +598,42 @@ export default function LegalPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {LEGAL_RESTRICTIONS.AGE_RESTRICTIONS.restrictions.map((restriction, index) => (
-                    <div key={index} className="p-4 border rounded-lg">
-                      <h4 className="font-medium">{restriction.name}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{restriction.description}</p>
-                      <div className="mt-3 space-y-2">
-                        {restriction.minimumAge && (
-                          <div className="flex justify-between">
-                            <span>Ελάχιστη ηλικία:</span>
-                            <Badge variant="outline">{restriction.minimumAge} έτη</Badge>
-                          </div>
-                        )}
-                        {restriction.ageLimit && (
-                          <div className="flex justify-between">
-                            <span>Όριο ηλικίας:</span>
-                            <Badge variant="outline">{restriction.ageLimit} έτη</Badge>
-                          </div>
-                        )}
-                        {(restriction as any).maxDailyHours && (
-                          <div className="flex justify-between">
-                            <span>Μέγ. ημερήσιες ώρες:</span>
-                            <Badge variant="default">{(restriction as any).maxDailyHours}h</Badge>
-                          </div>
-                        )}
+                  {LEGAL_RESTRICTIONS.AGE_RESTRICTIONS.restrictions.map(
+                    (restriction, index) => (
+                      <div key={index} className="p-4 border rounded-lg">
+                        <h4 className="font-medium">{restriction.name}</h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {restriction.description}
+                        </p>
+                        <div className="mt-3 space-y-2">
+                          {restriction.minimumAge && (
+                            <div className="flex justify-between">
+                              <span>Ελάχιστη ηλικία:</span>
+                              <Badge variant="outline">
+                                {restriction.minimumAge} έτη
+                              </Badge>
+                            </div>
+                          )}
+                          {restriction.ageLimit && (
+                            <div className="flex justify-between">
+                              <span>Όριο ηλικίας:</span>
+                              <Badge variant="outline">
+                                {restriction.ageLimit} έτη
+                              </Badge>
+                            </div>
+                          )}
+                          {(restriction as any).maxDailyHours && (
+                            <div className="flex justify-between">
+                              <span>Μέγ. ημερήσιες ώρες:</span>
+                              <Badge variant="default">
+                                {(restriction as any).maxDailyHours}h
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -532,28 +648,38 @@ export default function LegalPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {LEGAL_RESTRICTIONS.WORKING_TIME_RESTRICTIONS.restrictions.map((restriction, index) => (
-                    <div key={index} className="p-4 border rounded-lg">
-                      <h4 className="font-medium">{restriction.name}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{restriction.description}</p>
-                      <div className="mt-3 space-y-2">
-                        <div className="flex justify-between">
-                          <span>Κανονικές ώρες:</span>
-                          <Badge variant="outline">{restriction.standardHours}h</Badge>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Μέγιστες ώρες:</span>
-                          <Badge variant="destructive">{restriction.maximumHours}h</Badge>
-                        </div>
-                        {(restriction as any).emergencyHours && (
+                  {LEGAL_RESTRICTIONS.WORKING_TIME_RESTRICTIONS.restrictions.map(
+                    (restriction, index) => (
+                      <div key={index} className="p-4 border rounded-lg">
+                        <h4 className="font-medium">{restriction.name}</h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {restriction.description}
+                        </p>
+                        <div className="mt-3 space-y-2">
                           <div className="flex justify-between">
-                            <span>Επείγουσες ώρες:</span>
-                            <Badge variant="secondary">{(restriction as any).emergencyHours}h</Badge>
+                            <span>Κανονικές ώρες:</span>
+                            <Badge variant="outline">
+                              {restriction.standardHours}h
+                            </Badge>
                           </div>
-                        )}
+                          <div className="flex justify-between">
+                            <span>Μέγιστες ώρες:</span>
+                            <Badge variant="destructive">
+                              {restriction.maximumHours}h
+                            </Badge>
+                          </div>
+                          {(restriction as any).emergencyHours && (
+                            <div className="flex justify-between">
+                              <span>Επείγουσες ώρες:</span>
+                              <Badge variant="secondary">
+                                {(restriction as any).emergencyHours}h
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -568,32 +694,46 @@ export default function LegalPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {LEGAL_RESTRICTIONS.HEALTH_SAFETY_RESTRICTIONS.restrictions.map((restriction, index) => (
-                    <div key={index} className="p-4 border rounded-lg">
-                      <h4 className="font-medium">{restriction.name}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{restriction.description}</p>
-                      <div className="mt-3">
-                        {(restriction as any).prohibitedActivities && (
-                          <div>
-                            <span className="text-sm font-medium">Απαγορευμένες δραστηριότητες:</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {(restriction as any).prohibitedActivities.map((activity: string, i: number) => (
-                                <Badge key={i} variant="secondary" className="text-xs">
-                                  {activity.replace('_', ' ')}
-                                </Badge>
-                              ))}
+                  {LEGAL_RESTRICTIONS.HEALTH_SAFETY_RESTRICTIONS.restrictions.map(
+                    (restriction, index) => (
+                      <div key={index} className="p-4 border rounded-lg">
+                        <h4 className="font-medium">{restriction.name}</h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {restriction.description}
+                        </p>
+                        <div className="mt-3">
+                          {(restriction as any).prohibitedActivities && (
+                            <div>
+                              <span className="text-sm font-medium">
+                                Απαγορευμένες δραστηριότητες:
+                              </span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {(restriction as any).prohibitedActivities.map(
+                                  (activity: string, i: number) => (
+                                    <Badge
+                                      key={i}
+                                      variant="secondary"
+                                      className="text-xs"
+                                    >
+                                      {activity.replace('_', ' ')}
+                                    </Badge>
+                                  )
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {(restriction as any).minimumAge && (
-                          <div className="flex justify-between mt-2">
-                            <span>Ελάχιστη ηλικία:</span>
-                            <Badge variant="outline">{(restriction as any).minimumAge} έτη</Badge>
-                          </div>
-                        )}
+                          )}
+                          {(restriction as any).minimumAge && (
+                            <div className="flex justify-between mt-2">
+                              <span>Ελάχιστη ηλικία:</span>
+                              <Badge variant="outline">
+                                {(restriction as any).minimumAge} έτη
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -611,14 +751,20 @@ export default function LegalPage() {
                   Ανάλυση Απαιτήσεων Υγείας & Ασφάλειας
                 </CardTitle>
                 <CardDescription>
-                  Νέες απαιτήσεις 2025 για συντονιστές ασφάλειας, εκπαίδευση πρώτων βοηθειών και προστασία μισθών
+                  Νέες απαιτήσεις 2025 για συντονιστές ασφάλειας, εκπαίδευση
+                  πρώτων βοηθειών και προστασία μισθών
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="projectType">Τύπος Έργου</Label>
-                    <Select value={projectData.type} onValueChange={(value) => setProjectData({...projectData, type: value})}>
+                    <Select
+                      value={projectData.type}
+                      onValueChange={value =>
+                        setProjectData({ ...projectData, type: value })
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -637,13 +783,23 @@ export default function LegalPage() {
                       id="projectValue"
                       type="number"
                       value={projectData.value}
-                      onChange={(e) => setProjectData({...projectData, value: parseInt(e.target.value) || 0})}
+                      onChange={e =>
+                        setProjectData({
+                          ...projectData,
+                          value: parseInt(e.target.value) || 0,
+                        })
+                      }
                     />
                   </div>
 
                   <div>
                     <Label htmlFor="riskLevel">Επίπεδο Κινδύνου</Label>
-                    <Select value={projectData.riskLevel} onValueChange={(value: any) => setProjectData({...projectData, riskLevel: value})}>
+                    <Select
+                      value={projectData.riskLevel}
+                      onValueChange={(value: any) =>
+                        setProjectData({ ...projectData, riskLevel: value })
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -661,7 +817,12 @@ export default function LegalPage() {
                       id="duration"
                       type="number"
                       value={projectData.duration}
-                      onChange={(e) => setProjectData({...projectData, duration: parseInt(e.target.value) || 0})}
+                      onChange={e =>
+                        setProjectData({
+                          ...projectData,
+                          duration: parseInt(e.target.value) || 0,
+                        })
+                      }
                     />
                   </div>
                 </div>
@@ -675,13 +836,23 @@ export default function LegalPage() {
                       id="employeeCount"
                       type="number"
                       value={companyData.employeeCount}
-                      onChange={(e) => setCompanyData({...companyData, employeeCount: parseInt(e.target.value) || 0})}
+                      onChange={e =>
+                        setCompanyData({
+                          ...companyData,
+                          employeeCount: parseInt(e.target.value) || 0,
+                        })
+                      }
                     />
                   </div>
 
                   <div>
                     <Label htmlFor="industry">Κλάδος</Label>
-                    <Select value={companyData.industry} onValueChange={(value) => setCompanyData({...companyData, industry: value})}>
+                    <Select
+                      value={companyData.industry}
+                      onValueChange={value =>
+                        setCompanyData({ ...companyData, industry: value })
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -690,7 +861,9 @@ export default function LegalPage() {
                         <SelectItem value="manufacturing">Παραγωγή</SelectItem>
                         <SelectItem value="healthcare">Υγεία</SelectItem>
                         <SelectItem value="education">Εκπαίδευση</SelectItem>
-                        <SelectItem value="administrative">Διοικητικό</SelectItem>
+                        <SelectItem value="administrative">
+                          Διοικητικό
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -700,12 +873,23 @@ export default function LegalPage() {
                   <Switch
                     id="digitalCard"
                     checked={companyData.digitalCardImplemented}
-                    onCheckedChange={(checked) => setCompanyData({...companyData, digitalCardImplemented: checked})}
+                    onCheckedChange={checked =>
+                      setCompanyData({
+                        ...companyData,
+                        digitalCardImplemented: checked,
+                      })
+                    }
                   />
-                  <Label htmlFor="digitalCard">Ψηφιακή Κάρτα Εργασίας Ενεργοποιημένη</Label>
+                  <Label htmlFor="digitalCard">
+                    Ψηφιακή Κάρτα Εργασίας Ενεργοποιημένη
+                  </Label>
                 </div>
 
-                <Button onClick={handleHealthSafetyAnalysis} className="w-full" size="lg">
+                <Button
+                  onClick={handleHealthSafetyAnalysis}
+                  className="w-full"
+                  size="lg"
+                >
                   <Shield className="mr-2 h-4 w-4" />
                   Ανάλυση Απαιτήσεων Υγείας & Ασφάλειας
                 </Button>
@@ -724,11 +908,13 @@ export default function LegalPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className={`p-4 rounded-lg border-l-4 ${
-                      healthSafetyResults.coordinatorCheck.required 
-                        ? 'bg-red-50 border-red-500' 
-                        : 'bg-green-50 border-green-500'
-                    }`}>
+                    <div
+                      className={`p-4 rounded-lg border-l-4 ${
+                        healthSafetyResults.coordinatorCheck.required
+                          ? 'bg-red-50 border-red-500'
+                          : 'bg-green-50 border-green-500'
+                      }`}
+                    >
                       <div className="flex items-center gap-2 mb-2">
                         {healthSafetyResults.coordinatorCheck.required ? (
                           <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -736,20 +922,26 @@ export default function LegalPage() {
                           <CheckCircle className="h-5 w-5 text-green-600" />
                         )}
                         <span className="font-medium">
-                          {healthSafetyResults.coordinatorCheck.required ? 'Απαιτείται Διορισμός' : 'Δεν Απαιτείται'}
+                          {healthSafetyResults.coordinatorCheck.required
+                            ? 'Απαιτείται Διορισμός'
+                            : 'Δεν Απαιτείται'}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 mb-3">
                         {healthSafetyResults.coordinatorCheck.reason}
                       </p>
-                      
+
                       {healthSafetyResults.coordinatorCheck.required && (
                         <div>
-                          <h5 className="font-medium mb-2">Απαιτούμενα Προσόντα:</h5>
+                          <h5 className="font-medium mb-2">
+                            Απαιτούμενα Προσόντα:
+                          </h5>
                           <ul className="list-disc list-inside space-y-1 text-sm">
-                            {healthSafetyResults.coordinatorCheck.qualificationRequirements.map((req: string, index: number) => (
-                              <li key={index}>{req}</li>
-                            ))}
+                            {healthSafetyResults.coordinatorCheck.qualificationRequirements.map(
+                              (req: string, index: number) => (
+                                <li key={index}>{req}</li>
+                              )
+                            )}
                           </ul>
                         </div>
                       )}
@@ -770,14 +962,17 @@ export default function LegalPage() {
                       <div className="flex justify-between items-center">
                         <span>Συμμετέχοντες Εργαζόμενοι:</span>
                         <Badge variant="default">
-                          {companyData.employeeCount - healthSafetyResults.firstAidTraining.exemptEmployees}
+                          {companyData.employeeCount -
+                            healthSafetyResults.firstAidTraining
+                              .exemptEmployees}
                         </Badge>
                       </div>
-                      
+
                       <div className="flex justify-between items-center">
                         <span>Εκτιμώμενο Κόστος:</span>
                         <Badge variant="outline">
-                          €{healthSafetyResults.firstAidTraining.estimatedCost.toLocaleString()}
+                          €
+                          {healthSafetyResults.firstAidTraining.estimatedCost.toLocaleString()}
                         </Badge>
                       </div>
 
@@ -787,13 +982,21 @@ export default function LegalPage() {
                       </div>
 
                       <div>
-                        <h5 className="font-medium mb-2">Μαθήματα Εκπαίδευσης:</h5>
+                        <h5 className="font-medium mb-2">
+                          Μαθήματα Εκπαίδευσης:
+                        </h5>
                         <div className="flex flex-wrap gap-1">
-                          {healthSafetyResults.firstAidTraining.trainingModules.map((module: string, index: number) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {module}
-                            </Badge>
-                          ))}
+                          {healthSafetyResults.firstAidTraining.trainingModules.map(
+                            (module: string, index: number) => (
+                              <Badge
+                                key={index}
+                                variant="outline"
+                                className="text-xs"
+                              >
+                                {module}
+                              </Badge>
+                            )
+                          )}
                         </div>
                       </div>
                     </div>
@@ -809,11 +1012,13 @@ export default function LegalPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className={`p-4 rounded-lg border-l-4 ${
-                      healthSafetyResults.salaryProtection.violation 
-                        ? 'bg-red-50 border-red-500' 
-                        : 'bg-green-50 border-green-500'
-                    }`}>
+                    <div
+                      className={`p-4 rounded-lg border-l-4 ${
+                        healthSafetyResults.salaryProtection.violation
+                          ? 'bg-red-50 border-red-500'
+                          : 'bg-green-50 border-green-500'
+                      }`}
+                    >
                       <div className="flex items-center gap-2 mb-2">
                         {healthSafetyResults.salaryProtection.violation ? (
                           <AlertTriangle className="h-5 w-5 text-red-600" />
@@ -821,28 +1026,38 @@ export default function LegalPage() {
                           <CheckCircle className="h-5 w-5 text-green-600" />
                         )}
                         <span className="font-medium">
-                          {healthSafetyResults.salaryProtection.violation ? 'Παραβίαση Εντοπίστηκε' : 'Πλήρης Συμμόρφωση'}
+                          {healthSafetyResults.salaryProtection.violation
+                            ? 'Παραβίαση Εντοπίστηκε'
+                            : 'Πλήρης Συμμόρφωση'}
                         </span>
                       </div>
-                      
-                      {healthSafetyResults.salaryProtection.recommendations.length > 0 && (
+
+                      {healthSafetyResults.salaryProtection.recommendations
+                        .length > 0 && (
                         <div className="mt-3">
                           <h5 className="font-medium mb-2">Συστάσεις:</h5>
                           <ul className="list-disc list-inside space-y-1 text-sm">
-                            {healthSafetyResults.salaryProtection.recommendations.map((rec: string, index: number) => (
-                              <li key={index}>{rec}</li>
-                            ))}
+                            {healthSafetyResults.salaryProtection.recommendations.map(
+                              (rec: string, index: number) => (
+                                <li key={index}>{rec}</li>
+                              )
+                            )}
                           </ul>
                         </div>
                       )}
 
-                      {healthSafetyResults.salaryProtection.legalActions.length > 0 && (
+                      {healthSafetyResults.salaryProtection.legalActions
+                        .length > 0 && (
                         <div className="mt-3">
-                          <h5 className="font-medium mb-2 text-red-600">Νομικές Ενέργειες:</h5>
+                          <h5 className="font-medium mb-2 text-red-600">
+                            Νομικές Ενέργειες:
+                          </h5>
                           <ul className="list-disc list-inside space-y-1 text-sm text-red-600">
-                            {healthSafetyResults.salaryProtection.legalActions.map((action: string, index: number) => (
-                              <li key={index}>{action}</li>
-                            ))}
+                            {healthSafetyResults.salaryProtection.legalActions.map(
+                              (action: string, index: number) => (
+                                <li key={index}>{action}</li>
+                              )
+                            )}
                           </ul>
                         </div>
                       )}
@@ -861,29 +1076,41 @@ export default function LegalPage() {
                   <CardContent>
                     <div className="text-center space-y-4">
                       <div className="text-4xl font-bold text-center">
-                        <span className={
-                          healthSafetyResults.complianceReport.complianceScore >= 80 
-                            ? 'text-green-600' 
-                            : healthSafetyResults.complianceReport.complianceScore >= 60 
-                            ? 'text-yellow-600' 
-                            : 'text-red-600'
-                        }>
-                          {healthSafetyResults.complianceReport.complianceScore}%
+                        <span
+                          className={
+                            healthSafetyResults.complianceReport
+                              .complianceScore >= 80
+                              ? 'text-green-600'
+                              : healthSafetyResults.complianceReport
+                                    .complianceScore >= 60
+                                ? 'text-yellow-600'
+                                : 'text-red-600'
+                          }
+                        >
+                          {healthSafetyResults.complianceReport.complianceScore}
+                          %
                         </span>
                       </div>
-                      
-                      <Progress 
-                        value={healthSafetyResults.complianceReport.complianceScore} 
-                        className="w-full" 
+
+                      <Progress
+                        value={
+                          healthSafetyResults.complianceReport.complianceScore
+                        }
+                        className="w-full"
                       />
 
-                      {healthSafetyResults.complianceReport.recommendations.length > 0 && (
+                      {healthSafetyResults.complianceReport.recommendations
+                        .length > 0 && (
                         <div className="text-left">
-                          <h5 className="font-medium mb-2">Προτάσεις Βελτίωσης:</h5>
+                          <h5 className="font-medium mb-2">
+                            Προτάσεις Βελτίωσης:
+                          </h5>
                           <ul className="list-disc list-inside space-y-1 text-sm">
-                            {healthSafetyResults.complianceReport.recommendations.map((rec: string, index: number) => (
-                              <li key={index}>{rec}</li>
-                            ))}
+                            {healthSafetyResults.complianceReport.recommendations.map(
+                              (rec: string, index: number) => (
+                                <li key={index}>{rec}</li>
+                              )
+                            )}
                           </ul>
                         </div>
                       )}
@@ -913,13 +1140,18 @@ export default function LegalPage() {
                       id="terminationDate"
                       type="date"
                       value={terminationData.terminationDate}
-                      onChange={(e) => setTerminationData({...terminationData, terminationDate: e.target.value})}
+                      onChange={e =>
+                        setTerminationData({
+                          ...terminationData,
+                          terminationDate: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
-                  <Button 
-                    onClick={handleCalculateLayoff} 
-                    className="w-full" 
+                  <Button
+                    onClick={handleCalculateLayoff}
+                    className="w-full"
                     size="lg"
                   >
                     <Calendar className="mr-2 h-4 w-4" />
@@ -946,12 +1178,16 @@ export default function LegalPage() {
                         <div className="text-lg font-bold text-green-600">
                           {layoffResults.noticeDays} ημέρες
                         </div>
-                        <div className="text-sm text-gray-600">Προειδοποίηση</div>
+                        <div className="text-sm text-gray-600">
+                          Προειδοποίηση
+                        </div>
                       </div>
                     </div>
 
                     <div className="p-3 bg-gray-50 rounded-lg">
-                      <div className="font-medium">{layoffResults.description}</div>
+                      <div className="font-medium">
+                        {layoffResults.description}
+                      </div>
                       <div className="text-sm text-gray-600 mt-1">
                         Βάσει {layoffResults.tenureMonths} μηνών προϋπηρεσίας
                       </div>
@@ -959,13 +1195,21 @@ export default function LegalPage() {
 
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <CheckCircle className={`h-4 w-4 ${layoffResults.paymentInLieuAllowed ? 'text-green-600' : 'text-gray-400'}`} />
-                        <span className="text-sm">Δυνατότητα καταβολής αντί προειδοποίησης</span>
+                        <CheckCircle
+                          className={`h-4 w-4 ${layoffResults.paymentInLieuAllowed ? 'text-green-600' : 'text-gray-400'}`}
+                        />
+                        <span className="text-sm">
+                          Δυνατότητα καταβολής αντί προειδοποίησης
+                        </span>
                       </div>
-                      
+
                       <div className="flex items-center gap-2">
-                        <CheckCircle className={`h-4 w-4 ${layoffResults.severanceRequired ? 'text-green-600' : 'text-gray-400'}`} />
-                        <span className="text-sm">Απαιτείται αποζημίωση απόλυσης</span>
+                        <CheckCircle
+                          className={`h-4 w-4 ${layoffResults.severanceRequired ? 'text-green-600' : 'text-gray-400'}`}
+                        />
+                        <span className="text-sm">
+                          Απαιτείται αποζημίωση απόλυσης
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -986,30 +1230,44 @@ export default function LegalPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {LAYOFF_NOTICE_PERIODS.INDIVIDUAL_LAYOFFS.noticePeriods.map((period, index) => (
-                    <div key={index} className="flex justify-between items-center p-3 border rounded">
-                      <div>
-                        <div className="font-medium">{period.description}</div>
-                        <div className="text-sm text-gray-600">
-                          {period.tenureMonths} - {period.tenureLimit || '∞'} μήνες
+                  {LAYOFF_NOTICE_PERIODS.INDIVIDUAL_LAYOFFS.noticePeriods.map(
+                    (period, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center p-3 border rounded"
+                      >
+                        <div>
+                          <div className="font-medium">
+                            {period.description}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {period.tenureMonths} - {period.tenureLimit || '∞'}{' '}
+                            μήνες
+                          </div>
                         </div>
+                        <Badge variant="outline">
+                          {period.noticeDays} ημέρες
+                        </Badge>
                       </div>
-                      <Badge variant="outline">
-                        {period.noticeDays} ημέρες
-                      </Badge>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
 
                 <Separator className="my-4" />
 
                 <div className="space-y-2">
                   <h4 className="font-medium">Ειδικές Προστασίες</h4>
-                  {LAYOFF_NOTICE_PERIODS.SPECIAL_CATEGORIES.protectedCategories.map((category, index) => (
-                    <div key={index} className="p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
-                      <span className="font-medium">{category.name}:</span> {category.protection}
-                    </div>
-                  ))}
+                  {LAYOFF_NOTICE_PERIODS.SPECIAL_CATEGORIES.protectedCategories.map(
+                    (category, index) => (
+                      <div
+                        key={index}
+                        className="p-2 bg-yellow-50 border border-yellow-200 rounded text-sm"
+                      >
+                        <span className="font-medium">{category.name}:</span>{' '}
+                        {category.protection}
+                      </div>
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1030,18 +1288,31 @@ export default function LegalPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="terminationType">Τύπος Λύσης</Label>
-                    <Select 
-                      value={terminationData.type} 
-                      onValueChange={(value) => setTerminationData({...terminationData, type: value as any})}
+                    <Select
+                      value={terminationData.type}
+                      onValueChange={value =>
+                        setTerminationData({
+                          ...terminationData,
+                          type: value as any,
+                        })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="resignation">Οικειοθελής Παραίτηση</SelectItem>
-                        <SelectItem value="dismissal-cause">Απόλυση με Αιτία</SelectItem>
-                        <SelectItem value="dismissal-no-cause">Απόλυση χωρίς Αιτία</SelectItem>
-                        <SelectItem value="retirement">Συνταξιοδότηση</SelectItem>
+                        <SelectItem value="resignation">
+                          Οικειοθελής Παραίτηση
+                        </SelectItem>
+                        <SelectItem value="dismissal-cause">
+                          Απόλυση με Αιτία
+                        </SelectItem>
+                        <SelectItem value="dismissal-no-cause">
+                          Απόλυση χωρίς Αιτία
+                        </SelectItem>
+                        <SelectItem value="retirement">
+                          Συνταξιοδότηση
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -1052,7 +1323,12 @@ export default function LegalPage() {
                       id="reason"
                       placeholder="Προαιρετική αιτιολογία..."
                       value={terminationData.reason}
-                      onChange={(e) => setTerminationData({...terminationData, reason: e.target.value})}
+                      onChange={e =>
+                        setTerminationData({
+                          ...terminationData,
+                          reason: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
@@ -1061,7 +1337,12 @@ export default function LegalPage() {
                       <Switch
                         id="hasAssets"
                         checked={employeeData.hasAssets}
-                        onCheckedChange={(checked) => setEmployeeData({...employeeData, hasAssets: checked})}
+                        onCheckedChange={checked =>
+                          setEmployeeData({
+                            ...employeeData,
+                            hasAssets: checked,
+                          })
+                        }
                       />
                       <Label htmlFor="hasAssets">Έχει Εταιρικό Εξοπλισμό</Label>
                     </div>
@@ -1070,15 +1351,22 @@ export default function LegalPage() {
                       <Switch
                         id="hasPendingProjects"
                         checked={employeeData.hasPendingProjects}
-                        onCheckedChange={(checked) => setEmployeeData({...employeeData, hasPendingProjects: checked})}
+                        onCheckedChange={checked =>
+                          setEmployeeData({
+                            ...employeeData,
+                            hasPendingProjects: checked,
+                          })
+                        }
                       />
-                      <Label htmlFor="hasPendingProjects">Έχει Εκκρεμή Έργα</Label>
+                      <Label htmlFor="hasPendingProjects">
+                        Έχει Εκκρεμή Έργα
+                      </Label>
                     </div>
                   </div>
 
-                  <Button 
-                    onClick={handleGenerateChecklist} 
-                    className="w-full" 
+                  <Button
+                    onClick={handleGenerateChecklist}
+                    className="w-full"
                     size="lg"
                   >
                     <Briefcase className="mr-2 h-4 w-4" />
@@ -1097,46 +1385,74 @@ export default function LegalPage() {
                     Checklist Λύσης Σύμβασης
                   </CardTitle>
                   <CardDescription>
-                    Εκτιμώμενη διάρκεια: {terminationChecklist.estimatedDays} ημέρες
+                    Εκτιμώμενη διάρκεια: {terminationChecklist.estimatedDays}{' '}
+                    ημέρες
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {terminationChecklist.checklist.map((item: any, index: number) => (
-                      <div key={index} className="flex items-start gap-3 p-3 border rounded">
-                        <Checkbox 
-                          checked={item.completed}
-                          onCheckedChange={(checked) => {
-                            const updatedChecklist = { ...terminationChecklist };
-                            updatedChecklist.checklist[index].completed = checked;
-                            setTerminationChecklist(updatedChecklist);
-                          }}
-                        />
-                        <div className="flex-1">
-                          <div className="font-medium">{item.task}</div>
-                          <div className="text-sm text-gray-600">
-                            Υπεύθυνος: {item.responsible} | Προθεσμία: {item.deadline}
-                          </div>
-                        </div>
-                        <Badge 
-                          variant={
-                            item.priority === 'high' ? 'destructive' :
-                            item.priority === 'medium' ? 'default' : 'secondary'
-                          }
+                    {terminationChecklist.checklist.map(
+                      (item: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-start gap-3 p-3 border rounded"
                         >
-                          {item.priority === 'high' ? 'Υψηλή' :
-                           item.priority === 'medium' ? 'Μεσαία' : 'Χαμηλή'}
-                        </Badge>
-                      </div>
-                    ))}
+                          <Checkbox
+                            checked={item.completed}
+                            onCheckedChange={checked => {
+                              const updatedChecklist = {
+                                ...terminationChecklist,
+                              };
+                              updatedChecklist.checklist[index].completed =
+                                checked;
+                              setTerminationChecklist(updatedChecklist);
+                            }}
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium">{item.task}</div>
+                            <div className="text-sm text-gray-600">
+                              Υπεύθυνος: {item.responsible} | Προθεσμία:{' '}
+                              {item.deadline}
+                            </div>
+                          </div>
+                          <Badge
+                            variant={
+                              item.priority === 'high'
+                                ? 'destructive'
+                                : item.priority === 'medium'
+                                  ? 'default'
+                                  : 'secondary'
+                            }
+                          >
+                            {item.priority === 'high'
+                              ? 'Υψηλή'
+                              : item.priority === 'medium'
+                                ? 'Μεσαία'
+                                : 'Χαμηλή'}
+                          </Badge>
+                        </div>
+                      )
+                    )}
                   </div>
 
                   <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                     <div className="text-sm text-blue-800">
-                      Πρόοδος: {terminationChecklist.checklist.filter((item: any) => item.completed).length} / {terminationChecklist.checklist.length} ολοκληρωμένα
+                      Πρόοδος:{' '}
+                      {
+                        terminationChecklist.checklist.filter(
+                          (item: any) => item.completed
+                        ).length
+                      }{' '}
+                      / {terminationChecklist.checklist.length} ολοκληρωμένα
                     </div>
-                    <Progress 
-                      value={(terminationChecklist.checklist.filter((item: any) => item.completed).length / terminationChecklist.checklist.length) * 100}
+                    <Progress
+                      value={
+                        (terminationChecklist.checklist.filter(
+                          (item: any) => item.completed
+                        ).length /
+                          terminationChecklist.checklist.length) *
+                        100
+                      }
                       className="mt-2"
                     />
                   </div>
@@ -1163,53 +1479,86 @@ export default function LegalPage() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="employmentStartDate">Ημερομηνία Έναρξης</Label>
+                      <Label htmlFor="employmentStartDate">
+                        Ημερομηνία Έναρξης
+                      </Label>
                       <Input
                         id="employmentStartDate"
                         type="date"
                         value={contractData.employmentStartDate}
-                        onChange={(e) => setContractData({...contractData, employmentStartDate: e.target.value})}
+                        onChange={e =>
+                          setContractData({
+                            ...contractData,
+                            employmentStartDate: e.target.value,
+                          })
+                        }
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="contractProvidedOn">Ημερομηνία Παροχής Σύμβασης</Label>
+                      <Label htmlFor="contractProvidedOn">
+                        Ημερομηνία Παροχής Σύμβασης
+                      </Label>
                       <Input
                         id="contractProvidedOn"
                         type="date"
                         value={contractData.contractProvidedOn}
-                        onChange={(e) => setContractData({...contractData, contractProvidedOn: e.target.value})}
+                        onChange={e =>
+                          setContractData({
+                            ...contractData,
+                            contractProvidedOn: e.target.value,
+                          })
+                        }
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="probationPeriod">Περίοδος Δοκιμασίας (μήνες)</Label>
+                    <Label htmlFor="probationPeriod">
+                      Περίοδος Δοκιμασίας (μήνες)
+                    </Label>
                     <Input
                       id="probationPeriod"
                       type="number"
                       max="6"
                       value={contractData.probationPeriodMonths}
-                      onChange={(e) => setContractData({...contractData, probationPeriodMonths: parseInt(e.target.value)})}
+                      onChange={e =>
+                        setContractData({
+                          ...contractData,
+                          probationPeriodMonths: parseInt(e.target.value),
+                        })
+                      }
                     />
                     <div className="text-sm text-gray-600 mt-1">
-                      Μέγιστη διάρκεια: 6 μήνες (3 μήνες για συμβάσεις ορισμένου χρόνου)
+                      Μέγιστη διάρκεια: 6 μήνες (3 μήνες για συμβάσεις ορισμένου
+                      χρόνου)
                     </div>
                   </div>
 
                   <div>
                     <Label htmlFor="contractType">Τύπος Σύμβασης</Label>
-                    <Select 
-                      value={contractData.contractType} 
-                      onValueChange={(value) => setContractData({...contractData, contractType: value as any})}
+                    <Select
+                      value={contractData.contractType}
+                      onValueChange={value =>
+                        setContractData({
+                          ...contractData,
+                          contractType: value as any,
+                        })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="permanent">Αορίστου Χρόνου</SelectItem>
-                        <SelectItem value="fixed_term">Ορισμένου Χρόνου</SelectItem>
-                        <SelectItem value="part_time">Μερικής Απασχόλησης</SelectItem>
+                        <SelectItem value="permanent">
+                          Αορίστου Χρόνου
+                        </SelectItem>
+                        <SelectItem value="fixed_term">
+                          Ορισμένου Χρόνου
+                        </SelectItem>
+                        <SelectItem value="part_time">
+                          Μερικής Απασχόλησης
+                        </SelectItem>
                         <SelectItem value="temporary">Προσωρινή</SelectItem>
                       </SelectContent>
                     </Select>
@@ -1219,23 +1568,37 @@ export default function LegalPage() {
                     <Switch
                       id="hasWrittenContract"
                       checked={contractData.hasWrittenContract}
-                      onCheckedChange={(checked) => setContractData({...contractData, hasWrittenContract: checked})}
+                      onCheckedChange={checked =>
+                        setContractData({
+                          ...contractData,
+                          hasWrittenContract: checked,
+                        })
+                      }
                     />
-                    <Label htmlFor="hasWrittenContract">Έχει Έγγραφη Σύμβαση</Label>
+                    <Label htmlFor="hasWrittenContract">
+                      Έχει Έγγραφη Σύμβαση
+                    </Label>
                   </div>
 
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="hasAllTerms"
                       checked={contractData.hasAllRequiredTerms}
-                      onCheckedChange={(checked) => setContractData({...contractData, hasAllRequiredTerms: checked})}
+                      onCheckedChange={checked =>
+                        setContractData({
+                          ...contractData,
+                          hasAllRequiredTerms: checked,
+                        })
+                      }
                     />
-                    <Label htmlFor="hasAllTerms">Περιλαμβάνει Όλους τους Απαιτούμενους Όρους</Label>
+                    <Label htmlFor="hasAllTerms">
+                      Περιλαμβάνει Όλους τους Απαιτούμενους Όρους
+                    </Label>
                   </div>
 
-                  <Button 
-                    onClick={handleEUDirectiveCheck} 
-                    className="w-full" 
+                  <Button
+                    onClick={handleEUDirectiveCheck}
+                    className="w-full"
                     size="lg"
                   >
                     <FileCheck className="mr-2 h-4 w-4" />
@@ -1250,10 +1613,11 @@ export default function LegalPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    {euDirectiveResults.isCompliant ? 
-                      <CheckCircle className="h-5 w-5 text-green-600" /> : 
+                    {euDirectiveResults.isCompliant ? (
+                      <CheckCircle className="h-5 w-5 text-green-600" />
+                    ) : (
                       <AlertTriangle className="h-5 w-5 text-red-600" />
-                    }
+                    )}
                     Αποτελέσματα Ελέγχου
                   </CardTitle>
                   <CardDescription>
@@ -1261,40 +1625,61 @@ export default function LegalPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Progress value={euDirectiveResults.complianceScore} className="mb-4" />
-                  
+                  <Progress
+                    value={euDirectiveResults.complianceScore}
+                    className="mb-4"
+                  />
+
                   {euDirectiveResults.violations.length > 0 && (
                     <div className="space-y-3 mb-4">
                       <h4 className="font-medium text-red-600">Παραβάσεις</h4>
-                      {euDirectiveResults.violations.map((violation: any, index: number) => (
-                        <div key={index} className="p-3 border border-red-200 bg-red-50 rounded">
-                          <div className="font-medium">{violation.description}</div>
-                          <div className="text-sm text-gray-600 mt-1">
-                            <strong>Επίλυση:</strong> {violation.remedy}
-                          </div>
-                          <Badge 
-                            variant={
-                              violation.severity === 'critical' ? 'destructive' :
-                              violation.severity === 'major' ? 'default' : 'secondary'
-                            }
-                            className="mt-2"
+                      {euDirectiveResults.violations.map(
+                        (violation: any, index: number) => (
+                          <div
+                            key={index}
+                            className="p-3 border border-red-200 bg-red-50 rounded"
                           >
-                            {violation.severity === 'critical' ? 'Κρίσιμη' :
-                             violation.severity === 'major' ? 'Σημαντική' : 'Μικρή'}
-                          </Badge>
-                        </div>
-                      ))}
+                            <div className="font-medium">
+                              {violation.description}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              <strong>Επίλυση:</strong> {violation.remedy}
+                            </div>
+                            <Badge
+                              variant={
+                                violation.severity === 'critical'
+                                  ? 'destructive'
+                                  : violation.severity === 'major'
+                                    ? 'default'
+                                    : 'secondary'
+                              }
+                              className="mt-2"
+                            >
+                              {violation.severity === 'critical'
+                                ? 'Κρίσιμη'
+                                : violation.severity === 'major'
+                                  ? 'Σημαντική'
+                                  : 'Μικρή'}
+                            </Badge>
+                          </div>
+                        )
+                      )}
                     </div>
                   )}
 
                   <div className="space-y-2">
                     <h4 className="font-medium">Επόμενες Ενέργειες</h4>
-                    {euDirectiveResults.nextActions.map((action: string, index: number) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        {action}
-                      </div>
-                    ))}
+                    {euDirectiveResults.nextActions.map(
+                      (action: string, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 text-sm"
+                        >
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          {action}
+                        </div>
+                      )
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -1324,84 +1709,134 @@ export default function LegalPage() {
                         id="employeeCount"
                         type="number"
                         value={companyStrikeData.employeeCount}
-                        onChange={(e) => setCompanyStrikeData({...companyStrikeData, employeeCount: parseInt(e.target.value)})}
+                        onChange={e =>
+                          setCompanyStrikeData({
+                            ...companyStrikeData,
+                            employeeCount: parseInt(e.target.value),
+                          })
+                        }
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="unionizedEmployees">Συνδικαλισμένοι Εργαζόμενοι</Label>
+                      <Label htmlFor="unionizedEmployees">
+                        Συνδικαλισμένοι Εργαζόμενοι
+                      </Label>
                       <Input
                         id="unionizedEmployees"
                         type="number"
                         value={companyStrikeData.unionizedEmployees}
-                        onChange={(e) => setCompanyStrikeData({...companyStrikeData, unionizedEmployees: parseInt(e.target.value)})}
+                        onChange={e =>
+                          setCompanyStrikeData({
+                            ...companyStrikeData,
+                            unionizedEmployees: parseInt(e.target.value),
+                          })
+                        }
                       />
                     </div>
                   </div>
 
                   <div>
                     <Label htmlFor="industry">Κλάδος</Label>
-                    <Select 
-                      value={companyStrikeData.industry} 
-                      onValueChange={(value) => setCompanyStrikeData({...companyStrikeData, industry: value})}
+                    <Select
+                      value={companyStrikeData.industry}
+                      onValueChange={value =>
+                        setCompanyStrikeData({
+                          ...companyStrikeData,
+                          industry: value,
+                        })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="technology">Τεχνολογία</SelectItem>
-                        <SelectItem value="manufacturing">Μεταποίηση</SelectItem>
+                        <SelectItem value="manufacturing">
+                          Μεταποίηση
+                        </SelectItem>
                         <SelectItem value="construction">Κατασκευές</SelectItem>
                         <SelectItem value="healthcare">Υγεία</SelectItem>
                         <SelectItem value="education">Εκπαίδευση</SelectItem>
-                        <SelectItem value="tourism_hospitality">Τουρισμός</SelectItem>
-                        <SelectItem value="public_sector">Δημόσιος Τομέας</SelectItem>
-                        <SelectItem value="transportation">Μεταφορές</SelectItem>
+                        <SelectItem value="tourism_hospitality">
+                          Τουρισμός
+                        </SelectItem>
+                        <SelectItem value="public_sector">
+                          Δημόσιος Τομέας
+                        </SelectItem>
+                        <SelectItem value="transportation">
+                          Μεταφορές
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
                     <Label htmlFor="strikeType">Τύπος Απεργίας</Label>
-                    <Select 
-                      value={currentStrikeData.type} 
-                      onValueChange={(value) => setCurrentStrikeData({...currentStrikeData, type: value as any})}
+                    <Select
+                      value={currentStrikeData.type}
+                      onValueChange={value =>
+                        setCurrentStrikeData({
+                          ...currentStrikeData,
+                          type: value as any,
+                        })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="general_strike">Γενική Απεργία</SelectItem>
-                        <SelectItem value="sectoral_strike">Κλαδική Απεργία</SelectItem>
-                        <SelectItem value="company_strike">Εταιρική Απεργία</SelectItem>
+                        <SelectItem value="general_strike">
+                          Γενική Απεργία
+                        </SelectItem>
+                        <SelectItem value="sectoral_strike">
+                          Κλαδική Απεργία
+                        </SelectItem>
+                        <SelectItem value="company_strike">
+                          Εταιρική Απεργία
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label htmlFor="expectedDuration">Αναμενόμενη Διάρκεια (ώρες)</Label>
+                    <Label htmlFor="expectedDuration">
+                      Αναμενόμενη Διάρκεια (ώρες)
+                    </Label>
                     <Input
                       id="expectedDuration"
                       type="number"
                       value={currentStrikeData.expectedDuration}
-                      onChange={(e) => setCurrentStrikeData({...currentStrikeData, expectedDuration: parseInt(e.target.value)})}
+                      onChange={e =>
+                        setCurrentStrikeData({
+                          ...currentStrikeData,
+                          expectedDuration: parseInt(e.target.value),
+                        })
+                      }
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="expectedParticipation">Αναμενόμενη Συμμετοχή (%)</Label>
+                    <Label htmlFor="expectedParticipation">
+                      Αναμενόμενη Συμμετοχή (%)
+                    </Label>
                     <Input
                       id="expectedParticipation"
                       type="number"
                       max="100"
                       value={currentStrikeData.expectedParticipation}
-                      onChange={(e) => setCurrentStrikeData({...currentStrikeData, expectedParticipation: parseInt(e.target.value)})}
+                      onChange={e =>
+                        setCurrentStrikeData({
+                          ...currentStrikeData,
+                          expectedParticipation: parseInt(e.target.value),
+                        })
+                      }
                     />
                   </div>
 
-                  <Button 
-                    onClick={handleStrikeAssessment} 
-                    className="w-full" 
+                  <Button
+                    onClick={handleStrikeAssessment}
+                    className="w-full"
                     size="lg"
                   >
                     <AlertTriangle className="mr-2 h-4 w-4" />
@@ -1416,16 +1851,25 @@ export default function LegalPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className={`h-5 w-5 ${
-                      strikeAssessmentResults.riskLevel === 'critical' ? 'text-red-600' :
-                      strikeAssessmentResults.riskLevel === 'high' ? 'text-orange-600' :
-                      strikeAssessmentResults.riskLevel === 'medium' ? 'text-yellow-600' : 'text-green-600'
-                    }`} />
-                    Εκτίμηση Κινδύνου: {
-                      strikeAssessmentResults.riskLevel === 'critical' ? 'Κρίσιμος' :
-                      strikeAssessmentResults.riskLevel === 'high' ? 'Υψηλός' :
-                      strikeAssessmentResults.riskLevel === 'medium' ? 'Μεσαίος' : 'Χαμηλός'
-                    }
+                    <AlertCircle
+                      className={`h-5 w-5 ${
+                        strikeAssessmentResults.riskLevel === 'critical'
+                          ? 'text-red-600'
+                          : strikeAssessmentResults.riskLevel === 'high'
+                            ? 'text-orange-600'
+                            : strikeAssessmentResults.riskLevel === 'medium'
+                              ? 'text-yellow-600'
+                              : 'text-green-600'
+                      }`}
+                    />
+                    Εκτίμηση Κινδύνου:{' '}
+                    {strikeAssessmentResults.riskLevel === 'critical'
+                      ? 'Κρίσιμος'
+                      : strikeAssessmentResults.riskLevel === 'high'
+                        ? 'Υψηλός'
+                        : strikeAssessmentResults.riskLevel === 'medium'
+                          ? 'Μεσαίος'
+                          : 'Χαμηλός'}
                   </CardTitle>
                   <CardDescription>
                     Αναλυτική εκτίμηση επιπτώσεων για την επιχείρηση
@@ -1436,52 +1880,82 @@ export default function LegalPage() {
                     <div className="grid grid-cols-3 gap-4">
                       <div className="text-center p-3 border rounded">
                         <div className="text-2xl font-bold text-blue-600">
-                          {strikeAssessmentResults.expectedImpact.operationalImpact}%
+                          {
+                            strikeAssessmentResults.expectedImpact
+                              .operationalImpact
+                          }
+                          %
                         </div>
-                        <div className="text-sm text-gray-600">Λειτουργικό Αντίκτυπο</div>
+                        <div className="text-sm text-gray-600">
+                          Λειτουργικό Αντίκτυπο
+                        </div>
                       </div>
                       <div className="text-center p-3 border rounded">
                         <div className="text-2xl font-bold text-red-600">
-                          €{strikeAssessmentResults.expectedImpact.financialImpact.toLocaleString()}
+                          €
+                          {strikeAssessmentResults.expectedImpact.financialImpact.toLocaleString()}
                         </div>
-                        <div className="text-sm text-gray-600">Οικονομικές Απώλειες</div>
+                        <div className="text-sm text-gray-600">
+                          Οικονομικές Απώλειες
+                        </div>
                       </div>
                       <div className="text-center p-3 border rounded">
                         <div className="text-2xl font-bold text-purple-600">
-                          {strikeAssessmentResults.expectedImpact.employeeParticipation}%
+                          {
+                            strikeAssessmentResults.expectedImpact
+                              .employeeParticipation
+                          }
+                          %
                         </div>
-                        <div className="text-sm text-gray-600">Συμμετοχή Εργαζομένων</div>
+                        <div className="text-sm text-gray-600">
+                          Συμμετοχή Εργαζομένων
+                        </div>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <h4 className="font-medium">Μέτρα Έκτακτης Ανάγκης</h4>
-                      {strikeAssessmentResults.contingencyMeasures.map((measure: string, index: number) => (
-                        <div key={index} className="flex items-center gap-2 text-sm p-2 bg-yellow-50 border border-yellow-200 rounded">
-                          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                          {measure}
-                        </div>
-                      ))}
+                      {strikeAssessmentResults.contingencyMeasures.map(
+                        (measure: string, index: number) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 text-sm p-2 bg-yellow-50 border border-yellow-200 rounded"
+                          >
+                            <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                            {measure}
+                          </div>
+                        )
+                      )}
                     </div>
 
                     <div className="space-y-3">
                       <h4 className="font-medium">Συστάσεις Διαπραγμάτευσης</h4>
-                      {strikeAssessmentResults.negotiationRecommendations.map((recommendation: string, index: number) => (
-                        <div key={index} className="flex items-center gap-2 text-sm p-2 bg-blue-50 border border-blue-200 rounded">
-                          <Scale className="h-4 w-4 text-blue-600" />
-                          {recommendation}
-                        </div>
-                      ))}
+                      {strikeAssessmentResults.negotiationRecommendations.map(
+                        (recommendation: string, index: number) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 text-sm p-2 bg-blue-50 border border-blue-200 rounded"
+                          >
+                            <Scale className="h-4 w-4 text-blue-600" />
+                            {recommendation}
+                          </div>
+                        )
+                      )}
                     </div>
 
                     <div className="space-y-3">
                       <h4 className="font-medium">Checklist Συμμόρφωσης</h4>
-                      {strikeAssessmentResults.complianceChecklist.map((item: string, index: number) => (
-                        <div key={index} className="flex items-center gap-2 text-sm">
-                          <Checkbox />
-                          {item}
-                        </div>
-                      ))}
+                      {strikeAssessmentResults.complianceChecklist.map(
+                        (item: string, index: number) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <Checkbox />
+                            {item}
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </CardContent>

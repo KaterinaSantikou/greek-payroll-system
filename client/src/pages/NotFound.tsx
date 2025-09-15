@@ -2,7 +2,13 @@ import React from 'react';
 import { Search, Home, ArrowLeft, MapPin } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
 const NotFound: React.FC = () => {
@@ -23,10 +29,30 @@ const NotFound: React.FC = () => {
 
   // Common pages for Greek HR/Payroll system
   const suggestedPages = [
-    { href: '/', icon: Home, title: 'Αρχική Σελίδα', description: 'Επιστροφή στην κεντρική σελίδα' },
-    { href: '/employees', icon: MapPin, title: 'Υπάλληλοι', description: 'Διαχείριση προσωπικού' },
-    { href: '/payroll', icon: MapPin, title: 'Μισθοδοσία', description: 'Υπολογισμοί μισθών' },
-    { href: '/compliance', icon: MapPin, title: 'Συμμόρφωση', description: 'ΕΡΓΑΝΗ & νομική συμμόρφωση' },
+    {
+      href: '/',
+      icon: Home,
+      title: 'Αρχική Σελίδα',
+      description: 'Επιστροφή στην κεντρική σελίδα',
+    },
+    {
+      href: '/employees',
+      icon: MapPin,
+      title: 'Υπάλληλοι',
+      description: 'Διαχείριση προσωπικού',
+    },
+    {
+      href: '/payroll',
+      icon: MapPin,
+      title: 'Μισθοδοσία',
+      description: 'Υπολογισμοί μισθών',
+    },
+    {
+      href: '/compliance',
+      icon: MapPin,
+      title: 'Συμμόρφωση',
+      description: 'ΕΡΓΑΝΗ & νομική συμμόρφωση',
+    },
   ];
 
   return (
@@ -34,7 +60,9 @@ const NotFound: React.FC = () => {
       <Card className="w-full max-w-2xl">
         <CardHeader className="text-center">
           <div className="mx-auto w-24 h-24 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-6">
-            <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">404</span>
+            <span className="text-4xl font-bold text-blue-600 dark:text-blue-400">
+              404
+            </span>
           </div>
           <CardTitle className="text-3xl font-bold text-gray-900 dark:text-gray-100">
             Η σελίδα δεν βρέθηκε
@@ -43,7 +71,7 @@ const NotFound: React.FC = () => {
             Η σελίδα που ψάχνετε δεν υπάρχει ή έχει μετακινηθεί
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-8">
           {/* Current URL Info */}
           <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
@@ -52,7 +80,8 @@ const NotFound: React.FC = () => {
               <span className="font-medium">Ζητήθηκε URL:</span>
             </div>
             <div className="mt-1 font-mono text-sm text-gray-800 dark:text-gray-200 break-all">
-              {window.location.hostname}{location}
+              {window.location.hostname}
+              {location}
             </div>
           </div>
 
@@ -73,7 +102,7 @@ const NotFound: React.FC = () => {
                   type="text"
                   placeholder="π.χ. υπάλληλοι, μισθοδοσία, αναφορές..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   className="pl-10"
                   data-testid="input-search-404"
                 />
@@ -98,7 +127,7 @@ const NotFound: React.FC = () => {
                 <div className="text-xs text-gray-500">Προηγούμενη σελίδα</div>
               </div>
             </Button>
-            
+
             <Link href="/">
               <Button
                 variant="default"
@@ -148,7 +177,10 @@ const NotFound: React.FC = () => {
             <p className="mb-2">Χρειάζεστε βοήθεια;</p>
             <p>
               Επικοινωνήστε με την τεχνική υποστήριξη στο{' '}
-              <a href="mailto:support@payrollsync.gr" className="text-blue-600 dark:text-blue-400 underline">
+              <a
+                href="mailto:support@payrollsync.gr"
+                className="text-blue-600 dark:text-blue-400 underline"
+              >
                 support@payrollsync.gr
               </a>
             </p>

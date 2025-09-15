@@ -1,52 +1,58 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import PayExplanation from "@/components/PayExplanation";
-import { 
-  InfoIcon, 
-  FileTextIcon, 
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import PayExplanation from '@/components/PayExplanation';
+import {
+  InfoIcon,
+  FileTextIcon,
   CalculatorIcon,
   TrendingUpIcon,
   UsersIcon,
-  CalendarIcon
-} from "lucide-react";
+  CalendarIcon,
+} from 'lucide-react';
 
 // Mock paycheck data for demonstration
 const mockPaychecks = [
   {
-    id: "paycheck-001",
-    employeeName: "Μαρία Παπαδάκη",
-    period: "Δεκέμβριος 2024",
-    grossPay: "€2,450.00",
-    netPay: "€1,876.30",
-    status: "paid"
+    id: 'paycheck-001',
+    employeeName: 'Μαρία Παπαδάκη',
+    period: 'Δεκέμβριος 2024',
+    grossPay: '€2,450.00',
+    netPay: '€1,876.30',
+    status: 'paid',
   },
   {
-    id: "paycheck-002", 
-    employeeName: "Γιάννης Κωνσταντίνου",
-    period: "Δεκέμβριος 2024",
-    grossPay: "€2,180.00",
-    netPay: "€1,693.40",
-    status: "paid"
+    id: 'paycheck-002',
+    employeeName: 'Γιάννης Κωνσταντίνου',
+    period: 'Δεκέμβριος 2024',
+    grossPay: '€2,180.00',
+    netPay: '€1,693.40',
+    status: 'paid',
   },
   {
-    id: "paycheck-003",
-    employeeName: "Ελένη Αντωνίου",
-    period: "Δεκέμβριος 2024", 
-    grossPay: "€2,650.00",
-    netPay: "€2,012.20",
-    status: "paid"
-  }
+    id: 'paycheck-003',
+    employeeName: 'Ελένη Αντωνίου',
+    period: 'Δεκέμβριος 2024',
+    grossPay: '€2,650.00',
+    netPay: '€2,012.20',
+    status: 'paid',
+  },
 ];
 
 export default function PayExplanationDemo() {
-  const [selectedPaycheckId, setSelectedPaycheckId] = useState<string>("");
-  const [customPaycheckId, setCustomPaycheckId] = useState<string>("");
+  const [selectedPaycheckId, setSelectedPaycheckId] = useState<string>('');
+  const [customPaycheckId, setCustomPaycheckId] = useState<string>('');
   const [showExplanation, setShowExplanation] = useState<boolean>(false);
 
   const handleShowExplanation = () => {
@@ -70,8 +76,9 @@ export default function PayExplanationDemo() {
             </h1>
           </div>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Experience our advanced pay explanation system that provides transparent, 
-            detailed breakdowns of Greek payroll calculations with full compliance context.
+            Experience our advanced pay explanation system that provides
+            transparent, detailed breakdowns of Greek payroll calculations with
+            full compliance context.
           </p>
         </div>
 
@@ -82,21 +89,23 @@ export default function PayExplanationDemo() {
               <FileTextIcon className="h-8 w-8 text-green-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Detailed Breakdown</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Complete earnings, deductions, and summary with calculation provenance
+                Complete earnings, deductions, and summary with calculation
+                provenance
               </p>
             </CardContent>
           </Card>
-          
+
           <Card className="text-center">
             <CardContent className="pt-6">
               <TrendingUpIcon className="h-8 w-8 text-blue-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Change Analysis</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Automatic comparison with previous paycheck to highlight differences
+                Automatic comparison with previous paycheck to highlight
+                differences
               </p>
             </CardContent>
           </Card>
-          
+
           <Card className="text-center">
             <CardContent className="pt-6">
               <UsersIcon className="h-8 w-8 text-purple-600 mx-auto mb-3" />
@@ -118,39 +127,48 @@ export default function PayExplanationDemo() {
               Select Paycheck for Explanation
             </CardTitle>
             <CardDescription>
-              Choose a sample paycheck to see detailed pay explanations, or enter a custom paycheck ID.
+              Choose a sample paycheck to see detailed pay explanations, or
+              enter a custom paycheck ID.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Mock paycheck selection */}
             <div>
-              <Label className="text-sm font-medium mb-3 block">Sample Paychecks</Label>
+              <Label className="text-sm font-medium mb-3 block">
+                Sample Paychecks
+              </Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {mockPaychecks.map((paycheck) => (
-                  <Card 
+                {mockPaychecks.map(paycheck => (
+                  <Card
                     key={paycheck.id}
                     className={`cursor-pointer transition-all hover:shadow-md ${
-                      selectedPaycheckId === paycheck.id 
-                        ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950' 
+                      selectedPaycheckId === paycheck.id
+                        ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-950'
                         : ''
                     }`}
                     onClick={() => {
                       setSelectedPaycheckId(paycheck.id);
-                      setCustomPaycheckId("");
+                      setCustomPaycheckId('');
                     }}
                   >
                     <CardContent className="p-4">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-medium text-sm">{paycheck.employeeName}</h4>
+                          <h4 className="font-medium text-sm">
+                            {paycheck.employeeName}
+                          </h4>
                           <Badge variant="secondary" className="text-xs">
                             {paycheck.status}
                           </Badge>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">{paycheck.period}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          {paycheck.period}
+                        </p>
                         <div className="flex justify-between text-xs">
                           <span>Gross: {paycheck.grossPay}</span>
-                          <span className="font-semibold">Net: {paycheck.netPay}</span>
+                          <span className="font-semibold">
+                            Net: {paycheck.netPay}
+                          </span>
                         </div>
                       </div>
                     </CardContent>
@@ -171,10 +189,10 @@ export default function PayExplanationDemo() {
                   id="custom-paycheck"
                   placeholder="paycheck-abc123"
                   value={customPaycheckId}
-                  onChange={(e) => {
+                  onChange={e => {
                     setCustomPaycheckId(e.target.value);
                     if (e.target.value) {
-                      setSelectedPaycheckId("");
+                      setSelectedPaycheckId('');
                     }
                   }}
                   className="flex-1"
@@ -186,7 +204,7 @@ export default function PayExplanationDemo() {
 
             {/* Action buttons */}
             <div className="flex gap-3">
-              <Button 
+              <Button
                 onClick={handleShowExplanation}
                 disabled={!activePaycheckId}
                 className="flex-1"
@@ -195,7 +213,7 @@ export default function PayExplanationDemo() {
                 Generate Pay Explanation
               </Button>
               {showExplanation && (
-                <Button 
+                <Button
                   variant="outline"
                   onClick={() => setShowExplanation(false)}
                 >
@@ -208,7 +226,8 @@ export default function PayExplanationDemo() {
               <Alert>
                 <InfoIcon className="h-4 w-4" />
                 <AlertDescription>
-                  Please select a sample paycheck or enter a custom paycheck ID to generate an explanation.
+                  Please select a sample paycheck or enter a custom paycheck ID
+                  to generate an explanation.
                 </AlertDescription>
               </Alert>
             )}
@@ -220,10 +239,7 @@ export default function PayExplanationDemo() {
           <div className="space-y-6">
             <Separator />
             <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
-              <PayExplanation 
-                paycheckId={activePaycheckId}
-                language="el"
-              />
+              <PayExplanation paycheckId={activePaycheckId} language="el" />
             </div>
           </div>
         )}
@@ -235,10 +251,12 @@ export default function PayExplanationDemo() {
               PayrollSync Explain-Your-Pay Feature
             </h3>
             <p className="text-sm text-blue-800 dark:text-blue-200 max-w-3xl mx-auto">
-              This advanced system provides employees with comprehensive, transparent explanations of their 
-              pay calculations, including all Greek tax and social security deductions, overtime premiums, 
-              allowances, and compliance-related adjustments. Each calculation includes full provenance 
-              and links to relevant policies and regulations.
+              This advanced system provides employees with comprehensive,
+              transparent explanations of their pay calculations, including all
+              Greek tax and social security deductions, overtime premiums,
+              allowances, and compliance-related adjustments. Each calculation
+              includes full provenance and links to relevant policies and
+              regulations.
             </p>
             <div className="mt-4 flex items-center justify-center gap-6 text-xs text-blue-700 dark:text-blue-300">
               <span>✓ GDPR Compliant</span>

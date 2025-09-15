@@ -8,9 +8,12 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function MobilePunch() {
   const { user } = useAuth();
-  
+
   // Get user's default property or let them select
-  const { data: userProfile } = useQuery<{ id: string; defaultPropertyId?: string }>({
+  const { data: userProfile } = useQuery<{
+    id: string;
+    defaultPropertyId?: string;
+  }>({
     queryKey: ['/api/user/profile'],
     enabled: !!user?.id,
   });
@@ -22,10 +25,7 @@ export default function MobilePunch() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto">
-        <MobilePunchApp 
-          employeeId={employeeId} 
-          propertyId={propertyId} 
-        />
+        <MobilePunchApp employeeId={employeeId} propertyId={propertyId} />
       </div>
     </div>
   );

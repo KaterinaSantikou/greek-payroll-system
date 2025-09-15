@@ -1,17 +1,23 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { 
-  Download, 
-  DollarSign, 
-  Building2, 
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
+import {
+  Download,
+  DollarSign,
+  Building2,
   Calendar,
   FileText,
   CreditCard,
@@ -19,8 +25,8 @@ import {
   Receipt,
   CheckCircle,
   AlertCircle,
-  Euro
-} from "lucide-react";
+  Euro,
+} from 'lucide-react';
 
 interface SepaFile {
   sepaFileId: string;
@@ -61,7 +67,8 @@ export default function Payments() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedProperty, setSelectedProperty] = useState<string>('all');
-  const [selectedPayrollPeriod, setSelectedPayrollPeriod] = useState<string>('2025-01');
+  const [selectedPayrollPeriod, setSelectedPayrollPeriod] =
+    useState<string>('2025-01');
   const [selectedERPSystem, setSelectedERPSystem] = useState<string>('softone');
 
   // Mock data for properties and periods
@@ -69,55 +76,64 @@ export default function Payments() {
     { id: 'all', name: 'All Properties' },
     { id: 'PROP001', name: 'Grand Hotel Athens' },
     { id: 'PROP002', name: 'Seaside Resort Mykonos' },
-    { id: 'PROP003', name: 'Mountain Lodge Meteora' }
+    { id: 'PROP003', name: 'Mountain Lodge Meteora' },
   ];
 
   const payrollPeriods = [
     { id: '2025-01', name: 'January 2025' },
     { id: '2024-12', name: 'December 2024' },
-    { id: '2024-11', name: 'November 2024' }
+    { id: '2024-11', name: 'November 2024' },
   ];
 
   const erpSystems = [
     { id: 'softone', name: 'SoftOne' },
     { id: 'epsilon', name: 'Epsilon' },
     { id: 'sap', name: 'SAP Business One' },
-    { id: 'navision', name: 'Microsoft Navision' }
+    { id: 'navision', name: 'Microsoft Navision' },
   ];
 
   // Fetch payment history
   const { data: paymentHistory = [], isLoading: isLoadingHistory } = useQuery({
     queryKey: ['/api/payments/history', selectedProperty],
-    queryFn: () => apiRequest(`/api/payments/history?propertyId=${selectedProperty}`, 'GET'),
-    enabled: true
+    queryFn: () =>
+      apiRequest(`/api/payments/history?propertyId=${selectedProperty}`, 'GET'),
+    enabled: true,
   });
 
   // Fetch GL export history
-  const { data: glExportHistory = [], isLoading: isLoadingGLHistory } = useQuery({
-    queryKey: ['/api/gl-export/history', selectedProperty, selectedERPSystem],
-    queryFn: () => apiRequest(`/api/gl-export/history?propertyId=${selectedProperty}&erpSystem=${selectedERPSystem}`, 'GET'),
-    enabled: true
-  });
+  const { data: glExportHistory = [], isLoading: isLoadingGLHistory } =
+    useQuery({
+      queryKey: ['/api/gl-export/history', selectedProperty, selectedERPSystem],
+      queryFn: () =>
+        apiRequest(
+          `/api/gl-export/history?propertyId=${selectedProperty}&erpSystem=${selectedERPSystem}`,
+          'GET'
+        ),
+      enabled: true,
+    });
 
   // Generate SEPA file mutation
   const generateSepaMutation = useMutation({
-    mutationFn: async (data: { payrollPeriodId: string; propertyId?: string }) => {
+    mutationFn: async (data: {
+      payrollPeriodId: string;
+      propertyId?: string;
+    }) => {
       return apiRequest('/api/payments/sepa/generate', 'POST', data);
     },
     onSuccess: () => {
       toast({
-        title: "SEPA File Generated",
-        description: "Payment file has been generated successfully.",
+        title: 'SEPA File Generated',
+        description: 'Payment file has been generated successfully.',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/payments/history'] });
     },
-    onError: (error) => {
+    onError: error => {
       toast({
-        title: "Generation Failed",
-        description: error.message || "Failed to generate SEPA file",
-        variant: "destructive",
+        title: 'Generation Failed',
+        description: error.message || 'Failed to generate SEPA file',
+        variant: 'destructive',
       });
-    }
+    },
   });
 
   // Generate GL export mutation
@@ -133,24 +149,24 @@ export default function Payments() {
     },
     onSuccess: () => {
       toast({
-        title: "GL Export Generated",
-        description: "General ledger export has been generated successfully.",
+        title: 'GL Export Generated',
+        description: 'General ledger export has been generated successfully.',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/gl-export/history'] });
     },
-    onError: (error) => {
+    onError: error => {
       toast({
-        title: "Export Failed",
-        description: error.message || "Failed to generate GL export",
-        variant: "destructive",
+        title: 'Export Failed',
+        description: error.message || 'Failed to generate GL export',
+        variant: 'destructive',
       });
-    }
+    },
   });
 
   const handleGenerateSepa = () => {
     generateSepaMutation.mutate({
       payrollPeriodId: selectedPayrollPeriod,
-      propertyId: selectedProperty === 'all' ? undefined : selectedProperty
+      propertyId: selectedProperty === 'all' ? undefined : selectedProperty,
     });
   };
 
@@ -160,7 +176,7 @@ export default function Payments() {
       propertyId: selectedProperty === 'all' ? undefined : selectedProperty,
       exportType: 'payroll',
       format: 'csv',
-      erpSystem: selectedERPSystem
+      erpSystem: selectedERPSystem,
     });
   };
 
@@ -168,7 +184,7 @@ export default function Payments() {
     try {
       const response = await fetch(`/api/payments/sepa/${fileId}/download`);
       if (!response.ok) throw new Error('Failed to download');
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -181,9 +197,9 @@ export default function Payments() {
       document.body.removeChild(a);
     } catch (error) {
       toast({
-        title: "Download Failed",
-        description: "Failed to download SEPA file",
-        variant: "destructive",
+        title: 'Download Failed',
+        description: 'Failed to download SEPA file',
+        variant: 'destructive',
       });
     }
   };
@@ -192,7 +208,7 @@ export default function Payments() {
     try {
       const response = await fetch(`/api/gl-export/${exportId}/download`);
       if (!response.ok) throw new Error('Failed to download');
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -205,9 +221,9 @@ export default function Payments() {
       document.body.removeChild(a);
     } catch (error) {
       toast({
-        title: "Download Failed",
-        description: "Failed to download GL export",
-        variant: "destructive",
+        title: 'Download Failed',
+        description: 'Failed to download GL export',
+        variant: 'destructive',
       });
     }
   };
@@ -240,7 +256,10 @@ export default function Payments() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Property</label>
-              <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+              <Select
+                value={selectedProperty}
+                onValueChange={setSelectedProperty}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select property" />
                 </SelectTrigger>
@@ -255,7 +274,10 @@ export default function Payments() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Payroll Period</label>
-              <Select value={selectedPayrollPeriod} onValueChange={setSelectedPayrollPeriod}>
+              <Select
+                value={selectedPayrollPeriod}
+                onValueChange={setSelectedPayrollPeriod}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
@@ -270,7 +292,10 @@ export default function Payments() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">ERP System</label>
-              <Select value={selectedERPSystem} onValueChange={setSelectedERPSystem}>
+              <Select
+                value={selectedERPSystem}
+                onValueChange={setSelectedERPSystem}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select ERP" />
                 </SelectTrigger>
@@ -284,24 +309,28 @@ export default function Payments() {
               </Select>
             </div>
           </div>
-          
+
           <div className="flex gap-3">
-            <Button 
+            <Button
               onClick={handleGenerateSepa}
               disabled={generateSepaMutation.isPending}
               className="flex items-center gap-2"
             >
               <Banknote className="w-4 h-4" />
-              {generateSepaMutation.isPending ? 'Generating...' : 'Generate SEPA File'}
+              {generateSepaMutation.isPending
+                ? 'Generating...'
+                : 'Generate SEPA File'}
             </Button>
-            <Button 
+            <Button
               variant="outline"
               onClick={handleGenerateGL}
               disabled={generateGLMutation.isPending}
               className="flex items-center gap-2"
             >
               <FileText className="w-4 h-4" />
-              {generateGLMutation.isPending ? 'Exporting...' : 'Generate GL Export'}
+              {generateGLMutation.isPending
+                ? 'Exporting...'
+                : 'Generate GL Export'}
             </Button>
           </div>
         </CardContent>
@@ -339,7 +368,7 @@ export default function Payments() {
                     totalTransactions: 87,
                     status: 'generated',
                     createdAt: new Date().toISOString(),
-                    payrollPeriodId: '2025-01'
+                    payrollPeriodId: '2025-01',
                   },
                   {
                     sepaFileId: 'SEPA002',
@@ -348,10 +377,13 @@ export default function Payments() {
                     totalTransactions: 83,
                     status: 'processed',
                     createdAt: new Date(Date.now() - 86400000).toISOString(),
-                    payrollPeriodId: '2024-12'
-                  }
-                ].map((file) => (
-                  <div key={file.sepaFileId} className="flex items-center justify-between p-4 border rounded-lg">
+                    payrollPeriodId: '2024-12',
+                  },
+                ].map(file => (
+                  <div
+                    key={file.sepaFileId}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-blue-100 rounded-lg">
                         <Banknote className="w-5 h-5 text-blue-600" />
@@ -361,12 +393,21 @@ export default function Payments() {
                         <div className="flex items-center gap-4 text-sm text-gray-500">
                           <span>€{file.totalAmount}</span>
                           <span>{file.totalTransactions} transactions</span>
-                          <span>{format(new Date(file.createdAt), 'MMM dd, yyyy HH:mm')}</span>
+                          <span>
+                            {format(
+                              new Date(file.createdAt),
+                              'MMM dd, yyyy HH:mm'
+                            )}
+                          </span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={file.status === 'processed' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={
+                          file.status === 'processed' ? 'default' : 'secondary'
+                        }
+                      >
                         {file.status === 'processed' ? (
                           <CheckCircle className="w-3 h-3 mr-1" />
                         ) : (
@@ -374,8 +415,8 @@ export default function Payments() {
                         )}
                         {file.status}
                       </Badge>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => handleDownloadSepa(file.sepaFileId)}
                       >
@@ -408,7 +449,7 @@ export default function Payments() {
                     totalEntries: 174,
                     status: 'generated',
                     createdAt: new Date().toISOString(),
-                    payrollPeriodId: '2025-01'
+                    payrollPeriodId: '2025-01',
                   },
                   {
                     glExportId: 'GL002',
@@ -420,10 +461,13 @@ export default function Payments() {
                     totalEntries: 166,
                     status: 'exported',
                     createdAt: new Date(Date.now() - 86400000).toISOString(),
-                    payrollPeriodId: '2024-12'
-                  }
-                ].map((export_) => (
-                  <div key={export_.glExportId} className="flex items-center justify-between p-4 border rounded-lg">
+                    payrollPeriodId: '2024-12',
+                  },
+                ].map(export_ => (
+                  <div
+                    key={export_.glExportId}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-green-100 rounded-lg">
                         <Receipt className="w-5 h-5 text-green-600" />
@@ -434,12 +478,23 @@ export default function Payments() {
                           <span>{export_.erpSystem}</span>
                           <span>{export_.totalEntries} entries</span>
                           <span>€{export_.totalDebits} balanced</span>
-                          <span>{format(new Date(export_.createdAt), 'MMM dd, yyyy HH:mm')}</span>
+                          <span>
+                            {format(
+                              new Date(export_.createdAt),
+                              'MMM dd, yyyy HH:mm'
+                            )}
+                          </span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={export_.status === 'exported' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={
+                          export_.status === 'exported'
+                            ? 'default'
+                            : 'secondary'
+                        }
+                      >
                         {export_.status === 'exported' ? (
                           <CheckCircle className="w-3 h-3 mr-1" />
                         ) : (
@@ -447,8 +502,8 @@ export default function Payments() {
                         )}
                         {export_.status}
                       </Badge>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => handleDownloadGL(export_.glExportId)}
                       >
@@ -477,7 +532,7 @@ export default function Payments() {
                     amount: '2,850.00',
                     status: 'processed',
                     bankAccount: 'GR16 0110 1250 0000 0001 2345 67',
-                    processedAt: new Date().toISOString()
+                    processedAt: new Date().toISOString(),
                   },
                   {
                     paymentId: 'PAY002',
@@ -485,7 +540,7 @@ export default function Payments() {
                     amount: '3,200.00',
                     status: 'processed',
                     bankAccount: 'GR16 0140 1050 0000 0001 2345 68',
-                    processedAt: new Date().toISOString()
+                    processedAt: new Date().toISOString(),
                   },
                   {
                     paymentId: 'PAY003',
@@ -493,25 +548,39 @@ export default function Payments() {
                     amount: '2,650.00',
                     status: 'pending',
                     bankAccount: 'GR16 0260 1230 0000 0001 2345 69',
-                    processedAt: new Date().toISOString()
-                  }
-                ].map((payment) => (
-                  <div key={payment.paymentId} className="flex items-center justify-between p-4 border rounded-lg">
+                    processedAt: new Date().toISOString(),
+                  },
+                ].map(payment => (
+                  <div
+                    key={payment.paymentId}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="p-2 bg-purple-100 rounded-lg">
                         <DollarSign className="w-5 h-5 text-purple-600" />
                       </div>
                       <div>
                         <p className="font-medium">{payment.employeeName}</p>
-                        <p className="text-sm text-gray-500">{payment.bankAccount}</p>
+                        <p className="text-sm text-gray-500">
+                          {payment.bankAccount}
+                        </p>
                         <p className="text-xs text-gray-400">
-                          {format(new Date(payment.processedAt), 'MMM dd, yyyy HH:mm')}
+                          {format(
+                            new Date(payment.processedAt),
+                            'MMM dd, yyyy HH:mm'
+                          )}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-4">
                       <span className="font-semibold">€{payment.amount}</span>
-                      <Badge variant={payment.status === 'processed' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={
+                          payment.status === 'processed'
+                            ? 'default'
+                            : 'secondary'
+                        }
+                      >
                         {payment.status === 'processed' ? (
                           <CheckCircle className="w-3 h-3 mr-1" />
                         ) : (

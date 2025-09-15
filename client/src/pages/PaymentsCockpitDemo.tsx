@@ -11,29 +11,29 @@ export function PaymentsCockpitDemo() {
 
   const handleReissueLines = (lineIds: string[]) => {
     toast({
-      title: "Re-issue Initiated",
+      title: 'Re-issue Initiated',
       description: `Processing ${lineIds.length} line(s) for SCT Instant re-issue`,
     });
-    
+
     // This would typically call the API
     console.log('Re-issuing lines as SCT Instant:', lineIds);
   };
 
   const handleCancelLines = (lineIds: string[]) => {
     toast({
-      title: "Lines Cancelled",
+      title: 'Lines Cancelled',
       description: `Cancelled ${lineIds.length} payment line(s)`,
     });
-    
+
     console.log('Cancelling lines:', lineIds);
   };
 
   const handleExportData = (format: 'csv' | 'excel') => {
     toast({
-      title: "Export Started",
+      title: 'Export Started',
       description: `Exporting payments data in ${format.toUpperCase()} format`,
     });
-    
+
     console.log('Exporting data in format:', format);
   };
 

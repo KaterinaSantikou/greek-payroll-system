@@ -1,15 +1,36 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clock, DollarSign, AlertTriangle, Calendar, Calculator, Sun, Moon, Zap } from "lucide-react";
-import { 
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Clock,
+  DollarSign,
+  AlertTriangle,
+  Calendar,
+  Calculator,
+  Sun,
+  Moon,
+  Zap,
+} from 'lucide-react';
+import {
   calculateOvertime,
   calculateSundayPremium,
   calculateNightShiftPremium,
@@ -22,32 +43,32 @@ import {
   SUNDAY_RATES,
   NIGHT_SHIFT_RATES,
   HOLIDAY_RATES,
-  SPECIAL_CONDITIONS
-} from "@/lib/overtimeCalculations";
+  SPECIAL_CONDITIONS,
+} from '@/lib/overtimeCalculations';
 
 export default function OvertimePage() {
   const [employeeData, setEmployeeData] = useState({
     baseSalary: 1200,
-    sector: "general",
+    sector: 'general',
     age: 30,
     hasHealthClearance: true,
     hasSpecialTraining: false,
     weeklyHoursWorked: 40,
     annualOvertimeHours: 50,
-    monthlySundaysWorked: 1
+    monthlySundaysWorked: 1,
   });
 
   const [workSession, setWorkSession] = useState({
     workDate: new Date().toISOString().split('T')[0],
-    workStartTime: "08:00",
-    workEndTime: "16:00",
+    workStartTime: '08:00',
+    workEndTime: '16:00',
     workingHours: 8,
     isOvertime: false,
     overtimeHours: 0,
     isSunday: false,
     isNightShift: false,
     hasSpecialConditions: false,
-    specialConditionType: "" as keyof typeof SPECIAL_CONDITIONS
+    specialConditionType: '' as keyof typeof SPECIAL_CONDITIONS,
   });
 
   const [calculationResults, setCalculationResults] = useState<any>(null);
@@ -56,7 +77,7 @@ export default function OvertimePage() {
 
   const handleCalculatePremium = () => {
     const hourlyRate = employeeData.baseSalary / (40 * 4.33);
-    
+
     const results = calculateTotalPremiumPay(
       employeeData.baseSalary,
       workSession.workingHours,
@@ -68,17 +89,19 @@ export default function OvertimePage() {
         overtimeHours: workSession.overtimeHours,
         isSunday: workSession.isSunday,
         isNightShift: workSession.isNightShift,
-        hasSpecialConditions: workSession.hasSpecialConditions ? workSession.specialConditionType : undefined,
-        employeeData: employeeData
+        hasSpecialConditions: workSession.hasSpecialConditions
+          ? workSession.specialConditionType
+          : undefined,
+        employeeData: employeeData,
       }
     );
 
     const holidayInfo = isGreekHoliday(workSession.workDate);
-    
+
     setCalculationResults({
       ...results,
       hourlyRate,
-      holidayInfo
+      holidayInfo,
     });
   };
 
@@ -86,14 +109,14 @@ export default function OvertimePage() {
     const start = new Date(`2000-01-01T${workSession.workStartTime}`);
     const end = new Date(`2000-01-01T${workSession.workEndTime}`);
     let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    
+
     if (hours < 0) hours += 24; // Handle overnight shifts
-    
+
     setWorkSession({
       ...workSession,
       workingHours: hours,
       overtimeHours: Math.max(0, hours - 8),
-      isOvertime: hours > 8
+      isOvertime: hours > 8,
     });
   };
 
@@ -103,7 +126,10 @@ export default function OvertimePage() {
         <Clock className="h-8 w-8 text-blue-600" />
         <div>
           <h1 className="text-3xl font-bold">Υπερωρίες & Ειδικές Ώρες</h1>
-          <p className="text-gray-600">Υπολογισμός υπερωριών και προσαυξήσεων σύμφωνα με το ελληνικό εργατικό δίκαιο</p>
+          <p className="text-gray-600">
+            Υπολογισμός υπερωριών και προσαυξήσεων σύμφωνα με το ελληνικό
+            εργατικό δίκαιο
+          </p>
         </div>
       </div>
 
@@ -134,25 +160,36 @@ export default function OvertimePage() {
                       id="baseSalary"
                       type="number"
                       value={employeeData.baseSalary}
-                      onChange={(e) => setEmployeeData({...employeeData, baseSalary: parseFloat(e.target.value)})}
+                      onChange={e =>
+                        setEmployeeData({
+                          ...employeeData,
+                          baseSalary: parseFloat(e.target.value),
+                        })
+                      }
                     />
                   </div>
 
                   <div>
                     <Label htmlFor="sector">Κλάδος Εργασίας</Label>
-                    <Select 
-                      value={employeeData.sector} 
-                      onValueChange={(value) => setEmployeeData({...employeeData, sector: value})}
+                    <Select
+                      value={employeeData.sector}
+                      onValueChange={value =>
+                        setEmployeeData({ ...employeeData, sector: value })
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="general">Γενικός</SelectItem>
-                        <SelectItem value="construction">Οικοδομικός</SelectItem>
+                        <SelectItem value="construction">
+                          Οικοδομικός
+                        </SelectItem>
                         <SelectItem value="healthcare">Υγειονομικός</SelectItem>
                         <SelectItem value="tourism">Τουριστικός</SelectItem>
-                        <SelectItem value="transportation">Μεταφορές</SelectItem>
+                        <SelectItem value="transportation">
+                          Μεταφορές
+                        </SelectItem>
                         <SelectItem value="security">Ασφάλεια</SelectItem>
                       </SelectContent>
                     </Select>
@@ -164,7 +201,12 @@ export default function OvertimePage() {
                       id="age"
                       type="number"
                       value={employeeData.age}
-                      onChange={(e) => setEmployeeData({...employeeData, age: parseInt(e.target.value)})}
+                      onChange={e =>
+                        setEmployeeData({
+                          ...employeeData,
+                          age: parseInt(e.target.value),
+                        })
+                      }
                     />
                   </div>
 
@@ -173,7 +215,12 @@ export default function OvertimePage() {
                       <Switch
                         id="healthClearance"
                         checked={employeeData.hasHealthClearance}
-                        onCheckedChange={(checked) => setEmployeeData({...employeeData, hasHealthClearance: checked})}
+                        onCheckedChange={checked =>
+                          setEmployeeData({
+                            ...employeeData,
+                            hasHealthClearance: checked,
+                          })
+                        }
                       />
                       <Label htmlFor="healthClearance">Ιατρική Εξέταση</Label>
                     </div>
@@ -182,7 +229,12 @@ export default function OvertimePage() {
                       <Switch
                         id="specialTraining"
                         checked={employeeData.hasSpecialTraining}
-                        onCheckedChange={(checked) => setEmployeeData({...employeeData, hasSpecialTraining: checked})}
+                        onCheckedChange={checked =>
+                          setEmployeeData({
+                            ...employeeData,
+                            hasSpecialTraining: checked,
+                          })
+                        }
                       />
                       <Label htmlFor="specialTraining">Ειδική Εκπαίδευση</Label>
                     </div>
@@ -205,7 +257,12 @@ export default function OvertimePage() {
                       id="workDate"
                       type="date"
                       value={workSession.workDate}
-                      onChange={(e) => setWorkSession({...workSession, workDate: e.target.value})}
+                      onChange={e =>
+                        setWorkSession({
+                          ...workSession,
+                          workDate: e.target.value,
+                        })
+                      }
                     />
                   </div>
 
@@ -216,7 +273,12 @@ export default function OvertimePage() {
                         id="startTime"
                         type="time"
                         value={workSession.workStartTime}
-                        onChange={(e) => setWorkSession({...workSession, workStartTime: e.target.value})}
+                        onChange={e =>
+                          setWorkSession({
+                            ...workSession,
+                            workStartTime: e.target.value,
+                          })
+                        }
                         onBlur={calculateHours}
                       />
                     </div>
@@ -227,7 +289,12 @@ export default function OvertimePage() {
                         id="endTime"
                         type="time"
                         value={workSession.workEndTime}
-                        onChange={(e) => setWorkSession({...workSession, workEndTime: e.target.value})}
+                        onChange={e =>
+                          setWorkSession({
+                            ...workSession,
+                            workEndTime: e.target.value,
+                          })
+                        }
                         onBlur={calculateHours}
                       />
                     </div>
@@ -240,7 +307,12 @@ export default function OvertimePage() {
                       type="number"
                       step="0.5"
                       value={workSession.workingHours}
-                      onChange={(e) => setWorkSession({...workSession, workingHours: parseFloat(e.target.value)})}
+                      onChange={e =>
+                        setWorkSession({
+                          ...workSession,
+                          workingHours: parseFloat(e.target.value),
+                        })
+                      }
                     />
                   </div>
 
@@ -251,7 +323,9 @@ export default function OvertimePage() {
                       <Switch
                         id="isSunday"
                         checked={workSession.isSunday}
-                        onCheckedChange={(checked) => setWorkSession({...workSession, isSunday: checked})}
+                        onCheckedChange={checked =>
+                          setWorkSession({ ...workSession, isSunday: checked })
+                        }
                       />
                       <Label htmlFor="isSunday">Κυριακάτικη Εργασία</Label>
                     </div>
@@ -260,7 +334,12 @@ export default function OvertimePage() {
                       <Switch
                         id="isNightShift"
                         checked={workSession.isNightShift}
-                        onCheckedChange={(checked) => setWorkSession({...workSession, isNightShift: checked})}
+                        onCheckedChange={checked =>
+                          setWorkSession({
+                            ...workSession,
+                            isNightShift: checked,
+                          })
+                        }
                       />
                       <Label htmlFor="isNightShift">Νυχτερινή Βάρδια</Label>
                     </div>
@@ -269,34 +348,55 @@ export default function OvertimePage() {
                       <Switch
                         id="hasSpecialConditions"
                         checked={workSession.hasSpecialConditions}
-                        onCheckedChange={(checked) => setWorkSession({...workSession, hasSpecialConditions: checked})}
+                        onCheckedChange={checked =>
+                          setWorkSession({
+                            ...workSession,
+                            hasSpecialConditions: checked,
+                          })
+                        }
                       />
-                      <Label htmlFor="hasSpecialConditions">Ειδικές Συνθήκες</Label>
+                      <Label htmlFor="hasSpecialConditions">
+                        Ειδικές Συνθήκες
+                      </Label>
                     </div>
 
                     {workSession.hasSpecialConditions && (
                       <div>
-                        <Label htmlFor="specialCondition">Τύπος Ειδικών Συνθηκών</Label>
-                        <Select 
-                          value={workSession.specialConditionType} 
-                          onValueChange={(value) => setWorkSession({...workSession, specialConditionType: value as keyof typeof SPECIAL_CONDITIONS})}
+                        <Label htmlFor="specialCondition">
+                          Τύπος Ειδικών Συνθηκών
+                        </Label>
+                        <Select
+                          value={workSession.specialConditionType}
+                          onValueChange={value =>
+                            setWorkSession({
+                              ...workSession,
+                              specialConditionType:
+                                value as keyof typeof SPECIAL_CONDITIONS,
+                            })
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Επιλέξτε τύπο" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="HAZARDOUS_WORK">Επικίνδυνη Εργασία</SelectItem>
-                            <SelectItem value="EXTREME_WEATHER">Ακραίες Καιρικές Συνθήκες</SelectItem>
-                            <SelectItem value="REMOTE_LOCATION">Απομακρυσμένη Τοποθεσία</SelectItem>
+                            <SelectItem value="HAZARDOUS_WORK">
+                              Επικίνδυνη Εργασία
+                            </SelectItem>
+                            <SelectItem value="EXTREME_WEATHER">
+                              Ακραίες Καιρικές Συνθήκες
+                            </SelectItem>
+                            <SelectItem value="REMOTE_LOCATION">
+                              Απομακρυσμένη Τοποθεσία
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     )}
                   </div>
 
-                  <Button 
-                    onClick={handleCalculatePremium} 
-                    className="w-full" 
+                  <Button
+                    onClick={handleCalculatePremium}
+                    className="w-full"
                     size="lg"
                   >
                     <Calculator className="mr-2 h-4 w-4" />
@@ -325,14 +425,18 @@ export default function OvertimePage() {
                       <div className="text-lg font-bold text-blue-600">
                         €{calculationResults.hourlyRate.toFixed(2)}/ώρα
                       </div>
-                      <div className="text-sm text-gray-600">Ωριαίος Μισθός</div>
+                      <div className="text-sm text-gray-600">
+                        Ωριαίος Μισθός
+                      </div>
                     </div>
 
                     <div className="text-center p-3 bg-green-50 rounded-lg">
                       <div className="text-lg font-bold text-green-600">
                         €{calculationResults.totalPay.toFixed(2)}
                       </div>
-                      <div className="text-sm text-gray-600">Συνολική Αμοιβή</div>
+                      <div className="text-sm text-gray-600">
+                        Συνολική Αμοιβή
+                      </div>
                     </div>
                   </div>
 
@@ -345,7 +449,10 @@ export default function OvertimePage() {
                           {calculationResults.holidayInfo.holidayName}
                         </span>
                         <Badge variant="destructive">
-                          {calculationResults.holidayInfo.holidayType === 'national' ? 'Εθνική Εορτή' : 'Θρησκευτική Εορτή'}
+                          {calculationResults.holidayInfo.holidayType ===
+                          'national'
+                            ? 'Εθνική Εορτή'
+                            : 'Θρησκευτική Εορτή'}
                         </Badge>
                       </div>
                     </div>
@@ -354,53 +461,70 @@ export default function OvertimePage() {
                   {/* Breakdown */}
                   <div className="space-y-3">
                     <h4 className="font-medium">Ανάλυση Αμοιβής</h4>
-                    
+
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span>Βασική Αμοιβή:</span>
-                        <span className="font-medium">€{calculationResults.basePay.toFixed(2)}</span>
+                        <span className="font-medium">
+                          €{calculationResults.basePay.toFixed(2)}
+                        </span>
                       </div>
-                      
+
                       {calculationResults.overtimePay > 0 && (
                         <div className="flex justify-between text-orange-600">
                           <span>Υπερωρίες:</span>
-                          <span className="font-medium">€{calculationResults.overtimePay.toFixed(2)}</span>
+                          <span className="font-medium">
+                            €{calculationResults.overtimePay.toFixed(2)}
+                          </span>
                         </div>
                       )}
-                      
+
                       {calculationResults.sundayPremium > 0 && (
                         <div className="flex justify-between text-purple-600">
                           <span>Κυριακάτικη Προσαύξηση:</span>
-                          <span className="font-medium">€{calculationResults.sundayPremium.toFixed(2)}</span>
+                          <span className="font-medium">
+                            €{calculationResults.sundayPremium.toFixed(2)}
+                          </span>
                         </div>
                       )}
-                      
+
                       {calculationResults.nightPremium > 0 && (
                         <div className="flex justify-between text-blue-600">
                           <span>Νυχτερινή Προσαύξηση:</span>
-                          <span className="font-medium">€{calculationResults.nightPremium.toFixed(2)}</span>
+                          <span className="font-medium">
+                            €{calculationResults.nightPremium.toFixed(2)}
+                          </span>
                         </div>
                       )}
-                      
+
                       {calculationResults.holidayPremium > 0 && (
                         <div className="flex justify-between text-red-600">
                           <span>Αργιακή Προσαύξηση:</span>
-                          <span className="font-medium">€{calculationResults.holidayPremium.toFixed(2)}</span>
+                          <span className="font-medium">
+                            €{calculationResults.holidayPremium.toFixed(2)}
+                          </span>
                         </div>
                       )}
-                      
+
                       {calculationResults.specialConditionsPremium > 0 && (
                         <div className="flex justify-between text-green-600">
                           <span>Ειδικές Συνθήκες:</span>
-                          <span className="font-medium">€{calculationResults.specialConditionsPremium.toFixed(2)}</span>
+                          <span className="font-medium">
+                            €
+                            {calculationResults.specialConditionsPremium.toFixed(
+                              2
+                            )}
+                          </span>
                         </div>
                       )}
-                      
+
                       <Separator />
-                      
+
                       <div className="flex justify-between font-bold text-lg">
                         <span>Σύνολο Προσαυξήσεων:</span>
-                        <span className="text-green-600">€{calculationResults.totalPremiumPay.toFixed(2)}</span>
+                        <span className="text-green-600">
+                          €{calculationResults.totalPremiumPay.toFixed(2)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -410,12 +534,16 @@ export default function OvertimePage() {
                     <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <AlertTriangle className="h-5 w-5 text-red-600" />
-                        <span className="font-medium text-red-800">Παραβάσεις Νομοθεσίας</span>
+                        <span className="font-medium text-red-800">
+                          Παραβάσεις Νομοθεσίας
+                        </span>
                       </div>
                       <ul className="list-disc list-inside space-y-1 text-sm text-red-700">
-                        {calculationResults.violations.map((violation: string, index: number) => (
-                          <li key={index}>{violation}</li>
-                        ))}
+                        {calculationResults.violations.map(
+                          (violation: string, index: number) => (
+                            <li key={index}>{violation}</li>
+                          )
+                        )}
                       </ul>
                     </div>
                   )}
@@ -452,11 +580,15 @@ export default function OvertimePage() {
                   {Object.entries(OVERTIME_RATES).map(([key, rate]) => (
                     <div key={key} className="p-4 border rounded-lg">
                       <h4 className="font-medium">{rate.name}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{rate.description}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {rate.description}
+                      </p>
                       <div className="mt-3 space-y-2">
                         <div className="flex justify-between">
                           <span>Προσαύξηση:</span>
-                          <Badge variant="default">{((rate.multiplier - 1) * 100).toFixed(0)}%</Badge>
+                          <Badge variant="default">
+                            {((rate.multiplier - 1) * 100).toFixed(0)}%
+                          </Badge>
                         </div>
                         <div className="flex justify-between">
                           <span>Μέγ. ημερήσιες ώρες:</span>
@@ -488,15 +620,23 @@ export default function OvertimePage() {
                   {Object.entries(SUNDAY_RATES).map(([key, rate]) => (
                     <div key={key} className="p-4 border rounded-lg">
                       <h4 className="font-medium">{rate.name}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{rate.description}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {rate.description}
+                      </p>
                       <div className="mt-3 space-y-2">
                         <div className="flex justify-between">
                           <span>Προσαύξηση:</span>
-                          <Badge variant="default">{((rate.multiplier - 1) * 100).toFixed(0)}%</Badge>
+                          <Badge variant="default">
+                            {((rate.multiplier - 1) * 100).toFixed(0)}%
+                          </Badge>
                         </div>
                         <div className="flex justify-between">
                           <span>Εναλλακτική ανάπαυση:</span>
-                          <Badge variant={rate.alternativeRest ? "default" : "secondary"}>
+                          <Badge
+                            variant={
+                              rate.alternativeRest ? 'default' : 'secondary'
+                            }
+                          >
                             {rate.alternativeRest ? 'Ναι' : 'Όχι'}
                           </Badge>
                         </div>
@@ -520,15 +660,21 @@ export default function OvertimePage() {
                   {Object.entries(NIGHT_SHIFT_RATES).map(([key, rate]) => (
                     <div key={key} className="p-4 border rounded-lg">
                       <h4 className="font-medium">{rate.name}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{rate.description}</p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {rate.description}
+                      </p>
                       <div className="mt-3 space-y-2">
                         <div className="flex justify-between">
                           <span>Προσαύξηση:</span>
-                          <Badge variant="default">{((rate.multiplier - 1) * 100).toFixed(0)}%</Badge>
+                          <Badge variant="default">
+                            {((rate.multiplier - 1) * 100).toFixed(0)}%
+                          </Badge>
                         </div>
                         <div className="flex justify-between">
                           <span>Ώρες:</span>
-                          <span>{rate.startTime} - {rate.endTime}</span>
+                          <span>
+                            {rate.startTime} - {rate.endTime}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span>Ελάχιστες ώρες:</span>
@@ -561,21 +707,28 @@ export default function OvertimePage() {
                   <div key={index} className="p-4 border rounded-lg">
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-medium">{holiday.name}</h4>
-                      <Badge variant={holiday.type === 'national' ? 'destructive' : 'default'}>
+                      <Badge
+                        variant={
+                          holiday.type === 'national'
+                            ? 'destructive'
+                            : 'default'
+                        }
+                      >
                         {holiday.type === 'national' ? 'Εθνική' : 'Θρησκευτική'}
                       </Badge>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {new Date(holiday.date).toLocaleDateString('el-GR', { 
+                      {new Date(holiday.date).toLocaleDateString('el-GR', {
                         weekday: 'long',
                         year: 'numeric',
                         month: 'long',
-                        day: 'numeric'
+                        day: 'numeric',
                       })}
                     </p>
                     <div className="mt-2">
                       <Badge variant="outline">
-                        Προσαύξηση: {holiday.type === 'national' ? '100%' : '75%'}
+                        Προσαύξηση:{' '}
+                        {holiday.type === 'national' ? '100%' : '75%'}
                       </Badge>
                     </div>
                   </div>
@@ -646,24 +799,35 @@ export default function OvertimePage() {
               <CardHeader>
                 <CardTitle>Προσαυξήσεις Αμοιβής</CardTitle>
                 <CardDescription>
-                  Υποχρεωτικές προσαυξήσεις σύμφωνα με το Ν. 2874/2000 και συλλογικές συμβάσεις
+                  Υποχρεωτικές προσαυξήσεις σύμφωνα με το Ν. 2874/2000 και
+                  συλλογικές συμβάσεις
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-4 bg-orange-50 rounded-lg">
-                    <div className="text-2xl font-bold text-orange-600">25%</div>
-                    <div className="text-sm text-gray-600">Κανονικές Υπερωρίες</div>
+                    <div className="text-2xl font-bold text-orange-600">
+                      25%
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Κανονικές Υπερωρίες
+                    </div>
                   </div>
 
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">75%</div>
-                    <div className="text-sm text-gray-600">Κυριακάτικη Εργασία</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      75%
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Κυριακάτικη Εργασία
+                    </div>
                   </div>
 
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600">25%</div>
-                    <div className="text-sm text-gray-600">Νυχτερινή Βάρδια</div>
+                    <div className="text-sm text-gray-600">
+                      Νυχτερινή Βάρδια
+                    </div>
                   </div>
 
                   <div className="text-center p-4 bg-red-50 rounded-lg">

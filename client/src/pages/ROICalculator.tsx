@@ -4,11 +4,23 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -29,7 +41,7 @@ import {
   Zap,
   Target,
   Building,
-  Calendar
+  Calendar,
 } from 'lucide-react';
 
 interface BusinessInputs {
@@ -82,18 +94,20 @@ export default function ROICalculator() {
     hrStaff: 2,
     complianceIssues: 3,
     processingTime: 40,
-    errorRate: 5
+    errorRate: 5,
   });
 
   const [currency, setCurrency] = useState<'EUR' | 'USD'>('EUR');
-  const [timeframe, setTimeframe] = useState<'monthly' | 'annual' | 'three-year'>('annual');
+  const [timeframe, setTimeframe] = useState<
+    'monthly' | 'annual' | 'three-year'
+  >('annual');
 
   // Greek market pricing data
   const pricingTiers = {
     small: { min: 1, max: 25, price: 8 },
     medium: { min: 26, max: 100, price: 12 },
     large: { min: 101, max: 500, price: 16 },
-    enterprise: { min: 501, max: 9999, price: 20 }
+    enterprise: { min: 501, max: 9999, price: 20 },
   };
 
   const getTier = (employees: number) => {
@@ -105,53 +119,67 @@ export default function ROICalculator() {
 
   const calculateROI = useMemo((): ROIMetrics => {
     const tier = getTier(inputs.employees);
-    
+
     // Current costs calculation
-    const softwareCostPerEmployee = inputs.currentSystem === 'manual' ? 0 : 
-                                   inputs.currentSystem === 'basic' ? 15 : 25;
-    
+    const softwareCostPerEmployee =
+      inputs.currentSystem === 'manual'
+        ? 0
+        : inputs.currentSystem === 'basic'
+          ? 15
+          : 25;
+
     const currentSoftware = inputs.employees * softwareCostPerEmployee;
     const currentHRStaff = inputs.hrStaff * 3500; // Average HR specialist salary in Greece
-    
+
     // Greek-specific compliance costs
     const complianceCostPerIssue = 850; // Average cost per compliance violation in Greece
     const currentCompliance = inputs.complianceIssues * complianceCostPerIssue;
-    
+
     // Error costs (salary corrections, EFKA adjustments, etc.)
     const avgErrorCost = 125; // Cost per payroll error in Greece
-    const currentErrors = (inputs.employees * inputs.errorRate / 100) * avgErrorCost;
-    
+    const currentErrors =
+      ((inputs.employees * inputs.errorRate) / 100) * avgErrorCost;
+
     // Processing time costs
     const hrHourlyRate = 25; // HR specialist hourly rate in Greece
     const currentProcessing = inputs.processingTime * hrHourlyRate;
-    
-    const totalCurrentCosts = currentSoftware + currentHRStaff + currentCompliance + 
-                             currentErrors + currentProcessing;
+
+    const totalCurrentCosts =
+      currentSoftware +
+      currentHRStaff +
+      currentCompliance +
+      currentErrors +
+      currentProcessing;
 
     // PayrollSync costs
     const subscriptionCost = inputs.employees * tier.price;
     const implementationCost = Math.max(2500, inputs.employees * 15); // One-time
     const trainingCost = Math.max(800, inputs.hrStaff * 200); // One-time
-    const totalPayrollSyncCosts = subscriptionCost + (implementationCost + trainingCost) / 12; // Amortized monthly
+    const totalPayrollSyncCosts =
+      subscriptionCost + (implementationCost + trainingCost) / 12; // Amortized monthly
 
     // Savings calculation
     const softwareSavings = Math.max(0, currentSoftware - subscriptionCost);
-    
+
     // Efficiency savings (30-50% reduction in HR time)
     const efficiencySavings = currentProcessing * 0.4;
-    
+
     // Compliance savings (80% reduction in issues)
     const complianceSavings = currentCompliance * 0.8;
-    
+
     // Error reduction savings (90% reduction in errors)
     const errorSavings = currentErrors * 0.9;
-    
-    const totalSavings = softwareSavings + efficiencySavings + complianceSavings + errorSavings;
+
+    const totalSavings =
+      softwareSavings + efficiencySavings + complianceSavings + errorSavings;
     const netMonthlySavings = totalSavings - totalPayrollSyncCosts;
     const netAnnualSavings = netMonthlySavings * 12;
-    const paybackMonths = (implementationCost + trainingCost) / netMonthlySavings;
-    const threeYearROI = ((netAnnualSavings * 3 - implementationCost - trainingCost) / 
-                         (implementationCost + trainingCost + subscriptionCost * 36)) * 100;
+    const paybackMonths =
+      (implementationCost + trainingCost) / netMonthlySavings;
+    const threeYearROI =
+      ((netAnnualSavings * 3 - implementationCost - trainingCost) /
+        (implementationCost + trainingCost + subscriptionCost * 36)) *
+      100;
 
     return {
       currentCosts: {
@@ -160,61 +188,104 @@ export default function ROICalculator() {
         compliance: currentCompliance,
         errors: currentErrors,
         processing: currentProcessing,
-        total: totalCurrentCosts
+        total: totalCurrentCosts,
       },
       payrollSyncCosts: {
         subscription: subscriptionCost,
         implementation: implementationCost,
         training: trainingCost,
-        total: totalPayrollSyncCosts
+        total: totalPayrollSyncCosts,
       },
       savings: {
         software: softwareSavings,
         efficiency: efficiencySavings,
         compliance: complianceSavings,
         errors: errorSavings,
-        total: totalSavings
+        total: totalSavings,
       },
       roi: {
         monthlyNetSavings: netMonthlySavings,
         annualNetSavings: netAnnualSavings,
         paybackMonths: paybackMonths,
-        threeYearROI: threeYearROI
-      }
+        threeYearROI: threeYearROI,
+      },
     };
   }, [inputs]);
 
   const formatCurrency = (amount: number) => {
     const symbol = currency === 'EUR' ? '€' : '$';
     const rate = currency === 'EUR' ? 1 : 1.1; // Approximate EUR to USD
-    return `${symbol}${(Math.abs(amount) * rate).toLocaleString('en-US', { 
+    return `${symbol}${(Math.abs(amount) * rate).toLocaleString('en-US', {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0 
+      maximumFractionDigits: 0,
     })}`;
   };
 
   const industryOptions = [
-    { value: 'hospitality', label: 'Hotels & Tourism', employees: '10-500', savings: 'High' },
-    { value: 'retail', label: 'Retail & Commerce', employees: '5-200', savings: 'Medium' },
-    { value: 'manufacturing', label: 'Manufacturing', employees: '20-1000', savings: 'High' },
-    { value: 'services', label: 'Professional Services', employees: '5-100', savings: 'Medium' },
-    { value: 'healthcare', label: 'Healthcare', employees: '10-300', savings: 'High' },
-    { value: 'construction', label: 'Construction', employees: '15-200', savings: 'Very High' }
+    {
+      value: 'hospitality',
+      label: 'Hotels & Tourism',
+      employees: '10-500',
+      savings: 'High',
+    },
+    {
+      value: 'retail',
+      label: 'Retail & Commerce',
+      employees: '5-200',
+      savings: 'Medium',
+    },
+    {
+      value: 'manufacturing',
+      label: 'Manufacturing',
+      employees: '20-1000',
+      savings: 'High',
+    },
+    {
+      value: 'services',
+      label: 'Professional Services',
+      employees: '5-100',
+      savings: 'Medium',
+    },
+    {
+      value: 'healthcare',
+      label: 'Healthcare',
+      employees: '10-300',
+      savings: 'High',
+    },
+    {
+      value: 'construction',
+      label: 'Construction',
+      employees: '15-200',
+      savings: 'Very High',
+    },
   ];
 
   const currentSystemOptions = [
     { value: 'manual', label: 'Manual/Excel', cost: 'Low', risk: 'Very High' },
-    { value: 'basic', label: 'Basic Payroll Software', cost: 'Medium', risk: 'Medium' },
-    { value: 'advanced', label: 'Advanced HR System', cost: 'High', risk: 'Low' }
+    {
+      value: 'basic',
+      label: 'Basic Payroll Software',
+      cost: 'Medium',
+      risk: 'Medium',
+    },
+    {
+      value: 'advanced',
+      label: 'Advanced HR System',
+      cost: 'High',
+      risk: 'Low',
+    },
   ];
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-7xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4">ROI Calculator for Greek Businesses</h1>
+        <h1 className="text-3xl font-bold mb-4">
+          ROI Calculator for Greek Businesses
+        </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">
-          Calculate potential savings and return on investment for implementing PayrollSync 
-          in your Greek business. Based on real market data and compliance requirements.
+          Calculate potential savings and return on investment for implementing
+          PayrollSync in your Greek business. Based on real market data and
+          compliance requirements.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -230,7 +301,7 @@ export default function ROICalculator() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -243,7 +314,7 @@ export default function ROICalculator() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -256,7 +327,7 @@ export default function ROICalculator() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
@@ -281,7 +352,9 @@ export default function ROICalculator() {
                 <Building className="h-5 w-5" />
                 Business Information
               </CardTitle>
-              <CardDescription>Tell us about your Greek business</CardDescription>
+              <CardDescription>
+                Tell us about your Greek business
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -289,7 +362,9 @@ export default function ROICalculator() {
                 <div className="flex items-center space-x-4 mt-2">
                   <Slider
                     value={[inputs.employees]}
-                    onValueChange={(value) => setInputs({...inputs, employees: value[0]})}
+                    onValueChange={value =>
+                      setInputs({ ...inputs, employees: value[0] })
+                    }
                     max={1000}
                     min={1}
                     step={1}
@@ -298,19 +373,30 @@ export default function ROICalculator() {
                   <Input
                     type="number"
                     value={inputs.employees}
-                    onChange={(e) => setInputs({...inputs, employees: parseInt(e.target.value) || 1})}
+                    onChange={e =>
+                      setInputs({
+                        ...inputs,
+                        employees: parseInt(e.target.value) || 1,
+                      })
+                    }
                     className="w-20"
                     min="1"
                   />
                 </div>
                 <p className="text-sm text-gray-500 mt-1">
-                  Pricing: {formatCurrency(getTier(inputs.employees).price)} per employee/month
+                  Pricing: {formatCurrency(getTier(inputs.employees).price)} per
+                  employee/month
                 </p>
               </div>
 
               <div>
                 <Label htmlFor="industry">Industry</Label>
-                <Select value={inputs.industry} onValueChange={(value) => setInputs({...inputs, industry: value})}>
+                <Select
+                  value={inputs.industry}
+                  onValueChange={value =>
+                    setInputs({ ...inputs, industry: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -319,7 +405,9 @@ export default function ROICalculator() {
                       <SelectItem key={option.value} value={option.value}>
                         <div className="flex justify-between items-center w-full">
                           <span>{option.label}</span>
-                          <Badge variant="outline" className="ml-2">{option.savings}</Badge>
+                          <Badge variant="outline" className="ml-2">
+                            {option.savings}
+                          </Badge>
                         </div>
                       </SelectItem>
                     ))}
@@ -329,7 +417,12 @@ export default function ROICalculator() {
 
               <div>
                 <Label htmlFor="currentSystem">Current Payroll System</Label>
-                <Select value={inputs.currentSystem} onValueChange={(value) => setInputs({...inputs, currentSystem: value})}>
+                <Select
+                  value={inputs.currentSystem}
+                  onValueChange={value =>
+                    setInputs({ ...inputs, currentSystem: value })
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -339,7 +432,9 @@ export default function ROICalculator() {
                         <div className="flex justify-between items-center w-full">
                           <span>{option.label}</span>
                           <div className="flex gap-1">
-                            <Badge variant="outline" className="text-xs">Risk: {option.risk}</Badge>
+                            <Badge variant="outline" className="text-xs">
+                              Risk: {option.risk}
+                            </Badge>
                           </div>
                         </div>
                       </SelectItem>
@@ -353,10 +448,17 @@ export default function ROICalculator() {
                 <Input
                   type="number"
                   value={inputs.avgSalary}
-                  onChange={(e) => setInputs({...inputs, avgSalary: parseInt(e.target.value) || 1200})}
+                  onChange={e =>
+                    setInputs({
+                      ...inputs,
+                      avgSalary: parseInt(e.target.value) || 1200,
+                    })
+                  }
                   min="600"
                 />
-                <p className="text-sm text-gray-500">Greek minimum: €663, average: €1,200</p>
+                <p className="text-sm text-gray-500">
+                  Greek minimum: €663, average: €1,200
+                </p>
               </div>
 
               <div>
@@ -364,7 +466,12 @@ export default function ROICalculator() {
                 <Input
                   type="number"
                   value={inputs.hrStaff}
-                  onChange={(e) => setInputs({...inputs, hrStaff: parseInt(e.target.value) || 1})}
+                  onChange={e =>
+                    setInputs({
+                      ...inputs,
+                      hrStaff: parseInt(e.target.value) || 1,
+                    })
+                  }
                   min="1"
                 />
               </div>
@@ -377,14 +484,20 @@ export default function ROICalculator() {
                 <AlertTriangle className="h-5 w-5" />
                 Current Challenges
               </CardTitle>
-              <CardDescription>How much do current issues cost?</CardDescription>
+              <CardDescription>
+                How much do current issues cost?
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="complianceIssues">ERGANI/EFKA Issues per Month</Label>
-                <Select 
-                  value={inputs.complianceIssues.toString()} 
-                  onValueChange={(value) => setInputs({...inputs, complianceIssues: parseInt(value)})}
+                <Label htmlFor="complianceIssues">
+                  ERGANI/EFKA Issues per Month
+                </Label>
+                <Select
+                  value={inputs.complianceIssues.toString()}
+                  onValueChange={value =>
+                    setInputs({ ...inputs, complianceIssues: parseInt(value) })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -408,7 +521,9 @@ export default function ROICalculator() {
                 <div className="flex items-center space-x-4 mt-2">
                   <Slider
                     value={[inputs.processingTime]}
-                    onValueChange={(value) => setInputs({...inputs, processingTime: value[0]})}
+                    onValueChange={value =>
+                      setInputs({ ...inputs, processingTime: value[0] })
+                    }
                     max={200}
                     min={10}
                     step={5}
@@ -426,7 +541,9 @@ export default function ROICalculator() {
                 <div className="flex items-center space-x-4 mt-2">
                   <Slider
                     value={[inputs.errorRate]}
-                    onValueChange={(value) => setInputs({...inputs, errorRate: value[0]})}
+                    onValueChange={value =>
+                      setInputs({ ...inputs, errorRate: value[0] })
+                    }
                     max={20}
                     min={0}
                     step={0.5}
@@ -452,10 +569,15 @@ export default function ROICalculator() {
                     <Calculator className="h-5 w-5" />
                     ROI Analysis Results
                   </CardTitle>
-                  <CardDescription>Financial impact for your business</CardDescription>
+                  <CardDescription>
+                    Financial impact for your business
+                  </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Select value={currency} onValueChange={(value: 'EUR' | 'USD') => setCurrency(value)}>
+                  <Select
+                    value={currency}
+                    onValueChange={(value: 'EUR' | 'USD') => setCurrency(value)}
+                  >
                     <SelectTrigger className="w-20">
                       <SelectValue />
                     </SelectTrigger>
@@ -464,7 +586,10 @@ export default function ROICalculator() {
                       <SelectItem value="USD">USD</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={timeframe} onValueChange={(value: any) => setTimeframe(value)}>
+                  <Select
+                    value={timeframe}
+                    onValueChange={(value: any) => setTimeframe(value)}
+                  >
                     <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
@@ -494,14 +619,19 @@ export default function ROICalculator() {
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-green-700 dark:text-green-300">Net Annual Savings</p>
-                        <p className="text-3xl font-bold text-green-600">{formatCurrency(calculateROI.roi.annualNetSavings)}</p>
+                        <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                          Net Annual Savings
+                        </p>
+                        <p className="text-3xl font-bold text-green-600">
+                          {formatCurrency(calculateROI.roi.annualNetSavings)}
+                        </p>
                       </div>
                       <TrendingUp className="h-8 w-8 text-green-600" />
                     </div>
                     <div className="mt-4">
                       <p className="text-sm text-green-600">
-                        {formatCurrency(calculateROI.roi.monthlyNetSavings)} per month
+                        {formatCurrency(calculateROI.roi.monthlyNetSavings)} per
+                        month
                       </p>
                     </div>
                   </CardContent>
@@ -511,14 +641,19 @@ export default function ROICalculator() {
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300">3-Year ROI</p>
-                        <p className="text-3xl font-bold text-blue-600">{calculateROI.roi.threeYearROI.toFixed(0)}%</p>
+                        <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                          3-Year ROI
+                        </p>
+                        <p className="text-3xl font-bold text-blue-600">
+                          {calculateROI.roi.threeYearROI.toFixed(0)}%
+                        </p>
                       </div>
                       <Target className="h-8 w-8 text-blue-600" />
                     </div>
                     <div className="mt-4">
                       <p className="text-sm text-blue-600">
-                        Payback in {calculateROI.roi.paybackMonths.toFixed(1)} months
+                        Payback in {calculateROI.roi.paybackMonths.toFixed(1)}{' '}
+                        months
                       </p>
                     </div>
                   </CardContent>
@@ -535,41 +670,64 @@ export default function ROICalculator() {
                     <div className="flex justify-between items-center">
                       <span>Implementation Investment</span>
                       <span className="font-semibold text-red-600">
-                        -{formatCurrency(calculateROI.payrollSyncCosts.implementation + calculateROI.payrollSyncCosts.training)}
+                        -
+                        {formatCurrency(
+                          calculateROI.payrollSyncCosts.implementation +
+                            calculateROI.payrollSyncCosts.training
+                        )}
                       </span>
                     </div>
-                    
+
                     <div className="flex justify-between items-center">
                       <span>Annual Subscription Cost</span>
                       <span className="font-semibold text-red-600">
-                        -{formatCurrency(calculateROI.payrollSyncCosts.subscription * 12)}
+                        -
+                        {formatCurrency(
+                          calculateROI.payrollSyncCosts.subscription * 12
+                        )}
                       </span>
                     </div>
-                    
+
                     <div className="flex justify-between items-center">
                       <span>Annual Cost Savings</span>
                       <span className="font-semibold text-green-600">
                         +{formatCurrency(calculateROI.savings.total * 12)}
                       </span>
                     </div>
-                    
+
                     <hr className="my-2" />
-                    
+
                     <div className="flex justify-between items-center text-lg font-bold">
                       <span>Net Annual Benefit</span>
-                      <span className={calculateROI.roi.annualNetSavings > 0 ? 'text-green-600' : 'text-red-600'}>
-                        {calculateROI.roi.annualNetSavings > 0 ? '+' : ''}{formatCurrency(calculateROI.roi.annualNetSavings)}
+                      <span
+                        className={
+                          calculateROI.roi.annualNetSavings > 0
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }
+                      >
+                        {calculateROI.roi.annualNetSavings > 0 ? '+' : ''}
+                        {formatCurrency(calculateROI.roi.annualNetSavings)}
                       </span>
                     </div>
                   </div>
-                  
+
                   <div className="mt-6">
                     <div className="flex justify-between text-sm mb-2">
                       <span>ROI Progress (3 years)</span>
-                      <span>{Math.min(100, (calculateROI.roi.threeYearROI / 5)).toFixed(0)}%</span>
+                      <span>
+                        {Math.min(
+                          100,
+                          calculateROI.roi.threeYearROI / 5
+                        ).toFixed(0)}
+                        %
+                      </span>
                     </div>
-                    <Progress 
-                      value={Math.min(100, Math.max(0, calculateROI.roi.threeYearROI / 5))} 
+                    <Progress
+                      value={Math.min(
+                        100,
+                        Math.max(0, calculateROI.roi.threeYearROI / 5)
+                      )}
                       className="h-3"
                     />
                   </div>
@@ -581,58 +739,91 @@ export default function ROICalculator() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg text-red-600">Current Costs (Monthly)</CardTitle>
+                    <CardTitle className="text-lg text-red-600">
+                      Current Costs (Monthly)
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
                       <span>Current Software</span>
-                      <span>{formatCurrency(calculateROI.currentCosts.software)}</span>
+                      <span>
+                        {formatCurrency(calculateROI.currentCosts.software)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>HR Staff Costs</span>
-                      <span>{formatCurrency(calculateROI.currentCosts.hrStaff)}</span>
+                      <span>
+                        {formatCurrency(calculateROI.currentCosts.hrStaff)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Compliance Issues</span>
-                      <span>{formatCurrency(calculateROI.currentCosts.compliance)}</span>
+                      <span>
+                        {formatCurrency(calculateROI.currentCosts.compliance)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Error Corrections</span>
-                      <span>{formatCurrency(calculateROI.currentCosts.errors)}</span>
+                      <span>
+                        {formatCurrency(calculateROI.currentCosts.errors)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Processing Time</span>
-                      <span>{formatCurrency(calculateROI.currentCosts.processing)}</span>
+                      <span>
+                        {formatCurrency(calculateROI.currentCosts.processing)}
+                      </span>
                     </div>
                     <hr />
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total Current</span>
-                      <span>{formatCurrency(calculateROI.currentCosts.total)}</span>
+                      <span>
+                        {formatCurrency(calculateROI.currentCosts.total)}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg text-blue-600">PayrollSync Costs (Monthly)</CardTitle>
+                    <CardTitle className="text-lg text-blue-600">
+                      PayrollSync Costs (Monthly)
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="flex justify-between">
-                      <span>Subscription ({inputs.employees} × {formatCurrency(getTier(inputs.employees).price)})</span>
-                      <span>{formatCurrency(calculateROI.payrollSyncCosts.subscription)}</span>
+                      <span>
+                        Subscription ({inputs.employees} ×{' '}
+                        {formatCurrency(getTier(inputs.employees).price)})
+                      </span>
+                      <span>
+                        {formatCurrency(
+                          calculateROI.payrollSyncCosts.subscription
+                        )}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Implementation (amortized)</span>
-                      <span>{formatCurrency(calculateROI.payrollSyncCosts.implementation / 12)}</span>
+                      <span>
+                        {formatCurrency(
+                          calculateROI.payrollSyncCosts.implementation / 12
+                        )}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Training (amortized)</span>
-                      <span>{formatCurrency(calculateROI.payrollSyncCosts.training / 12)}</span>
+                      <span>
+                        {formatCurrency(
+                          calculateROI.payrollSyncCosts.training / 12
+                        )}
+                      </span>
                     </div>
                     <hr />
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total PayrollSync</span>
-                      <span>{formatCurrency(calculateROI.payrollSyncCosts.total)}</span>
+                      <span>
+                        {formatCurrency(calculateROI.payrollSyncCosts.total)}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
@@ -642,44 +833,51 @@ export default function ROICalculator() {
             <TabsContent value="savings" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg text-green-600">Monthly Savings Breakdown</CardTitle>
+                  <CardTitle className="text-lg text-green-600">
+                    Monthly Savings Breakdown
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {[
-                      { 
-                        label: 'Software Replacement', 
+                      {
+                        label: 'Software Replacement',
                         amount: calculateROI.savings.software,
                         icon: <Zap className="h-4 w-4" />,
-                        description: 'Replace current payroll software'
+                        description: 'Replace current payroll software',
                       },
-                      { 
-                        label: 'Process Efficiency', 
+                      {
+                        label: 'Process Efficiency',
                         amount: calculateROI.savings.efficiency,
                         icon: <Clock className="h-4 w-4" />,
-                        description: '40% reduction in HR processing time'
+                        description: '40% reduction in HR processing time',
                       },
-                      { 
-                        label: 'Compliance Improvement', 
+                      {
+                        label: 'Compliance Improvement',
                         amount: calculateROI.savings.compliance,
                         icon: <Shield className="h-4 w-4" />,
-                        description: '80% reduction in ERGANI/EFKA issues'
+                        description: '80% reduction in ERGANI/EFKA issues',
                       },
-                      { 
-                        label: 'Error Reduction', 
+                      {
+                        label: 'Error Reduction',
                         amount: calculateROI.savings.errors,
                         icon: <CheckCircle className="h-4 w-4" />,
-                        description: '90% reduction in payroll errors'
-                      }
+                        description: '90% reduction in payroll errors',
+                      },
                     ].map((saving, index) => (
-                      <div key={index} className="flex justify-between items-start p-3 bg-green-50 dark:bg-green-950/20 rounded">
+                      <div
+                        key={index}
+                        className="flex justify-between items-start p-3 bg-green-50 dark:bg-green-950/20 rounded"
+                      >
                         <div className="flex items-start gap-3">
                           <div className="text-green-600 mt-0.5">
                             {saving.icon}
                           </div>
                           <div>
                             <p className="font-medium">{saving.label}</p>
-                            <p className="text-sm text-gray-600">{saving.description}</p>
+                            <p className="text-sm text-gray-600">
+                              {saving.description}
+                            </p>
                           </div>
                         </div>
                         <span className="font-semibold text-green-600">
@@ -687,15 +885,19 @@ export default function ROICalculator() {
                         </span>
                       </div>
                     ))}
-                    
+
                     <div className="border-t pt-4">
                       <div className="flex justify-between items-center text-lg font-bold">
                         <span>Total Monthly Savings</span>
-                        <span className="text-green-600">{formatCurrency(calculateROI.savings.total)}</span>
+                        <span className="text-green-600">
+                          {formatCurrency(calculateROI.savings.total)}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center text-sm text-gray-600 mt-1">
                         <span>Annual Savings</span>
-                        <span>{formatCurrency(calculateROI.savings.total * 12)}</span>
+                        <span>
+                          {formatCurrency(calculateROI.savings.total * 12)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -707,7 +909,9 @@ export default function ROICalculator() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Investment Analysis</CardTitle>
+                    <CardTitle className="text-lg">
+                      Investment Analysis
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="text-center">
@@ -716,16 +920,24 @@ export default function ROICalculator() {
                       </div>
                       <p className="text-gray-600">Payback Period</p>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span>Break-even month:</span>
-                        <span className="font-medium">{Math.ceil(calculateROI.roi.paybackMonths)}</span>
+                        <span className="font-medium">
+                          {Math.ceil(calculateROI.roi.paybackMonths)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Year 1 ROI:</span>
                         <span className="font-medium text-green-600">
-                          {((calculateROI.roi.annualNetSavings / (calculateROI.payrollSyncCosts.implementation + calculateROI.payrollSyncCosts.training)) * 100).toFixed(0)}%
+                          {(
+                            (calculateROI.roi.annualNetSavings /
+                              (calculateROI.payrollSyncCosts.implementation +
+                                calculateROI.payrollSyncCosts.training)) *
+                            100
+                          ).toFixed(0)}
+                          %
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -745,26 +957,49 @@ export default function ROICalculator() {
                   <CardContent className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span>Implementation Risk</span>
-                      <Badge variant="outline" className="bg-green-100 text-green-800">Low</Badge>
+                      <Badge
+                        variant="outline"
+                        className="bg-green-100 text-green-800"
+                      >
+                        Low
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Technology Risk</span>
-                      <Badge variant="outline" className="bg-green-100 text-green-800">Low</Badge>
+                      <Badge
+                        variant="outline"
+                        className="bg-green-100 text-green-800"
+                      >
+                        Low
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Compliance Risk</span>
-                      <Badge variant="outline" className="bg-red-100 text-red-800">High Without</Badge>
+                      <Badge
+                        variant="outline"
+                        className="bg-red-100 text-red-800"
+                      >
+                        High Without
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Cost Overrun Risk</span>
-                      <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Medium</Badge>
+                      <Badge
+                        variant="outline"
+                        className="bg-yellow-100 text-yellow-800"
+                      >
+                        Medium
+                      </Badge>
                     </div>
-                    
+
                     <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded">
                       <p className="text-sm">
-                        <strong>Recommendation:</strong> {calculateROI.roi.threeYearROI > 200 ? 'Strongly Recommended' : 
-                                                        calculateROI.roi.threeYearROI > 100 ? 'Recommended' : 
-                                                        'Consider carefully'}
+                        <strong>Recommendation:</strong>{' '}
+                        {calculateROI.roi.threeYearROI > 200
+                          ? 'Strongly Recommended'
+                          : calculateROI.roi.threeYearROI > 100
+                            ? 'Recommended'
+                            : 'Consider carefully'}
                       </p>
                     </div>
                   </CardContent>
@@ -773,12 +1008,16 @@ export default function ROICalculator() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Greek Market Context</CardTitle>
+                  <CardTitle className="text-lg">
+                    Greek Market Context
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <h4 className="font-medium mb-2">Regulatory Requirements</h4>
+                      <h4 className="font-medium mb-2">
+                        Regulatory Requirements
+                      </h4>
                       <ul className="text-sm space-y-1 text-gray-600">
                         <li>• ERGANI II mandatory reporting</li>
                         <li>• e-EFKA social security integration</li>

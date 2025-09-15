@@ -8,13 +8,21 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Calendar, Building2 } from 'lucide-react';
 import { format, startOfMonth, subMonths } from 'date-fns';
 
 export default function PayrollPreview() {
   const { user } = useAuth();
-  const [selectedPeriod, setSelectedPeriod] = useState(format(new Date(), 'yyyy-MM'));
+  const [selectedPeriod, setSelectedPeriod] = useState(
+    format(new Date(), 'yyyy-MM')
+  );
   const [selectedProperty, setSelectedProperty] = useState<string>('');
 
   // Get user's properties
@@ -24,7 +32,10 @@ export default function PayrollPreview() {
   });
 
   // Get user profile for default property
-  const { data: userProfile } = useQuery<{ id: string; defaultPropertyId?: string }>({
+  const { data: userProfile } = useQuery<{
+    id: string;
+    defaultPropertyId?: string;
+  }>({
     queryKey: ['/api/user/profile'],
     enabled: !!user?.id,
   });
@@ -45,7 +56,11 @@ export default function PayrollPreview() {
   });
 
   // Use default property if none selected
-  const propertyId = selectedProperty || userProfile?.defaultPropertyId || (properties?.[0]?.propertyId) || 'prop-princess';
+  const propertyId =
+    selectedProperty ||
+    userProfile?.defaultPropertyId ||
+    properties?.[0]?.propertyId ||
+    'prop-princess';
 
   return (
     <div className="min-h-screen bg-background">
@@ -63,12 +78,15 @@ export default function PayrollPreview() {
               {/* Pay Period Selection */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Pay Period</label>
-                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                <Select
+                  value={selectedPeriod}
+                  onValueChange={setSelectedPeriod}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select pay period" />
                   </SelectTrigger>
                   <SelectContent>
-                    {periodOptions.map((option) => (
+                    {periodOptions.map(option => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
@@ -80,13 +98,19 @@ export default function PayrollPreview() {
               {/* Property Selection */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Property</label>
-                <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+                <Select
+                  value={selectedProperty}
+                  onValueChange={setSelectedProperty}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select property" />
                   </SelectTrigger>
                   <SelectContent>
                     {properties?.map((property: any) => (
-                      <SelectItem key={property.propertyId} value={property.propertyId}>
+                      <SelectItem
+                        key={property.propertyId}
+                        value={property.propertyId}
+                      >
                         <div className="flex items-center gap-2">
                           <Building2 className="h-4 w-4" />
                           {property.name}
@@ -101,7 +125,7 @@ export default function PayrollPreview() {
         </Card>
 
         {/* Payroll Preview Component */}
-        <OfflinePayrollPreview 
+        <OfflinePayrollPreview
           payPeriod={selectedPeriod}
           propertyId={propertyId}
         />
