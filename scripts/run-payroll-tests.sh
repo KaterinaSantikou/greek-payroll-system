@@ -145,6 +145,8 @@ echo "   ✅ Prorated Salaries (partial months, part-time, Greek bonus proration
 echo "   ✅ Rounding Logic (currency precision, tax calculations, EFKA contributions)"
 echo "   ✅ Termination Handling (severance calculations, eligibility, Greek law compliance)"
 echo "   ✅ Integration Testing (complete payroll scenarios, real-world cases)"
+echo "   ✅ Payroll Run Integration (multi-employee processing, edge cases)"
+echo "   ✅ System Integration (multi-company, concurrent processing, performance)"
 
 echo ""
 print_info "Greek Labor Law Compliance:"
