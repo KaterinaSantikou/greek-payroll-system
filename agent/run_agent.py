@@ -2320,8 +2320,8 @@ def main():
             
             if not implementation_plan:
                 print("❌ Planning phase failed, falling back to direct implementation")
-            # Fallback to old direct implementation
-            system = {
+                # Fallback to old direct implementation
+                system = {
                 "role":"system",
                 "content": (
                     "You are a senior full-stack engineer working on a Greek Payroll SaaS for hospitality (EFKA, ΣΣΕ, Digital Work Card).\n\n"
