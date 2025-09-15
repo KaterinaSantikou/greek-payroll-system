@@ -155,6 +155,7 @@ def main():
 
     task_text = read_file(task_file)
     tree = repo_tree()
+    knowledge = read_knowledge()
 
     system = {
         "role":"system",
@@ -195,6 +196,10 @@ def main():
         TASK SPEC:
         ---
         {task_text}
+
+        CURRENT SYSTEM KNOWLEDGE:
+        ---
+        {knowledge}
 
         REPO TREE (truncated):
         ---
