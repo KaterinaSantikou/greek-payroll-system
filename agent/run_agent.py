@@ -2105,7 +2105,7 @@ def main():
         if not resp:
             print("❌ Failed to get response from OpenAI")
             return
-    
+        
         # Create git checkpoint before applying changes
         print("💾 Creating git checkpoint before applying changes...")
         try:
@@ -2115,9 +2115,9 @@ def main():
         except subprocess.CalledProcessError:
             print("⚠️ Could not create git checkpoint (no changes to stash)")
             backup_created = False
-    
-    # Apply changes to sandbox environment
-    changed = apply_file_blocks(resp, SANDBOX_DIR)
+        
+        # Apply changes to sandbox environment
+        changed = apply_file_blocks(resp, SANDBOX_DIR)
     
     # Validate that we're not changing too many files
     if len(changed) > MAX_FILES_PER_TASK:
