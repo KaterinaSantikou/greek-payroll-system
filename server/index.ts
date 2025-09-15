@@ -711,7 +711,7 @@ app.use((req, res, next) => {
   app.use((err: { status?: number; statusCode?: number; message?: string; stack?: string }, req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-    const requestId = (req as any).requestId;
+    const requestId = (req as Request & { requestId?: string }).requestId;
 
     logger.error('Express error handler triggered', {
       error: err.message,
