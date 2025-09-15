@@ -2322,16 +2322,16 @@ def main():
                 print("❌ Planning phase failed, falling back to direct implementation")
                 # Fallback to old direct implementation
                 system = {
-                "role":"system",
-                "content": (
-                    "You are a senior full-stack engineer working on a Greek Payroll SaaS for hospitality (EFKA, ΣΣΕ, Digital Work Card).\n\n"
-                    "Here is the full architecture and coding rules you MUST follow:\n\n"
-                    f"{ARCHITECTURE_TEXT}\n\n"
-                    "Here is the database schema you MUST respect:\n\n"
-                    f"{SCHEMA_TEXT}\n\n"
-                    "Here is the existing core payroll calculation logic you must improve and not break:\n\n"
-                    f"{PAYROLL_ENGINE_TEXT}"
-                ) + textwrap.dedent(f"""
+                    "role":"system",
+                    "content": (
+                        "You are a senior full-stack engineer working on a Greek Payroll SaaS for hospitality (EFKA, ΣΣΕ, Digital Work Card).\n\n"
+                        "Here is the full architecture and coding rules you MUST follow:\n\n"
+                        f"{ARCHITECTURE_TEXT}\n\n"
+                        "Here is the database schema you MUST respect:\n\n"
+                        f"{SCHEMA_TEXT}\n\n"
+                        "Here is the existing core payroll calculation logic you must improve and not break:\n\n"
+                        f"{PAYROLL_ENGINE_TEXT}"
+                    ) + textwrap.dedent(f"""
                 
                 ARCHITECTURE RULES:
                 - Use Express/Node back-end with TypeScript
