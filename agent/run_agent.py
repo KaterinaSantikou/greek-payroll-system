@@ -15,6 +15,16 @@ CONFIG = json.loads(json.dumps({}))  # placeholder if you expand
 FILE_BLOCK_START = "<<<FILE:"
 FILE_BLOCK_END = ">>>END"
 
+def safe_run(cmd):
+    """Run git command safely, masking tokens from error output"""
+    try:
+        out = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        return out
+    except subprocess.CalledProcessError as e:
+        clean = re.sub(r"https://[^@]+@", "https://***@", e.stderr or "")
+        print(f"⚠️ Git error: {clean}")
+        raise
+
 # ---- SIMPLE OPENAI CALLER (no extra installs needed on Replit if using requests) ----
 import requests
 
