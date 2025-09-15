@@ -1576,6 +1576,12 @@ def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolv
             DO NOT WRITE ANY CODE. This is PLANNING ONLY.
             Focus on creating a complete, detailed plan that eliminates guesswork during implementation.
             
+            TASK SIZE LIMITS:
+            - Maximum {MAX_FILES_PER_TASK} files can be modified per task
+            - If more files are needed, the task will be automatically split into subtasks
+            - Plan accordingly to stay within size limits when possible
+            - Focus on the most critical files for the core functionality
+            
             CONTEXT ABOUT THE CODEBASE:
             {dependency_summary}
             
@@ -1997,6 +2003,10 @@ def main():
         
         if not implementation_plan:
             print("❌ Planning phase failed, falling back to direct implementation")
+        elif implementation_plan == "TASK_SPLIT_INTO_SUBTASKS":
+            print("📦 Task was split into subtasks. Current task completed.")
+            print("✅ Subtasks created successfully. Run the agent again to process them.")
+            return
             # Fallback to old direct implementation
             system = {
                 "role":"system",
@@ -2106,6 +2116,13 @@ def main():
     
     # Apply changes to sandbox environment
     changed = apply_file_blocks(resp, SANDBOX_DIR)
+    
+    # Validate that we're not changing too many files
+    if len(changed) > MAX_FILES_PER_TASK:
+        print(f"⚠️ Implementation changed {len(changed)} files, exceeding limit of {MAX_FILES_PER_TASK}")
+        print("📦 This suggests the task should have been split further.")
+        print("🔄 Consider updating the planning phase to better estimate file changes.")
+        # Continue anyway but warn about the size
 
     summary_path = f"agent/last_run_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
     pathlib.Path(summary_path).write_text(resp, encoding="utf-8")
