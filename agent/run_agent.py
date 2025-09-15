@@ -2119,15 +2119,15 @@ def main():
         # Apply changes to sandbox environment
         changed = apply_file_blocks(resp, SANDBOX_DIR)
     
-    # Validate that we're not changing too many files
-    if len(changed) > MAX_FILES_PER_TASK:
-        print(f"⚠️ Implementation changed {len(changed)} files, exceeding limit of {MAX_FILES_PER_TASK}")
-        print("📦 This suggests the task should have been split further.")
-        print("🔄 Consider updating the planning phase to better estimate file changes.")
-        # Continue anyway but warn about the size
+        # Validate that we're not changing too many files
+        if len(changed) > MAX_FILES_PER_TASK:
+            print(f"⚠️ Implementation changed {len(changed)} files, exceeding limit of {MAX_FILES_PER_TASK}")
+            print("📦 This suggests the task should have been split further.")
+            print("🔄 Consider updating the planning phase to better estimate file changes.")
+            # Continue anyway but warn about the size
 
-    summary_path = f"agent/last_run_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-    pathlib.Path(summary_path).write_text(resp, encoding="utf-8")
+        summary_path = f"agent/last_run_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        pathlib.Path(summary_path).write_text(resp, encoding="utf-8")
 
     # Only move task to done if actual file changes were made
     if not changed:
