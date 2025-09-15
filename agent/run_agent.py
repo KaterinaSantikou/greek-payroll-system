@@ -1,4 +1,4 @@
-import os, glob, json, textwrap, pathlib, subprocess, re
+import os, glob, json, textwrap, pathlib, subprocess, re, time, random
 from datetime import datetime
 
 # ---- CONFIG ----
@@ -24,6 +24,20 @@ def safe_run(cmd):
         clean = re.sub(r"https://[^@]+@", "https://***@", e.stderr or "")
         print(f"⚠️ Git error: {clean}")
         raise
+
+def call_with_retry(func, max_tries=5):
+    """Call function with exponential backoff retry logic"""
+    delay = 5
+    for attempt in range(max_tries):
+        try:
+            return func()
+        except Exception as e:
+            print(f"⚠️ Error: {e} (retrying in {delay}s)")
+            if attempt < max_tries - 1:  # Don't sleep on last attempt
+                time.sleep(delay)
+                delay *= 2 * (1 + random.random())
+            else:
+                raise RuntimeError("❌ Max retries exceeded")
 
 # ---- SIMPLE OPENAI CALLER (no extra installs needed on Replit if using requests) ----
 import requests
