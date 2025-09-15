@@ -152,7 +152,7 @@ export function setSentryContext(key: string, context: Record<string, any>) {
  */
 export function captureClientMetric(name: string, value: number, tags?: Record<string, string>) {
   // Note: Sentry metrics API not available in current version
-  console.debug(`[SENTRY] Metric: ${name} = ${value}`, { tags });
+  console.debug(`[SENTRY] Metric: ${name} = ${value}`, tags);
 }
 
 /**
