@@ -320,8 +320,8 @@ def save_agent_state() -> ToolResult:
     if manager.current_state:
         return manager.save_state(manager.current_state)
     else:
-        manager.create_initial_state()
-        return manager.save_state(manager.current_state)
+        state = manager.create_initial_state()
+        return manager.save_state(state)
 
 def update_backlog_progress(index: int):
     """Update backlog index progress"""
