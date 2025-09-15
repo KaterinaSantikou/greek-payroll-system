@@ -12,9 +12,9 @@ import type {
   TipsDistribution 
 } from "@shared/schema";
 // Business layer imports
-import { payrollCalculator, type PayrollCalculationInput } from "./business/payroll-calculator";
-import { payrollService } from "./business/payroll-service";
-import { payrollValidator } from "./business/payroll-validator";
+import { payrollCalculator, type PayrollCalculationInput } from "../lib/payroll/calculators/payroll-calculator";
+import { payrollService } from "../lib/payroll/services/payroll-service";
+import { payrollValidator } from "../lib/payroll/calculators/payroll-validator";
 
 // Infrastructure layer imports
 import { payrollRepository } from "./infrastructure/payroll-repository";
