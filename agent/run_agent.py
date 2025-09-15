@@ -211,233 +211,37 @@ def call_with_retry(func, max_tries=5):
 # ---- PRE-COMMIT VALIDATION SYSTEM ----
 def run_pre_commit_validation():
     """
-    Comprehensive pre-commit validation to prevent broken code from being committed.
-    
-    Tests included:
-    - TypeScript compilation check (tsc --noEmit)
-    - Build process validation (npm run build)
-    - Database connection test (if DATABASE_URL exists)
-    - Schema validation (basic syntax check)
-    - Import/export validation (key files syntax check)
+    Comprehensive pre-commit validation using tool abstractions.
     
     Returns:
         bool: True if ALL validation checks pass, False otherwise
     """
-    print("\n🔒 Starting pre-commit validation (safety guardrails)...")
-    validation_start_time = time.time()
+    print("\n🔒 Starting pre-commit validation using tools...")
+    
+    # Use tool abstraction for validation
+    validation_results = run_full_validation()
+    
+    # Check results and provide detailed feedback
     failed_checks = []
+    for check_name, result in validation_results.items():
+        if result.success:
+            print(f"   ✅ {check_name}: {result.message}")
+        else:
+            print(f"   ❌ {check_name}: {result.message}")
+            if result.error:
+                print(f"      Error: {result.error}")
+            failed_checks.append(check_name)
     
-    # Change to root directory for validation
-    original_cwd = pathlib.Path.cwd()
-    os.chdir(ROOT)
-    
-    try:
-        # 1. TypeScript Compilation Check
-        print("\n📋 [1/5] TypeScript compilation check...")
-        try:
-            result = subprocess.run(
-                ["npm", "run", "check"], 
-                capture_output=True, 
-                text=True, 
-                timeout=120
-            )
-            if result.returncode == 0:
-                print("   ✅ TypeScript compilation passed")
-            else:
-                print("   ❌ TypeScript compilation failed")
-                safe_log_subprocess_output(result, "TypeScript check")
-                failed_checks.append("TypeScript compilation")
-        except subprocess.TimeoutExpired:
-            print("   ❌ TypeScript check timed out (>120s)")
-            failed_checks.append("TypeScript compilation (timeout)")
-        except Exception as e:
-            print(f"   ❌ TypeScript check error: {e}")
-            failed_checks.append("TypeScript compilation (error)")
-        
-        # 2. Build Process Validation
-        print("\n🏗️ [2/5] Build process validation...")
-        try:
-            result = subprocess.run(
-                ["npm", "run", "build"], 
-                capture_output=True, 
-                text=True, 
-                timeout=180
-            )
-            if result.returncode == 0:
-                print("   ✅ Build process completed successfully")
-                # Clean up build artifacts to avoid repo pollution
-                try:
-                    build_dir = ROOT / "dist"
-                    if build_dir.exists():
-                        shutil.rmtree(build_dir)
-                        print("   🧹 Cleaned up build artifacts")
-                except Exception:
-                    pass  # Don't fail validation for cleanup issues
-            else:
-                print("   ❌ Build process failed")
-                safe_log_subprocess_output(result, "Build process")
-                failed_checks.append("Build process")
-        except subprocess.TimeoutExpired:
-            print("   ❌ Build process timed out (>180s)")
-            failed_checks.append("Build process (timeout)")
-        except Exception as e:
-            print(f"   ❌ Build process error: {e}")
-            failed_checks.append("Build process (error)")
-        
-        # 3. Database Connection Test
-        print("\n🗄️ [3/5] Database connection test...")
-        database_url = os.environ.get("DATABASE_URL")
-        if database_url:
-            try:
-                # Import neon client for connection test
-                from neon import neon
-                
-                # Test connection with simple query
-                with neon(database_url) as conn:
-                    with conn.cursor() as cur:
-                        cur.execute("SELECT 1")
-                        result = cur.fetchone()
-                        if result and result[0] == 1:
-                            print("   ✅ Database connection successful")
-                        else:
-                            print("   ❌ Database connection test failed")
-                            failed_checks.append("Database connection")
-            except ImportError:
-                # Try alternative method using psycopg2-binary or pg
-                try:
-                    result = subprocess.run(
-                        ["node", "-e", """
-                        const { neon } = require('@neondatabase/serverless');
-                        const sql = neon(process.env.DATABASE_URL);
-                        sql`SELECT 1`.then(() => {
-                            console.log('DB_OK');
-                            process.exit(0);
-                        }).catch((e) => {
-                            console.error('DB_ERROR:', e.message);
-                            process.exit(1);
-                        });
-                        """], 
-                        capture_output=True, 
-                        text=True, 
-                        timeout=30,
-                        env=dict(os.environ, DATABASE_URL=database_url)
-                    )
-                    if result.returncode == 0 and "DB_OK" in result.stdout:
-                        print("   ✅ Database connection successful")
-                    else:
-                        print("   ❌ Database connection failed")
-                        safe_log_subprocess_output(result, "Database connection")
-                        failed_checks.append("Database connection")
-                except Exception as e:
-                    print(f"   ⚠️ Database connection test skipped (error: {e})")
-            except Exception as e:
-                print(f"   ❌ Database connection failed: {e}")
-                failed_checks.append("Database connection")
-        else:
-            print("   ⚠️ No DATABASE_URL found, skipping database test")
-        
-        # 4. Schema Validation
-        print("\n📋 [4/5] Schema validation...")
-        schema_files = [
-            ROOT / "shared" / "schema.ts",
-            ROOT / "shared" / "payments-schema.ts",
-            ROOT / "shared" / "grcSchema.ts"
-        ]
-        
-        schema_valid = True
-        for schema_file in schema_files:
-            if schema_file.exists():
-                try:
-                    # Basic syntax check using TypeScript compiler
-                    result = subprocess.run(
-                        ["npx", "tsc", "--noEmit", "--skipLibCheck", str(schema_file)], 
-                        capture_output=True, 
-                        text=True, 
-                        timeout=30
-                    )
-                    if result.returncode == 0:
-                        print(f"   ✅ {schema_file.name} syntax valid")
-                    else:
-                        print(f"   ❌ {schema_file.name} syntax errors")
-                        safe_log_subprocess_output(result, f"{schema_file.name} validation")
-                        schema_valid = False
-                except Exception as e:
-                    print(f"   ❌ {schema_file.name} validation error: {e}")
-                    schema_valid = False
-        
-        if schema_valid:
-            print("   ✅ All schema files valid")
-        else:
-            failed_checks.append("Schema validation")
-        
-        # 5. Import/Export Validation
-        print("\n🔗 [5/5] Import/export validation...")
-        key_files = [
-            ROOT / "server" / "index.ts",
-            ROOT / "server" / "routes.ts",
-            ROOT / "client" / "src" / "App.tsx",
-            ROOT / "client" / "src" / "main.tsx"
-        ]
-        
-        import_export_valid = True
-        for key_file in key_files:
-            if key_file.exists():
-                try:
-                    # Basic syntax check using TypeScript compiler
-                    result = subprocess.run(
-                        ["npx", "tsc", "--noEmit", "--skipLibCheck", str(key_file)], 
-                        capture_output=True, 
-                        text=True, 
-                        timeout=30
-                    )
-                    if result.returncode == 0:
-                        print(f"   ✅ {key_file.name} imports/exports valid")
-                    else:
-                        print(f"   ❌ {key_file.name} import/export errors")
-                        safe_log_subprocess_output(result, f"{key_file.name} validation")
-                        import_export_valid = False
-                except Exception as e:
-                    print(f"   ❌ {key_file.name} validation error: {e}")
-                    import_export_valid = False
-        
-        if import_export_valid:
-            print("   ✅ All key files imports/exports valid")
-        else:
-            failed_checks.append("Import/export validation")
-        
-        # Summary
-        validation_time = time.time() - validation_start_time
-        print(f"\n🔒 Pre-commit validation completed in {validation_time:.1f}s")
-        
-        if failed_checks:
-            print("\n❌ VALIDATION FAILED - Commit blocked!")
-            print("   Failed checks:")
-            for check in failed_checks:
-                print(f"   - {check}")
-            print("\n💡 Fix all validation errors before committing.")
-            print("   Run individual commands to debug:")
-            print("   - npm run check  # TypeScript compilation")
-            print("   - npm run build  # Build process")
-            print("   - Check database connectivity")
-            print("   - Validate schema files syntax")
-            return False
-        else:
-            print("\n✅ ALL VALIDATION CHECKS PASSED - Commit allowed!")
-            print(f"   ✓ TypeScript compilation")
-            print(f"   ✓ Build process")
-            print(f"   ✓ Database connectivity")
-            print(f"   ✓ Schema validation")
-            print(f"   ✓ Import/export validation")
-            return True
-            
-    except Exception as e:
-        print(f"\n❌ Pre-commit validation failed with error: {e}")
-        failed_checks.append("System error")
+    if failed_checks:
+        print(f"\n❌ VALIDATION FAILED - Commit blocked!")
+        print(f"   Failed checks: {', '.join(failed_checks)}")
+        print("\n💡 Fix all validation errors before committing.")
         return False
-    
-    finally:
-        # Always restore original working directory
-        os.chdir(original_cwd)
+    else:
+        print(f"\n✅ ALL VALIDATION CHECKS PASSED - Commit allowed!")
+        total_time = sum(r.duration for r in validation_results.values() if r.duration)
+        print(f"   Total validation time: {total_time:.1f}s")
+        return True
 
 # ---- SIMPLE OPENAI CALLER (no extra installs needed on Replit if using requests) ----
 import requests
