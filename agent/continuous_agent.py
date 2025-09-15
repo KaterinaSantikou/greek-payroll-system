@@ -93,20 +93,20 @@ while True:
     else:
         try:
             print(f"💾 Committing and pushing changes to dev branch (task: {task_title})...")
-            subprocess.run(["git", "config", "--global", "user.name", "AI Dev Agent"], check=True)
-            subprocess.run(["git", "config", "--global", "user.email", "agent@localhost"], check=True)
-            subprocess.run(["git", "checkout", "dev"], check=False)
-            subprocess.run(["git", "add", "."], check=True)
-            subprocess.run(["git", "commit", "-m", f"AI Agent: Completed task — {task_title}"], check=False)
-            subprocess.run([
+            safe_run(["git", "config", "--global", "user.name", "AI Dev Agent"])
+            safe_run(["git", "config", "--global", "user.email", "agent@localhost"])
+            safe_run(["git", "checkout", "dev"])
+            safe_run(["git", "add", "."])
+            safe_run(["git", "commit", "-m", f"AI Agent: Completed task — {task_title}"])
+            safe_run([
                 "git",
                 "push",
                 f"https://{os.environ.get('GITHUB_TOKEN')}@github.com/{GITHUB_REPO}.git",
                 "dev"
-            ], check=True)
+            ])
             print("✅ Pushed to dev branch.")
-        except subprocess.CalledProcessError as e:
-            print(f"⚠️ Git push failed: {e}")
+        except subprocess.CalledProcessError:
+            print("⚠️ Git push failed (see error above)")  # Error already printed by safe_run
 
     print("✅ Cycle complete — checking again immediately...\n")
     time.sleep(5)
