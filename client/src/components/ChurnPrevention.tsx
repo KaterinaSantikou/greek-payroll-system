@@ -10,7 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import {
@@ -49,7 +55,7 @@ import {
   PlayCircle,
   Pause,
   StopCircle,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react';
 
 interface AtRiskAccount {
@@ -131,14 +137,14 @@ const AT_RISK_ACCOUNTS: AtRiskAccount[] = [
       'Support ticket volume increased',
       'Payment delay (15 days)',
       'Key user left company',
-      'Exploring competitor solutions'
+      'Exploring competitor solutions',
     ],
     riskFactorsEl: [
       'Μειωμένη συχνότητα σύνδεσης (πτώση 50%)',
       'Αυξημένος όγκος tickets υποστήριξης',
       'Καθυστέρηση πληρωμής (15 ημέρες)',
       'Βασικός χρήστης άφησε την εταιρεία',
-      'Εξερεύνηση λύσεων ανταγωνιστών'
+      'Εξερεύνηση λύσεων ανταγωνιστών',
     ],
     segment: 'Enterprise',
     industry: 'Hospitality',
@@ -152,7 +158,7 @@ const AT_RISK_ACCOUNTS: AtRiskAccount[] = [
     supportTickets: 12,
     paymentDelays: 2,
     featureAdoption: 45,
-    engagementTrend: 'down'
+    engagementTrend: 'down',
   },
   {
     id: 'acc-002',
@@ -170,14 +176,14 @@ const AT_RISK_ACCOUNTS: AtRiskAccount[] = [
       'Missed training sessions',
       'Late payment last quarter',
       'Limited feature adoption',
-      'Competitor outreach confirmed'
+      'Competitor outreach confirmed',
     ],
     riskFactorsEl: [
       'Χρήση μειώθηκε 30% τον τελευταίο μήνα',
       'Χάθηκαν συνεδρίες εκπαίδευσης',
       'Καθυστερημένη πληρωμή το τελευταίο τρίμηνο',
       'Περιορισμένη υιοθέτηση χαρακτηριστικών',
-      'Επαφή ανταγωνιστή επιβεβαιώθηκε'
+      'Επαφή ανταγωνιστή επιβεβαιώθηκε',
     ],
     segment: 'Mid-Market',
     industry: 'Retail',
@@ -191,7 +197,7 @@ const AT_RISK_ACCOUNTS: AtRiskAccount[] = [
     supportTickets: 8,
     paymentDelays: 1,
     featureAdoption: 52,
-    engagementTrend: 'down'
+    engagementTrend: 'down',
   },
   {
     id: 'acc-003',
@@ -208,13 +214,13 @@ const AT_RISK_ACCOUNTS: AtRiskAccount[] = [
       'Slower adoption of new features',
       'Reduced admin activity',
       'Budget constraints mentioned',
-      'Team turnover in HR department'
+      'Team turnover in HR department',
     ],
     riskFactorsEl: [
       'Πιο αργή υιοθέτηση νέων χαρακτηριστικών',
       'Μειωμένη δραστηριότητα διαχειριστή',
       'Αναφέρθηκαν περιορισμοί προϋπολογισμού',
-      'Αλλαγή προσωπικού στο τμήμα HR'
+      'Αλλαγή προσωπικού στο τμήμα HR',
     ],
     segment: 'Mid-Market',
     industry: 'Manufacturing',
@@ -228,7 +234,7 @@ const AT_RISK_ACCOUNTS: AtRiskAccount[] = [
     supportTickets: 4,
     paymentDelays: 0,
     featureAdoption: 68,
-    engagementTrend: 'stable'
+    engagementTrend: 'stable',
   },
   {
     id: 'acc-004',
@@ -246,14 +252,14 @@ const AT_RISK_ACCOUNTS: AtRiskAccount[] = [
       'Support response satisfaction low',
       'Integration issues unresolved',
       'Key stakeholder left company',
-      'Price sensitivity expressed'
+      'Price sensitivity expressed',
     ],
     riskFactorsEl: [
       'Ανωμαλίες στο εποχιακό πρότυπο χρήσης',
       'Χαμηλή ικανοποίηση από τις απαντήσεις υποστήριξης',
       'Άλυτα προβλήματα ενσωμάτωσης',
       'Βασικός stakeholder άφησε την εταιρεία',
-      'Εκφράστηκε ευαισθησία στην τιμή'
+      'Εκφράστηκε ευαισθησία στην τιμή',
     ],
     segment: 'Small Business',
     industry: 'Tourism',
@@ -267,8 +273,8 @@ const AT_RISK_ACCOUNTS: AtRiskAccount[] = [
     supportTickets: 9,
     paymentDelays: 1,
     featureAdoption: 41,
-    engagementTrend: 'down'
-  }
+    engagementTrend: 'down',
+  },
 ];
 
 const OUTREACH_CAMPAIGNS: OutreachCampaign[] = [
@@ -280,15 +286,17 @@ const OUTREACH_CAMPAIGNS: OutreachCampaign[] = [
     status: 'active',
     targetSegment: 'Enterprise',
     riskLevelTarget: ['critical', 'high'],
-    template: 'Personal meeting with executive team to address concerns and provide custom solutions.',
-    templateEl: 'Προσωπική συνάντηση με τη διοικητική ομάδα για την αντιμετώπιση ανησυχιών και παροχή προσαρμοσμένων λύσεων.',
+    template:
+      'Personal meeting with executive team to address concerns and provide custom solutions.',
+    templateEl:
+      'Προσωπική συνάντηση με τη διοικητική ομάδα για την αντιμετώπιση ανησυχιών και παροχή προσαρμοσμένων λύσεων.',
     sentCount: 23,
     openRate: 95,
     responseRate: 78,
     conversionRate: 65,
     createdDate: '2025-01-01',
     lastSent: '2025-01-20',
-    scheduledDate: '2025-01-25'
+    scheduledDate: '2025-01-25',
   },
   {
     id: 'camp-002',
@@ -298,14 +306,16 @@ const OUTREACH_CAMPAIGNS: OutreachCampaign[] = [
     status: 'active',
     targetSegment: 'Mid-Market',
     riskLevelTarget: ['medium', 'high'],
-    template: 'Personalized training invitation and feature showcase to increase platform value.',
-    templateEl: 'Εξατομικευμένη πρόσκληση εκπαίδευσης και επίδειξη χαρακτηριστικών για αύξηση της αξίας της πλατφόρμας.',
+    template:
+      'Personalized training invitation and feature showcase to increase platform value.',
+    templateEl:
+      'Εξατομικευμένη πρόσκληση εκπαίδευσης και επίδειξη χαρακτηριστικών για αύξηση της αξίας της πλατφόρμας.',
     sentCount: 156,
     openRate: 72,
     responseRate: 34,
     conversionRate: 28,
     createdDate: '2025-01-08',
-    lastSent: '2025-01-19'
+    lastSent: '2025-01-19',
   },
   {
     id: 'camp-003',
@@ -315,14 +325,16 @@ const OUTREACH_CAMPAIGNS: OutreachCampaign[] = [
     status: 'active',
     targetSegment: 'All',
     riskLevelTarget: ['medium'],
-    template: 'Proactive success check-in calls to ensure customer satisfaction and identify improvement areas.',
-    templateEl: 'Προληπτικές κλήσεις ελέγχου επιτυχίας για διασφάλιση ικανοποίησης πελατών και εντοπισμό περιοχών βελτίωσης.',
+    template:
+      'Proactive success check-in calls to ensure customer satisfaction and identify improvement areas.',
+    templateEl:
+      'Προληπτικές κλήσεις ελέγχου επιτυχίας για διασφάλιση ικανοποίησης πελατών και εντοπισμό περιοχών βελτίωσης.',
     sentCount: 89,
     openRate: 85,
     responseRate: 67,
     conversionRate: 54,
     createdDate: '2025-01-10',
-    lastSent: '2025-01-18'
+    lastSent: '2025-01-18',
   },
   {
     id: 'camp-004',
@@ -332,16 +344,18 @@ const OUTREACH_CAMPAIGNS: OutreachCampaign[] = [
     status: 'draft',
     targetSegment: 'Enterprise',
     riskLevelTarget: ['high', 'critical'],
-    template: 'Exclusive workshop to demonstrate ROI and advanced features tailored to their specific needs.',
-    templateEl: 'Αποκλειστικό εργαστήριο για επίδειξη ROI και προχωρημένων χαρακτηριστικών προσαρμοσμένων στις ειδικές τους ανάγκες.',
+    template:
+      'Exclusive workshop to demonstrate ROI and advanced features tailored to their specific needs.',
+    templateEl:
+      'Αποκλειστικό εργαστήριο για επίδειξη ROI και προχωρημένων χαρακτηριστικών προσαρμοσμένων στις ειδικές τους ανάγκες.',
     sentCount: 0,
     openRate: 0,
     responseRate: 0,
     conversionRate: 0,
     createdDate: '2025-01-15',
     lastSent: '',
-    scheduledDate: '2025-01-30'
-  }
+    scheduledDate: '2025-01-30',
+  },
 ];
 
 const RETENTION_METRICS: RetentionMetrics = {
@@ -352,15 +366,20 @@ const RETENTION_METRICS: RetentionMetrics = {
   averageRiskScore: 64,
   successfulOutreach: 78,
   revenueAtRisk: 156000,
-  preventedChurn: 23
+  preventedChurn: 23,
 };
 
-export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps) {
+export default function ChurnPrevention({
+  locale = 'en',
+}: ChurnPreventionProps) {
   const [selectedTab, setSelectedTab] = useState('dashboard');
   const [accounts, setAccounts] = useState(AT_RISK_ACCOUNTS);
   const [campaigns, setCampaigns] = useState(OUTREACH_CAMPAIGNS);
-  const [selectedAccount, setSelectedAccount] = useState<AtRiskAccount | null>(null);
-  const [selectedCampaign, setSelectedCampaign] = useState<OutreachCampaign | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<AtRiskAccount | null>(
+    null
+  );
+  const [selectedCampaign, setSelectedCampaign] =
+    useState<OutreachCampaign | null>(null);
   const [filterRiskLevel, setFilterRiskLevel] = useState<string>('all');
   const [filterSegment, setFilterSegment] = useState<string>('all');
   const [newOutreachMessage, setNewOutreachMessage] = useState('');
@@ -374,7 +393,7 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
         accounts: 'At-Risk Accounts',
         outreach: 'Outreach Campaigns',
         analytics: 'Analytics',
-        settings: 'Settings'
+        settings: 'Settings',
       },
       metrics: {
         totalAtRisk: 'Total At-Risk',
@@ -384,32 +403,32 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
         averageRiskScore: 'Avg Risk Score',
         successfulOutreach: 'Successful Outreach',
         revenueAtRisk: 'Revenue at Risk',
-        preventedChurn: 'Prevented Churn'
+        preventedChurn: 'Prevented Churn',
       },
       riskLevels: {
         low: 'Low Risk',
         medium: 'Medium Risk',
         high: 'High Risk',
-        critical: 'Critical Risk'
+        critical: 'Critical Risk',
       },
       outreachStatus: {
         pending: 'Pending',
         'in-progress': 'In Progress',
         completed: 'Completed',
-        escalated: 'Escalated'
+        escalated: 'Escalated',
       },
       campaignTypes: {
         email: 'Email',
         call: 'Phone Call',
         meeting: 'Meeting',
         survey: 'Survey',
-        offer: 'Special Offer'
+        offer: 'Special Offer',
       },
       campaignStatus: {
         active: 'Active',
         paused: 'Paused',
         completed: 'Completed',
-        draft: 'Draft'
+        draft: 'Draft',
       },
       actions: {
         contactNow: 'Contact Now',
@@ -420,29 +439,29 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
         startCampaign: 'Start Campaign',
         pauseCampaign: 'Pause Campaign',
         viewReports: 'View Reports',
-        exportData: 'Export Data'
+        exportData: 'Export Data',
       },
       filters: {
         all: 'All',
         riskLevel: 'Risk Level',
         segment: 'Segment',
         industry: 'Industry',
-        manager: 'Account Manager'
+        manager: 'Account Manager',
       },
       accountDetails: {
         riskFactors: 'Risk Factors',
         contactInfo: 'Contact Information',
         accountHealth: 'Account Health',
         recentActivity: 'Recent Activity',
-        outreachHistory: 'Outreach History'
+        outreachHistory: 'Outreach History',
       },
       quickActions: {
         title: 'Quick Actions',
         escalateToManager: 'Escalate to Manager',
         scheduleFollowUp: 'Schedule Follow-up',
         updateRiskScore: 'Update Risk Score',
-        addNote: 'Add Note'
-      }
+        addNote: 'Add Note',
+      },
     },
     el: {
       title: 'Πρόληψη Εγκατάλειψης',
@@ -452,7 +471,7 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
         accounts: 'Λογαριασμοί Κινδύνου',
         outreach: 'Καμπάνιες Προσέγγισης',
         analytics: 'Αναλυτικά',
-        settings: 'Ρυθμίσεις'
+        settings: 'Ρυθμίσεις',
       },
       metrics: {
         totalAtRisk: 'Σύνολο σε Κίνδυνο',
@@ -462,32 +481,32 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
         averageRiskScore: 'Μέσος Βαθμός Κινδύνου',
         successfulOutreach: 'Επιτυχημένη Προσέγγιση',
         revenueAtRisk: 'Έσοδα σε Κίνδυνο',
-        preventedChurn: 'Αποτροπή Εγκατάλειψης'
+        preventedChurn: 'Αποτροπή Εγκατάλειψης',
       },
       riskLevels: {
         low: 'Χαμηλός Κίνδυνος',
         medium: 'Μέτριος Κίνδυνος',
         high: 'Υψηλός Κίνδυνος',
-        critical: 'Κρίσιμος Κίνδυνος'
+        critical: 'Κρίσιμος Κίνδυνος',
       },
       outreachStatus: {
         pending: 'Εκκρεμεί',
         'in-progress': 'Σε Εξέλιξη',
         completed: 'Ολοκληρώθηκε',
-        escalated: 'Κλιμακώθηκε'
+        escalated: 'Κλιμακώθηκε',
       },
       campaignTypes: {
         email: 'Email',
         call: 'Τηλεφωνική Κλήση',
         meeting: 'Συνάντηση',
         survey: 'Έρευνα',
-        offer: 'Ειδική Προσφορά'
+        offer: 'Ειδική Προσφορά',
       },
       campaignStatus: {
         active: 'Ενεργό',
         paused: 'Σε Παύση',
         completed: 'Ολοκληρώθηκε',
-        draft: 'Πρόχειρο'
+        draft: 'Πρόχειρο',
       },
       actions: {
         contactNow: 'Επικοινωνία Τώρα',
@@ -498,86 +517,121 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
         startCampaign: 'Έναρξη Καμπάνιας',
         pauseCampaign: 'Παύση Καμπάνιας',
         viewReports: 'Προβολή Αναφορών',
-        exportData: 'Εξαγωγή Δεδομένων'
+        exportData: 'Εξαγωγή Δεδομένων',
       },
       filters: {
         all: 'Όλα',
         riskLevel: 'Επίπεδο Κινδύνου',
         segment: 'Τμήμα',
         industry: 'Κλάδος',
-        manager: 'Υπεύθυνος Λογαριασμού'
+        manager: 'Υπεύθυνος Λογαριασμού',
       },
       accountDetails: {
         riskFactors: 'Παράγοντες Κινδύνου',
         contactInfo: 'Στοιχεία Επικοινωνίας',
         accountHealth: 'Υγεία Λογαριασμού',
         recentActivity: 'Πρόσφατη Δραστηριότητα',
-        outreachHistory: 'Ιστορικό Προσεγγίσεων'
+        outreachHistory: 'Ιστορικό Προσεγγίσεων',
       },
       quickActions: {
         title: 'Γρήγορες Ενέργειες',
         escalateToManager: 'Κλιμάκωση στον Manager',
         scheduleFollowUp: 'Προγραμματισμός Παρακολούθησης',
         updateRiskScore: 'Ενημέρωση Βαθμού Κινδύνου',
-        addNote: 'Προσθήκη Σημείωσης'
-      }
-    }
+        addNote: 'Προσθήκη Σημείωσης',
+      },
+    },
   };
 
   const t = translations[locale];
 
   const getRiskLevelColor = (level: string) => {
     switch (level) {
-      case 'low': return 'bg-green-100 text-green-800 border-green-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'low':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'high':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'critical':
+        return 'bg-red-100 text-red-800 border-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getOutreachStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-gray-100 text-gray-800';
-      case 'in-progress': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'escalated': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'pending':
+        return 'bg-gray-100 text-gray-800';
+      case 'in-progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'escalated':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getCampaignStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'paused': return 'bg-yellow-100 text-yellow-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'paused':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'completed':
+        return 'bg-blue-100 text-blue-800';
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const filteredAccounts = accounts.filter(account => {
-    const riskMatch = filterRiskLevel === 'all' || account.riskLevel === filterRiskLevel;
-    const segmentMatch = filterSegment === 'all' || account.segment === filterSegment;
+    const riskMatch =
+      filterRiskLevel === 'all' || account.riskLevel === filterRiskLevel;
+    const segmentMatch =
+      filterSegment === 'all' || account.segment === filterSegment;
     return riskMatch && segmentMatch;
   });
 
-  const handleContactAccount = (accountId: string, method: 'email' | 'call' | 'meeting') => {
-    setAccounts(prev => 
-      prev.map(acc => 
-        acc.id === accountId 
-          ? { ...acc, outreachStatus: 'in-progress', lastContactDate: new Date().toISOString().split('T')[0] }
+  const handleContactAccount = (
+    accountId: string,
+    method: 'email' | 'call' | 'meeting'
+  ) => {
+    setAccounts(prev =>
+      prev.map(acc =>
+        acc.id === accountId
+          ? {
+              ...acc,
+              outreachStatus: 'in-progress',
+              lastContactDate: new Date().toISOString().split('T')[0],
+            }
           : acc
       )
     );
     console.log(`Initiating ${method} contact with account ${accountId}`);
   };
 
-  const handleCampaignAction = (campaignId: string, action: 'start' | 'pause' | 'stop') => {
+  const handleCampaignAction = (
+    campaignId: string,
+    action: 'start' | 'pause' | 'stop'
+  ) => {
     setCampaigns(prev =>
       prev.map(campaign =>
         campaign.id === campaignId
-          ? { ...campaign, status: action === 'start' ? 'active' : action === 'pause' ? 'paused' : 'completed' }
+          ? {
+              ...campaign,
+              status:
+                action === 'start'
+                  ? 'active'
+                  : action === 'pause'
+                    ? 'paused'
+                    : 'completed',
+            }
           : campaign
       )
     );
@@ -615,57 +669,89 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
           <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4 mb-6">
             <Card className="p-4 bg-gradient-to-r from-red-500 to-red-600 text-white">
               <div className="text-center">
-                <div className="text-2xl font-bold">{RETENTION_METRICS.totalAtRisk}</div>
-                <div className="text-xs text-red-100">{t.metrics.totalAtRisk}</div>
+                <div className="text-2xl font-bold">
+                  {RETENTION_METRICS.totalAtRisk}
+                </div>
+                <div className="text-xs text-red-100">
+                  {t.metrics.totalAtRisk}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
               <div className="text-center">
-                <div className="text-2xl font-bold">{RETENTION_METRICS.criticalAccounts}</div>
-                <div className="text-xs text-orange-100">{t.metrics.criticalAccounts}</div>
+                <div className="text-2xl font-bold">
+                  {RETENTION_METRICS.criticalAccounts}
+                </div>
+                <div className="text-xs text-orange-100">
+                  {t.metrics.criticalAccounts}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white">
               <div className="text-center">
-                <div className="text-2xl font-bold">{RETENTION_METRICS.monthlyChurnRate}%</div>
-                <div className="text-xs text-yellow-100">{t.metrics.monthlyChurnRate}</div>
+                <div className="text-2xl font-bold">
+                  {RETENTION_METRICS.monthlyChurnRate}%
+                </div>
+                <div className="text-xs text-yellow-100">
+                  {t.metrics.monthlyChurnRate}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4 bg-gradient-to-r from-green-500 to-green-600 text-white">
               <div className="text-center">
-                <div className="text-2xl font-bold">{RETENTION_METRICS.retentionRate}%</div>
-                <div className="text-xs text-green-100">{t.metrics.retentionRate}</div>
+                <div className="text-2xl font-bold">
+                  {RETENTION_METRICS.retentionRate}%
+                </div>
+                <div className="text-xs text-green-100">
+                  {t.metrics.retentionRate}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
               <div className="text-center">
-                <div className="text-2xl font-bold">{RETENTION_METRICS.averageRiskScore}</div>
-                <div className="text-xs text-blue-100">{t.metrics.averageRiskScore}</div>
+                <div className="text-2xl font-bold">
+                  {RETENTION_METRICS.averageRiskScore}
+                </div>
+                <div className="text-xs text-blue-100">
+                  {t.metrics.averageRiskScore}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
               <div className="text-center">
-                <div className="text-2xl font-bold">{RETENTION_METRICS.successfulOutreach}%</div>
-                <div className="text-xs text-purple-100">{t.metrics.successfulOutreach}</div>
+                <div className="text-2xl font-bold">
+                  {RETENTION_METRICS.successfulOutreach}%
+                </div>
+                <div className="text-xs text-purple-100">
+                  {t.metrics.successfulOutreach}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4 bg-gradient-to-r from-gray-600 to-gray-700 text-white">
               <div className="text-center">
-                <div className="text-2xl font-bold">€{(RETENTION_METRICS.revenueAtRisk / 1000).toFixed(0)}K</div>
-                <div className="text-xs text-gray-300">{t.metrics.revenueAtRisk}</div>
+                <div className="text-2xl font-bold">
+                  €{(RETENTION_METRICS.revenueAtRisk / 1000).toFixed(0)}K
+                </div>
+                <div className="text-xs text-gray-300">
+                  {t.metrics.revenueAtRisk}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white">
               <div className="text-center">
-                <div className="text-2xl font-bold">{RETENTION_METRICS.preventedChurn}</div>
-                <div className="text-xs text-emerald-100">{t.metrics.preventedChurn}</div>
+                <div className="text-2xl font-bold">
+                  {RETENTION_METRICS.preventedChurn}
+                </div>
+                <div className="text-xs text-emerald-100">
+                  {t.metrics.preventedChurn}
+                </div>
               </div>
             </Card>
           </div>
@@ -694,31 +780,53 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {accounts.filter(acc => acc.riskLevel === 'critical').map((account) => (
-                        <div key={account.id} className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="h-10 w-10">
-                              <AvatarFallback className="bg-red-600 text-white">
-                                {account.companyName.substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium">{locale === 'en' ? account.companyName : account.companyNameEl}</div>
-                              <div className="text-sm text-gray-600">{account.contactPerson} • €{account.monthlyRevenue.toLocaleString()}/month</div>
+                      {accounts
+                        .filter(acc => acc.riskLevel === 'critical')
+                        .map(account => (
+                          <div
+                            key={account.id}
+                            className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50"
+                          >
+                            <div className="flex items-center gap-4">
+                              <Avatar className="h-10 w-10">
+                                <AvatarFallback className="bg-red-600 text-white">
+                                  {account.companyName
+                                    .substring(0, 2)
+                                    .toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium">
+                                  {locale === 'en'
+                                    ? account.companyName
+                                    : account.companyNameEl}
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {account.contactPerson} • €
+                                  {account.monthlyRevenue.toLocaleString()}
+                                  /month
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-red-600">
+                                  {account.riskScore}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Risk Score
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                <Phone className="h-4 w-4 mr-1" />
+                                {t.actions.contactNow}
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <div className="text-right">
-                              <div className="text-2xl font-bold text-red-600">{account.riskScore}</div>
-                              <div className="text-xs text-gray-500">Risk Score</div>
-                            </div>
-                            <Button size="sm" className="bg-red-600 hover:bg-red-700">
-                              <Phone className="h-4 w-4 mr-1" />
-                              {t.actions.contactNow}
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -810,7 +918,9 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Prevented Churn This Month</span>
+                      <span className="text-sm">
+                        Prevented Churn This Month
+                      </span>
                       <div className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4 text-green-600" />
                         <span className="font-medium">23 accounts</span>
@@ -854,13 +964,17 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
                     Filter At-Risk Accounts
                   </CardTitle>
                   <div className="text-sm text-gray-500">
-                    Showing {filteredAccounts.length} of {accounts.length} accounts
+                    Showing {filteredAccounts.length} of {accounts.length}{' '}
+                    accounts
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-4 gap-4">
-                  <Select value={filterRiskLevel} onValueChange={setFilterRiskLevel}>
+                  <Select
+                    value={filterRiskLevel}
+                    onValueChange={setFilterRiskLevel}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder={t.filters.riskLevel} />
                     </SelectTrigger>
@@ -873,7 +987,10 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
                     </SelectContent>
                   </Select>
 
-                  <Select value={filterSegment} onValueChange={setFilterSegment}>
+                  <Select
+                    value={filterSegment}
+                    onValueChange={setFilterSegment}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder={t.filters.segment} />
                     </SelectTrigger>
@@ -881,7 +998,9 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
                       <SelectItem value="all">{t.filters.all}</SelectItem>
                       <SelectItem value="Enterprise">Enterprise</SelectItem>
                       <SelectItem value="Mid-Market">Mid-Market</SelectItem>
-                      <SelectItem value="Small Business">Small Business</SelectItem>
+                      <SelectItem value="Small Business">
+                        Small Business
+                      </SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -900,26 +1019,46 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
 
             {/* Accounts List */}
             <div className="grid gap-4">
-              {filteredAccounts.map((account) => (
-                <Card key={account.id} className="hover:shadow-md transition-shadow">
+              {filteredAccounts.map(account => (
+                <Card
+                  key={account.id}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-4">
                         <Avatar className="h-12 w-12">
-                          <AvatarFallback className={`${account.riskLevel === 'critical' ? 'bg-red-600' : account.riskLevel === 'high' ? 'bg-orange-600' : account.riskLevel === 'medium' ? 'bg-yellow-600' : 'bg-green-600'} text-white`}>
+                          <AvatarFallback
+                            className={`${account.riskLevel === 'critical' ? 'bg-red-600' : account.riskLevel === 'high' ? 'bg-orange-600' : account.riskLevel === 'medium' ? 'bg-yellow-600' : 'bg-green-600'} text-white`}
+                          >
                             {account.companyName.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <h3 className="font-semibold text-lg">{locale === 'en' ? account.companyName : account.companyNameEl}</h3>
-                          <p className="text-gray-600">{account.contactPerson} • {account.segment} • {account.employeeCount} employees</p>
+                          <h3 className="font-semibold text-lg">
+                            {locale === 'en'
+                              ? account.companyName
+                              : account.companyNameEl}
+                          </h3>
+                          <p className="text-gray-600">
+                            {account.contactPerson} • {account.segment} •{' '}
+                            {account.employeeCount} employees
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-red-600">{account.riskScore}</div>
-                          <Badge className={getRiskLevelColor(account.riskLevel)}>
-                            {t.riskLevels[account.riskLevel as keyof typeof t.riskLevels]}
+                          <div className="text-2xl font-bold text-red-600">
+                            {account.riskScore}
+                          </div>
+                          <Badge
+                            className={getRiskLevelColor(account.riskLevel)}
+                          >
+                            {
+                              t.riskLevels[
+                                account.riskLevel as keyof typeof t.riskLevels
+                              ]
+                            }
                           </Badge>
                         </div>
                       </div>
@@ -927,40 +1066,75 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
 
                     <div className="grid md:grid-cols-3 gap-6 mb-4">
                       <div>
-                        <div className="text-sm font-medium text-gray-700 mb-2">Account Health</div>
+                        <div className="text-sm font-medium text-gray-700 mb-2">
+                          Account Health
+                        </div>
                         <div className="flex items-center gap-2">
-                          <Progress value={account.healthScore} className="flex-1" />
-                          <span className="text-sm font-medium">{account.healthScore}%</span>
+                          <Progress
+                            value={account.healthScore}
+                            className="flex-1"
+                          />
+                          <span className="text-sm font-medium">
+                            {account.healthScore}%
+                          </span>
                         </div>
                       </div>
 
                       <div>
-                        <div className="text-sm font-medium text-gray-700 mb-2">Feature Adoption</div>
+                        <div className="text-sm font-medium text-gray-700 mb-2">
+                          Feature Adoption
+                        </div>
                         <div className="flex items-center gap-2">
-                          <Progress value={account.featureAdoption} className="flex-1" />
-                          <span className="text-sm font-medium">{account.featureAdoption}%</span>
+                          <Progress
+                            value={account.featureAdoption}
+                            className="flex-1"
+                          />
+                          <span className="text-sm font-medium">
+                            {account.featureAdoption}%
+                          </span>
                         </div>
                       </div>
 
                       <div>
-                        <div className="text-sm font-medium text-gray-700 mb-2">Engagement Trend</div>
+                        <div className="text-sm font-medium text-gray-700 mb-2">
+                          Engagement Trend
+                        </div>
                         <div className="flex items-center gap-2">
-                          {account.engagementTrend === 'up' && <ArrowUp className="h-4 w-4 text-green-600" />}
-                          {account.engagementTrend === 'down' && <ArrowDown className="h-4 w-4 text-red-600" />}
-                          {account.engagementTrend === 'stable' && <Minus className="h-4 w-4 text-yellow-600" />}
-                          <span className="text-sm font-medium capitalize">{account.engagementTrend}</span>
+                          {account.engagementTrend === 'up' && (
+                            <ArrowUp className="h-4 w-4 text-green-600" />
+                          )}
+                          {account.engagementTrend === 'down' && (
+                            <ArrowDown className="h-4 w-4 text-red-600" />
+                          )}
+                          {account.engagementTrend === 'stable' && (
+                            <Minus className="h-4 w-4 text-yellow-600" />
+                          )}
+                          <span className="text-sm font-medium capitalize">
+                            {account.engagementTrend}
+                          </span>
                         </div>
                       </div>
                     </div>
 
                     <div className="mb-4">
-                      <div className="text-sm font-medium text-gray-700 mb-2">{t.accountDetails.riskFactors}</div>
+                      <div className="text-sm font-medium text-gray-700 mb-2">
+                        {t.accountDetails.riskFactors}
+                      </div>
                       <div className="flex flex-wrap gap-2">
-                        {(locale === 'en' ? account.riskFactors : account.riskFactorsEl).slice(0, 3).map((factor, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {factor}
-                          </Badge>
-                        ))}
+                        {(locale === 'en'
+                          ? account.riskFactors
+                          : account.riskFactorsEl
+                        )
+                          .slice(0, 3)
+                          .map((factor, index) => (
+                            <Badge
+                              key={index}
+                              variant="outline"
+                              className="text-xs"
+                            >
+                              {factor}
+                            </Badge>
+                          ))}
                         {account.riskFactors.length > 3 && (
                           <Badge variant="outline" className="text-xs">
                             +{account.riskFactors.length - 3} more
@@ -972,38 +1146,52 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          €{account.monthlyRevenue.toLocaleString()}/month
+                          <DollarSign className="h-4 w-4" />€
+                          {account.monthlyRevenue.toLocaleString()}/month
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
                           Last contact: {account.lastContactDate}
                         </div>
-                        <Badge className={getOutreachStatusColor(account.outreachStatus)}>
-                          {t.outreachStatus[account.outreachStatus as keyof typeof t.outreachStatus]}
+                        <Badge
+                          className={getOutreachStatusColor(
+                            account.outreachStatus
+                          )}
+                        >
+                          {
+                            t.outreachStatus[
+                              account.outreachStatus as keyof typeof t.outreachStatus
+                            ]
+                          }
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleContactAccount(account.id, 'email')}
+                          onClick={() =>
+                            handleContactAccount(account.id, 'email')
+                          }
                         >
                           <Mail className="h-4 w-4 mr-1" />
                           {t.actions.sendEmail}
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
-                          onClick={() => handleContactAccount(account.id, 'call')}
+                          onClick={() =>
+                            handleContactAccount(account.id, 'call')
+                          }
                         >
                           <Phone className="h-4 w-4 mr-1" />
                           Call
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           className="bg-red-600 hover:bg-red-700"
-                          onClick={() => handleContactAccount(account.id, 'meeting')}
+                          onClick={() =>
+                            handleContactAccount(account.id, 'meeting')
+                          }
                         >
                           <Calendar className="h-4 w-4 mr-1" />
                           {t.actions.scheduleMeeting}
@@ -1019,41 +1207,73 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
           {/* Outreach Campaigns Tab */}
           <TabsContent value="outreach" className="space-y-6">
             <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
-              {campaigns.map((campaign) => (
-                <Card key={campaign.id} className="hover:shadow-md transition-shadow">
+              {campaigns.map(campaign => (
+                <Card
+                  key={campaign.id}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{locale === 'en' ? campaign.name : campaign.nameEl}</CardTitle>
-                      <Badge className={getCampaignStatusColor(campaign.status)}>
-                        {t.campaignStatus[campaign.status as keyof typeof t.campaignStatus]}
+                      <CardTitle className="text-lg">
+                        {locale === 'en' ? campaign.name : campaign.nameEl}
+                      </CardTitle>
+                      <Badge
+                        className={getCampaignStatusColor(campaign.status)}
+                      >
+                        {
+                          t.campaignStatus[
+                            campaign.status as keyof typeof t.campaignStatus
+                          ]
+                        }
                       </Badge>
                     </div>
                     <div className="text-sm text-gray-600">
-                      {t.campaignTypes[campaign.type as keyof typeof t.campaignTypes]} • {campaign.targetSegment}
+                      {
+                        t.campaignTypes[
+                          campaign.type as keyof typeof t.campaignTypes
+                        ]
+                      }{' '}
+                      • {campaign.targetSegment}
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       <div className="text-sm">
-                        {locale === 'en' ? campaign.template : campaign.templateEl}
+                        {locale === 'en'
+                          ? campaign.template
+                          : campaign.templateEl}
                       </div>
 
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <div className="font-medium text-gray-700">Sent</div>
-                          <div className="text-lg font-bold">{campaign.sentCount}</div>
+                          <div className="text-lg font-bold">
+                            {campaign.sentCount}
+                          </div>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-700">Open Rate</div>
-                          <div className="text-lg font-bold">{campaign.openRate}%</div>
+                          <div className="font-medium text-gray-700">
+                            Open Rate
+                          </div>
+                          <div className="text-lg font-bold">
+                            {campaign.openRate}%
+                          </div>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-700">Response</div>
-                          <div className="text-lg font-bold">{campaign.responseRate}%</div>
+                          <div className="font-medium text-gray-700">
+                            Response
+                          </div>
+                          <div className="text-lg font-bold">
+                            {campaign.responseRate}%
+                          </div>
                         </div>
                         <div>
-                          <div className="font-medium text-gray-700">Convert</div>
-                          <div className="text-lg font-bold">{campaign.conversionRate}%</div>
+                          <div className="font-medium text-gray-700">
+                            Convert
+                          </div>
+                          <div className="text-lg font-bold">
+                            {campaign.conversionRate}%
+                          </div>
                         </div>
                       </div>
 
@@ -1063,7 +1283,9 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
                             variant="outline"
                             size="sm"
                             className="flex-1"
-                            onClick={() => handleCampaignAction(campaign.id, 'pause')}
+                            onClick={() =>
+                              handleCampaignAction(campaign.id, 'pause')
+                            }
                           >
                             <Pause className="h-4 w-4 mr-1" />
                             {t.actions.pauseCampaign}
@@ -1072,7 +1294,9 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
                           <Button
                             size="sm"
                             className="flex-1"
-                            onClick={() => handleCampaignAction(campaign.id, 'start')}
+                            onClick={() =>
+                              handleCampaignAction(campaign.id, 'start')
+                            }
                           >
                             <PlayCircle className="h-4 w-4 mr-1" />
                             {t.actions.startCampaign}
@@ -1081,7 +1305,9 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
                           <Button
                             size="sm"
                             className="flex-1"
-                            onClick={() => handleCampaignAction(campaign.id, 'start')}
+                            onClick={() =>
+                              handleCampaignAction(campaign.id, 'start')
+                            }
                           >
                             <PlayCircle className="h-4 w-4 mr-1" />
                             {t.actions.startCampaign}
@@ -1110,15 +1336,21 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <span>Total Revenue Saved</span>
-                      <span className="text-2xl font-bold text-green-600">€234,500</span>
+                      <span className="text-2xl font-bold text-green-600">
+                        €234,500
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span>Accounts Recovered</span>
-                      <span className="text-2xl font-bold text-blue-600">47</span>
+                      <span className="text-2xl font-bold text-blue-600">
+                        47
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span>Success Rate</span>
-                      <span className="text-2xl font-bold text-purple-600">78%</span>
+                      <span className="text-2xl font-bold text-purple-600">
+                        78%
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -1172,22 +1404,32 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Risk Scoring Parameters</h3>
+                  <h3 className="text-lg font-medium mb-4">
+                    Risk Scoring Parameters
+                  </h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Login Frequency Weight</label>
+                      <label className="block text-sm font-medium mb-2">
+                        Login Frequency Weight
+                      </label>
                       <Input type="number" defaultValue="25" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Support Ticket Weight</label>
+                      <label className="block text-sm font-medium mb-2">
+                        Support Ticket Weight
+                      </label>
                       <Input type="number" defaultValue="20" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Payment Delay Weight</label>
+                      <label className="block text-sm font-medium mb-2">
+                        Payment Delay Weight
+                      </label>
                       <Input type="number" defaultValue="30" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Feature Adoption Weight</label>
+                      <label className="block text-sm font-medium mb-2">
+                        Feature Adoption Weight
+                      </label>
                       <Input type="number" defaultValue="25" />
                     </div>
                   </div>
@@ -1197,15 +1439,21 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
                   <h3 className="text-lg font-medium mb-4">Alert Thresholds</h3>
                   <div className="grid md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Critical Risk Threshold</label>
+                      <label className="block text-sm font-medium mb-2">
+                        Critical Risk Threshold
+                      </label>
                       <Input type="number" defaultValue="80" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">High Risk Threshold</label>
+                      <label className="block text-sm font-medium mb-2">
+                        High Risk Threshold
+                      </label>
                       <Input type="number" defaultValue="65" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Medium Risk Threshold</label>
+                      <label className="block text-sm font-medium mb-2">
+                        Medium Risk Threshold
+                      </label>
                       <Input type="number" defaultValue="45" />
                     </div>
                   </div>
@@ -1213,7 +1461,9 @@ export default function ChurnPrevention({ locale = 'en' }: ChurnPreventionProps)
 
                 <div className="flex justify-end gap-3">
                   <Button variant="outline">Reset to Defaults</Button>
-                  <Button className="bg-red-600 hover:bg-red-700">Save Settings</Button>
+                  <Button className="bg-red-600 hover:bg-red-700">
+                    Save Settings
+                  </Button>
                 </div>
               </CardContent>
             </Card>

@@ -1,13 +1,31 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { FilterIcon, SettingsIcon, CalendarIcon } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { MetricCard } from "./MetricCard";
-import { AssumptionsDrawer } from "./AssumptionsDrawer";
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import { FilterIcon, SettingsIcon, CalendarIcon } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { MetricCard } from './MetricCard';
+import { AssumptionsDrawer } from './AssumptionsDrawer';
 
 interface FiltersState {
   entity: string;
@@ -65,16 +83,16 @@ interface MetricsData {
 
 export function S1MetricsPage() {
   const [filters, setFilters] = useState<FiltersState>({
-    entity: "hq-athens",
-    country: "GRC",
-    period: "2024",
+    entity: 'hq-athens',
+    country: 'GRC',
+    period: '2024',
   });
 
   const { data: metricsData, isLoading } = useQuery<MetricsData>({
     queryKey: ['/api/csrd/metrics', filters],
   });
 
-  const { data: entities } = useQuery<Array<{id: string, name: string}>>({
+  const { data: entities } = useQuery<Array<{ id: string; name: string }>>({
     queryKey: ['/api/entities'],
   });
 
@@ -87,7 +105,9 @@ export function S1MetricsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">ESRS S1 Metrics</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            ESRS S1 Metrics
+          </h1>
           <p className="text-muted-foreground">
             Social sustainability metrics with data lineage and audit trail
           </p>
@@ -114,12 +134,15 @@ export function S1MetricsPage() {
         <CardContent className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <label className="text-sm font-medium mb-1 block">Entity</label>
-            <Select value={filters.entity} onValueChange={(value) => handleFilterChange('entity', value)}>
+            <Select
+              value={filters.entity}
+              onValueChange={value => handleFilterChange('entity', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select entity" />
               </SelectTrigger>
               <SelectContent>
-                {entities?.map((entity) => (
+                {entities?.map(entity => (
                   <SelectItem key={entity.id} value={entity.id}>
                     {entity.name}
                   </SelectItem>
@@ -127,10 +150,13 @@ export function S1MetricsPage() {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="flex-1">
             <label className="text-sm font-medium mb-1 block">Country</label>
-            <Select value={filters.country} onValueChange={(value) => handleFilterChange('country', value)}>
+            <Select
+              value={filters.country}
+              onValueChange={value => handleFilterChange('country', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select country" />
               </SelectTrigger>
@@ -142,10 +168,13 @@ export function S1MetricsPage() {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="flex-1">
             <label className="text-sm font-medium mb-1 block">Period</label>
-            <Select value={filters.period} onValueChange={(value) => handleFilterChange('period', value)}>
+            <Select
+              value={filters.period}
+              onValueChange={value => handleFilterChange('period', value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select period" />
               </SelectTrigger>
@@ -165,7 +194,9 @@ export function S1MetricsPage() {
           <span className="text-muted-foreground">Applied filters:</span>
           {filters.entity && (
             <Badge variant="secondary">
-              Entity: {entities?.find(e => e.id === filters.entity)?.name || filters.entity}
+              Entity:{' '}
+              {entities?.find(e => e.id === filters.entity)?.name ||
+                filters.entity}
             </Badge>
           )}
           {filters.country && (
@@ -214,18 +245,23 @@ export function S1MetricsPage() {
             unit="%"
             trend={metricsData?.genderPayGap?.trend || 0}
             lastCalculated={metricsData?.genderPayGap?.lastCalculated}
-            formula={metricsData?.genderPayGap?.formula || "GPG = (Avg male gross hourly – Avg female gross hourly) ÷ Avg male gross hourly × 100"}
-            inclusions={metricsData?.genderPayGap?.inclusions || [
-              "All employees with recorded gender",
-              "Valid payroll and hours data",
-              "Excludes contractors and temporary staff",
-              "Based on gross hourly rates including overtime"
-            ]}
+            formula={
+              metricsData?.genderPayGap?.formula ||
+              'GPG = (Avg male gross hourly – Avg female gross hourly) ÷ Avg male gross hourly × 100'
+            }
+            inclusions={
+              metricsData?.genderPayGap?.inclusions || [
+                'All employees with recorded gender',
+                'Valid payroll and hours data',
+                'Excludes contractors and temporary staff',
+                'Based on gross hourly rates including overtime',
+              ]
+            }
             metricCode="S1-16-GPG"
-            status={metricsData?.genderPayGap?.status as any || 'ready'}
+            status={(metricsData?.genderPayGap?.status as any) || 'ready'}
             methodology={metricsData?.genderPayGap?.methodology}
           />
-          
+
           <MetricCard
             title="Top-to-Median Ratio"
             description="CEO compensation relative to median employee"
@@ -233,18 +269,23 @@ export function S1MetricsPage() {
             unit=":1"
             trend={metricsData?.topToMedianRatio?.trend || 0}
             lastCalculated={metricsData?.topToMedianRatio?.lastCalculated}
-            formula={metricsData?.topToMedianRatio?.formula || "Ratio = Highest paid total compensation ÷ Median employee compensation"}
-            inclusions={metricsData?.topToMedianRatio?.inclusions || [
-              "Total annual compensation including bonuses",
-              "All employees in calculation period",
-              "Stock options valued at grant date",
-              "Excludes CEO from median calculation"
-            ]}
+            formula={
+              metricsData?.topToMedianRatio?.formula ||
+              'Ratio = Highest paid total compensation ÷ Median employee compensation'
+            }
+            inclusions={
+              metricsData?.topToMedianRatio?.inclusions || [
+                'Total annual compensation including bonuses',
+                'All employees in calculation period',
+                'Stock options valued at grant date',
+                'Excludes CEO from median calculation',
+              ]
+            }
             metricCode="S1-16-CEO-RATIO"
-            status={metricsData?.topToMedianRatio?.status as any || 'ready'}
+            status={(metricsData?.topToMedianRatio?.status as any) || 'ready'}
             methodology={metricsData?.topToMedianRatio?.methodology}
           />
-          
+
           <MetricCard
             title="H&S Coverage"
             description="Workforce covered by health & safety systems"
@@ -252,18 +293,25 @@ export function S1MetricsPage() {
             unit="%"
             trend={metricsData?.healthSafetyCoverage?.trend || 0}
             lastCalculated={metricsData?.healthSafetyCoverage?.lastCalculated}
-            formula={metricsData?.healthSafetyCoverage?.formula || "Coverage = (Workers under H&S system ÷ Total workers) × 100"}
-            inclusions={metricsData?.healthSafetyCoverage?.inclusions || [
-              "All employees and contractors on-site",
-              "Formal H&S management system coverage",
-              "Regular safety training participation",
-              "Incident reporting system access"
-            ]}
+            formula={
+              metricsData?.healthSafetyCoverage?.formula ||
+              'Coverage = (Workers under H&S system ÷ Total workers) × 100'
+            }
+            inclusions={
+              metricsData?.healthSafetyCoverage?.inclusions || [
+                'All employees and contractors on-site',
+                'Formal H&S management system coverage',
+                'Regular safety training participation',
+                'Incident reporting system access',
+              ]
+            }
             metricCode="S1-HS-COVERAGE"
-            status={metricsData?.healthSafetyCoverage?.status as any || 'ready'}
+            status={
+              (metricsData?.healthSafetyCoverage?.status as any) || 'ready'
+            }
             methodology={metricsData?.healthSafetyCoverage?.methodology}
           />
-          
+
           <MetricCard
             title="Incidents Rate"
             description="Work-related incidents per 100 FTE employees"
@@ -271,18 +319,23 @@ export function S1MetricsPage() {
             unit="/100 FTE"
             trend={metricsData?.incidentsRate?.trend || 0}
             lastCalculated={metricsData?.incidentsRate?.lastCalculated}
-            formula={metricsData?.incidentsRate?.formula || "Rate = (Total incidents ÷ Total FTE) × 100"}
-            inclusions={metricsData?.incidentsRate?.inclusions || [
-              "All recordable work-related injuries",
-              "Incidents resulting in lost time",
-              "Both employees and contractors",
-              "Excludes commuting incidents"
-            ]}
+            formula={
+              metricsData?.incidentsRate?.formula ||
+              'Rate = (Total incidents ÷ Total FTE) × 100'
+            }
+            inclusions={
+              metricsData?.incidentsRate?.inclusions || [
+                'All recordable work-related injuries',
+                'Incidents resulting in lost time',
+                'Both employees and contractors',
+                'Excludes commuting incidents',
+              ]
+            }
             metricCode="S1-16-INJURY-RATE"
-            status={metricsData?.incidentsRate?.status as any || 'ready'}
+            status={(metricsData?.incidentsRate?.status as any) || 'ready'}
             methodology={metricsData?.incidentsRate?.methodology}
           />
-          
+
           <MetricCard
             title="Work-Life Usage"
             description="Usage rate of work-life balance policies"
@@ -290,15 +343,20 @@ export function S1MetricsPage() {
             unit="%"
             trend={metricsData?.workLifeUsage?.trend || 0}
             lastCalculated={metricsData?.workLifeUsage?.lastCalculated}
-            formula={metricsData?.workLifeUsage?.formula || "Usage = (Policy users ÷ Eligible population) × 100"}
-            inclusions={metricsData?.workLifeUsage?.inclusions || [
-              "Parental leave, flexible work, wellness programs",
-              "Eligible employees with >12 months tenure",
-              "Both male and female employees",
-              "Voluntary and mandatory programs"
-            ]}
+            formula={
+              metricsData?.workLifeUsage?.formula ||
+              'Usage = (Policy users ÷ Eligible population) × 100'
+            }
+            inclusions={
+              metricsData?.workLifeUsage?.inclusions || [
+                'Parental leave, flexible work, wellness programs',
+                'Eligible employees with >12 months tenure',
+                'Both male and female employees',
+                'Voluntary and mandatory programs',
+              ]
+            }
             metricCode="S1-WORKLIFE"
-            status={metricsData?.workLifeUsage?.status as any || 'ready'}
+            status={(metricsData?.workLifeUsage?.status as any) || 'ready'}
             methodology={metricsData?.workLifeUsage?.methodology}
           />
         </div>

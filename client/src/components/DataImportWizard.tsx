@@ -9,13 +9,25 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -23,19 +35,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Upload, 
-  ArrowRight, 
-  ArrowLeft, 
-  Check, 
-  AlertTriangle, 
-  FileSpreadsheet, 
-  MapPin, 
-  CheckCircle, 
+import {
+  Upload,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  AlertTriangle,
+  FileSpreadsheet,
+  MapPin,
+  CheckCircle,
   XCircle,
   Eye,
   Download,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react';
 
 export interface DataImportWizardProps {
@@ -106,7 +118,7 @@ const DATA_TYPE_LABELS: Record<DataType, string> = {
   employees: 'Employees',
   contracts: 'Employment Contracts',
   bank_details: 'Bank Details',
-  wage_components: 'Wage Components'
+  wage_components: 'Wage Components',
 };
 
 const STEP_TITLES: Record<ImportStep, string> = {
@@ -114,18 +126,24 @@ const STEP_TITLES: Record<ImportStep, string> = {
   mapping: 'Map Fields',
   validation: 'Validate Data',
   preview: 'Preview Changes',
-  execute: 'Import Data'
+  execute: 'Import Data',
 };
 
-export function DataImportWizard({ trigger, onImportComplete }: DataImportWizardProps) {
+export function DataImportWizard({
+  trigger,
+  onImportComplete,
+}: DataImportWizardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState<ImportStep>('upload');
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [selectedDataType, setSelectedDataType] = useState<DataType>('employees');
+  const [selectedDataType, setSelectedDataType] =
+    useState<DataType>('employees');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [columnMappings, setColumnMappings] = useState<Record<string, string>>({});
+  const [columnMappings, setColumnMappings] = useState<Record<string, string>>(
+    {}
+  );
   const [confirmImport, setConfirmImport] = useState(false);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -133,19 +151,25 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
   const { data: sessionData, refetch: refetchSession } = useQuery({
     queryKey: ['/api/data-import', sessionId],
     enabled: !!sessionId,
-    retry: false
+    retry: false,
   });
 
   // File upload mutation
   const uploadMutation = useMutation({
-    mutationFn: async ({ file, dataType }: { file: File; dataType: DataType }) => {
+    mutationFn: async ({
+      file,
+      dataType,
+    }: {
+      file: File;
+      dataType: DataType;
+    }) => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('dataType', dataType);
 
       const response = await fetch('/api/data-import/upload', {
         method: 'POST',
-        body: formData
+        body: formData,
       });
 
       if (!response.ok) {
@@ -155,26 +179,28 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
 
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       setSessionId(data.sessionId);
       setCurrentStep('mapping');
       toast({
         title: 'File uploaded successfully',
-        description: `${data.totalRows} rows ready for mapping`
+        description: `${data.totalRows} rows ready for mapping`,
       });
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: 'Upload failed',
         description: error.message,
-        variant: 'destructive'
+        variant: 'destructive',
       });
-    }
+    },
   });
 
   // Column mapping mutation
   const mappingMutation = useMutation({
-    mutationFn: async (mappings: { sourceColumn: string; targetField: string }[]) => {
+    mutationFn: async (
+      mappings: { sourceColumn: string; targetField: string }[]
+    ) => {
       const response = await apiRequest(
         'PUT',
         `/api/data-import/${sessionId}/mapping`,
@@ -187,9 +213,9 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
       refetchSession();
       toast({
         title: 'Column mapping saved',
-        description: 'Ready for data validation'
+        description: 'Ready for data validation',
       });
-    }
+    },
   });
 
   // Data validation mutation
@@ -206,9 +232,9 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
       refetchSession();
       toast({
         title: 'Data validated',
-        description: 'Ready to preview changes'
+        description: 'Ready to preview changes',
       });
-    }
+    },
   });
 
   // Dry run mutation
@@ -224,9 +250,9 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
       refetchSession();
       toast({
         title: 'Dry run complete',
-        description: 'Preview of changes is ready'
+        description: 'Preview of changes is ready',
       });
-    }
+    },
   });
 
   // Execute import mutation
@@ -242,20 +268,20 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
     onSuccess: (data: any) => {
       toast({
         title: 'Import completed successfully',
-        description: `${data.summary.inserted} records inserted, ${data.summary.updated} updated`
+        description: `${data.summary.inserted} records inserted, ${data.summary.updated} updated`,
       });
       setIsOpen(false);
       resetWizard();
       onImportComplete?.();
       queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: 'Import failed',
         description: error.message,
-        variant: 'destructive'
+        variant: 'destructive',
       });
-    }
+    },
   });
 
   const resetWizard = useCallback(() => {
@@ -281,17 +307,19 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
 
   const handleMappingComplete = () => {
     const mappings = Object.entries(columnMappings)
-      .filter(([sourceColumn, targetField]) => targetField && targetField !== 'skip')
+      .filter(
+        ([sourceColumn, targetField]) => targetField && targetField !== 'skip'
+      )
       .map(([sourceColumn, targetField]) => ({
         sourceColumn,
-        targetField
+        targetField,
       }));
 
     if (mappings.length === 0) {
       toast({
         title: 'No mappings defined',
         description: 'Please map at least one column',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -300,7 +328,13 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
   };
 
   const getProgressPercent = (): number => {
-    const steps: ImportStep[] = ['upload', 'mapping', 'validation', 'preview', 'execute'];
+    const steps: ImportStep[] = [
+      'upload',
+      'mapping',
+      'validation',
+      'preview',
+      'execute',
+    ];
     const currentIndex = steps.indexOf(currentStep);
     return ((currentIndex + 1) / steps.length) * 100;
   };
@@ -322,7 +356,8 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
             Data Import Wizard
           </DialogTitle>
           <DialogDescription>
-            Import CSV or Excel files with intelligent field mapping and validation
+            Import CSV or Excel files with intelligent field mapping and
+            validation
           </DialogDescription>
         </DialogHeader>
 
@@ -349,16 +384,23 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
                 <CardContent className="space-y-4">
                   <div>
                     <Label htmlFor="dataType">Data Type</Label>
-                    <Select value={selectedDataType} onValueChange={(value: DataType) => setSelectedDataType(value)}>
+                    <Select
+                      value={selectedDataType}
+                      onValueChange={(value: DataType) =>
+                        setSelectedDataType(value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(DATA_TYPE_LABELS).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>
-                            {label}
-                          </SelectItem>
-                        ))}
+                        {Object.entries(DATA_TYPE_LABELS).map(
+                          ([value, label]) => (
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
+                          )
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -378,7 +420,8 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
                       <FileSpreadsheet className="h-4 w-4" />
                       <AlertTitle>File Selected</AlertTitle>
                       <AlertDescription>
-                        {selectedFile.name} ({Math.round(selectedFile.size / 1024)}KB)
+                        {selectedFile.name} (
+                        {Math.round(selectedFile.size / 1024)}KB)
                       </AlertDescription>
                     </Alert>
                   )}
@@ -432,7 +475,13 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
               <Button
                 variant="outline"
                 onClick={() => {
-                  const steps: ImportStep[] = ['upload', 'mapping', 'validation', 'preview', 'execute'];
+                  const steps: ImportStep[] = [
+                    'upload',
+                    'mapping',
+                    'validation',
+                    'preview',
+                    'execute',
+                  ];
                   const currentIndex = steps.indexOf(currentStep);
                   if (currentIndex > 0) {
                     setCurrentStep(steps[currentIndex - 1]);
@@ -449,7 +498,7 @@ export function DataImportWizard({ trigger, onImportComplete }: DataImportWizard
             <Button variant="outline" onClick={resetWizard}>
               Reset
             </Button>
-            
+
             {currentStep === 'upload' && (
               <Button
                 onClick={handleUpload}
@@ -496,11 +545,15 @@ interface ColumnMappingStepProps {
   onMappingChange: (mappings: Record<string, string>) => void;
 }
 
-function ColumnMappingStep({ sessionData, columnMappings, onMappingChange }: ColumnMappingStepProps) {
+function ColumnMappingStep({
+  sessionData,
+  columnMappings,
+  onMappingChange,
+}: ColumnMappingStepProps) {
   const updateMapping = (sourceColumn: string, targetField: string) => {
     onMappingChange({
       ...columnMappings,
-      [sourceColumn]: targetField
+      [sourceColumn]: targetField,
     });
   };
 
@@ -509,7 +562,8 @@ function ColumnMappingStep({ sessionData, columnMappings, onMappingChange }: Col
       <CardHeader>
         <CardTitle>Map Fields</CardTitle>
         <CardDescription>
-          Map columns from your file to database fields. Required fields are marked with an asterisk.
+          Map columns from your file to database fields. Required fields are
+          marked with an asterisk.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -530,15 +584,17 @@ function ColumnMappingStep({ sessionData, columnMappings, onMappingChange }: Col
                     </tr>
                   </thead>
                   <tbody>
-                    {sessionData.sampleData.slice(0, 3).map((row: any, index: number) => (
-                      <tr key={index} className="border-t">
-                        {sessionData.headers.map((header: string) => (
-                          <td key={header} className="p-2">
-                            {row[header] || '-'}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
+                    {sessionData.sampleData
+                      .slice(0, 3)
+                      .map((row: any, index: number) => (
+                        <tr key={index} className="border-t">
+                          {sessionData.headers.map((header: string) => (
+                            <td key={header} className="p-2">
+                              {row[header] || '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
@@ -552,15 +608,13 @@ function ColumnMappingStep({ sessionData, columnMappings, onMappingChange }: Col
             {sessionData.headers.map((sourceColumn: string) => (
               <div key={sourceColumn} className="flex items-center gap-4">
                 <div className="flex-1">
-                  <Label className="text-sm font-medium">
-                    {sourceColumn}
-                  </Label>
+                  <Label className="text-sm font-medium">{sourceColumn}</Label>
                 </div>
                 <ArrowRight className="w-4 h-4 text-muted-foreground" />
                 <div className="flex-1">
                   <Select
                     value={columnMappings[sourceColumn] || 'skip'}
-                    onValueChange={(value) => updateMapping(sourceColumn, value)}
+                    onValueChange={value => updateMapping(sourceColumn, value)}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -594,10 +648,21 @@ interface ValidationStepProps {
   isValidating: boolean;
 }
 
-function ValidationStep({ sessionData, onValidate, isValidating }: ValidationStepProps) {
-  const hasValidationResults = sessionData?.validationResults && sessionData.validationResults.length > 0;
-  const validRows = hasValidationResults ? sessionData.validationResults.filter((r: ValidationResult) => r.isValid).length : 0;
-  const errorRows = hasValidationResults ? sessionData.validationResults.filter((r: ValidationResult) => !r.isValid).length : 0;
+function ValidationStep({
+  sessionData,
+  onValidate,
+  isValidating,
+}: ValidationStepProps) {
+  const hasValidationResults =
+    sessionData?.validationResults && sessionData.validationResults.length > 0;
+  const validRows = hasValidationResults
+    ? sessionData.validationResults.filter((r: ValidationResult) => r.isValid)
+        .length
+    : 0;
+  const errorRows = hasValidationResults
+    ? sessionData.validationResults.filter((r: ValidationResult) => !r.isValid)
+        .length
+    : 0;
 
   return (
     <Card>
@@ -628,7 +693,9 @@ function ValidationStep({ sessionData, onValidate, isValidating }: ValidationSte
                     <CheckCircle className="w-5 h-5 text-green-600" />
                     <div>
                       <p className="text-2xl font-bold">{validRows}</p>
-                      <p className="text-sm text-muted-foreground">Valid Rows</p>
+                      <p className="text-sm text-muted-foreground">
+                        Valid Rows
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -640,7 +707,9 @@ function ValidationStep({ sessionData, onValidate, isValidating }: ValidationSte
                     <XCircle className="w-5 h-5 text-red-600" />
                     <div>
                       <p className="text-2xl font-bold">{errorRows}</p>
-                      <p className="text-sm text-muted-foreground">Error Rows</p>
+                      <p className="text-sm text-muted-foreground">
+                        Error Rows
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -651,8 +720,12 @@ function ValidationStep({ sessionData, onValidate, isValidating }: ValidationSte
                   <div className="flex items-center gap-2">
                     <FileSpreadsheet className="w-5 h-5 text-blue-600" />
                     <div>
-                      <p className="text-2xl font-bold">{sessionData.totalRows}</p>
-                      <p className="text-sm text-muted-foreground">Total Rows</p>
+                      <p className="text-2xl font-bold">
+                        {sessionData.totalRows}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Rows
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -668,10 +741,18 @@ function ValidationStep({ sessionData, onValidate, isValidating }: ValidationSte
                       .filter((r: ValidationResult) => !r.isValid)
                       .slice(0, 10)
                       .map((result: ValidationResult) => (
-                        <div key={result.rowIndex} className="text-sm border rounded p-2">
-                          <div className="font-medium">Row {result.rowIndex + 1}</div>
+                        <div
+                          key={result.rowIndex}
+                          className="text-sm border rounded p-2"
+                        >
+                          <div className="font-medium">
+                            Row {result.rowIndex + 1}
+                          </div>
                           {result.errors.map((error: ValidationError) => (
-                            <div key={`${error.field}-${error.code}`} className="text-red-600 text-xs">
+                            <div
+                              key={`${error.field}-${error.code}`}
+                              className="text-red-600 text-xs"
+                            >
                               {error.field}: {error.message}
                             </div>
                           ))}
@@ -698,9 +779,14 @@ interface PreviewStepProps {
   isDryRunning: boolean;
 }
 
-function PreviewStep({ sessionData, onDryRun, isDryRunning }: PreviewStepProps) {
-  const hasDryRunResults = sessionData?.dryRunResults && sessionData.dryRunResults.length > 0;
-  
+function PreviewStep({
+  sessionData,
+  onDryRun,
+  isDryRunning,
+}: PreviewStepProps) {
+  const hasDryRunResults =
+    sessionData?.dryRunResults && sessionData.dryRunResults.length > 0;
+
   return (
     <Card>
       <CardHeader>
@@ -727,14 +813,23 @@ function PreviewStep({ sessionData, onDryRun, isDryRunning }: PreviewStepProps) 
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <Badge variant="default" className="bg-green-100 text-green-800">
+                    <Badge
+                      variant="default"
+                      className="bg-green-100 text-green-800"
+                    >
                       INSERT
                     </Badge>
                     <div>
                       <p className="text-2xl font-bold">
-                        {sessionData.dryRunResults.filter((r: DryRunResult) => r.action === 'insert').length}
+                        {
+                          sessionData.dryRunResults.filter(
+                            (r: DryRunResult) => r.action === 'insert'
+                          ).length
+                        }
                       </p>
-                      <p className="text-sm text-muted-foreground">New Records</p>
+                      <p className="text-sm text-muted-foreground">
+                        New Records
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -743,12 +838,19 @@ function PreviewStep({ sessionData, onDryRun, isDryRunning }: PreviewStepProps) 
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
-                    <Badge variant="default" className="bg-blue-100 text-blue-800">
+                    <Badge
+                      variant="default"
+                      className="bg-blue-100 text-blue-800"
+                    >
                       UPDATE
                     </Badge>
                     <div>
                       <p className="text-2xl font-bold">
-                        {sessionData.dryRunResults.filter((r: DryRunResult) => r.action === 'update').length}
+                        {
+                          sessionData.dryRunResults.filter(
+                            (r: DryRunResult) => r.action === 'update'
+                          ).length
+                        }
                       </p>
                       <p className="text-sm text-muted-foreground">Updates</p>
                     </div>
@@ -762,7 +864,11 @@ function PreviewStep({ sessionData, onDryRun, isDryRunning }: PreviewStepProps) 
                     <Badge variant="secondary">SKIP</Badge>
                     <div>
                       <p className="text-2xl font-bold">
-                        {sessionData.dryRunResults.filter((r: DryRunResult) => r.action === 'skip').length}
+                        {
+                          sessionData.dryRunResults.filter(
+                            (r: DryRunResult) => r.action === 'skip'
+                          ).length
+                        }
                       </p>
                       <p className="text-sm text-muted-foreground">Skipped</p>
                     </div>
@@ -780,39 +886,61 @@ function PreviewStep({ sessionData, onDryRun, isDryRunning }: PreviewStepProps) 
                     .filter((r: DryRunResult) => r.action !== 'skip')
                     .slice(0, 10)
                     .map((result: DryRunResult) => (
-                      <div key={result.rowIndex} className="text-sm border rounded p-2">
+                      <div
+                        key={result.rowIndex}
+                        className="text-sm border rounded p-2"
+                      >
                         <div className="flex items-center gap-2 mb-1">
-                          <Badge 
-                            variant={result.action === 'insert' ? 'default' : 'secondary'}
+                          <Badge
+                            variant={
+                              result.action === 'insert'
+                                ? 'default'
+                                : 'secondary'
+                            }
                             className={
-                              result.action === 'insert' 
-                                ? 'bg-green-100 text-green-800' 
+                              result.action === 'insert'
+                                ? 'bg-green-100 text-green-800'
                                 : 'bg-blue-100 text-blue-800'
                             }
                           >
                             {result.action.toUpperCase()}
                           </Badge>
-                          <span className="font-medium">Row {result.rowIndex + 1}</span>
+                          <span className="font-medium">
+                            Row {result.rowIndex + 1}
+                          </span>
                         </div>
                         {result.changes && result.changes.length > 0 && (
                           <div className="text-xs space-y-1">
-                            {result.changes.slice(0, 3).map((change: FieldChange) => (
-                              <div key={change.field} className="flex justify-between">
-                                <span className="font-medium">{change.field}:</span>
-                                <span>
-                                  {change.type === 'modified' && (
-                                    <>
-                                      <span className="text-red-600">{change.oldValue}</span>
-                                      <span className="mx-1">→</span>
-                                      <span className="text-green-600">{change.newValue}</span>
-                                    </>
-                                  )}
-                                  {change.type === 'added' && (
-                                    <span className="text-green-600">{change.newValue}</span>
-                                  )}
-                                </span>
-                              </div>
-                            ))}
+                            {result.changes
+                              .slice(0, 3)
+                              .map((change: FieldChange) => (
+                                <div
+                                  key={change.field}
+                                  className="flex justify-between"
+                                >
+                                  <span className="font-medium">
+                                    {change.field}:
+                                  </span>
+                                  <span>
+                                    {change.type === 'modified' && (
+                                      <>
+                                        <span className="text-red-600">
+                                          {change.oldValue}
+                                        </span>
+                                        <span className="mx-1">→</span>
+                                        <span className="text-green-600">
+                                          {change.newValue}
+                                        </span>
+                                      </>
+                                    )}
+                                    {change.type === 'added' && (
+                                      <span className="text-green-600">
+                                        {change.newValue}
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                              ))}
                           </div>
                         )}
                       </div>
@@ -839,12 +967,12 @@ interface ExecuteStepProps {
   onConfirmChange: (confirmed: boolean) => void;
 }
 
-function ExecuteStep({ 
-  sessionData, 
-  onExecute, 
-  isExecuting, 
-  confirmImport, 
-  onConfirmChange 
+function ExecuteStep({
+  sessionData,
+  onExecute,
+  isExecuting,
+  confirmImport,
+  onConfirmChange,
 }: ExecuteStepProps) {
   return (
     <Card>
@@ -859,7 +987,8 @@ function ExecuteStep({
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Final Confirmation</AlertTitle>
           <AlertDescription>
-            You are about to import data into the system. Please review the summary below and confirm.
+            You are about to import data into the system. Please review the
+            summary below and confirm.
           </AlertDescription>
         </Alert>
 
@@ -868,13 +997,21 @@ function ExecuteStep({
             <div>
               <p className="text-sm font-medium">New Records</p>
               <p className="text-2xl font-bold text-green-600">
-                {sessionData.dryRunResults.filter((r: DryRunResult) => r.action === 'insert').length}
+                {
+                  sessionData.dryRunResults.filter(
+                    (r: DryRunResult) => r.action === 'insert'
+                  ).length
+                }
               </p>
             </div>
             <div>
               <p className="text-sm font-medium">Updates</p>
               <p className="text-2xl font-bold text-blue-600">
-                {sessionData.dryRunResults.filter((r: DryRunResult) => r.action === 'update').length}
+                {
+                  sessionData.dryRunResults.filter(
+                    (r: DryRunResult) => r.action === 'update'
+                  ).length
+                }
               </p>
             </div>
           </div>
@@ -885,11 +1022,12 @@ function ExecuteStep({
             type="checkbox"
             id="confirmImport"
             checked={confirmImport}
-            onChange={(e) => onConfirmChange(e.target.checked)}
+            onChange={e => onConfirmChange(e.target.checked)}
             className="h-4 w-4"
           />
           <Label htmlFor="confirmImport" className="text-sm">
-            I understand this action cannot be undone and want to proceed with the import
+            I understand this action cannot be undone and want to proceed with
+            the import
           </Label>
         </div>
 

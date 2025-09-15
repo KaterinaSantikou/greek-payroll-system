@@ -83,11 +83,11 @@ const riskColors = {
   HIGH: 'text-red-600',
 };
 
-export function CutOffDisplay({ 
-  bankProfileId, 
-  cutOffData, 
-  onRecommendPayment, 
-  onReissueAsInstant 
+export function CutOffDisplay({
+  bankProfileId,
+  cutOffData,
+  onRecommendPayment,
+  onReissueAsInstant,
 }: CutOffDisplayProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const { countdown_display, cockpit_integration, auto_refresh } = cutOffData;
@@ -122,31 +122,43 @@ export function CutOffDisplay({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <StatusIcon className={`h-6 w-6 ${statusColors[countdown_display.status]}`} />
+              <StatusIcon
+                className={`h-6 w-6 ${statusColors[countdown_display.status]}`}
+              />
               <div>
                 <CardTitle className="text-lg">
                   {getBankDisplayName(bankProfileId)} Cut-Off
                 </CardTitle>
                 <div className="flex items-center space-x-2 mt-1">
-                  <Badge 
-                    variant={countdown_display.status === 'ACTIVE' ? 'default' : 
-                            countdown_display.status === 'NON_BUSINESS_DAY' ? 'secondary' : 'destructive'}
+                  <Badge
+                    variant={
+                      countdown_display.status === 'ACTIVE'
+                        ? 'default'
+                        : countdown_display.status === 'NON_BUSINESS_DAY'
+                          ? 'secondary'
+                          : 'destructive'
+                    }
                   >
                     {countdown_display.status.replace('_', ' ')}
                   </Badge>
-                  <Badge variant="outline" className={riskColors[countdown_display.riskLevel]}>
+                  <Badge
+                    variant="outline"
+                    className={riskColors[countdown_display.riskLevel]}
+                  >
                     {countdown_display.riskLevel} Risk
                   </Badge>
                 </div>
               </div>
             </div>
-            
+
             <div className="text-right">
               <div className="text-3xl font-bold text-gray-900">
                 {countdown_display.countdown}
               </div>
               <div className="text-sm text-gray-500">
-                {countdown_display.status === 'ACTIVE' ? 'Until SCT Cut-Off' : 'Cut-Off Status'}
+                {countdown_display.status === 'ACTIVE'
+                  ? 'Until SCT Cut-Off'
+                  : 'Cut-Off Status'}
               </div>
             </div>
           </div>
@@ -155,27 +167,37 @@ export function CutOffDisplay({
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Current Time: {currentTime.toLocaleTimeString('el-GR', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit' 
+              Current Time:{' '}
+              {currentTime.toLocaleTimeString('el-GR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
               })}
             </div>
-            
+
             <div className="flex space-x-2">
               {onRecommendPayment && (
-                <Button variant="outline" size="sm" onClick={onRecommendPayment}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onRecommendPayment}
+                >
                   <Info className="h-4 w-4 mr-1" />
                   Get Recommendation
                 </Button>
               )}
-              
-              {countdown_display.status === 'PAST_CUTOFF' && onReissueAsInstant && (
-                <Button variant="default" size="sm" onClick={onReissueAsInstant}>
-                  <Zap className="h-4 w-4 mr-1" />
-                  Use SCT Instant
-                </Button>
-              )}
+
+              {countdown_display.status === 'PAST_CUTOFF' &&
+                onReissueAsInstant && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={onReissueAsInstant}
+                  >
+                    <Zap className="h-4 w-4 mr-1" />
+                    Use SCT Instant
+                  </Button>
+                )}
             </div>
           </div>
         </CardContent>
@@ -183,7 +205,13 @@ export function CutOffDisplay({
 
       {/* Cut-Off Banner */}
       {cockpit_integration.show_banner && (
-        <Alert variant={cockpit_integration.banner_variant === 'error' ? 'destructive' : 'default'}>
+        <Alert
+          variant={
+            cockpit_integration.banner_variant === 'error'
+              ? 'destructive'
+              : 'default'
+          }
+        >
           {cockpit_integration.banner_variant === 'error' ? (
             <AlertTriangle className="h-4 w-4" />
           ) : (
@@ -208,7 +236,9 @@ export function CutOffDisplay({
                 <ul className="text-sm text-orange-700 space-y-1">
                   {countdown_display.status === 'PAST_CUTOFF' && (
                     <>
-                      <li>• Use SCT Instant for immediate same-day processing</li>
+                      <li>
+                        • Use SCT Instant for immediate same-day processing
+                      </li>
                       <li>• SCT payments will process next business day</li>
                       <li>• Consider batch consolidation for efficiency</li>
                     </>
@@ -245,19 +275,27 @@ export function AllBanksCutOffDisplay({ allBanksData }: AllBanksCutOffProps) {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-600">{summary.active}</div>
+          <div className="text-2xl font-bold text-green-600">
+            {summary.active}
+          </div>
           <div className="text-sm text-gray-500">Active</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-yellow-600">{summary.approaching_cut_off}</div>
+          <div className="text-2xl font-bold text-yellow-600">
+            {summary.approaching_cut_off}
+          </div>
           <div className="text-sm text-gray-500">Approaching</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-red-600">{summary.past_cut_off}</div>
+          <div className="text-2xl font-bold text-red-600">
+            {summary.past_cut_off}
+          </div>
           <div className="text-sm text-gray-500">Past Cut-Off</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-gray-700">{summary.total_banks}</div>
+          <div className="text-2xl font-bold text-gray-700">
+            {summary.total_banks}
+          </div>
           <div className="text-sm text-gray-500">Total Banks</div>
         </div>
       </div>
@@ -267,7 +305,7 @@ export function AllBanksCutOffDisplay({ allBanksData }: AllBanksCutOffProps) {
         <Alert>
           <Zap className="h-4 w-4" />
           <AlertDescription>
-            <strong>Recommendation:</strong> Use SCT Instant for new payments - 
+            <strong>Recommendation:</strong> Use SCT Instant for new payments -
             {summary.past_cut_off} bank(s) past cut-off time.
           </AlertDescription>
         </Alert>
@@ -275,20 +313,29 @@ export function AllBanksCutOffDisplay({ allBanksData }: AllBanksCutOffProps) {
 
       {/* Individual Bank Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {all_banks_status.map((bank) => {
+        {all_banks_status.map(bank => {
           const StatusIcon = statusIcons[bank.status] || Clock;
-          
+
           return (
             <Card key={bank.bank_id}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <StatusIcon className={`h-5 w-5 ${statusColors[bank.status]}`} />
-                    <CardTitle className="text-base">{bank.bank_name}</CardTitle>
+                    <StatusIcon
+                      className={`h-5 w-5 ${statusColors[bank.status]}`}
+                    />
+                    <CardTitle className="text-base">
+                      {bank.bank_name}
+                    </CardTitle>
                   </div>
-                  <Badge 
-                    variant={bank.status === 'ACTIVE' ? 'default' : 
-                            bank.status === 'APPROACHING' ? 'secondary' : 'destructive'}
+                  <Badge
+                    variant={
+                      bank.status === 'ACTIVE'
+                        ? 'default'
+                        : bank.status === 'APPROACHING'
+                          ? 'secondary'
+                          : 'destructive'
+                    }
                     className="text-xs"
                   >
                     {bank.status}
@@ -302,21 +349,25 @@ export function AllBanksCutOffDisplay({ allBanksData }: AllBanksCutOffProps) {
                     <span className="text-gray-600">Cut-Off Time:</span>
                     <span className="font-medium">{bank.cut_off_time}</span>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Time Remaining:</span>
-                    <span className={`font-medium ${riskColors[bank.risk_level]}`}>
+                    <span
+                      className={`font-medium ${riskColors[bank.risk_level]}`}
+                    >
                       {bank.time_remaining}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">SCT Instant:</span>
                     <span className="font-medium text-green-600">
-                      {bank.sct_instant_available ? '✓ Available' : '✗ Not Available'}
+                      {bank.sct_instant_available
+                        ? '✓ Available'
+                        : '✗ Not Available'}
                     </span>
                   </div>
-                  
+
                   {!bank.business_day && (
                     <div className="text-xs text-gray-500 mt-2">
                       ⚠️ Non-business day - SCT will process next business day
@@ -334,7 +385,7 @@ export function AllBanksCutOffDisplay({ allBanksData }: AllBanksCutOffProps) {
         <Alert variant="default">
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Banks have different cut-off statuses. Review individual bank timing 
+            Banks have different cut-off statuses. Review individual bank timing
             when routing payments to ensure optimal processing.
           </AlertDescription>
         </Alert>

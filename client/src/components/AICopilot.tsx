@@ -1,19 +1,33 @@
-import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Bot, Send, Lightbulb, AlertTriangle, CheckCircle, 
-  Clock, Users, Euro, FileText, Zap 
-} from "lucide-react";
-import { useProperty } from "@/contexts/PropertyContext";
-import { useUserRole } from "@/contexts/UserRoleContext";
+import { useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Bot,
+  Send,
+  Lightbulb,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Users,
+  Euro,
+  FileText,
+  Zap,
+} from 'lucide-react';
+import { useProperty } from '@/contexts/PropertyContext';
+import { useUserRole } from '@/contexts/UserRoleContext';
 
 interface AIQuery {
   id: string;
@@ -41,28 +55,28 @@ interface ProactiveAlert {
 }
 
 export function AICopilot() {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const [queryHistory, setQueryHistory] = useState<AIQuery[]>([]);
   const { selectedProperty } = useProperty();
   const { userProfile, hasPermission } = useUserRole();
 
   // Get proactive alerts
   const { data: proactiveAlerts = [] } = useQuery<ProactiveAlert[]>({
-    queryKey: ["/api/ai/proactive-alerts", selectedProperty?.propertyId],
+    queryKey: ['/api/ai/proactive-alerts', selectedProperty?.propertyId],
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   // AI Query mutation
   const queryMutation = useMutation({
     mutationFn: async (userQuery: string) => {
-      const response = await apiRequest("/api/ai/query", "POST", { 
+      const response = await apiRequest('/api/ai/query', 'POST', {
         query: userQuery,
         propertyId: selectedProperty?.propertyId,
         userRole: userProfile?.role,
         context: {
           department: userProfile?.department,
-          permissions: userProfile?.permissions || []
-        }
+          permissions: userProfile?.permissions || [],
+        },
       });
       return response;
     },
@@ -70,14 +84,14 @@ export function AICopilot() {
       const newQuery: AIQuery = {
         id: Date.now().toString(),
         query,
-        response: response.answer || "No response received",
+        response: response.answer || 'No response received',
         timestamp: new Date(),
         confidence: response.confidence || 0.85,
         citations: response.citations || [],
-        actionable: response.actionable || false
+        actionable: response.actionable || false,
       };
       setQueryHistory(prev => [newQuery, ...prev.slice(0, 9)]); // Keep last 10
-      setQuery("");
+      setQuery('');
     },
   });
 
@@ -89,9 +103,12 @@ export function AICopilot() {
   };
 
   const getAlertIcon = (type: string, priority: string) => {
-    if (priority === 'high') return <AlertTriangle className="w-4 h-4 text-red-500" />;
-    if (type === 'suggestion') return <Lightbulb className="w-4 h-4 text-yellow-500" />;
-    if (type === 'compliance') return <CheckCircle className="w-4 h-4 text-blue-500" />;
+    if (priority === 'high')
+      return <AlertTriangle className="w-4 h-4 text-red-500" />;
+    if (type === 'suggestion')
+      return <Lightbulb className="w-4 h-4 text-yellow-500" />;
+    if (type === 'compliance')
+      return <CheckCircle className="w-4 h-4 text-blue-500" />;
     return <AlertTriangle className="w-4 h-4 text-orange-500" />;
   };
 
@@ -127,12 +144,19 @@ export function AICopilot() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {proactiveAlerts.slice(0, 3).map((alert) => (
-              <Alert key={alert.id} className={`
-                ${alert.priority === 'high' ? 'border-red-200 bg-red-50' : 
-                  alert.priority === 'medium' ? 'border-orange-200 bg-orange-50' : 
-                  'border-gray-200 bg-gray-50'}
-              `}>
+            {proactiveAlerts.slice(0, 3).map(alert => (
+              <Alert
+                key={alert.id}
+                className={`
+                ${
+                  alert.priority === 'high'
+                    ? 'border-red-200 bg-red-50'
+                    : alert.priority === 'medium'
+                      ? 'border-orange-200 bg-orange-50'
+                      : 'border-gray-200 bg-gray-50'
+                }
+              `}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start space-x-3">
                     {getAlertIcon(alert.type, alert.priority)}
@@ -178,7 +202,8 @@ export function AICopilot() {
         <CardHeader>
           <CardTitle>Ask AI Copilot</CardTitle>
           <CardDescription>
-            Ask questions in natural language about schedules, payroll, compliance, and more
+            Ask questions in natural language about schedules, payroll,
+            compliance, and more
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -186,12 +211,12 @@ export function AICopilot() {
             <Input
               placeholder="Show me who is approaching OT cap this month..."
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={e => setQuery(e.target.value)}
               disabled={queryMutation.isPending}
               className="flex-1"
             />
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={queryMutation.isPending || !query.trim()}
               className="flex items-center space-x-1"
             >
@@ -205,12 +230,12 @@ export function AICopilot() {
             <p className="text-sm text-muted-foreground mb-2">Try asking:</p>
             <div className="flex flex-wrap gap-2">
               {[
-                "Show me who is approaching OT cap this month",
-                "Why did net pay change for housekeeping team?",
-                "Suggest schedule fixes for next week",
-                "Who has the most overtime in December?",
-                "Show compliance status for ERGANI filings"
-              ].map((example) => (
+                'Show me who is approaching OT cap this month',
+                'Why did net pay change for housekeeping team?',
+                'Suggest schedule fixes for next week',
+                'Who has the most overtime in December?',
+                'Show compliance status for ERGANI filings',
+              ].map(example => (
                 <Button
                   key={example}
                   variant="outline"
@@ -245,8 +270,8 @@ export function AICopilot() {
                     <span className="text-xs text-muted-foreground">
                       {item.timestamp.toLocaleString()}
                     </span>
-                    <Badge 
-                      variant={item.confidence > 0.8 ? "default" : "secondary"} 
+                    <Badge
+                      variant={item.confidence > 0.8 ? 'default' : 'secondary'}
                       className="text-xs"
                     >
                       {Math.round(item.confidence * 100)}% confident
@@ -259,17 +284,23 @@ export function AICopilot() {
                     </Badge>
                   )}
                 </div>
-                
+
                 <div className="pl-4 border-l-2 border-gray-200">
                   <p className="font-medium text-blue-900">Q: {item.query}</p>
                   <p className="mt-1 text-gray-700">A: {item.response}</p>
-                  
+
                   {item.citations.length > 0 && (
                     <div className="mt-2">
-                      <p className="text-xs text-muted-foreground mb-1">Sources:</p>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        Sources:
+                      </p>
                       <div className="flex flex-wrap gap-1">
                         {item.citations.map((citation, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
+                          <Badge
+                            key={idx}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {citation}
                           </Badge>
                         ))}
@@ -277,7 +308,7 @@ export function AICopilot() {
                     </div>
                   )}
                 </div>
-                
+
                 {index < queryHistory.length - 1 && <Separator />}
               </div>
             ))}

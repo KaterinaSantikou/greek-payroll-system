@@ -1,27 +1,27 @@
-import { useAppContext } from "@/contexts/AppContext";
-import { ContextBanner } from "./ui/context-banner";
-import { useAuth } from "@/hooks/useAuth";
+import { useAppContext } from '@/contexts/AppContext';
+import { ContextBanner } from './ui/context-banner';
+import { useAuth } from '@/hooks/useAuth';
 
 export function ContextAwareBanner() {
   const { viewingMode, exitViewingMode } = useAppContext();
   const { user } = useAuth();
 
-  if (viewingMode.type === "normal") {
+  if (viewingMode.type === 'normal') {
     return null;
   }
 
-  if (viewingMode.type === "impersonation") {
+  if (viewingMode.type === 'impersonation') {
     return (
       <ContextBanner
         type="impersonation"
-        title={`Impersonating ${viewingMode.targetEmployee?.name || "Employee"}`}
+        title={`Impersonating ${viewingMode.targetEmployee?.name || 'Employee'}`}
         description="You are viewing the system as this employee. Click to exit impersonation mode."
         onDismiss={exitViewingMode}
       />
     );
   }
 
-  if (viewingMode.type === "employee_view") {
+  if (viewingMode.type === 'employee_view') {
     return (
       <ContextBanner
         type="info"

@@ -24,7 +24,7 @@ import {
   User,
   Building,
   Euro,
-  X
+  X,
 } from 'lucide-react';
 
 interface CommandPaletteProps {
@@ -63,7 +63,9 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
   const { locale } = useLocale();
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCommands, setFilteredCommands] = useState<Command[]>([]);
-  const [filteredSuggestions, setFilteredSuggestions] = useState<SearchSuggestion[]>([]);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<
+    SearchSuggestion[]
+  >([]);
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -84,15 +86,18 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
   // Save recent searches to localStorage
   const saveRecentSearch = (query: string, resultType: string) => {
     if (query.trim().length < 2) return;
-    
+
     const newSearch: RecentSearch = {
       id: Date.now().toString(),
       query: query.trim(),
       timestamp: Date.now(),
-      resultType
+      resultType,
     };
-    
-    const updated = [newSearch, ...recentSearches.filter(s => s.query !== query.trim())].slice(0, 10);
+
+    const updated = [
+      newSearch,
+      ...recentSearches.filter(s => s.query !== query.trim()),
+    ].slice(0, 10);
     setRecentSearches(updated);
     localStorage.setItem('payroll-recent-searches', JSON.stringify(updated));
   };
@@ -107,7 +112,14 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
       type: 'employee',
       icon: <User className="h-4 w-4" />,
       category: locale === 'el' ? 'Εργαζόμενοι' : 'Employees',
-      searchTerms: ['maria', 'papadopoulos', 'front', 'desk', 'manager', 'reception']
+      searchTerms: [
+        'maria',
+        'papadopoulos',
+        'front',
+        'desk',
+        'manager',
+        'reception',
+      ],
     },
     {
       id: 'emp-dimitris-kostas',
@@ -116,17 +128,27 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
       type: 'employee',
       icon: <User className="h-4 w-4" />,
       category: locale === 'el' ? 'Εργαζόμενοι' : 'Employees',
-      searchTerms: ['dimitris', 'kostas', 'chef', 'kitchen', 'head']
+      searchTerms: ['dimitris', 'kostas', 'chef', 'kitchen', 'head'],
     },
     // Payroll runs
     {
       id: 'payroll-december-2024',
-      title: locale === 'el' ? 'Μισθοδοσία Δεκεμβρίου 2024' : 'December 2024 Payroll',
+      title:
+        locale === 'el'
+          ? 'Μισθοδοσία Δεκεμβρίου 2024'
+          : 'December 2024 Payroll',
       subtitle: '€124,280 • 127 employees',
       type: 'payroll',
       icon: <Euro className="h-4 w-4" />,
       category: locale === 'el' ? 'Μισθοδοσία' : 'Payroll',
-      searchTerms: ['december', 'δεκέμβριος', '2024', 'payroll', 'μισθοδοσία', '124280']
+      searchTerms: [
+        'december',
+        'δεκέμβριος',
+        '2024',
+        'payroll',
+        'μισθοδοσία',
+        '124280',
+      ],
     },
     // Properties
     {
@@ -136,42 +158,46 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
       type: 'property',
       icon: <Building className="h-4 w-4" />,
       category: locale === 'el' ? 'Ιδιοκτησίες' : 'Properties',
-      searchTerms: ['princess', 'hotel', 'property', 'main']
-    }
+      searchTerms: ['princess', 'hotel', 'property', 'main'],
+    },
   ];
 
   const commands: Command[] = [
     {
       id: 'run-payroll',
       title: locale === 'el' ? 'Εκτέλεση Μισθοδοσίας' : 'Run Payroll',
-      subtitle: locale === 'el' ? 'Ξεκίνα νέα μισθοδοσία' : 'Start new payroll run',
+      subtitle:
+        locale === 'el' ? 'Ξεκίνα νέα μισθοδοσία' : 'Start new payroll run',
       action: () => console.log('Run payroll'),
       icon: <Calculator className="h-4 w-4" />,
-      category: locale === 'el' ? 'Μισθοδοσία' : 'Payroll'
+      category: locale === 'el' ? 'Μισθοδοσία' : 'Payroll',
     },
     {
       id: 'view-employees',
       title: locale === 'el' ? 'Προβολή Εργαζομένων' : 'View Employees',
-      subtitle: locale === 'el' ? 'Διαχείριση εργαζομένων' : 'Manage employee data',
+      subtitle:
+        locale === 'el' ? 'Διαχείριση εργαζομένων' : 'Manage employee data',
       action: () => console.log('View employees'),
       icon: <Users className="h-4 w-4" />,
-      category: locale === 'el' ? 'Άνθρωποι' : 'People'
+      category: locale === 'el' ? 'Άνθρωποι' : 'People',
     },
     {
       id: 'ergani-sync',
       title: locale === 'el' ? 'Συγχρονισμός ΕΡΓΑΝΗ' : 'ERGANI Sync',
-      subtitle: locale === 'el' ? 'Ανεβάστε στο ΕΡΓΑΝΗ ΙΙ' : 'Upload to ERGANI II',
+      subtitle:
+        locale === 'el' ? 'Ανεβάστε στο ΕΡΓΑΝΗ ΙΙ' : 'Upload to ERGANI II',
       action: () => console.log('ERGANI sync'),
       icon: <FileText className="h-4 w-4" />,
-      category: locale === 'el' ? 'Συμμόρφωση' : 'Compliance'
+      category: locale === 'el' ? 'Συμμόρφωση' : 'Compliance',
     },
     {
       id: 'view-schedule',
       title: locale === 'el' ? 'Προβολή Προγράμματος' : 'View Schedule',
-      subtitle: locale === 'el' ? 'Διαχείριση προγραμμάτων' : 'Manage schedules',
+      subtitle:
+        locale === 'el' ? 'Διαχείριση προγραμμάτων' : 'Manage schedules',
       action: () => console.log('View schedule'),
       icon: <Calendar className="h-4 w-4" />,
-      category: locale === 'el' ? 'Χρόνος' : 'Time'
+      category: locale === 'el' ? 'Χρόνος' : 'Time',
     },
     {
       id: 'settings',
@@ -179,14 +205,14 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
       subtitle: locale === 'el' ? 'Ρύθμιση εφαρμογής' : 'Configure application',
       action: () => console.log('Settings'),
       icon: <Settings className="h-4 w-4" />,
-      category: locale === 'el' ? 'Σύστημα' : 'System'
-    }
+      category: locale === 'el' ? 'Σύστημα' : 'System',
+    },
   ];
 
   // Enhanced filtering logic
   useEffect(() => {
     const query = searchQuery.toLowerCase().trim();
-    
+
     if (query === '') {
       setFilteredCommands(commands);
       setFilteredSuggestions([]);
@@ -194,20 +220,26 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
       setSelectedIndex(0);
     } else {
       // Filter commands
-      const filteredCmds = commands.filter(cmd =>
-        cmd.title.toLowerCase().includes(query) ||
-        cmd.subtitle?.toLowerCase().includes(query) ||
-        cmd.category.toLowerCase().includes(query)
+      const filteredCmds = commands.filter(
+        cmd =>
+          cmd.title.toLowerCase().includes(query) ||
+          cmd.subtitle?.toLowerCase().includes(query) ||
+          cmd.category.toLowerCase().includes(query)
       );
       setFilteredCommands(filteredCmds);
-      
+
       // Filter suggestions with fuzzy matching
-      const filteredSugs = searchSuggestions.filter(suggestion =>
-        suggestion.searchTerms.some(term => term.toLowerCase().includes(query)) ||
-        suggestion.title.toLowerCase().includes(query) ||
-        suggestion.subtitle?.toLowerCase().includes(query)
-      ).slice(0, 6); // Limit to 6 suggestions
-      
+      const filteredSugs = searchSuggestions
+        .filter(
+          suggestion =>
+            suggestion.searchTerms.some(term =>
+              term.toLowerCase().includes(query)
+            ) ||
+            suggestion.title.toLowerCase().includes(query) ||
+            suggestion.subtitle?.toLowerCase().includes(query)
+        )
+        .slice(0, 6); // Limit to 6 suggestions
+
       setFilteredSuggestions(filteredSugs);
       setShowSuggestions(query.length >= 1);
       setSelectedIndex(0);
@@ -220,24 +252,24 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
     onClose();
     setSearchQuery('');
   };
-  
+
   const handleSuggestionSelect = (suggestion: SearchSuggestion) => {
     saveRecentSearch(suggestion.title, suggestion.type);
     console.log('Selected suggestion:', suggestion);
     onClose();
     setSearchQuery('');
   };
-  
+
   const handleRecentSearchSelect = (recentSearch: RecentSearch) => {
     setSearchQuery(recentSearch.query);
     inputRef.current?.focus();
   };
-  
+
   const clearRecentSearches = () => {
     setRecentSearches([]);
     localStorage.removeItem('payroll-recent-searches');
   };
-  
+
   const removeRecentSearch = (id: string) => {
     const updated = recentSearches.filter(s => s.id !== id);
     setRecentSearches(updated);
@@ -246,7 +278,7 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
 
   const handleKeydown = (e: React.KeyboardEvent) => {
     const totalItems = filteredCommands.length + filteredSuggestions.length;
-    
+
     if (e.key === 'Escape') {
       onClose();
     } else if (e.key === 'ArrowDown') {
@@ -283,9 +315,13 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               ref={inputRef}
-              placeholder={locale === 'el' ? 'Αναζήτηση εργαζομένων, μισθοδοσίας, εντολών...' : 'Search employees, payroll, commands...'}
+              placeholder={
+                locale === 'el'
+                  ? 'Αναζήτηση εργαζομένων, μισθοδοσίας, εντολών...'
+                  : 'Search employees, payroll, commands...'
+              }
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="pl-10 border-0 shadow-none text-lg h-12 focus-visible:ring-0"
               autoFocus
             />
@@ -299,7 +335,9 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
               <div className="px-4 py-2 flex items-center justify-between">
                 <div className="text-xs font-medium text-gray-500 uppercase tracking-wide flex items-center gap-2">
                   <History className="h-3 w-3" />
-                  {locale === 'el' ? 'Πρόσφατες Αναζητήσεις' : 'Recent Searches'}
+                  {locale === 'el'
+                    ? 'Πρόσφατες Αναζητήσεις'
+                    : 'Recent Searches'}
                 </div>
                 <Button
                   variant="ghost"
@@ -310,7 +348,7 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
                   {locale === 'el' ? 'Καθαρισμός' : 'Clear'}
                 </Button>
               </div>
-              {recentSearches.slice(0, 5).map((recentSearch) => (
+              {recentSearches.slice(0, 5).map(recentSearch => (
                 <Button
                   key={recentSearch.id}
                   variant="ghost"
@@ -322,14 +360,15 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
                     <div className="flex-1 min-w-0">
                       <div className="font-medium">{recentSearch.query}</div>
                       <div className="text-xs text-gray-500 capitalize">
-                        {recentSearch.resultType} • {new Date(recentSearch.timestamp).toLocaleDateString()}
+                        {recentSearch.resultType} •{' '}
+                        {new Date(recentSearch.timestamp).toLocaleDateString()}
                       </div>
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         removeRecentSearch(recentSearch.id);
                       }}
@@ -341,7 +380,7 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
               ))}
             </div>
           )}
-          
+
           {/* Search results */}
           {searchQuery.trim() !== '' && (
             <>
@@ -357,14 +396,14 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
                       key={suggestion.id}
                       variant="ghost"
                       className={`w-full justify-start h-auto p-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 ${
-                        index === selectedIndex ? 'bg-gray-100 dark:bg-gray-800' : ''
+                        index === selectedIndex
+                          ? 'bg-gray-100 dark:bg-gray-800'
+                          : ''
                       }`}
                       onClick={() => handleSuggestionSelect(suggestion)}
                     >
                       <div className="flex items-center gap-3 w-full">
-                        <div className="flex-shrink-0">
-                          {suggestion.icon}
-                        </div>
+                        <div className="flex-shrink-0">{suggestion.icon}</div>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium">{suggestion.title}</div>
                           {suggestion.subtitle && (
@@ -379,10 +418,12 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
                       </div>
                     </Button>
                   ))}
-                  {filteredCommands.length > 0 && <Separator className="my-2" />}
+                  {filteredCommands.length > 0 && (
+                    <Separator className="my-2" />
+                  )}
                 </div>
               )}
-              
+
               {/* Commands section */}
               {filteredCommands.length > 0 ? (
                 <div className="py-2">
@@ -391,31 +432,41 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
                     {locale === 'el' ? 'Εντολές' : 'Commands'}
                   </div>
                   {Object.entries(
-                    filteredCommands.reduce((acc, cmd) => {
-                      if (!acc[cmd.category]) acc[cmd.category] = [];
-                      acc[cmd.category].push(cmd);
-                      return acc;
-                    }, {} as Record<string, Command[]>)
+                    filteredCommands.reduce(
+                      (acc, cmd) => {
+                        if (!acc[cmd.category]) acc[cmd.category] = [];
+                        acc[cmd.category].push(cmd);
+                        return acc;
+                      },
+                      {} as Record<string, Command[]>
+                    )
                   ).map(([category, commands]) => (
                     <div key={category} className="mb-2">
                       {commands.map((command, cmdIndex) => {
-                        const globalIndex = filteredSuggestions.length + Object.values(
-                          filteredCommands.reduce((acc, cmd, idx) => {
-                            if (idx < filteredCommands.indexOf(command)) {
-                              const cat = cmd.category;
-                              if (!acc[cat]) acc[cat] = 0;
-                              acc[cat]++;
-                            }
-                            return acc;
-                          }, {} as Record<string, number>)
-                        ).reduce((sum, count) => sum + count, 0);
-                        
+                        const globalIndex =
+                          filteredSuggestions.length +
+                          Object.values(
+                            filteredCommands.reduce(
+                              (acc, cmd, idx) => {
+                                if (idx < filteredCommands.indexOf(command)) {
+                                  const cat = cmd.category;
+                                  if (!acc[cat]) acc[cat] = 0;
+                                  acc[cat]++;
+                                }
+                                return acc;
+                              },
+                              {} as Record<string, number>
+                            )
+                          ).reduce((sum, count) => sum + count, 0);
+
                         return (
                           <Button
                             key={command.id}
                             variant="ghost"
                             className={`w-full justify-start h-auto p-3 text-left hover:bg-gray-100 dark:hover:bg-gray-800 ${
-                              globalIndex + cmdIndex === selectedIndex ? 'bg-gray-100 dark:bg-gray-800' : ''
+                              globalIndex + cmdIndex === selectedIndex
+                                ? 'bg-gray-100 dark:bg-gray-800'
+                                : ''
                             }`}
                             onClick={() => handleCommandSelect(command)}
                           >
@@ -424,7 +475,9 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
                                 {command.icon}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-medium">{command.title}</div>
+                                <div className="font-medium">
+                                  {command.title}
+                                </div>
                                 {command.subtitle && (
                                   <div className="text-sm text-gray-500 truncate">
                                     {command.subtitle}
@@ -439,17 +492,23 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
                     </div>
                   ))}
                 </div>
-              ) : filteredSuggestions.length === 0 && (
-                <div className="p-8 text-center text-gray-500">
-                  {locale === 'el' ? 'Δεν βρέθηκαν αποτελέσματα' : 'No results found'}
-                  <div className="text-sm mt-1">
-                    {locale === 'el' ? 'Δοκιμάστε διαφορετικούς όρους' : 'Try different search terms'}
+              ) : (
+                filteredSuggestions.length === 0 && (
+                  <div className="p-8 text-center text-gray-500">
+                    {locale === 'el'
+                      ? 'Δεν βρέθηκαν αποτελέσματα'
+                      : 'No results found'}
+                    <div className="text-sm mt-1">
+                      {locale === 'el'
+                        ? 'Δοκιμάστε διαφορετικούς όρους'
+                        : 'Try different search terms'}
+                    </div>
                   </div>
-                </div>
+                )
               )}
             </>
           )}
-          
+
           {/* Show all commands when no search query */}
           {searchQuery.trim() === '' && (
             <div className="py-2">
@@ -458,14 +517,17 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
                 {locale === 'el' ? 'Συχνές Εντολές' : 'Quick Actions'}
               </div>
               {Object.entries(
-                commands.reduce((acc, cmd) => {
-                  if (!acc[cmd.category]) acc[cmd.category] = [];
-                  acc[cmd.category].push(cmd);
-                  return acc;
-                }, {} as Record<string, Command[]>)
+                commands.reduce(
+                  (acc, cmd) => {
+                    if (!acc[cmd.category]) acc[cmd.category] = [];
+                    acc[cmd.category].push(cmd);
+                    return acc;
+                  },
+                  {} as Record<string, Command[]>
+                )
               ).map(([category, categoryCommands]) => (
                 <div key={category} className="mb-2">
-                  {categoryCommands.map((command) => (
+                  {categoryCommands.map(command => (
                     <Button
                       key={command.id}
                       variant="ghost"
@@ -473,9 +535,7 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
                       onClick={() => handleCommandSelect(command)}
                     >
                       <div className="flex items-center gap-3 w-full">
-                        <div className="flex-shrink-0">
-                          {command.icon}
-                        </div>
+                        <div className="flex-shrink-0">{command.icon}</div>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium">{command.title}</div>
                           {command.subtitle && (
@@ -498,11 +558,15 @@ export function CommandPaletteModal({ isOpen, onClose }: CommandPaletteProps) {
           <div className="flex items-center justify-between text-xs text-gray-500">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">
-                <kbd className="px-2 py-1 bg-white dark:bg-gray-700 border rounded text-xs">↵</kbd>
+                <kbd className="px-2 py-1 bg-white dark:bg-gray-700 border rounded text-xs">
+                  ↵
+                </kbd>
                 <span>{locale === 'el' ? 'Εκτέλεση' : 'Execute'}</span>
               </div>
               <div className="flex items-center gap-1">
-                <kbd className="px-2 py-1 bg-white dark:bg-gray-700 border rounded text-xs">Esc</kbd>
+                <kbd className="px-2 py-1 bg-white dark:bg-gray-700 border rounded text-xs">
+                  Esc
+                </kbd>
                 <span>{locale === 'el' ? 'Κλείσιμο' : 'Close'}</span>
               </div>
             </div>

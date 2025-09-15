@@ -1,9 +1,26 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { HelpCircleIcon, TrendingUpIcon, TrendingDownIcon, CalendarIcon, InfoIcon, AlertTriangleIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  HelpCircleIcon,
+  TrendingUpIcon,
+  TrendingDownIcon,
+  CalendarIcon,
+  InfoIcon,
+  AlertTriangleIcon,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface MetricCardProps {
   title: string;
@@ -46,19 +63,19 @@ export function MetricCard({
   };
 
   const getTrendColor = () => {
-    if (trend > 0) return "text-green-600";
-    if (trend < 0) return "text-red-600";
-    return "text-muted-foreground";
+    if (trend > 0) return 'text-green-600';
+    if (trend < 0) return 'text-red-600';
+    return 'text-muted-foreground';
   };
 
   const formatValue = () => {
-    if (unit === "%") {
+    if (unit === '%') {
       return value.toFixed(1);
     }
-    if (unit === ":1") {
+    if (unit === ':1') {
       return value.toFixed(1);
     }
-    if (unit === "/100 FTE") {
+    if (unit === '/100 FTE') {
       return value.toFixed(2);
     }
     return value.toString();
@@ -72,11 +89,20 @@ export function MetricCard({
             <div className="flex items-center gap-2">
               <CardTitle className="text-lg">{title}</CardTitle>
               {status !== 'ready' && (
-                <Badge variant={status === 'pending' ? 'secondary' : 'destructive'} className="text-xs">
+                <Badge
+                  variant={status === 'pending' ? 'secondary' : 'destructive'}
+                  className="text-xs"
+                >
                   {status === 'pending' ? (
-                    <><AlertTriangleIcon className="w-3 h-3 mr-1" />Pending</>
+                    <>
+                      <AlertTriangleIcon className="w-3 h-3 mr-1" />
+                      Pending
+                    </>
                   ) : (
-                    <><AlertTriangleIcon className="w-3 h-3 mr-1" />Incomplete</>
+                    <>
+                      <AlertTriangleIcon className="w-3 h-3 mr-1" />
+                      Incomplete
+                    </>
                   )}
                 </Badge>
               )}
@@ -97,19 +123,23 @@ export function MetricCard({
                         {formula}
                       </div>
                     </div>
-                    
+
                     <div>
-                      <h4 className="font-semibold text-sm mb-2">Inclusions & Scope</h4>
+                      <h4 className="font-semibold text-sm mb-2">
+                        Inclusions & Scope
+                      </h4>
                       <ul className="text-sm space-y-1">
                         {inclusions.map((inclusion, index) => (
                           <li key={index} className="flex items-start gap-2">
                             <span className="w-1 h-1 bg-current rounded-full mt-2 flex-shrink-0" />
-                            <span className="text-muted-foreground">{inclusion}</span>
+                            <span className="text-muted-foreground">
+                              {inclusion}
+                            </span>
                           </li>
                         ))}
                       </ul>
                     </div>
-                    
+
                     {methodology && (
                       <div>
                         <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
@@ -119,45 +149,65 @@ export function MetricCard({
                         <div className="space-y-2 text-xs text-muted-foreground">
                           {methodology.nonEmployeesExcluded !== undefined && (
                             <div className="bg-blue-50 p-2 rounded">
-                              <span className="font-medium">Non-employees excluded:</span> {methodology.nonEmployeesExcluded}
+                              <span className="font-medium">
+                                Non-employees excluded:
+                              </span>{' '}
+                              {methodology.nonEmployeesExcluded}
                               <br />
-                              <span className="text-blue-600">Contractors, consultants, temporary agency workers excluded per ESRS requirements</span>
+                              <span className="text-blue-600">
+                                Contractors, consultants, temporary agency
+                                workers excluded per ESRS requirements
+                              </span>
                             </div>
                           )}
-                          
+
                           {methodology.hourlyDerivation && (
                             <div className="bg-amber-50 p-2 rounded">
-                              <span className="font-medium">Hourly derivation:</span>
+                              <span className="font-medium">
+                                Hourly derivation:
+                              </span>
                               <br />
-                              <span className="text-amber-700">{methodology.hourlyDerivation}</span>
+                              <span className="text-amber-700">
+                                {methodology.hourlyDerivation}
+                              </span>
                             </div>
                           )}
-                          
+
                           {methodology.pppAdjusted && (
                             <div className="bg-purple-50 p-2 rounded">
-                              <span className="font-medium">PPP Adjustment:</span> Applied
+                              <span className="font-medium">
+                                PPP Adjustment:
+                              </span>{' '}
+                              Applied
                               <br />
-                              <span className="text-purple-700">{methodology.pppMethodology}</span>
+                              <span className="text-purple-700">
+                                {methodology.pppMethodology}
+                              </span>
                             </div>
                           )}
-                          
+
                           {methodology.sampleSize && (
                             <div className="bg-gray-50 p-2 rounded">
-                              <span className="font-medium">Sample size:</span> {methodology.sampleSize} employees
+                              <span className="font-medium">Sample size:</span>{' '}
+                              {methodology.sampleSize} employees
                             </div>
                           )}
-                          
+
                           {methodology.methodologyDisclosure && (
                             <div className="bg-green-50 p-2 rounded max-h-32 overflow-y-auto">
-                              <span className="font-medium">Full Methodology:</span>
+                              <span className="font-medium">
+                                Full Methodology:
+                              </span>
                               <br />
-                              <span className="text-green-700 whitespace-pre-wrap">{methodology.methodologyDisclosure}</span>
+                              <span className="text-green-700 whitespace-pre-wrap">
+                                {methodology.methodologyDisclosure}
+                              </span>
                             </div>
                           )}
                         </div>
                       </div>
                     )}
-                    
+
                     <div className="pt-2 border-t">
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>Metric Code: {metricCode}</span>
@@ -174,7 +224,7 @@ export function MetricCard({
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         {/* Main Value */}
         <div className="space-y-1">
@@ -182,13 +232,16 @@ export function MetricCard({
             <span className="text-3xl font-bold">{formatValue()}</span>
             <span className="text-lg text-muted-foreground">{unit}</span>
           </div>
-          
+
           {/* Trend Indicator */}
           {trend !== 0 && (
-            <div className={cn("flex items-center gap-1 text-sm", getTrendColor())}>
+            <div
+              className={cn('flex items-center gap-1 text-sm', getTrendColor())}
+            >
               {getTrendIcon()}
               <span>
-                {trend > 0 ? '+' : ''}{trend.toFixed(1)}% from last period
+                {trend > 0 ? '+' : ''}
+                {trend.toFixed(1)}% from last period
               </span>
             </div>
           )}
@@ -198,7 +251,9 @@ export function MetricCard({
         {lastCalculated && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t">
             <CalendarIcon className="w-3 h-3" />
-            <span>Last calculated: {new Date(lastCalculated).toLocaleDateString()}</span>
+            <span>
+              Last calculated: {new Date(lastCalculated).toLocaleDateString()}
+            </span>
           </div>
         )}
       </CardContent>

@@ -1,11 +1,10 @@
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 
 export function DashboardSkeleton() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="container mx-auto px-6 py-4">
-        
         {/* Top Bar Skeleton */}
         <div className="sticky top-0 z-[60] bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-lg shadow-sm border mb-6 p-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
@@ -23,7 +22,6 @@ export function DashboardSkeleton() {
         </div>
 
         <div className="space-y-6">
-          
           {/* Primary CTA Skeleton */}
           <Card>
             <CardContent className="p-6">
@@ -66,7 +64,6 @@ export function DashboardSkeleton() {
 
           {/* Main Grid Skeleton */}
           <div className="grid lg:grid-cols-4 gap-6">
-            
             {/* Left Column */}
             <div className="space-y-4">
               <Card>
@@ -75,7 +72,10 @@ export function DashboardSkeleton() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {[...Array(3)].map((_, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2">
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-2"
+                    >
                       <div className="space-y-1">
                         <Skeleton className="h-3 w-20" />
                         <Skeleton className="h-3 w-16" />

@@ -1,9 +1,27 @@
-import { ReactNode } from "react";
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { UsersIcon, GlobeIcon, ScaleIcon, AlertTriangleIcon } from "lucide-react";
+import { ReactNode } from 'react';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import {
+  UsersIcon,
+  GlobeIcon,
+  ScaleIcon,
+  AlertTriangleIcon,
+} from 'lucide-react';
 
 interface AssumptionsDrawerProps {
   children: ReactNode;
@@ -12,20 +30,18 @@ interface AssumptionsDrawerProps {
 export function AssumptionsDrawer({ children }: AssumptionsDrawerProps) {
   return (
     <Drawer>
-      <DrawerTrigger asChild>
-        {children}
-      </DrawerTrigger>
+      <DrawerTrigger asChild>{children}</DrawerTrigger>
       <DrawerContent className="max-h-[80vh]">
         <div className="mx-auto w-full max-w-4xl">
           <DrawerHeader>
             <DrawerTitle>ESRS S1 Calculation Assumptions</DrawerTitle>
             <DrawerDescription>
-              Key assumptions and definitions used in S1 social sustainability metrics calculations
+              Key assumptions and definitions used in S1 social sustainability
+              metrics calculations
             </DrawerDescription>
           </DrawerHeader>
           <div className="p-4 pb-0">
             <div className="space-y-6 max-h-[60vh] overflow-y-auto">
-              
               {/* Employee Definitions */}
               <Card>
                 <CardHeader>
@@ -42,7 +58,9 @@ export function AssumptionsDrawer({ children }: AssumptionsDrawerProps) {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="default">Employees</Badge>
-                        <span className="text-sm text-muted-foreground">Included in all metrics</span>
+                        <span className="text-sm text-muted-foreground">
+                          Included in all metrics
+                        </span>
                       </div>
                       <ul className="text-sm space-y-1 text-muted-foreground">
                         <li>• Permanent full-time and part-time staff</li>
@@ -55,7 +73,9 @@ export function AssumptionsDrawer({ children }: AssumptionsDrawerProps) {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="secondary">Non-Employees</Badge>
-                        <span className="text-sm text-muted-foreground">Limited inclusion</span>
+                        <span className="text-sm text-muted-foreground">
+                          Limited inclusion
+                        </span>
                       </div>
                       <ul className="text-sm space-y-1 text-muted-foreground">
                         <li>• External contractors (H&S metrics only)</li>
@@ -127,29 +147,43 @@ export function AssumptionsDrawer({ children }: AssumptionsDrawerProps) {
                 <CardContent className="space-y-4">
                   <div className="space-y-3">
                     <div>
-                      <h4 className="font-medium text-sm mb-2">Applied ESRS Reliefs</h4>
+                      <h4 className="font-medium text-sm mb-2">
+                        Applied ESRS Reliefs
+                      </h4>
                       <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline">Art. 30: Reduced Disclosures (First-time)</Badge>
-                        <Badge variant="outline">Art. 10(2): Stop-the-Clock Applied</Badge>
-                        <Badge variant="outline">S1-6: Core Workforce Only</Badge>
+                        <Badge variant="outline">
+                          Art. 30: Reduced Disclosures (First-time)
+                        </Badge>
+                        <Badge variant="outline">
+                          Art. 10(2): Stop-the-Clock Applied
+                        </Badge>
+                        <Badge variant="outline">
+                          S1-6: Core Workforce Only
+                        </Badge>
                       </div>
                     </div>
-                    
+
                     <Separator />
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <h4 className="font-medium text-sm mb-2">FTE Calculation</h4>
+                        <h4 className="font-medium text-sm mb-2">
+                          FTE Calculation
+                        </h4>
                         <p className="text-sm text-muted-foreground">
-                          Full-time equivalent calculated as: (Actual hours ÷ Standard full-time hours) 
-                          based on 40-hour work week standard
+                          Full-time equivalent calculated as: (Actual hours ÷
+                          Standard full-time hours) based on 40-hour work week
+                          standard
                         </p>
                       </div>
                       <div>
-                        <h4 className="font-medium text-sm mb-2">Reporting Period</h4>
+                        <h4 className="font-medium text-sm mb-2">
+                          Reporting Period
+                        </h4>
                         <p className="text-sm text-muted-foreground">
-                          Calendar year reporting with point-in-time measurements on December 31st 
-                          and period-average calculations where specified
+                          Calendar year reporting with point-in-time
+                          measurements on December 31st and period-average
+                          calculations where specified
                         </p>
                       </div>
                     </div>
@@ -171,7 +205,9 @@ export function AssumptionsDrawer({ children }: AssumptionsDrawerProps) {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <h4 className="font-medium text-sm">Data Quality Indicators</h4>
+                      <h4 className="font-medium text-sm">
+                        Data Quality Indicators
+                      </h4>
                       <ul className="text-sm space-y-1 text-muted-foreground">
                         <li>• Gender data: Self-reported where available</li>
                         <li>• Pay data: From verified payroll systems</li>
@@ -182,14 +218,16 @@ export function AssumptionsDrawer({ children }: AssumptionsDrawerProps) {
                     <div className="space-y-2">
                       <h4 className="font-medium text-sm">Known Limitations</h4>
                       <ul className="text-sm space-y-1 text-muted-foreground">
-                        <li>• Non-binary gender classification not yet captured</li>
+                        <li>
+                          • Non-binary gender classification not yet captured
+                        </li>
                         <li>• Bonus data may exclude end-of-year awards</li>
                         <li>• Remote work hours partially estimated</li>
                         <li>• Minor incidents may be underreported</li>
                       </ul>
                     </div>
                   </div>
-                  
+
                   <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
                     <div className="flex items-start gap-2">
                       <AlertTriangleIcon className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
@@ -198,8 +236,10 @@ export function AssumptionsDrawer({ children }: AssumptionsDrawerProps) {
                           First-time ESRS Implementation
                         </p>
                         <p className="text-yellow-700 dark:text-yellow-300 mt-1">
-                          This is our first year implementing ESRS S1. Data completeness and methodologies 
-                          will improve as we refine our collection processes and system integrations.
+                          This is our first year implementing ESRS S1. Data
+                          completeness and methodologies will improve as we
+                          refine our collection processes and system
+                          integrations.
                         </p>
                       </div>
                     </div>

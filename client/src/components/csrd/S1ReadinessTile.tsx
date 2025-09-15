@@ -1,9 +1,15 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CalendarIcon, AlertTriangleIcon, CheckCircleIcon } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { CalendarIcon, AlertTriangleIcon, CheckCircleIcon } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 interface S1ReadinessTileProps {
   entityId: string;
@@ -19,7 +25,10 @@ interface ReadinessData {
   completedMetrics: number;
 }
 
-export function S1ReadinessTile({ entityId, entityName }: S1ReadinessTileProps) {
+export function S1ReadinessTile({
+  entityId,
+  entityName,
+}: S1ReadinessTileProps) {
   const { data: readinessData, isLoading } = useQuery<ReadinessData>({
     queryKey: ['/api/csrd/s1-readiness', entityId],
     enabled: !!entityId,
@@ -54,17 +63,23 @@ export function S1ReadinessTile({ entityId, entityName }: S1ReadinessTileProps) 
 
   const getStatusColor = () => {
     switch (readiness.status) {
-      case 'ready': return 'bg-green-500';
-      case 'pending': return 'bg-yellow-500';
-      case 'incomplete': return 'bg-red-500';
+      case 'ready':
+        return 'bg-green-500';
+      case 'pending':
+        return 'bg-yellow-500';
+      case 'incomplete':
+        return 'bg-red-500';
     }
   };
 
   const getStatusIcon = () => {
     switch (readiness.status) {
-      case 'ready': return <CheckCircleIcon className="w-4 h-4 text-green-600" />;
-      case 'pending': return <AlertTriangleIcon className="w-4 h-4 text-yellow-600" />;
-      case 'incomplete': return <AlertTriangleIcon className="w-4 h-4 text-red-600" />;
+      case 'ready':
+        return <CheckCircleIcon className="w-4 h-4 text-green-600" />;
+      case 'pending':
+        return <AlertTriangleIcon className="w-4 h-4 text-yellow-600" />;
+      case 'incomplete':
+        return <AlertTriangleIcon className="w-4 h-4 text-red-600" />;
     }
   };
 
@@ -78,7 +93,10 @@ export function S1ReadinessTile({ entityId, entityName }: S1ReadinessTileProps) 
           </div>
           <div className="flex items-center gap-1">
             {getStatusIcon()}
-            <Badge variant={readiness.status === 'ready' ? 'default' : 'secondary'} className="text-xs">
+            <Badge
+              variant={readiness.status === 'ready' ? 'default' : 'secondary'}
+              className="text-xs"
+            >
               {readiness.status}
             </Badge>
           </div>
@@ -89,24 +107,30 @@ export function S1ReadinessTile({ entityId, entityName }: S1ReadinessTileProps) 
         <div className="space-y-2">
           <div className="flex justify-between items-center text-xs">
             <span className="text-muted-foreground">Data Completeness</span>
-            <span className="font-medium">{readiness.completenessPercent}%</span>
+            <span className="font-medium">
+              {readiness.completenessPercent}%
+            </span>
           </div>
-          <Progress 
-            value={readiness.completenessPercent} 
+          <Progress
+            value={readiness.completenessPercent}
             className="h-2"
             style={{
-              background: readiness.completenessPercent < 50 
-                ? 'linear-gradient(to right, #ef4444, #f97316)'
-                : readiness.completenessPercent < 80
-                ? 'linear-gradient(to right, #f97316, #eab308)'
-                : 'linear-gradient(to right, #22c55e, #16a34a)'
+              background:
+                readiness.completenessPercent < 50
+                  ? 'linear-gradient(to right, #ef4444, #f97316)'
+                  : readiness.completenessPercent < 80
+                    ? 'linear-gradient(to right, #f97316, #eab308)'
+                    : 'linear-gradient(to right, #22c55e, #16a34a)',
             }}
           />
         </div>
 
         {/* Metrics Progress */}
         <div className="flex justify-between items-center text-xs text-muted-foreground">
-          <span>{readiness.completedMetrics}/{readiness.totalMetrics} metrics complete</span>
+          <span>
+            {readiness.completedMetrics}/{readiness.totalMetrics} metrics
+            complete
+          </span>
           <span>
             {readiness.lastCalculationDate ? (
               <div className="flex items-center gap-1">
@@ -124,8 +148,12 @@ export function S1ReadinessTile({ entityId, entityName }: S1ReadinessTileProps) 
           <div className="space-y-1">
             <div className="text-xs text-muted-foreground">Pending fields:</div>
             <div className="flex flex-wrap gap-1">
-              {readiness.pendingFields.slice(0, 3).map((field) => (
-                <Badge key={field} variant="outline" className="text-xs px-1 py-0">
+              {readiness.pendingFields.slice(0, 3).map(field => (
+                <Badge
+                  key={field}
+                  variant="outline"
+                  className="text-xs px-1 py-0"
+                >
                   {field}
                 </Badge>
               ))}
@@ -139,8 +167,8 @@ export function S1ReadinessTile({ entityId, entityName }: S1ReadinessTileProps) 
         )}
 
         {/* Action Button */}
-        <Button 
-          size="sm" 
+        <Button
+          size="sm"
           variant={readiness.status === 'ready' ? 'default' : 'secondary'}
           className="w-full text-xs"
         >

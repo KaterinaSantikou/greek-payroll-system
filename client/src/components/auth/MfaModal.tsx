@@ -10,15 +10,32 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Smartphone, Shield, Key, Fingerprint, Download, AlertCircle, CheckCircle } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Smartphone,
+  Shield,
+  Key,
+  Fingerprint,
+  Download,
+  AlertCircle,
+  CheckCircle,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MfaModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   mode: 'setup' | 'verify' | 'challenge';
-  onVerify: (method: 'totp' | 'webauthn' | 'backup', value: string) => Promise<boolean>;
+  onVerify: (
+    method: 'totp' | 'webauthn' | 'backup',
+    value: string
+  ) => Promise<boolean>;
   onSetupComplete?: () => void;
   availableMethods?: {
     totp: boolean;
@@ -45,8 +62,12 @@ export function MfaModal({
 }: MfaModalProps) {
   const [totpCode, setTotpCode] = useState('');
   const [backupCode, setBackupCode] = useState('');
-  const [activeTab, setActiveTab] = useState<'totp' | 'webauthn' | 'backup'>('totp');
-  const [setupStep, setSetupStep] = useState<'choose' | 'totp-setup' | 'webauthn-setup' | 'backup-codes'>('choose');
+  const [activeTab, setActiveTab] = useState<'totp' | 'webauthn' | 'backup'>(
+    'totp'
+  );
+  const [setupStep, setSetupStep] = useState<
+    'choose' | 'totp-setup' | 'webauthn-setup' | 'backup-codes'
+  >('choose');
 
   const handleTotpVerify = async () => {
     if (totpCode.length === 6) {
@@ -83,7 +104,7 @@ export function MfaModal({
 
   const downloadBackupCodes = () => {
     const content = `PayrollSync MFA Backup Codes\nGenerated: ${new Date().toLocaleDateString()}\n\n${backupCodes.map((code, i) => `${i + 1}. ${code}`).join('\n')}\n\nIMPORTANT:\n- Keep these codes secure and private\n- Each code can only be used once\n- Use when you cannot access your authenticator app`;
-    
+
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -113,23 +134,32 @@ export function MfaModal({
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 {availableMethods.totp && (
-                  <Card className="cursor-pointer hover:bg-accent" onClick={() => setSetupStep('totp-setup')}>
+                  <Card
+                    className="cursor-pointer hover:bg-accent"
+                    onClick={() => setSetupStep('totp-setup')}
+                  >
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
                         <Smartphone className="h-5 w-5" />
-                        <CardTitle className="text-lg">Authenticator App</CardTitle>
+                        <CardTitle className="text-lg">
+                          Authenticator App
+                        </CardTitle>
                       </div>
                     </CardHeader>
                     <CardContent>
                       <CardDescription>
-                        Use Google Authenticator, Authy, or similar app to generate codes
+                        Use Google Authenticator, Authy, or similar app to
+                        generate codes
                       </CardDescription>
                     </CardContent>
                   </Card>
                 )}
 
                 {availableMethods.webauthn && (
-                  <Card className="cursor-pointer hover:bg-accent" onClick={() => setSetupStep('webauthn-setup')}>
+                  <Card
+                    className="cursor-pointer hover:bg-accent"
+                    onClick={() => setSetupStep('webauthn-setup')}
+                  >
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
                         <Fingerprint className="h-5 w-5" />
@@ -155,9 +185,14 @@ export function MfaModal({
                   </CardHeader>
                   <CardContent>
                     <CardDescription className="mb-3">
-                      Generate one-time backup codes to access your account if other methods are unavailable
+                      Generate one-time backup codes to access your account if
+                      other methods are unavailable
                     </CardDescription>
-                    <Button variant="outline" onClick={() => setSetupStep('backup-codes')} className="w-full">
+                    <Button
+                      variant="outline"
+                      onClick={() => setSetupStep('backup-codes')}
+                      className="w-full"
+                    >
                       Generate Backup Codes
                     </Button>
                   </CardContent>
@@ -174,7 +209,11 @@ export function MfaModal({
                   Scan this QR code with your authenticator app
                 </p>
                 {qrCodeDataUrl ? (
-                  <img src={qrCodeDataUrl} alt="QR Code" className="mx-auto border rounded" />
+                  <img
+                    src={qrCodeDataUrl}
+                    alt="QR Code"
+                    className="mx-auto border rounded"
+                  />
                 ) : (
                   <div className="w-48 h-48 mx-auto bg-muted rounded flex items-center justify-center">
                     QR Code Loading...
@@ -183,7 +222,9 @@ export function MfaModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="totp-verify">Enter 6-digit code from your app</Label>
+                <Label htmlFor="totp-verify">
+                  Enter 6-digit code from your app
+                </Label>
                 <Input
                   id="totp-verify"
                   type="text"
@@ -191,7 +232,7 @@ export function MfaModal({
                   pattern="[0-9]*"
                   maxLength={6}
                   value={totpCode}
-                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
+                  onChange={e => setTotpCode(e.target.value.replace(/\D/g, ''))}
                   placeholder="123456"
                   className="text-center text-lg tracking-widest"
                 />
@@ -205,10 +246,13 @@ export function MfaModal({
               )}
 
               <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setSetupStep('choose')}>
+                <Button
+                  variant="outline"
+                  onClick={() => setSetupStep('choose')}
+                >
                   Back
                 </Button>
-                <Button 
+                <Button
                   onClick={handleTotpVerify}
                   disabled={totpCode.length !== 6 || loading}
                 >
@@ -224,9 +268,12 @@ export function MfaModal({
                 <Fingerprint className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <h3 className="text-lg font-medium mb-2">Set Up Security Key</h3>
+                <h3 className="text-lg font-medium mb-2">
+                  Set Up Security Key
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  Click the button below and follow your browser's instructions to register your security key or biometric authentication.
+                  Click the button below and follow your browser's instructions
+                  to register your security key or biometric authentication.
                 </p>
               </div>
 
@@ -238,13 +285,13 @@ export function MfaModal({
               )}
 
               <div className="flex gap-2 justify-center">
-                <Button variant="outline" onClick={() => setSetupStep('choose')}>
+                <Button
+                  variant="outline"
+                  onClick={() => setSetupStep('choose')}
+                >
                   Back
                 </Button>
-                <Button 
-                  onClick={handleWebAuthnVerify}
-                  disabled={loading}
-                >
+                <Button onClick={handleWebAuthnVerify} disabled={loading}>
                   {loading ? 'Setting Up...' : 'Set Up Security Key'}
                 </Button>
               </div>
@@ -256,7 +303,8 @@ export function MfaModal({
               <div className="text-center">
                 <h3 className="text-lg font-medium mb-2">Your Backup Codes</h3>
                 <p className="text-sm text-muted-foreground">
-                  Save these codes in a secure location. Each code can only be used once.
+                  Save these codes in a secure location. Each code can only be
+                  used once.
                 </p>
               </div>
 
@@ -264,8 +312,13 @@ export function MfaModal({
                 <CardContent className="pt-6">
                   <div className="grid grid-cols-2 gap-2 font-mono text-sm">
                     {backupCodes.map((code, index) => (
-                      <div key={index} className="flex items-center gap-2 p-2 bg-muted/50 rounded">
-                        <span className="text-muted-foreground">{(index + 1).toString().padStart(2, '0')}.</span>
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 p-2 bg-muted/50 rounded"
+                      >
+                        <span className="text-muted-foreground">
+                          {(index + 1).toString().padStart(2, '0')}.
+                        </span>
                         <span>{code}</span>
                       </div>
                     ))}
@@ -281,7 +334,10 @@ export function MfaModal({
               </div>
 
               <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setSetupStep('choose')}>
+                <Button
+                  variant="outline"
+                  onClick={() => setSetupStep('choose')}
+                >
                   Back
                 </Button>
                 <Button onClick={downloadBackupCodes}>
@@ -310,7 +366,10 @@ export function MfaModal({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
+        <Tabs
+          value={activeTab}
+          onValueChange={value => setActiveTab(value as any)}
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="totp" disabled={!availableMethods.totp}>
               <Smartphone className="h-4 w-4" />
@@ -318,7 +377,10 @@ export function MfaModal({
             <TabsTrigger value="webauthn" disabled={!availableMethods.webauthn}>
               <Fingerprint className="h-4 w-4" />
             </TabsTrigger>
-            <TabsTrigger value="backup" disabled={!availableMethods.backupCodes}>
+            <TabsTrigger
+              value="backup"
+              disabled={!availableMethods.backupCodes}
+            >
               <Key className="h-4 w-4" />
             </TabsTrigger>
           </TabsList>
@@ -336,7 +398,7 @@ export function MfaModal({
                 pattern="[0-9]*"
                 maxLength={6}
                 value={totpCode}
-                onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ''))}
+                onChange={e => setTotpCode(e.target.value.replace(/\D/g, ''))}
                 placeholder="123456"
                 className="text-center text-lg tracking-widest"
                 autoFocus
@@ -348,7 +410,7 @@ export function MfaModal({
                 {error}
               </div>
             )}
-            <Button 
+            <Button
               onClick={handleTotpVerify}
               disabled={totpCode.length !== 6 || loading}
               className="w-full"
@@ -372,7 +434,7 @@ export function MfaModal({
                 {error}
               </div>
             )}
-            <Button 
+            <Button
               onClick={handleWebAuthnVerify}
               disabled={loading}
               className="w-full"
@@ -391,7 +453,9 @@ export function MfaModal({
               <Input
                 type="text"
                 value={backupCode}
-                onChange={(e) => setBackupCode(e.target.value.replace(/[^0-9-]/g, ''))}
+                onChange={e =>
+                  setBackupCode(e.target.value.replace(/[^0-9-]/g, ''))
+                }
                 placeholder="1234-5678"
                 className="text-center font-mono"
                 maxLength={9}
@@ -403,7 +467,7 @@ export function MfaModal({
                 {error}
               </div>
             )}
-            <Button 
+            <Button
               onClick={handleBackupCodeVerify}
               disabled={backupCode.length < 8 || loading}
               className="w-full"

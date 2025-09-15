@@ -25,7 +25,7 @@ export function ABTestProvider({ children, userId }: ABTestProviderProps) {
 
   const getUserId = () => {
     if (userId) return userId;
-    
+
     // Try to get from localStorage for persistent user identity
     let storedUserId = localStorage.getItem('ab-test-user-id');
     if (!storedUserId) {
@@ -46,7 +46,9 @@ export function ABTestProvider({ children, userId }: ABTestProviderProps) {
   }, []);
 
   return (
-    <ABTestContext.Provider value={{ tests, isLoading, getUserId, refreshTests }}>
+    <ABTestContext.Provider
+      value={{ tests, isLoading, getUserId, refreshTests }}
+    >
       {children}
     </ABTestContext.Provider>
   );

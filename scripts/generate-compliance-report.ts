@@ -2,7 +2,7 @@
 
 /**
  * Compliance Report Generation Script
- * 
+ *
  * This script generates comprehensive compliance reports showing the status
  * of legal documents, configuration alignment, and regulatory compliance.
  */
@@ -53,7 +53,6 @@ interface ComplianceReport {
 }
 
 class ComplianceReportGenerator {
-  
   /**
    * Generate comprehensive compliance report
    */
@@ -64,29 +63,33 @@ class ComplianceReportGenerator {
       // Get current configuration
       const config = await greekLawConfigLoader.loadConfig();
       const complianceStatus = await greekLawConfigLoader.getComplianceStatus();
-      
+
       // Generate full compliance report from legal document tracker
       const fullReport = legalDocumentTracker.generateComplianceReport();
-      
+
       // Calculate compliance metrics
       const complianceMetrics = await this.calculateComplianceMetrics();
-      
+
       // Get documents requiring attention
-      const attentionItems = legalDocumentTracker.getDocumentsRequiringAttention();
-      
+      const attentionItems =
+        legalDocumentTracker.getDocumentsRequiringAttention();
+
       // Build comprehensive report
       const report: ComplianceReport = {
         generatedAt: new Date().toISOString(),
         reportVersion: '1.0.0',
         configVersion: config.version,
-        
+
         complianceStatus: {
-          overall: this.determineOverallCompliance(complianceStatus, attentionItems),
+          overall: this.determineOverallCompliance(
+            complianceStatus,
+            attentionItems
+          ),
           score: complianceMetrics.score,
           issues: complianceStatus.issues,
-          recommendations: this.generateRecommendations(attentionItems)
+          recommendations: this.generateRecommendations(attentionItems),
         },
-        
+
         documents: {
           total: fullReport.documentSummary.total,
           active: fullReport.documentSummary.active,
@@ -94,19 +97,18 @@ class ComplianceReportGenerator {
           expiringSoon: attentionItems.expiringSoon.length,
           underReview: attentionItems.underReview.length,
           byCategory: fullReport.documentSummary.byCategory,
-          byType: fullReport.documentSummary.byType
+          byType: fullReport.documentSummary.byType,
         },
-        
+
         configurationAlignment: complianceMetrics.configurationAlignment,
-        
+
         auditTrail: {
           recentChanges: this.getRecentDocumentChanges(),
-          upcomingReviews: this.getUpcomingReviews()
-        }
+          upcomingReviews: this.getUpcomingReviews(),
+        },
       };
 
       return report;
-      
     } catch (error) {
       console.error('Failed to generate compliance report:', error);
       throw error;
@@ -127,11 +129,11 @@ class ComplianceReportGenerator {
   }> {
     const configSections = [
       'minimumWage',
-      'efkaRates', 
+      'efkaRates',
       'taxBrackets',
       'workingTimeLimits',
       'premiumRates',
-      'severanceRules'
+      'severanceRules',
     ];
 
     let compliantSections = 0;
@@ -140,8 +142,9 @@ class ComplianceReportGenerator {
 
     // Check each configuration section
     for (const section of configSections) {
-      const documents = legalDocumentTracker.getDocumentsForConfigSection(section);
-      
+      const documents =
+        legalDocumentTracker.getDocumentsForConfigSection(section);
+
       if (documents.length === 0) {
         missingDocumentation.push(section);
       } else {
@@ -154,7 +157,7 @@ class ComplianceReportGenerator {
           }
           return true;
         });
-        
+
         if (allCurrent) {
           compliantSections++;
         } else {
@@ -172,8 +175,8 @@ class ComplianceReportGenerator {
         sectionsTracked: configSections.length,
         sectionsCompliant: compliantSections,
         missingDocumentation,
-        outdatedReferences
-      }
+        outdatedReferences,
+      },
     };
   }
 
@@ -187,13 +190,16 @@ class ComplianceReportGenerator {
     if (status.status === 'CRITICAL' || status.issues.length > 5) {
       return 'NON_COMPLIANT';
     }
-    
-    if (status.status === 'WARNING' || status.status === 'OVERDUE' || 
-        attentionItems.expiringSoon.length > 0 || 
-        attentionItems.underReview.length > 2) {
+
+    if (
+      status.status === 'WARNING' ||
+      status.status === 'OVERDUE' ||
+      attentionItems.expiringSoon.length > 0 ||
+      attentionItems.underReview.length > 2
+    ) {
       return 'WARNING';
     }
-    
+
     return 'COMPLIANT';
   }
 
@@ -208,21 +214,31 @@ class ComplianceReportGenerator {
     const recommendations: string[] = [];
 
     if (attentionItems.expiringSoon.length > 0) {
-      recommendations.push(`Update ${attentionItems.expiringSoon.length} documents expiring soon`);
+      recommendations.push(
+        `Update ${attentionItems.expiringSoon.length} documents expiring soon`
+      );
     }
 
     if (attentionItems.underReview.length > 0) {
-      recommendations.push(`Complete review of ${attentionItems.underReview.length} pending documents`);
+      recommendations.push(
+        `Complete review of ${attentionItems.underReview.length} pending documents`
+      );
     }
 
     if (attentionItems.missingChecksums.length > 0) {
-      recommendations.push(`Add checksums for ${attentionItems.missingChecksums.length} documents`);
+      recommendations.push(
+        `Add checksums for ${attentionItems.missingChecksums.length} documents`
+      );
     }
 
     // Generic recommendations
     recommendations.push('Schedule quarterly compliance review');
-    recommendations.push('Update environment variables if law changes are pending');
-    recommendations.push('Run full system validation after any document updates');
+    recommendations.push(
+      'Update environment variables if law changes are pending'
+    );
+    recommendations.push(
+      'Run full system validation after any document updates'
+    );
 
     return recommendations;
   }
@@ -254,14 +270,16 @@ class ComplianceReportGenerator {
               documentId: doc.documentId,
               version: version.version,
               date: version.date,
-              changes: version.changes
+              changes: version.changes,
             });
           }
         });
       });
 
       // Sort by date (newest first)
-      return recentChanges.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      return recentChanges.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
     } catch (error) {
       console.warn('Could not load recent changes:', error);
       return [];
@@ -284,16 +302,20 @@ class ComplianceReportGenerator {
         priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
       }> = [];
       const now = new Date();
-      const sixMonthsFromNow = new Date(now.getTime() + 6 * 30 * 24 * 60 * 60 * 1000);
+      const sixMonthsFromNow = new Date(
+        now.getTime() + 6 * 30 * 24 * 60 * 60 * 1000
+      );
 
       registry.documentRegistry.documents.forEach(doc => {
         if (doc.expiryDate) {
           const expiryDate = new Date(doc.expiryDate);
           if (expiryDate > now && expiryDate <= sixMonthsFromNow) {
             // Determine priority based on time to expiry
-            const daysToExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+            const daysToExpiry = Math.ceil(
+              (expiryDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
+            );
             let priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' = 'LOW';
-            
+
             if (daysToExpiry <= 30) priority = 'CRITICAL';
             else if (daysToExpiry <= 60) priority = 'HIGH';
             else if (daysToExpiry <= 90) priority = 'MEDIUM';
@@ -301,19 +323,21 @@ class ComplianceReportGenerator {
             upcomingReviews.push({
               documentId: doc.documentId,
               reviewDate: doc.expiryDate,
-              priority
+              priority,
             });
           }
         }
       });
 
       // Sort by priority and date
-      const priorityOrder = { 'CRITICAL': 4, 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1 };
+      const priorityOrder = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
       return upcomingReviews.sort((a, b) => {
         if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
           return priorityOrder[b.priority] - priorityOrder[a.priority];
         }
-        return new Date(a.reviewDate).getTime() - new Date(b.reviewDate).getTime();
+        return (
+          new Date(a.reviewDate).getTime() - new Date(b.reviewDate).getTime()
+        );
       });
     } catch (error) {
       console.warn('Could not load upcoming reviews:', error);
@@ -327,7 +351,7 @@ class ComplianceReportGenerator {
   async generateReports(outputDir: string = 'reports'): Promise<void> {
     const report = await this.generateReport();
     const timestamp = new Date().toISOString().split('T')[0];
-    
+
     // JSON Report
     const jsonPath = resolve(outputDir, `compliance-report-${timestamp}.json`);
     writeFileSync(jsonPath, JSON.stringify(report, null, 2));
@@ -366,9 +390,10 @@ class ComplianceReportGenerator {
 
 ## Compliance Issues
 
-${report.complianceStatus.issues.length > 0 ? 
-  report.complianceStatus.issues.map(issue => `- ⚠️ ${issue}`).join('\n') : 
-  '_No compliance issues detected._'
+${
+  report.complianceStatus.issues.length > 0
+    ? report.complianceStatus.issues.map(issue => `- ⚠️ ${issue}`).join('\n')
+    : '_No compliance issues detected._'
 }
 
 ## Recommendations
@@ -392,33 +417,49 @@ ${Object.entries(report.documents.byType)
 **Tracked Sections:** ${report.configurationAlignment.sectionsTracked}  
 **Compliant Sections:** ${report.configurationAlignment.sectionsCompliant}
 
-${report.configurationAlignment.missingDocumentation.length > 0 ? `
+${
+  report.configurationAlignment.missingDocumentation.length > 0
+    ? `
 ### Missing Documentation
 ${report.configurationAlignment.missingDocumentation.map(section => `- ❌ ${section}`).join('\n')}
-` : ''}
+`
+    : ''
+}
 
-${report.configurationAlignment.outdatedReferences.length > 0 ? `
+${
+  report.configurationAlignment.outdatedReferences.length > 0
+    ? `
 ### Outdated References
 ${report.configurationAlignment.outdatedReferences.map(section => `- ⏰ ${section}`).join('\n')}
-` : ''}
+`
+    : ''
+}
 
 ## Recent Changes (Last 30 Days)
 
-${report.auditTrail.recentChanges.length > 0 ? 
-  report.auditTrail.recentChanges
-    .slice(0, 10) // Show last 10 changes
-    .map(change => `- **${change.documentId}** v${change.version} (${change.date}): ${change.changes}`)
-    .join('\n') :
-  '_No recent changes._'
+${
+  report.auditTrail.recentChanges.length > 0
+    ? report.auditTrail.recentChanges
+        .slice(0, 10) // Show last 10 changes
+        .map(
+          change =>
+            `- **${change.documentId}** v${change.version} (${change.date}): ${change.changes}`
+        )
+        .join('\n')
+    : '_No recent changes._'
 }
 
 ## Upcoming Reviews
 
-${report.auditTrail.upcomingReviews.length > 0 ?
-  report.auditTrail.upcomingReviews
-    .map(review => `- **${review.documentId}** - ${review.reviewDate} (${review.priority} priority)`)
-    .join('\n') :
-  '_No upcoming reviews scheduled._'
+${
+  report.auditTrail.upcomingReviews.length > 0
+    ? report.auditTrail.upcomingReviews
+        .map(
+          review =>
+            `- **${review.documentId}** - ${review.reviewDate} (${review.priority} priority)`
+        )
+        .join('\n')
+    : '_No upcoming reviews scheduled._'
 }
 
 ---
@@ -433,24 +474,28 @@ ${report.auditTrail.upcomingReviews.length > 0 ?
     console.log('\n' + '='.repeat(60));
     console.log('📊 LEGAL COMPLIANCE REPORT SUMMARY');
     console.log('='.repeat(60));
-    console.log(`Status: ${this.getStatusEmoji(report.complianceStatus.overall)} ${report.complianceStatus.overall}`);
+    console.log(
+      `Status: ${this.getStatusEmoji(report.complianceStatus.overall)} ${report.complianceStatus.overall}`
+    );
     console.log(`Score: ${report.complianceStatus.score}/100`);
-    console.log(`Documents: ${report.documents.active}/${report.documents.total} active`);
-    
+    console.log(
+      `Documents: ${report.documents.active}/${report.documents.total} active`
+    );
+
     if (report.complianceStatus.issues.length > 0) {
       console.log('\n🚨 Issues:');
       report.complianceStatus.issues.slice(0, 5).forEach(issue => {
         console.log(`  - ${issue}`);
       });
     }
-    
+
     if (report.complianceStatus.recommendations.length > 0) {
       console.log('\n💡 Top Recommendations:');
       report.complianceStatus.recommendations.slice(0, 3).forEach(rec => {
         console.log(`  - ${rec}`);
       });
     }
-    
+
     console.log('\n📈 Next Steps:');
     console.log('  1. Review and address any compliance issues');
     console.log('  2. Update expiring documents');
@@ -460,10 +505,14 @@ ${report.auditTrail.upcomingReviews.length > 0 ?
 
   private getStatusEmoji(status: string): string {
     switch (status) {
-      case 'COMPLIANT': return '✅';
-      case 'WARNING': return '⚠️';
-      case 'NON_COMPLIANT': return '❌';
-      default: return '❓';
+      case 'COMPLIANT':
+        return '✅';
+      case 'WARNING':
+        return '⚠️';
+      case 'NON_COMPLIANT':
+        return '❌';
+      default:
+        return '❓';
     }
   }
 }

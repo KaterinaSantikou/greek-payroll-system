@@ -11,7 +11,7 @@ const AuthBootstrap = ({ children }: { children: React.ReactNode }) => {
   const [authState, setAuthState] = useState({
     authenticated: false,
     user: null,
-    loading: true
+    loading: true,
   });
 
   useEffect(() => {
@@ -21,11 +21,11 @@ const AuthBootstrap = ({ children }: { children: React.ReactNode }) => {
           credentials: 'include',
         });
         const data = await response.json();
-        
+
         setAuthState({
           authenticated: data.authenticated,
           user: data.user,
-          loading: false
+          loading: false,
         });
 
         // Navigate to dashboard if authenticated and on login page
@@ -60,26 +60,27 @@ describe('AuthBootstrap', () => {
       },
     });
     mockLocation = new MemoryLocation();
-    
+
     // Clear all mocks
     vi.clearAllMocks();
-    
+
     // Mock fetch globally
     global.fetch = vi.fn();
   });
 
-  const TestWrapper = ({ children, initialPath = '/' }: { 
-    children: React.ReactNode; 
+  const TestWrapper = ({
+    children,
+    initialPath = '/',
+  }: {
+    children: React.ReactNode;
     initialPath?: string;
   }) => {
     mockLocation.setPath(initialPath);
-    
+
     return (
       <QueryClientProvider client={queryClient}>
         <Router hook={mockLocation.hook}>
-          <AuthBootstrap>
-            {children}
-          </AuthBootstrap>
+          <AuthBootstrap>{children}</AuthBootstrap>
         </Router>
       </QueryClientProvider>
     );
@@ -88,7 +89,7 @@ describe('AuthBootstrap', () => {
   it('should fetch auth status with credentials included', async () => {
     const mockResponse = {
       authenticated: false,
-      user: null
+      user: null,
     };
 
     (global.fetch as any).mockResolvedValueOnce({
@@ -112,7 +113,7 @@ describe('AuthBootstrap', () => {
   it('should navigate to dashboard when authenticated and on login page', async () => {
     const mockResponse = {
       authenticated: true,
-      user: { id: '1', name: 'Test User', email: 'test@example.com' }
+      user: { id: '1', name: 'Test User', email: 'test@example.com' },
     };
 
     (global.fetch as any).mockResolvedValueOnce({
@@ -134,7 +135,7 @@ describe('AuthBootstrap', () => {
   it('should not navigate when authenticated but not on login page', async () => {
     const mockResponse = {
       authenticated: true,
-      user: { id: '1', name: 'Test User', email: 'test@example.com' }
+      user: { id: '1', name: 'Test User', email: 'test@example.com' },
     };
 
     (global.fetch as any).mockResolvedValueOnce({
@@ -159,7 +160,7 @@ describe('AuthBootstrap', () => {
   it('should not navigate when not authenticated', async () => {
     const mockResponse = {
       authenticated: false,
-      user: null
+      user: null,
     };
 
     (global.fetch as any).mockResolvedValueOnce({
@@ -183,7 +184,7 @@ describe('AuthBootstrap', () => {
 
   it('should handle fetch errors gracefully', async () => {
     (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
-    
+
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     render(
@@ -193,7 +194,10 @@ describe('AuthBootstrap', () => {
     );
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith('Auth bootstrap failed:', expect.any(Error));
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Auth bootstrap failed:',
+        expect.any(Error)
+      );
     });
 
     consoleSpy.mockRestore();

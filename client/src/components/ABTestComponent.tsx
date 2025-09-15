@@ -8,7 +8,13 @@ import { useABTestContext } from '@/components/ABTestProvider';
 
 interface ABTestComponentProps {
   testId: string;
-  children: React.ReactNode | ((props: { variant?: any; trackConversion?: (value?: number) => void; isInTest: boolean }) => React.ReactNode);
+  children:
+    | React.ReactNode
+    | ((props: {
+        variant?: any;
+        trackConversion?: (value?: number) => void;
+        isInTest: boolean;
+      }) => React.ReactNode);
   fallback?: React.ReactNode;
   onImpression?: () => void;
   onConversion?: (value?: number) => void;
@@ -19,14 +25,14 @@ export function ABTestComponent({
   children,
   fallback,
   onImpression,
-  onConversion
+  onConversion,
 }: ABTestComponentProps) {
   const { getUserId } = useABTestContext();
   const { variant, isLoading, trackConversion, isInTest } = useABTest({
     testId,
     userId: getUserId(),
     onImpression,
-    onConversion
+    onConversion,
   });
 
   if (isLoading) {
@@ -41,15 +47,16 @@ export function ABTestComponent({
   const childProps = {
     variant: variant.config,
     trackConversion,
-    isInTest: true
+    isInTest: true,
   };
 
   return (
     <div data-ab-test={testId} data-ab-variant={variant.id}>
-      {typeof children === 'function' 
-        ? (children as (props: typeof childProps) => React.ReactNode)(childProps)
-        : children
-      }
+      {typeof children === 'function'
+        ? (children as (props: typeof childProps) => React.ReactNode)(
+            childProps
+          )
+        : children}
     </div>
   );
 }
@@ -64,7 +71,7 @@ export function withABTest<P extends object>(
     const { getUserId } = useABTestContext();
     const { variant, isLoading, trackConversion, isInTest } = useABTest({
       testId,
-      userId: getUserId()
+      userId: getUserId(),
     });
 
     if (isLoading) {
@@ -78,7 +85,7 @@ export function withABTest<P extends object>(
     const enhancedProps = {
       ...props,
       abTestVariant: variant.config,
-      trackConversion
+      trackConversion,
     } as P & { abTestVariant: any; trackConversion: (value?: number) => void };
 
     return <Component {...enhancedProps} />;
