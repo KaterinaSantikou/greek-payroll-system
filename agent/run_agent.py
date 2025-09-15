@@ -970,7 +970,7 @@ def main():
         dependency_graph = read_dependency_graph()
         dependency_summary = format_dependency_summary(dependency_graph)
 
-    system = {
+        system = {
         "role":"system",
         "content": textwrap.dedent(f"""
         You are a senior full-stack engineer working on a Greek Payroll SaaS for hospitality (EFKA, ΣΣΕ, Digital Work Card).
