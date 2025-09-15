@@ -813,6 +813,320 @@ def run_quality_critic(task_file, changed_files, task_summary):
         print(f"⚠️ Error in quality critic: {e}")
         return False
 
+def analyze_critic_reports():
+    """Analyze past critic reports to extract improvement patterns"""
+    try:
+        critic_files = list(AGENT_DIR.glob("critic_report_*.md"))
+        if not critic_files:
+            return {}
+        
+        print(f"📊 Analyzing {len(critic_files)} critic reports for skill growth...")
+        
+        patterns = {
+            "common_issues": [],
+            "architectural_insights": [],
+            "greek_law_refinements": [],
+            "code_quality_patterns": [],
+            "success_patterns": []
+        }
+        
+        for critic_file in critic_files[-10:]:  # Analyze last 10 reports
+            try:
+                content = critic_file.read_text(encoding="utf-8")
+                
+                # Extract assessment level
+                if "Overall Assessment: EXCELLENT" in content:
+                    patterns["success_patterns"].append(extract_success_factors(content))
+                elif "Overall Assessment: NEEDS_IMPROVEMENT" in content:
+                    patterns["common_issues"].append(extract_issues(content))
+                
+                # Extract specific insights
+                if "Greek Labor Law Compliance:" in content:
+                    patterns["greek_law_refinements"].append(extract_law_insights(content))
+                
+                if "Code Quality:" in content:
+                    patterns["code_quality_patterns"].append(extract_quality_insights(content))
+                
+                if "Recommendations:" in content:
+                    patterns["architectural_insights"].append(extract_recommendations(content))
+                    
+            except Exception as e:
+                print(f"⚠️ Error analyzing {critic_file.name}: {e}")
+        
+        return patterns
+        
+    except Exception as e:
+        print(f"⚠️ Error analyzing critic reports: {e}")
+        return {}
+
+def extract_success_factors(content):
+    """Extract what made a task successful"""
+    lines = content.split('\n')
+    success_factors = []
+    
+    in_compliance_section = False
+    in_quality_section = False
+    
+    for line in lines:
+        if "Requirements Compliance:" in line and "5/5" in line:
+            success_factors.append("Perfect requirements compliance")
+        elif "Code Quality:" in line and "5/5" in line:
+            success_factors.append("Excellent code quality")
+        elif "✅" in line:
+            success_factors.append(line.strip())
+    
+    return success_factors
+
+def extract_issues(content):
+    """Extract common issues from poor assessments"""
+    lines = content.split('\n')
+    issues = []
+    
+    for line in lines:
+        if "⚠️" in line or "Missing" in line or "Consider" in line:
+            issues.append(line.strip())
+    
+    return issues
+
+def extract_law_insights(content):
+    """Extract Greek labor law insights"""
+    lines = content.split('\n')
+    insights = []
+    
+    for line in lines:
+        if any(keyword in line for keyword in ["N. 4093/2012", "EFKA", "ΣΣΕ", "Digital Work Card", "overtime", "holiday"]):
+            insights.append(line.strip())
+    
+    return insights
+
+def extract_quality_insights(content):
+    """Extract code quality patterns"""
+    lines = content.split('\n')
+    insights = []
+    
+    for line in lines:
+        if any(keyword in line for keyword in ["test", "validation", "error handling", "type safety", "performance"]):
+            insights.append(line.strip())
+    
+    return insights
+
+def extract_recommendations(content):
+    """Extract architectural recommendations"""
+    lines = content.split('\n')
+    recommendations = []
+    
+    in_recommendations = False
+    for line in lines:
+        if "## Recommendations:" in line:
+            in_recommendations = True
+            continue
+        elif line.startswith("##") and in_recommendations:
+            break
+        elif in_recommendations and line.strip():
+            recommendations.append(line.strip())
+    
+    return recommendations
+
+def evolve_prompt_guidelines(patterns):
+    """Evolve the system prompt based on learned patterns"""
+    try:
+        # Load existing evolution data
+        evolution_data = {}
+        if PROMPT_EVOLUTION_FILE.exists():
+            evolution_data = json.loads(PROMPT_EVOLUTION_FILE.read_text(encoding="utf-8"))
+        
+        # Initialize evolution tracking
+        if "version" not in evolution_data:
+            evolution_data = {
+                "version": 1,
+                "last_updated": datetime.now().isoformat(),
+                "learned_guidelines": [],
+                "architectural_patterns": [],
+                "greek_law_insights": [],
+                "quality_improvements": []
+            }
+        
+        # Add new insights from critic analysis
+        new_guidelines = []
+        
+        # Process common issues to create preventive guidelines
+        for issue_group in patterns.get("common_issues", []):
+            for issue in issue_group:
+                if "missing" in issue.lower():
+                    guideline = f"ALWAYS ensure: {issue.replace('Missing', 'Include').replace('⚠️', '').strip()}"
+                    new_guidelines.append(guideline)
+        
+        # Process success patterns to reinforce good practices
+        for success_group in patterns.get("success_patterns", []):
+            for success in success_group:
+                if "✅" in success:
+                    guideline = f"BEST PRACTICE: {success.replace('✅', '').strip()}"
+                    new_guidelines.append(guideline)
+        
+        # Add architectural insights
+        for insight_group in patterns.get("architectural_insights", []):
+            for insight in insight_group:
+                if insight and len(insight) > 10:
+                    evolution_data["architectural_patterns"].append(insight)
+        
+        # Add Greek law insights
+        for law_group in patterns.get("greek_law_refinements", []):
+            for law_insight in law_group:
+                if any(keyword in law_insight for keyword in ["N. 4093/2012", "EFKA", "overtime"]):
+                    evolution_data["greek_law_insights"].append(law_insight)
+        
+        # Add quality improvements
+        for quality_group in patterns.get("code_quality_patterns", []):
+            for quality in quality_group:
+                if any(keyword in quality for keyword in ["test", "validation", "error"]):
+                    evolution_data["quality_improvements"].append(quality)
+        
+        # Update evolution data
+        evolution_data["learned_guidelines"].extend(new_guidelines)
+        evolution_data["version"] += 1
+        evolution_data["last_updated"] = datetime.now().isoformat()
+        
+        # Remove duplicates and keep recent insights
+        evolution_data["learned_guidelines"] = list(set(evolution_data["learned_guidelines"]))[-50:]
+        evolution_data["architectural_patterns"] = list(set(evolution_data["architectural_patterns"]))[-30:]
+        evolution_data["greek_law_insights"] = list(set(evolution_data["greek_law_insights"]))[-30:]
+        evolution_data["quality_improvements"] = list(set(evolution_data["quality_improvements"]))[-30:]
+        
+        # Save evolution data
+        PROMPT_EVOLUTION_FILE.write_text(
+            json.dumps(evolution_data, indent=2, ensure_ascii=False),
+            encoding="utf-8"
+        )
+        
+        print(f"🧠 Prompt evolution updated to version {evolution_data['version']}")
+        print(f"   - {len(new_guidelines)} new guidelines learned")
+        print(f"   - {len(evolution_data['architectural_patterns'])} architectural patterns")
+        print(f"   - {len(evolution_data['greek_law_insights'])} Greek law insights")
+        
+        return evolution_data
+        
+    except Exception as e:
+        print(f"⚠️ Error evolving prompt guidelines: {e}")
+        return {}
+
+def update_learned_patterns(evolution_data):
+    """Update the learned patterns documentation"""
+    try:
+        CONTEXT_DIR.mkdir(exist_ok=True)
+        
+        learned_content = f"""# Learned Patterns and Guidelines
+
+**Last Updated**: {evolution_data.get('last_updated', 'Unknown')}
+**Version**: {evolution_data.get('version', 1)}
+
+## Evolved Guidelines
+
+These guidelines have been learned from past task completions and critic feedback:
+
+"""
+        
+        for guideline in evolution_data.get('learned_guidelines', []):
+            learned_content += f"- {guideline}\n"
+        
+        learned_content += f"""
+
+## Architectural Patterns
+
+Proven architectural patterns from successful implementations:
+
+"""
+        
+        for pattern in evolution_data.get('architectural_patterns', []):
+            learned_content += f"- {pattern}\n"
+        
+        learned_content += f"""
+
+## Greek Labor Law Insights
+
+Specific insights about Greek payroll compliance:
+
+"""
+        
+        for insight in evolution_data.get('greek_law_insights', []):
+            learned_content += f"- {insight}\n"
+        
+        learned_content += f"""
+
+## Quality Improvements
+
+Code quality and testing insights:
+
+"""
+        
+        for improvement in evolution_data.get('quality_improvements', []):
+            learned_content += f"- {improvement}\n"
+        
+        LEARNED_PATTERNS_FILE.write_text(learned_content, encoding="utf-8")
+        print(f"📚 Updated learned patterns documentation")
+        
+    except Exception as e:
+        print(f"⚠️ Error updating learned patterns: {e}")
+
+def load_evolved_guidelines():
+    """Load evolved guidelines to enhance the system prompt"""
+    try:
+        if not PROMPT_EVOLUTION_FILE.exists():
+            return ""
+        
+        evolution_data = json.loads(PROMPT_EVOLUTION_FILE.read_text(encoding="utf-8"))
+        
+        guidelines_text = ""
+        
+        if evolution_data.get('learned_guidelines'):
+            guidelines_text += "\n        EVOLVED GUIDELINES (learned from experience):\n"
+            for guideline in evolution_data['learned_guidelines'][-20:]:  # Last 20 guidelines
+                guidelines_text += f"        - {guideline}\n"
+        
+        if evolution_data.get('architectural_patterns'):
+            guidelines_text += "\n        PROVEN ARCHITECTURAL PATTERNS:\n"
+            for pattern in evolution_data['architectural_patterns'][-10:]:  # Last 10 patterns
+                guidelines_text += f"        - {pattern}\n"
+        
+        if evolution_data.get('greek_law_insights'):
+            guidelines_text += "\n        GREEK LAW EXPERTISE (from experience):\n"
+            for insight in evolution_data['greek_law_insights'][-15:]:  # Last 15 insights
+                guidelines_text += f"        - {insight}\n"
+        
+        return guidelines_text
+        
+    except Exception as e:
+        print(f"⚠️ Error loading evolved guidelines: {e}")
+        return ""
+
+def perform_skill_growth_cycle():
+    """Perform a complete skill growth and prompt evolution cycle"""
+    try:
+        print("🧠 Starting skill growth and prompt evolution cycle...")
+        
+        # Analyze past critic reports
+        patterns = analyze_critic_reports()
+        
+        if not patterns or not any(patterns.values()):
+            print("📊 No significant patterns found, skipping evolution")
+            return False
+        
+        # Evolve prompt guidelines based on patterns
+        evolution_data = evolve_prompt_guidelines(patterns)
+        
+        if not evolution_data:
+            print("⚠️ Failed to evolve guidelines")
+            return False
+        
+        # Update learned patterns documentation
+        update_learned_patterns(evolution_data)
+        
+        print("✅ Skill growth cycle completed successfully")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error in skill growth cycle: {e}")
+        return False
+
 def create_sandbox_environment():
     """Create isolated sandbox environment for safe development"""
     try:
@@ -971,6 +1285,9 @@ def main():
         # Get dependency graph for architectural context
         dependency_graph = read_dependency_graph()
         dependency_summary = format_dependency_summary(dependency_graph)
+        
+        # Load evolved guidelines from skill growth
+        evolved_guidelines = load_evolved_guidelines()
 
         system = {
         "role":"system",
