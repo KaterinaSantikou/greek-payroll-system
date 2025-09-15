@@ -395,6 +395,50 @@ export class PayrollEngineService {
       const processingTime = Date.now() - startTime;
       console.log(`Scope ${scopeId} computed in ${processingTime}ms (target: ≤1200ms)`);
 
+      // Finalize resource monitoring and log comprehensive report
+      if (resourceMonitor) {
+        const finalMetrics = resourceMonitor.finalize();
+        
+        // Log summary for large runs
+        logger.info('Payroll computation completed with resource monitoring', {
+          scopeId,
+          performance: {
+            employeesProcessed: calculations.length,
+            duration: `${finalMetrics.totalDuration}ms`,
+            employeesPerSecond: finalMetrics.employeesPerSecond,
+            timePerEmployee: `${finalMetrics.timePerEmployee.toFixed(2)}ms`
+          },
+          resources: {
+            peakMemory: `${Math.round(finalMetrics.peakMemoryUsage / 1024 / 1024)}MB`,
+            memoryGrowth: `${Math.round(finalMetrics.memoryGrowth / 1024 / 1024)}MB`,
+            memoryPerEmployee: `${Math.round(finalMetrics.memoryPerEmployee / 1024)}KB`,
+            gcActivity: `${finalMetrics.gcCount} collections, ${finalMetrics.gcTime}ms`
+          },
+          efficiency: {
+            overallScore: `${finalMetrics.overallScore}/100`,
+            memoryEfficiency: `${finalMetrics.memoryEfficiency}/100`,
+            timeEfficiency: `${finalMetrics.timeEfficiency}/100`
+          },
+          alerts: {
+            total: finalMetrics.alerts.length,
+            critical: finalMetrics.alerts.filter(a => a.severity === 'CRITICAL').length
+          }
+        });
+        
+        // Store resource metrics for analysis (could be persisted to database)
+        if (finalMetrics.overallScore < 60) {
+          logger.warn('Payroll run performance below threshold', {
+            scopeId,
+            score: finalMetrics.overallScore,
+            recommendations: [
+              'Consider reducing batch size for future runs',
+              'Review memory usage patterns',
+              'Monitor system resources during processing'
+            ]
+          });
+        }
+      }
+
       return {
         success: true,
         scopeId,
