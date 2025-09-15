@@ -2106,15 +2106,15 @@ def main():
             print("❌ Failed to get response from OpenAI")
             return
     
-    # Create git checkpoint before applying changes
-    print("💾 Creating git checkpoint before applying changes...")
-    try:
-        safe_run(["git", "stash", "push", "-m", "agent-backup", "--include-untracked"])
-        backup_created = True
-        print("✅ Git checkpoint created")
-    except subprocess.CalledProcessError:
-        print("⚠️ Could not create git checkpoint (no changes to stash)")
-        backup_created = False
+        # Create git checkpoint before applying changes
+        print("💾 Creating git checkpoint before applying changes...")
+        try:
+            safe_run(["git", "stash", "push", "-m", "agent-backup", "--include-untracked"])
+            backup_created = True
+            print("✅ Git checkpoint created")
+        except subprocess.CalledProcessError:
+            print("⚠️ Could not create git checkpoint (no changes to stash)")
+            backup_created = False
     
     # Apply changes to sandbox environment
     changed = apply_file_blocks(resp, SANDBOX_DIR)
