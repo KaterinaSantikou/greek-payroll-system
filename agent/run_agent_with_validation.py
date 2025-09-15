@@ -162,7 +162,7 @@ class AgentWithValidation:
         
         return False
 
-    def execute_pr_workflow_if_enabled(self, commit_message: str = None) -> bool:
+    def execute_pr_workflow_if_enabled(self, commit_message: Optional[str] = None) -> bool:
         """Execute PR workflow if enabled and validation passed"""
         if not self.config.get('auto_pr_enabled', True):
             logger.info("📋 PR workflow disabled - skipping")
@@ -185,7 +185,7 @@ class AgentWithValidation:
             return False
 
     def run_agent_with_safety(self, agent_script: str = "run_agent.py", 
-                             commit_message: str = None) -> bool:
+                             commit_message: Optional[str] = None) -> bool:
         """Run the agent with full safety pipeline"""
         logger.info("🤖 Starting agent with validation pipeline...")
         
@@ -235,7 +235,7 @@ class AgentWithValidation:
             logger.error(f"❌ Agent execution failed: {e}")
             return False
 
-    def get_validation_status(self) -> Dict[str, any]:
+    def get_validation_status(self) -> Dict[str, Any]:
         """Get current validation system status"""
         try:
             # Check validation log
