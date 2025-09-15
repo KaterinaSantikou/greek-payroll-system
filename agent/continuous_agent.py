@@ -27,10 +27,10 @@ def pop_first_idea(file_path):
     return first
 
 def backlog_empty():
-    """Return True if both backlog files are empty or missing"""
+    """Return True if all backlog files are empty or missing"""
     def has_ideas(fp):
         return fp.exists() and any(l.strip() and not l.startswith("#") for l in fp.read_text(encoding="utf-8").splitlines())
-    return not has_ideas(LOGIC_FILE) and not has_ideas(UI_FILE)
+    return not any(has_ideas(bf) for bf in BACKLOG_FILES)
 
 def get_last_done_task_title():
     """Get the title from the most recently completed .md file in /done"""
@@ -52,14 +52,13 @@ while True:
         print("🛠 Found a pending task — running agent...")
         run_once()
     else:
-        if next_type == "logic":
-            idea = pop_first_idea(LOGIC_FILE)
-            label = "Logic"
-            next_type = "ui"
-        else:
-            idea = pop_first_idea(UI_FILE)
-            label = "UI/UX"
-            next_type = "logic"
+        # Pick from the first available backlog file
+        idea = None
+        label = "Analytical"
+        for backlog_file in BACKLOG_FILES:
+            idea = pop_first_idea(backlog_file)
+            if idea:
+                break
 
         if idea:
             print(f"📝 Creating {label} task from backlog idea: {idea}")
