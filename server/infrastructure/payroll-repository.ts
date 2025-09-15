@@ -135,11 +135,12 @@ export class PayrollRepository {
         )
       );
 
-    // Combine employee and contract data
+    // PERFORMANCE OPTIMIZATION: Use Map for O(1) contract lookups instead of O(n) Array.find()
+    const contractMap = new Map(contractData.map(c => [c.employeeId, c]));
     const result: EmployeePayrollInfo[] = [];
     
     for (const emp of employeeData) {
-      const contract = contractData.find(c => c.employeeId === emp.employeeId);
+      const contract = contractMap.get(emp.employeeId);
       if (contract) {
         // Calculate age if birth date available
         let age: number | undefined;
