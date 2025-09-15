@@ -1,3 +1,22 @@
+We’ll upgrade it so it actually:
+
+Opens the last .md file from /tasks/done
+
+Reads the first heading or title line inside it (like # Task: Implement severance calculation module)
+
+Uses that as the commit message:
+
+AI Agent: Completed task — Implement severance calculation module
+
+📝 How to Update continuous_agent.py
+
+In Replit, open:
+
+agent/continuous_agent.py
+
+
+Replace the whole file content with this version:
+
 import time, pathlib, sys, subprocess, re
 from agent.run_agent import main as run_once
 
@@ -90,3 +109,31 @@ while True:
 
     print("✅ Cycle complete — checking again immediately...\n")
     time.sleep(5)
+
+
+⚠️ Replace:
+
+https://$GITHUB_TOKEN@github.com/<YOUR-USERNAME>/<YOUR-REPO>.git
+
+
+with your actual GitHub repo path, e.g.:
+
+https://$GITHUB_TOKEN@github.com/katerinasantikou/payroll-sync.git
+
+
+Click Save
+
+⚡️ What this does now
+
+After each task finishes, it:
+
+Reads the .md file content from /tasks/done/
+
+Extracts the task title
+
+Commits with:
+
+AI Agent: Completed task — Implement severance calculation module
+
+
+Pushes to the dev branch automatically
