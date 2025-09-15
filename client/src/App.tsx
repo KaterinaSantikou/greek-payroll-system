@@ -19,7 +19,7 @@ import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import { OboProvider } from "@/contexts/OboContext";
 import { ABTestProvider } from "@/components/ABTestProvider";
 import { usePWA } from "@/hooks/usePWA";
-import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+// import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 // Lazy loaded components
 const Home = lazy(() => import("@/pages/home"));
