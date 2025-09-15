@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -22,9 +22,13 @@ const languages = [
   { code: 'el' as Locale, name: 'Greek', nativeName: 'Ελληνικά' },
 ];
 
-export function LanguageSwitch({ locale, onLocaleChange, className }: LanguageSwitchProps) {
+export function LanguageSwitch({
+  locale,
+  onLocaleChange,
+  className,
+}: LanguageSwitchProps) {
   const [isClient, setIsClient] = useState(false);
-  
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -32,18 +36,20 @@ export function LanguageSwitch({ locale, onLocaleChange, className }: LanguageSw
   const handleLanguageChange = (newLocale: Locale) => {
     // Update localStorage for persistence
     localStorage.setItem('preferred_locale', newLocale);
-    
+
     // Update cookie for SSR support
     document.cookie = `lang=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}`; // 1 year
-    
+
     // Call the parent handler
     onLocaleChange(newLocale);
-    
+
     // Broadcast language change event for third-party widgets
-    window.dispatchEvent(new CustomEvent('langChanged', { 
-      detail: { locale: newLocale, previousLocale: locale }
-    }));
-    
+    window.dispatchEvent(
+      new CustomEvent('langChanged', {
+        detail: { locale: newLocale, previousLocale: locale },
+      })
+    );
+
     // Log for debugging
     console.log(`Language changed from ${locale} to ${newLocale}`);
   };
@@ -52,7 +58,12 @@ export function LanguageSwitch({ locale, onLocaleChange, className }: LanguageSw
 
   if (!isClient) {
     return (
-      <Button variant="ghost" size="sm" className={cn("h-8 px-2", className)} disabled>
+      <Button
+        variant="ghost"
+        size="sm"
+        className={cn('h-8 px-2', className)}
+        disabled
+      >
         <Globe className="h-4 w-4" />
       </Button>
     );
@@ -61,10 +72,13 @@ export function LanguageSwitch({ locale, onLocaleChange, className }: LanguageSw
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className={cn("h-8 px-2 hover:bg-accent hover:text-accent-foreground", className)}
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            'h-8 px-2 hover:bg-accent hover:text-accent-foreground',
+            className
+          )}
         >
           <Globe className="h-4 w-4 mr-2" />
           <span className="hidden sm:inline-block">
@@ -73,7 +87,7 @@ export function LanguageSwitch({ locale, onLocaleChange, className }: LanguageSw
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
-        {languages.map((language) => (
+        {languages.map(language => (
           <DropdownMenuItem
             key={language.code}
             onClick={() => handleLanguageChange(language.code)}
@@ -81,7 +95,9 @@ export function LanguageSwitch({ locale, onLocaleChange, className }: LanguageSw
           >
             <div className="flex flex-col">
               <span className="font-medium">{language.nativeName}</span>
-              <span className="text-xs text-muted-foreground">{language.name}</span>
+              <span className="text-xs text-muted-foreground">
+                {language.name}
+              </span>
             </div>
             {locale === language.code && (
               <Check className="h-4 w-4 text-primary" />
@@ -101,7 +117,7 @@ export function useLanguagePersistence() {
     // Language source of truth order:
     // 1. User profile preferred_locale (would need API call)
     // 2. Cookie lang
-    // 3. localStorage.lang  
+    // 3. localStorage.lang
     // 4. Browser navigator.language
     // 5. Fallback en-US
 

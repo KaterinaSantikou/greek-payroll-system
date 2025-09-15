@@ -9,7 +9,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { Clock, Wifi, WifiOff, RefreshCw, CheckCircle2, AlertTriangle, MapPin } from 'lucide-react';
+import {
+  Clock,
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  MapPin,
+} from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { offlineStorage, type OfflinePunchEvent } from '@/lib/offlineStorage';
@@ -34,7 +42,10 @@ interface LastPunchStatus {
 
 export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [pendingPunches, setPendingPunches] = useState<OfflinePunchEvent[]>([]);
   const [syncStatus, setSyncStatus] = useState<SyncResult | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -65,21 +76,31 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
     const handleSyncCompleted = (event: CustomEvent<SyncResult>) => {
       setSyncStatus(event.detail);
       loadPendingPunches();
-      
+
       if (event.detail.success && event.detail.syncedItems > 0) {
         toast({
-          title: "Sync Complete",
+          title: 'Sync Complete',
           description: `${event.detail.syncedItems} items synced successfully`,
         });
       }
     };
 
-    window.addEventListener('syncCompleted', handleSyncCompleted as EventListener);
-    return () => window.removeEventListener('syncCompleted', handleSyncCompleted as EventListener);
+    window.addEventListener(
+      'syncCompleted',
+      handleSyncCompleted as EventListener
+    );
+    return () =>
+      window.removeEventListener(
+        'syncCompleted',
+        handleSyncCompleted as EventListener
+      );
   }, [toast]);
 
   // Get current location
-  const getCurrentLocation = (): Promise<{ latitude: number; longitude: number }> => {
+  const getCurrentLocation = (): Promise<{
+    latitude: number;
+    longitude: number;
+  }> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
         reject(new Error('Geolocation not supported'));
@@ -88,23 +109,23 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
 
       setIsGettingLocation(true);
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        position => {
           const coords = {
             latitude: position.coords.latitude,
-            longitude: position.coords.longitude
+            longitude: position.coords.longitude,
           };
           setLocation(coords);
           setIsGettingLocation(false);
           resolve(coords);
         },
-        (error) => {
+        error => {
           setIsGettingLocation(false);
           reject(error);
         },
         {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 300000 // 5 minutes
+          maximumAge: 300000, // 5 minutes
         }
       );
     });
@@ -121,19 +142,26 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
   };
 
   // Get last punch status
-  const { data: lastPunchStatus, isLoading: isLoadingStatus } = useQuery<LastPunchStatus>({
-    queryKey: ['/api/employees', employeeId, 'punch-status'],
-    enabled: isOnline,
-    refetchInterval: 30000, // Refresh every 30 seconds when online
-    retry: false
-  });
+  const { data: lastPunchStatus, isLoading: isLoadingStatus } =
+    useQuery<LastPunchStatus>({
+      queryKey: ['/api/employees', employeeId, 'punch-status'],
+      enabled: isOnline,
+      refetchInterval: 30000, // Refresh every 30 seconds when online
+      retry: false,
+    });
 
   // Punch mutation (works offline)
   const punchMutation = useMutation({
-    mutationFn: async ({ type, location }: { type: string; location?: { latitude: number; longitude: number } }) => {
+    mutationFn: async ({
+      type,
+      location,
+    }: {
+      type: string;
+      location?: { latitude: number; longitude: number };
+    }) => {
       const timestamp = new Date().toISOString();
       const clientEventId = `punch_${employeeId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       const punchData: OfflinePunchEvent = {
         clientEventId,
         employeeId,
@@ -146,7 +174,7 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
         sourceDeviceId: navigator.userAgent,
         syncStatus: isOnline ? 'synced' : 'pending',
         syncAttempts: 0,
-        createdAt: timestamp
+        createdAt: timestamp,
       };
 
       // Save to offline storage first
@@ -155,29 +183,28 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
       // Try to sync immediately if online
       if (isOnline) {
         try {
-          await apiRequest(
-            'POST',
-            '/api/punch-events',
-            {
-              employeeId: punchData.employeeId,
-              propertyId: punchData.propertyId,
-              timestamp: punchData.timestamp,
-              type: punchData.type,
-              method: punchData.method,
-              latitude: punchData.latitude,
-              longitude: punchData.longitude,
-              clientEventId: punchData.clientEventId,
-              offlineFlag: false
-            }
-          );
-          
+          await apiRequest('POST', '/api/punch-events', {
+            employeeId: punchData.employeeId,
+            propertyId: punchData.propertyId,
+            timestamp: punchData.timestamp,
+            type: punchData.type,
+            method: punchData.method,
+            latitude: punchData.latitude,
+            longitude: punchData.longitude,
+            clientEventId: punchData.clientEventId,
+            offlineFlag: false,
+          });
+
           // Mark as synced
-          await offlineStorage.updatePunchEventSyncStatus(clientEventId, 'synced');
+          await offlineStorage.updatePunchEventSyncStatus(
+            clientEventId,
+            'synced'
+          );
         } catch (error) {
           // Mark as failed, will retry later
           await offlineStorage.updatePunchEventSyncStatus(
-            clientEventId, 
-            'failed', 
+            clientEventId,
+            'failed',
             error instanceof Error ? error.message : 'Sync failed'
           );
           throw error;
@@ -187,23 +214,26 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
       return punchData;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/employees', employeeId, 'punch-status'] });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/employees', employeeId, 'punch-status'],
+      });
       loadPendingPunches();
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         variant: 'destructive',
         title: 'Punch Failed',
-        description: error instanceof Error ? error.message : 'Failed to record punch'
+        description:
+          error instanceof Error ? error.message : 'Failed to record punch',
       });
-    }
+    },
   });
 
   // Handle punch action
   const handlePunch = async (type: string) => {
     try {
       let locationData = location;
-      
+
       // Get fresh location if we don't have it or it's old
       if (!locationData) {
         try {
@@ -214,15 +244,25 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
         }
       }
 
-      await punchMutation.mutateAsync({ type, location: locationData || undefined });
-      
-      const action = type === 'in' ? 'Clock In' : 
-                   type === 'out' ? 'Clock Out' :
-                   type === 'break_in' ? 'Break Start' : 'Break End';
-                   
+      await punchMutation.mutateAsync({
+        type,
+        location: locationData || undefined,
+      });
+
+      const action =
+        type === 'in'
+          ? 'Clock In'
+          : type === 'out'
+            ? 'Clock Out'
+            : type === 'break_in'
+              ? 'Break Start'
+              : 'Break End';
+
       toast({
         title: `${action} Recorded`,
-        description: isOnline ? 'Synced immediately' : 'Saved offline - will sync when connected'
+        description: isOnline
+          ? 'Synced immediately'
+          : 'Saved offline - will sync when connected',
       });
     } catch (error) {
       // Error already handled in mutation
@@ -235,18 +275,18 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
       const result = await syncService.forcSync();
       setSyncStatus(result);
       loadPendingPunches();
-      
+
       toast({
         title: result.success ? 'Sync Complete' : 'Sync Failed',
-        description: result.success 
+        description: result.success
           ? `${result.syncedItems} items synced, ${result.failedItems} failed`
-          : 'Some items failed to sync'
+          : 'Some items failed to sync',
       });
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Sync Error',
-        description: 'Failed to sync data'
+        description: 'Failed to sync data',
       });
     }
   };
@@ -263,12 +303,18 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
             </CardTitle>
             <div className="flex items-center gap-2">
               {isOnline ? (
-                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                <Badge
+                  variant="secondary"
+                  className="bg-green-100 text-green-800"
+                >
                   <Wifi className="h-3 w-3 mr-1" />
                   Online
                 </Badge>
               ) : (
-                <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                <Badge
+                  variant="secondary"
+                  className="bg-orange-100 text-orange-800"
+                >
                   <WifiOff className="h-3 w-3 mr-1" />
                   Offline
                 </Badge>
@@ -298,22 +344,34 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
             {lastPunchStatus.lastPunch ? (
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Last Action:</span>
-                  <Badge variant={
-                    lastPunchStatus.lastPunch.type === 'in' ? 'default' :
-                    lastPunchStatus.lastPunch.type === 'out' ? 'secondary' :
-                    'outline'
-                  }>
-                    {lastPunchStatus.lastPunch.type === 'in' ? 'Clocked In' :
-                     lastPunchStatus.lastPunch.type === 'out' ? 'Clocked Out' :
-                     lastPunchStatus.lastPunch.type === 'break_in' ? 'On Break' :
-                     'Back from Break'}
+                  <span className="text-sm text-muted-foreground">
+                    Last Action:
+                  </span>
+                  <Badge
+                    variant={
+                      lastPunchStatus.lastPunch.type === 'in'
+                        ? 'default'
+                        : lastPunchStatus.lastPunch.type === 'out'
+                          ? 'secondary'
+                          : 'outline'
+                    }
+                  >
+                    {lastPunchStatus.lastPunch.type === 'in'
+                      ? 'Clocked In'
+                      : lastPunchStatus.lastPunch.type === 'out'
+                        ? 'Clocked Out'
+                        : lastPunchStatus.lastPunch.type === 'break_in'
+                          ? 'On Break'
+                          : 'Back from Break'}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">Time:</span>
                   <span className="text-sm">
-                    {format(new Date(lastPunchStatus.lastPunch.timestamp), 'HH:mm')}
+                    {format(
+                      new Date(lastPunchStatus.lastPunch.timestamp),
+                      'HH:mm'
+                    )}
                   </span>
                 </div>
               </div>
@@ -342,7 +400,7 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
             </>
           )}
         </Button>
-        
+
         <Button
           onClick={() => handlePunch('out')}
           disabled={punchMutation.isPending || isGettingLocation}
@@ -358,7 +416,7 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
             </>
           )}
         </Button>
-        
+
         <Button
           onClick={() => handlePunch('break_in')}
           disabled={punchMutation.isPending || isGettingLocation}
@@ -367,7 +425,7 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
         >
           Start Break
         </Button>
-        
+
         <Button
           onClick={() => handlePunch('break_out')}
           disabled={punchMutation.isPending || isGettingLocation}
@@ -397,7 +455,7 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {pendingPunches.map((punch) => (
+              {pendingPunches.map(punch => (
                 <div
                   key={punch.clientEventId}
                   className="flex items-center justify-between p-2 bg-muted rounded-lg"
@@ -410,28 +468,39 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
                     )}
                     <div>
                       <div className="text-sm font-medium">
-                        {punch.type === 'in' ? 'Clock In' :
-                         punch.type === 'out' ? 'Clock Out' :
-                         punch.type === 'break_in' ? 'Break Start' :
-                         'Break End'}
+                        {punch.type === 'in'
+                          ? 'Clock In'
+                          : punch.type === 'out'
+                            ? 'Clock Out'
+                            : punch.type === 'break_in'
+                              ? 'Break Start'
+                              : 'Break End'}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {format(new Date(punch.timestamp), 'HH:mm')}
                       </div>
                     </div>
                   </div>
-                  <Badge variant={punch.syncStatus === 'failed' ? 'destructive' : 'secondary'}>
+                  <Badge
+                    variant={
+                      punch.syncStatus === 'failed'
+                        ? 'destructive'
+                        : 'secondary'
+                    }
+                  >
                     {punch.syncStatus}
                   </Badge>
                 </div>
               ))}
             </div>
-            
+
             {!isOnline && (
               <Alert className="mt-3">
                 <WifiOff className="h-4 w-4" />
                 <AlertDescription>
-                  {pendingPunches.length} punch{pendingPunches.length > 1 ? 'es' : ''} will sync when connection is restored
+                  {pendingPunches.length} punch
+                  {pendingPunches.length > 1 ? 'es' : ''} will sync when
+                  connection is restored
                 </AlertDescription>
               </Alert>
             )}
@@ -445,7 +514,8 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
           <CardContent className="pt-3">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="h-3 w-3" />
-              Location: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+              Location: {location.latitude.toFixed(6)},{' '}
+              {location.longitude.toFixed(6)}
             </div>
           </CardContent>
         </Card>
@@ -468,11 +538,15 @@ export function MobilePunchApp({ employeeId, propertyId }: PunchAppProps) {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm">Synced:</span>
-                <span className="text-sm font-medium">{syncStatus.syncedItems}</span>
+                <span className="text-sm font-medium">
+                  {syncStatus.syncedItems}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm">Failed:</span>
-                <span className="text-sm font-medium">{syncStatus.failedItems}</span>
+                <span className="text-sm font-medium">
+                  {syncStatus.failedItems}
+                </span>
               </div>
               {syncStatus.conflicts.length > 0 && (
                 <div className="flex justify-between">

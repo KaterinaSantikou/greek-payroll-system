@@ -1,21 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  MessageCircle, 
-  Send, 
-  X, 
-  Minimize2, 
+import {
+  MessageCircle,
+  Send,
+  X,
+  Minimize2,
   Maximize2,
   User,
   Bot,
   Clock,
   CheckCircle2,
   AlertTriangle,
-  FileText
+  FileText,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -45,50 +51,55 @@ const cannedResponses: CannedResponse[] = [
   {
     id: 'payroll-001',
     title: 'Σφάλμα Υπολογισμού Υπερωριών',
-    content: 'Για τη διόρθωση σφαλμάτων υπολογισμού υπερωριών: 1) Επαληθεύστε τις ώρες εργασίας στο σύστημα 2) Ελέγξτε τους συντελεστές υπερωρίας για τον κλάδο 3) Βεβαιωθείτε ότι εφαρμόζεται η σωστή συλλογική σύμβαση. Μπορείτε να διορθώσετε τα στοιχεία από Μισθοδοσία > Επεξεργασία Υπερωριών.',
+    content:
+      'Για τη διόρθωση σφαλμάτων υπολογισμού υπερωριών: 1) Επαληθεύστε τις ώρες εργασίας στο σύστημα 2) Ελέγξτε τους συντελεστές υπερωρίας για τον κλάδο 3) Βεβαιωθείτε ότι εφαρμόζεται η σωστή συλλογική σύμβαση. Μπορείτε να διορθώσετε τα στοιχεία από Μισθοδοσία > Επεξεργασία Υπερωριών.',
     category: 'payroll',
     keywords: ['υπερωρία', 'υπολογισμός', 'λάθος', 'σφάλμα'],
-    priority: 1
+    priority: 1,
   },
   {
     id: 'ergani-001',
     title: 'Αποτυχία Υποβολής ΕΡΓΑΝΗ',
-    content: 'Όταν αποτυγχάνει η υποβολή στην ΕΡΓΑΝΗ: 1) Ελέγξτε τη σύνδεση στο διαδίκτυο 2) Βεβαιωθείτε ότι τα πιστοποιητικά είναι ενεργά 3) Επαληθεύστε τα στοιχεία εργαζομένου (ΑΦΜ, ΑΜΚΑ) 4) Δοκιμάστε εκ νέου υποβολή. Εάν το πρόβλημα παραμένει, επικοινωνήστε με την τεχνική υποστήριξη.',
+    content:
+      'Όταν αποτυγχάνει η υποβολή στην ΕΡΓΑΝΗ: 1) Ελέγξτε τη σύνδεση στο διαδίκτυο 2) Βεβαιωθείτε ότι τα πιστοποιητικά είναι ενεργά 3) Επαληθεύστε τα στοιχεία εργαζομένου (ΑΦΜ, ΑΜΚΑ) 4) Δοκιμάστε εκ νέου υποβολή. Εάν το πρόβλημα παραμένει, επικοινωνήστε με την τεχνική υποστήριξη.',
     category: 'ergani',
     keywords: ['εργανη', 'ergani', 'υποβολή', 'αποτυχία', 'σύνδεση'],
-    priority: 1
+    priority: 1,
   },
   {
     id: 'ergani-002',
     title: 'Σφάλμα Ψηφιακής Κάρτας Εργασίας',
-    content: 'Για προβλήματα με ψηφιακές κάρτες εργασίας: 1) Βεβαιωθείτε ότι ο εργαζόμενος έχει εγγραφεί στο σύστημα 2) Ελέγξτε ότι τα προσωπικά στοιχεία είναι σωστά 3) Επαληθεύστε την ενεργή σύνδεση NFC/QR 4) Συγχρονίστε τα δεδομένα με την ΕΡΓΑΝΗ II. Οδηγός: Ψηφιακές Κάρτες > Διαχείριση.',
+    content:
+      'Για προβλήματα με ψηφιακές κάρτες εργασίας: 1) Βεβαιωθείτε ότι ο εργαζόμενος έχει εγγραφεί στο σύστημα 2) Ελέγξτε ότι τα προσωπικά στοιχεία είναι σωστά 3) Επαληθεύστε την ενεργή σύνδεση NFC/QR 4) Συγχρονίστε τα δεδομένα με την ΕΡΓΑΝΗ II. Οδηγός: Ψηφιακές Κάρτες > Διαχείριση.',
     category: 'ergani',
     keywords: ['κάρτα', 'εργασίας', 'ψηφιακή', 'nfc', 'qr'],
-    priority: 2
+    priority: 2,
   },
   {
     id: 'efka-001',
     title: 'Σφάλμα Εισφορών ΕΦΚΑ',
-    content: 'Για σφάλματα στις εισφορές ΕΦΚΑ: 1) Ελέγξτε τα ποσοστά εισφορών (ενημερωμένα για 2025) 2) Επαληθεύστε τα μισθολογικά στοιχεία 3) Βεβαιωθείτε για τη σωστή κατηγοριοποίηση εργαζομένων 4) Ελέγξτε τα όρια ασφάλισης. Ενέργειες: Μισθοδοσία > Εισφορές ΕΦΚΑ > Επαναϋπολογισμός.',
+    content:
+      'Για σφάλματα στις εισφορές ΕΦΚΑ: 1) Ελέγξτε τα ποσοστά εισφορών (ενημερωμένα για 2025) 2) Επαληθεύστε τα μισθολογικά στοιχεία 3) Βεβαιωθείτε για τη σωστή κατηγοριοποίηση εργαζομένων 4) Ελέγξτε τα όρια ασφάλισης. Ενέργειες: Μισθοδοσία > Εισφορές ΕΦΚΑ > Επαναϋπολογισμός.',
     category: 'efka',
     keywords: ['εφκα', 'εισφορές', 'ασφάλιση', 'ποσοστά'],
-    priority: 1
+    priority: 1,
   },
   {
     id: 'payroll-002',
     title: 'Πρόβλημα Φορολογικής Παρακράτησης',
-    content: 'Για διόρθωση φορολογικής παρακράτησης: 1) Ελέγξτε το αφορολόγητο όριο (€9.100 για 2025) 2) Επαληθεύστε τις κλίμακες φορολογίας 3) Βεβαιωθείτε για τυχόν εξαιρέσεις 4) Ελέγξτε τα στοιχεία Ε1 του εργαζομένου. Διόρθωση: Μισθοδοσία > Φορολογία > Ρυθμίσεις.',
+    content:
+      'Για διόρθωση φορολογικής παρακράτησης: 1) Ελέγξτε το αφορολόγητο όριο (€9.100 για 2025) 2) Επαληθεύστε τις κλίμακες φορολογίας 3) Βεβαιωθείτε για τυχόν εξαιρέσεις 4) Ελέγξτε τα στοιχεία Ε1 του εργαζομένου. Διόρθωση: Μισθοδοσία > Φορολογία > Ρυθμίσεις.',
     category: 'payroll',
     keywords: ['φορολογία', 'παρακράτηση', 'κλίμακα', 'αφορολόγητο'],
-    priority: 2
-  }
+    priority: 2,
+  },
 ];
 
 const slaLevels = {
   urgent: { time: '1 ώρα', color: 'bg-red-100 text-red-800' },
   high: { time: '4 ώρες', color: 'bg-orange-100 text-orange-800' },
   medium: { time: '24 ώρες', color: 'bg-yellow-100 text-yellow-800' },
-  low: { time: '3 εργάσιμες ημέρες', color: 'bg-green-100 text-green-800' }
+  low: { time: '3 εργάσιμες ημέρες', color: 'bg-green-100 text-green-800' },
 };
 
 export function SupportChatWidget() {
@@ -97,11 +108,12 @@ export function SupportChatWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
-      content: 'Γεια σας! Είμαι εδώ για να σας βοηθήσω με ερωτήσεις για το PayrollSync. Μπορείτε να περιγράψετε το πρόβλημά σας;',
+      content:
+        'Γεια σας! Είμαι εδώ για να σας βοηθήσω με ερωτήσεις για το PayrollSync. Μπορείτε να περιγράψετε το πρόβλημά σας;',
       sender: 'system',
       timestamp: new Date(),
-      type: 'text'
-    }
+      type: 'text',
+    },
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -109,14 +121,16 @@ export function SupportChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const findRelevantCannedResponse = (message: string): CannedResponse | null => {
+  const findRelevantCannedResponse = (
+    message: string
+  ): CannedResponse | null => {
     const lowerMessage = message.toLowerCase();
     const scored = cannedResponses.map(response => {
       const score = response.keywords.reduce((acc, keyword) => {
@@ -140,7 +154,7 @@ export function SupportChatWidget() {
       content: inputMessage,
       sender: 'user',
       timestamp: new Date(),
-      type: 'text'
+      type: 'text',
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -162,21 +176,22 @@ export function SupportChatWidget() {
         type: 'canned_response',
         metadata: {
           category: cannedResponse.category,
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       };
       setMessages(prev => [...prev, supportResponse]);
     } else {
       const genericResponse: ChatMessage = {
         id: `support-${Date.now()}`,
-        content: 'Σας ευχαριστώ για το μήνυμά σας. Ένας εξειδικευμένος σύμβουλος θα επικοινωνήσει μαζί σας εντός 4 ωρών. Εάν είναι επείγον, καλέστε στο +30 210 1234567.',
+        content:
+          'Σας ευχαριστώ για το μήνυμά σας. Ένας εξειδικευμένος σύμβουλος θα επικοινωνήσει μαζί σας εντός 4 ωρών. Εάν είναι επείγον, καλέστε στο +30 210 1234567.',
         sender: 'support',
         timestamp: new Date(),
         type: 'escalation',
         metadata: {
           ticketId: `TICKET-${Date.now()}`,
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       };
       setMessages(prev => [...prev, genericResponse]);
     }
@@ -185,9 +200,9 @@ export function SupportChatWidget() {
   };
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('el-GR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleTimeString('el-GR', {
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -201,11 +216,7 @@ export function SupportChatWidget() {
   const getSLABadge = (priority?: string) => {
     if (!priority) return null;
     const sla = slaLevels[priority as keyof typeof slaLevels];
-    return (
-      <Badge className={`text-xs ${sla.color}`}>
-        SLA: {sla.time}
-      </Badge>
-    );
+    return <Badge className={`text-xs ${sla.color}`}>SLA: {sla.time}</Badge>;
   };
 
   return (
@@ -221,14 +232,18 @@ export function SupportChatWidget() {
 
       {/* Chat Window */}
       {isOpen && (
-        <Card className={`fixed bottom-6 right-6 w-96 shadow-xl z-50 transition-all ${
-          isMinimized ? 'h-16' : 'h-[500px]'
-        }`}>
+        <Card
+          className={`fixed bottom-6 right-6 w-96 shadow-xl z-50 transition-all ${
+            isMinimized ? 'h-16' : 'h-[500px]'
+          }`}
+        >
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <MessageCircle className="h-5 w-5 text-blue-600" />
-                <CardTitle className="text-lg">Υποστήριξη PayrollSync</CardTitle>
+                <CardTitle className="text-lg">
+                  Υποστήριξη PayrollSync
+                </CardTitle>
               </div>
               <div className="flex items-center gap-1">
                 <Button
@@ -236,7 +251,11 @@ export function SupportChatWidget() {
                   size="sm"
                   onClick={() => setIsMinimized(!isMinimized)}
                 >
-                  {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+                  {isMinimized ? (
+                    <Maximize2 className="h-4 w-4" />
+                  ) : (
+                    <Minimize2 className="h-4 w-4" />
+                  )}
                 </Button>
                 <Button
                   variant="ghost"
@@ -257,36 +276,48 @@ export function SupportChatWidget() {
               <CardContent className="flex-1 p-0">
                 <ScrollArea className="h-80 px-4">
                   <div className="space-y-4">
-                    {messages.map((message) => (
+                    {messages.map(message => (
                       <div
                         key={message.id}
                         className={`flex gap-2 ${
-                          message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'
+                          message.sender === 'user'
+                            ? 'flex-row-reverse'
+                            : 'flex-row'
                         }`}
                       >
-                        <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                          message.sender === 'user' 
-                            ? 'bg-blue-600 text-white' 
-                            : 'bg-muted text-muted-foreground'
-                        }`}>
-                          {getMessageIcon(message.sender, message.type)}
-                        </div>
-                        
-                        <div className={`max-w-xs ${
-                          message.sender === 'user' ? 'text-right' : 'text-left'
-                        }`}>
-                          <div className={`inline-block px-3 py-2 rounded-lg text-sm ${
+                        <div
+                          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                             message.sender === 'user'
                               ? 'bg-blue-600 text-white'
-                              : 'bg-muted text-foreground'
-                          }`}>
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {getMessageIcon(message.sender, message.type)}
+                        </div>
+
+                        <div
+                          className={`max-w-xs ${
+                            message.sender === 'user'
+                              ? 'text-right'
+                              : 'text-left'
+                          }`}
+                        >
+                          <div
+                            className={`inline-block px-3 py-2 rounded-lg text-sm ${
+                              message.sender === 'user'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-muted text-foreground'
+                            }`}
+                          >
                             {message.content}
                           </div>
-                          
+
                           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                             <span>{formatTime(message.timestamp)}</span>
                             {message.metadata?.ticketId && (
-                              <span>#{message.metadata.ticketId.slice(-6)}</span>
+                              <span>
+                                #{message.metadata.ticketId.slice(-6)}
+                              </span>
                             )}
                             {getSLABadge(message.metadata?.priority)}
                           </div>
@@ -302,8 +333,14 @@ export function SupportChatWidget() {
                         <div className="bg-muted px-3 py-2 rounded-lg">
                           <div className="flex gap-1">
                             <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse"></div>
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                            <div
+                              className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse"
+                              style={{ animationDelay: '0.2s' }}
+                            ></div>
+                            <div
+                              className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse"
+                              style={{ animationDelay: '0.4s' }}
+                            ></div>
                           </div>
                         </div>
                       </div>
@@ -318,15 +355,18 @@ export function SupportChatWidget() {
                   <Input
                     placeholder="Περιγράψτε το πρόβλημά σας..."
                     value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={(e) => {
+                    onChange={e => setInputMessage(e.target.value)}
+                    onKeyPress={e => {
                       if (e.key === 'Enter') {
                         sendMessage();
                       }
                     }}
                     disabled={isTyping}
                   />
-                  <Button onClick={sendMessage} disabled={isTyping || !inputMessage.trim()}>
+                  <Button
+                    onClick={sendMessage}
+                    disabled={isTyping || !inputMessage.trim()}
+                  >
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>

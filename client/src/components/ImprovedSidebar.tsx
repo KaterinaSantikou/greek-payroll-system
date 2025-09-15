@@ -1,9 +1,9 @@
-import { Link, useLocation } from "wouter";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
-import { Badge } from "./ui/badge";
-import { SidebarSection, SidebarDivider } from "./ui/sidebar-section";
-import { ProfileFooter } from "./ui/profile-footer";
+import { Link, useLocation } from 'wouter';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { Badge } from './ui/badge';
+import { SidebarSection, SidebarDivider } from './ui/sidebar-section';
+import { ProfileFooter } from './ui/profile-footer';
 import {
   LayoutDashboard,
   Users,
@@ -23,8 +23,8 @@ import {
   Smartphone,
   Hotel,
   Briefcase,
-  Target
-} from "lucide-react";
+  Target,
+} from 'lucide-react';
 
 interface NavigationItem {
   name: string;
@@ -32,7 +32,7 @@ interface NavigationItem {
   icon: any;
   badge?: {
     count: number;
-    variant: "default" | "success" | "warning" | "error";
+    variant: 'default' | 'success' | 'warning' | 'error';
   };
   description?: string;
 }
@@ -44,184 +44,189 @@ interface NavigationSection {
 
 const useNavigationSections = (): NavigationSection[] => {
   const { user } = useAuth();
-  const isManager = user?.email?.includes("manager") || user?.firstName === "Manager";
-  
+  const isManager =
+    user?.email?.includes('manager') || user?.firstName === 'Manager';
+
   return [
     {
-      title: "Dashboards",
+      title: 'Dashboards',
       items: [
         {
-          name: "Home Dashboard",
-          href: "/",
+          name: 'Home Dashboard',
+          href: '/',
           icon: LayoutDashboard,
-          description: "Overview and quick actions"
+          description: 'Overview and quick actions',
         },
-        ...(isManager ? [{
-          name: "Manager Dashboard",
-          href: "/manager-dashboard",
-          icon: UserCog,
-          description: "Team oversight and approvals"
-        }] : [] as NavigationItem[]),
+        ...(isManager
+          ? [
+              {
+                name: 'Manager Dashboard',
+                href: '/manager-dashboard',
+                icon: UserCog,
+                description: 'Team oversight and approvals',
+              },
+            ]
+          : ([] as NavigationItem[])),
         {
-          name: "Property Dashboard",
-          href: "/property-dashboard",
+          name: 'Property Dashboard',
+          href: '/property-dashboard',
           icon: Building2,
-          description: "Property-specific metrics"
-        }
-      ]
+          description: 'Property-specific metrics',
+        },
+      ],
     },
     {
-      title: "People",
+      title: 'People',
       items: [
         {
-          name: "Employee Master",
-          href: "/employee-master",
+          name: 'Employee Master',
+          href: '/employee-master',
           icon: Users,
-          description: "Employee records and profiles"
+          description: 'Employee records and profiles',
         },
         {
-          name: "Employee Self-Service",
-          href: "/employee-self-service",
+          name: 'Employee Self-Service',
+          href: '/employee-self-service',
           icon: Briefcase,
-          description: "Personal HR actions"
-        }
-      ]
+          description: 'Personal HR actions',
+        },
+      ],
     },
     {
-      title: "Time & Attendance",
+      title: 'Time & Attendance',
       items: [
         {
-          name: "Time Capture",
-          href: "/advanced-time-capture",
+          name: 'Time Capture',
+          href: '/advanced-time-capture',
           icon: Clock,
-          description: "Punch tracking and schedules"
+          description: 'Punch tracking and schedules',
         },
         {
-          name: "Mobile Punch",
-          href: "/mobile-punch",
+          name: 'Mobile Punch',
+          href: '/mobile-punch',
           icon: Smartphone,
-          description: "Mobile time tracking"
+          description: 'Mobile time tracking',
         },
         {
-          name: "Schedules",
-          href: "/schedules",
+          name: 'Schedules',
+          href: '/schedules',
           icon: Calendar,
-          description: "Shift planning and rota"
+          description: 'Shift planning and rota',
         },
         {
-          name: "Exceptions",
-          href: "/overtime",
+          name: 'Exceptions',
+          href: '/overtime',
           icon: AlertTriangle,
           badge: {
             count: 3,
-            variant: "warning"
+            variant: 'warning',
           },
-          description: "Time and attendance issues"
+          description: 'Time and attendance issues',
         },
         {
-          name: "Leave Management",
-          href: "/leave",
+          name: 'Leave Management',
+          href: '/leave',
           icon: FileText,
-          description: "Vacation and sick leave"
-        }
-      ]
+          description: 'Vacation and sick leave',
+        },
+      ],
     },
     {
-      title: "Live Compliance",
+      title: 'Live Compliance',
       items: [
         {
-          name: "Compliance Monitor",
-          href: "/compliance",
+          name: 'Compliance Monitor',
+          href: '/compliance',
           icon: Shield,
           badge: {
             count: 2,
-            variant: "error"
+            variant: 'error',
           },
-          description: "Real-time compliance status"
+          description: 'Real-time compliance status',
         },
         {
-          name: "ERGANI Status",
-          href: "/ergani-compliance",
+          name: 'ERGANI Status',
+          href: '/ergani-compliance',
           icon: CheckCircle,
-          description: "Government submissions"
+          description: 'Government submissions',
         },
         {
-          name: "Legal Updates",
-          href: "/change-log-legal-watch",
+          name: 'Legal Updates',
+          href: '/change-log-legal-watch',
           icon: FileText,
-          description: "Law changes and updates"
-        }
-      ]
+          description: 'Law changes and updates',
+        },
+      ],
     },
     {
-      title: "Cost Insights",
+      title: 'Cost Insights',
       items: [
         {
-          name: "Analytics",
-          href: "/analytics",
+          name: 'Analytics',
+          href: '/analytics',
           icon: BarChart3,
-          description: "Labor cost analysis"
+          description: 'Labor cost analysis',
         },
         {
-          name: "Visual Analytics",
-          href: "/visual-analytics",
+          name: 'Visual Analytics',
+          href: '/visual-analytics',
           icon: TrendingUp,
-          description: "Charts and trends"
+          description: 'Charts and trends',
         },
         {
-          name: "Forecasting",
-          href: "/forecasting",
+          name: 'Forecasting',
+          href: '/forecasting',
           icon: Target,
-          description: "Predictive analytics"
-        }
-      ]
+          description: 'Predictive analytics',
+        },
+      ],
     },
     {
-      title: "Payroll & Finance",
+      title: 'Payroll & Finance',
       items: [
         {
-          name: "Payroll Processing",
-          href: "/payroll-processing",
+          name: 'Payroll Processing',
+          href: '/payroll-processing',
           icon: CreditCard,
-          description: "Run and manage payroll"
+          description: 'Run and manage payroll',
         },
         {
-          name: "SEPA Payments",
-          href: "/sepa-payments",
+          name: 'SEPA Payments',
+          href: '/sepa-payments',
           icon: CreditCard,
-          description: "Banking and payments"
+          description: 'Banking and payments',
         },
         {
-          name: "Success Metrics",
-          href: "/success-metrics",
+          name: 'Success Metrics',
+          href: '/success-metrics',
           icon: Target,
-          description: "KPIs and performance"
-        }
-      ]
+          description: 'KPIs and performance',
+        },
+      ],
     },
     {
-      title: "Hotel Operations",
+      title: 'Hotel Operations',
       items: [
         {
-          name: "Hotel Operations",
-          href: "/hotel-operations",
+          name: 'Hotel Operations',
+          href: '/hotel-operations',
           icon: Hotel,
-          description: "Property-specific features"
+          description: 'Property-specific features',
         },
         {
-          name: "Hotel Enhancements",
-          href: "/hotel-enhancements",
+          name: 'Hotel Enhancements',
+          href: '/hotel-enhancements',
           icon: Building2,
-          description: "Advanced hotel features"
+          description: 'Advanced hotel features',
         },
         {
-          name: "Tip Pooling",
-          href: "/hotel-tip-pooling",
+          name: 'Tip Pooling',
+          href: '/hotel-tip-pooling',
           icon: CreditCard,
-          description: "Tip distribution management"
-        }
-      ]
-    }
+          description: 'Tip distribution management',
+        },
+      ],
+    },
   ];
 };
 
@@ -234,10 +239,10 @@ interface ImprovedSidebarProps {
   onPropertyChange?: (propertyId: string) => void;
 }
 
-export function ImprovedSidebar({ 
-  currentProperty, 
+export function ImprovedSidebar({
+  currentProperty,
   userRole,
-  onPropertyChange 
+  onPropertyChange,
 }: ImprovedSidebarProps) {
   const [location] = useLocation();
   const navigationSections = useNavigationSections();
@@ -262,22 +267,28 @@ export function ImprovedSidebar({
         {navigationSections.map((section, sectionIndex) => (
           <div key={sectionIndex}>
             <SidebarSection title={section.title}>
-              {section.items.map((item) => (
+              {section.items.map(item => (
                 <Link key={item.href} href={item.href}>
-                  <div className={cn(
-                    "mx-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer group relative",
-                    location === item.href
-                      ? "bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow-sm border-l-4 border-blue-600 dark:border-blue-400"
-                      : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300"
-                  )}>
+                  <div
+                    className={cn(
+                      'mx-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer group relative',
+                      location === item.href
+                        ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100 shadow-sm border-l-4 border-blue-600 dark:border-blue-400'
+                        : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
+                    )}
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <item.icon className="h-5 w-5" />
                         <div>
-                          <div className={cn(
-                            "font-medium text-sm",
-                            location === item.href && "font-semibold"
-                          )}>{item.name}</div>
+                          <div
+                            className={cn(
+                              'font-medium text-sm',
+                              location === item.href && 'font-semibold'
+                            )}
+                          >
+                            {item.name}
+                          </div>
                           {item.description && (
                             <div className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
                               {item.description}
@@ -301,10 +312,7 @@ export function ImprovedSidebar({
       </nav>
 
       {/* Profile Footer */}
-      <ProfileFooter 
-        currentProperty={currentProperty}
-        userRole={userRole}
-      />
+      <ProfileFooter currentProperty={currentProperty} userRole={userRole} />
     </div>
   );
 }

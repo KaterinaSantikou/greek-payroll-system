@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { 
+import { Button } from '@/components/ui/button';
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useLocale, Locale } from "@/lib/i18n";
-import { Globe, Check } from "lucide-react";
+} from '@/components/ui/dropdown-menu';
+import { useLocale, Locale } from '@/lib/i18n';
+import { Globe, Check } from 'lucide-react';
 
 const languages = [
   { code: 'en' as Locale, name: 'English', nativeName: 'English', flag: '🇺🇸' },
@@ -52,18 +52,20 @@ export default function LanguageSwitcher() {
   const handleLanguageChange = (newLocale: Locale) => {
     // Update localStorage for persistence
     localStorage.setItem('preferred_locale', newLocale);
-    
+
     // Update cookie for SSR support
     document.cookie = `lang=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}`; // 1 year
-    
+
     // Update the locale in context
     setLocale(newLocale);
-    
+
     // Broadcast language change event for third-party widgets
-    window.dispatchEvent(new CustomEvent('langChanged', { 
-      detail: { locale: newLocale, previousLocale: locale }
-    }));
-    
+    window.dispatchEvent(
+      new CustomEvent('langChanged', {
+        detail: { locale: newLocale, previousLocale: locale },
+      })
+    );
+
     // Log for debugging
     console.log(`Language changed from ${locale} to ${newLocale}`);
   };
@@ -78,13 +80,11 @@ export default function LanguageSwitcher() {
           <span className="hidden sm:inline">
             {currentLanguage?.flag} {currentLanguage?.nativeName}
           </span>
-          <span className="sm:hidden">
-            {currentLanguage?.flag}
-          </span>
+          <span className="sm:hidden">{currentLanguage?.flag}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        {languages.map((language) => (
+        {languages.map(language => (
           <DropdownMenuItem
             key={language.code}
             onClick={() => handleLanguageChange(language.code)}
@@ -94,7 +94,9 @@ export default function LanguageSwitcher() {
               <span>{language.flag}</span>
               <div className="flex flex-col">
                 <span className="font-medium">{language.nativeName}</span>
-                <span className="text-xs text-muted-foreground">{language.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {language.name}
+                </span>
               </div>
             </div>
             {locale === language.code && (

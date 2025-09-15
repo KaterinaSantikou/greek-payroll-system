@@ -41,14 +41,20 @@ import {
   Code,
   Network,
   Timer,
-  Target
+  Target,
 } from 'lucide-react';
 
 interface ErrorEvent {
   id: string;
   timestamp: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
-  category: 'api' | 'payment' | 'validation' | 'security' | 'performance' | 'integration';
+  category:
+    | 'api'
+    | 'payment'
+    | 'validation'
+    | 'security'
+    | 'performance'
+    | 'integration';
   source: string;
   message: string;
   details: string;
@@ -106,7 +112,7 @@ const ERROR_EVENTS: ErrorEvent[] = [
     affectedUsers: 12,
     businessImpact: 'high',
     environment: 'production',
-    tags: ['government', 'compliance', 'timeout', 'urgent']
+    tags: ['government', 'compliance', 'timeout', 'urgent'],
   },
   {
     id: 'err-002',
@@ -124,7 +130,7 @@ const ERROR_EVENTS: ErrorEvent[] = [
     affectedUsers: 47,
     businessImpact: 'medium',
     environment: 'production',
-    tags: ['payment', 'sepa', 'validation', 'resolved']
+    tags: ['payment', 'sepa', 'validation', 'resolved'],
   },
   {
     id: 'err-003',
@@ -140,7 +146,7 @@ const ERROR_EVENTS: ErrorEvent[] = [
     affectedUsers: 1,
     businessImpact: 'low',
     environment: 'production',
-    tags: ['validation', 'afm', 'greek-compliance']
+    tags: ['validation', 'afm', 'greek-compliance'],
   },
   {
     id: 'err-004',
@@ -156,7 +162,7 @@ const ERROR_EVENTS: ErrorEvent[] = [
     affectedUsers: 0,
     businessImpact: 'none',
     environment: 'production',
-    tags: ['performance', 'database', 'optimization']
+    tags: ['performance', 'database', 'optimization'],
   },
   {
     id: 'err-005',
@@ -172,8 +178,8 @@ const ERROR_EVENTS: ErrorEvent[] = [
     affectedUsers: 0,
     businessImpact: 'low',
     environment: 'production',
-    tags: ['security', 'brute-force', 'blocked']
-  }
+    tags: ['security', 'brute-force', 'blocked'],
+  },
 ];
 
 const ERROR_METRICS: ErrorMetric[] = [
@@ -188,7 +194,7 @@ const ERROR_METRICS: ErrorMetric[] = [
     trend: 'down',
     category: 'Overall',
     description: 'Percentage of requests resulting in errors',
-    descriptionEl: 'Ποσοστό αιτημάτων που καταλήγουν σε σφάλματα'
+    descriptionEl: 'Ποσοστό αιτημάτων που καταλήγουν σε σφάλματα',
   },
   {
     id: 'mttr',
@@ -201,7 +207,7 @@ const ERROR_METRICS: ErrorMetric[] = [
     trend: 'down',
     category: 'Response',
     description: 'Average time to resolve critical errors (minutes)',
-    descriptionEl: 'Μέσος χρόνος επίλυσης κρίσιμων σφαλμάτων (λεπτά)'
+    descriptionEl: 'Μέσος χρόνος επίλυσης κρίσιμων σφαλμάτων (λεπτά)',
   },
   {
     id: 'uptime',
@@ -214,7 +220,7 @@ const ERROR_METRICS: ErrorMetric[] = [
     trend: 'up',
     category: 'Reliability',
     description: 'Percentage of time systems are operational',
-    descriptionEl: 'Ποσοστό χρόνου που τα συστήματα λειτουργούν'
+    descriptionEl: 'Ποσοστό χρόνου που τα συστήματα λειτουργούν',
   },
   {
     id: 'customer-impact',
@@ -227,7 +233,7 @@ const ERROR_METRICS: ErrorMetric[] = [
     trend: 'down',
     category: 'Customer Experience',
     description: 'Number of errors affecting customer experience',
-    descriptionEl: 'Αριθμός σφαλμάτων που επηρεάζουν την εμπειρία πελάτη'
+    descriptionEl: 'Αριθμός σφαλμάτων που επηρεάζουν την εμπειρία πελάτη',
   },
   {
     id: 'greek-integration-health',
@@ -240,7 +246,7 @@ const ERROR_METRICS: ErrorMetric[] = [
     trend: 'up',
     category: 'Government Systems',
     description: 'Health score of ERGANI II, e-EFKA connections',
-    descriptionEl: 'Βαθμός υγείας συνδέσεων ΕΡΓΑΝΗ ΙΙ, e-ΕΦΚΑ'
+    descriptionEl: 'Βαθμός υγείας συνδέσεων ΕΡΓΑΝΗ ΙΙ, e-ΕΦΚΑ',
   },
   {
     id: 'payment-success-rate',
@@ -253,8 +259,8 @@ const ERROR_METRICS: ErrorMetric[] = [
     trend: 'up',
     category: 'Payments',
     description: 'Percentage of successful SEPA salary payments',
-    descriptionEl: 'Ποσοστό επιτυχών πληρωμών μισθών SEPA'
-  }
+    descriptionEl: 'Ποσοστό επιτυχών πληρωμών μισθών SEPA',
+  },
 ];
 
 const SYSTEM_HEALTH: SystemHealth[] = [
@@ -266,7 +272,7 @@ const SYSTEM_HEALTH: SystemHealth[] = [
     responseTime: 1250,
     errorRate: 2.1,
     lastIncident: '2025-01-20T15:45:00Z',
-    criticalForPayroll: true
+    criticalForPayroll: true,
   },
   {
     component: 'e-EFKA Integration',
@@ -275,7 +281,7 @@ const SYSTEM_HEALTH: SystemHealth[] = [
     uptime: 99.8,
     responseTime: 450,
     errorRate: 0.1,
-    criticalForPayroll: true
+    criticalForPayroll: true,
   },
   {
     component: 'Alpha Bank SEPA',
@@ -284,7 +290,7 @@ const SYSTEM_HEALTH: SystemHealth[] = [
     uptime: 99.9,
     responseTime: 320,
     errorRate: 0.05,
-    criticalForPayroll: true
+    criticalForPayroll: true,
   },
   {
     component: 'Payroll Engine',
@@ -293,7 +299,7 @@ const SYSTEM_HEALTH: SystemHealth[] = [
     uptime: 99.95,
     responseTime: 180,
     errorRate: 0.02,
-    criticalForPayroll: true
+    criticalForPayroll: true,
   },
   {
     component: 'Database Cluster',
@@ -302,7 +308,7 @@ const SYSTEM_HEALTH: SystemHealth[] = [
     uptime: 100,
     responseTime: 85,
     errorRate: 0,
-    criticalForPayroll: true
+    criticalForPayroll: true,
   },
   {
     component: 'Authentication Service',
@@ -311,15 +317,17 @@ const SYSTEM_HEALTH: SystemHealth[] = [
     uptime: 99.97,
     responseTime: 120,
     errorRate: 0.03,
-    criticalForPayroll: false
-  }
+    criticalForPayroll: false,
+  },
 ];
 
 interface ErrorTrackingDashboardProps {
   locale?: 'en' | 'el';
 }
 
-export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingDashboardProps) {
+export default function ErrorTrackingDashboard({
+  locale = 'en',
+}: ErrorTrackingDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedError, setSelectedError] = useState<ErrorEvent | null>(null);
   const [realTimeEnabled, setRealTimeEnabled] = useState(true);
@@ -329,7 +337,7 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
   // Simulate real-time updates
   useEffect(() => {
     if (!realTimeEnabled) return;
-    
+
     const interval = setInterval(() => {
       setLastUpdate(new Date());
     }, 10000); // Update every 10 seconds
@@ -340,7 +348,8 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
   const translations = {
     en: {
       title: 'Real-Time Error Tracking',
-      subtitle: 'Fix issues before customers notice - Comprehensive error monitoring and resolution',
+      subtitle:
+        'Fix issues before customers notice - Comprehensive error monitoring and resolution',
       overview: 'Error Overview',
       realTime: 'Real-Time Monitor',
       analytics: 'Error Analytics',
@@ -376,13 +385,13 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
       healthStatus: {
         healthy: 'Healthy',
         degraded: 'Degraded',
-        down: 'Down'
+        down: 'Down',
       },
       severityLevels: {
         low: 'Low',
-        medium: 'Medium', 
+        medium: 'Medium',
         high: 'High',
-        critical: 'Critical'
+        critical: 'Critical',
       },
       categories: {
         api: 'API Integration',
@@ -390,17 +399,18 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
         validation: 'Data Validation',
         security: 'Security',
         performance: 'Performance',
-        integration: 'System Integration'
+        integration: 'System Integration',
       },
       trends: {
         up: 'Trending Up',
         down: 'Trending Down',
-        stable: 'Stable'
-      }
+        stable: 'Stable',
+      },
     },
     el: {
       title: 'Παρακολούθηση Σφαλμάτων σε Πραγματικό Χρόνο',
-      subtitle: 'Διορθώστε προβλήματα πριν τα παρατηρήσουν οι πελάτες - Ολοκληρωμένη παρακολούθηση και επίλυση σφαλμάτων',
+      subtitle:
+        'Διορθώστε προβλήματα πριν τα παρατηρήσουν οι πελάτες - Ολοκληρωμένη παρακολούθηση και επίλυση σφαλμάτων',
       overview: 'Επισκόπηση Σφαλμάτων',
       realTime: 'Παρακολούθηση σε Πραγματικό Χρόνο',
       analytics: 'Αναλυτικά Σφαλμάτων',
@@ -436,13 +446,13 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
       healthStatus: {
         healthy: 'Υγιής',
         degraded: 'Υποβαθμισμένο',
-        down: 'Εκτός Λειτουργίας'
+        down: 'Εκτός Λειτουργίας',
       },
       severityLevels: {
         low: 'Χαμηλό',
         medium: 'Μέτριο',
-        high: 'Υψηλό', 
-        critical: 'Κρίσιμο'
+        high: 'Υψηλό',
+        critical: 'Κρίσιμο',
       },
       categories: {
         api: 'Ενσωμάτωση API',
@@ -450,85 +460,118 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
         validation: 'Επικύρωση Δεδομένων',
         security: 'Ασφάλεια',
         performance: 'Απόδοση',
-        integration: 'Ενσωμάτωση Συστήματος'
+        integration: 'Ενσωμάτωση Συστήματος',
       },
       trends: {
         up: 'Ανοδική Τάση',
         down: 'Καθοδική Τάση',
-        stable: 'Σταθερό'
-      }
-    }
+        stable: 'Σταθερό',
+      },
+    },
   };
 
   const t = translations[locale];
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'low': return 'bg-blue-100 text-blue-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'critical': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'low':
+        return 'bg-blue-100 text-blue-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'high':
+        return 'bg-orange-100 text-orange-800';
+      case 'critical':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-      case 'low': return AlertCircle;
-      case 'medium': return AlertTriangle;
-      case 'high': return XCircle;
-      case 'critical': return XCircle;
-      default: return AlertCircle;
+      case 'low':
+        return AlertCircle;
+      case 'medium':
+        return AlertTriangle;
+      case 'high':
+        return XCircle;
+      case 'critical':
+        return XCircle;
+      default:
+        return AlertCircle;
     }
   };
 
   const getHealthColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'bg-green-100 text-green-800';
-      case 'degraded': return 'bg-yellow-100 text-yellow-800';
-      case 'down': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'healthy':
+        return 'bg-green-100 text-green-800';
+      case 'degraded':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'down':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getHealthIcon = (status: string) => {
     switch (status) {
-      case 'healthy': return CheckCircle;
-      case 'degraded': return AlertTriangle;
-      case 'down': return XCircle;
-      default: return AlertCircle;
+      case 'healthy':
+        return CheckCircle;
+      case 'degraded':
+        return AlertTriangle;
+      case 'down':
+        return XCircle;
+      default:
+        return AlertCircle;
     }
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'up': return TrendingUp;
-      case 'down': return TrendingDown;
-      case 'stable': return Activity;
-      default: return Activity;
+      case 'up':
+        return TrendingUp;
+      case 'down':
+        return TrendingDown;
+      case 'stable':
+        return Activity;
+      default:
+        return Activity;
     }
   };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'api': return Network;
-      case 'payment': return CreditCard;
-      case 'validation': return CheckCircle;
-      case 'security': return Shield;
-      case 'performance': return Timer;
-      case 'integration': return Globe;
-      default: return Bug;
+      case 'api':
+        return Network;
+      case 'payment':
+        return CreditCard;
+      case 'validation':
+        return CheckCircle;
+      case 'security':
+        return Shield;
+      case 'performance':
+        return Timer;
+      case 'integration':
+        return Globe;
+      default:
+        return Bug;
     }
   };
 
-  const filteredErrors = ERROR_EVENTS.filter(error => 
-    filterSeverity === 'all' || error.severity === filterSeverity
+  const filteredErrors = ERROR_EVENTS.filter(
+    error => filterSeverity === 'all' || error.severity === filterSeverity
   );
 
-  const criticalErrors = ERROR_EVENTS.filter(e => e.severity === 'critical').length;
+  const criticalErrors = ERROR_EVENTS.filter(
+    e => e.severity === 'critical'
+  ).length;
   const unresolvedErrors = ERROR_EVENTS.filter(e => !e.resolved).length;
-  const resolvedToday = ERROR_EVENTS.filter(e => e.resolved && 
-    new Date(e.timestamp).toDateString() === new Date().toDateString()
+  const resolvedToday = ERROR_EVENTS.filter(
+    e =>
+      e.resolved &&
+      new Date(e.timestamp).toDateString() === new Date().toDateString()
   ).length;
 
   return (
@@ -546,11 +589,15 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button 
-              variant={realTimeEnabled ? "default" : "outline"}
+            <Button
+              variant={realTimeEnabled ? 'default' : 'outline'}
               onClick={() => setRealTimeEnabled(!realTimeEnabled)}
             >
-              {realTimeEnabled ? <Bell className="h-4 w-4 mr-2" /> : <BellOff className="h-4 w-4 mr-2" />}
+              {realTimeEnabled ? (
+                <Bell className="h-4 w-4 mr-2" />
+              ) : (
+                <BellOff className="h-4 w-4 mr-2" />
+              )}
               {t.realTimeMonitoring}
             </Button>
             <Button variant="outline">
@@ -583,11 +630,15 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm">{t.totalErrors}</p>
-                  <p className="text-2xl font-bold text-gray-900">{ERROR_EVENTS.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {ERROR_EVENTS.length}
+                  </p>
                 </div>
                 <AlertTriangle className="h-8 w-8 text-orange-600" />
               </div>
-              <p className="text-sm text-gray-500 mt-2">{unresolvedErrors} unresolved</p>
+              <p className="text-sm text-gray-500 mt-2">
+                {unresolvedErrors} unresolved
+              </p>
             </CardContent>
           </Card>
 
@@ -596,7 +647,9 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm">{t.resolvedToday}</p>
-                  <p className="text-2xl font-bold text-green-600">{resolvedToday}</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {resolvedToday}
+                  </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
@@ -642,7 +695,9 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
                 </div>
                 <BarChart3 className="h-8 w-8 text-yellow-600" />
               </div>
-              <p className="text-sm text-gray-500 mt-2">{t.lastUpdate}: {lastUpdate.toLocaleTimeString()}</p>
+              <p className="text-sm text-gray-500 mt-2">
+                {t.lastUpdate}: {lastUpdate.toLocaleTimeString()}
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -660,9 +715,9 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
         <TabsContent value="overview" className="space-y-6">
           {/* Error Metrics Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ERROR_METRICS.map((metric) => {
+            {ERROR_METRICS.map(metric => {
               const TrendIcon = getTrendIcon(metric.trend);
-              
+
               return (
                 <Card key={metric.id}>
                   <CardHeader>
@@ -670,11 +725,15 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
                       <CardTitle className="text-lg">
                         {locale === 'en' ? metric.name : metric.nameEl}
                       </CardTitle>
-                      <Badge className={
-                        metric.status === 'good' ? 'bg-green-100 text-green-800' :
-                        metric.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }>
+                      <Badge
+                        className={
+                          metric.status === 'good'
+                            ? 'bg-green-100 text-green-800'
+                            : metric.status === 'warning'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                        }
+                      >
                         {metric.status}
                       </Badge>
                     </div>
@@ -683,54 +742,77 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-3xl font-bold text-gray-900">
-                          {metric.name.includes('Rate') || metric.name.includes('Uptime') || metric.name.includes('Health') ? 
-                            `${metric.value}%` : 
-                            metric.name.includes('Time') ? 
-                            `${metric.value}m` : 
-                            metric.value
-                          }
+                          {metric.name.includes('Rate') ||
+                          metric.name.includes('Uptime') ||
+                          metric.name.includes('Health')
+                            ? `${metric.value}%`
+                            : metric.name.includes('Time')
+                              ? `${metric.value}m`
+                              : metric.value}
                         </span>
-                        <TrendIcon className={`h-5 w-5 ${
-                          metric.trend === 'up' ? 'text-green-600' : 
-                          metric.trend === 'down' ? 'text-red-600' : 
-                          'text-gray-600'
-                        }`} />
+                        <TrendIcon
+                          className={`h-5 w-5 ${
+                            metric.trend === 'up'
+                              ? 'text-green-600'
+                              : metric.trend === 'down'
+                                ? 'text-red-600'
+                                : 'text-gray-600'
+                          }`}
+                        />
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">Target: {
-                            metric.name.includes('Rate') || metric.name.includes('Uptime') || metric.name.includes('Health') ? 
-                            `${metric.target}%` : 
-                            metric.name.includes('Time') ? 
-                            `${metric.target}m` : 
-                            metric.target
-                          }</span>
-                          <span className={
-                            metric.value >= metric.target ? 'text-green-600' : 'text-red-600'
-                          }>
-                            {metric.value >= metric.target ? '✓ Met' : '⚠ Below'}
+                          <span className="text-gray-500">
+                            Target:{' '}
+                            {metric.name.includes('Rate') ||
+                            metric.name.includes('Uptime') ||
+                            metric.name.includes('Health')
+                              ? `${metric.target}%`
+                              : metric.name.includes('Time')
+                                ? `${metric.target}m`
+                                : metric.target}
+                          </span>
+                          <span
+                            className={
+                              metric.value >= metric.target
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                            }
+                          >
+                            {metric.value >= metric.target
+                              ? '✓ Met'
+                              : '⚠ Below'}
                           </span>
                         </div>
-                        <Progress 
-                          value={metric.name.includes('Rate') || metric.name.includes('Uptime') || metric.name.includes('Health') ? metric.value : 
-                                (metric.value / metric.target) * 100} 
-                          className="h-2" 
+                        <Progress
+                          value={
+                            metric.name.includes('Rate') ||
+                            metric.name.includes('Uptime') ||
+                            metric.name.includes('Health')
+                              ? metric.value
+                              : (metric.value / metric.target) * 100
+                          }
+                          className="h-2"
                         />
                       </div>
 
                       <p className="text-sm text-gray-600">
-                        {locale === 'en' ? metric.description : metric.descriptionEl}
+                        {locale === 'en'
+                          ? metric.description
+                          : metric.descriptionEl}
                       </p>
 
                       <div className="text-xs text-gray-500">
-                        Previous: {
-                          metric.name.includes('Rate') || metric.name.includes('Uptime') || metric.name.includes('Health') ? 
-                          `${metric.previousValue}%` : 
-                          metric.name.includes('Time') ? 
-                          `${metric.previousValue}m` : 
-                          metric.previousValue
-                        } | Category: {metric.category}
+                        Previous:{' '}
+                        {metric.name.includes('Rate') ||
+                        metric.name.includes('Uptime') ||
+                        metric.name.includes('Health')
+                          ? `${metric.previousValue}%`
+                          : metric.name.includes('Time')
+                            ? `${metric.previousValue}m`
+                            : metric.previousValue}{' '}
+                        | Category: {metric.category}
                       </div>
                     </div>
                   </CardContent>
@@ -745,7 +827,7 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
           <div className="flex items-center gap-4 mb-6">
             <select
               value={filterSeverity}
-              onChange={(e) => setFilterSeverity(e.target.value)}
+              onChange={e => setFilterSeverity(e.target.value)}
               className="px-3 py-2 border rounded-md"
             >
               <option value="all">All Severities</option>
@@ -758,32 +840,50 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
               <Filter className="h-4 w-4 mr-2" />
               {t.filterErrors}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => setLastUpdate(new Date())}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setLastUpdate(new Date())}
+            >
               <RefreshCw className="h-4 w-4 mr-2" />
               {t.refreshData}
             </Button>
           </div>
 
           <div className="space-y-4">
-            {filteredErrors.map((error) => {
+            {filteredErrors.map(error => {
               const SeverityIcon = getSeverityIcon(error.severity);
               const CategoryIcon = getCategoryIcon(error.category);
-              
+
               return (
-                <Card key={error.id} className="hover:shadow-lg transition-shadow">
+                <Card
+                  key={error.id}
+                  className="hover:shadow-lg transition-shadow"
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                          <SeverityIcon className={`h-5 w-5 ${
-                            error.severity === 'critical' ? 'text-red-600' :
-                            error.severity === 'high' ? 'text-orange-600' :
-                            error.severity === 'medium' ? 'text-yellow-600' :
-                            'text-blue-600'
-                          }`} />
-                          <h3 className="font-semibold text-lg">{error.message}</h3>
+                          <SeverityIcon
+                            className={`h-5 w-5 ${
+                              error.severity === 'critical'
+                                ? 'text-red-600'
+                                : error.severity === 'high'
+                                  ? 'text-orange-600'
+                                  : error.severity === 'medium'
+                                    ? 'text-yellow-600'
+                                    : 'text-blue-600'
+                            }`}
+                          />
+                          <h3 className="font-semibold text-lg">
+                            {error.message}
+                          </h3>
                           <Badge className={getSeverityColor(error.severity)}>
-                            {t.severityLevels[error.severity as keyof typeof t.severityLevels]}
+                            {
+                              t.severityLevels[
+                                error.severity as keyof typeof t.severityLevels
+                              ]
+                            }
                           </Badge>
                           {error.resolved ? (
                             <Badge className="bg-green-100 text-green-800">
@@ -800,26 +900,42 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
 
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                           <div>
-                            <span className="font-medium text-gray-500">{t.source}:</span>
+                            <span className="font-medium text-gray-500">
+                              {t.source}:
+                            </span>
                             <div className="flex items-center gap-2">
                               <CategoryIcon className="h-4 w-4 text-gray-400" />
                               {error.source}
                             </div>
                           </div>
                           <div>
-                            <span className="font-medium text-gray-500">{t.category}:</span>
-                            <div>{t.categories[error.category as keyof typeof t.categories]}</div>
+                            <span className="font-medium text-gray-500">
+                              {t.category}:
+                            </span>
+                            <div>
+                              {
+                                t.categories[
+                                  error.category as keyof typeof t.categories
+                                ]
+                              }
+                            </div>
                           </div>
                           <div>
-                            <span className="font-medium text-gray-500">{t.affectedUsers}:</span>
+                            <span className="font-medium text-gray-500">
+                              {t.affectedUsers}:
+                            </span>
                             <div className="flex items-center gap-1">
                               <Users className="h-4 w-4 text-gray-400" />
                               {error.affectedUsers}
                             </div>
                           </div>
                           <div>
-                            <span className="font-medium text-gray-500">Time:</span>
-                            <div>{new Date(error.timestamp).toLocaleString()}</div>
+                            <span className="font-medium text-gray-500">
+                              Time:
+                            </span>
+                            <div>
+                              {new Date(error.timestamp).toLocaleString()}
+                            </div>
                           </div>
                         </div>
 
@@ -827,7 +943,9 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
                           <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                             <div className="flex items-center gap-2">
                               <Globe className="h-4 w-4 text-blue-600" />
-                              <span className="font-medium text-blue-900">Greek Integration: {error.greekIntegration}</span>
+                              <span className="font-medium text-blue-900">
+                                Greek Integration: {error.greekIntegration}
+                              </span>
                             </div>
                           </div>
                         )}
@@ -836,7 +954,9 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
                           <div className="mt-3 p-3 bg-orange-50 rounded-lg">
                             <div className="flex items-center gap-2">
                               <AlertTriangle className="h-4 w-4 text-orange-600" />
-                              <span className="font-medium text-orange-900">{t.customerFacing}</span>
+                              <span className="font-medium text-orange-900">
+                                {t.customerFacing}
+                              </span>
                             </div>
                           </div>
                         )}
@@ -879,14 +999,18 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
               <CardContent>
                 <div className="space-y-4">
                   {Object.entries(t.categories).map(([key, category]) => {
-                    const count = ERROR_EVENTS.filter(e => e.category === key).length;
+                    const count = ERROR_EVENTS.filter(
+                      e => e.category === key
+                    ).length;
                     const percentage = (count / ERROR_EVENTS.length) * 100;
-                    
+
                     return (
                       <div key={key} className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>{category}</span>
-                          <span>{count} ({percentage.toFixed(1)}%)</span>
+                          <span>
+                            {count} ({percentage.toFixed(1)}%)
+                          </span>
                         </div>
                         <Progress value={percentage} className="h-2" />
                       </div>
@@ -906,22 +1030,31 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
               <CardContent>
                 <div className="space-y-4">
                   {Object.entries(t.severityLevels).map(([key, severity]) => {
-                    const count = ERROR_EVENTS.filter(e => e.severity === key).length;
+                    const count = ERROR_EVENTS.filter(
+                      e => e.severity === key
+                    ).length;
                     const percentage = (count / ERROR_EVENTS.length) * 100;
-                    
+
                     return (
                       <div key={key} className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${
-                              key === 'critical' ? 'bg-red-500' :
-                              key === 'high' ? 'bg-orange-500' :
-                              key === 'medium' ? 'bg-yellow-500' :
-                              'bg-blue-500'
-                            }`}></div>
+                            <div
+                              className={`w-3 h-3 rounded-full ${
+                                key === 'critical'
+                                  ? 'bg-red-500'
+                                  : key === 'high'
+                                    ? 'bg-orange-500'
+                                    : key === 'medium'
+                                      ? 'bg-yellow-500'
+                                      : 'bg-blue-500'
+                              }`}
+                            ></div>
                             {severity}
                           </span>
-                          <span>{count} ({percentage.toFixed(1)}%)</span>
+                          <span>
+                            {count} ({percentage.toFixed(1)}%)
+                          </span>
                         </div>
                         <Progress value={percentage} className="h-2" />
                       </div>
@@ -945,24 +1078,36 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
                   <div className="text-3xl font-bold text-red-600 mb-2">
                     {ERROR_EVENTS.filter(e => e.customerFacing).length}
                   </div>
-                  <div className="text-sm text-gray-600">Customer-Facing Errors</div>
-                  <div className="text-xs text-gray-500 mt-1">-40% from last week</div>
+                  <div className="text-sm text-gray-600">
+                    Customer-Facing Errors
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    -40% from last week
+                  </div>
                 </div>
-                
+
                 <div className="text-center p-6 border rounded-lg">
                   <div className="text-3xl font-bold text-blue-600 mb-2">
                     {ERROR_EVENTS.filter(e => e.greekIntegration).length}
                   </div>
-                  <div className="text-sm text-gray-600">Greek Integration Issues</div>
-                  <div className="text-xs text-gray-500 mt-1">+2 from yesterday</div>
+                  <div className="text-sm text-gray-600">
+                    Greek Integration Issues
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    +2 from yesterday
+                  </div>
                 </div>
-                
+
                 <div className="text-center p-6 border rounded-lg">
                   <div className="text-3xl font-bold text-green-600 mb-2">
                     {ERROR_EVENTS.filter(e => e.category === 'payment').length}
                   </div>
-                  <div className="text-sm text-gray-600">Payment System Errors</div>
-                  <div className="text-xs text-gray-500 mt-1">-1 from yesterday</div>
+                  <div className="text-sm text-gray-600">
+                    Payment System Errors
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    -1 from yesterday
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -978,7 +1123,9 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
               <div className="text-center text-gray-500 py-8">
                 <Target className="h-12 w-12 mx-auto mb-4 text-gray-400" />
                 <p>Advanced resolution workflow will be implemented here</p>
-                <p className="text-sm">Automated assignment, escalation, and resolution tracking</p>
+                <p className="text-sm">
+                  Automated assignment, escalation, and resolution tracking
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -986,30 +1133,39 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
 
         <TabsContent value="health" className="space-y-6">
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {SYSTEM_HEALTH.map((component) => {
+            {SYSTEM_HEALTH.map(component => {
               const HealthIcon = getHealthIcon(component.status);
-              
+
               return (
                 <Card key={component.component}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-lg">
-                        {locale === 'en' ? component.component : component.componentEl}
+                        {locale === 'en'
+                          ? component.component
+                          : component.componentEl}
                       </CardTitle>
                       <div className="flex items-center gap-2">
                         <Badge className={getHealthColor(component.status)}>
                           <HealthIcon className="h-3 w-3 mr-1" />
-                          {t.healthStatus[component.status as keyof typeof t.healthStatus]}
+                          {
+                            t.healthStatus[
+                              component.status as keyof typeof t.healthStatus
+                            ]
+                          }
                         </Badge>
                         {component.criticalForPayroll && (
-                          <Badge variant="outline" className="text-red-700 border-red-300">
+                          <Badge
+                            variant="outline"
+                            className="text-red-700 border-red-300"
+                          >
                             Critical
                           </Badge>
                         )}
                       </div>
                     </div>
                   </CardHeader>
-                  
+
                   <CardContent>
                     <div className="space-y-4">
                       <div className="grid grid-cols-2 gap-4 text-sm">
@@ -1019,24 +1175,34 @@ export default function ErrorTrackingDashboard({ locale = 'en' }: ErrorTrackingD
                         </div>
                         <div>
                           <span className="text-gray-500">Response Time:</span>
-                          <div className="font-medium">{component.responseTime}ms</div>
+                          <div className="font-medium">
+                            {component.responseTime}ms
+                          </div>
                         </div>
                         <div>
                           <span className="text-gray-500">Error Rate:</span>
-                          <div className="font-medium">{component.errorRate}%</div>
+                          <div className="font-medium">
+                            {component.errorRate}%
+                          </div>
                         </div>
                         <div>
                           <span className="text-gray-500">Status:</span>
-                          <div className="font-medium capitalize">{component.status}</div>
+                          <div className="font-medium capitalize">
+                            {component.status}
+                          </div>
                         </div>
                       </div>
 
                       {component.lastIncident && (
                         <div className="p-3 bg-yellow-50 rounded-lg">
                           <div className="text-sm">
-                            <span className="font-medium text-yellow-800">Last Incident:</span>
+                            <span className="font-medium text-yellow-800">
+                              Last Incident:
+                            </span>
                             <div className="text-yellow-700">
-                              {new Date(component.lastIncident).toLocaleString()}
+                              {new Date(
+                                component.lastIncident
+                              ).toLocaleString()}
                             </div>
                           </div>
                         </div>

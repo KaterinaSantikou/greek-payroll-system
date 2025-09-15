@@ -28,7 +28,7 @@ import {
   Trash2,
   Edit,
   Info,
-  ArrowLeft
+  ArrowLeft,
 } from 'lucide-react';
 
 interface InstalledIntegration {
@@ -79,25 +79,25 @@ const INSTALLED_INTEGRATIONS: InstalledIntegration[] = [
       dailyTransactions: 156,
       monthlyTransactions: 4200,
       errorRate: 0.2,
-      uptime: 99.8
+      uptime: 99.8,
     },
     networkImpact: {
       connectionsEnabled: 8,
       dataShared: 95,
-      efficiencyGain: 87
+      efficiencyGain: 87,
     },
     businessValue: {
       timeSaved: '12 hours/week',
       costReduction: '€2,400/month',
-      accuracyImprovement: '99.8%'
+      accuracyImprovement: '99.8%',
     },
     configuration: {
       autoSync: true,
       notifications: true,
-      dataRetention: 365
+      dataRetention: 365,
     },
     dependencies: ['e-efka', 'digital-work-card'],
-    isGreekSpecific: true
+    isGreekSpecific: true,
   },
   {
     id: 'alpha-bank',
@@ -112,25 +112,25 @@ const INSTALLED_INTEGRATIONS: InstalledIntegration[] = [
       dailyTransactions: 89,
       monthlyTransactions: 2100,
       errorRate: 0.1,
-      uptime: 99.9
+      uptime: 99.9,
     },
     networkImpact: {
       connectionsEnabled: 5,
       dataShared: 78,
-      efficiencyGain: 92
+      efficiencyGain: 92,
     },
     businessValue: {
       timeSaved: '6 hours/week',
       costReduction: '€800/month',
-      accuracyImprovement: '99.9%'
+      accuracyImprovement: '99.9%',
     },
     configuration: {
       autoSync: true,
       notifications: true,
-      dataRetention: 180
+      dataRetention: 180,
     },
     dependencies: [],
-    isGreekSpecific: true
+    isGreekSpecific: true,
   },
   {
     id: 'microsoft-teams',
@@ -145,34 +145,37 @@ const INSTALLED_INTEGRATIONS: InstalledIntegration[] = [
       dailyTransactions: 234,
       monthlyTransactions: 6800,
       errorRate: 0.5,
-      uptime: 98.7
+      uptime: 98.7,
     },
     networkImpact: {
       connectionsEnabled: 12,
       dataShared: 65,
-      efficiencyGain: 73
+      efficiencyGain: 73,
     },
     businessValue: {
       timeSaved: '4 hours/week',
       costReduction: '€400/month',
-      accuracyImprovement: '94.2%'
+      accuracyImprovement: '94.2%',
     },
     configuration: {
       autoSync: true,
       notifications: false,
-      dataRetention: 90
+      dataRetention: 90,
     },
     dependencies: ['office365'],
-    isGreekSpecific: false
-  }
+    isGreekSpecific: false,
+  },
 ];
 
 interface IntegrationManagerProps {
   locale?: 'en' | 'el';
 }
 
-export default function IntegrationManager({ locale = 'en' }: IntegrationManagerProps) {
-  const [selectedIntegration, setSelectedIntegration] = useState<InstalledIntegration | null>(null);
+export default function IntegrationManager({
+  locale = 'en',
+}: IntegrationManagerProps) {
+  const [selectedIntegration, setSelectedIntegration] =
+    useState<InstalledIntegration | null>(null);
   const [view, setView] = useState<'overview' | 'details'>('overview');
 
   const translations = {
@@ -213,12 +216,13 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
         totalConnections: 'Total Connections',
         averageEfficiency: 'Average Efficiency',
         dataFlow: 'Daily Data Flow',
-        businessImpact: 'Business Impact Score'
-      }
+        businessImpact: 'Business Impact Score',
+      },
     },
     el: {
       title: 'Διαχειριστής Ενσωματώσεων',
-      subtitle: 'Παρακολουθήστε και διαχειριστείτε τις ενεργές ενσωματώσεις σας',
+      subtitle:
+        'Παρακολουθήστε και διαχειριστείτε τις ενεργές ενσωματώσεις σας',
       overview: 'Επισκόπηση',
       details: 'Λεπτομέρειες',
       status: 'Κατάσταση',
@@ -253,30 +257,40 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
         totalConnections: 'Συνολικές Συνδέσεις',
         averageEfficiency: 'Μέση Αποδοτικότητα',
         dataFlow: 'Ημερήσια Ροή Δεδομένων',
-        businessImpact: 'Βαθμός Επιχειρηματικού Αντικτύπου'
-      }
-    }
+        businessImpact: 'Βαθμός Επιχειρηματικού Αντικτύπου',
+      },
+    },
   };
 
   const t = translations[locale];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-gray-100 text-gray-800';
-      case 'error': return 'bg-red-100 text-red-800';
-      case 'syncing': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800';
+      case 'error':
+        return 'bg-red-100 text-red-800';
+      case 'syncing':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active': return CheckCircle;
-      case 'inactive': return Clock;
-      case 'error': return AlertTriangle;
-      case 'syncing': return RefreshCw;
-      default: return Info;
+      case 'active':
+        return CheckCircle;
+      case 'inactive':
+        return Clock;
+      case 'error':
+        return AlertTriangle;
+      case 'syncing':
+        return RefreshCw;
+      default:
+        return Info;
     }
   };
 
@@ -286,38 +300,45 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
     const diffMs = now.getTime() - date.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffMins = Math.floor(diffMs / (1000 * 60));
-    
+
     if (diffHours > 0) return `${diffHours}h ago`;
     if (diffMins > 0) return `${diffMins}m ago`;
     return 'Just now';
   };
 
   // Calculate network effects metrics
-  const totalConnections = INSTALLED_INTEGRATIONS.reduce((acc, integration) => 
-    acc + integration.networkImpact.connectionsEnabled, 0
+  const totalConnections = INSTALLED_INTEGRATIONS.reduce(
+    (acc, integration) => acc + integration.networkImpact.connectionsEnabled,
+    0
   );
-  
+
   const averageEfficiency = Math.round(
-    INSTALLED_INTEGRATIONS.reduce((acc, integration) => 
-      acc + integration.networkImpact.efficiencyGain, 0
+    INSTALLED_INTEGRATIONS.reduce(
+      (acc, integration) => acc + integration.networkImpact.efficiencyGain,
+      0
     ) / INSTALLED_INTEGRATIONS.length
   );
-  
-  const dailyDataFlow = INSTALLED_INTEGRATIONS.reduce((acc, integration) => 
-    acc + integration.usageStats.dailyTransactions, 0
+
+  const dailyDataFlow = INSTALLED_INTEGRATIONS.reduce(
+    (acc, integration) => acc + integration.usageStats.dailyTransactions,
+    0
   );
 
   const businessImpactScore = Math.round(
-    (totalConnections * 2.5) + (averageEfficiency * 0.8) + (dailyDataFlow * 0.1)
+    totalConnections * 2.5 + averageEfficiency * 0.8 + dailyDataFlow * 0.1
   );
 
   if (view === 'details' && selectedIntegration) {
     const Icon = selectedIntegration.icon;
     const StatusIcon = getStatusIcon(selectedIntegration.status);
-    
+
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <Button variant="ghost" onClick={() => setView('overview')} className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => setView('overview')}
+          className="mb-6"
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           {t.backToOverview}
         </Button>
@@ -334,16 +355,24 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
                     </div>
                     <div>
                       <CardTitle className="text-2xl">
-                        {locale === 'en' ? selectedIntegration.name : selectedIntegration.nameEl}
+                        {locale === 'en'
+                          ? selectedIntegration.name
+                          : selectedIntegration.nameEl}
                       </CardTitle>
-                      <p className="text-gray-600">{selectedIntegration.description}</p>
+                      <p className="text-gray-600">
+                        {selectedIntegration.description}
+                      </p>
                       <div className="flex items-center gap-3 mt-2">
-                        <Badge className={getStatusColor(selectedIntegration.status)}>
+                        <Badge
+                          className={getStatusColor(selectedIntegration.status)}
+                        >
                           <StatusIcon className="h-3 w-3 mr-1" />
-                          {(t as any)[selectedIntegration.status] || selectedIntegration.status}
+                          {(t as any)[selectedIntegration.status] ||
+                            selectedIntegration.status}
                         </Badge>
                         <span className="text-sm text-gray-500">
-                          {t.lastSync}: {formatLastSync(selectedIntegration.lastSync)}
+                          {t.lastSync}:{' '}
+                          {formatLastSync(selectedIntegration.lastSync)}
                         </span>
                       </div>
                     </div>
@@ -370,13 +399,17 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
                     <div className="text-2xl font-bold text-blue-600">
                       {selectedIntegration.usageStats.dailyTransactions}
                     </div>
-                    <div className="text-sm text-gray-600">{t.dailyTransactions}</div>
+                    <div className="text-sm text-gray-600">
+                      {t.dailyTransactions}
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">
                       {selectedIntegration.usageStats.monthlyTransactions.toLocaleString()}
                     </div>
-                    <div className="text-sm text-gray-600">{t.monthlyTransactions}</div>
+                    <div className="text-sm text-gray-600">
+                      {t.monthlyTransactions}
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-red-600">
@@ -407,22 +440,40 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
                   <div className="flex items-center justify-between">
                     <span>{t.connectionsEnabled}</span>
                     <div className="flex items-center gap-2">
-                      <Progress value={selectedIntegration.networkImpact.connectionsEnabled * 8} className="w-24" />
-                      <span className="font-medium">{selectedIntegration.networkImpact.connectionsEnabled}</span>
+                      <Progress
+                        value={
+                          selectedIntegration.networkImpact.connectionsEnabled *
+                          8
+                        }
+                        className="w-24"
+                      />
+                      <span className="font-medium">
+                        {selectedIntegration.networkImpact.connectionsEnabled}
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>{t.dataShared}</span>
                     <div className="flex items-center gap-2">
-                      <Progress value={selectedIntegration.networkImpact.dataShared} className="w-24" />
-                      <span className="font-medium">{selectedIntegration.networkImpact.dataShared}%</span>
+                      <Progress
+                        value={selectedIntegration.networkImpact.dataShared}
+                        className="w-24"
+                      />
+                      <span className="font-medium">
+                        {selectedIntegration.networkImpact.dataShared}%
+                      </span>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>{t.efficiencyGain}</span>
                     <div className="flex items-center gap-2">
-                      <Progress value={selectedIntegration.networkImpact.efficiencyGain} className="w-24" />
-                      <span className="font-medium">{selectedIntegration.networkImpact.efficiencyGain}%</span>
+                      <Progress
+                        value={selectedIntegration.networkImpact.efficiencyGain}
+                        className="w-24"
+                      />
+                      <span className="font-medium">
+                        {selectedIntegration.networkImpact.efficiencyGain}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -440,15 +491,23 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
               <CardContent className="space-y-4">
                 <div>
                   <div className="text-sm text-gray-600">{t.timeSaved}</div>
-                  <div className="font-semibold text-green-600">{selectedIntegration.businessValue.timeSaved}</div>
+                  <div className="font-semibold text-green-600">
+                    {selectedIntegration.businessValue.timeSaved}
+                  </div>
                 </div>
                 <div>
                   <div className="text-sm text-gray-600">{t.costReduction}</div>
-                  <div className="font-semibold text-blue-600">{selectedIntegration.businessValue.costReduction}</div>
+                  <div className="font-semibold text-blue-600">
+                    {selectedIntegration.businessValue.costReduction}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-600">{t.accuracyImprovement}</div>
-                  <div className="font-semibold text-purple-600">{selectedIntegration.businessValue.accuracyImprovement}</div>
+                  <div className="text-sm text-gray-600">
+                    {t.accuracyImprovement}
+                  </div>
+                  <div className="font-semibold text-purple-600">
+                    {selectedIntegration.businessValue.accuracyImprovement}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -461,15 +520,21 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label>{t.autoSync}</Label>
-                  <Switch checked={selectedIntegration.configuration.autoSync} />
+                  <Switch
+                    checked={selectedIntegration.configuration.autoSync}
+                  />
                 </div>
                 <div className="flex items-center justify-between">
                   <Label>{t.notifications}</Label>
-                  <Switch checked={selectedIntegration.configuration.notifications} />
+                  <Switch
+                    checked={selectedIntegration.configuration.notifications}
+                  />
                 </div>
                 <div>
                   <Label className="text-sm">{t.dataRetention}</Label>
-                  <div className="font-medium">{selectedIntegration.configuration.dataRetention}</div>
+                  <div className="font-medium">
+                    {selectedIntegration.configuration.dataRetention}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -535,20 +600,36 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
         <CardContent>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">{totalConnections}</div>
-              <div className="text-sm text-gray-600">{t.networkEffects.totalConnections}</div>
+              <div className="text-3xl font-bold text-blue-600">
+                {totalConnections}
+              </div>
+              <div className="text-sm text-gray-600">
+                {t.networkEffects.totalConnections}
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-600">{averageEfficiency}%</div>
-              <div className="text-sm text-gray-600">{t.networkEffects.averageEfficiency}</div>
+              <div className="text-3xl font-bold text-green-600">
+                {averageEfficiency}%
+              </div>
+              <div className="text-sm text-gray-600">
+                {t.networkEffects.averageEfficiency}
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600">{dailyDataFlow}</div>
-              <div className="text-sm text-gray-600">{t.networkEffects.dataFlow}</div>
+              <div className="text-3xl font-bold text-purple-600">
+                {dailyDataFlow}
+              </div>
+              <div className="text-sm text-gray-600">
+                {t.networkEffects.dataFlow}
+              </div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600">{businessImpactScore}</div>
-              <div className="text-sm text-gray-600">{t.networkEffects.businessImpact}</div>
+              <div className="text-3xl font-bold text-orange-600">
+                {businessImpactScore}
+              </div>
+              <div className="text-sm text-gray-600">
+                {t.networkEffects.businessImpact}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -556,12 +637,12 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
 
       {/* Installed Integrations */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {INSTALLED_INTEGRATIONS.map((integration) => {
+        {INSTALLED_INTEGRATIONS.map(integration => {
           const Icon = integration.icon;
           const StatusIcon = getStatusIcon(integration.status);
-          
+
           return (
-            <Card 
+            <Card
               key={integration.id}
               className="cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => {
@@ -577,9 +658,13 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
                     </div>
                     <div>
                       <CardTitle className="text-lg">
-                        {locale === 'en' ? integration.name : integration.nameEl}
+                        {locale === 'en'
+                          ? integration.name
+                          : integration.nameEl}
                       </CardTitle>
-                      <p className="text-sm text-gray-600">{integration.category}</p>
+                      <p className="text-sm text-gray-600">
+                        {integration.category}
+                      </p>
                     </div>
                   </div>
                   <Badge className={getStatusColor(integration.status)}>
@@ -588,30 +673,39 @@ export default function IntegrationManager({ locale = 'en' }: IntegrationManager
                   </Badge>
                 </div>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="space-y-4">
-                  <p className="text-sm text-gray-600">{integration.description}</p>
-                  
+                  <p className="text-sm text-gray-600">
+                    {integration.description}
+                  </p>
+
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <div className="text-gray-500">{t.dailyTransactions}</div>
-                      <div className="font-medium">{integration.usageStats.dailyTransactions}</div>
+                      <div className="font-medium">
+                        {integration.usageStats.dailyTransactions}
+                      </div>
                     </div>
                     <div>
                       <div className="text-gray-500">{t.uptime}</div>
-                      <div className="font-medium">{integration.usageStats.uptime}%</div>
+                      <div className="font-medium">
+                        {integration.usageStats.uptime}%
+                      </div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>{t.efficiencyGain}</span>
                       <span>{integration.networkImpact.efficiencyGain}%</span>
                     </div>
-                    <Progress value={integration.networkImpact.efficiencyGain} className="h-2" />
+                    <Progress
+                      value={integration.networkImpact.efficiencyGain}
+                      className="h-2"
+                    />
                   </div>
-                  
+
                   <div className="flex justify-between items-center pt-3 border-t">
                     <span className="text-xs text-gray-500">
                       {t.lastSync}: {formatLastSync(integration.lastSync)}

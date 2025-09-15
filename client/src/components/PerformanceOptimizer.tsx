@@ -11,11 +11,12 @@ interface PerformanceOptimizerProps {
   enableDevMetrics?: boolean;
 }
 
-export default function PerformanceOptimizer({ 
-  children, 
-  enableDevMetrics = false 
+export default function PerformanceOptimizer({
+  children,
+  enableDevMetrics = false,
 }: PerformanceOptimizerProps) {
-  const { metrics, isSlowConnection, getPerformanceRecommendations } = usePerformanceOptimization();
+  const { metrics, isSlowConnection, getPerformanceRecommendations } =
+    usePerformanceOptimization();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function PerformanceOptimizer({
     const recommendations = getPerformanceRecommendations();
 
     return (
-      <div 
+      <div
         style={{
           position: 'fixed',
           top: 10,
@@ -45,16 +46,22 @@ export default function PerformanceOptimizer({
           maxWidth: '300px',
         }}
       >
-        <div><strong>🇬🇷 Greek Performance Metrics</strong></div>
+        <div>
+          <strong>🇬🇷 Greek Performance Metrics</strong>
+        </div>
         <div>FCP: {metrics.firstContentfulPaint.toFixed(0)}ms</div>
         <div>LCP: {metrics.largestContentfulPaint.toFixed(0)}ms</div>
         <div>CLS: {metrics.cumulativeLayoutShift.toFixed(3)}</div>
         <div>Connection: {metrics.effectiveConnectionType}</div>
-        {isSlowConnection && <div style={{color: '#ff6b6b'}}>🐌 Slow connection detected</div>}
-        
+        {isSlowConnection && (
+          <div style={{ color: '#ff6b6b' }}>🐌 Slow connection detected</div>
+        )}
+
         {recommendations.length > 0 && (
           <div style={{ marginTop: '8px', fontSize: '11px' }}>
-            <div><strong>Recommendations:</strong></div>
+            <div>
+              <strong>Recommendations:</strong>
+            </div>
             {recommendations.map((rec, i) => (
               <div key={i}>• {rec}</div>
             ))}
@@ -67,7 +74,7 @@ export default function PerformanceOptimizer({
   // Loading state optimized for Greek connections
   if (isLoading) {
     return (
-      <div 
+      <div
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -78,10 +85,17 @@ export default function PerformanceOptimizer({
         }}
       >
         <div style={{ textAlign: 'center' }}>
-          <div className="loading-spinner" style={{ margin: '0 auto 16px' }}></div>
-          <div style={{ fontSize: '18px', marginBottom: '8px' }}>PayrollSync</div>
+          <div
+            className="loading-spinner"
+            style={{ margin: '0 auto 16px' }}
+          ></div>
+          <div style={{ fontSize: '18px', marginBottom: '8px' }}>
+            PayrollSync
+          </div>
           <div style={{ fontSize: '14px', opacity: 0.8 }}>
-            {isSlowConnection ? 'Optimizing for Greek internet...' : 'Loading...'}
+            {isSlowConnection
+              ? 'Optimizing for Greek internet...'
+              : 'Loading...'}
           </div>
         </div>
       </div>

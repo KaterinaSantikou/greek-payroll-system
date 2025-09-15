@@ -4,19 +4,31 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Mail, 
-  Clock, 
+import {
+  Mail,
+  Clock,
   Calendar,
   Globe2,
   Settings,
@@ -27,7 +39,7 @@ import {
   Zap,
   BarChart3,
   Eye,
-  Copy
+  Copy,
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -88,7 +100,7 @@ export function DunningEmailManager() {
     activeSequences: 0,
     pendingEmails: 0,
     sentEmails: 0,
-    failedEmails: 0
+    failedEmails: 0,
   });
   const [config, setConfig] = useState<DunningConfig | null>(null);
   const [testForm, setTestForm] = useState<TestFormData>({
@@ -105,7 +117,7 @@ export function DunningEmailManager() {
     supplierTaxOffice: 'ΔΟΥ Αθηνών',
     supplierAddress: 'Βασ. Σοφίας 123, 10676 Αθήνα',
     supplierDomain: 'example.com',
-    isGreek: false
+    isGreek: false,
   });
   const [isTestingDunning, setIsTestingDunning] = useState(false);
   const [previewStage, setPreviewStage] = useState('D0');
@@ -121,7 +133,7 @@ export function DunningEmailManager() {
       // Load statistics and configuration
       const [statsResponse, configResponse] = await Promise.all([
         apiRequest('GET', '/api/dunning-emails/statistics'),
-        apiRequest('GET', '/api/dunning-emails/config')
+        apiRequest('GET', '/api/dunning-emails/config'),
       ]);
 
       const statsData = await statsResponse.json();
@@ -142,7 +154,7 @@ export function DunningEmailManager() {
         activeSequences: 8,
         pendingEmails: 12,
         sentEmails: 156,
-        failedEmails: 2
+        failedEmails: 2,
       });
 
       setConfig({
@@ -150,41 +162,64 @@ export function DunningEmailManager() {
         sendWindows: {
           D0: { immediate: true },
           D3_D7: { hours: '10:00-12:00', days: 'Tuesday-Friday' },
-          D14: { hours: '09:30-11:00', days: 'Monday-Tuesday' }
+          D14: { hours: '09:30-11:00', days: 'Monday-Tuesday' },
         },
         utm: {
           source: 'dunning',
           medium: 'email',
-          campaign: '{{trigger_id}}'
+          campaign: '{{trigger_id}}',
         },
         sender: {
           fromName: '{{supplier_name}} Billing',
           fromEmail: 'billing@{{supplier_domain}}',
-          replyTo: 'accounts@{{supplier_domain}}'
+          replyTo: 'accounts@{{supplier_domain}}',
         },
         supportedLanguages: ['en', 'el'],
         stages: ['D0', 'D3', 'D7', 'D14', 'SUCCESS'],
         variables: {
           required: [
-            'customer_name', 'tenant_name', 'invoice_number', 'invoice_series',
-            'invoice_issue_date', 'amount_due', 'currency', 'due_date', 'days_past_due',
-            'pay_link', 'invoice_pdf_url', 'payment_method', 'next_retry_date',
-            'grace_suspend_date', 'support_email', 'support_phone', 'supplier_name',
-            'supplier_vat', 'supplier_tax_office', 'supplier_address', 'supplier_domain',
-            'legal_footer', 'is_el', 'trigger_id'
+            'customer_name',
+            'tenant_name',
+            'invoice_number',
+            'invoice_series',
+            'invoice_issue_date',
+            'amount_due',
+            'currency',
+            'due_date',
+            'days_past_due',
+            'pay_link',
+            'invoice_pdf_url',
+            'payment_method',
+            'next_retry_date',
+            'grace_suspend_date',
+            'support_email',
+            'support_phone',
+            'supplier_name',
+            'supplier_vat',
+            'supplier_tax_office',
+            'supplier_address',
+            'supplier_domain',
+            'legal_footer',
+            'is_el',
+            'trigger_id',
           ],
-          optional: ['last4', 'sepa_mandate_ref']
-        }
+          optional: ['last4', 'sepa_mandate_ref'],
+        },
       });
     }
   };
 
   const testDunningSequence = async () => {
-    if (!testForm.customerName || !testForm.tenantName || !testForm.invoiceNumber) {
+    if (
+      !testForm.customerName ||
+      !testForm.tenantName ||
+      !testForm.invoiceNumber
+    ) {
       toast({
         title: 'Validation Error',
-        description: 'Please fill in required fields: Customer Name, Tenant Name, and Invoice Number',
-        variant: 'destructive'
+        description:
+          'Please fill in required fields: Customer Name, Tenant Name, and Invoice Number',
+        variant: 'destructive',
       });
       return;
     }
@@ -192,24 +227,24 @@ export function DunningEmailManager() {
     setIsTestingDunning(true);
     try {
       const response = await apiRequest('POST', '/api/dunning-emails/test', {
-        isGreek: testForm.isGreek
+        isGreek: testForm.isGreek,
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         toast({
           title: 'Test Sequence Created',
-          description: `${data.language} dunning sequence created with ${data.stages.length} stages`
+          description: `${data.language} dunning sequence created with ${data.stages.length} stages`,
         });
-        
+
         // Reload statistics
         await loadData();
       } else {
         toast({
           title: 'Test Failed',
           description: data.error || 'Failed to create test sequence',
-          variant: 'destructive'
+          variant: 'destructive',
         });
       }
     } catch (error) {
@@ -218,13 +253,13 @@ export function DunningEmailManager() {
         title: 'Test Sequence Success',
         description: `Created ${testForm.isGreek ? 'Greek' : 'English'} dunning sequence with 4 stages (D0, D3, D7, D14)`,
       });
-      
+
       // Update statistics with mock increase
       setStatistics(prev => ({
         ...prev,
         totalSequences: prev.totalSequences + 1,
         activeSequences: prev.activeSequences + 1,
-        pendingEmails: prev.pendingEmails + 4
+        pendingEmails: prev.pendingEmails + 4,
       }));
     } finally {
       setIsTestingDunning(false);
@@ -234,43 +269,45 @@ export function DunningEmailManager() {
   const previewTemplate = async () => {
     try {
       const testVariables = {
-        customer_name: testForm.customerName || (testForm.isGreek ? 'Γιάννης Παπαδόπουλος' : 'John Smith'),
+        customer_name:
+          testForm.customerName ||
+          (testForm.isGreek ? 'Γιάννης Παπαδόπουλος' : 'John Smith'),
         invoice_number: testForm.invoiceNumber || '2024001',
-        amount_due: testForm.amountDue || 1250.00,
+        amount_due: testForm.amountDue || 1250.0,
         days_past_due: testForm.daysPastDue,
         pay_link: 'https://billing.example.com/pay/preview',
-        trigger_id: 'preview_test'
+        trigger_id: 'preview_test',
       };
 
       const response = await apiRequest('POST', '/api/dunning-emails/preview', {
         stage: previewStage,
         isGreek: previewLanguage === 'el',
-        variables: testVariables
+        variables: testVariables,
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         const preview = data.preview;
         toast({
           title: 'Template Preview',
-          description: `${preview.language} ${preview.stage} template - Send Window: ${preview.sendWindow}`
+          description: `${preview.language} ${preview.stage} template - Send Window: ${preview.sendWindow}`,
         });
-        
+
         // In a real implementation, this would show the actual email preview
         console.log('Email preview:', preview);
       } else {
         toast({
           title: 'Preview Failed',
           description: data.error || 'Failed to generate preview',
-          variant: 'destructive'
+          variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error previewing template:', error);
       toast({
         title: 'Preview Generated',
-        description: `${previewLanguage === 'el' ? 'Greek' : 'English'} ${previewStage} template preview created`
+        description: `${previewLanguage === 'el' ? 'Greek' : 'English'} ${previewStage} template preview created`,
       });
     }
   };
@@ -288,7 +325,7 @@ export function DunningEmailManager() {
       navigator.clipboard.writeText(JSON.stringify(config, null, 2));
       toast({
         title: 'Configuration Copied',
-        description: 'Dunning email configuration copied to clipboard'
+        description: 'Dunning email configuration copied to clipboard',
       });
     }
   };
@@ -298,7 +335,9 @@ export function DunningEmailManager() {
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dunning email configuration...</p>
+          <p className="text-muted-foreground">
+            Loading dunning email configuration...
+          </p>
         </div>
       </div>
     );
@@ -331,7 +370,10 @@ export function DunningEmailManager() {
             <BarChart3 className="h-4 w-4" />
             <span>Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="configuration" className="flex items-center space-x-1">
+          <TabsTrigger
+            value="configuration"
+            className="flex items-center space-x-1"
+          >
             <Settings className="h-4 w-4" />
             <span>Configuration</span>
           </TabsTrigger>
@@ -339,7 +381,10 @@ export function DunningEmailManager() {
             <Play className="h-4 w-4" />
             <span>Testing</span>
           </TabsTrigger>
-          <TabsTrigger value="templates" className="flex items-center space-x-1">
+          <TabsTrigger
+            value="templates"
+            className="flex items-center space-x-1"
+          >
             <Eye className="h-4 w-4" />
             <span>Templates</span>
           </TabsTrigger>
@@ -350,11 +395,15 @@ export function DunningEmailManager() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Sequences</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Sequences
+                </CardTitle>
                 <Mail className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{statistics.totalSequences}</div>
+                <div className="text-2xl font-bold">
+                  {statistics.totalSequences}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Dunning campaigns created
                 </p>
@@ -363,11 +412,15 @@ export function DunningEmailManager() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Sequences</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Active Sequences
+                </CardTitle>
                 <Zap className="h-4 w-4 text-yellow-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">{statistics.activeSequences}</div>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {statistics.activeSequences}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Currently running
                 </p>
@@ -376,24 +429,30 @@ export function DunningEmailManager() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Pending Emails</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Pending Emails
+                </CardTitle>
                 <Clock className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{statistics.pendingEmails}</div>
-                <p className="text-xs text-muted-foreground">
-                  Waiting to send
-                </p>
+                <div className="text-2xl font-bold text-blue-600">
+                  {statistics.pendingEmails}
+                </div>
+                <p className="text-xs text-muted-foreground">Waiting to send</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Sent Emails</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Sent Emails
+                </CardTitle>
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">{statistics.sentEmails}</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {statistics.sentEmails}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Successfully delivered
                 </p>
@@ -402,11 +461,15 @@ export function DunningEmailManager() {
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Failed Emails</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Failed Emails
+                </CardTitle>
                 <XCircle className="h-4 w-4 text-red-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-600">{statistics.failedEmails}</div>
+                <div className="text-2xl font-bold text-red-600">
+                  {statistics.failedEmails}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Delivery failures
                 </p>
@@ -440,7 +503,8 @@ export function DunningEmailManager() {
                     <span className="text-sm">Reminders</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {config.sendWindows.D3_D7.hours}<br/>
+                    {config.sendWindows.D3_D7.hours}
+                    <br />
                     {config.sendWindows.D3_D7.days}
                   </p>
                 </div>
@@ -451,7 +515,8 @@ export function DunningEmailManager() {
                     <span className="text-sm">Final Notice</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    {config.sendWindows.D14.hours}<br/>
+                    {config.sendWindows.D14.hours}
+                    <br />
                     {config.sendWindows.D14.days}
                   </p>
                 </div>
@@ -470,7 +535,8 @@ export function DunningEmailManager() {
             <CardContent>
               <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
                 <code className="text-sm">
-                  ?utm_source={config.utm.source}&utm_medium={config.utm.medium}&utm_campaign={config.utm.campaign}
+                  ?utm_source={config.utm.source}&utm_medium={config.utm.medium}
+                  &utm_campaign={config.utm.campaign}
                 </code>
               </div>
             </CardContent>
@@ -484,7 +550,11 @@ export function DunningEmailManager() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>System Configuration</CardTitle>
-                  <Button variant="outline" size="sm" onClick={copyConfigToClipboard}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={copyConfigToClipboard}
+                  >
                     <Copy className="h-3 w-3 mr-1" />
                     Copy JSON
                   </Button>
@@ -496,15 +566,23 @@ export function DunningEmailManager() {
               <CardContent className="space-y-4">
                 <div>
                   <Label className="text-sm font-medium">Timezone</Label>
-                  <p className="text-sm text-muted-foreground">{config.timezone}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {config.timezone}
+                  </p>
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium">Supported Languages</Label>
+                  <Label className="text-sm font-medium">
+                    Supported Languages
+                  </Label>
                   <div className="flex items-center space-x-2 mt-1">
                     {config.supportedLanguages.map(lang => (
                       <Badge key={lang} variant="secondary">
-                        {lang === 'en' ? 'English' : lang === 'el' ? 'Ελληνικά' : lang}
+                        {lang === 'en'
+                          ? 'English'
+                          : lang === 'el'
+                            ? 'Ελληνικά'
+                            : lang}
                       </Badge>
                     ))}
                   </div>
@@ -533,17 +611,23 @@ export function DunningEmailManager() {
               <CardContent className="space-y-4">
                 <div>
                   <Label className="text-sm font-medium">From Name</Label>
-                  <p className="text-sm text-muted-foreground font-mono">{config.sender.fromName}</p>
+                  <p className="text-sm text-muted-foreground font-mono">
+                    {config.sender.fromName}
+                  </p>
                 </div>
 
                 <div>
                   <Label className="text-sm font-medium">From Email</Label>
-                  <p className="text-sm text-muted-foreground font-mono">{config.sender.fromEmail}</p>
+                  <p className="text-sm text-muted-foreground font-mono">
+                    {config.sender.fromEmail}
+                  </p>
                 </div>
 
                 <div>
                   <Label className="text-sm font-medium">Reply-To</Label>
-                  <p className="text-sm text-muted-foreground font-mono">{config.sender.replyTo}</p>
+                  <p className="text-sm text-muted-foreground font-mono">
+                    {config.sender.replyTo}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -560,19 +644,33 @@ export function DunningEmailManager() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 {config.variables.required.map(variable => (
-                  <Badge key={variable} variant="outline" className="justify-start">
-                    <code className="text-xs">&#123;&#123;{variable}&#125;&#125;</code>
+                  <Badge
+                    key={variable}
+                    variant="outline"
+                    className="justify-start"
+                  >
+                    <code className="text-xs">
+                      &#123;&#123;{variable}&#125;&#125;
+                    </code>
                   </Badge>
                 ))}
               </div>
-              
+
               {config.variables.optional.length > 0 && (
                 <div className="mt-4">
-                  <Label className="text-sm font-medium">Optional Variables</Label>
+                  <Label className="text-sm font-medium">
+                    Optional Variables
+                  </Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
                     {config.variables.optional.map(variable => (
-                      <Badge key={variable} variant="secondary" className="justify-start">
-                        <code className="text-xs">&#123;&#123;{variable}&#125;&#125;</code>
+                      <Badge
+                        key={variable}
+                        variant="secondary"
+                        className="justify-start"
+                      >
+                        <code className="text-xs">
+                          &#123;&#123;{variable}&#125;&#125;
+                        </code>
                       </Badge>
                     ))}
                   </div>
@@ -596,18 +694,32 @@ export function DunningEmailManager() {
                 <div className="space-y-2">
                   <Label>Customer Name</Label>
                   <Input
-                    placeholder={testForm.isGreek ? "Γιάννης Παπαδόπουλος" : "John Smith"}
+                    placeholder={
+                      testForm.isGreek ? 'Γιάννης Παπαδόπουλος' : 'John Smith'
+                    }
                     value={testForm.customerName}
-                    onChange={(e) => setTestForm(prev => ({ ...prev, customerName: e.target.value }))}
+                    onChange={e =>
+                      setTestForm(prev => ({
+                        ...prev,
+                        customerName: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Tenant Name</Label>
                   <Input
-                    placeholder={testForm.isGreek ? "Τεστ Εταιρεία ΑΕ" : "Test Company Ltd"}
+                    placeholder={
+                      testForm.isGreek ? 'Τεστ Εταιρεία ΑΕ' : 'Test Company Ltd'
+                    }
                     value={testForm.tenantName}
-                    onChange={(e) => setTestForm(prev => ({ ...prev, tenantName: e.target.value }))}
+                    onChange={e =>
+                      setTestForm(prev => ({
+                        ...prev,
+                        tenantName: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
@@ -616,7 +728,12 @@ export function DunningEmailManager() {
                   <Input
                     placeholder="2024001"
                     value={testForm.invoiceNumber}
-                    onChange={(e) => setTestForm(prev => ({ ...prev, invoiceNumber: e.target.value }))}
+                    onChange={e =>
+                      setTestForm(prev => ({
+                        ...prev,
+                        invoiceNumber: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
@@ -625,7 +742,12 @@ export function DunningEmailManager() {
                   <Input
                     placeholder="SALES-24"
                     value={testForm.invoiceSeries}
-                    onChange={(e) => setTestForm(prev => ({ ...prev, invoiceSeries: e.target.value }))}
+                    onChange={e =>
+                      setTestForm(prev => ({
+                        ...prev,
+                        invoiceSeries: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
@@ -635,7 +757,12 @@ export function DunningEmailManager() {
                     type="number"
                     step="0.01"
                     value={testForm.amountDue}
-                    onChange={(e) => setTestForm(prev => ({ ...prev, amountDue: parseFloat(e.target.value) || 0 }))}
+                    onChange={e =>
+                      setTestForm(prev => ({
+                        ...prev,
+                        amountDue: parseFloat(e.target.value) || 0,
+                      }))
+                    }
                   />
                 </div>
 
@@ -645,7 +772,12 @@ export function DunningEmailManager() {
                     type="number"
                     min="0"
                     value={testForm.daysPastDue}
-                    onChange={(e) => setTestForm(prev => ({ ...prev, daysPastDue: parseInt(e.target.value) || 0 }))}
+                    onChange={e =>
+                      setTestForm(prev => ({
+                        ...prev,
+                        daysPastDue: parseInt(e.target.value) || 0,
+                      }))
+                    }
                   />
                 </div>
               </div>
@@ -653,12 +785,14 @@ export function DunningEmailManager() {
               <div className="flex items-center space-x-2">
                 <Switch
                   checked={testForm.isGreek}
-                  onCheckedChange={(checked) => setTestForm(prev => ({ ...prev, isGreek: checked }))}
+                  onCheckedChange={checked =>
+                    setTestForm(prev => ({ ...prev, isGreek: checked }))
+                  }
                 />
                 <Label>Use Greek Language Templates</Label>
               </div>
 
-              <Button 
+              <Button
                 onClick={testDunningSequence}
                 disabled={isTestingDunning}
                 className="w-full"
@@ -685,7 +819,8 @@ export function DunningEmailManager() {
             <CardHeader>
               <CardTitle>Email Template Preview</CardTitle>
               <CardDescription>
-                Preview dunning email templates for different stages and languages
+                Preview dunning email templates for different stages and
+                languages
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -701,14 +836,19 @@ export function DunningEmailManager() {
                       <SelectItem value="D3">D3 - First Reminder</SelectItem>
                       <SelectItem value="D7">D7 - Second Reminder</SelectItem>
                       <SelectItem value="D14">D14 - Final Notice</SelectItem>
-                      <SelectItem value="SUCCESS">Success - Payment Received</SelectItem>
+                      <SelectItem value="SUCCESS">
+                        Success - Payment Received
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Language</Label>
-                  <Select value={previewLanguage} onValueChange={setPreviewLanguage}>
+                  <Select
+                    value={previewLanguage}
+                    onValueChange={setPreviewLanguage}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -722,7 +862,8 @@ export function DunningEmailManager() {
 
               <Button onClick={previewTemplate} className="w-full">
                 <Eye className="h-4 w-4 mr-2" />
-                Preview {previewLanguage === 'el' ? 'Greek' : 'English'} {previewStage} Template
+                Preview {previewLanguage === 'el' ? 'Greek' : 'English'}{' '}
+                {previewStage} Template
               </Button>
 
               {/* Template Examples */}
@@ -730,19 +871,23 @@ export function DunningEmailManager() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950">
                     <CardHeader>
-                      <CardTitle className="text-sm">D0 - Payment Due</CardTitle>
+                      <CardTitle className="text-sm">
+                        D0 - Payment Due
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-xs text-muted-foreground">
-                        Friendly reminder sent immediately when payment becomes due.
-                        Professional tone with clear payment options.
+                        Friendly reminder sent immediately when payment becomes
+                        due. Professional tone with clear payment options.
                       </p>
                     </CardContent>
                   </Card>
 
                   <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950">
                     <CardHeader>
-                      <CardTitle className="text-sm">D3/D7 - Reminders</CardTitle>
+                      <CardTitle className="text-sm">
+                        D3/D7 - Reminders
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-xs text-muted-foreground">
@@ -754,24 +899,28 @@ export function DunningEmailManager() {
 
                   <Card className="border-red-200 bg-red-50 dark:bg-red-950">
                     <CardHeader>
-                      <CardTitle className="text-sm">D14 - Final Notice</CardTitle>
+                      <CardTitle className="text-sm">
+                        D14 - Final Notice
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-xs text-muted-foreground">
-                        Critical final notice with suspension warning.
-                        Sent Monday/Tuesday mornings for maximum impact.
+                        Critical final notice with suspension warning. Sent
+                        Monday/Tuesday mornings for maximum impact.
                       </p>
                     </CardContent>
                   </Card>
 
                   <Card className="border-green-200 bg-green-50 dark:bg-green-950">
                     <CardHeader>
-                      <CardTitle className="text-sm">Success - Payment Received</CardTitle>
+                      <CardTitle className="text-sm">
+                        Success - Payment Received
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <p className="text-xs text-muted-foreground">
-                        Thank you message confirming payment receipt.
-                        Sent immediately upon payment processing.
+                        Thank you message confirming payment receipt. Sent
+                        immediately upon payment processing.
                       </p>
                     </CardContent>
                   </Card>

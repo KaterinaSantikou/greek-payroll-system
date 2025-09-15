@@ -7,11 +7,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  CheckCircle2, 
-  AlertTriangle, 
-  XCircle, 
-  Clock, 
+import {
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Clock,
   TrendingUp,
   Activity,
   Server,
@@ -19,14 +19,18 @@ import {
   Cloud,
   Shield,
   Wifi,
-  Globe
+  Globe,
 } from 'lucide-react';
 
 interface SystemComponent {
   id: string;
   name: string;
   description: string;
-  status: 'operational' | 'degraded_performance' | 'partial_outage' | 'major_outage';
+  status:
+    | 'operational'
+    | 'degraded_performance'
+    | 'partial_outage'
+    | 'major_outage';
   lastUpdated: string;
   uptime: number;
   responseTime: number;
@@ -45,7 +49,11 @@ interface HistoricalIncident {
 }
 
 interface SystemMetrics {
-  overallStatus: 'operational' | 'degraded_performance' | 'partial_outage' | 'major_outage';
+  overallStatus:
+    | 'operational'
+    | 'degraded_performance'
+    | 'partial_outage'
+    | 'major_outage';
   overallUptime: number;
   activeIncidents: number;
   lastIncident?: string;
@@ -58,7 +66,7 @@ const STATUS_CONFIG = {
     textColor: 'text-green-700',
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200',
-    icon: CheckCircle2
+    icon: CheckCircle2,
   },
   degraded_performance: {
     label: 'Degraded Performance',
@@ -66,7 +74,7 @@ const STATUS_CONFIG = {
     textColor: 'text-yellow-700',
     bgColor: 'bg-yellow-50',
     borderColor: 'border-yellow-200',
-    icon: AlertTriangle
+    icon: AlertTriangle,
   },
   partial_outage: {
     label: 'Partial Outage',
@@ -74,7 +82,7 @@ const STATUS_CONFIG = {
     textColor: 'text-orange-700',
     bgColor: 'bg-orange-50',
     borderColor: 'border-orange-200',
-    icon: AlertTriangle
+    icon: AlertTriangle,
   },
   major_outage: {
     label: 'Major Outage',
@@ -82,15 +90,15 @@ const STATUS_CONFIG = {
     textColor: 'text-red-700',
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
-    icon: XCircle
-  }
+    icon: XCircle,
+  },
 };
 
 export function PublicStatusPage() {
   const [systemMetrics, setSystemMetrics] = useState<SystemMetrics>({
     overallStatus: 'operational',
     overallUptime: 99.95,
-    activeIncidents: 0
+    activeIncidents: 0,
   });
 
   const [components, setComponents] = useState<SystemComponent[]>([
@@ -102,7 +110,7 @@ export function PublicStatusPage() {
       lastUpdated: new Date().toISOString(),
       uptime: 99.98,
       responseTime: 145,
-      icon: Globe
+      icon: Globe,
     },
     {
       id: 'api_services',
@@ -112,7 +120,7 @@ export function PublicStatusPage() {
       lastUpdated: new Date().toISOString(),
       uptime: 99.96,
       responseTime: 89,
-      icon: Server
+      icon: Server,
     },
     {
       id: 'database',
@@ -122,7 +130,7 @@ export function PublicStatusPage() {
       lastUpdated: new Date().toISOString(),
       uptime: 99.99,
       responseTime: 12,
-      icon: Database
+      icon: Database,
     },
     {
       id: 'file_storage',
@@ -132,7 +140,7 @@ export function PublicStatusPage() {
       lastUpdated: new Date().toISOString(),
       uptime: 99.94,
       responseTime: 230,
-      icon: Cloud
+      icon: Cloud,
     },
     {
       id: 'authentication',
@@ -142,7 +150,7 @@ export function PublicStatusPage() {
       lastUpdated: new Date().toISOString(),
       uptime: 99.97,
       responseTime: 67,
-      icon: Shield
+      icon: Shield,
     },
     {
       id: 'external_apis',
@@ -152,8 +160,8 @@ export function PublicStatusPage() {
       lastUpdated: new Date().toISOString(),
       uptime: 98.85,
       responseTime: 1240,
-      icon: Wifi
-    }
+      icon: Wifi,
+    },
   ]);
 
   const [recentIncidents, setRecentIncidents] = useState<HistoricalIncident[]>([
@@ -163,9 +171,12 @@ export function PublicStatusPage() {
       status: 'resolved',
       severity: 'minor',
       createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      resolvedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 45 * 60 * 1000).toISOString(),
+      resolvedAt: new Date(
+        Date.now() - 2 * 24 * 60 * 60 * 1000 + 45 * 60 * 1000
+      ).toISOString(),
       components: ['api_services', 'external_apis'],
-      summary: 'Resolved timeout issues with external API integrations. All systems restored to normal operation.'
+      summary:
+        'Resolved timeout issues with external API integrations. All systems restored to normal operation.',
     },
     {
       id: 'inc_002',
@@ -173,21 +184,29 @@ export function PublicStatusPage() {
       status: 'resolved',
       severity: 'minor',
       createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      resolvedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 120 * 60 * 1000).toISOString(),
+      resolvedAt: new Date(
+        Date.now() - 5 * 24 * 60 * 60 * 1000 + 120 * 60 * 1000
+      ).toISOString(),
       components: ['file_storage'],
-      summary: 'Optimized file storage infrastructure. Upload performance restored to normal levels.'
-    }
+      summary:
+        'Optimized file storage infrastructure. Upload performance restored to normal levels.',
+    },
   ]);
 
   useEffect(() => {
     // Simulate real-time updates
     const interval = setInterval(() => {
       // Update component response times with minor variations
-      setComponents(prev => prev.map(comp => ({
-        ...comp,
-        responseTime: Math.max(10, comp.responseTime + (Math.random() - 0.5) * 20),
-        lastUpdated: new Date().toISOString()
-      })));
+      setComponents(prev =>
+        prev.map(comp => ({
+          ...comp,
+          responseTime: Math.max(
+            10,
+            comp.responseTime + (Math.random() - 0.5) * 20
+          ),
+          lastUpdated: new Date().toISOString(),
+        }))
+      );
     }, 30000); // Update every 30 seconds
 
     return () => clearInterval(interval);
@@ -200,17 +219,25 @@ export function PublicStatusPage() {
   };
 
   const getStatusConfig = (status: string) => {
-    return STATUS_CONFIG[status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.operational;
+    return (
+      STATUS_CONFIG[status as keyof typeof STATUS_CONFIG] ||
+      STATUS_CONFIG.operational
+    );
   };
 
   const formatDuration = (minutes: number) => {
     if (minutes < 60) return `${Math.round(minutes)}m`;
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = Math.round(minutes % 60);
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+    return remainingMinutes > 0
+      ? `${hours}h ${remainingMinutes}m`
+      : `${hours}h`;
   };
 
-  const calculateIncidentDuration = (createdAt: string, resolvedAt?: string) => {
+  const calculateIncidentDuration = (
+    createdAt: string,
+    resolvedAt?: string
+  ) => {
     const start = new Date(createdAt);
     const end = resolvedAt ? new Date(resolvedAt) : new Date();
     return Math.round((end.getTime() - start.getTime()) / (1000 * 60));
@@ -223,8 +250,12 @@ export function PublicStatusPage() {
         <div className="max-w-6xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">PayrollSync Status</h1>
-              <p className="text-gray-600 mt-1">Real-time system status and incident updates</p>
+              <h1 className="text-3xl font-bold text-gray-900">
+                PayrollSync Status
+              </h1>
+              <p className="text-gray-600 mt-1">
+                Real-time system status and incident updates
+              </p>
             </div>
             <div className="text-right">
               <div className="text-sm text-gray-500">Last updated</div>
@@ -245,7 +276,7 @@ export function PublicStatusPage() {
                 {getStatusIcon(systemMetrics.overallStatus)}
                 <span>System Status</span>
               </CardTitle>
-              <Badge 
+              <Badge
                 className={`${getStatusConfig(systemMetrics.overallStatus).bgColor} ${getStatusConfig(systemMetrics.overallStatus).textColor} ${getStatusConfig(systemMetrics.overallStatus).borderColor}`}
               >
                 {getStatusConfig(systemMetrics.overallStatus).label}
@@ -255,19 +286,28 @@ export function PublicStatusPage() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{systemMetrics.overallUptime}%</div>
-                <div className="text-sm text-gray-500">Overall Uptime (30 days)</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {systemMetrics.overallUptime}%
+                </div>
+                <div className="text-sm text-gray-500">
+                  Overall Uptime (30 days)
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{systemMetrics.activeIncidents}</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {systemMetrics.activeIncidents}
+                </div>
                 <div className="text-sm text-gray-500">Active Incidents</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-gray-900">
-                  {systemMetrics.lastIncident ? 
-                    formatDuration((Date.now() - new Date(systemMetrics.lastIncident).getTime()) / (1000 * 60)) : 
-                    '2 days'
-                  }
+                  {systemMetrics.lastIncident
+                    ? formatDuration(
+                        (Date.now() -
+                          new Date(systemMetrics.lastIncident).getTime()) /
+                          (1000 * 60)
+                      )
+                    : '2 days'}
                 </div>
                 <div className="text-sm text-gray-500">Since Last Incident</div>
               </div>
@@ -284,32 +324,47 @@ export function PublicStatusPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {components.map((component) => {
+            {components.map(component => {
               const statusConfig = getStatusConfig(component.status);
               const IconComponent = component.icon;
-              
+
               return (
-                <div key={component.id} className="flex items-center justify-between p-4 rounded-lg border bg-white hover:bg-gray-50 transition-colors">
+                <div
+                  key={component.id}
+                  className="flex items-center justify-between p-4 rounded-lg border bg-white hover:bg-gray-50 transition-colors"
+                >
                   <div className="flex items-center space-x-3">
                     <div className={`p-2 rounded-lg ${statusConfig.bgColor}`}>
-                      <IconComponent className={`h-5 w-5 ${statusConfig.textColor}`} />
+                      <IconComponent
+                        className={`h-5 w-5 ${statusConfig.textColor}`}
+                      />
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">{component.name}</div>
-                      <div className="text-sm text-gray-500">{component.description}</div>
+                      <div className="font-medium text-gray-900">
+                        {component.name}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {component.description}
+                      </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-6 text-right">
                     <div className="hidden md:block">
-                      <div className="text-sm font-medium text-gray-900">{component.uptime}%</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {component.uptime}%
+                      </div>
                       <div className="text-xs text-gray-500">Uptime</div>
                     </div>
                     <div className="hidden md:block">
-                      <div className="text-sm font-medium text-gray-900">{Math.round(component.responseTime)}ms</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {Math.round(component.responseTime)}ms
+                      </div>
                       <div className="text-xs text-gray-500">Response</div>
                     </div>
-                    <Badge className={`${statusConfig.bgColor} ${statusConfig.textColor} ${statusConfig.borderColor}`}>
+                    <Badge
+                      className={`${statusConfig.bgColor} ${statusConfig.textColor} ${statusConfig.borderColor}`}
+                    >
                       {statusConfig.label}
                     </Badge>
                   </div>
@@ -332,37 +387,67 @@ export function PublicStatusPage() {
               <div className="text-center py-8 text-gray-500">
                 <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
                 <p className="font-medium">No recent incidents</p>
-                <p className="text-sm">All systems have been operating normally</p>
+                <p className="text-sm">
+                  All systems have been operating normally
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {recentIncidents.map((incident) => (
-                  <div key={incident.id} className="border rounded-lg p-4 bg-white">
+                {recentIncidents.map(incident => (
+                  <div
+                    key={incident.id}
+                    className="border rounded-lg p-4 bg-white"
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-2">
-                          <Badge 
-                            variant={incident.status === 'resolved' ? 'default' : 'destructive'}
+                          <Badge
+                            variant={
+                              incident.status === 'resolved'
+                                ? 'default'
+                                : 'destructive'
+                            }
                             className="text-xs"
                           >
                             {incident.status.replace('_', ' ')}
                           </Badge>
-                          <Badge 
-                            variant={incident.severity === 'critical' ? 'destructive' : 
-                                   incident.severity === 'major' ? 'secondary' : 'outline'}
+                          <Badge
+                            variant={
+                              incident.severity === 'critical'
+                                ? 'destructive'
+                                : incident.severity === 'major'
+                                  ? 'secondary'
+                                  : 'outline'
+                            }
                             className="text-xs"
                           >
                             {incident.severity}
                           </Badge>
                           <span className="text-xs text-gray-500">
-                            {new Date(incident.createdAt).toLocaleDateString()} at {new Date(incident.createdAt).toLocaleTimeString()}
+                            {new Date(incident.createdAt).toLocaleDateString()}{' '}
+                            at{' '}
+                            {new Date(incident.createdAt).toLocaleTimeString()}
                           </span>
                         </div>
-                        <h3 className="font-medium text-gray-900 mb-2">{incident.title}</h3>
-                        <p className="text-sm text-gray-600 mb-3">{incident.summary}</p>
+                        <h3 className="font-medium text-gray-900 mb-2">
+                          {incident.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-3">
+                          {incident.summary}
+                        </p>
                         <div className="flex items-center space-x-4 text-xs text-gray-500">
-                          <span>Duration: {formatDuration(calculateIncidentDuration(incident.createdAt, incident.resolvedAt))}</span>
-                          <span>Components: {incident.components.join(', ')}</span>
+                          <span>
+                            Duration:{' '}
+                            {formatDuration(
+                              calculateIncidentDuration(
+                                incident.createdAt,
+                                incident.resolvedAt
+                              )
+                            )}
+                          </span>
+                          <span>
+                            Components: {incident.components.join(', ')}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -375,7 +460,10 @@ export function PublicStatusPage() {
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500 pt-8 border-t">
-          <p>Status updates are refreshed every 30 seconds. For support inquiries, contact support@payrollsync.com</p>
+          <p>
+            Status updates are refreshed every 30 seconds. For support
+            inquiries, contact support@payrollsync.com
+          </p>
           <p className="mt-2">© 2025 PayrollSync. All rights reserved.</p>
         </div>
       </div>

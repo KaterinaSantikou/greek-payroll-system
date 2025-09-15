@@ -1,7 +1,13 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home, Bug } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 interface Props {
   children: ReactNode;
@@ -21,7 +27,7 @@ class ErrorBoundary extends Component<Props, State> {
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     };
   }
 
@@ -32,7 +38,7 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // Log error to monitoring service (Sentry)
@@ -40,9 +46,9 @@ class ErrorBoundary extends Component<Props, State> {
       window.Sentry.captureException(error, {
         contexts: {
           errorBoundary: {
-            componentStack: errorInfo.componentStack
-          }
-        }
+            componentStack: errorInfo.componentStack,
+          },
+        },
       });
     }
 
@@ -56,7 +62,7 @@ class ErrorBoundary extends Component<Props, State> {
     this.setState({
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     });
   };
 
@@ -90,14 +96,15 @@ class ErrorBoundary extends Component<Props, State> {
                 Κάτι πήγε στραβά
               </CardTitle>
               <CardDescription className="text-lg">
-                Συνάντησα ένα απροσδόκητο σφάλμα. Παρακαλώ δοκιμάστε ξανά ή επικοινωνήστε με την υποστήριξη.
+                Συνάντησα ένα απροσδόκητο σφάλμα. Παρακαλώ δοκιμάστε ξανά ή
+                επικοινωνήστε με την υποστήριξη.
               </CardDescription>
             </CardHeader>
-            
+
             <CardContent className="space-y-6">
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button 
+                <Button
                   onClick={this.handleRetry}
                   className="flex items-center gap-2"
                   data-testid="button-retry-error"
@@ -105,8 +112,8 @@ class ErrorBoundary extends Component<Props, State> {
                   <RefreshCw className="w-4 h-4" />
                   Δοκίμασε ξανά
                 </Button>
-                
-                <Button 
+
+                <Button
                   variant="outline"
                   onClick={this.handleReload}
                   className="flex items-center gap-2"
@@ -115,8 +122,8 @@ class ErrorBoundary extends Component<Props, State> {
                   <RefreshCw className="w-4 h-4" />
                   Ανανέωση σελίδας
                 </Button>
-                
-                <Button 
+
+                <Button
                   variant="outline"
                   onClick={this.handleGoHome}
                   className="flex items-center gap-2"

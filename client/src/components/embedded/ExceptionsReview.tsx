@@ -1,14 +1,31 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertTriangle, CheckCircle, Clock, UserX, Timer } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { AlertTriangle, CheckCircle, Clock, UserX, Timer } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface Exception {
   id: string;
-  type: 'missed_punch' | 'overtime_approval' | 'late_arrival' | 'early_departure';
+  type:
+    | 'missed_punch'
+    | 'overtime_approval'
+    | 'late_arrival'
+    | 'early_departure';
   employeeId: string;
   employeeName: string;
   date: string;
@@ -30,12 +47,12 @@ interface ExceptionsReviewProps {
   };
 }
 
-export function ExceptionsReview({ 
-  accessToken, 
+export function ExceptionsReview({
+  accessToken,
   onEvent,
   theme = 'light',
   locale = 'en',
-  filters
+  filters,
 }: ExceptionsReviewProps) {
   const [exceptions, setExceptions] = useState<Exception[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,47 +151,63 @@ export function ExceptionsReview({
       onEvent?.('exceptions.loaded', { count: mockExceptions.length });
     } catch (error) {
       console.error('Load exceptions error:', error);
-      onEvent?.('exceptions.failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+      onEvent?.('exceptions.failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const resolveException = async (exceptionId: string, action: 'approve' | 'reject' | 'resolve') => {
+  const resolveException = async (
+    exceptionId: string,
+    action: 'approve' | 'reject' | 'resolve'
+  ) => {
     setProcessingIds(prev => new Set(prev).add(exceptionId));
-    
+
     try {
       // Mock API call - in real implementation, this would call the API
       await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
-      
-      setExceptions(prev => 
-        prev.map(ex => 
-          ex.id === exceptionId 
-            ? { ...ex, status: action === 'resolve' ? 'resolved' : action === 'approve' ? 'approved' : 'rejected' }
+
+      setExceptions(prev =>
+        prev.map(ex =>
+          ex.id === exceptionId
+            ? {
+                ...ex,
+                status:
+                  action === 'resolve'
+                    ? 'resolved'
+                    : action === 'approve'
+                      ? 'approved'
+                      : 'rejected',
+              }
             : ex
         )
       );
 
       const exception = exceptions.find(ex => ex.id === exceptionId);
-      
+
       toast({
-        title: "Exception Resolved",
+        title: 'Exception Resolved',
         description: `${exception?.description} has been ${action}d`,
       });
-      
-      onEvent?.('exceptions.resolved', { 
-        exceptionId, 
-        action, 
+
+      onEvent?.('exceptions.resolved', {
+        exceptionId,
+        action,
         employeeId: exception?.employeeId,
-        type: exception?.type 
+        type: exception?.type,
       });
     } catch (error) {
       toast({
-        title: "Resolution Failed",
-        description: "Failed to resolve exception",
-        variant: "destructive",
+        title: 'Resolution Failed',
+        description: 'Failed to resolve exception',
+        variant: 'destructive',
       });
-      onEvent?.('exceptions.failed', { exceptionId, error: error instanceof Error ? error.message : 'Unknown error' });
+      onEvent?.('exceptions.failed', {
+        exceptionId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setProcessingIds(prev => {
         const updated = new Set(prev);
@@ -189,7 +222,9 @@ export function ExceptionsReview({
   }, [accessToken, filters]);
 
   const pendingCount = exceptions.filter(ex => ex.status === 'pending').length;
-  const highPriorityCount = exceptions.filter(ex => ex.severity === 'high' && ex.status === 'pending').length;
+  const highPriorityCount = exceptions.filter(
+    ex => ex.severity === 'high' && ex.status === 'pending'
+  ).length;
 
   if (loading) {
     return (
@@ -221,7 +256,7 @@ export function ExceptionsReview({
                   {highPriorityCount} High Priority
                 </Badge>
               )}
-              <Badge variant={pendingCount > 0 ? "default" : "secondary"}>
+              <Badge variant={pendingCount > 0 ? 'default' : 'secondary'}>
                 {pendingCount} Pending
               </Badge>
             </div>
@@ -230,20 +265,26 @@ export function ExceptionsReview({
             Review and resolve time & attendance exceptions
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           {/* Quick Stats */}
           <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
             {Object.entries(
-              exceptions.reduce((acc, ex) => {
-                acc[ex.type] = (acc[ex.type] || 0) + 1;
-                return acc;
-              }, {} as Record<string, number>)
+              exceptions.reduce(
+                (acc, ex) => {
+                  acc[ex.type] = (acc[ex.type] || 0) + 1;
+                  return acc;
+                },
+                {} as Record<string, number>
+              )
             ).map(([type, count]) => {
-              const config = exceptionTypeConfig[type as keyof typeof exceptionTypeConfig];
+              const config =
+                exceptionTypeConfig[type as keyof typeof exceptionTypeConfig];
               return (
                 <div key={type} className="text-center">
-                  <div className={`inline-flex items-center justify-center w-8 h-8 rounded-full mb-2 ${config.bgColor}`}>
+                  <div
+                    className={`inline-flex items-center justify-center w-8 h-8 rounded-full mb-2 ${config.bgColor}`}
+                  >
                     <config.icon className={`w-4 h-4 ${config.color}`} />
                   </div>
                   <div className="text-lg font-bold">{count}</div>
@@ -267,16 +308,20 @@ export function ExceptionsReview({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {exceptions.map((exception) => {
+              {exceptions.map(exception => {
                 const typeConfig = exceptionTypeConfig[exception.type];
                 const isProcessing = processingIds.has(exception.id);
-                
+
                 return (
                   <TableRow key={exception.id}>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <div className={`p-2 rounded-full ${typeConfig.bgColor}`}>
-                          <typeConfig.icon className={`w-4 h-4 ${typeConfig.color}`} />
+                        <div
+                          className={`p-2 rounded-full ${typeConfig.bgColor}`}
+                        >
+                          <typeConfig.icon
+                            className={`w-4 h-4 ${typeConfig.color}`}
+                          />
                         </div>
                         <span className="text-sm">{typeConfig.label}</span>
                       </div>
@@ -291,14 +336,15 @@ export function ExceptionsReview({
                       <div className="text-sm">{exception.description}</div>
                       {exception.details && (
                         <div className="text-xs text-gray-500 mt-1">
-                          {exception.type === 'overtime_approval' && 
-                            `${exception.details.hours}h @ ${exception.details.rate}`
-                          }
+                          {exception.type === 'overtime_approval' &&
+                            `${exception.details.hours}h @ ${exception.details.rate}`}
                         </div>
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge className={severityConfig[exception.severity].color}>
+                      <Badge
+                        className={severityConfig[exception.severity].color}
+                      >
                         {severityConfig[exception.severity].label}
                       </Badge>
                     </TableCell>
@@ -315,7 +361,9 @@ export function ExceptionsReview({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => resolveException(exception.id, 'approve')}
+                                onClick={() =>
+                                  resolveException(exception.id, 'approve')
+                                }
                                 disabled={isProcessing}
                                 className="text-green-600 border-green-600 hover:bg-green-50"
                               >
@@ -329,7 +377,9 @@ export function ExceptionsReview({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => resolveException(exception.id, 'reject')}
+                                onClick={() =>
+                                  resolveException(exception.id, 'reject')
+                                }
                                 disabled={isProcessing}
                                 className="text-red-600 border-red-600 hover:bg-red-50"
                               >
@@ -340,7 +390,9 @@ export function ExceptionsReview({
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => resolveException(exception.id, 'resolve')}
+                            onClick={() =>
+                              resolveException(exception.id, 'resolve')
+                            }
                             disabled={isProcessing}
                             className="text-blue-600 border-blue-600 hover:bg-blue-50"
                           >

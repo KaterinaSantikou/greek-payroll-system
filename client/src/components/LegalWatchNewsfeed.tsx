@@ -1,15 +1,21 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Calendar, 
-  ExternalLink, 
-  AlertTriangle, 
-  FileText, 
+import {
+  Calendar,
+  ExternalLink,
+  AlertTriangle,
+  FileText,
   TrendingUp,
   ChevronRight,
-  Clock
+  Clock,
 } from 'lucide-react';
 import { Link } from 'wouter';
 
@@ -35,7 +41,8 @@ const legalUpdates: LegalUpdate[] = [
   {
     id: 'update-2025-001',
     title: 'Αύξηση Κατώτατου Μισθού 2025 - Νέες Προδιαγραφές ΕΦΚΑ',
-    summary: 'Ο κατώτατος μισθός αυξάνεται σε €830 από 1/1/2025. Απαιτούνται ενημερώσεις στις δηλώσεις ΕΦΚΑ και προσαρμογή συμβάσεων εργασίας.',
+    summary:
+      'Ο κατώτατος μισθός αυξάνεται σε €830 από 1/1/2025. Απαιτούνται ενημερώσεις στις δηλώσεις ΕΦΚΑ και προσαρμογή συμβάσεων εργασίας.',
     publishDate: '2024-12-15',
     effectiveDate: '2025-01-01',
     priority: 'high',
@@ -46,27 +53,28 @@ const legalUpdates: LegalUpdate[] = [
         title: 'Ενημέρωση Συμβάσεων Εργασίας',
         description: 'Προσαρμογή όλων των συμβάσεων με μισθό κάτω από €830',
         href: '/employee-master?filter=salary_below_830',
-        urgent: true
+        urgent: true,
       },
       {
         title: 'Ενημέρωση Μισθοδοτικών Στοιχείων',
         description: 'Προσαρμογή βασικών μισθών και επανυπολογισμός ωρομισθίου',
         href: '/payroll-processing?action=salary_update',
-        urgent: true
+        urgent: true,
       },
       {
         title: 'Δηλώσεις ΕΦΚΑ',
         description: 'Υποβολή τροποποιητικών δηλώσεων για τον Ιανουάριο',
         href: '/ergani-compliance?form=efka_amendment',
-        urgent: false
-      }
+        urgent: false,
+      },
     ],
-    complianceImpact: 5
+    complianceImpact: 5,
   },
   {
     id: 'update-2025-002',
     title: 'Νέες Απαιτήσεις ΕΡΓΑΝΗ II - Ψηφιακές Κάρτες Εργασίας',
-    summary: 'Υποχρεωτική χρήση ψηφιακών καρτών εργασίας από 15/1/2025 για όλες τις επιχειρήσεις με πάνω από 50 εργαζόμενους.',
+    summary:
+      'Υποχρεωτική χρήση ψηφιακών καρτών εργασίας από 15/1/2025 για όλες τις επιχειρήσεις με πάνω από 50 εργαζόμενους.',
     publishDate: '2024-12-10',
     effectiveDate: '2025-01-15',
     priority: 'high',
@@ -75,23 +83,25 @@ const legalUpdates: LegalUpdate[] = [
     actionItems: [
       {
         title: 'Εγγραφή στο Σύστημα Ψηφιακών Καρτών',
-        description: 'Εγγραφή επιχείρησης και εργαζομένων στην πλατφόρμα ΕΡΓΑΝΗ II',
+        description:
+          'Εγγραφή επιχείρησης και εργαζομένων στην πλατφόρμα ΕΡΓΑΝΗ II',
         href: '/digital-work-card?action=setup',
-        urgent: true
+        urgent: true,
       },
       {
         title: 'Εκπαίδευση Εργαζομένων',
         description: 'Ενημέρωση εργαζομένων για χρήση ψηφιακών καρτών',
         href: '/onboarding?module=digital_cards',
-        urgent: false
-      }
+        urgent: false,
+      },
     ],
-    complianceImpact: 4
+    complianceImpact: 4,
   },
   {
     id: 'update-2024-045',
     title: 'Τροποποίηση Συλλογικής Σύμβασης Ξενοδοχοϋπαλλήλων',
-    summary: 'Νέες ρυθμίσεις για αποζημίωση υπερωριών και εργασία Κυριακής στον κλάδο φιλοξενίας. Ισχύς από 1/12/2024.',
+    summary:
+      'Νέες ρυθμίσεις για αποζημίωση υπερωριών και εργασία Κυριακής στον κλάδο φιλοξενίας. Ισχύς από 1/12/2024.',
     publishDate: '2024-11-28',
     effectiveDate: '2024-12-01',
     priority: 'medium',
@@ -102,21 +112,23 @@ const legalUpdates: LegalUpdate[] = [
         title: 'Ενημέρωση Υπολογισμών Υπερωριών',
         description: 'Προσαρμογή συντελεστών υπερωρίας για ξενοδοχοϋπαλλήλους',
         href: '/overtime?category=hotel_staff',
-        urgent: false
+        urgent: false,
       },
       {
         title: 'Επαναϋπολογισμός Δεκεμβρίου',
-        description: 'Επαναϋπολογισμός μισθοδοσίας Δεκεμβρίου με νέους συντελεστές',
+        description:
+          'Επαναϋπολογισμός μισθοδοσίας Δεκεμβρίου με νέους συντελεστές',
         href: '/payroll-processing?month=2024-12&recalculate=overtime',
-        urgent: false
-      }
+        urgent: false,
+      },
     ],
-    complianceImpact: 3
+    complianceImpact: 3,
   },
   {
     id: 'update-2024-043',
     title: 'Αλλαγές στη Φορολογία Εργαζομένων - Αφορολόγητο Όριο',
-    summary: 'Αύξηση αφορολόγητου ορίου σε €9.100 για το 2025. Προσαρμογή κλιμάκων φορολογίας και παρακράτησης.',
+    summary:
+      'Αύξηση αφορολόγητου ορίου σε €9.100 για το 2025. Προσαρμογή κλιμάκων φορολογίας και παρακράτησης.',
     publishDate: '2024-11-20',
     effectiveDate: '2025-01-01',
     priority: 'medium',
@@ -127,21 +139,22 @@ const legalUpdates: LegalUpdate[] = [
         title: 'Ενημέρωση Φορολογικών Υπολογισμών',
         description: 'Προσαρμογή κλιμάκων φορολογίας στο σύστημα μισθοδοσίας',
         href: '/payroll-processing?action=tax_update_2025',
-        urgent: false
+        urgent: false,
       },
       {
         title: 'Επαναϋπολογισμός Ιανουαρίου',
         description: 'Εφαρμογή νέων φορολογικών συντελεστών από Ιανουάριο 2025',
         href: '/payroll-processing?month=2025-01&tax_update=true',
-        urgent: false
-      }
+        urgent: false,
+      },
     ],
-    complianceImpact: 3
+    complianceImpact: 3,
   },
   {
     id: 'update-2024-041',
     title: 'Νέες Εισφορές ΕΦΚΑ - Προσαρμογή Ποσοστών 2025',
-    summary: 'Μικρή αύξηση εισφορών εργοδότη κατά 0,2% για το ασφαλιστικό έτος 2025. Ισχύς από 1/1/2025.',
+    summary:
+      'Μικρή αύξηση εισφορών εργοδότη κατά 0,2% για το ασφαλιστικό έτος 2025. Ισχύς από 1/1/2025.',
     publishDate: '2024-11-15',
     effectiveDate: '2025-01-01',
     priority: 'low',
@@ -152,26 +165,28 @@ const legalUpdates: LegalUpdate[] = [
         title: 'Ενημέρωση Εισφορών ΕΦΚΑ',
         description: 'Προσαρμογή ποσοστών εισφορών εργοδότη στο σύστημα',
         href: '/payroll-processing?action=efka_rates_2025',
-        urgent: false
-      }
+        urgent: false,
+      },
     ],
-    complianceImpact: 2
-  }
+    complianceImpact: 2,
+  },
 ];
 
 const priorityConfig = {
   high: {
     color: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300',
-    label: 'Υψηλή Προτεραιότητα'
+    label: 'Υψηλή Προτεραιότητα',
   },
   medium: {
-    color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300',
-    label: 'Μέτρια Προτεραιότητα'
+    color:
+      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300',
+    label: 'Μέτρια Προτεραιότητα',
   },
   low: {
-    color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300',
-    label: 'Χαμηλή Προτεραιότητα'
-  }
+    color:
+      'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300',
+    label: 'Χαμηλή Προτεραιότητα',
+  },
 };
 
 const categoryConfig = {
@@ -179,7 +194,7 @@ const categoryConfig = {
   labor: { label: 'Εργατική Νομοθεσία', icon: TrendingUp },
   insurance: { label: 'Ασφαλίσεις', icon: FileText },
   ergani: { label: 'ΕΡΓΑΝΗ', icon: AlertTriangle },
-  collective: { label: 'Συλλογικές Συμβάσεις', icon: FileText }
+  collective: { label: 'Συλλογικές Συμβάσεις', icon: FileText },
 };
 
 export default function LegalWatchNewsfeed() {
@@ -187,7 +202,7 @@ export default function LegalWatchNewsfeed() {
     return new Date(dateString).toLocaleDateString('el-GR', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -209,12 +224,15 @@ export default function LegalWatchNewsfeed() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {legalUpdates.map((update) => {
+        {legalUpdates.map(update => {
           const CategoryIcon = categoryConfig[update.category].icon;
           const priorityStyle = priorityConfig[update.priority];
-          
+
           return (
-            <div key={update.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+            <div
+              key={update.id}
+              className="border rounded-lg p-4 hover:bg-muted/50 transition-colors"
+            >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
@@ -233,7 +251,9 @@ export default function LegalWatchNewsfeed() {
                     {update.summary}
                   </p>
                 </div>
-                <div className={`text-xs font-medium ${getComplianceImpactColor(update.complianceImpact)}`}>
+                <div
+                  className={`text-xs font-medium ${getComplianceImpactColor(update.complianceImpact)}`}
+                >
                   Επίδραση: {update.complianceImpact}/5
                 </div>
               </div>
@@ -257,16 +277,23 @@ export default function LegalWatchNewsfeed() {
 
               {/* Action Items */}
               <div className="space-y-2">
-                <h5 className="text-sm font-medium text-foreground">Τι πρέπει να κάνετε τώρα:</h5>
+                <h5 className="text-sm font-medium text-foreground">
+                  Τι πρέπει να κάνετε τώρα:
+                </h5>
                 <div className="space-y-2">
                   {update.actionItems.map((action, index) => (
                     <Link key={index} href={action.href}>
                       <div className="flex items-center justify-between p-2 bg-muted/30 rounded border hover:bg-muted/50 transition-colors cursor-pointer">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">{action.title}</span>
+                            <span className="text-sm font-medium">
+                              {action.title}
+                            </span>
                             {action.urgent && (
-                              <Badge variant="destructive" className="text-xs px-1 py-0">
+                              <Badge
+                                variant="destructive"
+                                className="text-xs px-1 py-0"
+                              >
                                 Επείγον
                               </Badge>
                             )}

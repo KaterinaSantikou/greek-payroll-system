@@ -1,7 +1,13 @@
-import { Route, Redirect } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { Route, Redirect } from 'wouter';
+import { useAuth } from '@/hooks/useAuth';
 
-export function ProtectedRoute({ path, component: C }: { path: string; component: any }) {
+export function ProtectedRoute({
+  path,
+  component: C,
+}: {
+  path: string;
+  component: any;
+}) {
   const { isLoading, isAuthenticated } = useAuth();
   return (
     <Route path={path}>

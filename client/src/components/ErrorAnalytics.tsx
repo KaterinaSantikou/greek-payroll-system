@@ -20,19 +20,26 @@ import {
   Users,
   AlertTriangle,
   CheckCircle,
-  Target
+  Target,
 } from 'lucide-react';
 
 interface AnalyticsData {
   errorsByHour: number[];
   errorsByDay: { date: string; count: number; resolved: number }[];
   resolutionTimes: { category: string; avgTime: number; target: number }[];
-  impactAnalysis: { severity: string; customerImpact: number; businessCost: number }[];
+  impactAnalysis: {
+    severity: string;
+    customerImpact: number;
+    businessCost: number;
+  }[];
   topIssues: { issue: string; count: number; trend: 'up' | 'down' }[];
 }
 
 const mockAnalyticsData: AnalyticsData = {
-  errorsByHour: [2, 1, 0, 1, 0, 2, 4, 8, 12, 15, 18, 22, 25, 20, 18, 16, 14, 12, 8, 6, 4, 3, 2, 1],
+  errorsByHour: [
+    2, 1, 0, 1, 0, 2, 4, 8, 12, 15, 18, 22, 25, 20, 18, 16, 14, 12, 8, 6, 4, 3,
+    2, 1,
+  ],
   errorsByDay: [
     { date: '2025-01-14', count: 45, resolved: 42 },
     { date: '2025-01-15', count: 38, resolved: 35 },
@@ -40,28 +47,28 @@ const mockAnalyticsData: AnalyticsData = {
     { date: '2025-01-17', count: 29, resolved: 27 },
     { date: '2025-01-18', count: 33, resolved: 31 },
     { date: '2025-01-19', count: 41, resolved: 38 },
-    { date: '2025-01-20', count: 28, resolved: 25 }
+    { date: '2025-01-20', count: 28, resolved: 25 },
   ],
   resolutionTimes: [
     { category: 'ERGANI II Integration', avgTime: 25.5, target: 30 },
     { category: 'Payment Processing', avgTime: 12.3, target: 15 },
     { category: 'Data Validation', avgTime: 8.7, target: 10 },
     { category: 'Security Issues', avgTime: 45.2, target: 60 },
-    { category: 'Performance', avgTime: 18.9, target: 20 }
+    { category: 'Performance', avgTime: 18.9, target: 20 },
   ],
   impactAnalysis: [
     { severity: 'Critical', customerImpact: 85, businessCost: 12500 },
     { severity: 'High', customerImpact: 45, businessCost: 3200 },
     { severity: 'Medium', customerImpact: 12, businessCost: 850 },
-    { severity: 'Low', customerImpact: 3, businessCost: 120 }
+    { severity: 'Low', customerImpact: 3, businessCost: 120 },
   ],
   topIssues: [
     { issue: 'ERGANI II Timeout', count: 12, trend: 'up' },
     { issue: 'IBAN Validation Failed', count: 8, trend: 'down' },
     { issue: 'AFM Format Error', count: 6, trend: 'down' },
     { issue: 'Database Slow Query', count: 5, trend: 'up' },
-    { issue: 'Authentication Failed', count: 4, trend: 'down' }
-  ]
+    { issue: 'Authentication Failed', count: 4, trend: 'down' },
+  ],
 };
 
 interface ErrorAnalyticsProps {
@@ -98,7 +105,7 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
       thisMonth: 'This Month',
       minutes: 'minutes',
       users: 'users affected',
-      euros: 'EUR estimated cost'
+      euros: 'EUR estimated cost',
     },
     el: {
       title: 'Αναλυτικά & Insights Σφαλμάτων',
@@ -125,8 +132,8 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
       thisMonth: 'Αυτός ο Μήνας',
       minutes: 'λεπτά',
       users: 'επηρεασμένοι χρήστες',
-      euros: 'EUR εκτιμώμενο κόστος'
-    }
+      euros: 'EUR εκτιμώμενο κόστος',
+    },
   };
 
   const t = translations[locale];
@@ -140,7 +147,10 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
   };
 
   const maxErrorsInHour = Math.max(...mockAnalyticsData.errorsByHour);
-  const totalErrorsToday = mockAnalyticsData.errorsByHour.reduce((sum, count) => sum + count, 0);
+  const totalErrorsToday = mockAnalyticsData.errorsByHour.reduce(
+    (sum, count) => sum + count,
+    0
+  );
 
   return (
     <div className="space-y-6">
@@ -149,7 +159,7 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
         <div className="flex items-center gap-4">
           <select
             value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
+            onChange={e => setTimeRange(e.target.value)}
             className="px-3 py-2 border rounded-md"
           >
             <option value="24h">Last 24 Hours</option>
@@ -159,7 +169,7 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
           </select>
           <select
             value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
+            onChange={e => setSelectedCategory(e.target.value)}
             className="px-3 py-2 border rounded-md"
           >
             <option value="all">All Categories</option>
@@ -189,7 +199,9 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
               </div>
               <Clock className="h-8 w-8 text-blue-600" />
             </div>
-            <p className="text-sm text-gray-500 mt-2">{maxErrorsInHour} errors</p>
+            <p className="text-sm text-gray-500 mt-2">
+              {maxErrorsInHour} errors
+            </p>
           </CardContent>
         </Card>
 
@@ -252,7 +264,8 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
           <CardContent>
             <div className="space-y-3">
               {mockAnalyticsData.errorsByHour.map((count, hour) => {
-                const percentage = maxErrorsInHour > 0 ? (count / maxErrorsInHour) * 100 : 0;
+                const percentage =
+                  maxErrorsInHour > 0 ? (count / maxErrorsInHour) * 100 : 0;
                 return (
                   <div key={hour} className="flex items-center gap-3">
                     <div className="w-12 text-sm text-gray-500">
@@ -271,7 +284,8 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
             </div>
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
               <div className="text-sm text-gray-600">
-                Total today: <span className="font-medium">{totalErrorsToday} errors</span>
+                Total today:{' '}
+                <span className="font-medium">{totalErrorsToday} errors</span>
               </div>
             </div>
           </CardContent>
@@ -294,13 +308,16 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
                     <div className="flex justify-between text-sm">
                       <span>{new Date(day.date).toLocaleDateString()}</span>
                       <span className="text-gray-500">
-                        {day.count} errors, {day.resolved} resolved ({resolutionRate.toFixed(1)}%)
+                        {day.count} errors, {day.resolved} resolved (
+                        {resolutionRate.toFixed(1)}%)
                       </span>
                     </div>
                     <div className="flex gap-1">
                       <div
                         className="bg-red-200 h-2 rounded-l"
-                        style={{ width: `${((day.count - day.resolved) / day.count) * 100}%` }}
+                        style={{
+                          width: `${((day.count - day.resolved) / day.count) * 100}%`,
+                        }}
                       />
                       <div
                         className="bg-green-500 h-2 rounded-r"
@@ -335,19 +352,28 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mockAnalyticsData.resolutionTimes.map((item) => {
-              const performance = item.avgTime <= item.target ? 'good' : 'warning';
+            {mockAnalyticsData.resolutionTimes.map(item => {
+              const performance =
+                item.avgTime <= item.target ? 'good' : 'warning';
               const percentageOfTarget = (item.avgTime / item.target) * 100;
-              
+
               return (
                 <div key={item.category} className="p-4 border rounded-lg">
                   <div className="flex items-center justify-between mb-3">
                     <h4 className="font-medium">{item.category}</h4>
-                    <Badge className={performance === 'good' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                      {performance === 'good' ? '✓ On Target' : '⚠ Over Target'}
+                    <Badge
+                      className={
+                        performance === 'good'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }
+                    >
+                      {performance === 'good'
+                        ? '✓ On Target'
+                        : '⚠ Over Target'}
                     </Badge>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Actual: {item.avgTime}m</span>
@@ -356,7 +382,9 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full ${performance === 'good' ? 'bg-green-500' : 'bg-yellow-500'}`}
-                        style={{ width: `${Math.min(percentageOfTarget, 100)}%` }}
+                        style={{
+                          width: `${Math.min(percentageOfTarget, 100)}%`,
+                        }}
                       />
                     </div>
                     <div className="text-xs text-gray-500">
@@ -381,24 +409,35 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {mockAnalyticsData.impactAnalysis.map((impact) => (
+              {mockAnalyticsData.impactAnalysis.map(impact => (
                 <div key={impact.severity} className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="font-medium">{impact.severity} Severity</span>
+                    <span className="font-medium">
+                      {impact.severity} Severity
+                    </span>
                     <div className="text-right">
-                      <div>{impact.customerImpact} {t.users}</div>
-                      <div className="text-gray-500">€{impact.businessCost.toLocaleString()}</div>
+                      <div>
+                        {impact.customerImpact} {t.users}
+                      </div>
+                      <div className="text-gray-500">
+                        €{impact.businessCost.toLocaleString()}
+                      </div>
                     </div>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
                       className={`h-2 rounded-full ${
-                        impact.severity === 'Critical' ? 'bg-red-500' :
-                        impact.severity === 'High' ? 'bg-orange-500' :
-                        impact.severity === 'Medium' ? 'bg-yellow-500' :
-                        'bg-blue-500'
+                        impact.severity === 'Critical'
+                          ? 'bg-red-500'
+                          : impact.severity === 'High'
+                            ? 'bg-orange-500'
+                            : impact.severity === 'Medium'
+                              ? 'bg-yellow-500'
+                              : 'bg-blue-500'
                       }`}
-                      style={{ width: `${(impact.customerImpact / 100) * 100}%` }}
+                      style={{
+                        width: `${(impact.customerImpact / 100) * 100}%`,
+                      }}
                     />
                   </div>
                 </div>
@@ -406,7 +445,8 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
             </div>
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
               <div className="text-sm text-gray-600">
-                Total impact: <span className="font-medium">145 users, €16.7K cost</span>
+                Total impact:{' '}
+                <span className="font-medium">145 users, €16.7K cost</span>
               </div>
             </div>
           </CardContent>
@@ -424,16 +464,21 @@ export default function ErrorAnalytics({ locale = 'en' }: ErrorAnalyticsProps) {
               {mockAnalyticsData.topIssues.map((issue, index) => {
                 const TrendIcon = getTrendIcon(issue.trend);
                 const trendColor = getTrendColor(issue.trend);
-                
+
                 return (
-                  <div key={issue.issue} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div
+                    key={issue.issue}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-6 h-6 bg-gray-100 rounded-full text-xs font-medium">
                         {index + 1}
                       </div>
                       <div>
                         <div className="font-medium">{issue.issue}</div>
-                        <div className="text-sm text-gray-500">{issue.count} occurrences</div>
+                        <div className="text-sm text-gray-500">
+                          {issue.count} occurrences
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

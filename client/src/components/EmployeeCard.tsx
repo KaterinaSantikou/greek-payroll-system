@@ -1,8 +1,15 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Building, CreditCard, Calendar, Euro, Edit, Trash2 } from "lucide-react";
-import type { Employee } from "@shared/schema";
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Building,
+  CreditCard,
+  Calendar,
+  Euro,
+  Edit,
+  Trash2,
+} from 'lucide-react';
+import type { Employee } from '@shared/schema';
 
 interface EmployeeCardProps {
   employee: Employee;
@@ -11,17 +18,17 @@ interface EmployeeCardProps {
 }
 
 const statusColors = {
-  active: "bg-green-100 text-green-800",
-  inactive: "bg-gray-100 text-gray-800",
-  terminated: "bg-red-100 text-red-800",
-  probation: "bg-amber-100 text-amber-800",
+  active: 'bg-green-100 text-green-800',
+  inactive: 'bg-gray-100 text-gray-800',
+  terminated: 'bg-red-100 text-red-800',
+  probation: 'bg-amber-100 text-amber-800',
 };
 
 const statusLabels = {
-  active: "Ενεργός",
-  inactive: "Ανενεργός",
-  terminated: "Απολυμένος",
-  probation: "Δοκιμαστική",
+  active: 'Ενεργός',
+  inactive: 'Ανενεργός',
+  terminated: 'Απολυμένος',
+  probation: 'Δοκιμαστική',
 };
 
 const getInitials = (firstName: string, lastName: string) => {
@@ -30,21 +37,25 @@ const getInitials = (firstName: string, lastName: string) => {
 
 const getAvatarColor = (name: string) => {
   const colors = [
-    "bg-primary",
-    "bg-pink-500",
-    "bg-purple-500",
-    "bg-indigo-500",
-    "bg-blue-500",
-    "bg-green-500",
-    "bg-yellow-500",
-    "bg-red-500",
+    'bg-primary',
+    'bg-pink-500',
+    'bg-purple-500',
+    'bg-indigo-500',
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-yellow-500',
+    'bg-red-500',
   ];
-  
+
   const index = name.charCodeAt(0) % colors.length;
   return colors[index];
 };
 
-export default function EmployeeCard({ employee, onEdit, onDelete }: EmployeeCardProps) {
+export default function EmployeeCard({
+  employee,
+  onEdit,
+  onDelete,
+}: EmployeeCardProps) {
   const initials = getInitials(employee.firstName, employee.lastName);
   const avatarColor = getAvatarColor(employee.firstName + employee.lastName);
   const status = (employee.status as keyof typeof statusColors) || 'active';
@@ -54,7 +65,9 @@ export default function EmployeeCard({ employee, onEdit, onDelete }: EmployeeCar
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center">
-            <div className={`${avatarColor} text-white w-12 h-12 rounded-full flex items-center justify-center mr-4`}>
+            <div
+              className={`${avatarColor} text-white w-12 h-12 rounded-full flex items-center justify-center mr-4`}
+            >
               <span className="font-semibold">{initials}</span>
             </div>
             <div>
@@ -88,12 +101,16 @@ export default function EmployeeCard({ employee, onEdit, onDelete }: EmployeeCar
           <div className="flex items-center text-sm">
             <Building className="w-5 text-neutral-400 mr-3" />
             <span className="text-neutral-600">Τμήμα: </span>
-            <span className="font-medium text-neutral-900 ml-1">{employee.department}</span>
+            <span className="font-medium text-neutral-900 ml-1">
+              {employee.department}
+            </span>
           </div>
           <div className="flex items-center text-sm">
             <CreditCard className="w-5 text-neutral-400 mr-3" />
             <span className="text-neutral-600">ΑΦΜ: </span>
-            <span className="font-medium text-neutral-900 ml-1">{employee.afm}</span>
+            <span className="font-medium text-neutral-900 ml-1">
+              {employee.afm}
+            </span>
           </div>
           <div className="flex items-center text-sm">
             <Calendar className="w-5 text-neutral-400 mr-3" />

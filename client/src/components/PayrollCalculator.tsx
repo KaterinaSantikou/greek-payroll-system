@@ -1,17 +1,33 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { calculatePayroll, type PayrollInput, type PayrollResult } from "@/lib/payrollCalculations";
-import { Calculator, Save, FileText, Printer } from "lucide-react";
-import type { Employee } from "@shared/schema";
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useMutation } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { isUnauthorizedError } from '@/lib/authUtils';
+import {
+  calculatePayroll,
+  type PayrollInput,
+  type PayrollResult,
+} from '@/lib/payrollCalculations';
+import { Calculator, Save, FileText, Printer } from 'lucide-react';
+import type { Employee } from '@shared/schema';
 
 interface PayrollCalculatorProps {
   employees: Employee[];
@@ -28,9 +44,15 @@ interface PayrollFormData {
   collectiveAgreement: string;
 }
 
-export default function PayrollCalculator({ employees }: PayrollCalculatorProps) {
-  const [payrollResult, setPayrollResult] = useState<PayrollResult | null>(null);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+export default function PayrollCalculator({
+  employees,
+}: PayrollCalculatorProps) {
+  const [payrollResult, setPayrollResult] = useState<PayrollResult | null>(
+    null
+  );
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
   const { toast } = useToast();
 
   const {
@@ -43,16 +65,16 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
   } = useForm<PayrollFormData>({
     defaultValues: {
       payrollMonth: new Date().toISOString().slice(0, 7),
-      basicSalary: "",
-      bonuses: "0",
-      overtimeHours: "0",
-      nightHours: "0",
-      holidayHours: "0",
-      collectiveAgreement: "general",
+      basicSalary: '',
+      bonuses: '0',
+      overtimeHours: '0',
+      nightHours: '0',
+      holidayHours: '0',
+      collectiveAgreement: 'general',
     },
   });
 
-  const employeeId = watch("employeeId");
+  const employeeId = watch('employeeId');
 
   // Update form when employee is selected
   useEffect(() => {
@@ -60,19 +82,19 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
       const employee = employees.find(emp => emp.id === employeeId);
       if (employee) {
         setSelectedEmployee(employee);
-        setValue("basicSalary", employee.basicSalary);
+        setValue('basicSalary', employee.basicSalary);
       }
     }
   }, [employeeId, employees, setValue]);
 
   const savePayrollMutation = useMutation({
     mutationFn: async (payrollRecord: any) => {
-      return await apiRequest("POST", "/api/payroll", payrollRecord);
+      return await apiRequest('POST', '/api/payroll', payrollRecord);
     },
     onSuccess: () => {
       toast({
-        title: "Επιτυχία",
-        description: "Η μισθοδοσία αποθηκεύτηκε επιτυχώς",
+        title: 'Επιτυχία',
+        description: 'Η μισθοδοσία αποθηκεύτηκε επιτυχώς',
       });
     },
     onError: (error: any) => {
@@ -88,9 +110,9 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
       //   return;
       // }
       toast({
-        title: "Σφάλμα",
-        description: error.message || "Αποτυχία αποθήκευσης μισθοδοσίας",
-        variant: "destructive",
+        title: 'Σφάλμα',
+        description: error.message || 'Αποτυχία αποθήκευσης μισθοδοσίας',
+        variant: 'destructive',
       });
     },
   });
@@ -98,9 +120,9 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
   const onCalculate = (data: PayrollFormData) => {
     if (!selectedEmployee) {
       toast({
-        title: "Σφάλμα",
-        description: "Παρακαλώ επιλέξτε εργαζόμενο",
-        variant: "destructive",
+        title: 'Σφάλμα',
+        description: 'Παρακαλώ επιλέξτε εργαζόμενο',
+        variant: 'destructive',
       });
       return;
     }
@@ -126,12 +148,12 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
 
     const payrollRecord = {
       employeeId: selectedEmployee.id,
-      payrollMonth: watch("payrollMonth"),
+      payrollMonth: watch('payrollMonth'),
       basicSalary: payrollResult.basicSalary.toString(),
       overtime: payrollResult.overtime.toString(),
       nightShift: payrollResult.nightShift.toString(),
       holidayPay: payrollResult.holidayPay.toString(),
-      allowances: "0",
+      allowances: '0',
       bonuses: payrollResult.bonuses.toString(),
       grossTotal: payrollResult.grossTotal.toString(),
       incomeTax: payrollResult.incomeTax.toString(),
@@ -153,20 +175,20 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
     if (!payrollResult || !selectedEmployee) {
       return;
     }
-    
+
     // TODO: Implement PDF generation using jsPDF
     toast({
-      title: "Πληροφορία",
-      description: "Η λειτουργία εκτύπωσης μισθοδοτικού θα υλοποιηθεί σύντομα",
+      title: 'Πληροφορία',
+      description: 'Η λειτουργία εκτύπωσης μισθοδοτικού θα υλοποιηθεί σύντομα',
     });
   };
 
   const collectiveAgreements = [
-    { value: "general", label: "Γενική ΣΣΕ" },
-    { value: "private", label: "Ιδιωτικοί Υπάλληλοι" },
-    { value: "banks", label: "Τράπεζες" },
-    { value: "technical", label: "Τεχνικές Εταιρείες" },
-    { value: "commerce", label: "Εμπόριο" },
+    { value: 'general', label: 'Γενική ΣΣΕ' },
+    { value: 'private', label: 'Ιδιωτικοί Υπάλληλοι' },
+    { value: 'banks', label: 'Τράπεζες' },
+    { value: 'technical', label: 'Τεχνικές Εταιρείες' },
+    { value: 'commerce', label: 'Εμπόριο' },
   ];
 
   return (
@@ -187,14 +209,15 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
             <form onSubmit={handleSubmit(onCalculate)} className="space-y-4">
               <div>
                 <Label htmlFor="employeeId">Εργαζόμενος *</Label>
-                <Select onValueChange={(value) => setValue("employeeId", value)}>
+                <Select onValueChange={value => setValue('employeeId', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Επιλέξτε εργαζόμενο" />
                   </SelectTrigger>
                   <SelectContent>
-                    {employees.map((employee) => (
+                    {employees.map(employee => (
                       <SelectItem key={employee.id} value={employee.id}>
-                        {employee.firstName} {employee.lastName} - {employee.department}
+                        {employee.firstName} {employee.lastName} -{' '}
+                        {employee.department}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -206,7 +229,7 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
                 <Input
                   id="payrollMonth"
                   type="month"
-                  {...register("payrollMonth")}
+                  {...register('payrollMonth')}
                 />
               </div>
 
@@ -216,11 +239,15 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
                   id="basicSalary"
                   type="number"
                   step="0.01"
-                  {...register("basicSalary", { required: "Ο μισθός είναι υποχρεωτικός" })}
+                  {...register('basicSalary', {
+                    required: 'Ο μισθός είναι υποχρεωτικός',
+                  })}
                   placeholder="2500.00"
                 />
                 {errors.basicSalary && (
-                  <p className="text-red-500 text-sm mt-1">{errors.basicSalary.message}</p>
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.basicSalary.message}
+                  </p>
                 )}
               </div>
 
@@ -230,7 +257,7 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
                   id="bonuses"
                   type="number"
                   step="0.01"
-                  {...register("bonuses")}
+                  {...register('bonuses')}
                   placeholder="0.00"
                 />
               </div>
@@ -241,7 +268,7 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
                   id="overtimeHours"
                   type="number"
                   step="0.5"
-                  {...register("overtimeHours")}
+                  {...register('overtimeHours')}
                   placeholder="0"
                   min="0"
                   max="120"
@@ -254,7 +281,7 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
                   id="nightHours"
                   type="number"
                   step="0.5"
-                  {...register("nightHours")}
+                  {...register('nightHours')}
                   placeholder="0"
                   min="0"
                 />
@@ -266,7 +293,7 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
                   id="holidayHours"
                   type="number"
                   step="0.5"
-                  {...register("holidayHours")}
+                  {...register('holidayHours')}
                   placeholder="0"
                   min="0"
                 />
@@ -274,12 +301,16 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
 
               <div>
                 <Label htmlFor="collectiveAgreement">Κλάδος/ΣΣΕ</Label>
-                <Select onValueChange={(value) => setValue("collectiveAgreement", value)}>
+                <Select
+                  onValueChange={value =>
+                    setValue('collectiveAgreement', value)
+                  }
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Επιλέξτε συλλογική σύμβαση" />
                   </SelectTrigger>
                   <SelectContent>
-                    {collectiveAgreements.map((agreement) => (
+                    {collectiveAgreements.map(agreement => (
                       <SelectItem key={agreement.value} value={agreement.value}>
                         {agreement.label}
                       </SelectItem>
@@ -304,33 +335,49 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
             {/* Gross Earnings */}
             <Card className="border-green-200 bg-green-50">
               <CardHeader>
-                <CardTitle className="text-green-800">Μικτές Αποδοχές</CardTitle>
+                <CardTitle className="text-green-800">
+                  Μικτές Αποδοχές
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-green-700">Βασικός Μισθός:</span>
-                  <span className="font-semibold text-green-900">€{payrollResult.basicSalary.toFixed(2)}</span>
+                  <span className="font-semibold text-green-900">
+                    €{payrollResult.basicSalary.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-green-700">Υπερωρίες:</span>
-                  <span className="font-semibold text-green-900">€{payrollResult.overtime.toFixed(2)}</span>
+                  <span className="font-semibold text-green-900">
+                    €{payrollResult.overtime.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-green-700">Νυχτερινές:</span>
-                  <span className="font-semibold text-green-900">€{payrollResult.nightShift.toFixed(2)}</span>
+                  <span className="font-semibold text-green-900">
+                    €{payrollResult.nightShift.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-green-700">Αργίες:</span>
-                  <span className="font-semibold text-green-900">€{payrollResult.holidayPay.toFixed(2)}</span>
+                  <span className="font-semibold text-green-900">
+                    €{payrollResult.holidayPay.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-green-700">Επιδόματα:</span>
-                  <span className="font-semibold text-green-900">€{payrollResult.bonuses.toFixed(2)}</span>
+                  <span className="font-semibold text-green-900">
+                    €{payrollResult.bonuses.toFixed(2)}
+                  </span>
                 </div>
                 <div className="border-t border-green-300 pt-3">
                   <div className="flex justify-between">
-                    <span className="text-green-700 font-semibold">Σύνολο Μικτών:</span>
-                    <span className="font-bold text-green-900 text-lg">€{payrollResult.grossTotal.toFixed(2)}</span>
+                    <span className="text-green-700 font-semibold">
+                      Σύνολο Μικτών:
+                    </span>
+                    <span className="font-bold text-green-900 text-lg">
+                      €{payrollResult.grossTotal.toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -344,20 +391,30 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-red-700">Φόρος Εισοδήματος:</span>
-                  <span className="font-semibold text-red-900">€{payrollResult.incomeTax.toFixed(2)}</span>
+                  <span className="font-semibold text-red-900">
+                    €{payrollResult.incomeTax.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-red-700">ΕΦΚΑ Εργαζομένου (16%):</span>
-                  <span className="font-semibold text-red-900">€{payrollResult.employeeInsurance.toFixed(2)}</span>
+                  <span className="font-semibold text-red-900">
+                    €{payrollResult.employeeInsurance.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-red-700">Φόρος Αλληλεγγύης:</span>
-                  <span className="font-semibold text-red-900">€{payrollResult.solidarityTax.toFixed(2)}</span>
+                  <span className="font-semibold text-red-900">
+                    €{payrollResult.solidarityTax.toFixed(2)}
+                  </span>
                 </div>
                 <div className="border-t border-red-300 pt-3">
                   <div className="flex justify-between">
-                    <span className="text-red-700 font-semibold">Σύνολο Κρατήσεων:</span>
-                    <span className="font-bold text-red-900 text-lg">€{payrollResult.totalDeductions.toFixed(2)}</span>
+                    <span className="text-red-700 font-semibold">
+                      Σύνολο Κρατήσεων:
+                    </span>
+                    <span className="font-bold text-red-900 text-lg">
+                      €{payrollResult.totalDeductions.toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -366,12 +423,18 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
             {/* Net Pay */}
             <Card className="border-primary-200 bg-primary-50">
               <CardHeader>
-                <CardTitle className="text-primary-800">Καθαρές Αποδοχές</CardTitle>
+                <CardTitle className="text-primary-800">
+                  Καθαρές Αποδοχές
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-primary-900">€{payrollResult.netPay.toFixed(2)}</div>
-                  <p className="text-primary-700 mt-2">Καθαρός μισθός προς πληρωμή</p>
+                  <div className="text-3xl font-bold text-primary-900">
+                    €{payrollResult.netPay.toFixed(2)}
+                  </div>
+                  <p className="text-primary-700 mt-2">
+                    Καθαρός μισθός προς πληρωμή
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -379,21 +442,31 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
             {/* Employer Costs */}
             <Card className="border-amber-200 bg-amber-50">
               <CardHeader>
-                <CardTitle className="text-amber-800">Κόστος Εργοδότη</CardTitle>
+                <CardTitle className="text-amber-800">
+                  Κόστος Εργοδότη
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-amber-700">ΕΦΚΑ Εργοδότη (24.5%):</span>
-                  <span className="font-semibold text-amber-900">€{payrollResult.employerInsurance.toFixed(2)}</span>
+                  <span className="font-semibold text-amber-900">
+                    €{payrollResult.employerInsurance.toFixed(2)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-amber-700">Μικτές Αποδοχές:</span>
-                  <span className="font-semibold text-amber-900">€{payrollResult.grossTotal.toFixed(2)}</span>
+                  <span className="font-semibold text-amber-900">
+                    €{payrollResult.grossTotal.toFixed(2)}
+                  </span>
                 </div>
                 <div className="border-t border-amber-300 pt-3">
                   <div className="flex justify-between">
-                    <span className="text-amber-700 font-semibold">Συνολικό Κόστος:</span>
-                    <span className="font-bold text-amber-900 text-lg">€{payrollResult.totalCost.toFixed(2)}</span>
+                    <span className="text-amber-700 font-semibold">
+                      Συνολικό Κόστος:
+                    </span>
+                    <span className="font-bold text-amber-900 text-lg">
+                      €{payrollResult.totalCost.toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -401,11 +474,19 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
 
             {/* Action Buttons */}
             <div className="flex space-x-3">
-              <Button variant="outline" onClick={onPrintPayslip} className="flex-1">
+              <Button
+                variant="outline"
+                onClick={onPrintPayslip}
+                className="flex-1"
+              >
                 <Printer className="mr-2 h-4 w-4" />
                 Εκτύπωση
               </Button>
-              <Button onClick={onSavePayroll} className="flex-1" disabled={savePayrollMutation.isPending}>
+              <Button
+                onClick={onSavePayroll}
+                className="flex-1"
+                disabled={savePayrollMutation.isPending}
+              >
                 <Save className="mr-2 h-4 w-4" />
                 Αποθήκευση
               </Button>
@@ -415,9 +496,12 @@ export default function PayrollCalculator({ employees }: PayrollCalculatorProps)
           <Card>
             <CardContent className="p-8 text-center">
               <Calculator className="mx-auto h-12 w-12 text-neutral-400 mb-4" />
-              <h3 className="text-lg font-semibold text-neutral-900 mb-2">Υπολογισμός Μισθοδοσίας</h3>
+              <h3 className="text-lg font-semibold text-neutral-900 mb-2">
+                Υπολογισμός Μισθοδοσίας
+              </h3>
               <p className="text-neutral-600">
-                Συμπληρώστε τα στοιχεία στα αριστερά και πατήστε "Υπολογισμός" για να δείτε τα αποτελέσματα.
+                Συμπληρώστε τα στοιχεία στα αριστερά και πατήστε "Υπολογισμός"
+                για να δείτε τα αποτελέσματα.
               </p>
             </CardContent>
           </Card>

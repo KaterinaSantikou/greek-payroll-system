@@ -4,33 +4,45 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  Search, 
-  Plus, 
-  Clock, 
-  Users, 
-  CheckCircle2, 
-  AlertTriangle, 
-  Eye, 
-  Edit, 
+import {
+  Search,
+  Plus,
+  Clock,
+  Users,
+  CheckCircle2,
+  AlertTriangle,
+  Eye,
+  Edit,
   Download,
   BarChart3,
   Target,
   Calendar,
   FileText,
-  PlayCircle
+  PlayCircle,
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -128,7 +140,7 @@ const METHODOLOGY_LABELS = {
   fault_tree_analysis: 'Fault Tree Analysis',
   barrier_analysis: 'Barrier Analysis',
   change_analysis: 'Change Analysis',
-  human_factors_analysis: 'Human Factors Analysis'
+  human_factors_analysis: 'Human Factors Analysis',
 };
 
 const STATUS_COLORS = {
@@ -137,34 +149,36 @@ const STATUS_COLORS = {
   review: 'bg-orange-100 text-orange-800 border-orange-300',
   approved: 'bg-green-100 text-green-800 border-green-300',
   completed: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-  archived: 'bg-gray-100 text-gray-800 border-gray-300'
+  archived: 'bg-gray-100 text-gray-800 border-gray-300',
 };
 
 const SEVERITY_COLORS = {
   low: 'bg-green-100 text-green-800 border-green-300',
   medium: 'bg-yellow-100 text-yellow-800 border-yellow-300',
   high: 'bg-orange-100 text-orange-800 border-orange-300',
-  critical: 'bg-red-100 text-red-800 border-red-300'
+  critical: 'bg-red-100 text-red-800 border-red-300',
 };
 
 export function RootCauseAnalysisManager() {
   const [activeTab, setActiveTab] = useState('analyses');
   const [templates, setTemplates] = useState<RCATemplate[]>([]);
   const [analyses, setAnalyses] = useState<RCAAnalysis[]>([]);
-  const [selectedAnalysis, setSelectedAnalysis] = useState<RCAResult | null>(null);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<RCAResult | null>(
+    null
+  );
   const [isCreatingAnalysis, setIsCreatingAnalysis] = useState(false);
   const [newAnalysis, setNewAnalysis] = useState({
     methodology: '',
     title: '',
     description: '',
     severity: 'medium',
-    participants: ['']
+    participants: [''],
   });
   const [statistics, setStatistics] = useState({
     total: 0,
     byStatus: {} as Record<string, number>,
     byMethodology: {} as Record<string, number>,
-    completionRate: 0
+    completionRate: 0,
   });
   const { toast } = useToast();
 
@@ -186,7 +200,7 @@ export function RootCauseAnalysisManager() {
       toast({
         title: 'Error',
         description: 'Failed to load RCA templates',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -203,7 +217,7 @@ export function RootCauseAnalysisManager() {
       toast({
         title: 'Error',
         description: 'Failed to load RCA analyses',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -222,7 +236,10 @@ export function RootCauseAnalysisManager() {
 
   const loadAnalysisDetails = async (analysisId: string) => {
     try {
-      const response = await apiRequest('GET', `/api/rca/analyses/${analysisId}`);
+      const response = await apiRequest(
+        'GET',
+        `/api/rca/analyses/${analysisId}`
+      );
       if (response.ok) {
         const data = await response.json();
         setSelectedAnalysis(data);
@@ -232,7 +249,7 @@ export function RootCauseAnalysisManager() {
       toast({
         title: 'Error',
         description: 'Failed to load RCA details',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -242,7 +259,7 @@ export function RootCauseAnalysisManager() {
       toast({
         title: 'Validation Error',
         description: 'Please select methodology and provide title',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
@@ -254,21 +271,21 @@ export function RootCauseAnalysisManager() {
         title: newAnalysis.title,
         description: newAnalysis.description,
         severity: newAnalysis.severity,
-        participants: newAnalysis.participants.filter(p => p.trim())
+        participants: newAnalysis.participants.filter(p => p.trim()),
       });
 
       if (response.ok) {
         const data = await response.json();
         toast({
           title: 'Success',
-          description: 'RCA analysis created successfully'
+          description: 'RCA analysis created successfully',
         });
         setNewAnalysis({
           methodology: '',
           title: '',
           description: '',
           severity: 'medium',
-          participants: ['']
+          participants: [''],
         });
         loadAnalyses();
         loadStatistics();
@@ -277,7 +294,7 @@ export function RootCauseAnalysisManager() {
         toast({
           title: 'Creation Failed',
           description: errorData.error || 'Failed to create RCA analysis',
-          variant: 'destructive'
+          variant: 'destructive',
         });
       }
     } catch (error) {
@@ -285,7 +302,7 @@ export function RootCauseAnalysisManager() {
       toast({
         title: 'Error',
         description: 'Failed to create RCA analysis',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsCreatingAnalysis(false);
@@ -294,14 +311,18 @@ export function RootCauseAnalysisManager() {
 
   const updateAnalysisStatus = async (analysisId: string, status: string) => {
     try {
-      const response = await apiRequest('PUT', `/api/rca/analyses/${analysisId}/status`, {
-        status
-      });
+      const response = await apiRequest(
+        'PUT',
+        `/api/rca/analyses/${analysisId}/status`,
+        {
+          status,
+        }
+      );
 
       if (response.ok) {
         toast({
           title: 'Success',
-          description: 'Analysis status updated successfully'
+          description: 'Analysis status updated successfully',
         });
         loadAnalyses();
         if (selectedAnalysis?.analysis.id === analysisId) {
@@ -313,7 +334,7 @@ export function RootCauseAnalysisManager() {
       toast({
         title: 'Error',
         description: 'Failed to update analysis status',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
@@ -321,14 +342,14 @@ export function RootCauseAnalysisManager() {
   const addParticipant = () => {
     setNewAnalysis(prev => ({
       ...prev,
-      participants: [...prev.participants, '']
+      participants: [...prev.participants, ''],
     }));
   };
 
   const updateParticipant = (index: number, value: string) => {
     setNewAnalysis(prev => ({
       ...prev,
-      participants: prev.participants.map((p, i) => i === index ? value : p)
+      participants: prev.participants.map((p, i) => (i === index ? value : p)),
     }));
   };
 
@@ -366,7 +387,10 @@ export function RootCauseAnalysisManager() {
             <FileText className="h-4 w-4" />
             <span>Analyses</span>
           </TabsTrigger>
-          <TabsTrigger value="templates" className="flex items-center space-x-1">
+          <TabsTrigger
+            value="templates"
+            className="flex items-center space-x-1"
+          >
             <PlayCircle className="h-4 w-4" />
             <span>Templates</span>
           </TabsTrigger>
@@ -378,21 +402,45 @@ export function RootCauseAnalysisManager() {
 
         <TabsContent value="analyses" className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
-            {analyses.map((analysis) => (
-              <Card key={analysis.id} className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardHeader className="pb-3" onClick={() => loadAnalysisDetails(analysis.id)}>
+            {analyses.map(analysis => (
+              <Card
+                key={analysis.id}
+                className="hover:shadow-md transition-shadow cursor-pointer"
+              >
+                <CardHeader
+                  className="pb-3"
+                  onClick={() => loadAnalysisDetails(analysis.id)}
+                >
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <CardTitle className="text-lg">{analysis.title}</CardTitle>
+                      <CardTitle className="text-lg">
+                        {analysis.title}
+                      </CardTitle>
                       <CardDescription>
-                        {METHODOLOGY_LABELS[analysis.methodology as keyof typeof METHODOLOGY_LABELS]}
+                        {
+                          METHODOLOGY_LABELS[
+                            analysis.methodology as keyof typeof METHODOLOGY_LABELS
+                          ]
+                        }
                       </CardDescription>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge className={STATUS_COLORS[analysis.status as keyof typeof STATUS_COLORS]}>
+                      <Badge
+                        className={
+                          STATUS_COLORS[
+                            analysis.status as keyof typeof STATUS_COLORS
+                          ]
+                        }
+                      >
                         {analysis.status.replace('_', ' ')}
                       </Badge>
-                      <Badge className={SEVERITY_COLORS[analysis.severity as keyof typeof SEVERITY_COLORS]}>
+                      <Badge
+                        className={
+                          SEVERITY_COLORS[
+                            analysis.severity as keyof typeof SEVERITY_COLORS
+                          ]
+                        }
+                      >
                         {analysis.severity}
                       </Badge>
                     </div>
@@ -407,11 +455,15 @@ export function RootCauseAnalysisManager() {
                       </div>
                       <div className="flex items-center space-x-1">
                         <Clock className="h-4 w-4" />
-                        <span>{formatDuration(analysis.estimatedDuration)}</span>
+                        <span>
+                          {formatDuration(analysis.estimatedDuration)}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
-                        <span>{new Date(analysis.createdAt).toLocaleDateString()}</span>
+                        <span>
+                          {new Date(analysis.createdAt).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -419,7 +471,7 @@ export function RootCauseAnalysisManager() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             updateAnalysisStatus(analysis.id, 'completed');
                           }}
@@ -446,8 +498,11 @@ export function RootCauseAnalysisManager() {
 
         <TabsContent value="templates" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {templates.map((template) => (
-              <Card key={template.methodology} className="hover:shadow-md transition-shadow">
+            {templates.map(template => (
+              <Card
+                key={template.methodology}
+                className="hover:shadow-md transition-shadow"
+              >
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <PlayCircle className="h-5 w-5" />
@@ -466,11 +521,13 @@ export function RootCauseAnalysisManager() {
                       <span>{template.requiredRoles.length} roles</span>
                     </div>
                   </div>
-                  
+
                   <div>
-                    <Label className="text-xs font-medium text-muted-foreground">Required Roles</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      Required Roles
+                    </Label>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {template.requiredRoles.map((role) => (
+                      {template.requiredRoles.map(role => (
                         <Badge key={role} variant="outline" className="text-xs">
                           {role.replace('_', ' ')}
                         </Badge>
@@ -479,21 +536,30 @@ export function RootCauseAnalysisManager() {
                   </div>
 
                   <div>
-                    <Label className="text-xs font-medium text-muted-foreground">Deliverables</Label>
+                    <Label className="text-xs font-medium text-muted-foreground">
+                      Deliverables
+                    </Label>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {template.artifacts.map((artifact) => (
-                        <Badge key={artifact} variant="secondary" className="text-xs">
+                      {template.artifacts.map(artifact => (
+                        <Badge
+                          key={artifact}
+                          variant="secondary"
+                          className="text-xs"
+                        >
                           {artifact.replace('_', ' ')}
                         </Badge>
                       ))}
                     </div>
                   </div>
 
-                  <Button 
-                    className="w-full" 
+                  <Button
+                    className="w-full"
                     variant="outline"
                     onClick={() => {
-                      setNewAnalysis(prev => ({ ...prev, methodology: template.methodology }));
+                      setNewAnalysis(prev => ({
+                        ...prev,
+                        methodology: template.methodology,
+                      }));
                       setActiveTab('create');
                     }}
                   >
@@ -510,23 +576,29 @@ export function RootCauseAnalysisManager() {
             <CardHeader>
               <CardTitle>Create New RCA Analysis</CardTitle>
               <CardDescription>
-                Start a formal root cause analysis using structured methodologies
+                Start a formal root cause analysis using structured
+                methodologies
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="methodology">Methodology *</Label>
-                  <Select 
-                    value={newAnalysis.methodology} 
-                    onValueChange={(value) => setNewAnalysis(prev => ({ ...prev, methodology: value }))}
+                  <Select
+                    value={newAnalysis.methodology}
+                    onValueChange={value =>
+                      setNewAnalysis(prev => ({ ...prev, methodology: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select RCA methodology" />
                     </SelectTrigger>
                     <SelectContent>
-                      {templates.map((template) => (
-                        <SelectItem key={template.methodology} value={template.methodology}>
+                      {templates.map(template => (
+                        <SelectItem
+                          key={template.methodology}
+                          value={template.methodology}
+                        >
                           <div className="flex items-center space-x-2">
                             <span>{template.name}</span>
                             <Badge variant="outline" className="text-xs">
@@ -541,9 +613,11 @@ export function RootCauseAnalysisManager() {
 
                 <div className="space-y-2">
                   <Label htmlFor="severity">Severity *</Label>
-                  <Select 
-                    value={newAnalysis.severity} 
-                    onValueChange={(value) => setNewAnalysis(prev => ({ ...prev, severity: value }))}
+                  <Select
+                    value={newAnalysis.severity}
+                    onValueChange={value =>
+                      setNewAnalysis(prev => ({ ...prev, severity: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -564,7 +638,9 @@ export function RootCauseAnalysisManager() {
                   id="title"
                   placeholder="Brief description of the problem being analyzed"
                   value={newAnalysis.title}
-                  onChange={(e) => setNewAnalysis(prev => ({ ...prev, title: e.target.value }))}
+                  onChange={e =>
+                    setNewAnalysis(prev => ({ ...prev, title: e.target.value }))
+                  }
                 />
               </div>
 
@@ -574,7 +650,12 @@ export function RootCauseAnalysisManager() {
                   id="description"
                   placeholder="Detailed description of the incident or problem"
                   value={newAnalysis.description}
-                  onChange={(e) => setNewAnalysis(prev => ({ ...prev, description: e.target.value }))}
+                  onChange={e =>
+                    setNewAnalysis(prev => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
                   rows={3}
                 />
               </div>
@@ -582,7 +663,12 @@ export function RootCauseAnalysisManager() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>Participants *</Label>
-                  <Button type="button" variant="outline" size="sm" onClick={addParticipant}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addParticipant}
+                  >
                     <Plus className="h-3 w-3 mr-1" />
                     Add Participant
                   </Button>
@@ -593,14 +679,14 @@ export function RootCauseAnalysisManager() {
                       key={index}
                       placeholder="Participant name or email"
                       value={participant}
-                      onChange={(e) => updateParticipant(index, e.target.value)}
+                      onChange={e => updateParticipant(index, e.target.value)}
                     />
                   ))}
                 </div>
               </div>
 
-              <Button 
-                onClick={createAnalysis} 
+              <Button
+                onClick={createAnalysis}
                 disabled={isCreatingAnalysis}
                 className="w-full"
               >
@@ -619,11 +705,23 @@ export function RootCauseAnalysisManager() {
               <div>
                 <CardTitle>{selectedAnalysis.analysis.title}</CardTitle>
                 <CardDescription>
-                  {METHODOLOGY_LABELS[selectedAnalysis.analysis.methodology as keyof typeof METHODOLOGY_LABELS]}
+                  {
+                    METHODOLOGY_LABELS[
+                      selectedAnalysis.analysis
+                        .methodology as keyof typeof METHODOLOGY_LABELS
+                    ]
+                  }
                 </CardDescription>
               </div>
               <div className="flex items-center space-x-2">
-                <Badge className={STATUS_COLORS[selectedAnalysis.analysis.status as keyof typeof STATUS_COLORS]}>
+                <Badge
+                  className={
+                    STATUS_COLORS[
+                      selectedAnalysis.analysis
+                        .status as keyof typeof STATUS_COLORS
+                    ]
+                  }
+                >
                   {selectedAnalysis.analysis.status.replace('_', ' ')}
                 </Badge>
                 <Button variant="outline" size="sm">
@@ -636,27 +734,57 @@ export function RootCauseAnalysisManager() {
           <CardContent className="space-y-6">
             {/* Effectiveness Metrics */}
             <div>
-              <Label className="text-sm font-medium">Effectiveness Metrics</Label>
+              <Label className="text-sm font-medium">
+                Effectiveness Metrics
+              </Label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Completeness</Label>
-                  <Progress value={selectedAnalysis.effectiveness.completeness} className="h-2" />
-                  <span className="text-xs">{Math.round(selectedAnalysis.effectiveness.completeness)}%</span>
+                  <Label className="text-xs text-muted-foreground">
+                    Completeness
+                  </Label>
+                  <Progress
+                    value={selectedAnalysis.effectiveness.completeness}
+                    className="h-2"
+                  />
+                  <span className="text-xs">
+                    {Math.round(selectedAnalysis.effectiveness.completeness)}%
+                  </span>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Quality</Label>
-                  <Progress value={selectedAnalysis.effectiveness.quality} className="h-2" />
-                  <span className="text-xs">{Math.round(selectedAnalysis.effectiveness.quality)}%</span>
+                  <Label className="text-xs text-muted-foreground">
+                    Quality
+                  </Label>
+                  <Progress
+                    value={selectedAnalysis.effectiveness.quality}
+                    className="h-2"
+                  />
+                  <span className="text-xs">
+                    {Math.round(selectedAnalysis.effectiveness.quality)}%
+                  </span>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Actionability</Label>
-                  <Progress value={selectedAnalysis.effectiveness.actionability} className="h-2" />
-                  <span className="text-xs">{Math.round(selectedAnalysis.effectiveness.actionability)}%</span>
+                  <Label className="text-xs text-muted-foreground">
+                    Actionability
+                  </Label>
+                  <Progress
+                    value={selectedAnalysis.effectiveness.actionability}
+                    className="h-2"
+                  />
+                  <span className="text-xs">
+                    {Math.round(selectedAnalysis.effectiveness.actionability)}%
+                  </span>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">Overall</Label>
-                  <Progress value={selectedAnalysis.effectiveness.overall} className="h-2" />
-                  <span className="text-xs">{Math.round(selectedAnalysis.effectiveness.overall)}%</span>
+                  <Label className="text-xs text-muted-foreground">
+                    Overall
+                  </Label>
+                  <Progress
+                    value={selectedAnalysis.effectiveness.overall}
+                    className="h-2"
+                  />
+                  <span className="text-xs">
+                    {Math.round(selectedAnalysis.effectiveness.overall)}%
+                  </span>
                 </div>
               </div>
             </div>
@@ -665,24 +793,38 @@ export function RootCauseAnalysisManager() {
 
             {/* Findings */}
             <div>
-              <Label className="text-sm font-medium">Findings ({selectedAnalysis.findings.length})</Label>
+              <Label className="text-sm font-medium">
+                Findings ({selectedAnalysis.findings.length})
+              </Label>
               <div className="space-y-2 mt-2">
-                {selectedAnalysis.findings.map((finding) => (
+                {selectedAnalysis.findings.map(finding => (
                   <div key={finding.id} className="p-3 bg-muted/50 rounded-lg">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="text-xs">{finding.category}</Badge>
-                          <Badge className={SEVERITY_COLORS[finding.severity as keyof typeof SEVERITY_COLORS]}>
+                          <Badge variant="outline" className="text-xs">
+                            {finding.category}
+                          </Badge>
+                          <Badge
+                            className={
+                              SEVERITY_COLORS[
+                                finding.severity as keyof typeof SEVERITY_COLORS
+                              ]
+                            }
+                          >
                             {finding.severity}
                           </Badge>
                           {finding.isRootCause && (
-                            <Badge variant="destructive" className="text-xs">Root Cause</Badge>
+                            <Badge variant="destructive" className="text-xs">
+                              Root Cause
+                            </Badge>
                           )}
                         </div>
                         <p className="text-sm">{finding.finding}</p>
                         {finding.evidence && (
-                          <p className="text-xs text-muted-foreground">Evidence: {finding.evidence}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Evidence: {finding.evidence}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -695,24 +837,46 @@ export function RootCauseAnalysisManager() {
 
             {/* Action Items */}
             <div>
-              <Label className="text-sm font-medium">Action Items ({selectedAnalysis.actionItems.length})</Label>
+              <Label className="text-sm font-medium">
+                Action Items ({selectedAnalysis.actionItems.length})
+              </Label>
               <div className="space-y-2 mt-2">
-                {selectedAnalysis.actionItems.map((actionItem) => (
-                  <div key={actionItem.id} className="p-3 bg-muted/50 rounded-lg">
+                {selectedAnalysis.actionItems.map(actionItem => (
+                  <div
+                    key={actionItem.id}
+                    className="p-3 bg-muted/50 rounded-lg"
+                  >
                     <div className="flex items-start justify-between">
                       <div className="space-y-1 flex-1">
                         <div className="flex items-center space-x-2">
-                          <Badge variant="outline" className="text-xs">{actionItem.priority}</Badge>
-                          <Badge className={STATUS_COLORS[actionItem.status as keyof typeof STATUS_COLORS]}>
+                          <Badge variant="outline" className="text-xs">
+                            {actionItem.priority}
+                          </Badge>
+                          <Badge
+                            className={
+                              STATUS_COLORS[
+                                actionItem.status as keyof typeof STATUS_COLORS
+                              ]
+                            }
+                          >
                             {actionItem.status.replace('_', ' ')}
                           </Badge>
                         </div>
-                        <p className="font-medium text-sm">{actionItem.title}</p>
-                        <p className="text-sm text-muted-foreground">{actionItem.description}</p>
+                        <p className="font-medium text-sm">
+                          {actionItem.title}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {actionItem.description}
+                        </p>
                         <div className="flex items-center space-x-4 text-xs text-muted-foreground">
                           <span>Assignee: {actionItem.assignee}</span>
                           {actionItem.dueDate && (
-                            <span>Due: {new Date(actionItem.dueDate).toLocaleDateString()}</span>
+                            <span>
+                              Due:{' '}
+                              {new Date(
+                                actionItem.dueDate
+                              ).toLocaleDateString()}
+                            </span>
                           )}
                         </div>
                       </div>

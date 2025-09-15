@@ -1,14 +1,20 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Clock, 
-  CheckCircle2, 
-  AlertTriangle, 
+import {
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
   Users,
   TrendingUp,
-  Target
+  Target,
 } from 'lucide-react';
 
 interface SLAMetric {
@@ -36,10 +42,10 @@ const slaMetrics: SLAMetric[] = [
     unit: 'λεπτά',
     trend: {
       value: -15,
-      isImproving: true
+      isImproving: true,
     },
     status: 'excellent',
-    category: 'response'
+    category: 'response',
   },
   {
     id: 'resolution-time',
@@ -50,10 +56,10 @@ const slaMetrics: SLAMetric[] = [
     unit: 'λεπτά',
     trend: {
       value: -120,
-      isImproving: true
+      isImproving: true,
     },
     status: 'good',
-    category: 'resolution'
+    category: 'resolution',
   },
   {
     id: 'customer-satisfaction',
@@ -64,10 +70,10 @@ const slaMetrics: SLAMetric[] = [
     unit: '%',
     trend: {
       value: 2.3,
-      isImproving: true
+      isImproving: true,
     },
     status: 'excellent',
-    category: 'satisfaction'
+    category: 'satisfaction',
   },
   {
     id: 'system-uptime',
@@ -78,10 +84,10 @@ const slaMetrics: SLAMetric[] = [
     unit: '%',
     trend: {
       value: 0.02,
-      isImproving: true
+      isImproving: true,
     },
     status: 'excellent',
-    category: 'availability'
+    category: 'availability',
   },
   {
     id: 'urgent-tickets',
@@ -92,10 +98,10 @@ const slaMetrics: SLAMetric[] = [
     unit: '%',
     trend: {
       value: -1.5,
-      isImproving: false
+      isImproving: false,
     },
     status: 'warning',
-    category: 'response'
+    category: 'response',
   },
   {
     id: 'ergani-support',
@@ -106,34 +112,48 @@ const slaMetrics: SLAMetric[] = [
     unit: 'λεπτά',
     trend: {
       value: -480,
-      isImproving: true
+      isImproving: true,
     },
     status: 'good',
-    category: 'resolution'
-  }
+    category: 'resolution',
+  },
 ];
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'excellent': return 'bg-green-100 text-green-800 border-green-200';
-    case 'good': return 'bg-blue-100 text-blue-800 border-blue-200';
-    case 'warning': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    case 'critical': return 'bg-red-100 text-red-800 border-red-200';
-    default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    case 'excellent':
+      return 'bg-green-100 text-green-800 border-green-200';
+    case 'good':
+      return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'warning':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'critical':
+      return 'bg-red-100 text-red-800 border-red-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-200';
   }
 };
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case 'excellent': return <CheckCircle2 className="h-4 w-4" />;
-    case 'good': return <Target className="h-4 w-4" />;
-    case 'warning': return <AlertTriangle className="h-4 w-4" />;
-    case 'critical': return <AlertTriangle className="h-4 w-4" />;
-    default: return <Clock className="h-4 w-4" />;
+    case 'excellent':
+      return <CheckCircle2 className="h-4 w-4" />;
+    case 'good':
+      return <Target className="h-4 w-4" />;
+    case 'warning':
+      return <AlertTriangle className="h-4 w-4" />;
+    case 'critical':
+      return <AlertTriangle className="h-4 w-4" />;
+    default:
+      return <Clock className="h-4 w-4" />;
   }
 };
 
-const getProgressPercentage = (current: number, target: number, isPercentage: boolean = false): number => {
+const getProgressPercentage = (
+  current: number,
+  target: number,
+  isPercentage: boolean = false
+): number => {
   if (isPercentage) {
     return Math.min(100, (current / target) * 100);
   }
@@ -159,13 +179,23 @@ export default function SLADashboard() {
     response: slaMetrics.filter(m => m.category === 'response'),
     resolution: slaMetrics.filter(m => m.category === 'resolution'),
     satisfaction: slaMetrics.filter(m => m.category === 'satisfaction'),
-    availability: slaMetrics.filter(m => m.category === 'availability')
+    availability: slaMetrics.filter(m => m.category === 'availability'),
   };
 
-  const overallHealth = slaMetrics.reduce((acc, metric) => {
-    const weight = metric.status === 'excellent' ? 4 : metric.status === 'good' ? 3 : metric.status === 'warning' ? 2 : 1;
-    return acc + weight;
-  }, 0) / (slaMetrics.length * 4) * 100;
+  const overallHealth =
+    (slaMetrics.reduce((acc, metric) => {
+      const weight =
+        metric.status === 'excellent'
+          ? 4
+          : metric.status === 'good'
+            ? 3
+            : metric.status === 'warning'
+              ? 2
+              : 1;
+      return acc + weight;
+    }, 0) /
+      (slaMetrics.length * 4)) *
+    100;
 
   return (
     <div className="space-y-6">
@@ -178,8 +208,12 @@ export default function SLADashboard() {
                 <Target className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{Math.round(overallHealth)}%</p>
-                <p className="text-sm text-muted-foreground">Συνολική Απόδοση SLA</p>
+                <p className="text-2xl font-bold">
+                  {Math.round(overallHealth)}%
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Συνολική Απόδοση SLA
+                </p>
               </div>
             </div>
           </CardContent>
@@ -192,8 +226,12 @@ export default function SLADashboard() {
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{slaMetrics.filter(m => m.status === 'excellent').length}</p>
-                <p className="text-sm text-muted-foreground">Άριστες Επιδόσεις</p>
+                <p className="text-2xl font-bold">
+                  {slaMetrics.filter(m => m.status === 'excellent').length}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Άριστες Επιδόσεις
+                </p>
               </div>
             </div>
           </CardContent>
@@ -206,7 +244,9 @@ export default function SLADashboard() {
                 <AlertTriangle className="h-5 w-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{slaMetrics.filter(m => m.status === 'warning').length}</p>
+                <p className="text-2xl font-bold">
+                  {slaMetrics.filter(m => m.status === 'warning').length}
+                </p>
                 <p className="text-sm text-muted-foreground">Προειδοποιήσεις</p>
               </div>
             </div>
@@ -232,8 +272,12 @@ export default function SLADashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {slaMetrics.map(metric => {
           const isPercentageMetric = metric.unit === '%';
-          const progressValue = getProgressPercentage(metric.current, metric.target, isPercentageMetric);
-          
+          const progressValue = getProgressPercentage(
+            metric.current,
+            metric.target,
+            isPercentageMetric
+          );
+
           return (
             <Card key={metric.id}>
               <CardHeader className="pb-3">
@@ -247,7 +291,7 @@ export default function SLADashboard() {
                   {metric.description}
                 </CardDescription>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="space-y-3">
                   {/* Current vs Target */}
@@ -260,11 +304,20 @@ export default function SLADashboard() {
                         Στόχος: {formatValue(metric.target, metric.unit)}
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center gap-1 text-sm">
-                      <TrendingUp className={`h-4 w-4 ${metric.trend.isImproving ? 'text-green-600' : 'text-red-600'}`} />
-                      <span className={metric.trend.isImproving ? 'text-green-600' : 'text-red-600'}>
-                        {metric.trend.isImproving ? '+' : ''}{metric.trend.value}
+                      <TrendingUp
+                        className={`h-4 w-4 ${metric.trend.isImproving ? 'text-green-600' : 'text-red-600'}`}
+                      />
+                      <span
+                        className={
+                          metric.trend.isImproving
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }
+                      >
+                        {metric.trend.isImproving ? '+' : ''}
+                        {metric.trend.value}
                       </span>
                     </div>
                   </div>
@@ -275,10 +328,7 @@ export default function SLADashboard() {
                       <span>Επίδοση</span>
                       <span>{Math.round(progressValue)}%</span>
                     </div>
-                    <Progress 
-                      value={progressValue} 
-                      className="h-2"
-                    />
+                    <Progress value={progressValue} className="h-2" />
                   </div>
                 </div>
               </CardContent>
@@ -303,13 +353,21 @@ export default function SLADashboard() {
                   response: 'Ταχύτητα Απόκρισης',
                   resolution: 'Επίλυση Προβλημάτων',
                   satisfaction: 'Ικανοποίηση Πελατών',
-                  availability: 'Διαθεσιμότητα'
+                  availability: 'Διαθεσιμότητα',
                 };
 
-                const avgPerformance = metrics.reduce((acc, m) => {
-                  const score = m.status === 'excellent' ? 4 : m.status === 'good' ? 3 : m.status === 'warning' ? 2 : 1;
-                  return acc + score;
-                }, 0) / metrics.length;
+                const avgPerformance =
+                  metrics.reduce((acc, m) => {
+                    const score =
+                      m.status === 'excellent'
+                        ? 4
+                        : m.status === 'good'
+                          ? 3
+                          : m.status === 'warning'
+                            ? 2
+                            : 1;
+                    return acc + score;
+                  }, 0) / metrics.length;
 
                 const performancePercentage = (avgPerformance / 4) * 100;
 
@@ -317,7 +375,11 @@ export default function SLADashboard() {
                   <div key={category}>
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-medium">
-                        {categoryLabels[category as keyof typeof categoryLabels]}
+                        {
+                          categoryLabels[
+                            category as keyof typeof categoryLabels
+                          ]
+                        }
                       </span>
                       <span className="text-sm text-muted-foreground">
                         {Math.round(performancePercentage)}%

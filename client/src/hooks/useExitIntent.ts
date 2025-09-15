@@ -23,7 +23,9 @@ interface ExitIntentState {
   onCapture: (data: any) => void;
 }
 
-export function useExitIntent(options: UseExitIntentOptions = {}): ExitIntentState {
+export function useExitIntent(
+  options: UseExitIntentOptions = {}
+): ExitIntentState {
   const {
     enabled = true,
     variant = 'trial',
@@ -31,7 +33,7 @@ export function useExitIntent(options: UseExitIntentOptions = {}): ExitIntentSta
     showOnlyForAnonymous = true,
     showOnlyOnce = true,
     excludePages = [],
-    locale = 'en'
+    locale = 'en',
   } = options;
 
   const { isAuthenticated } = useAuth();
@@ -57,7 +59,13 @@ export function useExitIntent(options: UseExitIntentOptions = {}): ExitIntentSta
     };
 
     setShouldShow(checkShouldShow());
-  }, [enabled, isAuthenticated, showOnlyForAnonymous, showOnlyOnce, excludePages]);
+  }, [
+    enabled,
+    isAuthenticated,
+    showOnlyForAnonymous,
+    showOnlyOnce,
+    excludePages,
+  ]);
 
   const handleCapture = async (data: any) => {
     try {
@@ -72,7 +80,7 @@ export function useExitIntent(options: UseExitIntentOptions = {}): ExitIntentSta
         ...data,
         page: window.location.pathname,
         referrer: document.referrer,
-        sessionId: sessionStorage.getItem('sessionId') || 'anonymous'
+        sessionId: sessionStorage.getItem('sessionId') || 'anonymous',
       });
 
       // You could send to various services:
@@ -95,10 +103,9 @@ export function useExitIntent(options: UseExitIntentOptions = {}): ExitIntentSta
         (window as any).gtag('event', 'exit_intent_capture', {
           event_category: 'engagement',
           event_label: variant,
-          value: 1
+          value: 1,
         });
       }
-
     } catch (error) {
       console.error('Failed to process exit intent capture:', error);
     }
@@ -108,6 +115,6 @@ export function useExitIntent(options: UseExitIntentOptions = {}): ExitIntentSta
     shouldShow,
     variant,
     locale,
-    onCapture: handleCapture
+    onCapture: handleCapture,
   };
 }

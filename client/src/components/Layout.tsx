@@ -1,19 +1,19 @@
-import { MainNavigation } from "./MainNavigation";
-import { PropertySwitcher } from "./PropertySwitcher";
-import LanguageSwitcher from "./LanguageSwitcher";
-import { ThemeToggle } from "./ThemeToggle";
-import { CommandPaletteButton } from "./CommandPaletteButton";
-import { SupportChatWidget } from "./SupportChat";
-import { useCommandPalette } from "@/hooks/useCommandPalette";
-import { useProperty } from "@/contexts/PropertyContext";
-import { useAuth } from "@/hooks/useAuth";
-import { useSidebarState } from "@/hooks/useSidebarState";
-import { useLocale } from "@/lib/i18n";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { X, Menu } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { MainNavigation } from './MainNavigation';
+import { PropertySwitcher } from './PropertySwitcher';
+import LanguageSwitcher from './LanguageSwitcher';
+import { ThemeToggle } from './ThemeToggle';
+import { CommandPaletteButton } from './CommandPaletteButton';
+import { SupportChatWidget } from './SupportChat';
+import { useCommandPalette } from '@/hooks/useCommandPalette';
+import { useProperty } from '@/contexts/PropertyContext';
+import { useAuth } from '@/hooks/useAuth';
+import { useSidebarState } from '@/hooks/useSidebarState';
+import { useLocale } from '@/lib/i18n';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { X, Menu } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -22,8 +22,11 @@ interface LayoutProps {
 function LayoutContent({ children }: LayoutProps) {
   const { setOpen } = useCommandPalette();
   const { t } = useLocale();
-  const currentProperty = { propertyId: "prop-princess", name: "Princess Resort & Spa" };
-  
+  const currentProperty = {
+    propertyId: 'prop-princess',
+    name: 'Princess Resort & Spa',
+  };
+
   const {
     isExpanded,
     isCollapsed,
@@ -32,7 +35,7 @@ function LayoutContent({ children }: LayoutProps) {
     setSidebarState,
     isMobile,
     isTablet,
-    isDesktop
+    isDesktop,
   } = useSidebarState();
 
   const [isHovering, setIsHovering] = useState(false);
@@ -88,30 +91,40 @@ function LayoutContent({ children }: LayoutProps) {
           onClick={toggleSidebar}
           className="fixed top-4 left-4 z-50 lg:hidden"
         >
-          {isExpanded ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          {isExpanded ? (
+            <X className="h-4 w-4" />
+          ) : (
+            <Menu className="h-4 w-4" />
+          )}
         </Button>
       )}
-      
+
       {/* Sidebar */}
       <motion.aside
         className={cn(
-          "bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen",
+          'bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen',
           getSidebarWidth(),
           {
             // Z-index based on device
-            "z-30": isDesktop || isTablet,
-            "z-50": isMobile,
+            'z-30': isDesktop || isTablet,
+            'z-50': isMobile,
             // Transform based on state
-            "translate-x-0": !isMobile || isExpanded,
-            "-translate-x-full": isMobile && isHidden,
+            'translate-x-0': !isMobile || isExpanded,
+            '-translate-x-full': isMobile && isHidden,
           }
         )}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         animate={{
-          width: isMobile ? (isExpanded ? 320 : 0) : (shouldShowExpanded ? 280 : 72)
+          width: isMobile
+            ? isExpanded
+              ? 320
+              : 0
+            : shouldShowExpanded
+              ? 280
+              : 72,
         }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
         {/* Sidebar Header */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-800">
@@ -123,19 +136,23 @@ function LayoutContent({ children }: LayoutProps) {
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <h1 className="text-lg font-bold text-blue-600">{t('app.name')}</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{t('app.tagline')}</p>
+                <h1 className="text-lg font-bold text-blue-600">
+                  {t('app.name')}
+                </h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {t('app.tagline')}
+                </p>
               </motion.div>
             )}
-            
+
             {/* Toggle button - hidden on mobile as we have the floating button */}
             {!isMobile && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleSidebar}
-                className={cn("p-1", {
-                  "ml-auto": !shouldShowExpanded
+                className={cn('p-1', {
+                  'ml-auto': !shouldShowExpanded,
                 })}
               >
                 {shouldShowExpanded ? (
@@ -150,7 +167,7 @@ function LayoutContent({ children }: LayoutProps) {
 
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto">
-          <MainNavigation 
+          <MainNavigation
             collapsed={!shouldShowExpanded}
             isMobile={isMobile}
             isTablet={isTablet}
@@ -174,20 +191,17 @@ function LayoutContent({ children }: LayoutProps) {
       </motion.aside>
 
       {/* Main content area with responsive margin */}
-      <main 
-        className={cn(
-          "transition-all duration-300",
-          {
-            // Desktop: always account for sidebar
-            "ml-70": isDesktop && shouldShowExpanded,
-            "ml-18": (isDesktop && !shouldShowExpanded) || isTablet,
-            // Mobile: no margin (sidebar is overlay)
-            "ml-0": isMobile,
-          }
-        )}
+      <main
+        className={cn('transition-all duration-300', {
+          // Desktop: always account for sidebar
+          'ml-70': isDesktop && shouldShowExpanded,
+          'ml-18': (isDesktop && !shouldShowExpanded) || isTablet,
+          // Mobile: no margin (sidebar is overlay)
+          'ml-0': isMobile,
+        })}
       >
         {/* Top Bar */}
-        <motion.div 
+        <motion.div
           initial={{ y: -10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.3 }}
@@ -195,7 +209,7 @@ function LayoutContent({ children }: LayoutProps) {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <motion.h1 
+              <motion.h1
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
@@ -209,12 +223,14 @@ function LayoutContent({ children }: LayoutProps) {
               <LanguageSwitcher />
               <PropertySwitcher />
               <ThemeToggle />
-              
+
               {/* User section - show username when authenticated */}
               {user ? (
                 <div className="flex items-center space-x-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-xs text-white font-semibold">
-                    {user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || 'U'}
+                    {user.name?.charAt(0).toUpperCase() ||
+                      user.email?.charAt(0).toUpperCase() ||
+                      'U'}
                   </div>
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     {user.name || user.email || 'User'}
@@ -224,7 +240,7 @@ function LayoutContent({ children }: LayoutProps) {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => window.location.href = '/api/login'}
+                  onClick={() => (window.location.href = '/api/login')}
                   data-testid="button-signin"
                 >
                   Sign In
@@ -233,9 +249,9 @@ function LayoutContent({ children }: LayoutProps) {
             </div>
           </div>
         </motion.div>
-        
+
         {/* Page Content */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}

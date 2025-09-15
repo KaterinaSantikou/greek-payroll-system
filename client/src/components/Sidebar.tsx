@@ -1,18 +1,14 @@
-import { useAuth } from "@/hooks/useAuth";
-import { cn } from "@/lib/utils";
-import { 
-  Users, 
-  Settings, 
-  LogOut
-} from "lucide-react";
-import ThreeLevelNavigation from "./ThreeLevelNavigation";
+import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
+import { Users, Settings, LogOut } from 'lucide-react';
+import ThreeLevelNavigation from './ThreeLevelNavigation';
 
 export default function Sidebar() {
   const { user } = useAuth();
 
   const getInitials = (firstName?: string, lastName?: string) => {
-    if (!firstName && !lastName) return "ΧΡ";
-    return `${(firstName || "").charAt(0)}${(lastName || "").charAt(0)}`.toUpperCase();
+    if (!firstName && !lastName) return 'ΧΡ';
+    return `${(firstName || '').charAt(0)}${(lastName || '').charAt(0)}`.toUpperCase();
   };
 
   return (
@@ -58,21 +54,23 @@ export default function Sidebar() {
             <div className="flex items-center">
               <div className="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">
                 <span className="text-sm font-semibold">
-                  {getInitials(user?.firstName || undefined, user?.lastName || undefined)}
+                  {getInitials(
+                    user?.firstName || undefined,
+                    user?.lastName || undefined
+                  )}
                 </span>
               </div>
               <div>
                 <p className="text-sm font-medium text-neutral-900">
-                  {user?.firstName && user?.lastName 
+                  {user?.firstName && user?.lastName
                     ? `${user.firstName} ${user.lastName}`
-                    : user?.email || "Χρήστης"
-                  }
+                    : user?.email || 'Χρήστης'}
                 </p>
                 <p className="text-xs text-neutral-500">HR Manager</p>
               </div>
             </div>
             <button
-              onClick={() => window.location.href = "/api/logout"}
+              onClick={() => (window.location.href = '/api/logout')}
               className="p-1 text-neutral-500 hover:text-primary-600 transition-colors"
               title="Αποσύνδεση"
             >

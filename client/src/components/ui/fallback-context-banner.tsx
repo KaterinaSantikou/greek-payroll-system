@@ -1,11 +1,14 @@
-import { Badge } from "./badge";
+import { Badge } from './badge';
 
 interface FallbackContextBannerProps {
   userRole: string;
   propertyName: string;
 }
 
-export function FallbackContextBanner({ userRole, propertyName }: FallbackContextBannerProps) {
+export function FallbackContextBanner({
+  userRole,
+  propertyName,
+}: FallbackContextBannerProps) {
   return (
     <div className="bg-blue-50 border-b border-blue-200 px-6 py-3 dark:bg-blue-950 dark:border-blue-800">
       <div className="flex items-center justify-between">

@@ -1,24 +1,45 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { FileText, Clock, Send, AlertTriangle, CheckCircle, Calendar } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import {
+  FileText,
+  Clock,
+  Send,
+  AlertTriangle,
+  CheckCircle,
+  Calendar,
+} from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
 
 const transparencyRequestSchema = z.object({
-  employeeId: z.string().min(1, "Employee selection is required"),
+  employeeId: z.string().min(1, 'Employee selection is required'),
   requestType: z.enum(['pay_criteria', 'pay_levels', 'progression']),
-  requestDetails: z.string().min(10, "Please provide detailed information about your request"),
+  requestDetails: z
+    .string()
+    .min(10, 'Please provide detailed information about your request'),
 });
 
 type TransparencyRequestForm = z.infer<typeof transparencyRequestSchema>;
@@ -33,15 +54,28 @@ interface PendingRequest {
   responseDeadline: string;
 }
 
-export function RightToInfoWorkflow({ propertyId = "demo-property" }: { propertyId?: string }) {
+export function RightToInfoWorkflow({
+  propertyId = 'demo-property',
+}: {
+  propertyId?: string;
+}) {
   const [activeTab, setActiveTab] = useState<'submit' | 'pending'>('submit');
   const { toast } = useToast();
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<TransparencyRequestForm>();
-  const selectedRequestType = watch("requestType");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch,
+  } = useForm<TransparencyRequestForm>();
+  const selectedRequestType = watch('requestType');
 
   // Get pending requests for HR review
-  const { data: pendingRequests, isLoading } = useQuery<{ data: PendingRequest[] }>({
+  const { data: pendingRequests, isLoading } = useQuery<{
+    data: PendingRequest[];
+  }>({
     queryKey: ['/api/pay-equity/pending-requests', propertyId],
     refetchInterval: 60000, // 1 minute
   });
@@ -56,7 +90,7 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
     },
     onSuccess: (result: any) => {
       toast({
-        title: "🔍 Request Submitted",
+        title: '🔍 Request Submitted',
         description: `Your transparency request has been submitted. Response due: ${new Date(result.data.responseDeadline).toLocaleDateString('el-GR')}`,
       });
       reset();
@@ -64,9 +98,9 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
     },
     onError: () => {
       toast({
-        title: "Submission Failed",
-        description: "Could not submit your request. Please try again.",
-        variant: "destructive",
+        title: 'Submission Failed',
+        description: 'Could not submit your request. Please try again.',
+        variant: 'destructive',
       });
     },
   });
@@ -90,10 +124,14 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
 
   const getRequestTypeColor = (type: string) => {
     switch (type) {
-      case 'pay_criteria': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'pay_levels': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'progression': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+      case 'pay_criteria':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'pay_levels':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'progression':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
   };
 
@@ -101,7 +139,7 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
     return new Date(dateString).toLocaleDateString('el-GR', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -145,7 +183,8 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
               Employee Right-to-Information Request
             </CardTitle>
             <CardDescription>
-              Submit a request for pay transparency information (Article 8, EU 2023/970)
+              Submit a request for pay transparency information (Article 8, EU
+              2023/970)
             </CardDescription>
           </CardHeader>
 
@@ -157,17 +196,21 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
                 <Input
                   id="employeeId"
                   placeholder="Enter your employee ID"
-                  {...register("employeeId")}
+                  {...register('employeeId')}
                 />
                 {errors.employeeId && (
-                  <p className="text-sm text-red-500">{errors.employeeId.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.employeeId.message}
+                  </p>
                 )}
               </div>
 
               {/* Request Type */}
               <div className="space-y-2">
                 <Label>Request Type *</Label>
-                <Select onValueChange={(value: any) => setValue("requestType", value)}>
+                <Select
+                  onValueChange={(value: any) => setValue('requestType', value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select the type of information you're requesting" />
                   </SelectTrigger>
@@ -189,7 +232,9 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
                   </p>
                 )}
                 {errors.requestType && (
-                  <p className="text-sm text-red-500">{errors.requestType.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.requestType.message}
+                  </p>
                 )}
               </div>
 
@@ -200,10 +245,12 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
                   id="requestDetails"
                   placeholder="Please provide specific details about the information you're requesting..."
                   rows={4}
-                  {...register("requestDetails")}
+                  {...register('requestDetails')}
                 />
                 {errors.requestDetails && (
-                  <p className="text-sm text-red-500">{errors.requestDetails.message}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.requestDetails.message}
+                  </p>
                 )}
               </div>
 
@@ -211,20 +258,24 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Your Rights:</strong> Under EU Directive 2023/970, you have the right to request information about:
+                  <strong>Your Rights:</strong> Under EU Directive 2023/970, you
+                  have the right to request information about:
                   <ul className="mt-2 list-disc list-inside text-sm space-y-1">
                     <li>Pay criteria and factors used in pay decisions</li>
                     <li>Pay levels for your position or comparable roles</li>
-                    <li>Career progression and pay advancement opportunities</li>
+                    <li>
+                      Career progression and pay advancement opportunities
+                    </li>
                   </ul>
                   <p className="mt-2 text-sm">
-                    <strong>Response Timeline:</strong> You will receive a response within 2 months of submission.
+                    <strong>Response Timeline:</strong> You will receive a
+                    response within 2 months of submission.
                   </p>
                 </AlertDescription>
               </Alert>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={submitRequestMutation.isPending}
                 className="w-full"
               >
@@ -253,7 +304,7 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
           <CardContent>
             {isLoading ? (
               <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
+                {[1, 2, 3].map(i => (
                   <div key={i} className="border rounded-lg p-4 space-y-2">
                     <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
                     <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-full" />
@@ -263,11 +314,16 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
               </div>
             ) : pendingRequests?.data && pendingRequests.data.length > 0 ? (
               <div className="space-y-4">
-                {pendingRequests.data.map((request) => (
-                  <div key={request.id} className="border rounded-lg p-4 space-y-3">
+                {pendingRequests.data.map(request => (
+                  <div
+                    key={request.id}
+                    className="border rounded-lg p-4 space-y-3"
+                  >
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                      <Badge className={getRequestTypeColor(request.requestType)}>
+                      <Badge
+                        className={getRequestTypeColor(request.requestType)}
+                      >
                         {request.requestType.replace('_', ' ').toUpperCase()}
                       </Badge>
                       <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -287,21 +343,31 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                         <Calendar className="h-4 w-4" />
-                        <span>Submitted: {formatDate(request.requestDate)}</span>
+                        <span>
+                          Submitted: {formatDate(request.requestDate)}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        {calculateDaysRemaining(request.responseDeadline) > 14 ? (
-                          <Badge variant="secondary" className="bg-green-100 text-green-800">
-                            {calculateDaysRemaining(request.responseDeadline)} days remaining
+                        {calculateDaysRemaining(request.responseDeadline) >
+                        14 ? (
+                          <Badge
+                            variant="secondary"
+                            className="bg-green-100 text-green-800"
+                          >
+                            {calculateDaysRemaining(request.responseDeadline)}{' '}
+                            days remaining
                           </Badge>
-                        ) : calculateDaysRemaining(request.responseDeadline) > 0 ? (
-                          <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                            {calculateDaysRemaining(request.responseDeadline)} days remaining
+                        ) : calculateDaysRemaining(request.responseDeadline) >
+                          0 ? (
+                          <Badge
+                            variant="secondary"
+                            className="bg-orange-100 text-orange-800"
+                          >
+                            {calculateDaysRemaining(request.responseDeadline)}{' '}
+                            days remaining
                           </Badge>
                         ) : (
-                          <Badge variant="destructive">
-                            Overdue
-                          </Badge>
+                          <Badge variant="destructive">Overdue</Badge>
                         )}
                       </div>
                     </div>
@@ -322,7 +388,9 @@ export function RightToInfoWorkflow({ propertyId = "demo-property" }: { property
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
                 <h3 className="font-medium mb-2">No Pending Requests</h3>
-                <p className="text-sm">All transparency requests have been processed.</p>
+                <p className="text-sm">
+                  All transparency requests have been processed.
+                </p>
               </div>
             )}
           </CardContent>

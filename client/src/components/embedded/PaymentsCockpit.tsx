@@ -1,17 +1,37 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Clock, AlertTriangle, CreditCard, Download, RefreshCw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import {
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  CreditCard,
+  Download,
+  RefreshCw,
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface PaymentBatch {
   id: string;
   batchNumber: string;
   type: 'SEPA_SCT' | 'SEPA_SDD' | 'Instant_Payment';
   bank: 'Alpha' | 'Piraeus' | 'Eurobank' | 'NBG';
-  status: 'draft' | 'validated' | 'submitted' | 'processing' | 'completed' | 'failed' | 'rejected';
+  status:
+    | 'draft'
+    | 'validated'
+    | 'submitted'
+    | 'processing'
+    | 'completed'
+    | 'failed'
+    | 'rejected';
   paymentCount: number;
   totalAmount: string;
   currency: string;
@@ -30,11 +50,11 @@ interface PaymentsCockpitProps {
   locale?: string;
 }
 
-export function PaymentsCockpit({ 
-  accessToken, 
+export function PaymentsCockpit({
+  accessToken,
   onEvent,
   theme = 'light',
-  locale = 'en'
+  locale = 'en',
 }: PaymentsCockpitProps) {
   const [batches, setBatches] = useState<PaymentBatch[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,54 +62,54 @@ export function PaymentsCockpit({
   const { toast } = useToast();
 
   const statusConfig = {
-    draft: { 
-      icon: Clock, 
-      color: 'text-gray-600', 
+    draft: {
+      icon: Clock,
+      color: 'text-gray-600',
       bgColor: 'bg-gray-50',
       badge: 'bg-gray-100 text-gray-800',
-      label: 'Draft'
+      label: 'Draft',
     },
-    validated: { 
-      icon: CheckCircle, 
-      color: 'text-blue-600', 
+    validated: {
+      icon: CheckCircle,
+      color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       badge: 'bg-blue-100 text-blue-800',
-      label: 'Validated'
+      label: 'Validated',
     },
-    submitted: { 
-      icon: RefreshCw, 
-      color: 'text-indigo-600', 
+    submitted: {
+      icon: RefreshCw,
+      color: 'text-indigo-600',
       bgColor: 'bg-indigo-50',
       badge: 'bg-indigo-100 text-indigo-800',
-      label: 'Submitted'
+      label: 'Submitted',
     },
-    processing: { 
-      icon: RefreshCw, 
-      color: 'text-orange-600', 
+    processing: {
+      icon: RefreshCw,
+      color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       badge: 'bg-orange-100 text-orange-800',
-      label: 'Processing'
+      label: 'Processing',
     },
-    completed: { 
-      icon: CheckCircle, 
-      color: 'text-green-600', 
+    completed: {
+      icon: CheckCircle,
+      color: 'text-green-600',
       bgColor: 'bg-green-50',
       badge: 'bg-green-100 text-green-800',
-      label: 'Completed'
+      label: 'Completed',
     },
-    failed: { 
-      icon: AlertTriangle, 
-      color: 'text-red-600', 
+    failed: {
+      icon: AlertTriangle,
+      color: 'text-red-600',
       bgColor: 'bg-red-50',
       badge: 'bg-red-100 text-red-800',
-      label: 'Failed'
+      label: 'Failed',
     },
-    rejected: { 
-      icon: AlertTriangle, 
-      color: 'text-red-600', 
+    rejected: {
+      icon: AlertTriangle,
+      color: 'text-red-600',
       bgColor: 'bg-red-50',
       badge: 'bg-red-100 text-red-800',
-      label: 'Rejected'
+      label: 'Rejected',
     },
   };
 
@@ -101,9 +121,18 @@ export function PaymentsCockpit({
   };
 
   const typeConfig = {
-    SEPA_SCT: { label: 'SEPA Credit Transfer', color: 'bg-blue-50 text-blue-700' },
-    SEPA_SDD: { label: 'SEPA Direct Debit', color: 'bg-green-50 text-green-700' },
-    Instant_Payment: { label: 'Instant Payment', color: 'bg-purple-50 text-purple-700' },
+    SEPA_SCT: {
+      label: 'SEPA Credit Transfer',
+      color: 'bg-blue-50 text-blue-700',
+    },
+    SEPA_SDD: {
+      label: 'SEPA Direct Debit',
+      color: 'bg-green-50 text-green-700',
+    },
+    Instant_Payment: {
+      label: 'Instant Payment',
+      color: 'bg-purple-50 text-purple-700',
+    },
   };
 
   const loadBatches = async () => {
@@ -170,7 +199,9 @@ export function PaymentsCockpit({
       onEvent?.('payments.loaded', { count: mockBatches.length });
     } catch (error) {
       console.error('Load batches error:', error);
-      onEvent?.('payments.failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+      onEvent?.('payments.failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setLoading(false);
     }
@@ -178,40 +209,47 @@ export function PaymentsCockpit({
 
   const submitBatch = async (batchId: string) => {
     setProcessingIds(prev => new Set(prev).add(batchId));
-    
+
     try {
       // Mock API call - in real implementation, this would call the API
       await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-      
-      setBatches(prev => 
-        prev.map(batch => 
-          batch.id === batchId 
-            ? { ...batch, status: 'submitted', submittedAt: new Date().toISOString() }
+
+      setBatches(prev =>
+        prev.map(batch =>
+          batch.id === batchId
+            ? {
+                ...batch,
+                status: 'submitted',
+                submittedAt: new Date().toISOString(),
+              }
             : batch
         )
       );
 
       const batch = batches.find(b => b.id === batchId);
-      
+
       toast({
-        title: "Batch Submitted",
+        title: 'Batch Submitted',
         description: `Payment batch ${batch?.batchNumber} submitted to ${batch?.bank}`,
       });
-      
-      onEvent?.('payment.sent', { 
-        batchId, 
+
+      onEvent?.('payment.sent', {
+        batchId,
         batchNumber: batch?.batchNumber,
         bank: batch?.bank,
         amount: batch?.totalAmount,
-        paymentCount: batch?.paymentCount
+        paymentCount: batch?.paymentCount,
       });
     } catch (error) {
       toast({
-        title: "Submission Failed",
-        description: "Failed to submit payment batch",
-        variant: "destructive",
+        title: 'Submission Failed',
+        description: 'Failed to submit payment batch',
+        variant: 'destructive',
       });
-      onEvent?.('payment.failed', { batchId, error: error instanceof Error ? error.message : 'Unknown error' });
+      onEvent?.('payment.failed', {
+        batchId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setProcessingIds(prev => {
         const updated = new Set(prev);
@@ -224,35 +262,39 @@ export function PaymentsCockpit({
   const downloadAcknowledgment = async (batchId: string) => {
     // Mock download - in real implementation, this would download the actual file
     toast({
-      title: "Download Started",
-      description: "Bank acknowledgment file download started",
+      title: 'Download Started',
+      description: 'Bank acknowledgment file download started',
     });
   };
 
   const refreshBatch = async (batchId: string) => {
     setProcessingIds(prev => new Set(prev).add(batchId));
-    
+
     try {
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       // Mock status update
-      setBatches(prev => 
-        prev.map(batch => 
+      setBatches(prev =>
+        prev.map(batch =>
           batch.id === batchId && batch.status === 'processing'
-            ? { ...batch, status: 'completed', completedAt: new Date().toISOString() }
+            ? {
+                ...batch,
+                status: 'completed',
+                completedAt: new Date().toISOString(),
+              }
             : batch
         )
       );
-      
+
       toast({
-        title: "Status Updated",
-        description: "Payment batch status refreshed",
+        title: 'Status Updated',
+        description: 'Payment batch status refreshed',
       });
     } catch (error) {
       toast({
-        title: "Refresh Failed",
-        description: "Failed to refresh batch status",
-        variant: "destructive",
+        title: 'Refresh Failed',
+        description: 'Failed to refresh batch status',
+        variant: 'destructive',
       });
     } finally {
       setProcessingIds(prev => {
@@ -284,10 +326,18 @@ export function PaymentsCockpit({
     );
   }
 
-  const totalAmount = batches.reduce((sum, batch) => sum + parseFloat(batch.totalAmount), 0);
-  const totalPayments = batches.reduce((sum, batch) => sum + batch.paymentCount, 0);
+  const totalAmount = batches.reduce(
+    (sum, batch) => sum + parseFloat(batch.totalAmount),
+    0
+  );
+  const totalPayments = batches.reduce(
+    (sum, batch) => sum + batch.paymentCount,
+    0
+  );
   const completedBatches = batches.filter(b => b.status === 'completed').length;
-  const processingBatches = batches.filter(b => ['submitted', 'processing'].includes(b.status)).length;
+  const processingBatches = batches.filter(b =>
+    ['submitted', 'processing'].includes(b.status)
+  ).length;
 
   return (
     <div className={`w-full ${theme === 'dark' ? 'dark' : ''}`}>
@@ -302,58 +352,72 @@ export function PaymentsCockpit({
                   {processingBatches} Processing
                 </Badge>
               )}
-              <Badge variant="secondary">
-                {batches.length} Total Batches
-              </Badge>
+              <Badge variant="secondary">{batches.length} Total Batches</Badge>
             </div>
           </CardTitle>
           <CardDescription>
             SEPA payment batch status and bank connectivity
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {/* Summary Stats */}
           <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{totalPayments}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {totalPayments}
+              </div>
               <div className="text-sm text-gray-500">Total Payments</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">€{totalAmount.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-600">
+                €{totalAmount.toLocaleString()}
+              </div>
               <div className="text-sm text-gray-500">Total Amount</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-purple-600">{completedBatches}</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {completedBatches}
+              </div>
               <div className="text-sm text-gray-500">Completed</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">{processingBatches}</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {processingBatches}
+              </div>
               <div className="text-sm text-gray-500">In Progress</div>
             </div>
           </div>
 
           {/* Payment Batches */}
           <div className="space-y-4">
-            {batches.map((batch) => {
+            {batches.map(batch => {
               const statusInfo = statusConfig[batch.status];
               const bankInfo = bankConfig[batch.bank];
               const typeInfo = typeConfig[batch.type];
               const isProcessing = processingIds.has(batch.id);
-              
+
               return (
                 <Card key={batch.id} className="transition-all hover:shadow-md">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-4">
                         <div className={`p-3 rounded-lg ${statusInfo.bgColor}`}>
-                          <statusInfo.icon className={`w-6 h-6 ${statusInfo.color} ${
-                            ['processing', 'submitted'].includes(batch.status) || isProcessing ? 'animate-spin' : ''
-                          }`} />
+                          <statusInfo.icon
+                            className={`w-6 h-6 ${statusInfo.color} ${
+                              ['processing', 'submitted'].includes(
+                                batch.status
+                              ) || isProcessing
+                                ? 'animate-spin'
+                                : ''
+                            }`}
+                          />
                         </div>
-                        
+
                         <div>
-                          <h3 className="text-lg font-semibold">{batch.batchNumber}</h3>
+                          <h3 className="text-lg font-semibold">
+                            {batch.batchNumber}
+                          </h3>
                           <div className="flex items-center space-x-2 mt-1">
                             <Badge className={bankInfo.color}>
                               {bankInfo.logo} {batch.bank}
@@ -367,7 +431,7 @@ export function PaymentsCockpit({
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="text-right">
                         <div className="text-2xl font-bold text-green-600">
                           €{parseFloat(batch.totalAmount).toLocaleString()}
@@ -382,7 +446,9 @@ export function PaymentsCockpit({
                     <div className="grid grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
                       <div>
                         <span className="font-medium">Execution Date:</span>
-                        <div>{new Date(batch.executionDate).toLocaleDateString()}</div>
+                        <div>
+                          {new Date(batch.executionDate).toLocaleDateString()}
+                        </div>
                       </div>
                       <div>
                         <span className="font-medium">Created:</span>
@@ -396,13 +462,15 @@ export function PaymentsCockpit({
 
                     {batch.submittedAt && (
                       <div className="text-sm text-gray-500 mb-2">
-                        <span className="font-medium">Submitted:</span> {new Date(batch.submittedAt).toLocaleString()}
+                        <span className="font-medium">Submitted:</span>{' '}
+                        {new Date(batch.submittedAt).toLocaleString()}
                       </div>
                     )}
 
                     {batch.completedAt && (
                       <div className="text-sm text-gray-500 mb-2">
-                        <span className="font-medium">Completed:</span> {new Date(batch.completedAt).toLocaleString()}
+                        <span className="font-medium">Completed:</span>{' '}
+                        {new Date(batch.completedAt).toLocaleString()}
                       </div>
                     )}
 
@@ -416,9 +484,14 @@ export function PaymentsCockpit({
                     {/* Progress Bar for Processing */}
                     {['submitted', 'processing'].includes(batch.status) && (
                       <div className="mb-4">
-                        <Progress value={batch.status === 'submitted' ? 30 : 70} className="h-2" />
+                        <Progress
+                          value={batch.status === 'submitted' ? 30 : 70}
+                          className="h-2"
+                        />
                         <div className="text-xs text-gray-500 mt-1">
-                          {batch.status === 'submitted' ? 'Bank validation in progress...' : 'Processing payments...'}
+                          {batch.status === 'submitted'
+                            ? 'Bank validation in progress...'
+                            : 'Processing payments...'}
                         </div>
                       </div>
                     )}
@@ -441,7 +514,7 @@ export function PaymentsCockpit({
                             Submit to Bank
                           </Button>
                         )}
-                        
+
                         {batch.status === 'failed' && (
                           <Button
                             onClick={() => submitBatch(batch.id)}
@@ -458,7 +531,7 @@ export function PaymentsCockpit({
                             Retry
                           </Button>
                         )}
-                        
+
                         {['submitted', 'processing'].includes(batch.status) && (
                           <Button
                             onClick={() => refreshBatch(batch.id)}
@@ -475,7 +548,7 @@ export function PaymentsCockpit({
                           </Button>
                         )}
                       </div>
-                      
+
                       {batch.status === 'completed' && (
                         <Button
                           onClick={() => downloadAcknowledgment(batch.id)}

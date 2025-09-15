@@ -47,13 +47,18 @@ export function useLanguage() {
 export function useTranslation() {
   const { language } = useLanguage();
 
-  const t = (content: { [key: string]: string } | string, fallback?: string): string => {
+  const t = (
+    content: { [key: string]: string } | string,
+    fallback?: string
+  ): string => {
     if (typeof content === 'string') {
       return content;
     }
 
     const key = `${Object.keys(content)[0]}_${language}`;
-    return content[key] || content[`${Object.keys(content)[0]}_en`] || fallback || '';
+    return (
+      content[key] || content[`${Object.keys(content)[0]}_en`] || fallback || ''
+    );
   };
 
   return { t, language };

@@ -27,7 +27,7 @@ export function useABTest({
   userId = 'anonymous',
   defaultVariant,
   onImpression,
-  onConversion
+  onConversion,
 }: UseABTestOptions): UseABTestResult {
   const [variant, setVariant] = useState<ABVariant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,9 +41,11 @@ export function useABTest({
     }
 
     const assignedVariantId = ABTestManager.assignVariant(testId, userId);
-    
+
     if (assignedVariantId) {
-      const assignedVariant = test.variants.find(v => v.id === assignedVariantId);
+      const assignedVariant = test.variants.find(
+        v => v.id === assignedVariantId
+      );
       setVariant(assignedVariant || null);
     } else if (defaultVariant) {
       const defaultVar = test.variants.find(v => v.id === defaultVariant);
@@ -61,27 +63,30 @@ export function useABTest({
       variantId: variant.id,
       userId,
       sessionId: getSessionId(),
-      eventType: 'impression'
+      eventType: 'impression',
     });
 
     setHasTrackedImpression(true);
     onImpression?.();
   }, [testId, variant, userId, hasTrackedImpression, onImpression]);
 
-  const trackConversion = useCallback((value?: number) => {
-    if (!variant) return;
+  const trackConversion = useCallback(
+    (value?: number) => {
+      if (!variant) return;
 
-    ABTestManager.trackEvent({
-      testId,
-      variantId: variant.id,
-      userId,
-      sessionId: getSessionId(),
-      eventType: 'conversion',
-      eventValue: value
-    });
+      ABTestManager.trackEvent({
+        testId,
+        variantId: variant.id,
+        userId,
+        sessionId: getSessionId(),
+        eventType: 'conversion',
+        eventValue: value,
+      });
 
-    onConversion?.(value);
-  }, [testId, variant, userId, onConversion]);
+      onConversion?.(value);
+    },
+    [testId, variant, userId, onConversion]
+  );
 
   // Auto-track impression when variant is assigned and component mounts
   useEffect(() => {
@@ -95,12 +100,14 @@ export function useABTest({
     isLoading,
     trackImpression,
     trackConversion,
-    isInTest: !!variant
+    isInTest: !!variant,
   };
 }
 
 // Hook for managing multiple A/B tests
-export function useMultipleABTests(testConfigs: UseABTestOptions[]): Record<string, UseABTestResult> {
+export function useMultipleABTests(
+  testConfigs: UseABTestOptions[]
+): Record<string, UseABTestResult> {
   const results: Record<string, UseABTestResult> = {};
 
   testConfigs.forEach(config => {
@@ -123,20 +130,29 @@ export function useABTestManager() {
     setIsLoading(false);
   }, []);
 
-  const createTest = useCallback((testData: Omit<ABTest, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newTest = ABTestManager.createTest(testData);
-    setTests(prev => [...prev, newTest]);
-    return newTest;
-  }, []);
+  const createTest = useCallback(
+    (testData: Omit<ABTest, 'id' | 'createdAt' | 'updatedAt'>) => {
+      const newTest = ABTestManager.createTest(testData);
+      setTests(prev => [...prev, newTest]);
+      return newTest;
+    },
+    []
+  );
 
   const startTest = useCallback((testId: string) => {
     const success = ABTestManager.startTest(testId);
     if (success) {
-      setTests(prev => prev.map(test => 
-        test.id === testId 
-          ? { ...test, status: 'running', startDate: new Date().toISOString() }
-          : test
-      ));
+      setTests(prev =>
+        prev.map(test =>
+          test.id === testId
+            ? {
+                ...test,
+                status: 'running',
+                startDate: new Date().toISOString(),
+              }
+            : test
+        )
+      );
     }
     return success;
   }, []);
@@ -144,11 +160,17 @@ export function useABTestManager() {
   const stopTest = useCallback((testId: string) => {
     const success = ABTestManager.stopTest(testId);
     if (success) {
-      setTests(prev => prev.map(test => 
-        test.id === testId 
-          ? { ...test, status: 'completed', endDate: new Date().toISOString() }
-          : test
-      ));
+      setTests(prev =>
+        prev.map(test =>
+          test.id === testId
+            ? {
+                ...test,
+                status: 'completed',
+                endDate: new Date().toISOString(),
+              }
+            : test
+        )
+      );
     }
     return success;
   }, []);
@@ -169,7 +191,7 @@ export function useABTestManager() {
     startTest,
     stopTest,
     getTestResults,
-    refreshTests
+    refreshTests,
   };
 }
 

@@ -4,21 +4,27 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  X, 
-  Gift, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  Star, 
+import {
+  X,
+  Gift,
+  Mail,
+  Phone,
+  Calendar,
+  Star,
   Zap,
   ArrowRight,
-  Clock
+  Clock,
 } from 'lucide-react';
 
 interface ExitIntentPopupProps {
@@ -29,12 +35,12 @@ interface ExitIntentPopupProps {
   onCapture?: (data: any) => void;
 }
 
-export default function ExitIntentPopup({ 
-  locale = 'en', 
+export default function ExitIntentPopup({
+  locale = 'en',
   variant = 'trial',
   enabled = true,
   delay = 10,
-  onCapture 
+  onCapture,
 }: ExitIntentPopupProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [hasShown, setHasShown] = useState(false);
@@ -50,111 +56,172 @@ export default function ExitIntentPopup({
     en: {
       trial: {
         title: "Wait! Don't Leave Yet! 🚀",
-        subtitle: "Start Your Free 30-Day Trial",
-        description: "See why 1,000+ Greek businesses trust PayrollSync for their HR & payroll needs. No credit card required.",
-        cta: "Start Free Trial",
-        secondary: "Schedule Demo Instead",
-        features: ["Greek labor law compliance", "ERGANI II integration", "30-day free trial", "Expert support"]
+        subtitle: 'Start Your Free 30-Day Trial',
+        description:
+          'See why 1,000+ Greek businesses trust PayrollSync for their HR & payroll needs. No credit card required.',
+        cta: 'Start Free Trial',
+        secondary: 'Schedule Demo Instead',
+        features: [
+          'Greek labor law compliance',
+          'ERGANI II integration',
+          '30-day free trial',
+          'Expert support',
+        ],
       },
       demo: {
-        title: "Before You Go... 📅",
-        subtitle: "See PayrollSync in Action",
-        description: "Get a personalized demo and see how PayrollSync can save you 10+ hours per month on payroll.",
-        cta: "Book Free Demo",
-        secondary: "Download Brochure",
-        features: ["15-minute demo", "Personalized for your business", "Greek compliance walkthrough", "No sales pressure"]
+        title: 'Before You Go... 📅',
+        subtitle: 'See PayrollSync in Action',
+        description:
+          'Get a personalized demo and see how PayrollSync can save you 10+ hours per month on payroll.',
+        cta: 'Book Free Demo',
+        secondary: 'Download Brochure',
+        features: [
+          '15-minute demo',
+          'Personalized for your business',
+          'Greek compliance walkthrough',
+          'No sales pressure',
+        ],
       },
       newsletter: {
-        title: "Stay Updated! 📧",
-        subtitle: "Greek HR & Payroll Updates",
-        description: "Get monthly updates on Greek labor law changes, payroll tips, and compliance alerts.",
-        cta: "Subscribe Now",
-        secondary: "Maybe Later",
-        features: ["Monthly labor law updates", "Payroll best practices", "Compliance alerts", "Industry insights"]
+        title: 'Stay Updated! 📧',
+        subtitle: 'Greek HR & Payroll Updates',
+        description:
+          'Get monthly updates on Greek labor law changes, payroll tips, and compliance alerts.',
+        cta: 'Subscribe Now',
+        secondary: 'Maybe Later',
+        features: [
+          'Monthly labor law updates',
+          'Payroll best practices',
+          'Compliance alerts',
+          'Industry insights',
+        ],
       },
       support: {
-        title: "Need Help? 🆘",
-        subtitle: "Talk to a Greek Payroll Expert",
-        description: "Our certified Greek payroll specialists are here to answer your questions.",
-        cta: "Get Free Consultation",
-        secondary: "Browse Help Center",
-        features: ["Certified payroll experts", "Greek labor law specialists", "Free consultation", "Same-day response"]
+        title: 'Need Help? 🆘',
+        subtitle: 'Talk to a Greek Payroll Expert',
+        description:
+          'Our certified Greek payroll specialists are here to answer your questions.',
+        cta: 'Get Free Consultation',
+        secondary: 'Browse Help Center',
+        features: [
+          'Certified payroll experts',
+          'Greek labor law specialists',
+          'Free consultation',
+          'Same-day response',
+        ],
       },
       discount: {
-        title: "Special Offer! 💰",
-        subtitle: "50% Off Your First 3 Months",
-        description: "Limited time offer for new PayrollSync customers. Transform your Greek payroll today!",
-        cta: "Claim Discount",
-        secondary: "Learn More",
-        features: ["50% discount", "All premium features", "Priority support", "Cancel anytime"]
+        title: 'Special Offer! 💰',
+        subtitle: '50% Off Your First 3 Months',
+        description:
+          'Limited time offer for new PayrollSync customers. Transform your Greek payroll today!',
+        cta: 'Claim Discount',
+        secondary: 'Learn More',
+        features: [
+          '50% discount',
+          'All premium features',
+          'Priority support',
+          'Cancel anytime',
+        ],
       },
       common: {
-        close: "Close",
-        email: "Business Email",
-        phone: "Phone (Optional)",
-        company: "Company Name",
-        submitting: "Processing...",
+        close: 'Close',
+        email: 'Business Email',
+        phone: 'Phone (Optional)',
+        company: 'Company Name',
+        submitting: 'Processing...',
         success: "Thank you! We'll be in touch soon.",
-        error: "Something went wrong. Please try again.",
-        privacy: "We respect your privacy. Unsubscribe anytime.",
-        timeLeft: "Limited time offer",
-        trusted: "Trusted by 1,000+ Greek businesses"
-      }
+        error: 'Something went wrong. Please try again.',
+        privacy: 'We respect your privacy. Unsubscribe anytime.',
+        timeLeft: 'Limited time offer',
+        trusted: 'Trusted by 1,000+ Greek businesses',
+      },
     },
     el: {
       trial: {
-        title: "Περιμένετε! Μην Φύγετε Ακόμα! 🚀",
-        subtitle: "Ξεκινήστε τη Δωρεάν Δοκιμή 30 Ημερών",
-        description: "Δείτε γιατί 1.000+ ελληνικές επιχειρήσεις εμπιστεύονται το PayrollSync για τις ανάγκες HR & μισθοδοσίας τους.",
-        cta: "Δωρεάν Δοκιμή",
-        secondary: "Προγραμματίστε Demo",
-        features: ["Συμμόρφωση ελληνικού εργατικού δικαίου", "Ενσωμάτωση ΕΡΓΑΝΗ ΙΙ", "Δωρεάν δοκιμή 30 ημερών", "Εξειδικευμένη υποστήριξη"]
+        title: 'Περιμένετε! Μην Φύγετε Ακόμα! 🚀',
+        subtitle: 'Ξεκινήστε τη Δωρεάν Δοκιμή 30 Ημερών',
+        description:
+          'Δείτε γιατί 1.000+ ελληνικές επιχειρήσεις εμπιστεύονται το PayrollSync για τις ανάγκες HR & μισθοδοσίας τους.',
+        cta: 'Δωρεάν Δοκιμή',
+        secondary: 'Προγραμματίστε Demo',
+        features: [
+          'Συμμόρφωση ελληνικού εργατικού δικαίου',
+          'Ενσωμάτωση ΕΡΓΑΝΗ ΙΙ',
+          'Δωρεάν δοκιμή 30 ημερών',
+          'Εξειδικευμένη υποστήριξη',
+        ],
       },
       demo: {
-        title: "Πριν Φύγετε... 📅",
-        subtitle: "Δείτε το PayrollSync σε Δράση",
-        description: "Λάβετε ένα εξατομικευμένο demo και δείτε πώς το PayrollSync μπορεί να σας εξοικονομήσει 10+ ώρες το μήνα.",
-        cta: "Κλείστε Δωρεάν Demo",
-        secondary: "Κατεβάστε Ενημερωτικό",
-        features: ["Demo 15 λεπτών", "Εξατομικευμένο για την επιχείρησή σας", "Παρουσίαση ελληνικής συμμόρφωσης", "Χωρίς πιέσεις πώλησης"]
+        title: 'Πριν Φύγετε... 📅',
+        subtitle: 'Δείτε το PayrollSync σε Δράση',
+        description:
+          'Λάβετε ένα εξατομικευμένο demo και δείτε πώς το PayrollSync μπορεί να σας εξοικονομήσει 10+ ώρες το μήνα.',
+        cta: 'Κλείστε Δωρεάν Demo',
+        secondary: 'Κατεβάστε Ενημερωτικό',
+        features: [
+          'Demo 15 λεπτών',
+          'Εξατομικευμένο για την επιχείρησή σας',
+          'Παρουσίαση ελληνικής συμμόρφωσης',
+          'Χωρίς πιέσεις πώλησης',
+        ],
       },
       newsletter: {
-        title: "Μείνετε Ενημερωμένοι! 📧",
-        subtitle: "Ενημερώσεις Ελληνικού HR & Μισθοδοσίας",
-        description: "Λαμβάνετε μηνιαίες ενημερώσεις για αλλαγές στο ελληνικό εργατικό δίκαιο και συμβουλές μισθοδοσίας.",
-        cta: "Εγγραφή Τώρα",
-        secondary: "Ίσως Αργότερα",
-        features: ["Μηνιαίες ενημερώσεις νόμων", "Βέλτιστες πρακτικές μισθοδοσίας", "Ειδοποιήσεις συμμόρφωσης", "Κλαδικές αναλύσεις"]
+        title: 'Μείνετε Ενημερωμένοι! 📧',
+        subtitle: 'Ενημερώσεις Ελληνικού HR & Μισθοδοσίας',
+        description:
+          'Λαμβάνετε μηνιαίες ενημερώσεις για αλλαγές στο ελληνικό εργατικό δίκαιο και συμβουλές μισθοδοσίας.',
+        cta: 'Εγγραφή Τώρα',
+        secondary: 'Ίσως Αργότερα',
+        features: [
+          'Μηνιαίες ενημερώσεις νόμων',
+          'Βέλτιστες πρακτικές μισθοδοσίας',
+          'Ειδοποιήσεις συμμόρφωσης',
+          'Κλαδικές αναλύσεις',
+        ],
       },
       support: {
-        title: "Χρειάζεστε Βοήθεια; 🆘",
-        subtitle: "Μιλήστε με Εξειδικευμένο Ελληνικής Μισθοδοσίας",
-        description: "Οι πιστοποιημένοι ειδικοί ελληνικής μισθοδοσίας μας είναι εδώ για να απαντήσουν τις ερωτήσεις σας.",
-        cta: "Δωρεάν Συμβουλευτική",
-        secondary: "Κέντρο Βοήθειας",
-        features: ["Πιστοποιημένοι ειδικοί", "Ειδικοί ελληνικού εργατικού δικαίου", "Δωρεάν συμβουλευτική", "Απάντηση ίδια μέρα"]
+        title: 'Χρειάζεστε Βοήθεια; 🆘',
+        subtitle: 'Μιλήστε με Εξειδικευμένο Ελληνικής Μισθοδοσίας',
+        description:
+          'Οι πιστοποιημένοι ειδικοί ελληνικής μισθοδοσίας μας είναι εδώ για να απαντήσουν τις ερωτήσεις σας.',
+        cta: 'Δωρεάν Συμβουλευτική',
+        secondary: 'Κέντρο Βοήθειας',
+        features: [
+          'Πιστοποιημένοι ειδικοί',
+          'Ειδικοί ελληνικού εργατικού δικαίου',
+          'Δωρεάν συμβουλευτική',
+          'Απάντηση ίδια μέρα',
+        ],
       },
       discount: {
-        title: "Ειδική Προσφορά! 💰",
-        subtitle: "50% Έκπτωση στους Πρώτους 3 Μήνες",
-        description: "Περιορισμένη προσφορά για νέους πελάτες PayrollSync. Μεταμορφώστε την ελληνική σας μισθοδοσία σήμερα!",
-        cta: "Διεκδίκηση Έκπτωσης",
-        secondary: "Μάθετε Περισσότερα",
-        features: ["50% έκπτωση", "Όλες οι premium δυνατότητες", "Προτεραιότητα υποστήριξης", "Ακύρωση ανά πάσα στιγμή"]
+        title: 'Ειδική Προσφορά! 💰',
+        subtitle: '50% Έκπτωση στους Πρώτους 3 Μήνες',
+        description:
+          'Περιορισμένη προσφορά για νέους πελάτες PayrollSync. Μεταμορφώστε την ελληνική σας μισθοδοσία σήμερα!',
+        cta: 'Διεκδίκηση Έκπτωσης',
+        secondary: 'Μάθετε Περισσότερα',
+        features: [
+          '50% έκπτωση',
+          'Όλες οι premium δυνατότητες',
+          'Προτεραιότητα υποστήριξης',
+          'Ακύρωση ανά πάσα στιγμή',
+        ],
       },
       common: {
-        close: "Κλείσιμο",
-        email: "Επιχειρηματικό Email",
-        phone: "Τηλέφωνο (Προαιρετικό)",
-        company: "Όνομα Εταιρείας",
-        submitting: "Επεξεργασία...",
-        success: "Ευχαριστούμε! Θα επικοινωνήσουμε σύντομα.",
-        error: "Κάτι πήγε στραβά. Προσπαθήστε ξανά.",
-        privacy: "Σεβόμαστε την ιδιωτικότητά σας. Κατάργηση εγγραφής ανά πάσα στιγμή.",
-        timeLeft: "Περιορισμένη προσφορά",
-        trusted: "Εμπιστεύονται 1.000+ ελληνικές επιχειρήσεις"
-      }
-    }
+        close: 'Κλείσιμο',
+        email: 'Επιχειρηματικό Email',
+        phone: 'Τηλέφωνο (Προαιρετικό)',
+        company: 'Όνομα Εταιρείας',
+        submitting: 'Επεξεργασία...',
+        success: 'Ευχαριστούμε! Θα επικοινωνήσουμε σύντομα.',
+        error: 'Κάτι πήγε στραβά. Προσπαθήστε ξανά.',
+        privacy:
+          'Σεβόμαστε την ιδιωτικότητά σας. Κατάργηση εγγραφής ανά πάσα στιγμή.',
+        timeLeft: 'Περιορισμένη προσφορά',
+        trusted: 'Εμπιστεύονται 1.000+ ελληνικές επιχειρήσεις',
+      },
+    },
   };
 
   const t = translations[locale];
@@ -170,20 +237,23 @@ export default function ExitIntentPopup({
   }, []);
 
   // Exit intent detection
-  const handleMouseLeave = useCallback((e: MouseEvent) => {
-    if (!enabled || hasShown || isOpen || timeOnPage < delay) return;
-    
-    // Detect if mouse is moving towards the top of the viewport (exit intent)
-    if (e.clientY <= 10 && e.movementY < 0) {
-      setIsOpen(true);
-      setHasShown(true);
-    }
-  }, [enabled, hasShown, isOpen, timeOnPage, delay]);
+  const handleMouseLeave = useCallback(
+    (e: MouseEvent) => {
+      if (!enabled || hasShown || isOpen || timeOnPage < delay) return;
+
+      // Detect if mouse is moving towards the top of the viewport (exit intent)
+      if (e.clientY <= 10 && e.movementY < 0) {
+        setIsOpen(true);
+        setHasShown(true);
+      }
+    },
+    [enabled, hasShown, isOpen, timeOnPage, delay]
+  );
 
   // Mobile exit intent (back button, tab switch)
   const handleVisibilityChange = useCallback(() => {
     if (!enabled || hasShown || isOpen || timeOnPage < delay) return;
-    
+
     if (document.hidden) {
       // User is switching tabs or minimizing - show popup when they return
       setTimeout(() => {
@@ -200,7 +270,7 @@ export default function ExitIntentPopup({
 
     // Desktop exit intent
     document.addEventListener('mouseleave', handleMouseLeave);
-    
+
     // Mobile/tablet exit intent
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
@@ -227,7 +297,7 @@ export default function ExitIntentPopup({
         locale,
         timeOnPage,
         timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent
+        userAgent: navigator.userAgent,
       };
 
       // Simulate API call
@@ -241,14 +311,14 @@ export default function ExitIntentPopup({
 
       toast({
         title: t.common.success,
-        variant: 'default'
+        variant: 'default',
       });
 
       setIsOpen(false);
     } catch (error) {
       toast({
         title: t.common.error,
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -268,7 +338,10 @@ export default function ExitIntentPopup({
                 {content.title}
               </DialogTitle>
               <div className="flex items-center gap-2 mb-3">
-                <Badge variant="secondary" className="bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-200">
+                <Badge
+                  variant="secondary"
+                  className="bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-200"
+                >
                   <Clock className="h-3 w-3 mr-1" />
                   {t.common.timeLeft}
                 </Badge>
@@ -286,9 +359,9 @@ export default function ExitIntentPopup({
               </DialogDescription>
             </DialogHeader>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setIsOpen(false)}
             className="ml-2 h-6 w-6 p-0"
           >
@@ -301,7 +374,9 @@ export default function ExitIntentPopup({
           {content.features.map((feature, index) => (
             <div key={index} className="flex items-center gap-2">
               <div className="h-2 w-2 bg-green-500 rounded-full" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                {feature}
+              </span>
             </div>
           ))}
         </div>
@@ -313,13 +388,13 @@ export default function ExitIntentPopup({
               type="email"
               placeholder={t.common.email}
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               required
               className="w-full"
               disabled={isSubmitting}
             />
           </div>
-          
+
           {(variant === 'demo' || variant === 'support') && (
             <>
               <div>
@@ -327,7 +402,7 @@ export default function ExitIntentPopup({
                   type="text"
                   placeholder={t.common.company}
                   value={company}
-                  onChange={(e) => setCompany(e.target.value)}
+                  onChange={e => setCompany(e.target.value)}
                   className="w-full"
                   disabled={isSubmitting}
                 />
@@ -337,7 +412,7 @@ export default function ExitIntentPopup({
                   type="tel"
                   placeholder={t.common.phone}
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={e => setPhone(e.target.value)}
                   className="w-full"
                   disabled={isSubmitting}
                 />

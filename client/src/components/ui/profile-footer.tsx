@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useAppContext } from "@/contexts/AppContext";
-import { Badge } from "./badge";
-import { Button } from "./button";
-import { Separator } from "./separator";
+import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useAppContext } from '@/contexts/AppContext';
+import { Badge } from './badge';
+import { Button } from './button';
+import { Separator } from './separator';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,7 @@ import {
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-} from "./dropdown-menu";
+} from './dropdown-menu';
 import {
   User,
   Settings,
@@ -23,8 +23,8 @@ import {
   ChevronDown,
   Building2,
   Globe,
-  CheckCircle
-} from "lucide-react";
+  CheckCircle,
+} from 'lucide-react';
 
 interface ProfileFooterProps {
   currentProperty: {
@@ -34,30 +34,40 @@ interface ProfileFooterProps {
   userRole: string;
 }
 
-export function ProfileFooter({ currentProperty, userRole }: ProfileFooterProps) {
+export function ProfileFooter({
+  currentProperty,
+  userRole,
+}: ProfileFooterProps) {
   const { user } = useAuth();
   const { setCurrentProperty } = useAppContext();
-  
+
   const properties = [
-    { propertyId: "prop-princess", name: "Princess Resort & Spa" },
-    { propertyId: "prop-apollo", name: "Apollo Beach Hotel" },
-    { propertyId: "prop-athena", name: "Athena Palace" },
+    { propertyId: 'prop-princess', name: 'Princess Resort & Spa' },
+    { propertyId: 'prop-apollo', name: 'Apollo Beach Hotel' },
+    { propertyId: 'prop-athena', name: 'Athena Palace' },
   ];
 
   const departments = [
-    "Front Office", "Housekeeping", "F&B Service", 
-    "Kitchen", "Maintenance", "Administration"
+    'Front Office',
+    'Housekeeping',
+    'F&B Service',
+    'Kitchen',
+    'Maintenance',
+    'Administration',
   ];
 
-  const isManager = userRole?.toLowerCase().includes("manager") || 
-                  user?.email?.includes("manager");
+  const isManager =
+    userRole?.toLowerCase().includes('manager') ||
+    user?.email?.includes('manager');
 
   return (
     <div className="border-t border-gray-200 dark:border-gray-800 p-4 space-y-3">
       {/* Property Context */}
       <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-muted-foreground">Ενεργό Ακίνητο</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            Ενεργό Ακίνητο
+          </span>
           <Badge variant="outline" className="text-xs">
             {userRole}
           </Badge>
@@ -73,9 +83,11 @@ export function ProfileFooter({ currentProperty, userRole }: ProfileFooterProps)
       {/* Quick Department Switch for Managers */}
       {isManager && (
         <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground">Γρήγορη Αλλαγή Τμήματος</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            Γρήγορη Αλλαγή Τμήματος
+          </span>
           <div className="grid grid-cols-2 gap-1">
-            {departments.slice(0, 4).map((dept) => (
+            {departments.slice(0, 4).map(dept => (
               <Button
                 key={dept}
                 variant="ghost"
@@ -88,9 +100,9 @@ export function ProfileFooter({ currentProperty, userRole }: ProfileFooterProps)
           </div>
         </div>
       )}
-      
+
       <Separator />
-      
+
       {/* Account Menu */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -114,12 +126,12 @@ export function ProfileFooter({ currentProperty, userRole }: ProfileFooterProps)
         <DropdownMenuContent align="end" className="w-64">
           <DropdownMenuLabel>Λογαριασμός Χρήστη</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          
+
           <DropdownMenuItem>
             <User className="mr-2 h-4 w-4" />
             <span>Προφίλ</span>
           </DropdownMenuItem>
-          
+
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>
               <Globe className="mr-2 h-4 w-4" />
@@ -130,22 +142,20 @@ export function ProfileFooter({ currentProperty, userRole }: ProfileFooterProps)
                 <CheckCircle className="mr-2 h-4 w-4" />
                 Ελληνικά
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                English
-              </DropdownMenuItem>
+              <DropdownMenuItem>English</DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
-          
+
           <DropdownMenuItem>
             <Bell className="mr-2 h-4 w-4" />
             <span>Ειδοποιήσεις</span>
           </DropdownMenuItem>
-          
+
           <DropdownMenuItem>
             <Settings className="mr-2 h-4 w-4" />
             <span>Ρυθμίσεις</span>
           </DropdownMenuItem>
-          
+
           {isManager && (
             <>
               <DropdownMenuSeparator />
@@ -155,16 +165,26 @@ export function ProfileFooter({ currentProperty, userRole }: ProfileFooterProps)
                   <span>Αλλαγή Ακινήτου</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent>
-                  {properties.map((property) => (
-                    <DropdownMenuItem 
+                  {properties.map(property => (
+                    <DropdownMenuItem
                       key={property.propertyId}
                       onClick={() => setCurrentProperty(property)}
-                      className={currentProperty.propertyId === property.propertyId ? "bg-accent" : ""}
+                      className={
+                        currentProperty.propertyId === property.propertyId
+                          ? 'bg-accent'
+                          : ''
+                      }
                     >
                       {currentProperty.propertyId === property.propertyId && (
                         <CheckCircle className="mr-2 h-4 w-4" />
                       )}
-                      <span className={currentProperty.propertyId !== property.propertyId ? "ml-6" : ""}>
+                      <span
+                        className={
+                          currentProperty.propertyId !== property.propertyId
+                            ? 'ml-6'
+                            : ''
+                        }
+                      >
                         {property.name}
                       </span>
                     </DropdownMenuItem>
@@ -173,7 +193,7 @@ export function ProfileFooter({ currentProperty, userRole }: ProfileFooterProps)
               </DropdownMenuSub>
             </>
           )}
-          
+
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <a href="/api/logout" className="flex items-center">
@@ -183,7 +203,7 @@ export function ProfileFooter({ currentProperty, userRole }: ProfileFooterProps)
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      
+
       {/* Compliance Status */}
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>Συμμόρφωση Ελλάδας</span>

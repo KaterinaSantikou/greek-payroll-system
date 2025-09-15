@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 interface Property {
@@ -19,7 +25,9 @@ interface PropertyContextType {
   toggleGroupView: () => void;
 }
 
-const PropertyContext = createContext<PropertyContextType | undefined>(undefined);
+const PropertyContext = createContext<PropertyContextType | undefined>(
+  undefined
+);
 
 interface PropertyProviderProps {
   children: ReactNode;
@@ -30,7 +38,7 @@ export function PropertyProvider({ children }: PropertyProviderProps) {
   const [isGroupView, setIsGroupView] = useState(true);
 
   const { data: properties = [] } = useQuery<Property[]>({
-    queryKey: ["/api/properties"],
+    queryKey: ['/api/properties'],
   });
 
   // Load user's last selected property from localStorage
@@ -70,7 +78,9 @@ export function PropertyProvider({ children }: PropertyProviderProps) {
     }
   };
 
-  const selectedProperty = properties.find((p: Property) => p.propertyId === selectedPropertyId) || null;
+  const selectedProperty =
+    properties.find((p: Property) => p.propertyId === selectedPropertyId) ||
+    null;
 
   const value: PropertyContextType = {
     selectedPropertyId,

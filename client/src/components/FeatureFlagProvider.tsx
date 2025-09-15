@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { featureFlags, useFeatureFlag, useBackendHealth } from '@/lib/featureFlags';
+import {
+  featureFlags,
+  useFeatureFlag,
+  useBackendHealth,
+} from '@/lib/featureFlags';
 import type { BackendHealthCheck } from '@/lib/featureFlags';
 
 interface FeatureFlagContextType {
@@ -9,14 +13,19 @@ interface FeatureFlagContextType {
   enabledFeatures: string[];
 }
 
-const FeatureFlagContext = createContext<FeatureFlagContextType | undefined>(undefined);
+const FeatureFlagContext = createContext<FeatureFlagContextType | undefined>(
+  undefined
+);
 
 interface FeatureFlagProviderProps {
   children: React.ReactNode;
   userId?: string;
 }
 
-export function FeatureFlagProvider({ children, userId }: FeatureFlagProviderProps) {
+export function FeatureFlagProvider({
+  children,
+  userId,
+}: FeatureFlagProviderProps) {
   const backendHealth = useBackendHealth();
   const [enabledFeatures, setEnabledFeatures] = useState<string[]>([]);
 
@@ -24,15 +33,15 @@ export function FeatureFlagProvider({ children, userId }: FeatureFlagProviderPro
     if (userId) {
       featureFlags.setUserId(userId);
     }
-    
+
     // Update enabled features list
     const updateFeatures = () => {
       const features = featureFlags.getEnabledFeatures(userId);
       setEnabledFeatures(features);
     };
-    
+
     updateFeatures();
-    
+
     // Refresh every 10 seconds
     const interval = setInterval(updateFeatures, 10000);
     return () => clearInterval(interval);
@@ -63,7 +72,9 @@ export function FeatureFlagProvider({ children, userId }: FeatureFlagProviderPro
 export function useFeatureFlags(): FeatureFlagContextType {
   const context = useContext(FeatureFlagContext);
   if (context === undefined) {
-    throw new Error('useFeatureFlags must be used within a FeatureFlagProvider');
+    throw new Error(
+      'useFeatureFlags must be used within a FeatureFlagProvider'
+    );
   }
   return context;
 }
@@ -82,7 +93,12 @@ interface FeatureGateProps {
   showDebug?: boolean;
 }
 
-export function FeatureGate({ feature, children, fallback = null, showDebug = false }: FeatureGateProps) {
+export function FeatureGate({
+  feature,
+  children,
+  fallback = null,
+  showDebug = false,
+}: FeatureGateProps) {
   const isEnabled = useFeature(feature);
   const { backendHealth } = useFeatureFlags();
 
@@ -94,8 +110,8 @@ export function FeatureGate({ feature, children, fallback = null, showDebug = fa
             🚧 Feature Disabled: {feature}
           </div>
           <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-            Backend Status: {backendHealth.status} | 
-            Last Check: {backendHealth.lastCheck.toLocaleTimeString()}
+            Backend Status: {backendHealth.status} | Last Check:{' '}
+            {backendHealth.lastCheck.toLocaleTimeString()}
           </div>
           {fallback && (
             <div className="mt-2 border-t border-yellow-300 pt-2">
@@ -114,22 +130,30 @@ export function FeatureGate({ feature, children, fallback = null, showDebug = fa
 // Backend health indicator component
 export function BackendHealthIndicator() {
   const { backendHealth, refreshHealth } = useFeatureFlags();
-  
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'text-green-600 dark:text-green-400';
-      case 'degraded': return 'text-yellow-600 dark:text-yellow-400';
-      case 'down': return 'text-red-600 dark:text-red-400';
-      default: return 'text-gray-600 dark:text-gray-400';
+      case 'healthy':
+        return 'text-green-600 dark:text-green-400';
+      case 'degraded':
+        return 'text-yellow-600 dark:text-yellow-400';
+      case 'down':
+        return 'text-red-600 dark:text-red-400';
+      default:
+        return 'text-gray-600 dark:text-gray-400';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'healthy': return '●';
-      case 'degraded': return '◐';
-      case 'down': return '○';
-      default: return '?';
+      case 'healthy':
+        return '●';
+      case 'degraded':
+        return '◐';
+      case 'down':
+        return '○';
+      default:
+        return '?';
     }
   };
 

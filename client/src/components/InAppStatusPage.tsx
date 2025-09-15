@@ -5,22 +5,54 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, AlertCircle, XCircle, Clock, Wrench, Plus, RefreshCw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  Clock,
+  Wrench,
+  Plus,
+  RefreshCw,
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface SystemStatus {
-  overall: 'operational' | 'degraded_performance' | 'partial_outage' | 'major_outage' | 'under_maintenance';
+  overall:
+    | 'operational'
+    | 'degraded_performance'
+    | 'partial_outage'
+    | 'major_outage'
+    | 'under_maintenance';
   components: ComponentStatusInfo[];
   activeIncidents: StatusPageIncident[];
   upcomingMaintenance: StatusPageMaintenance[];
@@ -32,7 +64,12 @@ interface ComponentStatusInfo {
   id: string;
   name: string;
   description?: string;
-  status: 'operational' | 'degraded_performance' | 'partial_outage' | 'major_outage' | 'under_maintenance';
+  status:
+    | 'operational'
+    | 'degraded_performance'
+    | 'partial_outage'
+    | 'major_outage'
+    | 'under_maintenance';
   category: string;
   lastUpdated: string;
   uptimePercentage?: number;
@@ -113,59 +150,76 @@ export default function InAppStatusPage() {
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);
   const { toast } = useToast();
 
-  const { data: status, isLoading, refetch } = useQuery<SystemStatus>({
+  const {
+    data: status,
+    isLoading,
+    refetch,
+  } = useQuery<SystemStatus>({
     queryKey: ['/api/status/status'],
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
   const handleCreateIncident = async () => {
     try {
-      if (!newIncident.title || !newIncident.description || !newIncident.severity) {
+      if (
+        !newIncident.title ||
+        !newIncident.description ||
+        !newIncident.severity
+      ) {
         toast({
-          title: "Error",
-          description: "Please fill in all required fields",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Please fill in all required fields',
+          variant: 'destructive',
         });
         return;
       }
 
       await apiRequest('POST', '/api/status/incidents', newIncident);
-      
+
       toast({
-        title: "Success",
-        description: "Incident created successfully",
+        title: 'Success',
+        description: 'Incident created successfully',
       });
 
-      setNewIncident({ title: '', description: '', severity: '', affectedComponents: [] });
+      setNewIncident({
+        title: '',
+        description: '',
+        severity: '',
+        affectedComponents: [],
+      });
       setShowIncidentDialog(false);
       refetch();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create incident",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to create incident',
+        variant: 'destructive',
       });
     }
   };
 
-  const handleUpdateComponentStatus = async (componentId: string, newStatus: string, message?: string) => {
+  const handleUpdateComponentStatus = async (
+    componentId: string,
+    newStatus: string,
+    message?: string
+  ) => {
     try {
       await apiRequest('PUT', `/api/status/components/${componentId}/status`, {
         status: newStatus,
         message,
       });
-      
+
       toast({
-        title: "Success",
-        description: "Component status updated successfully",
+        title: 'Success',
+        description: 'Component status updated successfully',
       });
 
       refetch();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update component status",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to update component status',
+        variant: 'destructive',
       });
     }
   };
@@ -223,7 +277,10 @@ export default function InAppStatusPage() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Dialog open={showIncidentDialog} onOpenChange={setShowIncidentDialog}>
+          <Dialog
+            open={showIncidentDialog}
+            onOpenChange={setShowIncidentDialog}
+          >
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="h-4 w-4 mr-2" />
@@ -243,7 +300,9 @@ export default function InAppStatusPage() {
                   <Input
                     id="title"
                     value={newIncident.title}
-                    onChange={(e) => setNewIncident({ ...newIncident, title: e.target.value })}
+                    onChange={e =>
+                      setNewIncident({ ...newIncident, title: e.target.value })
+                    }
                     placeholder="Brief description of the incident"
                   />
                 </div>
@@ -252,13 +311,23 @@ export default function InAppStatusPage() {
                   <Textarea
                     id="description"
                     value={newIncident.description}
-                    onChange={(e) => setNewIncident({ ...newIncident, description: e.target.value })}
+                    onChange={e =>
+                      setNewIncident({
+                        ...newIncident,
+                        description: e.target.value,
+                      })
+                    }
                     placeholder="Detailed description of the incident and its impact"
                   />
                 </div>
                 <div>
                   <Label htmlFor="severity">Severity</Label>
-                  <Select value={newIncident.severity} onValueChange={(value) => setNewIncident({ ...newIncident, severity: value })}>
+                  <Select
+                    value={newIncident.severity}
+                    onValueChange={value =>
+                      setNewIncident({ ...newIncident, severity: value })
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select severity" />
                     </SelectTrigger>
@@ -270,7 +339,10 @@ export default function InAppStatusPage() {
                   </Select>
                 </div>
                 <div className="flex justify-end space-x-2">
-                  <Button variant="outline" onClick={() => setShowIncidentDialog(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowIncidentDialog(false)}
+                  >
                     Cancel
                   </Button>
                   <Button onClick={handleCreateIncident}>
@@ -299,19 +371,27 @@ export default function InAppStatusPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-xl font-bold">{status.uptimeStats.last24h}%</div>
+              <div className="text-xl font-bold">
+                {status.uptimeStats.last24h}%
+              </div>
               <div className="text-sm text-gray-600">Last 24 hours</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold">{status.uptimeStats.last7d}%</div>
+              <div className="text-xl font-bold">
+                {status.uptimeStats.last7d}%
+              </div>
               <div className="text-sm text-gray-600">Last 7 days</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold">{status.uptimeStats.last30d}%</div>
+              <div className="text-xl font-bold">
+                {status.uptimeStats.last30d}%
+              </div>
               <div className="text-sm text-gray-600">Last 30 days</div>
             </div>
             <div className="text-center">
-              <div className="text-xl font-bold">{status.uptimeStats.last90d}%</div>
+              <div className="text-xl font-bold">
+                {status.uptimeStats.last90d}%
+              </div>
               <div className="text-sm text-gray-600">Last 90 days</div>
             </div>
           </div>
@@ -329,16 +409,23 @@ export default function InAppStatusPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {status.activeIncidents.map((incident) => (
-                <div key={incident.id} className="border-l-4 border-red-500 pl-4">
+              {status.activeIncidents.map(incident => (
+                <div
+                  key={incident.id}
+                  className="border-l-4 border-red-500 pl-4"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-semibold">{incident.title}</h3>
                     <div className="flex space-x-2">
-                      <Badge className={severityColors[incident.severity]}>{incident.severity}</Badge>
+                      <Badge className={severityColors[incident.severity]}>
+                        {incident.severity}
+                      </Badge>
                       <Badge variant="outline">{incident.status}</Badge>
                     </div>
                   </div>
-                  <p className="text-gray-600 text-sm mb-2">{incident.description}</p>
+                  <p className="text-gray-600 text-sm mb-2">
+                    {incident.description}
+                  </p>
                   <p className="text-xs text-gray-400">
                     Started: {formatDate(incident.createdAt)}
                   </p>
@@ -358,51 +445,71 @@ export default function InAppStatusPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {Object.entries(categorizedComponents).map(([category, components]) => (
-            <div key={category} className="mb-6 last:mb-0">
-              <h3 className="text-lg font-semibold mb-3 capitalize">
-                {category.replace('_', ' ')} Systems
-              </h3>
-              <div className="space-y-2">
-                {components.map((component) => (
-                  <div key={component.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      {statusIcons[component.status]}
-                      <div>
-                        <div className="font-medium">{component.name}</div>
-                        {component.description && (
-                          <div className="text-sm text-gray-600">{component.description}</div>
-                        )}
+          {Object.entries(categorizedComponents).map(
+            ([category, components]) => (
+              <div key={category} className="mb-6 last:mb-0">
+                <h3 className="text-lg font-semibold mb-3 capitalize">
+                  {category.replace('_', ' ')} Systems
+                </h3>
+                <div className="space-y-2">
+                  {components.map(component => (
+                    <div
+                      key={component.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="flex items-center space-x-3">
+                        {statusIcons[component.status]}
+                        <div>
+                          <div className="font-medium">{component.name}</div>
+                          {component.description && (
+                            <div className="text-sm text-gray-600">
+                              {component.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Badge className={statusColors[component.status]}>
+                          {statusLabels[component.status]}
+                        </Badge>
+                        <Select
+                          value={component.status}
+                          onValueChange={value =>
+                            handleUpdateComponentStatus(component.id, value)
+                          }
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="operational">
+                              Operational
+                            </SelectItem>
+                            <SelectItem value="degraded_performance">
+                              Degraded
+                            </SelectItem>
+                            <SelectItem value="partial_outage">
+                              Partial Outage
+                            </SelectItem>
+                            <SelectItem value="major_outage">
+                              Major Outage
+                            </SelectItem>
+                            <SelectItem value="under_maintenance">
+                              Maintenance
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <Badge className={statusColors[component.status]}>
-                        {statusLabels[component.status]}
-                      </Badge>
-                      <Select
-                        value={component.status}
-                        onValueChange={(value) => handleUpdateComponentStatus(component.id, value)}
-                      >
-                        <SelectTrigger className="w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="operational">Operational</SelectItem>
-                          <SelectItem value="degraded_performance">Degraded</SelectItem>
-                          <SelectItem value="partial_outage">Partial Outage</SelectItem>
-                          <SelectItem value="major_outage">Major Outage</SelectItem>
-                          <SelectItem value="under_maintenance">Maintenance</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                {category !==
+                  Object.keys(categorizedComponents)[
+                    Object.keys(categorizedComponents).length - 1
+                  ] && <Separator className="mt-6" />}
               </div>
-              {category !== Object.keys(categorizedComponents)[Object.keys(categorizedComponents).length - 1] && (
-                <Separator className="mt-6" />
-              )}
-            </div>
-          ))}
+            )
+          )}
         </CardContent>
       </Card>
 
@@ -417,15 +524,21 @@ export default function InAppStatusPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {status.recentIncidents.slice(0, 5).map((incident) => (
-                <div key={incident.id} className="flex items-center justify-between py-2">
+              {status.recentIncidents.slice(0, 5).map(incident => (
+                <div
+                  key={incident.id}
+                  className="flex items-center justify-between py-2"
+                >
                   <div>
                     <div className="font-medium">{incident.title}</div>
                     <div className="text-sm text-gray-600">
-                      {incident.status === 'resolved' ? 'Resolved' : 'Active'} • {formatDate(incident.createdAt)}
+                      {incident.status === 'resolved' ? 'Resolved' : 'Active'} •{' '}
+                      {formatDate(incident.createdAt)}
                     </div>
                   </div>
-                  <Badge className={severityColors[incident.severity]}>{incident.severity}</Badge>
+                  <Badge className={severityColors[incident.severity]}>
+                    {incident.severity}
+                  </Badge>
                 </div>
               ))}
             </div>

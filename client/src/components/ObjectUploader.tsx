@@ -1,21 +1,21 @@
-import { useState } from "react";
-import type { ReactNode } from "react";
-import Uppy from "@uppy/core";
-import { DashboardModal } from "@uppy/react";
-import "@uppy/core/dist/style.min.css";
-import "@uppy/dashboard/dist/style.min.css";
-import AwsS3 from "@uppy/aws-s3";
-import type { UploadResult } from "@uppy/core";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from 'react';
+import type { ReactNode } from 'react';
+import Uppy from '@uppy/core';
+import { DashboardModal } from '@uppy/react';
+import '@uppy/core/dist/style.min.css';
+import '@uppy/dashboard/dist/style.min.css';
+import AwsS3 from '@uppy/aws-s3';
+import type { UploadResult } from '@uppy/core';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 interface ObjectUploaderProps {
   maxNumberOfFiles?: number;
   maxFileSize?: number;
   allowedFileTypes?: string[];
-  visibility?: "public" | "private";
+  visibility?: 'public' | 'private';
   onGetUploadParameters?: () => Promise<{
-    method: "PUT";
+    method: 'PUT';
     url: string;
     objectPath?: string;
     expiresAt?: Date;
@@ -30,7 +30,7 @@ interface ObjectUploaderProps {
 
 /**
  * A file upload component with object storage integration
- * 
+ *
  * Features:
  * - Renders as a customizable button that opens a file upload modal
  * - Integrates with Replit Object Storage via signed URLs
@@ -39,7 +39,7 @@ interface ObjectUploaderProps {
  * - Progress tracking and error handling
  * - Configurable file size and type restrictions
  * - Greek/English bilingual support
- * 
+ *
  * @param props - Component props
  * @param props.maxNumberOfFiles - Maximum number of files allowed (default: 1)
  * @param props.maxFileSize - Maximum file size in bytes (default: 10MB)
@@ -55,7 +55,7 @@ export function ObjectUploader({
   maxNumberOfFiles = 1,
   maxFileSize = 10485760, // 10MB default
   allowedFileTypes,
-  visibility = "private",
+  visibility = 'private',
   onGetUploadParameters,
   onComplete,
   buttonClassName,
@@ -95,9 +95,12 @@ export function ObjectUploader({
     } catch (error) {
       console.error('Error getting upload parameters:', error);
       toast({
-        title: "Σφάλμα μεταφόρτωσης / Upload Error",
-        description: error instanceof Error ? error.message : "Αποτυχία λήψης URL μεταφόρτωσης / Failed to get upload URL",
-        variant: "destructive",
+        title: 'Σφάλμα μεταφόρτωσης / Upload Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Αποτυχία λήψης URL μεταφόρτωσης / Failed to get upload URL',
+        variant: 'destructive',
       });
       throw error;
     }
@@ -146,12 +149,12 @@ export function ObjectUploader({
       setIsUploading(true);
     });
 
-    uppyInstance.on('complete', async (result) => {
+    uppyInstance.on('complete', async result => {
       setIsUploading(false);
-      
+
       if (result.successful.length > 0) {
         toast({
-          title: "Επιτυχής μεταφόρτωση / Upload Successful",
+          title: 'Επιτυχής μεταφόρτωση / Upload Successful',
           description: `${result.successful.length} αρχείο(α) μεταφορτώθηκαν επιτυχώς / file(s) uploaded successfully`,
         });
 
@@ -179,30 +182,34 @@ export function ObjectUploader({
 
       if (result.failed.length > 0) {
         toast({
-          title: "Σφάλμα μεταφόρτωσης / Upload Error", 
+          title: 'Σφάλμα μεταφόρτωσης / Upload Error',
           description: `${result.failed.length} αρχείο(α) απέτυχαν / file(s) failed to upload`,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
 
       onComplete?.(result);
     });
 
-    uppyInstance.on('error', (error) => {
+    uppyInstance.on('error', error => {
       setIsUploading(false);
       console.error('Upload error:', error);
       toast({
-        title: "Σφάλμα μεταφόρτωσης / Upload Error",
-        description: error.message || "Παρουσιάστηκε σφάλμα κατά τη μεταφόρτωση / An error occurred during upload",
-        variant: "destructive",
+        title: 'Σφάλμα μεταφόρτωσης / Upload Error',
+        description:
+          error.message ||
+          'Παρουσιάστηκε σφάλμα κατά τη μεταφόρτωση / An error occurred during upload',
+        variant: 'destructive',
       });
     });
 
     uppyInstance.on('restriction-failed', (file, error) => {
       toast({
-        title: "Περιορισμός αρχείου / File Restriction",
-        description: error.message || `Το αρχείο ${file?.name || 'Unknown'} δεν πληροί τις προϋποθέσεις / File does not meet requirements`,
-        variant: "destructive",
+        title: 'Περιορισμός αρχείου / File Restriction',
+        description:
+          error.message ||
+          `Το αρχείο ${file?.name || 'Unknown'} δεν πληροί τις προϋποθέσεις / File does not meet requirements`,
+        variant: 'destructive',
       });
     });
 
@@ -217,8 +224,8 @@ export function ObjectUploader({
 
   return (
     <div>
-      <Button 
-        onClick={handleOpenModal} 
+      <Button
+        onClick={handleOpenModal}
         className={buttonClassName}
         disabled={disabled || isUploading}
         data-testid="button-upload-object"

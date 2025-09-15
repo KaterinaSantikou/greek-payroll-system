@@ -23,7 +23,7 @@ import {
   Euro,
   FileCheck,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
 } from 'lucide-react';
 
 interface IndustryTemplate {
@@ -51,8 +51,10 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
     name: 'Hotel & Tourism',
     nameEl: 'Ξενοδοχεία & Τουρισμός',
     icon: Hotel,
-    description: 'Complete solution for hotels, resorts, and tourism businesses',
-    descriptionEl: 'Πλήρης λύση για ξενοδοχεία, θέρετρα και επιχειρήσεις τουρισμού',
+    description:
+      'Complete solution for hotels, resorts, and tourism businesses',
+    descriptionEl:
+      'Πλήρης λύση για ξενοδοχεία, θέρετρα και επιχειρήσεις τουρισμού',
     employees: '25-500+',
     complexity: 'Complex',
     setupTime: '2-3 days',
@@ -62,7 +64,7 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Multi-property support',
       'Split shift tracking',
       'Night audit premiums',
-      'Tourist season rates'
+      'Tourist season rates',
     ],
     featuresEl: [
       'Διαχείριση εποχιακών εργαζομένων',
@@ -70,13 +72,25 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Υποστήριξη πολλαπλών ακινήτων',
       'Παρακολούθηση διαιρεμένων βαρδιών',
       'Επιδόματα νυχτερινού ελέγχου',
-      'Τιμές τουριστικής περιόδου'
+      'Τιμές τουριστικής περιόδου',
     ],
-    collectiveAgreements: ['ΓΣΕΕ - Ξενοδοχοϋπάλληλοι', 'ΠΝΟ - Τουριστικές Επιχειρήσεις'],
-    specialAllowances: ['Night Premium (25%)', 'Sunday Premium (75%)', 'Holiday Premium (100%)', 'Tip Distribution'],
-    complianceRequirements: ['ΕΡΓΑΝΗ ΙΙ - Tourism', 'Digital Work Card', 'Seasonal Employment Forms'],
+    collectiveAgreements: [
+      'ΓΣΕΕ - Ξενοδοχοϋπάλληλοι',
+      'ΠΝΟ - Τουριστικές Επιχειρήσεις',
+    ],
+    specialAllowances: [
+      'Night Premium (25%)',
+      'Sunday Premium (75%)',
+      'Holiday Premium (100%)',
+      'Tip Distribution',
+    ],
+    complianceRequirements: [
+      'ΕΡΓΑΝΗ ΙΙ - Tourism',
+      'Digital Work Card',
+      'Seasonal Employment Forms',
+    ],
     popularityScore: 95,
-    color: 'bg-blue-500'
+    color: 'bg-blue-500',
   },
   {
     id: 'restaurant-food',
@@ -94,7 +108,7 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Multiple location support',
       'Peak hour premiums',
       'Food handler certifications',
-      'Inventory bonus tracking'
+      'Inventory bonus tracking',
     ],
     featuresEl: [
       'Παρακολούθηση φιλοδωρημάτων',
@@ -102,13 +116,22 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Υποστήριξη πολλών τοποθεσιών',
       'Επιδόματα ώρας αιχμής',
       'Πιστοποιήσεις χειρισμού τροφίμων',
-      'Παρακολούθηση μπόνους αποθήκης'
+      'Παρακολούθηση μπόνους αποθήκης',
     ],
     collectiveAgreements: ['ΓΣΕΕ - Εστιατόρια', 'ΕΚΠΟΙΖΩ - Ζαχαροπλαστεία'],
-    specialAllowances: ['Service Premium (15%)', 'Kitchen Premium (20%)', 'Late Night (30%)', 'Tip Share'],
-    complianceRequirements: ['Health Permits', 'Food Safety Compliance', 'Municipal Licenses'],
+    specialAllowances: [
+      'Service Premium (15%)',
+      'Kitchen Premium (20%)',
+      'Late Night (30%)',
+      'Tip Share',
+    ],
+    complianceRequirements: [
+      'Health Permits',
+      'Food Safety Compliance',
+      'Municipal Licenses',
+    ],
     popularityScore: 88,
-    color: 'bg-orange-500'
+    color: 'bg-orange-500',
   },
   {
     id: 'manufacturing',
@@ -126,7 +149,7 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Overtime calculations',
       'Safety compliance tracking',
       'Union contract management',
-      'Production bonus systems'
+      'Production bonus systems',
     ],
     featuresEl: [
       'Αμοιβή επικίνδυνης εργασίας',
@@ -134,13 +157,26 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Υπολογισμοί υπερωριών',
       'Παρακολούθηση ασφάλειας',
       'Διαχείριση συνδικαλιστικών συμβάσεων',
-      'Συστήματα μπόνους παραγωγής'
+      'Συστήματα μπόνους παραγωγής',
     ],
-    collectiveAgreements: ['ΓΣΕΕ - Μεταλλεργάτες', 'ΟΤΟΕ - Βιομήχανος', 'ΓΣΕΕ - Χημικοί'],
-    specialAllowances: ['Heavy Work (40%)', 'Hazard Pay (50%)', 'Night Shift (25%)', 'Overtime (125%)'],
-    complianceRequirements: ['Industrial Safety', 'Environmental Compliance', 'Union Agreements'],
+    collectiveAgreements: [
+      'ΓΣΕΕ - Μεταλλεργάτες',
+      'ΟΤΟΕ - Βιομήχανος',
+      'ΓΣΕΕ - Χημικοί',
+    ],
+    specialAllowances: [
+      'Heavy Work (40%)',
+      'Hazard Pay (50%)',
+      'Night Shift (25%)',
+      'Overtime (125%)',
+    ],
+    complianceRequirements: [
+      'Industrial Safety',
+      'Environmental Compliance',
+      'Union Agreements',
+    ],
     popularityScore: 82,
-    color: 'bg-gray-600'
+    color: 'bg-gray-600',
   },
   {
     id: 'retail',
@@ -158,7 +194,7 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Multiple store management',
       'Seasonal adjustments',
       'Customer service bonuses',
-      'Flexible hour tracking'
+      'Flexible hour tracking',
     ],
     featuresEl: [
       'Προγραμματισμός μερικής απασχόλησης',
@@ -166,13 +202,21 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Διαχείριση πολλών καταστημάτων',
       'Εποχιακές προσαρμογές',
       'Μπόνους εξυπηρέτησης πελατών',
-      'Ευέλικτη παρακολούθηση ωρών'
+      'Ευέλικτη παρακολούθηση ωρών',
     ],
     collectiveAgreements: ['ΓΣΕΕ - Εμπόριο', 'ΕΣΕΕ - Επαγγελματίες'],
-    specialAllowances: ['Sales Commission (2-5%)', 'Sunday Premium (75%)', 'Evening Premium (10%)'],
-    complianceRequirements: ['Commercial Licenses', 'Tax Compliance', 'Employment Permits'],
+    specialAllowances: [
+      'Sales Commission (2-5%)',
+      'Sunday Premium (75%)',
+      'Evening Premium (10%)',
+    ],
+    complianceRequirements: [
+      'Commercial Licenses',
+      'Tax Compliance',
+      'Employment Permits',
+    ],
     popularityScore: 75,
-    color: 'bg-green-500'
+    color: 'bg-green-500',
   },
   {
     id: 'construction',
@@ -190,7 +234,7 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Safety premium calculations',
       'Equipment operator rates',
       'Prevailing wage compliance',
-      'Union benefit tracking'
+      'Union benefit tracking',
     ],
     featuresEl: [
       'Μισθοδοσία βάσει έργων',
@@ -198,13 +242,26 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Υπολογισμοί επιδόματος ασφαλείας',
       'Τιμές χειριστών εξοπλισμού',
       'Συμμόρφωση κρατούντων μισθών',
-      'Παρακολούθηση συνδικαλιστικών παροχών'
+      'Παρακολούθηση συνδικαλιστικών παροχών',
     ],
-    collectiveAgreements: ['ΓΣΕΕ - Οικοδόμοι', 'ΟΤΟΕ - Τεχνίτες', 'ΓΣΕΕ - Μηχανικοί'],
-    specialAllowances: ['Height Work (30%)', 'Hazardous Conditions (45%)', 'Overtime (150%)', 'Weather Premium'],
-    complianceRequirements: ['Construction Safety', 'Building Permits', 'Worker Certification'],
+    collectiveAgreements: [
+      'ΓΣΕΕ - Οικοδόμοι',
+      'ΟΤΟΕ - Τεχνίτες',
+      'ΓΣΕΕ - Μηχανικοί',
+    ],
+    specialAllowances: [
+      'Height Work (30%)',
+      'Hazardous Conditions (45%)',
+      'Overtime (150%)',
+      'Weather Premium',
+    ],
+    complianceRequirements: [
+      'Construction Safety',
+      'Building Permits',
+      'Worker Certification',
+    ],
     popularityScore: 79,
-    color: 'bg-yellow-600'
+    color: 'bg-yellow-600',
   },
   {
     id: 'healthcare',
@@ -222,7 +279,7 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Continuing education credits',
       'Night shift differentials',
       'Emergency response bonuses',
-      'Medical license tracking'
+      'Medical license tracking',
     ],
     featuresEl: [
       'Τιμές ιατρικών ειδικοτήτων',
@@ -230,14 +287,23 @@ const INDUSTRY_TEMPLATES: IndustryTemplate[] = [
       'Πιστώσεις συνεχιζόμενης εκπαίδευσης',
       'Διαφορές νυχτερινής βάρδιας',
       'Μπόνους επείγουσας ανταπόκρισης',
-      'Παρακολούθηση ιατρικής άδειας'
+      'Παρακολούθηση ιατρικής άδειας',
     ],
     collectiveAgreements: ['ΟΕΝΓΕ - Νοσοκομειακοί', 'ΠΟΕΔΗΝ - Υγειονομικοί'],
-    specialAllowances: ['Medical Premium (35%)', 'Night Duty (40%)', 'Emergency Call (100%)', 'Specialist Rate'],
-    complianceRequirements: ['Medical Licenses', 'Patient Privacy (GDPR)', 'Health Ministry Compliance'],
+    specialAllowances: [
+      'Medical Premium (35%)',
+      'Night Duty (40%)',
+      'Emergency Call (100%)',
+      'Specialist Rate',
+    ],
+    complianceRequirements: [
+      'Medical Licenses',
+      'Patient Privacy (GDPR)',
+      'Health Ministry Compliance',
+    ],
     popularityScore: 86,
-    color: 'bg-red-500'
-  }
+    color: 'bg-red-500',
+  },
 ];
 
 interface IndustryTemplateSelectorProps {
@@ -245,9 +311,9 @@ interface IndustryTemplateSelectorProps {
   locale?: 'en' | 'el';
 }
 
-export default function IndustryTemplateSelector({ 
-  onSelectTemplate, 
-  locale = 'en' 
+export default function IndustryTemplateSelector({
+  onSelectTemplate,
+  locale = 'en',
 }: IndustryTemplateSelectorProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [view, setView] = useState<'grid' | 'comparison'>('grid');
@@ -267,7 +333,7 @@ export default function IndustryTemplateSelector({
       compareView: 'Compare Templates',
       gridView: 'Grid View',
       customizeSetup: 'Customize & Setup',
-      popularity: 'Popularity'
+      popularity: 'Popularity',
     },
     el: {
       title: 'Επιλέξτε Πρότυπο Κλάδου',
@@ -283,8 +349,8 @@ export default function IndustryTemplateSelector({
       compareView: 'Σύγκριση Προτύπων',
       gridView: 'Προβολή Πλέγματος',
       customizeSetup: 'Προσαρμογή & Εγκατάσταση',
-      popularity: 'Δημοτικότητα'
-    }
+      popularity: 'Δημοτικότητα',
+    },
   };
 
   const t = translations[locale];
@@ -296,10 +362,14 @@ export default function IndustryTemplateSelector({
 
   const getComplexityColor = (complexity: string) => {
     switch (complexity) {
-      case 'Simple': return 'bg-green-100 text-green-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Complex': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Simple':
+        return 'bg-green-100 text-green-800';
+      case 'Medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'Complex':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -320,22 +390,34 @@ export default function IndustryTemplateSelector({
           <table className="w-full border-collapse border border-gray-200">
             <thead>
               <tr className="bg-gray-50">
-                <th className="border border-gray-200 p-3 text-left">Industry</th>
-                <th className="border border-gray-200 p-3 text-left">{t.employees}</th>
-                <th className="border border-gray-200 p-3 text-left">Complexity</th>
-                <th className="border border-gray-200 p-3 text-left">{t.setup}</th>
-                <th className="border border-gray-200 p-3 text-left">{t.popularity}</th>
+                <th className="border border-gray-200 p-3 text-left">
+                  Industry
+                </th>
+                <th className="border border-gray-200 p-3 text-left">
+                  {t.employees}
+                </th>
+                <th className="border border-gray-200 p-3 text-left">
+                  Complexity
+                </th>
+                <th className="border border-gray-200 p-3 text-left">
+                  {t.setup}
+                </th>
+                <th className="border border-gray-200 p-3 text-left">
+                  {t.popularity}
+                </th>
                 <th className="border border-gray-200 p-3 text-left">Action</th>
               </tr>
             </thead>
             <tbody>
-              {INDUSTRY_TEMPLATES.map((template) => {
+              {INDUSTRY_TEMPLATES.map(template => {
                 const Icon = template.icon;
                 return (
                   <tr key={template.id} className="hover:bg-gray-50">
                     <td className="border border-gray-200 p-3">
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${template.color} text-white`}>
+                        <div
+                          className={`p-2 rounded-lg ${template.color} text-white`}
+                        >
                           <Icon className="h-5 w-5" />
                         </div>
                         <div>
@@ -343,29 +425,44 @@ export default function IndustryTemplateSelector({
                             {locale === 'en' ? template.name : template.nameEl}
                           </div>
                           <div className="text-sm text-gray-600">
-                            {locale === 'en' ? template.description : template.descriptionEl}
+                            {locale === 'en'
+                              ? template.description
+                              : template.descriptionEl}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="border border-gray-200 p-3">{template.employees}</td>
                     <td className="border border-gray-200 p-3">
-                      <Badge className={getComplexityColor(template.complexity)}>
+                      {template.employees}
+                    </td>
+                    <td className="border border-gray-200 p-3">
+                      <Badge
+                        className={getComplexityColor(template.complexity)}
+                      >
                         {template.complexity}
                       </Badge>
                     </td>
-                    <td className="border border-gray-200 p-3">{template.setupTime}</td>
+                    <td className="border border-gray-200 p-3">
+                      {template.setupTime}
+                    </td>
                     <td className="border border-gray-200 p-3">
                       <div className="flex items-center gap-2">
-                        <Progress value={template.popularityScore} className="w-20 h-2" />
-                        <span className="text-sm">{template.popularityScore}%</span>
+                        <Progress
+                          value={template.popularityScore}
+                          className="w-20 h-2"
+                        />
+                        <span className="text-sm">
+                          {template.popularityScore}%
+                        </span>
                       </div>
                     </td>
                     <td className="border border-gray-200 p-3">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => handleSelectTemplate(template)}
-                        className={selectedTemplate === template.id ? 'bg-green-600' : ''}
+                        className={
+                          selectedTemplate === template.id ? 'bg-green-600' : ''
+                        }
                       >
                         {selectedTemplate === template.id ? (
                           <>
@@ -403,22 +500,25 @@ export default function IndustryTemplateSelector({
       {/* Popular Templates Badge */}
       <div className="mb-6">
         <Badge className="bg-blue-100 text-blue-800 px-3 py-1">
-          {t.popular}: {INDUSTRY_TEMPLATES.slice(0, 3).map(t => locale === 'en' ? t.name : t.nameEl).join(', ')}
+          {t.popular}:{' '}
+          {INDUSTRY_TEMPLATES.slice(0, 3)
+            .map(t => (locale === 'en' ? t.name : t.nameEl))
+            .join(', ')}
         </Badge>
       </div>
 
       {/* Templates Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {INDUSTRY_TEMPLATES.map((template) => {
+        {INDUSTRY_TEMPLATES.map(template => {
           const Icon = template.icon;
           const isSelected = selectedTemplate === template.id;
-          
+
           return (
-            <Card 
-              key={template.id} 
+            <Card
+              key={template.id}
               className={`cursor-pointer transition-all duration-200 ${
-                isSelected 
-                  ? 'ring-2 ring-blue-500 shadow-lg scale-105' 
+                isSelected
+                  ? 'ring-2 ring-blue-500 shadow-lg scale-105'
                   : 'hover:shadow-lg hover:scale-102'
               }`}
               onClick={() => handleSelectTemplate(template)}
@@ -426,14 +526,18 @@ export default function IndustryTemplateSelector({
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`p-3 rounded-lg ${template.color} text-white`}>
+                    <div
+                      className={`p-3 rounded-lg ${template.color} text-white`}
+                    >
                       <Icon className="h-6 w-6" />
                     </div>
                     <div>
                       <CardTitle className="text-lg">
                         {locale === 'en' ? template.name : template.nameEl}
                       </CardTitle>
-                      <Badge className={getComplexityColor(template.complexity)}>
+                      <Badge
+                        className={getComplexityColor(template.complexity)}
+                      >
                         {template.complexity}
                       </Badge>
                     </div>
@@ -445,10 +549,12 @@ export default function IndustryTemplateSelector({
                   )}
                 </div>
                 <p className="text-gray-600 text-sm mt-2">
-                  {locale === 'en' ? template.description : template.descriptionEl}
+                  {locale === 'en'
+                    ? template.description
+                    : template.descriptionEl}
                 </p>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="space-y-4">
                   {/* Quick Stats */}
@@ -470,14 +576,20 @@ export default function IndustryTemplateSelector({
                       {t.features}
                     </h4>
                     <div className="space-y-1">
-                      {(locale === 'en' ? template.features : template.featuresEl)
+                      {(locale === 'en'
+                        ? template.features
+                        : template.featuresEl
+                      )
                         .slice(0, 3)
                         .map((feature, index) => (
-                        <div key={index} className="text-xs text-gray-600 flex items-center gap-2">
-                          <div className="w-1 h-1 bg-blue-500 rounded-full" />
-                          {feature}
-                        </div>
-                      ))}
+                          <div
+                            key={index}
+                            className="text-xs text-gray-600 flex items-center gap-2"
+                          >
+                            <div className="w-1 h-1 bg-blue-500 rounded-full" />
+                            {feature}
+                          </div>
+                        ))}
                       {template.features.length > 3 && (
                         <div className="text-xs text-gray-500">
                           +{template.features.length - 3} more features
@@ -493,11 +605,17 @@ export default function IndustryTemplateSelector({
                       {t.agreements}
                     </h4>
                     <div className="flex flex-wrap gap-1">
-                      {template.collectiveAgreements.slice(0, 2).map((agreement, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {agreement}
-                        </Badge>
-                      ))}
+                      {template.collectiveAgreements
+                        .slice(0, 2)
+                        .map((agreement, index) => (
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs"
+                          >
+                            {agreement}
+                          </Badge>
+                        ))}
                     </div>
                   </div>
 
@@ -508,11 +626,13 @@ export default function IndustryTemplateSelector({
                       {t.allowances}
                     </h4>
                     <div className="space-y-1">
-                      {template.specialAllowances.slice(0, 2).map((allowance, index) => (
-                        <div key={index} className="text-xs text-gray-600">
-                          • {allowance}
-                        </div>
-                      ))}
+                      {template.specialAllowances
+                        .slice(0, 2)
+                        .map((allowance, index) => (
+                          <div key={index} className="text-xs text-gray-600">
+                            • {allowance}
+                          </div>
+                        ))}
                     </div>
                   </div>
 
@@ -520,8 +640,13 @@ export default function IndustryTemplateSelector({
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{t.popularity}</span>
                     <div className="flex items-center gap-2">
-                      <Progress value={template.popularityScore} className="w-20 h-2" />
-                      <span className="text-sm">{template.popularityScore}%</span>
+                      <Progress
+                        value={template.popularityScore}
+                        className="w-20 h-2"
+                      />
+                      <span className="text-sm">
+                        {template.popularityScore}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -540,13 +665,16 @@ export default function IndustryTemplateSelector({
                 <CheckCircle className="h-6 w-6 text-blue-600" />
                 <div>
                   <h3 className="font-semibold text-blue-900">
-                    {locale === 'en' 
-                      ? INDUSTRY_TEMPLATES.find(t => t.id === selectedTemplate)?.name
-                      : INDUSTRY_TEMPLATES.find(t => t.id === selectedTemplate)?.nameEl
-                    } Template Selected
+                    {locale === 'en'
+                      ? INDUSTRY_TEMPLATES.find(t => t.id === selectedTemplate)
+                          ?.name
+                      : INDUSTRY_TEMPLATES.find(t => t.id === selectedTemplate)
+                          ?.nameEl}{' '}
+                    Template Selected
                   </h3>
                   <p className="text-sm text-blue-700">
-                    Ready to customize and deploy your industry-specific payroll solution
+                    Ready to customize and deploy your industry-specific payroll
+                    solution
                   </p>
                 </div>
               </div>

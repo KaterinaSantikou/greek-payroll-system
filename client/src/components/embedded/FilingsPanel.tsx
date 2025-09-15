@@ -1,10 +1,22 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { CheckCircle, Clock, AlertTriangle, Send, RefreshCw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import {
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  Send,
+  RefreshCw,
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface Filing {
   id: string;
@@ -25,11 +37,11 @@ interface FilingsPanelProps {
   locale?: string;
 }
 
-export function FilingsPanel({ 
-  accessToken, 
+export function FilingsPanel({
+  accessToken,
   onEvent,
   theme = 'light',
-  locale = 'en'
+  locale = 'en',
 }: FilingsPanelProps) {
   const [filings, setFilings] = useState<Filing[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +61,7 @@ export function FilingsPanel({
       color: 'bg-green-100 text-green-800',
       urgentColor: 'bg-green-600 text-white',
     },
-    'ΦΜΥ': {
+    ΦΜΥ: {
       fullName: 'ΑΑΔΕ/ΦΜΥ',
       description: 'Tax authority filings',
       color: 'bg-purple-100 text-purple-800',
@@ -58,35 +70,35 @@ export function FilingsPanel({
   };
 
   const statusConfig = {
-    pending: { 
-      icon: Clock, 
-      color: 'text-orange-600', 
+    pending: {
+      icon: Clock,
+      color: 'text-orange-600',
       bgColor: 'bg-orange-50',
-      label: 'Pending'
+      label: 'Pending',
     },
-    in_progress: { 
-      icon: RefreshCw, 
-      color: 'text-blue-600', 
+    in_progress: {
+      icon: RefreshCw,
+      color: 'text-blue-600',
       bgColor: 'bg-blue-50',
-      label: 'Processing'
+      label: 'Processing',
     },
-    submitted: { 
-      icon: Send, 
-      color: 'text-indigo-600', 
+    submitted: {
+      icon: Send,
+      color: 'text-indigo-600',
       bgColor: 'bg-indigo-50',
-      label: 'Submitted'
+      label: 'Submitted',
     },
-    acknowledged: { 
-      icon: CheckCircle, 
-      color: 'text-green-600', 
+    acknowledged: {
+      icon: CheckCircle,
+      color: 'text-green-600',
       bgColor: 'bg-green-50',
-      label: 'Acknowledged'
+      label: 'Acknowledged',
     },
-    failed: { 
-      icon: AlertTriangle, 
-      color: 'text-red-600', 
+    failed: {
+      icon: AlertTriangle,
+      color: 'text-red-600',
       bgColor: 'bg-red-50',
-      label: 'Failed'
+      label: 'Failed',
     },
   };
 
@@ -137,7 +149,9 @@ export function FilingsPanel({
       onEvent?.('filings.loaded', { count: mockFilings.length });
     } catch (error) {
       console.error('Load filings error:', error);
-      onEvent?.('filings.failed', { error: error instanceof Error ? error.message : 'Unknown error' });
+      onEvent?.('filings.failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setLoading(false);
     }
@@ -145,38 +159,45 @@ export function FilingsPanel({
 
   const submitFiling = async (filingId: string) => {
     setSubmittingIds(prev => new Set(prev).add(filingId));
-    
+
     try {
       // Mock API call - in real implementation, this would call the API
       await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
-      
-      setFilings(prev => 
-        prev.map(filing => 
-          filing.id === filingId 
-            ? { ...filing, status: 'submitted', submittedAt: new Date().toISOString() }
+
+      setFilings(prev =>
+        prev.map(filing =>
+          filing.id === filingId
+            ? {
+                ...filing,
+                status: 'submitted',
+                submittedAt: new Date().toISOString(),
+              }
             : filing
         )
       );
 
       const filing = filings.find(f => f.id === filingId);
-      
+
       toast({
-        title: "Filing Submitted",
+        title: 'Filing Submitted',
         description: `${filing?.description} submitted successfully`,
       });
-      
-      onEvent?.('filing.submitted', { 
-        filingId, 
+
+      onEvent?.('filing.submitted', {
+        filingId,
         type: filing?.type,
-        records: filing?.records 
+        records: filing?.records,
       });
     } catch (error) {
       toast({
-        title: "Submission Failed",
-        description: "Failed to submit filing",
-        variant: "destructive",
+        title: 'Submission Failed',
+        description: 'Failed to submit filing',
+        variant: 'destructive',
       });
-      onEvent?.('filing.failed', { filingId, error: error instanceof Error ? error.message : 'Unknown error' });
+      onEvent?.('filing.failed', {
+        filingId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     } finally {
       setSubmittingIds(prev => {
         const updated = new Set(prev);
@@ -219,8 +240,12 @@ export function FilingsPanel({
   }
 
   const pendingCount = filings.filter(f => f.status === 'pending').length;
-  const urgentCount = filings.filter(f => f.status === 'pending' && isUrgent(f.dueDate)).length;
-  const completedCount = filings.filter(f => f.status === 'acknowledged').length;
+  const urgentCount = filings.filter(
+    f => f.status === 'pending' && isUrgent(f.dueDate)
+  ).length;
+  const completedCount = filings.filter(
+    f => f.status === 'acknowledged'
+  ).length;
 
   return (
     <div className={`w-full ${theme === 'dark' ? 'dark' : ''}`}>
@@ -235,7 +260,7 @@ export function FilingsPanel({
                   {urgentCount} Urgent
                 </Badge>
               )}
-              <Badge variant={pendingCount > 0 ? "default" : "secondary"}>
+              <Badge variant={pendingCount > 0 ? 'default' : 'secondary'}>
                 {pendingCount} Pending
               </Badge>
             </div>
@@ -244,58 +269,88 @@ export function FilingsPanel({
             ΕΡΓΑΝΗ, e-EFKA/APD, and ΑΑΔΕ/ΦΜΥ filing status
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent className="space-y-6">
           {/* Summary Stats */}
           <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-600">{pendingCount}</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {pendingCount}
+              </div>
               <div className="text-sm text-gray-500">Pending</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{filings.filter(f => f.status === 'submitted').length}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {filings.filter(f => f.status === 'submitted').length}
+              </div>
               <div className="text-sm text-gray-500">Submitted</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{completedCount}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {completedCount}
+              </div>
               <div className="text-sm text-gray-500">Completed</div>
             </div>
           </div>
 
           {/* Filings List */}
           <div className="space-y-4">
-            {filings.map((filing) => {
+            {filings.map(filing => {
               const statusInfo = statusConfig[filing.status];
               const typeConfig = filingTypeConfig[filing.type];
               const daysUntilDue = getDaysUntilDue(filing.dueDate);
               const urgent = isUrgent(filing.dueDate);
               const isSubmitting = submittingIds.has(filing.id);
-              
+
               return (
-                <Card key={filing.id} className={`transition-all ${urgent ? 'ring-2 ring-red-200' : ''}`}>
+                <Card
+                  key={filing.id}
+                  className={`transition-all ${urgent ? 'ring-2 ring-red-200' : ''}`}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         <div className={`p-3 rounded-lg ${statusInfo.bgColor}`}>
-                          <statusInfo.icon className={`w-5 h-5 ${statusInfo.color} ${
-                            filing.status === 'in_progress' || isSubmitting ? 'animate-spin' : ''
-                          }`} />
+                          <statusInfo.icon
+                            className={`w-5 h-5 ${statusInfo.color} ${
+                              filing.status === 'in_progress' || isSubmitting
+                                ? 'animate-spin'
+                                : ''
+                            }`}
+                          />
                         </div>
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-1">
-                            <Badge className={urgent ? typeConfig.urgentColor : typeConfig.color}>
+                            <Badge
+                              className={
+                                urgent
+                                  ? typeConfig.urgentColor
+                                  : typeConfig.color
+                              }
+                            >
                               {filing.type}
                             </Badge>
-                            <h3 className="font-semibold">{filing.description}</h3>
+                            <h3 className="font-semibold">
+                              {filing.description}
+                            </h3>
                           </div>
-                          
+
                           <div className="flex items-center space-x-4 text-sm text-gray-500">
                             <span>{filing.records} records</span>
-                            <span>Due: {new Date(filing.dueDate).toLocaleDateString()}</span>
+                            <span>
+                              Due:{' '}
+                              {new Date(filing.dueDate).toLocaleDateString()}
+                            </span>
                             {daysUntilDue >= 0 && (
-                              <span className={urgent ? 'text-red-600 font-semibold' : ''}>
-                                {daysUntilDue === 0 ? 'Due today' : `${daysUntilDue} days`}
+                              <span
+                                className={
+                                  urgent ? 'text-red-600 font-semibold' : ''
+                                }
+                              >
+                                {daysUntilDue === 0
+                                  ? 'Due today'
+                                  : `${daysUntilDue} days`}
                               </span>
                             )}
                             {daysUntilDue < 0 && (
@@ -304,19 +359,21 @@ export function FilingsPanel({
                               </span>
                             )}
                           </div>
-                          
+
                           {filing.submittedAt && (
                             <div className="text-xs text-gray-400 mt-1">
-                              Submitted: {new Date(filing.submittedAt).toLocaleString()}
+                              Submitted:{' '}
+                              {new Date(filing.submittedAt).toLocaleString()}
                             </div>
                           )}
-                          
+
                           {filing.acknowledgedAt && (
                             <div className="text-xs text-gray-400 mt-1">
-                              Acknowledged: {new Date(filing.acknowledgedAt).toLocaleString()}
+                              Acknowledged:{' '}
+                              {new Date(filing.acknowledgedAt).toLocaleString()}
                             </div>
                           )}
-                          
+
                           {filing.errorMessage && (
                             <div className="text-sm text-red-600 mt-1 bg-red-50 p-2 rounded">
                               <AlertTriangle className="w-4 h-4 inline mr-1" />
@@ -325,12 +382,12 @@ export function FilingsPanel({
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
                         <Badge className={statusInfo.color}>
                           {statusInfo.label}
                         </Badge>
-                        
+
                         {filing.status === 'pending' && (
                           <Button
                             onClick={() => submitFiling(filing.id)}
@@ -346,7 +403,7 @@ export function FilingsPanel({
                             Submit
                           </Button>
                         )}
-                        
+
                         {filing.status === 'failed' && (
                           <Button
                             onClick={() => submitFiling(filing.id)}
@@ -383,10 +440,12 @@ export function FilingsPanel({
             <div className="pt-4 border-t">
               <div className="flex justify-between text-sm text-gray-500 mb-2">
                 <span>Overall Filing Progress</span>
-                <span>{Math.round((completedCount / filings.length) * 100)}%</span>
+                <span>
+                  {Math.round((completedCount / filings.length) * 100)}%
+                </span>
               </div>
-              <Progress 
-                value={(completedCount / filings.length) * 100} 
+              <Progress
+                value={(completedCount / filings.length) * 100}
                 className="h-2"
               />
             </div>

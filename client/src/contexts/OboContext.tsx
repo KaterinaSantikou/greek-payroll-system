@@ -2,7 +2,13 @@
  * OBO (On-Behalf-Of) Provider - Manages tenant context switching for partner firms
  */
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
@@ -39,7 +45,8 @@ export function OboProvider({ children }: OboProviderProps) {
   const [currentTenant, setCurrentTenant] = useState<string | null>(null);
   const [currentPartner, setCurrentPartner] = useState<string | null>(null);
   const [oboToken, setOboToken] = useState<string | null>(null);
-  const [securityMetadata, setSecurityMetadata] = useState<OboContext['securityMetadata']>(null);
+  const [securityMetadata, setSecurityMetadata] =
+    useState<OboContext['securityMetadata']>(null);
   const { toast } = useToast();
 
   const isOboActive = !!(currentTenant && currentPartner && oboToken);
@@ -51,7 +58,12 @@ export function OboProvider({ children }: OboProviderProps) {
         body: {
           partnerFirmId,
           asTenantId: tenantId,
-          scopes: ['filings:prepare', 'filings:submit', 'runs:view', 'audit:download'],
+          scopes: [
+            'filings:prepare',
+            'filings:submit',
+            'runs:view',
+            'audit:download',
+          ],
           rotateExisting: true, // Always rotate existing tokens for security
         },
       });
@@ -95,9 +107,9 @@ export function OboProvider({ children }: OboProviderProps) {
     setCurrentPartner(null);
     setOboToken(null);
     setSecurityMetadata(null);
-    
+
     sessionStorage.removeItem('obo_token');
-    sessionStorage.removeItem('obo_tenant');  
+    sessionStorage.removeItem('obo_tenant');
     sessionStorage.removeItem('obo_partner');
 
     toast({
@@ -122,14 +134,17 @@ export function OboProvider({ children }: OboProviderProps) {
   // Auto-clear context when token expires (10 minutes)
   useEffect(() => {
     if (oboToken) {
-      const timer = setTimeout(() => {
-        clearOboContext();
-        toast({
-          title: 'Session Expired',
-          description: 'OBO token expired for security (10min TTL)',
-          variant: 'destructive',
-        });
-      }, 10 * 60 * 1000); // 10 minutes
+      const timer = setTimeout(
+        () => {
+          clearOboContext();
+          toast({
+            title: 'Session Expired',
+            description: 'OBO token expired for security (10min TTL)',
+            variant: 'destructive',
+          });
+        },
+        10 * 60 * 1000
+      ); // 10 minutes
 
       return () => clearTimeout(timer);
     }
@@ -145,9 +160,5 @@ export function OboProvider({ children }: OboProviderProps) {
     securityMetadata,
   };
 
-  return (
-    <OboContext.Provider value={value}>
-      {children}
-    </OboContext.Provider>
-  );
+  return <OboContext.Provider value={value}>{children}</OboContext.Provider>;
 }

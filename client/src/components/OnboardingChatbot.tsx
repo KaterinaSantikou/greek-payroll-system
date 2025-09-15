@@ -29,7 +29,7 @@ import {
   Clock,
   Shield,
   Zap,
-  Target
+  Target,
 } from 'lucide-react';
 
 interface ChatMessage {
@@ -73,7 +73,8 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Company Information',
     titleEl: 'Στοιχεία Εταιρείας',
     description: 'Basic company details and Greek business registration',
-    descriptionEl: 'Βασικά στοιχεία εταιρείας και ελληνική επιχειρηματική εγγραφή',
+    descriptionEl:
+      'Βασικά στοιχεία εταιρείας και ελληνική επιχειρηματική εγγραφή',
     completed: false,
     required: true,
     icon: Building2,
@@ -83,7 +84,8 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Employee Setup',
     titleEl: 'Ρύθμιση Υπαλλήλων',
     description: 'Import or add employee information and Greek IDs',
-    descriptionEl: 'Εισαγωγή ή προσθήκη στοιχείων υπαλλήλων και ελληνικών ταυτοτήτων',
+    descriptionEl:
+      'Εισαγωγή ή προσθήκη στοιχείων υπαλλήλων και ελληνικών ταυτοτήτων',
     completed: false,
     required: true,
     icon: Users,
@@ -113,7 +115,8 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     title: 'Payroll Configuration',
     titleEl: 'Ρύθμιση Μισθοδοσίας',
     description: 'Tax rates, insurance, and Greek payroll rules',
-    descriptionEl: 'Φορολογικά ποσοστά, ασφάλιση και κανόνες ελληνικής μισθοδοσίας',
+    descriptionEl:
+      'Φορολογικά ποσοστά, ασφάλιση και κανόνες ελληνικής μισθοδοσίας',
     completed: false,
     required: true,
     icon: Settings,
@@ -134,7 +137,7 @@ export default function OnboardingChatbot({
   locale = 'en',
   onClose,
   minimized = false,
-  onToggleMinimize
+  onToggleMinimize,
 }: OnboardingChatbotProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -160,46 +163,58 @@ export default function OnboardingChatbot({
       help: 'How can I help you?',
       typing: 'Assistant is typing...',
       welcome: {
-        message: "Welcome to PayrollSync! I'm your setup assistant. I'll help you configure your Greek payroll system step by step. Let's start with your company information.",
+        message:
+          "Welcome to PayrollSync! I'm your setup assistant. I'll help you configure your Greek payroll system step by step. Let's start with your company information.",
         options: [
           "Let's get started!",
-          "I need help with compliance",
-          "Show me the setup steps"
-        ]
+          'I need help with compliance',
+          'Show me the setup steps',
+        ],
       },
       steps: {
         company: {
-          message: "Great! Let's start with your company information. I'll need some basic details about your Greek business.",
-          details: "Please provide your company's AFM (Tax Number), name, and address. This is required for ERGANI II integration."
+          message:
+            "Great! Let's start with your company information. I'll need some basic details about your Greek business.",
+          details:
+            "Please provide your company's AFM (Tax Number), name, and address. This is required for ERGANI II integration.",
         },
         employees: {
-          message: "Perfect! Now let's set up your employees. You can import from Excel or add them manually.",
-          details: "For each employee, I'll need their AMKA (Social Security Number), AFM, and basic employment details."
+          message:
+            "Perfect! Now let's set up your employees. You can import from Excel or add them manually.",
+          details:
+            "For each employee, I'll need their AMKA (Social Security Number), AFM, and basic employment details.",
         },
         compliance: {
-          message: "Time for Greek compliance setup! This is crucial for legal payroll processing.",
-          details: "I'll help you configure ERGANI II for work cards, e-EFKA for insurance, and AADE for tax reporting."
+          message:
+            'Time for Greek compliance setup! This is crucial for legal payroll processing.',
+          details:
+            "I'll help you configure ERGANI II for work cards, e-EFKA for insurance, and AADE for tax reporting.",
         },
         banking: {
           message: "Let's configure your SEPA banking for salary payments.",
-          details: "Connect your Greek bank account for automated salary transfers. I support all major Greek banks."
+          details:
+            'Connect your Greek bank account for automated salary transfers. I support all major Greek banks.',
         },
         payroll: {
-          message: "Now we'll set up your payroll rules and Greek tax settings.",
-          details: "Configure minimum wage, tax brackets, insurance rates, and collective agreements."
+          message:
+            "Now we'll set up your payroll rules and Greek tax settings.",
+          details:
+            'Configure minimum wage, tax brackets, insurance rates, and collective agreements.',
         },
         first: {
-          message: "Excellent! You're ready for your first payroll run. I'll guide you through it.",
-          details: "Let's process a test payroll to make sure everything is configured correctly."
-        }
+          message:
+            "Excellent! You're ready for your first payroll run. I'll guide you through it.",
+          details:
+            "Let's process a test payroll to make sure everything is configured correctly.",
+        },
       },
       quickActions: {
         title: 'Quick Actions',
         importEmployees: 'Import Employees',
         testConnection: 'Test ERGANI Connection',
         viewCompliance: 'View Compliance Status',
-        scheduleDemo: 'Schedule Demo'
-      }
+        scheduleDemo: 'Schedule Demo',
+      },
     },
     el: {
       title: 'Βοηθός Ρύθμισης PayrollSync',
@@ -217,47 +232,60 @@ export default function OnboardingChatbot({
       help: 'Πώς μπορώ να σας βοηθήσω;',
       typing: 'Ο βοηθός γράφει...',
       welcome: {
-        message: "Καλώς ήρθατε στο PayrollSync! Είμαι ο βοηθός ρύθμισης. Θα σας βοηθήσω να ρυθμίσετε το ελληνικό σύστημα μισθοδοσίας βήμα προς βήμα. Ας ξεκινήσουμε με τα στοιχεία της εταιρείας σας.",
+        message:
+          'Καλώς ήρθατε στο PayrollSync! Είμαι ο βοηθός ρύθμισης. Θα σας βοηθήσω να ρυθμίσετε το ελληνικό σύστημα μισθοδοσίας βήμα προς βήμα. Ας ξεκινήσουμε με τα στοιχεία της εταιρείας σας.',
         options: [
-          "Ας ξεκινήσουμε!",
-          "Χρειάζομαι βοήθεια με τη συμμόρφωση",
-          "Δείξτε μου τα βήματα ρύθμισης"
-        ]
+          'Ας ξεκινήσουμε!',
+          'Χρειάζομαι βοήθεια με τη συμμόρφωση',
+          'Δείξτε μου τα βήματα ρύθμισης',
+        ],
       },
       steps: {
         company: {
-          message: "Υπέροχα! Ας ξεκινήσουμε με τα στοιχεία της εταιρείας σας. Θα χρειαστώ μερικές βασικές πληροφορίες για την ελληνική επιχείρησή σας.",
-          details: "Παρακαλώ δώστε το ΑΦΜ της εταιρείας σας, την επωνυμία και τη διεύθυνση. Αυτό είναι απαραίτητο για την ενσωμάτωση ΕΡΓΑΝΗ ΙΙ."
+          message:
+            'Υπέροχα! Ας ξεκινήσουμε με τα στοιχεία της εταιρείας σας. Θα χρειαστώ μερικές βασικές πληροφορίες για την ελληνική επιχείρησή σας.',
+          details:
+            'Παρακαλώ δώστε το ΑΦΜ της εταιρείας σας, την επωνυμία και τη διεύθυνση. Αυτό είναι απαραίτητο για την ενσωμάτωση ΕΡΓΑΝΗ ΙΙ.',
         },
         employees: {
-          message: "Τέλεια! Τώρα ας ρυθμίσουμε τους υπαλλήλους σας. Μπορείτε να εισάγετε από Excel ή να τους προσθέσετε χειροκίνητα.",
-          details: "Για κάθε υπάλληλο, θα χρειαστώ το ΑΜΚΑ, το ΑΦΜ και τις βασικές λεπτομέρειες εργασίας."
+          message:
+            'Τέλεια! Τώρα ας ρυθμίσουμε τους υπαλλήλους σας. Μπορείτε να εισάγετε από Excel ή να τους προσθέσετε χειροκίνητα.',
+          details:
+            'Για κάθε υπάλληλο, θα χρειαστώ το ΑΜΚΑ, το ΑΦΜ και τις βασικές λεπτομέρειες εργασίας.',
         },
         compliance: {
-          message: "Ώρα για τη ρύθμιση ελληνικής συμμόρφωσης! Αυτό είναι ζωτικό για τη νόμιμη επεξεργασία μισθοδοσίας.",
-          details: "Θα σας βοηθήσω να ρυθμίσετε την ΕΡΓΑΝΗ ΙΙ για κάρτες εργασίας, το e-ΕΦΚΑ για ασφάλιση και την ΑΑΔΕ για φορολογική αναφορά."
+          message:
+            'Ώρα για τη ρύθμιση ελληνικής συμμόρφωσης! Αυτό είναι ζωτικό για τη νόμιμη επεξεργασία μισθοδοσίας.',
+          details:
+            'Θα σας βοηθήσω να ρυθμίσετε την ΕΡΓΑΝΗ ΙΙ για κάρτες εργασίας, το e-ΕΦΚΑ για ασφάλιση και την ΑΑΔΕ για φορολογική αναφορά.',
         },
         banking: {
-          message: "Ας ρυθμίσουμε την τραπεζική υπηρεσία SEPA για τις πληρωμές μισθών.",
-          details: "Συνδέστε τον ελληνικό τραπεζικό λογαριασμό σας για αυτοματοποιημένες μεταφορές μισθών. Υποστηρίζω όλες τις μεγάλες ελληνικές τράπεζες."
+          message:
+            'Ας ρυθμίσουμε την τραπεζική υπηρεσία SEPA για τις πληρωμές μισθών.',
+          details:
+            'Συνδέστε τον ελληνικό τραπεζικό λογαριασμό σας για αυτοματοποιημένες μεταφορές μισθών. Υποστηρίζω όλες τις μεγάλες ελληνικές τράπεζες.',
         },
         payroll: {
-          message: "Τώρα θα ρυθμίσουμε τους κανόνες μισθοδοσίας και τις ελληνικές φορολογικές ρυθμίσεις.",
-          details: "Ρυθμίστε τον κατώτατο μισθό, τις φορολογικές κλίμακες, τα ασφαλιστικά ποσοστά και τις συλλογικές συμβάσεις."
+          message:
+            'Τώρα θα ρυθμίσουμε τους κανόνες μισθοδοσίας και τις ελληνικές φορολογικές ρυθμίσεις.',
+          details:
+            'Ρυθμίστε τον κατώτατο μισθό, τις φορολογικές κλίμακες, τα ασφαλιστικά ποσοστά και τις συλλογικές συμβάσεις.',
         },
         first: {
-          message: "Εξαιρετικά! Είστε έτοιμοι για την πρώτη εκτέλεση μισθοδοσίας. Θα σας καθοδηγήσω.",
-          details: "Ας επεξεργαστούμε μια δοκιμαστική μισθοδοσία για να βεβαιωθούμε ότι όλα είναι σωστά ρυθμισμένα."
-        }
+          message:
+            'Εξαιρετικά! Είστε έτοιμοι για την πρώτη εκτέλεση μισθοδοσίας. Θα σας καθοδηγήσω.',
+          details:
+            'Ας επεξεργαστούμε μια δοκιμαστική μισθοδοσία για να βεβαιωθούμε ότι όλα είναι σωστά ρυθμισμένα.',
+        },
       },
       quickActions: {
         title: 'Γρήγορες Ενέργειες',
         importEmployees: 'Εισαγωγή Υπαλλήλων',
         testConnection: 'Δοκιμή Σύνδεσης ΕΡΓΑΝΗ',
         viewCompliance: 'Προβολή Κατάστασης Συμμόρφωσης',
-        scheduleDemo: 'Προγραμματισμός Επίδειξης'
-      }
-    }
+        scheduleDemo: 'Προγραμματισμός Επίδειξης',
+      },
+    },
   };
 
   const t = translations[locale];
@@ -272,8 +300,8 @@ export default function OnboardingChatbot({
       options: t.welcome.options.map((option, index) => ({
         id: `welcome-${index}`,
         label: option,
-        action: () => handleWelcomeOption(index)
-      }))
+        action: () => handleWelcomeOption(index),
+      })),
     };
     setMessages([welcomeMessage]);
   }, [locale]);
@@ -306,7 +334,7 @@ export default function OnboardingChatbot({
   const handleWelcomeOption = (index: number) => {
     addMessage({
       type: 'user',
-      content: t.welcome.options[index]
+      content: t.welcome.options[index],
     });
 
     simulateTyping(() => {
@@ -334,23 +362,24 @@ export default function OnboardingChatbot({
           label: 'Set up Company Info',
           labelEl: 'Ρύθμιση Στοιχείων Εταιρείας',
           action: () => handleCompanySetup(),
-          variant: 'default'
+          variant: 'default',
         },
         {
           id: 'import-data',
           label: 'I have existing data',
           labelEl: 'Έχω υπάρχοντα δεδομένα',
           action: () => handleDataImport(),
-          variant: 'outline'
-        }
-      ]
+          variant: 'outline',
+        },
+      ],
     });
   };
 
   const showComplianceHelp = () => {
     addMessage({
       type: 'bot',
-      content: "I'll help you understand Greek compliance requirements. The main systems you need to integrate with are:",
+      content:
+        "I'll help you understand Greek compliance requirements. The main systems you need to integrate with are:",
       component: (
         <div className="space-y-3 mt-3">
           <div className="p-3 border rounded-lg">
@@ -386,19 +415,21 @@ export default function OnboardingChatbot({
         {
           id: 'setup-compliance',
           label: 'Set up compliance now',
-          action: () => handleComplianceSetup()
+          action: () => handleComplianceSetup(),
         },
         {
           id: 'learn-more',
           label: 'Tell me more',
-          action: () => showDetailedCompliance()
-        }
-      ]
+          action: () => showDetailedCompliance(),
+        },
+      ],
     });
   };
 
   const showSetupSteps = () => {
-    const completedSteps = onboardingSteps.filter(step => step.completed).length;
+    const completedSteps = onboardingSteps.filter(
+      step => step.completed
+    ).length;
     const progress = (completedSteps / onboardingSteps.length) * 100;
 
     addMessage({
@@ -420,16 +451,22 @@ export default function OnboardingChatbot({
                 <div
                   key={step.id}
                   className={`flex items-center gap-3 p-3 rounded-lg border ${
-                    step.completed ? 'bg-green-50 border-green-200' : 
-                    index === currentStep ? 'bg-blue-50 border-blue-200' : 
-                    'bg-gray-50 border-gray-200'
+                    step.completed
+                      ? 'bg-green-50 border-green-200'
+                      : index === currentStep
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'bg-gray-50 border-gray-200'
                   }`}
                 >
-                  <Icon className={`h-5 w-5 ${
-                    step.completed ? 'text-green-600' : 
-                    index === currentStep ? 'text-blue-600' : 
-                    'text-gray-400'
-                  }`} />
+                  <Icon
+                    className={`h-5 w-5 ${
+                      step.completed
+                        ? 'text-green-600'
+                        : index === currentStep
+                          ? 'text-blue-600'
+                          : 'text-gray-400'
+                    }`}
+                  />
                   <div className="flex-1">
                     <div className="font-medium text-sm">
                       {locale === 'en' ? step.title : step.titleEl}
@@ -438,9 +475,13 @@ export default function OnboardingChatbot({
                       {locale === 'en' ? step.description : step.descriptionEl}
                     </div>
                   </div>
-                  {step.completed && <CheckCircle className="h-4 w-4 text-green-600" />}
+                  {step.completed && (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                  )}
                   {step.required && !step.completed && (
-                    <Badge variant="outline" className="text-xs">Required</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      Required
+                    </Badge>
                   )}
                 </div>
               );
@@ -452,21 +493,21 @@ export default function OnboardingChatbot({
         {
           id: 'continue-setup',
           label: 'Continue Setup',
-          action: () => continueFromCurrentStep()
+          action: () => continueFromCurrentStep(),
         },
         {
           id: 'jump-to-step',
           label: 'Jump to Specific Step',
-          action: () => showStepSelection()
-        }
-      ]
+          action: () => showStepSelection(),
+        },
+      ],
     });
   };
 
   const handleCompanySetup = () => {
     addMessage({
       type: 'user',
-      content: 'Set up Company Info'
+      content: 'Set up Company Info',
     });
 
     simulateTyping(() => {
@@ -475,7 +516,9 @@ export default function OnboardingChatbot({
         content: t.steps.company.details,
         component: (
           <div className="mt-4 p-4 border rounded-lg bg-blue-50">
-            <div className="font-medium text-sm mb-2">Required Information:</div>
+            <div className="font-medium text-sm mb-2">
+              Required Information:
+            </div>
             <div className="space-y-1 text-sm">
               <div>• Company AFM (Tax Number)</div>
               <div>• Legal Company Name</div>
@@ -491,16 +534,16 @@ export default function OnboardingChatbot({
             label: 'Open Company Setup Form',
             labelEl: 'Άνοιγμα Φόρμας Ρύθμισης Εταιρείας',
             action: () => openCompanyForm(),
-            variant: 'default'
+            variant: 'default',
           },
           {
             id: 'help-afm',
             label: 'What is AFM?',
             labelEl: 'Τι είναι το ΑΦΜ;',
             action: () => explainAFM(),
-            variant: 'outline'
-          }
-        ]
+            variant: 'outline',
+          },
+        ],
       });
     });
   };
@@ -508,30 +551,31 @@ export default function OnboardingChatbot({
   const handleDataImport = () => {
     addMessage({
       type: 'user',
-      content: 'I have existing data'
+      content: 'I have existing data',
     });
 
     simulateTyping(() => {
       addMessage({
         type: 'bot',
-        content: "Great! I can help you import existing data from various sources. What type of data do you want to import?",
+        content:
+          'Great! I can help you import existing data from various sources. What type of data do you want to import?',
         options: [
           {
             id: 'import-employees',
             label: 'Employee Data (Excel/CSV)',
-            action: () => handleEmployeeImport()
+            action: () => handleEmployeeImport(),
           },
           {
             id: 'import-payroll',
             label: 'Historical Payroll Data',
-            action: () => handlePayrollImport()
+            action: () => handlePayrollImport(),
           },
           {
             id: 'import-from-system',
             label: 'From Another Payroll System',
-            action: () => handleSystemMigration()
-          }
-        ]
+            action: () => handleSystemMigration(),
+          },
+        ],
       });
     });
   };
@@ -542,7 +586,7 @@ export default function OnboardingChatbot({
 
     addMessage({
       type: 'user',
-      content: 'Set up compliance now'
+      content: 'Set up compliance now',
     });
 
     simulateTyping(() => {
@@ -556,7 +600,9 @@ export default function OnboardingChatbot({
                 <Shield className="h-5 w-5 text-blue-600" />
                 <div>
                   <div className="font-medium">ERGANI II Integration</div>
-                  <div className="text-sm text-gray-600">Connect to government employment system</div>
+                  <div className="text-sm text-gray-600">
+                    Connect to government employment system
+                  </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-gray-400" />
               </div>
@@ -566,7 +612,9 @@ export default function OnboardingChatbot({
                 <Users className="h-5 w-5 text-green-600" />
                 <div>
                   <div className="font-medium">e-EFKA Setup</div>
-                  <div className="text-sm text-gray-600">Configure social security reporting</div>
+                  <div className="text-sm text-gray-600">
+                    Configure social security reporting
+                  </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-gray-400" />
               </div>
@@ -576,7 +624,9 @@ export default function OnboardingChatbot({
                 <FileText className="h-5 w-5 text-orange-600" />
                 <div>
                   <div className="font-medium">AADE Configuration</div>
-                  <div className="text-sm text-gray-600">Set up tax authority reporting</div>
+                  <div className="text-sm text-gray-600">
+                    Set up tax authority reporting
+                  </div>
                 </div>
                 <ArrowRight className="h-4 w-4 text-gray-400" />
               </div>
@@ -587,14 +637,14 @@ export default function OnboardingChatbot({
           {
             id: 'test-connections',
             label: 'Test All Connections',
-            action: () => testGovernmentConnections()
+            action: () => testGovernmentConnections(),
           },
           {
             id: 'setup-one-by-one',
             label: 'Set up one by one',
-            action: () => setupComplianceStepByStep()
-          }
-        ]
+            action: () => setupComplianceStepByStep(),
+          },
+        ],
       });
     });
   };
@@ -605,7 +655,7 @@ export default function OnboardingChatbot({
 
     addMessage({
       type: 'user',
-      content: `Continue with ${step.title}`
+      content: `Continue with ${step.title}`,
     });
 
     // Route to appropriate step handler
@@ -640,19 +690,19 @@ export default function OnboardingChatbot({
           {
             id: 'add-manually',
             label: 'Add employees manually',
-            action: () => openEmployeeForm()
+            action: () => openEmployeeForm(),
           },
           {
             id: 'import-excel',
             label: 'Import from Excel',
-            action: () => handleEmployeeImport()
+            action: () => handleEmployeeImport(),
           },
           {
             id: 'download-template',
             label: 'Download Excel template',
-            action: () => downloadEmployeeTemplate()
-          }
-        ]
+            action: () => downloadEmployeeTemplate(),
+          },
+        ],
       });
     });
   };
@@ -666,11 +716,16 @@ export default function OnboardingChatbot({
           <div className="mt-4 space-y-3">
             <div className="text-sm font-medium">Supported Greek Banks:</div>
             <div className="grid grid-cols-2 gap-2">
-              {['Alpha Bank', 'Eurobank', 'National Bank', 'Piraeus Bank'].map(bank => (
-                <div key={bank} className="p-2 border rounded text-center text-sm">
-                  {bank}
-                </div>
-              ))}
+              {['Alpha Bank', 'Eurobank', 'National Bank', 'Piraeus Bank'].map(
+                bank => (
+                  <div
+                    key={bank}
+                    className="p-2 border rounded text-center text-sm"
+                  >
+                    {bank}
+                  </div>
+                )
+              )}
             </div>
           </div>
         ),
@@ -678,14 +733,14 @@ export default function OnboardingChatbot({
           {
             id: 'connect-bank',
             label: 'Connect Bank Account',
-            action: () => connectBankAccount()
+            action: () => connectBankAccount(),
           },
           {
             id: 'manual-banking',
             label: 'Set up manually',
-            action: () => setupManualBanking()
-          }
-        ]
+            action: () => setupManualBanking(),
+          },
+        ],
       });
     });
   };
@@ -699,19 +754,19 @@ export default function OnboardingChatbot({
           {
             id: 'configure-taxes',
             label: 'Configure Tax Settings',
-            action: () => configureTaxes()
+            action: () => configureTaxes(),
           },
           {
             id: 'setup-insurance',
             label: 'Set up Insurance Rates',
-            action: () => setupInsurance()
+            action: () => setupInsurance(),
           },
           {
             id: 'collective-agreements',
             label: 'Apply Collective Agreements',
-            action: () => setupCollectiveAgreements()
-          }
-        ]
+            action: () => setupCollectiveAgreements(),
+          },
+        ],
       });
     });
   };
@@ -726,22 +781,22 @@ export default function OnboardingChatbot({
             id: 'run-test-payroll',
             label: 'Run Test Payroll',
             action: () => runTestPayroll(),
-            variant: 'default'
+            variant: 'default',
           },
           {
             id: 'schedule-payroll',
             label: 'Schedule Regular Payroll',
-            action: () => schedulePayroll()
-          }
-        ]
+            action: () => schedulePayroll(),
+          },
+        ],
       });
     });
   };
 
   // Helper functions for actions
   const markStepCompleted = (stepId: string) => {
-    setOnboardingSteps(prev => 
-      prev.map(step => 
+    setOnboardingSteps(prev =>
+      prev.map(step =>
         step.id === stepId ? { ...step, completed: true } : step
       )
     );
@@ -750,7 +805,7 @@ export default function OnboardingChatbot({
   const openCompanyForm = () => {
     addMessage({
       type: 'system',
-      content: 'Opening company setup form...'
+      content: 'Opening company setup form...',
     });
     // In real implementation, this would open a form or navigate to setup page
   };
@@ -759,14 +814,15 @@ export default function OnboardingChatbot({
     simulateTyping(() => {
       addMessage({
         type: 'bot',
-        content: "AFM (Αριθμός Φορολογικού Μητρώου) is your Greek Tax Registration Number. It's a 9-digit number that identifies your business to Greek tax authorities. You received it when you registered your company with the tax office.",
+        content:
+          "AFM (Αριθμός Φορολογικού Μητρώου) is your Greek Tax Registration Number. It's a 9-digit number that identifies your business to Greek tax authorities. You received it when you registered your company with the tax office.",
         options: [
           {
             id: 'continue-company-setup',
             label: 'Continue with setup',
-            action: () => openCompanyForm()
-          }
-        ]
+            action: () => openCompanyForm(),
+          },
+        ],
       });
     });
   };
@@ -774,32 +830,33 @@ export default function OnboardingChatbot({
   const handleEmployeeImport = () => {
     addMessage({
       type: 'system',
-      content: 'Opening employee import wizard...'
+      content: 'Opening employee import wizard...',
     });
   };
 
   const testGovernmentConnections = () => {
     addMessage({
       type: 'system',
-      content: 'Testing connections to ERGANI II, e-EFKA, and AADE...'
+      content: 'Testing connections to ERGANI II, e-EFKA, and AADE...',
     });
-    
+
     simulateTyping(() => {
       addMessage({
         type: 'bot',
-        content: "✅ ERGANI II: Connected successfully\n✅ e-EFKA: Connected successfully\n⚠️ AADE: Connection needs configuration\n\nI'll help you configure the AADE connection.",
+        content:
+          "✅ ERGANI II: Connected successfully\n✅ e-EFKA: Connected successfully\n⚠️ AADE: Connection needs configuration\n\nI'll help you configure the AADE connection.",
         options: [
           {
             id: 'fix-aade',
             label: 'Fix AADE Connection',
-            action: () => fixAADEConnection()
+            action: () => fixAADEConnection(),
           },
           {
             id: 'continue-anyway',
             label: 'Continue anyway',
-            action: () => continueSetup()
-          }
-        ]
+            action: () => continueSetup(),
+          },
+        ],
       });
     }, 3000);
   };
@@ -807,7 +864,7 @@ export default function OnboardingChatbot({
   const fixAADEConnection = () => {
     addMessage({
       type: 'system',
-      content: 'Opening AADE configuration...'
+      content: 'Opening AADE configuration...',
     });
   };
 
@@ -822,7 +879,7 @@ export default function OnboardingChatbot({
 
     addMessage({
       type: 'user',
-      content: inputMessage
+      content: inputMessage,
     });
 
     const userMessage = inputMessage.toLowerCase();
@@ -833,55 +890,61 @@ export default function OnboardingChatbot({
       if (userMessage.includes('help') || userMessage.includes('βοήθεια')) {
         addMessage({
           type: 'bot',
-          content: "I'm here to help! I can assist you with:\n\n• Company setup and Greek business registration\n• Employee data import and management\n• ERGANI II, e-EFKA, and AADE compliance\n• SEPA banking configuration\n• Payroll rules and Greek tax settings\n• Running your first payroll\n\nWhat would you like help with?",
+          content:
+            "I'm here to help! I can assist you with:\n\n• Company setup and Greek business registration\n• Employee data import and management\n• ERGANI II, e-EFKA, and AADE compliance\n• SEPA banking configuration\n• Payroll rules and Greek tax settings\n• Running your first payroll\n\nWhat would you like help with?",
           options: [
             {
               id: 'company-help',
               label: 'Company setup',
-              action: () => handleCompanySetup()
+              action: () => handleCompanySetup(),
             },
             {
               id: 'compliance-help',
               label: 'Compliance',
-              action: () => showComplianceHelp()
+              action: () => showComplianceHelp(),
             },
             {
               id: 'employees-help',
               label: 'Employees',
-              action: () => handleEmployeeSetup()
-            }
-          ]
+              action: () => handleEmployeeSetup(),
+            },
+          ],
         });
       } else if (userMessage.includes('afm') || userMessage.includes('αφμ')) {
         explainAFM();
-      } else if (userMessage.includes('ergani') || userMessage.includes('εργάνη')) {
+      } else if (
+        userMessage.includes('ergani') ||
+        userMessage.includes('εργάνη')
+      ) {
         addMessage({
           type: 'bot',
-          content: "ERGANI II is the Greek electronic system for employment notifications. It's mandatory for all Greek employers to:\n\n• Submit digital work cards for employees\n• Report work schedule changes\n• Notify about overtime work\n• Submit employment start/end notifications\n\nI can help you set up the integration automatically.",
+          content:
+            "ERGANI II is the Greek electronic system for employment notifications. It's mandatory for all Greek employers to:\n\n• Submit digital work cards for employees\n• Report work schedule changes\n• Notify about overtime work\n• Submit employment start/end notifications\n\nI can help you set up the integration automatically.",
           options: [
             {
               id: 'setup-ergani',
               label: 'Set up ERGANI II',
-              action: () => setupERGANI()
-            }
-          ]
+              action: () => setupERGANI(),
+            },
+          ],
         });
       } else {
         addMessage({
           type: 'bot',
-          content: "I understand you're asking about payroll setup. Let me help you with that. Would you like to continue with the guided setup or do you have a specific question?",
+          content:
+            "I understand you're asking about payroll setup. Let me help you with that. Would you like to continue with the guided setup or do you have a specific question?",
           options: [
             {
               id: 'continue-guided',
               label: 'Continue guided setup',
-              action: () => continueFromCurrentStep()
+              action: () => continueFromCurrentStep(),
             },
             {
               id: 'ask-question',
               label: 'I have a specific question',
-              action: () => askSpecificQuestion()
-            }
-          ]
+              action: () => askSpecificQuestion(),
+            },
+          ],
         });
       }
     });
@@ -890,32 +953,56 @@ export default function OnboardingChatbot({
   const setupERGANI = () => {
     addMessage({
       type: 'system',
-      content: 'Opening ERGANI II setup wizard...'
+      content: 'Opening ERGANI II setup wizard...',
     });
   };
 
   const askSpecificQuestion = () => {
     addMessage({
       type: 'bot',
-      content: "Sure! I'm here to answer any specific questions about Greek payroll setup. You can ask me about:\n\n• Tax rates and calculations\n• Insurance contributions\n• Employee benefits\n• Compliance requirements\n• Technical setup issues\n\nWhat would you like to know?"
+      content:
+        "Sure! I'm here to answer any specific questions about Greek payroll setup. You can ask me about:\n\n• Tax rates and calculations\n• Insurance contributions\n• Employee benefits\n• Compliance requirements\n• Technical setup issues\n\nWhat would you like to know?",
     });
   };
 
   // Placeholder functions for other actions
-  const openEmployeeForm = () => addMessage({ type: 'system', content: 'Opening employee form...' });
-  const downloadEmployeeTemplate = () => addMessage({ type: 'system', content: 'Downloading Excel template...' });
-  const connectBankAccount = () => addMessage({ type: 'system', content: 'Opening bank connection wizard...' });
-  const setupManualBanking = () => addMessage({ type: 'system', content: 'Opening manual banking setup...' });
-  const configureTaxes = () => addMessage({ type: 'system', content: 'Opening tax configuration...' });
-  const setupInsurance = () => addMessage({ type: 'system', content: 'Opening insurance setup...' });
-  const setupCollectiveAgreements = () => addMessage({ type: 'system', content: 'Opening collective agreements...' });
-  const runTestPayroll = () => addMessage({ type: 'system', content: 'Starting test payroll run...' });
-  const schedulePayroll = () => addMessage({ type: 'system', content: 'Opening payroll scheduler...' });
-  const handlePayrollImport = () => addMessage({ type: 'system', content: 'Opening payroll data import...' });
-  const handleSystemMigration = () => addMessage({ type: 'system', content: 'Opening system migration wizard...' });
-  const showDetailedCompliance = () => addMessage({ type: 'system', content: 'Opening compliance guide...' });
-  const setupComplianceStepByStep = () => addMessage({ type: 'system', content: 'Starting step-by-step compliance setup...' });
-  const showStepSelection = () => addMessage({ type: 'system', content: 'Opening step selection...' });
+  const openEmployeeForm = () =>
+    addMessage({ type: 'system', content: 'Opening employee form...' });
+  const downloadEmployeeTemplate = () =>
+    addMessage({ type: 'system', content: 'Downloading Excel template...' });
+  const connectBankAccount = () =>
+    addMessage({
+      type: 'system',
+      content: 'Opening bank connection wizard...',
+    });
+  const setupManualBanking = () =>
+    addMessage({ type: 'system', content: 'Opening manual banking setup...' });
+  const configureTaxes = () =>
+    addMessage({ type: 'system', content: 'Opening tax configuration...' });
+  const setupInsurance = () =>
+    addMessage({ type: 'system', content: 'Opening insurance setup...' });
+  const setupCollectiveAgreements = () =>
+    addMessage({ type: 'system', content: 'Opening collective agreements...' });
+  const runTestPayroll = () =>
+    addMessage({ type: 'system', content: 'Starting test payroll run...' });
+  const schedulePayroll = () =>
+    addMessage({ type: 'system', content: 'Opening payroll scheduler...' });
+  const handlePayrollImport = () =>
+    addMessage({ type: 'system', content: 'Opening payroll data import...' });
+  const handleSystemMigration = () =>
+    addMessage({
+      type: 'system',
+      content: 'Opening system migration wizard...',
+    });
+  const showDetailedCompliance = () =>
+    addMessage({ type: 'system', content: 'Opening compliance guide...' });
+  const setupComplianceStepByStep = () =>
+    addMessage({
+      type: 'system',
+      content: 'Starting step-by-step compliance setup...',
+    });
+  const showStepSelection = () =>
+    addMessage({ type: 'system', content: 'Opening step selection...' });
 
   if (minimized) {
     return (
@@ -969,19 +1056,24 @@ export default function OnboardingChatbot({
             <div className="flex justify-between text-xs text-gray-600">
               <span>{t.progress}</span>
               <span>
-                {onboardingSteps.filter(s => s.completed).length}/{onboardingSteps.length} {t.completed}
+                {onboardingSteps.filter(s => s.completed).length}/
+                {onboardingSteps.length} {t.completed}
               </span>
             </div>
-            <Progress 
-              value={(onboardingSteps.filter(s => s.completed).length / onboardingSteps.length) * 100} 
-              className="h-1" 
+            <Progress
+              value={
+                (onboardingSteps.filter(s => s.completed).length /
+                  onboardingSteps.length) *
+                100
+              }
+              className="h-1"
             />
           </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 px-4 pb-4 overflow-y-auto space-y-4">
-          {messages.map((message) => (
+          {messages.map(message => (
             <div
               key={message.id}
               className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -991,29 +1083,29 @@ export default function OnboardingChatbot({
                   <Bot className="h-3 w-3 text-blue-600" />
                 </div>
               )}
-              
-              <div className={`max-w-[80%] ${message.type === 'user' ? 'order-first' : ''}`}>
+
+              <div
+                className={`max-w-[80%] ${message.type === 'user' ? 'order-first' : ''}`}
+              >
                 <div
                   className={`p-3 rounded-lg text-sm ${
                     message.type === 'user'
                       ? 'bg-blue-600 text-white ml-auto'
                       : message.type === 'system'
-                      ? 'bg-gray-100 text-gray-700 italic'
-                      : 'bg-gray-100 text-gray-900'
+                        ? 'bg-gray-100 text-gray-700 italic'
+                        : 'bg-gray-100 text-gray-900'
                   }`}
                 >
                   {message.content}
                 </div>
 
                 {message.component && (
-                  <div className="mt-2">
-                    {message.component}
-                  </div>
+                  <div className="mt-2">{message.component}</div>
                 )}
 
                 {message.options && (
                   <div className="mt-2 space-y-2">
-                    {message.options.map((option) => (
+                    {message.options.map(option => (
                       <Button
                         key={option.id}
                         variant={option.variant || 'outline'}
@@ -1021,7 +1113,9 @@ export default function OnboardingChatbot({
                         onClick={option.action}
                         className="w-full justify-start text-left"
                       >
-                        {locale === 'el' && option.labelEl ? option.labelEl : option.label}
+                        {locale === 'el' && option.labelEl
+                          ? option.labelEl
+                          : option.label}
                       </Button>
                     ))}
                   </div>
@@ -1062,9 +1156,9 @@ export default function OnboardingChatbot({
           <div className="flex gap-2 mt-3">
             <Input
               value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
+              onChange={e => setInputMessage(e.target.value)}
               placeholder={t.placeholder}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
               className="flex-1"
             />
             <Button

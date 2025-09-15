@@ -1,11 +1,17 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ExternalLink, RefreshCw, AlertTriangle, Clock } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ExternalLink, RefreshCw, AlertTriangle, Clock } from 'lucide-react';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 interface NewsItem {
   id: string;
@@ -31,11 +37,15 @@ interface NewsfeedData {
 }
 
 const categoryColors = {
-  "Minimum Wage": "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  "Digital Work Card": "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  "Working Time": "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-  "Leave & Benefits": "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
-  "Context": "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+  'Minimum Wage':
+    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+  'Digital Work Card':
+    'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+  'Working Time':
+    'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+  'Leave & Benefits':
+    'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+  Context: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
 };
 
 export function LaborNewsfeedWidget() {
@@ -43,7 +53,11 @@ export function LaborNewsfeedWidget() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: newsfeedData, isLoading, error } = useQuery<NewsfeedData>({
+  const {
+    data: newsfeedData,
+    isLoading,
+    error,
+  } = useQuery<NewsfeedData>({
     queryKey: ['/api/labor-newsfeed'],
     refetchInterval: 4 * 60 * 60 * 1000, // 4 hours
     refetchIntervalInBackground: false,
@@ -55,18 +69,22 @@ export function LaborNewsfeedWidget() {
       await apiRequest('/api/labor-newsfeed/refresh', {
         method: 'POST',
       });
-      
-      await queryClient.invalidateQueries({ queryKey: ['/api/labor-newsfeed'] });
-      
+
+      await queryClient.invalidateQueries({
+        queryKey: ['/api/labor-newsfeed'],
+      });
+
       toast({
-        title: "Ενημερώθηκε επιτυχώς",
-        description: "Τα εργασιακά νέα ενημερώθηκαν με τις τελευταίες εξελίξεις.",
+        title: 'Ενημερώθηκε επιτυχώς',
+        description:
+          'Τα εργασιακά νέα ενημερώθηκαν με τις τελευταίες εξελίξεις.',
       });
     } catch (error) {
       toast({
-        title: "Σφάλμα ενημέρωσης",
-        description: "Δεν ήταν δυνατή η ενημέρωση των νέων. Παρακαλώ δοκιμάστε ξανά.",
-        variant: "destructive",
+        title: 'Σφάλμα ενημέρωσης',
+        description:
+          'Δεν ήταν δυνατή η ενημέρωση των νέων. Παρακαλώ δοκιμάστε ξανά.',
+        variant: 'destructive',
       });
     } finally {
       setIsRefreshing(false);
@@ -77,17 +95,19 @@ export function LaborNewsfeedWidget() {
     return new Date(dateString).toLocaleDateString('el-GR', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
   const getTimeSinceUpdate = (lastUpdated: string) => {
     const now = new Date();
     const updated = new Date(lastUpdated);
-    const diffHours = Math.floor((now.getTime() - updated.getTime()) / (1000 * 60 * 60));
-    
-    if (diffHours < 1) return "Μόλις ενημερώθηκε";
-    if (diffHours === 1) return "Πριν 1 ώρα";
+    const diffHours = Math.floor(
+      (now.getTime() - updated.getTime()) / (1000 * 60 * 60)
+    );
+
+    if (diffHours < 1) return 'Μόλις ενημερώθηκε';
+    if (diffHours === 1) return 'Πριν 1 ώρα';
     return `Πριν ${diffHours} ώρες`;
   };
 
@@ -101,7 +121,7 @@ export function LaborNewsfeedWidget() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3].map(i => (
             <div key={i} className="space-y-2">
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
               <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-full" />
@@ -127,7 +147,9 @@ export function LaborNewsfeedWidget() {
             Δεν ήταν δυνατή η φόρτωση των εργασιακών νέων.
           </p>
           <Button onClick={handleRefresh} size="sm" disabled={isRefreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`}
+            />
             Δοκιμάστε ξανά
           </Button>
         </CardContent>
@@ -149,24 +171,31 @@ export function LaborNewsfeedWidget() {
             disabled={isRefreshing}
             className="h-8 w-8 p-0"
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+            />
           </Button>
         </div>
         <CardDescription className="flex items-center gap-2 text-sm">
           <Clock className="h-4 w-4" />
-          {newsfeedData?.last_updated ? getTimeSinceUpdate(newsfeedData.last_updated) : "Δεν υπάρχουν δεδομένα"}
+          {newsfeedData?.last_updated
+            ? getTimeSinceUpdate(newsfeedData.last_updated)
+            : 'Δεν υπάρχουν δεδομένα'}
           <span className="text-xs text-gray-500">
-            • Ενημέρωση κάθε {newsfeedData?.update_policy.refresh_interval_minutes || 240} λεπτά
+            • Ενημέρωση κάθε{' '}
+            {newsfeedData?.update_policy.refresh_interval_minutes || 240} λεπτά
           </span>
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {newsfeedData?.items?.length === 0 ? (
           <div className="text-center py-6 text-gray-500 dark:text-gray-400">
-            <p className="text-sm">Δεν υπάρχουν διαθέσιμα νέα αυτή τη στιγμή.</p>
+            <p className="text-sm">
+              Δεν υπάρχουν διαθέσιμα νέα αυτή τη στιγμή.
+            </p>
           </div>
         ) : (
-          newsfeedData?.items?.map((item) => (
+          newsfeedData?.items?.map(item => (
             <div
               key={item.id}
               className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
@@ -175,8 +204,12 @@ export function LaborNewsfeedWidget() {
               <div className="flex items-center justify-between gap-2">
                 <Badge
                   variant="secondary"
-                  className={categoryColors[item.category as keyof typeof categoryColors] || 
-                          "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"}
+                  className={
+                    categoryColors[
+                      item.category as keyof typeof categoryColors
+                    ] ||
+                    'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+                  }
                 >
                   {item.category}
                 </Badge>
@@ -204,7 +237,9 @@ export function LaborNewsfeedWidget() {
                   variant="ghost"
                   size="sm"
                   className="h-7 px-2 text-xs"
-                  onClick={() => window.open(item.url, '_blank', 'noopener,noreferrer')}
+                  onClick={() =>
+                    window.open(item.url, '_blank', 'noopener,noreferrer')
+                  }
                 >
                   <ExternalLink className="h-3 w-3 mr-1" />
                   Άρθρο
@@ -217,11 +252,14 @@ export function LaborNewsfeedWidget() {
                   <span className="text-xs text-gray-400">Παραπομπές:</span>
                   {item.citations.slice(0, 3).map((citation, idx) => (
                     <span key={idx} className="text-xs text-gray-400">
-                      [{citation}]{idx < Math.min(item.citations.length - 1, 2) ? ',' : ''}
+                      [{citation}]
+                      {idx < Math.min(item.citations.length - 1, 2) ? ',' : ''}
                     </span>
                   ))}
                   {item.citations.length > 3 && (
-                    <span className="text-xs text-gray-400">+{item.citations.length - 3}</span>
+                    <span className="text-xs text-gray-400">
+                      +{item.citations.length - 3}
+                    </span>
                   )}
                 </div>
               )}

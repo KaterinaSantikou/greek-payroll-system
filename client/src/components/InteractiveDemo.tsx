@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
+import {
   Play,
   CheckCircle,
   Clock,
@@ -22,7 +22,7 @@ import {
   Upload,
   Download,
   AlertTriangle,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 
 interface InteractiveDemoProps {
@@ -33,47 +33,50 @@ interface InteractiveDemoProps {
 const DEMO_STEPS = [
   {
     id: 1,
-    title: "Employee Overview",
-    titleEl: "Επισκόπηση Υπαλλήλων",
+    title: 'Employee Overview',
+    titleEl: 'Επισκόπηση Υπαλλήλων',
     duration: 3000,
     icon: Users,
-    color: "bg-blue-500"
+    color: 'bg-blue-500',
   },
   {
-    id: 2, 
-    title: "Time & Attendance Review",
-    titleEl: "Έλεγχος Χρόνου & Παρουσίας",
+    id: 2,
+    title: 'Time & Attendance Review',
+    titleEl: 'Έλεγχος Χρόνου & Παρουσίας',
     duration: 4000,
     icon: Clock,
-    color: "bg-green-500"
+    color: 'bg-green-500',
   },
   {
     id: 3,
-    title: "Payroll Calculation",
-    titleEl: "Υπολογισμός Μισθοδοσίας", 
+    title: 'Payroll Calculation',
+    titleEl: 'Υπολογισμός Μισθοδοσίας',
     duration: 3500,
     icon: Calculator,
-    color: "bg-purple-500"
+    color: 'bg-purple-500',
   },
   {
     id: 4,
-    title: "Greek Compliance Check",
-    titleEl: "Έλεγχος Ελληνικής Συμμόρφωσης",
+    title: 'Greek Compliance Check',
+    titleEl: 'Έλεγχος Ελληνικής Συμμόρφωσης',
     duration: 3000,
     icon: FileCheck,
-    color: "bg-orange-500"
+    color: 'bg-orange-500',
   },
   {
     id: 5,
-    title: "SEPA Payment Generation",
-    titleEl: "Δημιουργία Πληρωμών SEPA",
+    title: 'SEPA Payment Generation',
+    titleEl: 'Δημιουργία Πληρωμών SEPA',
     duration: 2500,
     icon: CreditCard,
-    color: "bg-indigo-500"
-  }
+    color: 'bg-indigo-500',
+  },
 ];
 
-export default function InteractiveDemo({ onClose, autoPlay = false }: InteractiveDemoProps) {
+export default function InteractiveDemo({
+  onClose,
+  autoPlay = false,
+}: InteractiveDemoProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [progress, setProgress] = useState(0);
@@ -83,20 +86,20 @@ export default function InteractiveDemo({ onClose, autoPlay = false }: Interacti
   // Auto-progress through demo
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
+
     if (isPlaying && currentStep < DEMO_STEPS.length) {
       const stepDuration = DEMO_STEPS[currentStep].duration;
-      
+
       interval = setInterval(() => {
-        setProgress((prev) => {
-          const newProgress = prev + (100 / (stepDuration / 100));
-          
+        setProgress(prev => {
+          const newProgress = prev + 100 / (stepDuration / 100);
+
           if (newProgress >= 100) {
             setCompletedSteps(prev => [...prev, currentStep]);
             setCurrentStep(prev => prev + 1);
             return 0;
           }
-          
+
           return newProgress;
         });
       }, 100);
@@ -131,16 +134,17 @@ export default function InteractiveDemo({ onClose, autoPlay = false }: Interacti
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              {locale === 'en' ? 'PayrollSync Interactive Demo' : 'Διαδραστικό Demo PayrollSync'}
+              {locale === 'en'
+                ? 'PayrollSync Interactive Demo'
+                : 'Διαδραστικό Demo PayrollSync'}
             </h1>
             <p className="text-gray-600">
-              {locale === 'en' 
+              {locale === 'en'
                 ? 'See how we process payroll for 25 hotel employees in under 5 minutes'
-                : 'Δείτε πώς επεξεργαζόμαστε μισθοδοσία για 25 υπαλλήλους ξενοδοχείου σε λιγότερο από 5 λεπτά'
-              }
+                : 'Δείτε πώς επεξεργαζόμαστε μισθοδοσία για 25 υπαλλήλους ξενοδοχείου σε λιγότερο από 5 λεπτά'}
             </p>
           </div>
-          
+
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -176,26 +180,28 @@ export default function InteractiveDemo({ onClose, autoPlay = false }: Interacti
                   )}
                 </Button>
                 <span className="text-sm font-medium">
-                  {isComplete 
-                    ? (locale === 'en' ? 'Demo Complete!' : 'Demo Ολοκληρώθηκε!')
-                    : `${locale === 'en' ? 'Step' : 'Βήμα'} ${currentStep + 1}/${DEMO_STEPS.length}`
-                  }
+                  {isComplete
+                    ? locale === 'en'
+                      ? 'Demo Complete!'
+                      : 'Demo Ολοκληρώθηκε!'
+                    : `${locale === 'en' ? 'Step' : 'Βήμα'} ${currentStep + 1}/${DEMO_STEPS.length}`}
                 </span>
               </div>
-              
+
               <Button size="sm" variant="ghost" onClick={resetDemo}>
                 {locale === 'en' ? 'Restart' : 'Επανεκκίνηση'}
               </Button>
             </div>
-            
+
             {!isComplete && (
               <div className="space-y-2">
                 <Progress value={progress} className="h-2" />
                 <div className="text-xs text-gray-500 text-center">
-                  {locale === 'en' 
-                    ? (locale === 'en' ? DEMO_STEPS[currentStep]?.title : DEMO_STEPS[currentStep]?.titleEl)
-                    : DEMO_STEPS[currentStep]?.titleEl
-                  }
+                  {locale === 'en'
+                    ? locale === 'en'
+                      ? DEMO_STEPS[currentStep]?.title
+                      : DEMO_STEPS[currentStep]?.titleEl
+                    : DEMO_STEPS[currentStep]?.titleEl}
                 </div>
               </div>
             )}
@@ -219,23 +225,25 @@ export default function InteractiveDemo({ onClose, autoPlay = false }: Interacti
                   const Icon = step.icon;
                   const isActive = index === currentStep;
                   const isCompleted = completedSteps.includes(index);
-                  
+
                   return (
                     <button
                       key={step.id}
                       onClick={() => jumpToStep(index)}
                       className={`w-full text-left p-3 rounded-lg transition-colors ${
-                        isActive 
-                          ? 'bg-blue-50 border border-blue-200' 
-                          : isCompleted 
-                          ? 'bg-green-50 border border-green-200'
-                          : 'hover:bg-gray-50'
+                        isActive
+                          ? 'bg-blue-50 border border-blue-200'
+                          : isCompleted
+                            ? 'bg-green-50 border border-green-200'
+                            : 'hover:bg-gray-50'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${
-                          isCompleted ? 'bg-green-500' : step.color
-                        }`}>
+                        <div
+                          className={`p-2 rounded-lg ${
+                            isCompleted ? 'bg-green-500' : step.color
+                          }`}
+                        >
                           {isCompleted ? (
                             <CheckCircle className="h-4 w-4 text-white" />
                           ) : (
@@ -261,8 +269,8 @@ export default function InteractiveDemo({ onClose, autoPlay = false }: Interacti
 
         {/* Main Demo Area */}
         <div className="lg:col-span-3">
-          <DemoStepContent 
-            step={currentStep} 
+          <DemoStepContent
+            step={currentStep}
             locale={locale}
             isPlaying={isPlaying}
             isComplete={isComplete}
@@ -273,14 +281,14 @@ export default function InteractiveDemo({ onClose, autoPlay = false }: Interacti
   );
 }
 
-function DemoStepContent({ 
-  step, 
-  locale, 
-  isPlaying, 
-  isComplete 
-}: { 
-  step: number; 
-  locale: 'en' | 'el'; 
+function DemoStepContent({
+  step,
+  locale,
+  isPlaying,
+  isComplete,
+}: {
+  step: number;
+  locale: 'en' | 'el';
   isPlaying: boolean;
   isComplete: boolean;
 }) {
@@ -291,13 +299,14 @@ function DemoStepContent({
           <CheckCircle className="h-16 w-16 text-green-600 mx-auto" />
           <div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              {locale === 'en' ? 'Payroll Complete!' : 'Μισθοδοσία Ολοκληρώθηκε!'}
+              {locale === 'en'
+                ? 'Payroll Complete!'
+                : 'Μισθοδοσία Ολοκληρώθηκε!'}
             </h3>
             <p className="text-gray-600 mb-4">
-              {locale === 'en' 
+              {locale === 'en'
                 ? 'Processed 25 employees in 4 minutes with full Greek compliance'
-                : 'Επεξεργάστηκαν 25 υπάλληλοι σε 4 λεπτά με πλήρη ελληνική συμμόρφωση'
-              }
+                : 'Επεξεργάστηκαν 25 υπάλληλοι σε 4 λεπτά με πλήρη ελληνική συμμόρφωση'}
             </p>
           </div>
           <div className="flex gap-4 justify-center">
@@ -329,13 +338,44 @@ function DemoStepContent({
   }
 }
 
-function EmployeeOverviewStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPlaying: boolean }) {
+function EmployeeOverviewStep({
+  locale,
+  isPlaying,
+}: {
+  locale: 'en' | 'el';
+  isPlaying: boolean;
+}) {
   const employees = [
-    { name: "Maria Komnenos", position: "Front Office Manager", salary: "€1,200", status: "active" },
-    { name: "Dimitris Paleologos", position: "Executive Chef", salary: "€1,450", status: "active" },
-    { name: "Elena Vassiliou", position: "Restaurant Manager", salary: "€1,100", status: "active" },
-    { name: "Kostas Alexandros", position: "Housekeeping Supervisor", salary: "€980", status: "active" },
-    { name: "Anna Stavrou", position: "Reception Staff", salary: "€850", status: "active" }
+    {
+      name: 'Maria Komnenos',
+      position: 'Front Office Manager',
+      salary: '€1,200',
+      status: 'active',
+    },
+    {
+      name: 'Dimitris Paleologos',
+      position: 'Executive Chef',
+      salary: '€1,450',
+      status: 'active',
+    },
+    {
+      name: 'Elena Vassiliou',
+      position: 'Restaurant Manager',
+      salary: '€1,100',
+      status: 'active',
+    },
+    {
+      name: 'Kostas Alexandros',
+      position: 'Housekeeping Supervisor',
+      salary: '€980',
+      status: 'active',
+    },
+    {
+      name: 'Anna Stavrou',
+      position: 'Reception Staff',
+      salary: '€850',
+      status: 'active',
+    },
   ];
 
   return (
@@ -345,7 +385,9 @@ function EmployeeOverviewStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPl
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              {locale === 'en' ? 'Santikos Princess Hotel - Employees' : 'Ξενοδοχείο Santikos Princess - Υπάλληλοι'}
+              {locale === 'en'
+                ? 'Santikos Princess Hotel - Employees'
+                : 'Ξενοδοχείο Santikos Princess - Υπάλληλοι'}
             </CardTitle>
             <Badge variant="secondary">
               {locale === 'en' ? '25 Employees' : '25 Υπάλληλοι'}
@@ -355,7 +397,7 @@ function EmployeeOverviewStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPl
         <CardContent>
           <div className="space-y-3">
             {employees.map((employee, index) => (
-              <div 
+              <div
                 key={index}
                 className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-500 ${
                   isPlaying ? 'bg-green-50 border-green-200' : 'bg-gray-50'
@@ -369,7 +411,9 @@ function EmployeeOverviewStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPl
                   </div>
                   <div>
                     <div className="font-medium">{employee.name}</div>
-                    <div className="text-sm text-gray-600">{employee.position}</div>
+                    <div className="text-sm text-gray-600">
+                      {employee.position}
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
@@ -381,7 +425,9 @@ function EmployeeOverviewStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPl
               </div>
             ))}
             <div className="text-center py-2 text-gray-500">
-              {locale === 'en' ? '+ 20 more employees...' : '+ 20 ακόμη υπάλληλοι...'}
+              {locale === 'en'
+                ? '+ 20 more employees...'
+                : '+ 20 ακόμη υπάλληλοι...'}
             </div>
           </div>
         </CardContent>
@@ -390,14 +436,22 @@ function EmployeeOverviewStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPl
   );
 }
 
-function TimeAttendanceStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPlaying: boolean }) {
+function TimeAttendanceStep({
+  locale,
+  isPlaying,
+}: {
+  locale: 'en' | 'el';
+  isPlaying: boolean;
+}) {
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            {locale === 'en' ? 'January 2025 - Time Review' : 'Ιανουάριος 2025 - Έλεγχος Χρόνου'}
+            {locale === 'en'
+              ? 'January 2025 - Time Review'
+              : 'Ιανουάριος 2025 - Έλεγχος Χρόνου'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -417,15 +471,19 @@ function TimeAttendanceStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPlay
           </div>
 
           <div className="space-y-3">
-            <div className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-500 ${
-              isPlaying ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50'
-            }`}>
+            <div
+              className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-500 ${
+                isPlaying ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50'
+              }`}
+            >
               <div className="flex items-center gap-3">
                 <AlertTriangle className="h-5 w-5 text-yellow-600" />
                 <div>
                   <div className="font-medium">Maria Komnenos</div>
                   <div className="text-sm text-gray-600">
-                    {locale === 'en' ? 'Sunday work detected' : 'Εντοπίστηκε Κυριακάτικη εργασία'}
+                    {locale === 'en'
+                      ? 'Sunday work detected'
+                      : 'Εντοπίστηκε Κυριακάτικη εργασία'}
                   </div>
                 </div>
               </div>
@@ -435,15 +493,19 @@ function TimeAttendanceStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPlay
               </Button>
             </div>
 
-            <div className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-500 ${
-              isPlaying ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
-            }`}>
+            <div
+              className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-500 ${
+                isPlaying ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
+              }`}
+            >
               <div className="flex items-center gap-3">
                 <TrendingUp className="h-5 w-5 text-blue-600" />
                 <div>
                   <div className="font-medium">Dimitris Paleologos</div>
                   <div className="text-sm text-gray-600">
-                    {locale === 'en' ? 'Night shift premium applies' : 'Εφαρμόζεται επίδομα νυχτερινής βάρδιας'}
+                    {locale === 'en'
+                      ? 'Night shift premium applies'
+                      : 'Εφαρμόζεται επίδομα νυχτερινής βάρδιας'}
                   </div>
                 </div>
               </div>
@@ -458,14 +520,22 @@ function TimeAttendanceStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPlay
   );
 }
 
-function PayrollCalculationStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPlaying: boolean }) {
+function PayrollCalculationStep({
+  locale,
+  isPlaying,
+}: {
+  locale: 'en' | 'el';
+  isPlaying: boolean;
+}) {
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calculator className="h-5 w-5" />
-            {locale === 'en' ? 'Payroll Calculation' : 'Υπολογισμός Μισθοδοσίας'}
+            {locale === 'en'
+              ? 'Payroll Calculation'
+              : 'Υπολογισμός Μισθοδοσίας'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -496,20 +566,44 @@ function PayrollCalculationStep({ locale, isPlaying }: { locale: 'en' | 'el'; is
             </Card>
           </div>
 
-          <div className={`p-4 rounded-lg border transition-all duration-1000 ${
-            isPlaying ? 'bg-green-50 border-green-200' : 'bg-gray-50'
-          }`}>
+          <div
+            className={`p-4 rounded-lg border transition-all duration-1000 ${
+              isPlaying ? 'bg-green-50 border-green-200' : 'bg-gray-50'
+            }`}
+          >
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle className="h-5 w-5 text-green-600" />
               <span className="font-medium text-green-800">
-                {locale === 'en' ? 'Calculations Complete' : 'Υπολογισμοί Ολοκληρώθηκαν'}
+                {locale === 'en'
+                  ? 'Calculations Complete'
+                  : 'Υπολογισμοί Ολοκληρώθηκαν'}
               </span>
             </div>
             <ul className="space-y-1 text-sm text-gray-600">
-              <li>✓ {locale === 'en' ? 'Greek tax brackets applied' : 'Εφαρμόστηκαν ελληνικές φορολογικές κλίμακες'}</li>
-              <li>✓ {locale === 'en' ? 'EFKA contributions calculated' : 'Υπολογίστηκαν εισφορές ΕΦΚΑ'}</li>
-              <li>✓ {locale === 'en' ? 'Overtime premiums included' : 'Συμπεριλήφθηκαν επιδόματα υπερωριών'}</li>
-              <li>✓ {locale === 'en' ? 'Sunday/holiday rates applied' : 'Εφαρμόστηκαν τιμές Κυριακής/αργιών'}</li>
+              <li>
+                ✓{' '}
+                {locale === 'en'
+                  ? 'Greek tax brackets applied'
+                  : 'Εφαρμόστηκαν ελληνικές φορολογικές κλίμακες'}
+              </li>
+              <li>
+                ✓{' '}
+                {locale === 'en'
+                  ? 'EFKA contributions calculated'
+                  : 'Υπολογίστηκαν εισφορές ΕΦΚΑ'}
+              </li>
+              <li>
+                ✓{' '}
+                {locale === 'en'
+                  ? 'Overtime premiums included'
+                  : 'Συμπεριλήφθηκαν επιδόματα υπερωριών'}
+              </li>
+              <li>
+                ✓{' '}
+                {locale === 'en'
+                  ? 'Sunday/holiday rates applied'
+                  : 'Εφαρμόστηκαν τιμές Κυριακής/αργιών'}
+              </li>
             </ul>
           </div>
         </CardContent>
@@ -518,12 +612,22 @@ function PayrollCalculationStep({ locale, isPlaying }: { locale: 'en' | 'el'; is
   );
 }
 
-function ComplianceCheckStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPlaying: boolean }) {
+function ComplianceCheckStep({
+  locale,
+  isPlaying,
+}: {
+  locale: 'en' | 'el';
+  isPlaying: boolean;
+}) {
   const complianceItems = [
     { name: 'ERGANI II', name_el: 'ΕΡΓΑΝΗ ΙΙ', status: 'ready' },
-    { name: 'Digital Work Card', name_el: 'Ψηφιακή Κάρτα Εργασίας', status: 'ready' },
+    {
+      name: 'Digital Work Card',
+      name_el: 'Ψηφιακή Κάρτα Εργασίας',
+      status: 'ready',
+    },
     { name: 'AΠΔ Form', name_el: 'Έντυπο ΑΠΔ', status: 'ready' },
-    { name: 'ΦΜΥ Submission', name_el: 'Υποβολή ΦΜΥ', status: 'ready' }
+    { name: 'ΦΜΥ Submission', name_el: 'Υποβολή ΦΜΥ', status: 'ready' },
   ];
 
   return (
@@ -532,13 +636,15 @@ function ComplianceCheckStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPla
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileCheck className="h-5 w-5" />
-            {locale === 'en' ? 'Greek Compliance Validation' : 'Επαλήθευση Ελληνικής Συμμόρφωσης'}
+            {locale === 'en'
+              ? 'Greek Compliance Validation'
+              : 'Επαλήθευση Ελληνικής Συμμόρφωσης'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {complianceItems.map((item, index) => (
-              <div 
+              <div
                 key={index}
                 className={`flex items-center justify-between p-3 rounded-lg border transition-all duration-500 ${
                   isPlaying ? 'bg-green-50 border-green-200' : 'bg-gray-50'
@@ -552,7 +658,9 @@ function ComplianceCheckStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPla
                       {locale === 'en' ? item.name : item.name_el}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {locale === 'en' ? 'Ready for submission' : 'Έτοιμο για υποβολή'}
+                      {locale === 'en'
+                        ? 'Ready for submission'
+                        : 'Έτοιμο για υποβολή'}
                     </div>
                   </div>
                 </div>
@@ -563,18 +671,19 @@ function ComplianceCheckStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPla
             ))}
           </div>
 
-          <div className={`mt-6 p-4 rounded-lg border transition-all duration-1000 ${
-            isPlaying ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
-          }`}>
+          <div
+            className={`mt-6 p-4 rounded-lg border transition-all duration-1000 ${
+              isPlaying ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
+            }`}
+          >
             <div className="text-center">
               <div className="text-lg font-semibold text-blue-800 mb-2">
                 {locale === 'en' ? '100% Compliant' : '100% Συμβατό'}
               </div>
               <p className="text-sm text-gray-600">
-                {locale === 'en' 
+                {locale === 'en'
                   ? 'All Greek labor law requirements satisfied'
-                  : 'Όλες οι απαιτήσεις του ελληνικού εργατικού δικαίου ικανοποιήθηκαν'
-                }
+                  : 'Όλες οι απαιτήσεις του ελληνικού εργατικού δικαίου ικανοποιήθηκαν'}
               </p>
             </div>
           </div>
@@ -584,28 +693,40 @@ function ComplianceCheckStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPla
   );
 }
 
-function SepaPaymentStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPlaying: boolean }) {
+function SepaPaymentStep({
+  locale,
+  isPlaying,
+}: {
+  locale: 'en' | 'el';
+  isPlaying: boolean;
+}) {
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            {locale === 'en' ? 'SEPA Payment Processing' : 'Επεξεργασία Πληρωμών SEPA'}
+            {locale === 'en'
+              ? 'SEPA Payment Processing'
+              : 'Επεξεργασία Πληρωμών SEPA'}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className={`p-4 rounded-lg border transition-all duration-1000 ${
-              isPlaying ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
-            }`}>
+            <div
+              className={`p-4 rounded-lg border transition-all duration-1000 ${
+                isPlaying ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
+              }`}
+            >
               <div className="flex items-center justify-between mb-3">
                 <div className="font-medium">
-                  {locale === 'en' ? 'Payment Batch Generated' : 'Δημιουργήθηκε Παρτίδα Πληρωμής'}
+                  {locale === 'en'
+                    ? 'Payment Batch Generated'
+                    : 'Δημιουργήθηκε Παρτίδα Πληρωμής'}
                 </div>
                 <Badge className="bg-blue-100 text-blue-800">Alpha Bank</Badge>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-600">
@@ -641,20 +762,27 @@ function SepaPaymentStep({ locale, isPlaying }: { locale: 'en' | 'el'; isPlaying
                 <Download className="h-4 w-4 mr-2" />
                 {locale === 'en' ? 'Download SEPA File' : 'Λήψη Αρχείου SEPA'}
               </Button>
-              <Button variant="outline" className="flex-1" disabled={!isPlaying}>
+              <Button
+                variant="outline"
+                className="flex-1"
+                disabled={!isPlaying}
+              >
                 <Upload className="h-4 w-4 mr-2" />
                 {locale === 'en' ? 'Submit to Bank' : 'Υποβολή στην Τράπεζα'}
               </Button>
             </div>
 
-            <div className={`p-3 rounded-lg transition-all duration-1000 ${
-              isPlaying ? 'bg-green-50 border border-green-200' : 'bg-gray-100'
-            }`}>
+            <div
+              className={`p-3 rounded-lg transition-all duration-1000 ${
+                isPlaying
+                  ? 'bg-green-50 border border-green-200'
+                  : 'bg-gray-100'
+              }`}
+            >
               <div className="text-sm text-green-800 font-medium">
-                {locale === 'en' 
+                {locale === 'en'
                   ? '✓ Ready for instant SEPA transfer'
-                  : '✓ Έτοιμο για άμεση μεταφορά SEPA'
-                }
+                  : '✓ Έτοιμο για άμεση μεταφορά SEPA'}
               </div>
             </div>
           </div>

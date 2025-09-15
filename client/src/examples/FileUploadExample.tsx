@@ -1,50 +1,65 @@
 import { ObjectUploader } from '@/components/ObjectUploader';
 import type { UploadResult } from '@uppy/core';
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
 /**
  * Example page component demonstrating the ObjectUploader usage
- * 
+ *
  * Shows different upload scenarios:
  * - Profile picture upload (public, single file, images only)
  * - Document upload (private, multiple files, various types)
  * - Large file upload (with custom size limits)
  */
 export function FileUploadExample() {
-  const [uploadedFiles, setUploadedFiles] = useState<Array<{
-    name: string;
-    objectPath: string;
-    size: number;
-    type: string;
-    uploadedAt: Date;
-  }>>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<
+    Array<{
+      name: string;
+      objectPath: string;
+      size: number;
+      type: string;
+      uploadedAt: Date;
+    }>
+  >([]);
   const { toast } = useToast();
 
-  const handleProfilePictureComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+  const handleProfilePictureComplete = (
+    result: UploadResult<Record<string, unknown>, Record<string, unknown>>
+  ) => {
     if (result.successful.length > 0) {
       const file = result.successful[0];
-      setUploadedFiles(prev => [...prev, {
-        name: file.name,
-        objectPath: (file.response as any)?.body?.objectPath || 'unknown',
-        size: file.size || 0,
-        type: file.type || 'unknown',
-        uploadedAt: new Date(),
-      }]);
+      setUploadedFiles(prev => [
+        ...prev,
+        {
+          name: file.name,
+          objectPath: (file.response as any)?.body?.objectPath || 'unknown',
+          size: file.size || 0,
+          type: file.type || 'unknown',
+          uploadedAt: new Date(),
+        },
+      ]);
     }
   };
 
-  const handleDocumentComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+  const handleDocumentComplete = (
+    result: UploadResult<Record<string, unknown>, Record<string, unknown>>
+  ) => {
     const newFiles = result.successful.map(file => ({
       name: file.name,
-      objectPath: (file.response as any)?.body?.objectPath || 'unknown', 
+      objectPath: (file.response as any)?.body?.objectPath || 'unknown',
       size: file.size || 0,
       type: file.type || 'unknown',
       uploadedAt: new Date(),
     }));
-    
+
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
 
@@ -59,14 +74,16 @@ export function FileUploadExample() {
   return (
     <div className="container mx-auto p-6 space-y-8">
       <div className="text-center">
-        <h1 className="text-3xl font-bold mb-2">Object Storage Upload Examples</h1>
+        <h1 className="text-3xl font-bold mb-2">
+          Object Storage Upload Examples
+        </h1>
         <p className="text-muted-foreground">
-          Demonstration of different file upload scenarios using Replit Object Storage
+          Demonstration of different file upload scenarios using Replit Object
+          Storage
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        
         {/* Profile Picture Upload */}
         <Card>
           <CardHeader>
@@ -135,9 +152,7 @@ export function FileUploadExample() {
               💾 Large Files
               <Badge variant="destructive">50MB</Badge>
             </CardTitle>
-            <CardDescription>
-              Upload large files (up to 50MB)
-            </CardDescription>
+            <CardDescription>Upload large files (up to 50MB)</CardDescription>
           </CardHeader>
           <CardContent>
             <ObjectUploader
@@ -168,17 +183,25 @@ export function FileUploadExample() {
           <CardContent>
             <div className="space-y-2">
               {uploadedFiles.map((file, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <div className="text-2xl">
-                      {file.type.startsWith('image/') ? '🖼️' : 
-                       file.type.includes('pdf') ? '📄' : 
-                       file.type.includes('word') ? '📝' : '📁'}
+                      {file.type.startsWith('image/')
+                        ? '🖼️'
+                        : file.type.includes('pdf')
+                          ? '📄'
+                          : file.type.includes('word')
+                            ? '📝'
+                            : '📁'}
                     </div>
                     <div>
                       <div className="font-medium">{file.name}</div>
                       <div className="text-sm text-muted-foreground">
-                        {formatFileSize(file.size)} • {file.uploadedAt.toLocaleTimeString()}
+                        {formatFileSize(file.size)} •{' '}
+                        {file.uploadedAt.toLocaleTimeString()}
                       </div>
                     </div>
                   </div>
@@ -230,8 +253,8 @@ export function FileUploadExample() {
             <div>
               <h4 className="font-semibold mb-2">🌍 Bilingual Support</h4>
               <p className="text-sm text-muted-foreground">
-                Upload interface supports both Greek and English with automatic error message translation
-                and localized file operation feedback.
+                Upload interface supports both Greek and English with automatic
+                error message translation and localized file operation feedback.
               </p>
             </div>
           </div>

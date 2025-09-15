@@ -32,7 +32,7 @@ import {
   Copy,
   Download,
   Upload,
-  Zap
+  Zap,
 } from 'lucide-react';
 
 interface MFAMethod {
@@ -55,7 +55,12 @@ interface MFAMethod {
 interface SecurityEvent {
   id: string;
   timestamp: string;
-  type: 'login_success' | 'login_failed' | 'mfa_success' | 'mfa_failed' | 'device_new';
+  type:
+    | 'login_success'
+    | 'login_failed'
+    | 'mfa_success'
+    | 'mfa_failed'
+    | 'device_new';
   method: string;
   location: string;
   device: string;
@@ -78,7 +83,7 @@ const MFA_METHODS: MFAMethod[] = [
     icon: Smartphone,
     isPrimary: true,
     isRecommended: true,
-    greekCompliant: true
+    greekCompliant: true,
   },
   {
     id: 'sms-backup',
@@ -94,7 +99,7 @@ const MFA_METHODS: MFAMethod[] = [
     icon: MessageSquare,
     isPrimary: false,
     isRecommended: false,
-    greekCompliant: true
+    greekCompliant: true,
   },
   {
     id: 'email-backup',
@@ -110,7 +115,7 @@ const MFA_METHODS: MFAMethod[] = [
     icon: Mail,
     isPrimary: false,
     isRecommended: false,
-    greekCompliant: true
+    greekCompliant: true,
   },
   {
     id: 'biometric-windows',
@@ -126,7 +131,7 @@ const MFA_METHODS: MFAMethod[] = [
     icon: Fingerprint,
     isPrimary: false,
     isRecommended: true,
-    greekCompliant: true
+    greekCompliant: true,
   },
   {
     id: 'hardware-key',
@@ -142,8 +147,8 @@ const MFA_METHODS: MFAMethod[] = [
     icon: Key,
     isPrimary: false,
     isRecommended: true,
-    greekCompliant: true
-  }
+    greekCompliant: true,
+  },
 ];
 
 const RECENT_EVENTS: SecurityEvent[] = [
@@ -155,7 +160,7 @@ const RECENT_EVENTS: SecurityEvent[] = [
     location: 'Athens, Greece',
     device: 'Chrome on Windows',
     ipAddress: '95.130.xxx.xxx',
-    riskLevel: 'low'
+    riskLevel: 'low',
   },
   {
     id: 'event-002',
@@ -165,7 +170,7 @@ const RECENT_EVENTS: SecurityEvent[] = [
     location: 'Thessaloniki, Greece',
     device: 'Mobile Safari',
     ipAddress: '94.66.xxx.xxx',
-    riskLevel: 'low'
+    riskLevel: 'low',
   },
   {
     id: 'event-003',
@@ -175,15 +180,17 @@ const RECENT_EVENTS: SecurityEvent[] = [
     location: 'Sofia, Bulgaria',
     device: 'Chrome on Linux',
     ipAddress: '95.42.xxx.xxx',
-    riskLevel: 'high'
-  }
+    riskLevel: 'high',
+  },
 ];
 
 interface MultiFactorAuthProps {
   locale?: 'en' | 'el';
 }
 
-export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps) {
+export default function MultiFactorAuth({
+  locale = 'en',
+}: MultiFactorAuthProps) {
   const [activeTab, setActiveTab] = useState('methods');
   const [setupMethod, setSetupMethod] = useState<MFAMethod | null>(null);
   const [showBackupCodes, setShowBackupCodes] = useState(false);
@@ -220,15 +227,15 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
       riskLevel: {
         low: 'Low Risk',
         medium: 'Medium Risk',
-        high: 'High Risk'
+        high: 'High Risk',
       },
       eventTypes: {
         login_success: 'Successful Login',
         login_failed: 'Failed Login',
         mfa_success: 'MFA Success',
         mfa_failed: 'MFA Failed',
-        device_new: 'New Device'
-      }
+        device_new: 'New Device',
+      },
     },
     el: {
       title: 'Πολυπαραγοντική Αυθεντικοποίηση',
@@ -260,36 +267,45 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
       riskLevel: {
         low: 'Χαμηλός Κίνδυνος',
         medium: 'Μέτριος Κίνδυνος',
-        high: 'Υψηλός Κίνδυνος'
+        high: 'Υψηλός Κίνδυνος',
       },
       eventTypes: {
         login_success: 'Επιτυχής Σύνδεση',
         login_failed: 'Αποτυχημένη Σύνδεση',
         mfa_success: 'Επιτυχία MFA',
         mfa_failed: 'Αποτυχία MFA',
-        device_new: 'Νέα Συσκευή'
-      }
-    }
+        device_new: 'Νέα Συσκευή',
+      },
+    },
   };
 
   const t = translations[locale];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-gray-100 text-gray-800';
-      case 'setup': return 'bg-yellow-100 text-yellow-800';
-      case 'failed': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'inactive':
+        return 'bg-gray-100 text-gray-800';
+      case 'setup':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
-      case 'low': return 'text-green-600';
-      case 'medium': return 'text-yellow-600';
-      case 'high': return 'text-red-600';
-      default: return 'text-gray-600';
+      case 'low':
+        return 'text-green-600';
+      case 'medium':
+        return 'text-yellow-600';
+      case 'high':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
@@ -301,8 +317,10 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
 
   const activeMethods = MFA_METHODS.filter(m => m.status === 'active').length;
   const averageTrustScore = Math.round(
-    MFA_METHODS.filter(m => m.status === 'active')
-      .reduce((acc, method) => acc + method.trustScore, 0) / activeMethods
+    MFA_METHODS.filter(m => m.status === 'active').reduce(
+      (acc, method) => acc + method.trustScore,
+      0
+    ) / activeMethods
   );
 
   const backupCodes = [
@@ -313,14 +331,18 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
     'Y5Z6-A7B8-C9D0',
     'E1F2-G3H4-I5J6',
     'K7L8-M9N0-O1P2',
-    'Q3R4-S5T6-U7V8'
+    'Q3R4-S5T6-U7V8',
   ];
 
   if (setupMethod) {
     const Icon = setupMethod.icon;
     return (
       <div className="max-w-2xl mx-auto p-6">
-        <Button variant="ghost" onClick={() => setSetupMethod(null)} className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => setSetupMethod(null)}
+          className="mb-6"
+        >
           ← Back to MFA Methods
         </Button>
 
@@ -331,7 +353,9 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
               Setup {locale === 'en' ? setupMethod.name : setupMethod.nameEl}
             </CardTitle>
             <p className="text-gray-600">
-              {locale === 'en' ? setupMethod.description : setupMethod.descriptionEl}
+              {locale === 'en'
+                ? setupMethod.description
+                : setupMethod.descriptionEl}
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -345,13 +369,13 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
                     Scan this QR code with your authenticator app
                   </p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Manual Entry Key</Label>
                   <div className="flex gap-2">
-                    <Input 
-                      value="JBSWY3DPEHPK3PXP" 
-                      readOnly 
+                    <Input
+                      value="JBSWY3DPEHPK3PXP"
+                      readOnly
                       className="font-mono text-sm"
                     />
                     <Button variant="outline" size="sm">
@@ -362,7 +386,11 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
 
                 <div className="space-y-2">
                   <Label>Enter Verification Code</Label>
-                  <Input placeholder="123456" maxLength={6} className="font-mono text-center text-lg" />
+                  <Input
+                    placeholder="123456"
+                    maxLength={6}
+                    className="font-mono text-center text-lg"
+                  />
                 </div>
               </div>
             )}
@@ -388,7 +416,9 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
               <div className="space-y-4">
                 <div className="text-center py-8">
                   <Fingerprint className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-                  <h4 className="font-semibold mb-2">Biometric Setup Required</h4>
+                  <h4 className="font-semibold mb-2">
+                    Biometric Setup Required
+                  </h4>
                   <p className="text-gray-600">
                     Windows Hello must be configured on this device
                   </p>
@@ -419,9 +449,7 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
             )}
 
             <div className="flex gap-3">
-              <Button className="flex-1">
-                Complete Setup
-              </Button>
+              <Button className="flex-1">Complete Setup</Button>
               <Button variant="outline" onClick={() => setSetupMethod(null)}>
                 Cancel
               </Button>
@@ -453,11 +481,16 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm">Active Methods</p>
-                  <p className="text-2xl font-bold text-green-600">{activeMethods}</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {activeMethods}
+                  </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
-              <Progress value={(activeMethods / MFA_METHODS.length) * 100} className="mt-3" />
+              <Progress
+                value={(activeMethods / MFA_METHODS.length) * 100}
+                className="mt-3"
+              />
             </CardContent>
           </Card>
 
@@ -466,12 +499,16 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm">{t.trustScore}</p>
-                  <p className="text-2xl font-bold text-blue-600">{averageTrustScore}%</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {averageTrustScore}%
+                  </p>
                 </div>
                 <Shield className="h-8 w-8 text-blue-600" />
               </div>
               <div className="mt-3">
-                <span className={`text-sm font-medium ${getSecurityLevel(averageTrustScore).color}`}>
+                <span
+                  className={`text-sm font-medium ${getSecurityLevel(averageTrustScore).color}`}
+                >
                   {getSecurityLevel(averageTrustScore).level}
                 </span>
               </div>
@@ -483,11 +520,15 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-600 text-sm">{t.securityLevel}</p>
-                  <p className="text-2xl font-bold text-purple-600">Zero-Trust</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    Zero-Trust
+                  </p>
                 </div>
                 <Key className="h-8 w-8 text-purple-600" />
               </div>
-              <Badge className="bg-purple-100 text-purple-800 mt-2">Enterprise Grade</Badge>
+              <Badge className="bg-purple-100 text-purple-800 mt-2">
+                Enterprise Grade
+              </Badge>
             </CardContent>
           </Card>
         </div>
@@ -503,10 +544,10 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
 
         <TabsContent value="methods" className="space-y-6">
           <div className="grid md:grid-cols-2 gap-6">
-            {MFA_METHODS.map((method) => {
+            {MFA_METHODS.map(method => {
               const Icon = method.icon;
               const securityLevel = getSecurityLevel(method.trustScore);
-              
+
               return (
                 <Card key={method.id} className="relative">
                   <CardHeader>
@@ -518,7 +559,9 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
                             {locale === 'en' ? method.name : method.nameEl}
                           </CardTitle>
                           <p className="text-sm text-gray-600">
-                            {locale === 'en' ? method.description : method.descriptionEl}
+                            {locale === 'en'
+                              ? method.description
+                              : method.descriptionEl}
                           </p>
                         </div>
                       </div>
@@ -536,12 +579,18 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
 
                     <div className="flex flex-wrap gap-2 mt-3">
                       {method.isRecommended && (
-                        <Badge variant="outline" className="text-green-700 border-green-300">
+                        <Badge
+                          variant="outline"
+                          className="text-green-700 border-green-300"
+                        >
                           {t.recommended}
                         </Badge>
                       )}
                       {method.greekCompliant && (
-                        <Badge variant="outline" className="text-blue-700 border-blue-300">
+                        <Badge
+                          variant="outline"
+                          className="text-blue-700 border-blue-300"
+                        >
                           {t.greekCompliant}
                         </Badge>
                       )}
@@ -551,10 +600,17 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
                   <CardContent>
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">{t.trustScore}</span>
+                        <span className="text-sm text-gray-600">
+                          {t.trustScore}
+                        </span>
                         <div className="flex items-center gap-2">
-                          <Progress value={method.trustScore} className="w-20 h-2" />
-                          <span className={`font-medium ${securityLevel.color}`}>
+                          <Progress
+                            value={method.trustScore}
+                            className="w-20 h-2"
+                          />
+                          <span
+                            className={`font-medium ${securityLevel.color}`}
+                          >
                             {method.trustScore}%
                           </span>
                         </div>
@@ -563,18 +619,26 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="text-gray-500">{t.setupDate}:</span>
-                          <div>{method.setupDate ? new Date(method.setupDate).toLocaleDateString() : 'Not setup'}</div>
+                          <div>
+                            {method.setupDate
+                              ? new Date(method.setupDate).toLocaleDateString()
+                              : 'Not setup'}
+                          </div>
                         </div>
                         <div>
                           <span className="text-gray-500">{t.lastUsed}:</span>
-                          <div>{method.lastUsed ? new Date(method.lastUsed).toLocaleDateString() : t.neverUsed}</div>
+                          <div>
+                            {method.lastUsed
+                              ? new Date(method.lastUsed).toLocaleDateString()
+                              : t.neverUsed}
+                          </div>
                         </div>
                       </div>
 
                       <div className="flex gap-2 pt-3 border-t">
                         {method.status === 'setup' ? (
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             className="flex-1"
                             onClick={() => setSetupMethod(method)}
                           >
@@ -583,16 +647,25 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
                           </Button>
                         ) : (
                           <>
-                            <Button variant="outline" size="sm" className="flex-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                            >
                               <Settings className="h-4 w-4 mr-2" />
                               Configure
                             </Button>
-                            {!method.isPrimary && method.status === 'active' && (
-                              <Button variant="outline" size="sm">
-                                {t.setPrimary}
-                              </Button>
-                            )}
-                            <Button variant="outline" size="sm" className="text-red-600">
+                            {!method.isPrimary &&
+                              method.status === 'active' && (
+                                <Button variant="outline" size="sm">
+                                  {t.setPrimary}
+                                </Button>
+                              )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600"
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </>
@@ -613,31 +686,42 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {RECENT_EVENTS.map((event) => (
+                {RECENT_EVENTS.map(event => (
                   <div key={event.id} className="border rounded-lg p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h4 className="font-semibold">
-                            {t.eventTypes[event.type as keyof typeof t.eventTypes]}
+                            {
+                              t.eventTypes[
+                                event.type as keyof typeof t.eventTypes
+                              ]
+                            }
                           </h4>
-                          <span className={`text-sm font-medium ${getRiskColor(event.riskLevel)}`}>
-                            {(t.riskLevel as any)[event.riskLevel] || event.riskLevel}
+                          <span
+                            className={`text-sm font-medium ${getRiskColor(event.riskLevel)}`}
+                          >
+                            {(t.riskLevel as any)[event.riskLevel] ||
+                              event.riskLevel}
                           </span>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-gray-600">
                           <div>
-                            <span className="font-medium">Method:</span> {event.method}
+                            <span className="font-medium">Method:</span>{' '}
+                            {event.method}
                           </div>
                           <div>
-                            <span className="font-medium">Location:</span> {event.location}
+                            <span className="font-medium">Location:</span>{' '}
+                            {event.location}
                           </div>
                           <div>
-                            <span className="font-medium">Device:</span> {event.device}
+                            <span className="font-medium">Device:</span>{' '}
+                            {event.device}
                           </div>
                           <div>
-                            <span className="font-medium">Time:</span> {new Date(event.timestamp).toLocaleString()}
+                            <span className="font-medium">Time:</span>{' '}
+                            {new Date(event.timestamp).toLocaleString()}
                           </div>
                         </div>
                       </div>
@@ -689,7 +773,10 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
                 {showBackupCodes && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-gray-50 rounded-lg">
                     {backupCodes.map((code, index) => (
-                      <div key={index} className="bg-white p-3 rounded border text-center font-mono text-sm">
+                      <div
+                        key={index}
+                        className="bg-white p-3 rounded border text-center font-mono text-sm"
+                      >
                         {code}
                       </div>
                     ))}
@@ -722,8 +809,12 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-base">Require MFA for all logins</Label>
-                  <p className="text-sm text-gray-600">Always require multi-factor authentication</p>
+                  <Label className="text-base">
+                    Require MFA for all logins
+                  </Label>
+                  <p className="text-sm text-gray-600">
+                    Always require multi-factor authentication
+                  </p>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -731,7 +822,9 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-base">Remember trusted devices</Label>
-                  <p className="text-sm text-gray-600">Skip MFA for 30 days on trusted devices</p>
+                  <p className="text-sm text-gray-600">
+                    Skip MFA for 30 days on trusted devices
+                  </p>
                 </div>
                 <Switch />
               </div>
@@ -739,7 +832,9 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-base">Greek compliance mode</Label>
-                  <p className="text-sm text-gray-600">Enforce GDPR and Greek data protection requirements</p>
+                  <p className="text-sm text-gray-600">
+                    Enforce GDPR and Greek data protection requirements
+                  </p>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -747,7 +842,9 @@ export default function MultiFactorAuth({ locale = 'en' }: MultiFactorAuthProps)
               <div className="flex items-center justify-between">
                 <div>
                   <Label className="text-base">High-risk location alerts</Label>
-                  <p className="text-sm text-gray-600">Alert when login attempts from unusual locations</p>
+                  <p className="text-sm text-gray-600">
+                    Alert when login attempts from unusual locations
+                  </p>
                 </div>
                 <Switch defaultChecked />
               </div>

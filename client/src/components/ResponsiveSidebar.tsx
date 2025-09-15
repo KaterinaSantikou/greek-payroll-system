@@ -1,11 +1,11 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from "@/components/ui/button";
-import { X, Menu } from "lucide-react";
-import { MainNavigation } from "./MainNavigation";
-import { useSidebarState } from "@/hooks/useSidebarState";
-import { useLocale } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { Button } from '@/components/ui/button';
+import { X, Menu } from 'lucide-react';
+import { MainNavigation } from './MainNavigation';
+import { useSidebarState } from '@/hooks/useSidebarState';
+import { useLocale } from '@/lib/i18n';
+import { cn } from '@/lib/utils';
 
 interface ResponsiveSidebarProps {
   children?: React.ReactNode;
@@ -21,7 +21,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
     setSidebarState,
     isMobile,
     isTablet,
-    isDesktop
+    isDesktop,
   } = useSidebarState();
 
   const [isHovering, setIsHovering] = React.useState(false);
@@ -70,7 +70,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
   );
 
   // Mobile menu button
-  const MobileMenuButton = () => (
+  const MobileMenuButton = () =>
     isMobile && (
       <Button
         variant="ghost"
@@ -80,34 +80,39 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
       >
         {isExpanded ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
       </Button>
-    )
-  );
+    );
 
   return (
     <>
       <MobileOverlay />
       <MobileMenuButton />
-      
+
       {/* Sidebar */}
       <motion.aside
         className={cn(
-          "bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen",
+          'bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 flex flex-col fixed left-0 top-0 h-screen',
           getSidebarWidth(),
           {
             // Z-index based on device
-            "z-30": isDesktop || isTablet,
-            "z-50": isMobile,
+            'z-30': isDesktop || isTablet,
+            'z-50': isMobile,
             // Transform based on state
-            "translate-x-0": !isMobile || isExpanded,
-            "-translate-x-full": isMobile && isHidden,
+            'translate-x-0': !isMobile || isExpanded,
+            '-translate-x-full': isMobile && isHidden,
           }
         )}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         animate={{
-          width: isMobile ? (isExpanded ? 320 : 0) : (shouldShowExpanded ? 280 : 72)
+          width: isMobile
+            ? isExpanded
+              ? 320
+              : 0
+            : shouldShowExpanded
+              ? 280
+              : 72,
         }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
       >
         {/* Sidebar Header */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-800">
@@ -119,19 +124,23 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <h1 className="text-lg font-bold text-blue-600">{t('app.name')}</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{t('app.tagline')}</p>
+                <h1 className="text-lg font-bold text-blue-600">
+                  {t('app.name')}
+                </h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {t('app.tagline')}
+                </p>
               </motion.div>
             )}
-            
+
             {/* Toggle button - hidden on mobile as we have the floating button */}
             {!isMobile && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={toggleSidebar}
-                className={cn("p-1", {
-                  "ml-auto": !shouldShowExpanded
+                className={cn('p-1', {
+                  'ml-auto': !shouldShowExpanded,
                 })}
               >
                 {shouldShowExpanded ? (
@@ -146,7 +155,7 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
 
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-4">
-          <MainNavigation 
+          <MainNavigation
             collapsed={!shouldShowExpanded}
             isMobile={isMobile}
             isTablet={isTablet}
@@ -170,18 +179,17 @@ export function ResponsiveSidebar({ children }: ResponsiveSidebarProps) {
       </motion.aside>
 
       {/* Main content area with responsive margin */}
-      <main 
-        className={cn(
-          "transition-all duration-300 flex-1 overflow-auto",
-          {
-            // Desktop: always account for sidebar
-            "ml-70": isDesktop && shouldShowExpanded,
-            // Desktop collapsed or tablet
-            "ml-18": (isDesktop && !shouldShowExpanded && !isMobile) || (isTablet && !isMobile),
-            // Mobile: no margin (sidebar is overlay)
-            "ml-0": isMobile,
-          }
-        )}
+      <main
+        className={cn('transition-all duration-300 flex-1 overflow-auto', {
+          // Desktop: always account for sidebar
+          'ml-70': isDesktop && shouldShowExpanded,
+          // Desktop collapsed or tablet
+          'ml-18':
+            (isDesktop && !shouldShowExpanded && !isMobile) ||
+            (isTablet && !isMobile),
+          // Mobile: no margin (sidebar is overlay)
+          'ml-0': isMobile,
+        })}
       >
         {children}
       </main>

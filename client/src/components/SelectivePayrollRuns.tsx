@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
+import {
   Calendar,
   Users,
   CheckSquare,
@@ -12,16 +12,32 @@ import {
   FileText,
   Play,
   Pause,
-  Check
+  Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -87,13 +103,18 @@ export function SelectivePayrollRuns() {
   // Fetch employees with filters
   const { data: employees = [], isLoading: employeesLoading } = useQuery({
     queryKey: ['/api/payroll/employees', filters, currentPeriod],
-    queryFn: () => apiRequest('GET', `/api/payroll/employees?period=${currentPeriod}&${new URLSearchParams(filters as any).toString()}`),
+    queryFn: () =>
+      apiRequest(
+        'GET',
+        `/api/payroll/employees?period=${currentPeriod}&${new URLSearchParams(filters as any).toString()}`
+      ),
   });
 
   // Fetch existing scopes for the period
   const { data: existingScopes = [], isLoading: scopesLoading } = useQuery({
     queryKey: ['/api/payroll/scopes', currentPeriod],
-    queryFn: () => apiRequest('GET', `/api/payroll/scopes?period=${currentPeriod}`),
+    queryFn: () =>
+      apiRequest('GET', `/api/payroll/scopes?period=${currentPeriod}`),
   });
 
   // Fetch filter options
@@ -143,40 +164,56 @@ export function SelectivePayrollRuns() {
   };
 
   const getIncompatibleEmployees = () => {
-    const selected = employees.filter(emp => selectedEmployees.includes(emp.employeeId));
+    const selected = employees.filter(emp =>
+      selectedEmployees.includes(emp.employeeId)
+    );
     const payCalendars = new Set(selected.map(emp => emp.payCalendar));
     const properties = new Set(selected.map(emp => emp.propertyId));
-    
+
     return {
       multipleCalendars: payCalendars.size > 1,
       multipleProperties: properties.size > 1,
       calendars: Array.from(payCalendars),
-      properties: Array.from(properties).map(propId => 
-        selected.find(emp => emp.propertyId === propId)?.propertyName || propId
+      properties: Array.from(properties).map(
+        propId =>
+          selected.find(emp => emp.propertyId === propId)?.propertyName ||
+          propId
       ),
     };
   };
 
   const getEmployeeWarnings = () => {
-    const selected = employees.filter(emp => selectedEmployees.includes(emp.employeeId));
+    const selected = employees.filter(emp =>
+      selectedEmployees.includes(emp.employeeId)
+    );
     const warnings = [];
-    
+
     const missingIban = selected.filter(emp => emp.missingIban).length;
     const missingAfm = selected.filter(emp => emp.missingAfm).length;
-    const pendingApprovals = selected.filter(emp => !emp.hasApprovedTimesheet).length;
+    const pendingApprovals = selected.filter(
+      emp => !emp.hasApprovedTimesheet
+    ).length;
     const capsWarnings = selected.filter(emp => emp.capsWarning).length;
-    
+
     if (missingIban > 0) warnings.push(`${missingIban} employees missing IBAN`);
     if (missingAfm > 0) warnings.push(`${missingAfm} employees missing AFM`);
-    if (pendingApprovals > 0) warnings.push(`${pendingApprovals} employees with pending timesheet approvals`);
-    if (capsWarnings > 0) warnings.push(`${capsWarnings} employees with cap consumption warnings`);
-    
+    if (pendingApprovals > 0)
+      warnings.push(
+        `${pendingApprovals} employees with pending timesheet approvals`
+      );
+    if (capsWarnings > 0)
+      warnings.push(`${capsWarnings} employees with cap consumption warnings`);
+
     return warnings;
   };
 
   const canCreateScope = () => {
     const incompatible = getIncompatibleEmployees();
-    return selectedEmployees.length > 0 && !incompatible.multipleCalendars && !incompatible.multipleProperties;
+    return (
+      selectedEmployees.length > 0 &&
+      !incompatible.multipleCalendars &&
+      !incompatible.multipleProperties
+    );
   };
 
   return (
@@ -184,12 +221,15 @@ export function SelectivePayrollRuns() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h2 className="text-2xl font-semibold tracking-tight">Selective Payroll Runs</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">
+            Selective Payroll Runs
+          </h2>
           <p className="text-sm text-muted-foreground">
-            Run payroll for specific employees or groups while maintaining compliance
+            Run payroll for specific employees or groups while maintaining
+            compliance
           </p>
         </div>
-        
+
         <div className="flex items-center gap-4">
           <Select value={currentPeriod} onValueChange={setCurrentPeriod}>
             <SelectTrigger className="w-40">
@@ -216,15 +256,26 @@ export function SelectivePayrollRuns() {
           <CardContent>
             <div className="grid gap-3">
               {existingScopes.map((scope: PayrollScope) => (
-                <div key={scope.scopeId} className="flex items-center justify-between p-3 border rounded-lg">
+                <div
+                  key={scope.scopeId}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
                   <div className="flex items-center gap-3">
-                    <Badge variant={scope.status === 'finalized' ? 'default' : 'secondary'}>
+                    <Badge
+                      variant={
+                        scope.status === 'finalized' ? 'default' : 'secondary'
+                      }
+                    >
                       {scope.status}
                     </Badge>
                     <div>
-                      <p className="font-medium">{scope.type.replace('_', ' ')} - {scope.totalEmployees} employees</p>
+                      <p className="font-medium">
+                        {scope.type.replace('_', ' ')} - {scope.totalEmployees}{' '}
+                        employees
+                      </p>
                       <p className="text-sm text-muted-foreground">
-                        €{scope.totalGrossPay.toFixed(2)} gross • {scope.description || 'No description'}
+                        €{scope.totalGrossPay.toFixed(2)} gross •{' '}
+                        {scope.description || 'No description'}
                       </p>
                     </div>
                   </div>
@@ -249,34 +300,55 @@ export function SelectivePayrollRuns() {
             <Input
               placeholder="Search employees..."
               value={filters.search}
-              onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+              onChange={e =>
+                setFilters(prev => ({ ...prev, search: e.target.value }))
+              }
             />
-            
-            <Select value={filters.property} onValueChange={(value) => setFilters(prev => ({ ...prev, property: value }))}>
+
+            <Select
+              value={filters.property}
+              onValueChange={value =>
+                setFilters(prev => ({ ...prev, property: value }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Property" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Properties</SelectItem>
                 {(filterOptions.properties || []).map(prop => (
-                  <SelectItem key={prop.id} value={prop.id}>{prop.name}</SelectItem>
+                  <SelectItem key={prop.id} value={prop.id}>
+                    {prop.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            
-            <Select value={filters.team} onValueChange={(value) => setFilters(prev => ({ ...prev, team: value }))}>
+
+            <Select
+              value={filters.team}
+              onValueChange={value =>
+                setFilters(prev => ({ ...prev, team: value }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Team" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Teams</SelectItem>
                 {(filterOptions.teams || []).map(team => (
-                  <SelectItem key={team} value={team}>{team}</SelectItem>
+                  <SelectItem key={team} value={team}>
+                    {team}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            
-            <Select value={filters.status} onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}>
+
+            <Select
+              value={filters.status}
+              onValueChange={value =>
+                setFilters(prev => ({ ...prev, status: value }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -287,8 +359,13 @@ export function SelectivePayrollRuns() {
                 <SelectItem value="terminated">Terminated</SelectItem>
               </SelectContent>
             </Select>
-            
-            <Select value={filters.contractType} onValueChange={(value) => setFilters(prev => ({ ...prev, contractType: value }))}>
+
+            <Select
+              value={filters.contractType}
+              onValueChange={value =>
+                setFilters(prev => ({ ...prev, contractType: value }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Contract" />
               </SelectTrigger>
@@ -299,8 +376,13 @@ export function SelectivePayrollRuns() {
                 <SelectItem value="seasonal">Seasonal</SelectItem>
               </SelectContent>
             </Select>
-            
-            <Select value={filters.payCalendar} onValueChange={(value) => setFilters(prev => ({ ...prev, payCalendar: value }))}>
+
+            <Select
+              value={filters.payCalendar}
+              onValueChange={value =>
+                setFilters(prev => ({ ...prev, payCalendar: value }))
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Pay Calendar" />
               </SelectTrigger>
@@ -310,14 +392,21 @@ export function SelectivePayrollRuns() {
                 <SelectItem value="semi_monthly">Semi-Monthly</SelectItem>
               </SelectContent>
             </Select>
-            
+
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="approved-only"
                 checked={filters.showOnlyApproved}
-                onCheckedChange={(checked) => setFilters(prev => ({ ...prev, showOnlyApproved: checked as boolean }))}
+                onCheckedChange={checked =>
+                  setFilters(prev => ({
+                    ...prev,
+                    showOnlyApproved: checked as boolean,
+                  }))
+                }
               />
-              <label htmlFor="approved-only" className="text-sm">Approved Only</label>
+              <label htmlFor="approved-only" className="text-sm">
+                Approved Only
+              </label>
             </div>
           </div>
         </CardContent>
@@ -344,9 +433,12 @@ export function SelectivePayrollRuns() {
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {employees.map((employee: Employee) => {
-                const isSelected = selectedEmployees.includes(employee.employeeId);
-                const isEligible = employee.hasApprovedTimesheet || !filters.showOnlyApproved;
-                
+                const isSelected = selectedEmployees.includes(
+                  employee.employeeId
+                );
+                const isEligible =
+                  employee.hasApprovedTimesheet || !filters.showOnlyApproved;
+
                 return (
                   <div
                     key={employee.employeeId}
@@ -357,7 +449,12 @@ export function SelectivePayrollRuns() {
                     <div className="flex items-center gap-3">
                       <Checkbox
                         checked={isSelected}
-                        onCheckedChange={(checked) => handleEmployeeSelect(employee.employeeId, checked as boolean)}
+                        onCheckedChange={checked =>
+                          handleEmployeeSelect(
+                            employee.employeeId,
+                            checked as boolean
+                          )
+                        }
                         disabled={!isEligible}
                       />
                       <div className="flex-1">
@@ -375,18 +472,29 @@ export function SelectivePayrollRuns() {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {employee.propertyName} • {employee.teamName} • €{employee.basePay}/month
+                          {employee.propertyName} • {employee.teamName} • €
+                          {employee.basePay}/month
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {!employee.hasApprovedTimesheet && (
-                        <AlertCircle className="h-4 w-4 text-amber-500" title="Pending timesheet approval" />
+                        <AlertCircle
+                          className="h-4 w-4 text-amber-500"
+                          title="Pending timesheet approval"
+                        />
                       )}
                       {employee.missingIban && (
-                        <CreditCard className="h-4 w-4 text-red-500" title="Missing IBAN" />
+                        <CreditCard
+                          className="h-4 w-4 text-red-500"
+                          title="Missing IBAN"
+                        />
                       )}
-                      <Badge variant={employee.status === 'active' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={
+                          employee.status === 'active' ? 'default' : 'secondary'
+                        }
+                      >
                         {employee.status}
                       </Badge>
                     </div>
@@ -411,17 +519,19 @@ export function SelectivePayrollRuns() {
                   {(() => {
                     const incompatible = getIncompatibleEmployees();
                     const warnings = getEmployeeWarnings();
-                    
+
                     return (
                       <div className="space-y-1">
                         {incompatible.multipleCalendars && (
                           <p className="text-sm text-red-600">
-                            ⚠️ Multiple pay calendars: {incompatible.calendars.join(', ')}
+                            ⚠️ Multiple pay calendars:{' '}
+                            {incompatible.calendars.join(', ')}
                           </p>
                         )}
                         {incompatible.multipleProperties && (
                           <p className="text-sm text-red-600">
-                            ⚠️ Multiple properties: {incompatible.properties.join(', ')}
+                            ⚠️ Multiple properties:{' '}
+                            {incompatible.properties.join(', ')}
                           </p>
                         )}
                         {warnings.map((warning, idx) => (
@@ -456,7 +566,7 @@ export function SelectivePayrollRuns() {
         period={currentPeriod}
         scopeType={scopeType}
         setScopeType={setScopeType}
-        onCreateScope={(data) => createScopeMutation.mutate(data)}
+        onCreateScope={data => createScopeMutation.mutate(data)}
         isCreating={createScopeMutation.isPending}
       />
     </div>
@@ -489,8 +599,13 @@ function ScopeReviewDrawer({
   const [description, setDescription] = useState('');
   const [includeApprovedOnly, setIncludeApprovedOnly] = useState(true);
 
-  const selectedEmployeeData = employees.filter(emp => selectedEmployees.includes(emp.employeeId));
-  const totalGrossPay = selectedEmployeeData.reduce((sum, emp) => sum + emp.basePay, 0);
+  const selectedEmployeeData = employees.filter(emp =>
+    selectedEmployees.includes(emp.employeeId)
+  );
+  const totalGrossPay = selectedEmployeeData.reduce(
+    (sum, emp) => sum + emp.basePay,
+    0
+  );
 
   const handleCreate = () => {
     onCreateScope({
@@ -518,7 +633,9 @@ function ScopeReviewDrawer({
               <Input value={period} disabled />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Scope Type</label>
+              <label className="block text-sm font-medium mb-2">
+                Scope Type
+              </label>
               <Select value={scopeType} onValueChange={setScopeType}>
                 <SelectTrigger>
                   <SelectValue />
@@ -535,10 +652,12 @@ function ScopeReviewDrawer({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Description (Optional)</label>
+            <label className="block text-sm font-medium mb-2">
+              Description (Optional)
+            </label>
             <Input
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               placeholder="e.g., Terminations for December 2024"
             />
           </div>
@@ -557,7 +676,9 @@ function ScopeReviewDrawer({
           {/* Summary */}
           <div className="grid grid-cols-3 gap-4 p-4 bg-muted rounded-lg">
             <div className="text-center">
-              <p className="text-2xl font-bold">{selectedEmployeeData.length}</p>
+              <p className="text-2xl font-bold">
+                {selectedEmployeeData.length}
+              </p>
               <p className="text-sm text-muted-foreground">Employees</p>
             </div>
             <div className="text-center">
@@ -577,15 +698,26 @@ function ScopeReviewDrawer({
             <h4 className="font-medium mb-3">Selected Employees</h4>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {selectedEmployeeData.map(employee => (
-                <div key={employee.employeeId} className="flex items-center justify-between p-2 border rounded">
+                <div
+                  key={employee.employeeId}
+                  className="flex items-center justify-between p-2 border rounded"
+                >
                   <div>
-                    <p className="font-medium">{employee.firstName} {employee.lastName}</p>
-                    <p className="text-sm text-muted-foreground">{employee.propertyName}</p>
+                    <p className="font-medium">
+                      {employee.firstName} {employee.lastName}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {employee.propertyName}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">€{employee.basePay.toFixed(2)}</p>
+                    <p className="font-medium">
+                      €{employee.basePay.toFixed(2)}
+                    </p>
                     {employee.capsWarning && (
-                      <Badge variant="destructive" className="text-xs">Warning</Badge>
+                      <Badge variant="destructive" className="text-xs">
+                        Warning
+                      </Badge>
                     )}
                   </div>
                 </div>

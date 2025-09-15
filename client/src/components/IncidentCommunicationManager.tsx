@@ -4,26 +4,38 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  MessageSquare, 
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
-  Settings, 
+import {
+  MessageSquare,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Settings,
   Send,
   RefreshCw,
   Eye,
-  Copy
+  Copy,
 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -59,7 +71,7 @@ interface GeneratedCommunication {
 const SEVERITY_COLORS = {
   minor: 'bg-yellow-100 text-yellow-800 border-yellow-300',
   major: 'bg-orange-100 text-orange-800 border-orange-300',
-  critical: 'bg-red-100 text-red-800 border-red-300'
+  critical: 'bg-red-100 text-red-800 border-red-300',
 };
 
 const TEMPLATE_TYPE_LABELS = {
@@ -72,14 +84,16 @@ const TEMPLATE_TYPE_LABELS = {
   maintenance_started: 'Maintenance Started',
   maintenance_completed: 'Maintenance Completed',
   service_degraded: 'Service Degraded',
-  service_restored: 'Service Restored'
+  service_restored: 'Service Restored',
 };
 
 export function IncidentCommunicationManager() {
   const [templates, setTemplates] = useState<CommunicationTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<CommunicationTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<CommunicationTemplate | null>(null);
   const [variables, setVariables] = useState<Record<string, string>>({});
-  const [generatedCommunication, setGeneratedCommunication] = useState<GeneratedCommunication | null>(null);
+  const [generatedCommunication, setGeneratedCommunication] =
+    useState<GeneratedCommunication | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const { toast } = useToast();
@@ -90,7 +104,10 @@ export function IncidentCommunicationManager() {
 
   const loadTemplates = async () => {
     try {
-      const response = await apiRequest('GET', '/api/incident-templates/templates');
+      const response = await apiRequest(
+        'GET',
+        '/api/incident-templates/templates'
+      );
       if (response.ok) {
         const data = await response.json();
         setTemplates(data.templates || []);
@@ -100,16 +117,18 @@ export function IncidentCommunicationManager() {
       toast({
         title: 'Error',
         description: 'Failed to load communication templates',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     }
   };
 
   const handleTemplateSelect = (templateKey: string) => {
-    const template = templates.find(t => 
-      t.severity ? `${t.type}_${t.severity}` === templateKey : t.type === templateKey
+    const template = templates.find(t =>
+      t.severity
+        ? `${t.type}_${t.severity}` === templateKey
+        : t.type === templateKey
     );
-    
+
     if (template) {
       setSelectedTemplate(template);
       // Initialize variables with default values
@@ -134,11 +153,15 @@ export function IncidentCommunicationManager() {
     if (!selectedTemplate) return false;
 
     try {
-      const response = await apiRequest('POST', '/api/incident-templates/validate', {
-        templateType: selectedTemplate.type,
-        variables,
-        severity: selectedTemplate.severity
-      });
+      const response = await apiRequest(
+        'POST',
+        '/api/incident-templates/validate',
+        {
+          templateType: selectedTemplate.type,
+          variables,
+          severity: selectedTemplate.severity,
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -153,7 +176,7 @@ export function IncidentCommunicationManager() {
       setValidationErrors(['Validation failed']);
       return false;
     }
-    
+
     return false;
   };
 
@@ -165,32 +188,36 @@ export function IncidentCommunicationManager() {
       toast({
         title: 'Validation Error',
         description: 'Please fix the validation errors before generating',
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
 
     setIsGenerating(true);
     try {
-      const response = await apiRequest('POST', '/api/incident-templates/generate', {
-        templateType: selectedTemplate.type,
-        variables,
-        severity: selectedTemplate.severity
-      });
+      const response = await apiRequest(
+        'POST',
+        '/api/incident-templates/generate',
+        {
+          templateType: selectedTemplate.type,
+          variables,
+          severity: selectedTemplate.severity,
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
         setGeneratedCommunication(data.communication);
         toast({
           title: 'Success',
-          description: 'Communication generated successfully'
+          description: 'Communication generated successfully',
         });
       } else {
         const errorData = await response.json();
         toast({
           title: 'Generation Failed',
           description: errorData.error || 'Failed to generate communication',
-          variant: 'destructive'
+          variant: 'destructive',
         });
       }
     } catch (error) {
@@ -198,7 +225,7 @@ export function IncidentCommunicationManager() {
       toast({
         title: 'Error',
         description: 'Failed to generate communication',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsGenerating(false);
@@ -209,7 +236,7 @@ export function IncidentCommunicationManager() {
     navigator.clipboard.writeText(text);
     toast({
       title: 'Copied',
-      description: 'Communication copied to clipboard'
+      description: 'Communication copied to clipboard',
     });
   };
 
@@ -220,26 +247,35 @@ export function IncidentCommunicationManager() {
     if (type.includes('maintenance')) {
       return <Settings className="h-4 w-4" />;
     }
-    if (type.includes('resolved') || type.includes('completed') || type.includes('restored')) {
+    if (
+      type.includes('resolved') ||
+      type.includes('completed') ||
+      type.includes('restored')
+    ) {
       return <CheckCircle className="h-4 w-4" />;
     }
     return <MessageSquare className="h-4 w-4" />;
   };
 
-  const groupedTemplates = templates.reduce((groups, template) => {
-    const key = template.type;
-    if (!groups[key]) {
-      groups[key] = [];
-    }
-    groups[key].push(template);
-    return groups;
-  }, {} as Record<string, CommunicationTemplate[]>);
+  const groupedTemplates = templates.reduce(
+    (groups, template) => {
+      const key = template.type;
+      if (!groups[key]) {
+        groups[key] = [];
+      }
+      groups[key].push(template);
+      return groups;
+    },
+    {} as Record<string, CommunicationTemplate[]>
+  );
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold">Incident Communication Manager</h2>
+          <h2 className="text-2xl font-semibold">
+            Incident Communication Manager
+          </h2>
           <p className="text-sm text-muted-foreground">
             Create standardized communications for incidents and maintenance
           </p>
@@ -267,35 +303,56 @@ export function IncidentCommunicationManager() {
                   <SelectValue placeholder="Select a communication template" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(groupedTemplates).map(([type, typeTemplates]) => (
-                    <div key={type}>
-                      <div className="font-medium text-sm text-muted-foreground px-2 py-1">
-                        {TEMPLATE_TYPE_LABELS[type as keyof typeof TEMPLATE_TYPE_LABELS] || type}
+                  {Object.entries(groupedTemplates).map(
+                    ([type, typeTemplates]) => (
+                      <div key={type}>
+                        <div className="font-medium text-sm text-muted-foreground px-2 py-1">
+                          {TEMPLATE_TYPE_LABELS[
+                            type as keyof typeof TEMPLATE_TYPE_LABELS
+                          ] || type}
+                        </div>
+                        {typeTemplates.map(template => (
+                          <SelectItem
+                            key={
+                              template.severity
+                                ? `${template.type}_${template.severity}`
+                                : template.type
+                            }
+                            value={
+                              template.severity
+                                ? `${template.type}_${template.severity}`
+                                : template.type
+                            }
+                          >
+                            <div className="flex items-center space-x-2">
+                              {getTemplateIcon(template.type)}
+                              <span>
+                                {template.severity ? (
+                                  <>
+                                    {
+                                      TEMPLATE_TYPE_LABELS[
+                                        template.type as keyof typeof TEMPLATE_TYPE_LABELS
+                                      ]
+                                    }{' '}
+                                    -
+                                    <Badge
+                                      className={`ml-1 ${SEVERITY_COLORS[template.severity as keyof typeof SEVERITY_COLORS]}`}
+                                    >
+                                      {template.severity}
+                                    </Badge>
+                                  </>
+                                ) : (
+                                  TEMPLATE_TYPE_LABELS[
+                                    template.type as keyof typeof TEMPLATE_TYPE_LABELS
+                                  ]
+                                )}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
                       </div>
-                      {typeTemplates.map(template => (
-                        <SelectItem 
-                          key={template.severity ? `${template.type}_${template.severity}` : template.type}
-                          value={template.severity ? `${template.type}_${template.severity}` : template.type}
-                        >
-                          <div className="flex items-center space-x-2">
-                            {getTemplateIcon(template.type)}
-                            <span>
-                              {template.severity ? (
-                                <>
-                                  {TEMPLATE_TYPE_LABELS[template.type as keyof typeof TEMPLATE_TYPE_LABELS]} - 
-                                  <Badge className={`ml-1 ${SEVERITY_COLORS[template.severity as keyof typeof SEVERITY_COLORS]}`}>
-                                    {template.severity}
-                                  </Badge>
-                                </>
-                              ) : (
-                                TEMPLATE_TYPE_LABELS[template.type as keyof typeof TEMPLATE_TYPE_LABELS]
-                              )}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </div>
-                  ))}
+                    )
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -303,16 +360,22 @@ export function IncidentCommunicationManager() {
             {selectedTemplate && (
               <div className="space-y-4 p-4 bg-muted/50 rounded-lg">
                 <div>
-                  <Label className="text-sm font-medium">Template Preview</Label>
+                  <Label className="text-sm font-medium">
+                    Template Preview
+                  </Label>
                   <div className="mt-2 space-y-2">
                     <div>
-                      <span className="text-xs text-muted-foreground">Subject:</span>
+                      <span className="text-xs text-muted-foreground">
+                        Subject:
+                      </span>
                       <p className="text-sm font-mono bg-background p-2 rounded border">
                         {selectedTemplate.subjectTemplate}
                       </p>
                     </div>
                     <div>
-                      <span className="text-xs text-muted-foreground">Message:</span>
+                      <span className="text-xs text-muted-foreground">
+                        Message:
+                      </span>
                       <p className="text-sm font-mono bg-background p-2 rounded border">
                         {selectedTemplate.messageTemplate}
                       </p>
@@ -321,10 +384,16 @@ export function IncidentCommunicationManager() {
                 </div>
 
                 <div>
-                  <Label className="text-sm font-medium">Default Channels</Label>
+                  <Label className="text-sm font-medium">
+                    Default Channels
+                  </Label>
                   <div className="flex flex-wrap gap-1 mt-1">
                     {selectedTemplate.defaultChannels.map(channel => (
-                      <Badge key={channel} variant="outline" className="text-xs">
+                      <Badge
+                        key={channel}
+                        variant="outline"
+                        className="text-xs"
+                      >
                         {channel}
                       </Badge>
                     ))}
@@ -351,7 +420,9 @@ export function IncidentCommunicationManager() {
                   <AlertDescription>
                     <ul className="list-disc list-inside space-y-1">
                       {validationErrors.map((error, index) => (
-                        <li key={index} className="text-sm">{error}</li>
+                        <li key={index} className="text-sm">
+                          {error}
+                        </li>
                       ))}
                     </ul>
                   </AlertDescription>
@@ -360,25 +431,38 @@ export function IncidentCommunicationManager() {
 
               {selectedTemplate.variables.map(variable => (
                 <div key={variable.key} className="space-y-2">
-                  <Label htmlFor={variable.key} className="flex items-center space-x-2">
+                  <Label
+                    htmlFor={variable.key}
+                    className="flex items-center space-x-2"
+                  >
                     <span>{variable.key}</span>
                     {variable.required && (
-                      <Badge variant="destructive" className="text-xs">required</Badge>
+                      <Badge variant="destructive" className="text-xs">
+                        required
+                      </Badge>
                     )}
                   </Label>
                   <Input
                     id={variable.key}
                     placeholder={variable.example}
                     value={variables[variable.key] || ''}
-                    onChange={(e) => handleVariableChange(variable.key, e.target.value)}
-                    className={validationErrors.some(e => e.includes(variable.key)) ? 'border-red-300' : ''}
+                    onChange={e =>
+                      handleVariableChange(variable.key, e.target.value)
+                    }
+                    className={
+                      validationErrors.some(e => e.includes(variable.key))
+                        ? 'border-red-300'
+                        : ''
+                    }
                   />
-                  <p className="text-xs text-muted-foreground">{variable.description}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {variable.description}
+                  </p>
                 </div>
               ))}
 
-              <Button 
-                onClick={generateCommunication} 
+              <Button
+                onClick={generateCommunication}
                 disabled={isGenerating}
                 className="w-full"
               >
@@ -414,7 +498,9 @@ export function IncidentCommunicationManager() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => copyCommunication(generatedCommunication.subject)}
+                    onClick={() =>
+                      copyCommunication(generatedCommunication.subject)
+                    }
                   >
                     <Copy className="h-3 w-3 mr-1" />
                     Copy
@@ -433,7 +519,9 @@ export function IncidentCommunicationManager() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => copyCommunication(generatedCommunication.message)}
+                    onClick={() =>
+                      copyCommunication(generatedCommunication.message)
+                    }
                   >
                     <Copy className="h-3 w-3 mr-1" />
                     Copy
@@ -449,16 +537,26 @@ export function IncidentCommunicationManager() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div>
-                    <span className="text-sm text-muted-foreground">Severity:</span>
-                    <Badge className={`ml-1 ${SEVERITY_COLORS[generatedCommunication.severity as keyof typeof SEVERITY_COLORS]}`}>
+                    <span className="text-sm text-muted-foreground">
+                      Severity:
+                    </span>
+                    <Badge
+                      className={`ml-1 ${SEVERITY_COLORS[generatedCommunication.severity as keyof typeof SEVERITY_COLORS]}`}
+                    >
                       {generatedCommunication.severity}
                     </Badge>
                   </div>
                   <div>
-                    <span className="text-sm text-muted-foreground">Channels:</span>
+                    <span className="text-sm text-muted-foreground">
+                      Channels:
+                    </span>
                     <div className="flex flex-wrap gap-1 ml-1">
                       {generatedCommunication.channels.map(channel => (
-                        <Badge key={channel} variant="outline" className="text-xs">
+                        <Badge
+                          key={channel}
+                          variant="outline"
+                          className="text-xs"
+                        >
                           {channel}
                         </Badge>
                       ))}
@@ -466,9 +564,11 @@ export function IncidentCommunicationManager() {
                   </div>
                 </div>
                 <Button
-                  onClick={() => copyCommunication(
-                    `Subject: ${generatedCommunication.subject}\n\n${generatedCommunication.message}`
-                  )}
+                  onClick={() =>
+                    copyCommunication(
+                      `Subject: ${generatedCommunication.subject}\n\n${generatedCommunication.message}`
+                    )
+                  }
                 >
                   <Copy className="h-4 w-4 mr-2" />
                   Copy All

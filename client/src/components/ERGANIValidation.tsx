@@ -11,7 +11,13 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   CheckCircle,
   XCircle,
@@ -47,7 +53,7 @@ import {
   BarChart3,
   TrendingUp,
   Target,
-  Flag
+  Flag,
 } from 'lucide-react';
 
 interface ValidationResult {
@@ -138,7 +144,7 @@ const SAMPLE_EMPLOYEES: ERGANIEmployee[] = [
     phone: '+30 210 123 4567',
     email: 'dimitris.p@company.gr',
     emergencyContact: 'Maria Papadopoulos',
-    emergencyPhone: '+30 210 987 6543'
+    emergencyPhone: '+30 210 987 6543',
   },
   {
     id: 'emp-002',
@@ -155,8 +161,8 @@ const SAMPLE_EMPLOYEES: ERGANIEmployee[] = [
     phone: '+30 231 098 7654',
     email: 'sofia.n@company.gr',
     emergencyContact: 'Yannis Nikolaou',
-    emergencyPhone: '+30 231 555 1234'
-  }
+    emergencyPhone: '+30 231 555 1234',
+  },
 ];
 
 const SAMPLE_CONTRACTS: ERGANIContract[] = [
@@ -172,7 +178,7 @@ const SAMPLE_CONTRACTS: ERGANIContract[] = [
     specialtyCode: '2512',
     insertionReason: 'NEW_HIRE',
     workLocation: 'Athens Office',
-    collectiveAgreement: 'IT_SECTOR_2024'
+    collectiveAgreement: 'IT_SECTOR_2024',
   },
   {
     id: 'cont-002',
@@ -186,8 +192,8 @@ const SAMPLE_CONTRACTS: ERGANIContract[] = [
     department: 'Marketing',
     specialtyCode: '2431',
     insertionReason: 'SEASONAL',
-    workLocation: 'Thessaloniki Office'
-  }
+    workLocation: 'Thessaloniki Office',
+  },
 ];
 
 const SAMPLE_WORK_CARDS: ERGANIWorkCard[] = [
@@ -202,26 +208,33 @@ const SAMPLE_WORK_CARDS: ERGANIWorkCard[] = [
     location: 'Athens Office',
     overtime: false,
     holidayWork: false,
-    nightShift: false
-  }
+    nightShift: false,
+  },
 ];
 
-export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProps) {
+export default function ERGANIValidation({
+  locale = 'en',
+}: ERGANIValidationProps) {
   const [selectedTab, setSelectedTab] = useState('dashboard');
   const [employees, setEmployees] = useState(SAMPLE_EMPLOYEES);
   const [contracts, setContracts] = useState(SAMPLE_CONTRACTS);
   const [workCards, setWorkCards] = useState(SAMPLE_WORK_CARDS);
-  const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
-  const [validationSummary, setValidationSummary] = useState<ValidationSummary>({
-    totalChecks: 0,
-    validChecks: 0,
-    invalidChecks: 0,
-    warningChecks: 0,
-    overallScore: 0,
-    readyToSubmit: false
-  });
+  const [validationResults, setValidationResults] = useState<
+    ValidationResult[]
+  >([]);
+  const [validationSummary, setValidationSummary] = useState<ValidationSummary>(
+    {
+      totalChecks: 0,
+      validChecks: 0,
+      invalidChecks: 0,
+      warningChecks: 0,
+      overallScore: 0,
+      readyToSubmit: false,
+    }
+  );
   const [isValidating, setIsValidating] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<ERGANIEmployee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<ERGANIEmployee | null>(null);
   const [autoValidate, setAutoValidate] = useState(true);
 
   const translations = {
@@ -234,7 +247,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         contracts: 'Contracts',
         workCards: 'Work Cards',
         validation: 'Validation Results',
-        settings: 'Settings'
+        settings: 'Settings',
       },
       validation: {
         valid: 'Valid',
@@ -249,7 +262,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         totalChecks: 'Total Checks',
         validChecks: 'Valid',
         invalidChecks: 'Invalid',
-        warningChecks: 'Warnings'
+        warningChecks: 'Warnings',
       },
       actions: {
         validate: 'Validate All',
@@ -261,7 +274,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         details: 'View Details',
         edit: 'Edit',
         delete: 'Delete',
-        add: 'Add New'
+        add: 'Add New',
       },
       fields: {
         firstName: 'First Name',
@@ -283,7 +296,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         salary: 'Salary',
         position: 'Position',
         department: 'Department',
-        workLocation: 'Work Location'
+        workLocation: 'Work Location',
       },
       validationRules: {
         title: 'ERGANI Validation Rules',
@@ -295,7 +308,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         salaryMinimum: 'Salary cannot be below minimum wage',
         workingHoursMax: 'Working hours cannot exceed 48 per week',
         contractDates: 'Contract end date must be after start date',
-        specialtyCode: 'Valid specialty code required'
+        specialtyCode: 'Valid specialty code required',
       },
       errors: {
         invalidAFM: 'Invalid AFM format or checksum',
@@ -308,7 +321,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         missingField: 'Required field is missing',
         invalidContractDates: 'Contract end date before start date',
         duplicateAFM: 'AFM already exists in system',
-        duplicateAMKA: 'AMKA already exists in system'
+        duplicateAMKA: 'AMKA already exists in system',
       },
       warnings: {
         unusualSalary: 'Salary seems unusually high/low',
@@ -316,8 +329,8 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         nightShift: 'Night shift work requires special approval',
         overtime: 'Overtime work detected',
         holidayWork: 'Work on public holiday',
-        contractExpiring: 'Contract expiring within 30 days'
-      }
+        contractExpiring: 'Contract expiring within 30 days',
+      },
     },
     el: {
       title: 'Επικύρωση ΕΡΓΑΝΗ',
@@ -328,7 +341,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         contracts: 'Συμβόλαια',
         workCards: 'Κάρτες Εργασίας',
         validation: 'Αποτελέσματα Επικύρωσης',
-        settings: 'Ρυθμίσεις'
+        settings: 'Ρυθμίσεις',
       },
       validation: {
         valid: 'Έγκυρο',
@@ -343,7 +356,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         totalChecks: 'Σύνολο Ελέγχων',
         validChecks: 'Έγκυρα',
         invalidChecks: 'Μη Έγκυρα',
-        warningChecks: 'Προειδοποιήσεις'
+        warningChecks: 'Προειδοποιήσεις',
       },
       actions: {
         validate: 'Επικύρωση Όλων',
@@ -355,7 +368,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         details: 'Προβολή Λεπτομερειών',
         edit: 'Επεξεργασία',
         delete: 'Διαγραφή',
-        add: 'Προσθήκη Νέου'
+        add: 'Προσθήκη Νέου',
       },
       fields: {
         firstName: 'Όνομα',
@@ -377,7 +390,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         salary: 'Μισθός',
         position: 'Θέση',
         department: 'Τμήμα',
-        workLocation: 'Τόπος Εργασίας'
+        workLocation: 'Τόπος Εργασίας',
       },
       validationRules: {
         title: 'Κανόνες Επικύρωσης ΕΡΓΑΝΗ',
@@ -387,9 +400,11 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         phoneFormat: 'Απαιτείται έγκυρος ελληνικός αριθμός τηλεφώνου',
         dateFormat: 'Η ημερομηνία πρέπει να είναι σε μορφή ΗΗ/ΜΜ/ΕΕΕΕ',
         salaryMinimum: 'Ο μισθός δεν μπορεί να είναι κάτω από τον κατώτατο',
-        workingHoursMax: 'Οι ώρες εργασίας δεν μπορούν να υπερβαίνουν τις 48 την εβδομάδα',
-        contractDates: 'Η ημερομηνία λήξης συμβολαίου πρέπει να είναι μετά την έναρξη',
-        specialtyCode: 'Απαιτείται έγκυρος κωδικός ειδικότητας'
+        workingHoursMax:
+          'Οι ώρες εργασίας δεν μπορούν να υπερβαίνουν τις 48 την εβδομάδα',
+        contractDates:
+          'Η ημερομηνία λήξης συμβολαίου πρέπει να είναι μετά την έναρξη',
+        specialtyCode: 'Απαιτείται έγκυρος κωδικός ειδικότητας',
       },
       errors: {
         invalidAFM: 'Μη έγκυρη μορφή ή άθροισμα ελέγχου ΑΦΜ',
@@ -398,11 +413,12 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         invalidPhone: 'Μη έγκυρη μορφή ελληνικού τηλεφώνου',
         invalidDate: 'Μη έγκυρη μορφή ημερομηνίας',
         salaryTooLow: 'Μισθός κάτω από τον κατώτατο (€760)',
-        workingHoursTooHigh: 'Ώρες εργασίας υπερβαίνουν το νόμιμο όριο (48ω/εβδομάδα)',
+        workingHoursTooHigh:
+          'Ώρες εργασίας υπερβαίνουν το νόμιμο όριο (48ω/εβδομάδα)',
         missingField: 'Το υποχρεωτικό πεδίο λείπει',
         invalidContractDates: 'Ημερομηνία λήξης συμβολαίου πριν την έναρξη',
         duplicateAFM: 'Το ΑΦΜ υπάρχει ήδη στο σύστημα',
-        duplicateAMKA: 'Το ΑΜΚΑ υπάρχει ήδη στο σύστημα'
+        duplicateAMKA: 'Το ΑΜΚΑ υπάρχει ήδη στο σύστημα',
       },
       warnings: {
         unusualSalary: 'Ο μισθός φαίνεται ασυνήθιστα υψηλός/χαμηλός',
@@ -410,9 +426,9 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
         nightShift: 'Η νυχτερινή εργασία απαιτεί ειδική άδεια',
         overtime: 'Εντοπίστηκε υπερωριακή εργασία',
         holidayWork: 'Εργασία σε δημόσια αργία',
-        contractExpiring: 'Το συμβόλαιο λήγει εντός 30 ημερών'
-      }
-    }
+        contractExpiring: 'Το συμβόλαιο λήγει εντός 30 ημερών',
+      },
+    },
   };
 
   const t = translations[locale];
@@ -420,7 +436,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
   // AFM validation with checksum
   const validateAFM = useCallback((afm: string): boolean => {
     if (!/^\d{9}$/.test(afm)) return false;
-    
+
     const digits = afm.split('').map(Number);
     let sum = 0;
     for (let i = 0; i < 8; i++) {
@@ -428,14 +444,14 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
     }
     const checksum = sum % 11;
     const expectedChecksum = checksum < 10 ? checksum : 0;
-    
+
     return digits[8] === expectedChecksum;
   }, []);
 
   // AMKA validation with checksum
   const validateAMKA = useCallback((amka: string): boolean => {
     if (!/^\d{11}$/.test(amka)) return false;
-    
+
     const digits = amka.split('').map(Number);
     let sum = 0;
     for (let i = 0; i < 10; i++) {
@@ -445,7 +461,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
       }
     }
     const checksum = (10 - (sum % 10)) % 10;
-    
+
     return digits[10] === checksum;
   }, []);
 
@@ -462,230 +478,254 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
   }, []);
 
   // Comprehensive validation function
-  const validateEmployeeData = useCallback((employee: ERGANIEmployee): ValidationResult[] => {
-    const results: ValidationResult[] = [];
+  const validateEmployeeData = useCallback(
+    (employee: ERGANIEmployee): ValidationResult[] => {
+      const results: ValidationResult[] = [];
 
-    // AFM validation
-    if (!validateAFM(employee.afm)) {
-      results.push({
-        field: 'afm',
-        fieldEl: 'ΑΦΜ',
-        status: 'invalid',
-        message: t.errors.invalidAFM,
-        messageEl: 'Μη έγκυρη μορφή ή άθροισμα ελέγχου ΑΦΜ',
-        code: 'AFM_INVALID',
-        suggestion: 'Please verify the AFM number and checksum',
-        suggestionEl: 'Παρακαλώ επιβεβαιώστε τον αριθμό και το άθροισμα ελέγχου του ΑΦΜ'
-      });
-    } else {
-      results.push({
-        field: 'afm',
-        fieldEl: 'ΑΦΜ',
-        status: 'valid',
-        message: 'AFM is valid',
-        messageEl: 'Το ΑΦΜ είναι έγκυρο'
-      });
-    }
-
-    // AMKA validation
-    if (!validateAMKA(employee.amka)) {
-      results.push({
-        field: 'amka',
-        fieldEl: 'ΑΜΚΑ',
-        status: 'invalid',
-        message: t.errors.invalidAMKA,
-        messageEl: 'Μη έγκυρη μορφή ή άθροισμα ελέγχου ΑΜΚΑ',
-        code: 'AMKA_INVALID',
-        suggestion: 'Please verify the AMKA number and checksum',
-        suggestionEl: 'Παρακαλώ επιβεβαιώστε τον αριθμό και το άθροισμα ελέγχου του ΑΜΚΑ'
-      });
-    } else {
-      results.push({
-        field: 'amka',
-        fieldEl: 'ΑΜΚΑ',
-        status: 'valid',
-        message: 'AMKA is valid',
-        messageEl: 'Το ΑΜΚΑ είναι έγκυρο'
-      });
-    }
-
-    // Email validation
-    if (!validateEmail(employee.email)) {
-      results.push({
-        field: 'email',
-        fieldEl: 'Email',
-        status: 'invalid',
-        message: t.errors.invalidEmail,
-        messageEl: 'Μη έγκυρη μορφή διεύθυνσης email',
-        code: 'EMAIL_INVALID',
-        suggestion: 'Please enter a valid email address',
-        suggestionEl: 'Παρακαλώ εισάγετε έγκυρη διεύθυνση email'
-      });
-    } else {
-      results.push({
-        field: 'email',
-        fieldEl: 'Email',
-        status: 'valid',
-        message: 'Email is valid',
-        messageEl: 'Το email είναι έγκυρο'
-      });
-    }
-
-    // Phone validation
-    if (!validateGreekPhone(employee.phone)) {
-      results.push({
-        field: 'phone',
-        fieldEl: 'Τηλέφωνο',
-        status: 'invalid',
-        message: t.errors.invalidPhone,
-        messageEl: 'Μη έγκυρη μορφή ελληνικού τηλεφώνου',
-        code: 'PHONE_INVALID',
-        suggestion: 'Please enter a valid Greek phone number',
-        suggestionEl: 'Παρακαλώ εισάγετε έγκυρο ελληνικό αριθμό τηλεφώνου'
-      });
-    } else {
-      results.push({
-        field: 'phone',
-        fieldEl: 'Τηλέφωνο',
-        status: 'valid',
-        message: 'Phone number is valid',
-        messageEl: 'Ο αριθμός τηλεφώνου είναι έγκυρος'
-      });
-    }
-
-    // Required fields check
-    const requiredFields = ['firstName', 'lastName', 'birthDate', 'nationality', 'gender', 'address', 'city', 'postalCode'];
-    requiredFields.forEach(field => {
-      const value = employee[field as keyof ERGANIEmployee];
-      if (!value || value.toString().trim() === '') {
+      // AFM validation
+      if (!validateAFM(employee.afm)) {
         results.push({
-          field,
-          fieldEl: t.fields[field as keyof typeof t.fields],
+          field: 'afm',
+          fieldEl: 'ΑΦΜ',
           status: 'invalid',
-          message: t.errors.missingField,
-          messageEl: 'Το υποχρεωτικό πεδίο λείπει',
-          code: 'MISSING_FIELD',
-          suggestion: `Please provide ${t.fields[field as keyof typeof t.fields]}`,
-          suggestionEl: `Παρακαλώ συμπληρώστε το πεδίο ${t.fields[field as keyof typeof t.fields]}`
+          message: t.errors.invalidAFM,
+          messageEl: 'Μη έγκυρη μορφή ή άθροισμα ελέγχου ΑΦΜ',
+          code: 'AFM_INVALID',
+          suggestion: 'Please verify the AFM number and checksum',
+          suggestionEl:
+            'Παρακαλώ επιβεβαιώστε τον αριθμό και το άθροισμα ελέγχου του ΑΦΜ',
         });
       } else {
         results.push({
-          field,
-          fieldEl: t.fields[field as keyof typeof t.fields],
+          field: 'afm',
+          fieldEl: 'ΑΦΜ',
           status: 'valid',
-          message: `${t.fields[field as keyof typeof t.fields]} is provided`,
-          messageEl: `Το πεδίο ${t.fields[field as keyof typeof t.fields]} είναι συμπληρωμένο`
+          message: 'AFM is valid',
+          messageEl: 'Το ΑΦΜ είναι έγκυρο',
         });
       }
-    });
 
-    return results;
-  }, [validateAFM, validateAMKA, validateEmail, validateGreekPhone, t]);
+      // AMKA validation
+      if (!validateAMKA(employee.amka)) {
+        results.push({
+          field: 'amka',
+          fieldEl: 'ΑΜΚΑ',
+          status: 'invalid',
+          message: t.errors.invalidAMKA,
+          messageEl: 'Μη έγκυρη μορφή ή άθροισμα ελέγχου ΑΜΚΑ',
+          code: 'AMKA_INVALID',
+          suggestion: 'Please verify the AMKA number and checksum',
+          suggestionEl:
+            'Παρακαλώ επιβεβαιώστε τον αριθμό και το άθροισμα ελέγχου του ΑΜΚΑ',
+        });
+      } else {
+        results.push({
+          field: 'amka',
+          fieldEl: 'ΑΜΚΑ',
+          status: 'valid',
+          message: 'AMKA is valid',
+          messageEl: 'Το ΑΜΚΑ είναι έγκυρο',
+        });
+      }
+
+      // Email validation
+      if (!validateEmail(employee.email)) {
+        results.push({
+          field: 'email',
+          fieldEl: 'Email',
+          status: 'invalid',
+          message: t.errors.invalidEmail,
+          messageEl: 'Μη έγκυρη μορφή διεύθυνσης email',
+          code: 'EMAIL_INVALID',
+          suggestion: 'Please enter a valid email address',
+          suggestionEl: 'Παρακαλώ εισάγετε έγκυρη διεύθυνση email',
+        });
+      } else {
+        results.push({
+          field: 'email',
+          fieldEl: 'Email',
+          status: 'valid',
+          message: 'Email is valid',
+          messageEl: 'Το email είναι έγκυρο',
+        });
+      }
+
+      // Phone validation
+      if (!validateGreekPhone(employee.phone)) {
+        results.push({
+          field: 'phone',
+          fieldEl: 'Τηλέφωνο',
+          status: 'invalid',
+          message: t.errors.invalidPhone,
+          messageEl: 'Μη έγκυρη μορφή ελληνικού τηλεφώνου',
+          code: 'PHONE_INVALID',
+          suggestion: 'Please enter a valid Greek phone number',
+          suggestionEl: 'Παρακαλώ εισάγετε έγκυρο ελληνικό αριθμό τηλεφώνου',
+        });
+      } else {
+        results.push({
+          field: 'phone',
+          fieldEl: 'Τηλέφωνο',
+          status: 'valid',
+          message: 'Phone number is valid',
+          messageEl: 'Ο αριθμός τηλεφώνου είναι έγκυρος',
+        });
+      }
+
+      // Required fields check
+      const requiredFields = [
+        'firstName',
+        'lastName',
+        'birthDate',
+        'nationality',
+        'gender',
+        'address',
+        'city',
+        'postalCode',
+      ];
+      requiredFields.forEach(field => {
+        const value = employee[field as keyof ERGANIEmployee];
+        if (!value || value.toString().trim() === '') {
+          results.push({
+            field,
+            fieldEl: t.fields[field as keyof typeof t.fields],
+            status: 'invalid',
+            message: t.errors.missingField,
+            messageEl: 'Το υποχρεωτικό πεδίο λείπει',
+            code: 'MISSING_FIELD',
+            suggestion: `Please provide ${t.fields[field as keyof typeof t.fields]}`,
+            suggestionEl: `Παρακαλώ συμπληρώστε το πεδίο ${t.fields[field as keyof typeof t.fields]}`,
+          });
+        } else {
+          results.push({
+            field,
+            fieldEl: t.fields[field as keyof typeof t.fields],
+            status: 'valid',
+            message: `${t.fields[field as keyof typeof t.fields]} is provided`,
+            messageEl: `Το πεδίο ${t.fields[field as keyof typeof t.fields]} είναι συμπληρωμένο`,
+          });
+        }
+      });
+
+      return results;
+    },
+    [validateAFM, validateAMKA, validateEmail, validateGreekPhone, t]
+  );
 
   // Contract validation
-  const validateContractData = useCallback((contract: ERGANIContract): ValidationResult[] => {
-    const results: ValidationResult[] = [];
+  const validateContractData = useCallback(
+    (contract: ERGANIContract): ValidationResult[] => {
+      const results: ValidationResult[] = [];
 
-    // Salary validation
-    const minimumWage = 760;
-    if (contract.salary < minimumWage) {
-      results.push({
-        field: 'salary',
-        fieldEl: 'Μισθός',
-        status: 'invalid',
-        message: t.errors.salaryTooLow,
-        messageEl: `Μισθός κάτω από τον κατώτατο (€${minimumWage})`,
-        code: 'SALARY_TOO_LOW',
-        suggestion: `Salary must be at least €${minimumWage}`,
-        suggestionEl: `Ο μισθός πρέπει να είναι τουλάχιστον €${minimumWage}`
-      });
-    } else {
-      results.push({
-        field: 'salary',
-        fieldEl: 'Μισθός',
-        status: 'valid',
-        message: 'Salary meets minimum wage requirements',
-        messageEl: 'Ο μισθός πληροί τις απαιτήσεις κατώτατου μισθού'
-      });
-    }
-
-    // Working hours validation
-    if (contract.workingHours > 48) {
-      results.push({
-        field: 'workingHours',
-        fieldEl: 'Ώρες Εργασίας',
-        status: 'invalid',
-        message: t.errors.workingHoursTooHigh,
-        messageEl: 'Ώρες εργασίας υπερβαίνουν το νόμιμο όριο (48ω/εβδομάδα)',
-        code: 'WORKING_HOURS_TOO_HIGH',
-        suggestion: 'Working hours cannot exceed 48 per week',
-        suggestionEl: 'Οι ώρες εργασίας δεν μπορούν να υπερβαίνουν τις 48 την εβδομάδα'
-      });
-    } else {
-      results.push({
-        field: 'workingHours',
-        fieldEl: 'Ώρες Εργασίας',
-        status: 'valid',
-        message: 'Working hours are within legal limits',
-        messageEl: 'Οι ώρες εργασίας είναι εντός των νόμιμων ορίων'
-      });
-    }
-
-    // Contract dates validation
-    if (contract.endDate && new Date(contract.endDate) <= new Date(contract.startDate)) {
-      results.push({
-        field: 'contractDates',
-        fieldEl: 'Ημερομηνίες Συμβολαίου',
-        status: 'invalid',
-        message: t.errors.invalidContractDates,
-        messageEl: 'Ημερομηνία λήξης συμβολαίου πριν την έναρξη',
-        code: 'INVALID_CONTRACT_DATES',
-        suggestion: 'End date must be after start date',
-        suggestionEl: 'Η ημερομηνία λήξης πρέπει να είναι μετά την έναρξη'
-      });
-    } else {
-      results.push({
-        field: 'contractDates',
-        fieldEl: 'Ημερομηνίες Συμβολαίου',
-        status: 'valid',
-        message: 'Contract dates are valid',
-        messageEl: 'Οι ημερομηνίες συμβολαίου είναι έγκυρες'
-      });
-    }
-
-    // Warning for expiring contracts
-    if (contract.endDate) {
-      const daysUntilExpiry = Math.ceil((new Date(contract.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-      if (daysUntilExpiry <= 30 && daysUntilExpiry >= 0) {
+      // Salary validation
+      const minimumWage = 760;
+      if (contract.salary < minimumWage) {
         results.push({
-          field: 'contractExpiry',
-          fieldEl: 'Λήξη Συμβολαίου',
-          status: 'warning',
-          message: t.warnings.contractExpiring,
-          messageEl: 'Το συμβόλαιο λήγει εντός 30 ημερών',
-          code: 'CONTRACT_EXPIRING',
-          suggestion: 'Consider renewing the contract soon',
-          suggestionEl: 'Σκεφτείτε να ανανεώσετε το συμβόλαιο σύντομα'
+          field: 'salary',
+          fieldEl: 'Μισθός',
+          status: 'invalid',
+          message: t.errors.salaryTooLow,
+          messageEl: `Μισθός κάτω από τον κατώτατο (€${minimumWage})`,
+          code: 'SALARY_TOO_LOW',
+          suggestion: `Salary must be at least €${minimumWage}`,
+          suggestionEl: `Ο μισθός πρέπει να είναι τουλάχιστον €${minimumWage}`,
+        });
+      } else {
+        results.push({
+          field: 'salary',
+          fieldEl: 'Μισθός',
+          status: 'valid',
+          message: 'Salary meets minimum wage requirements',
+          messageEl: 'Ο μισθός πληροί τις απαιτήσεις κατώτατου μισθού',
         });
       }
-    }
 
-    // Unusual salary warning
-    if (contract.salary > 5000) {
-      results.push({
-        field: 'salary',
-        fieldEl: 'Μισθός',
-        status: 'warning',
-        message: t.warnings.unusualSalary,
-        messageEl: 'Ο μισθός φαίνεται ασυνήθιστα υψηλός',
-        code: 'UNUSUAL_SALARY',
-        suggestion: 'Please verify salary amount',
-        suggestionEl: 'Παρακαλώ επιβεβαιώστε το ποσό του μισθού'
-      });
-    }
+      // Working hours validation
+      if (contract.workingHours > 48) {
+        results.push({
+          field: 'workingHours',
+          fieldEl: 'Ώρες Εργασίας',
+          status: 'invalid',
+          message: t.errors.workingHoursTooHigh,
+          messageEl: 'Ώρες εργασίας υπερβαίνουν το νόμιμο όριο (48ω/εβδομάδα)',
+          code: 'WORKING_HOURS_TOO_HIGH',
+          suggestion: 'Working hours cannot exceed 48 per week',
+          suggestionEl:
+            'Οι ώρες εργασίας δεν μπορούν να υπερβαίνουν τις 48 την εβδομάδα',
+        });
+      } else {
+        results.push({
+          field: 'workingHours',
+          fieldEl: 'Ώρες Εργασίας',
+          status: 'valid',
+          message: 'Working hours are within legal limits',
+          messageEl: 'Οι ώρες εργασίας είναι εντός των νόμιμων ορίων',
+        });
+      }
 
-    return results;
-  }, [t]);
+      // Contract dates validation
+      if (
+        contract.endDate &&
+        new Date(contract.endDate) <= new Date(contract.startDate)
+      ) {
+        results.push({
+          field: 'contractDates',
+          fieldEl: 'Ημερομηνίες Συμβολαίου',
+          status: 'invalid',
+          message: t.errors.invalidContractDates,
+          messageEl: 'Ημερομηνία λήξης συμβολαίου πριν την έναρξη',
+          code: 'INVALID_CONTRACT_DATES',
+          suggestion: 'End date must be after start date',
+          suggestionEl: 'Η ημερομηνία λήξης πρέπει να είναι μετά την έναρξη',
+        });
+      } else {
+        results.push({
+          field: 'contractDates',
+          fieldEl: 'Ημερομηνίες Συμβολαίου',
+          status: 'valid',
+          message: 'Contract dates are valid',
+          messageEl: 'Οι ημερομηνίες συμβολαίου είναι έγκυρες',
+        });
+      }
+
+      // Warning for expiring contracts
+      if (contract.endDate) {
+        const daysUntilExpiry = Math.ceil(
+          (new Date(contract.endDate).getTime() - new Date().getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
+        if (daysUntilExpiry <= 30 && daysUntilExpiry >= 0) {
+          results.push({
+            field: 'contractExpiry',
+            fieldEl: 'Λήξη Συμβολαίου',
+            status: 'warning',
+            message: t.warnings.contractExpiring,
+            messageEl: 'Το συμβόλαιο λήγει εντός 30 ημερών',
+            code: 'CONTRACT_EXPIRING',
+            suggestion: 'Consider renewing the contract soon',
+            suggestionEl: 'Σκεφτείτε να ανανεώσετε το συμβόλαιο σύντομα',
+          });
+        }
+      }
+
+      // Unusual salary warning
+      if (contract.salary > 5000) {
+        results.push({
+          field: 'salary',
+          fieldEl: 'Μισθός',
+          status: 'warning',
+          message: t.warnings.unusualSalary,
+          messageEl: 'Ο μισθός φαίνεται ασυνήθιστα υψηλός',
+          code: 'UNUSUAL_SALARY',
+          suggestion: 'Please verify salary amount',
+          suggestionEl: 'Παρακαλώ επιβεβαιώστε το ποσό του μισθού',
+        });
+      }
+
+      return results;
+    },
+    [t]
+  );
 
   // Run validation
   const runValidation = useCallback(async () => {
@@ -695,13 +735,23 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
     // Validate employees
     employees.forEach(employee => {
       const employeeResults = validateEmployeeData(employee);
-      allResults.push(...employeeResults.map(r => ({ ...r, field: `employee_${employee.id}_${r.field}` })));
+      allResults.push(
+        ...employeeResults.map(r => ({
+          ...r,
+          field: `employee_${employee.id}_${r.field}`,
+        }))
+      );
     });
 
     // Validate contracts
     contracts.forEach(contract => {
       const contractResults = validateContractData(contract);
-      allResults.push(...contractResults.map(r => ({ ...r, field: `contract_${contract.id}_${r.field}` })));
+      allResults.push(
+        ...contractResults.map(r => ({
+          ...r,
+          field: `contract_${contract.id}_${r.field}`,
+        }))
+      );
     });
 
     // Simulate API validation delay
@@ -722,7 +772,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
       invalidChecks: invalidCount,
       warningChecks: warningCount,
       overallScore: score,
-      readyToSubmit: invalidCount === 0
+      readyToSubmit: invalidCount === 0,
     });
 
     setIsValidating(false);
@@ -737,28 +787,40 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'valid': return 'text-green-600';
-      case 'invalid': return 'text-red-600';
-      case 'warning': return 'text-yellow-600';
-      default: return 'text-gray-600';
+      case 'valid':
+        return 'text-green-600';
+      case 'invalid':
+        return 'text-red-600';
+      case 'warning':
+        return 'text-yellow-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'valid': return CheckCircle;
-      case 'invalid': return XCircle;
-      case 'warning': return AlertTriangle;
-      default: return Clock;
+      case 'valid':
+        return CheckCircle;
+      case 'invalid':
+        return XCircle;
+      case 'warning':
+        return AlertTriangle;
+      default:
+        return Clock;
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'valid': return 'bg-green-100 text-green-800';
-      case 'invalid': return 'bg-red-100 text-red-800';
-      case 'warning': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'valid':
+        return 'bg-green-100 text-green-800';
+      case 'invalid':
+        return 'bg-red-100 text-red-800';
+      case 'warning':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -778,8 +840,8 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
               <p className="text-gray-600 ml-12">{t.subtitle}</p>
             </div>
             <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={runValidation}
                 disabled={isValidating}
               >
@@ -795,7 +857,7 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                   </>
                 )}
               </Button>
-              <Button 
+              <Button
                 className="bg-green-600 hover:bg-green-700"
                 disabled={!validationSummary.readyToSubmit}
               >
@@ -809,37 +871,60 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             <Card className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{validationSummary.overallScore}%</div>
-                <div className="text-sm text-gray-600">{t.validation.overallScore}</div>
-                <Progress value={validationSummary.overallScore} className="mt-2" />
+                <div className="text-2xl font-bold text-blue-600">
+                  {validationSummary.overallScore}%
+                </div>
+                <div className="text-sm text-gray-600">
+                  {t.validation.overallScore}
+                </div>
+                <Progress
+                  value={validationSummary.overallScore}
+                  className="mt-2"
+                />
               </div>
             </Card>
 
             <Card className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{validationSummary.totalChecks}</div>
-                <div className="text-sm text-gray-600">{t.validation.totalChecks}</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {validationSummary.totalChecks}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {t.validation.totalChecks}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{validationSummary.validChecks}</div>
-                <div className="text-sm text-gray-600">{t.validation.validChecks}</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {validationSummary.validChecks}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {t.validation.validChecks}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{validationSummary.invalidChecks}</div>
-                <div className="text-sm text-gray-600">{t.validation.invalidChecks}</div>
+                <div className="text-2xl font-bold text-red-600">
+                  {validationSummary.invalidChecks}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {t.validation.invalidChecks}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">{validationSummary.warningChecks}</div>
-                <div className="text-sm text-gray-600">{t.validation.warningChecks}</div>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {validationSummary.warningChecks}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {t.validation.warningChecks}
+                </div>
               </div>
             </Card>
           </div>
@@ -888,21 +973,27 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                         <CheckCircle className="h-4 w-4 text-green-600" />
                         <span className="text-sm">Valid Checks</span>
                       </div>
-                      <div className="text-sm font-medium">{validationSummary.validChecks}</div>
+                      <div className="text-sm font-medium">
+                        {validationSummary.validChecks}
+                      </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <XCircle className="h-4 w-4 text-red-600" />
                         <span className="text-sm">Invalid Checks</span>
                       </div>
-                      <div className="text-sm font-medium">{validationSummary.invalidChecks}</div>
+                      <div className="text-sm font-medium">
+                        {validationSummary.invalidChecks}
+                      </div>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <AlertTriangle className="h-4 w-4 text-yellow-600" />
                         <span className="text-sm">Warning Checks</span>
                       </div>
-                      <div className="text-sm font-medium">{validationSummary.warningChecks}</div>
+                      <div className="text-sm font-medium">
+                        {validationSummary.warningChecks}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -924,18 +1015,27 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                       .map((result, index) => {
                         const Icon = getStatusIcon(result.status);
                         return (
-                          <div key={index} className="flex items-start gap-3 p-3 border border-red-200 rounded-lg bg-red-50">
+                          <div
+                            key={index}
+                            className="flex items-start gap-3 p-3 border border-red-200 rounded-lg bg-red-50"
+                          >
                             <Icon className="h-4 w-4 text-red-600 mt-0.5" />
                             <div className="flex-1">
                               <div className="font-medium text-sm">
-                                {locale === 'en' ? result.field : result.fieldEl}
+                                {locale === 'en'
+                                  ? result.field
+                                  : result.fieldEl}
                               </div>
                               <div className="text-xs text-red-700">
-                                {locale === 'en' ? result.message : result.messageEl}
+                                {locale === 'en'
+                                  ? result.message
+                                  : result.messageEl}
                               </div>
                               {result.suggestion && (
                                 <div className="text-xs text-red-600 mt-1">
-                                  {locale === 'en' ? result.suggestion : result.suggestionEl}
+                                  {locale === 'en'
+                                    ? result.suggestion
+                                    : result.suggestionEl}
                                 </div>
                               )}
                             </div>
@@ -945,7 +1045,8 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                           </div>
                         );
                       })}
-                    {validationResults.filter(r => r.status === 'invalid').length === 0 && (
+                    {validationResults.filter(r => r.status === 'invalid')
+                      .length === 0 && (
                       <div className="text-center py-8 text-gray-500">
                         No critical issues found
                       </div>
@@ -969,19 +1070,25 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-gray-600">12:34 PM</span>
                     <span>Employee data validated successfully</span>
-                    <Badge className="bg-green-100 text-green-800">✓ Valid</Badge>
+                    <Badge className="bg-green-100 text-green-800">
+                      ✓ Valid
+                    </Badge>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <div className="w-2 h-2 bg-red-500 rounded-full"></div>
                     <span className="text-gray-600">12:32 PM</span>
-                    <span>Contract validation failed - Invalid working hours</span>
+                    <span>
+                      Contract validation failed - Invalid working hours
+                    </span>
                     <Badge className="bg-red-100 text-red-800">✗ Invalid</Badge>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                     <span className="text-gray-600">12:30 PM</span>
                     <span>Salary amount warning - Unusually high</span>
-                    <Badge className="bg-yellow-100 text-yellow-800">⚠ Warning</Badge>
+                    <Badge className="bg-yellow-100 text-yellow-800">
+                      ⚠ Warning
+                    </Badge>
                   </div>
                 </div>
               </CardContent>
@@ -1005,37 +1112,62 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {employees.map((employee) => {
-                    const employeeResults = validationResults.filter(r => 
+                  {employees.map(employee => {
+                    const employeeResults = validationResults.filter(r =>
                       r.field.startsWith(`employee_${employee.id}`)
                     );
-                    const hasErrors = employeeResults.some(r => r.status === 'invalid');
-                    const hasWarnings = employeeResults.some(r => r.status === 'warning');
-                    
+                    const hasErrors = employeeResults.some(
+                      r => r.status === 'invalid'
+                    );
+                    const hasWarnings = employeeResults.some(
+                      r => r.status === 'warning'
+                    );
+
                     return (
-                      <div key={employee.id} className={`p-4 border rounded-lg ${
-                        hasErrors ? 'border-red-200 bg-red-50' : 
-                        hasWarnings ? 'border-yellow-200 bg-yellow-50' : 
-                        'border-green-200 bg-green-50'
-                      }`}>
+                      <div
+                        key={employee.id}
+                        className={`p-4 border rounded-lg ${
+                          hasErrors
+                            ? 'border-red-200 bg-red-50'
+                            : hasWarnings
+                              ? 'border-yellow-200 bg-yellow-50'
+                              : 'border-green-200 bg-green-50'
+                        }`}
+                      >
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <h3 className="font-semibold">{employee.firstName} {employee.lastName}</h3>
-                            <p className="text-sm text-gray-600">AFM: {employee.afm} • AMKA: {employee.amka}</p>
+                            <h3 className="font-semibold">
+                              {employee.firstName} {employee.lastName}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              AFM: {employee.afm} • AMKA: {employee.amka}
+                            </p>
                           </div>
                           <div className="flex items-center gap-2">
                             {hasErrors && (
                               <Badge className="bg-red-100 text-red-800">
-                                {employeeResults.filter(r => r.status === 'invalid').length} Errors
+                                {
+                                  employeeResults.filter(
+                                    r => r.status === 'invalid'
+                                  ).length
+                                }{' '}
+                                Errors
                               </Badge>
                             )}
                             {hasWarnings && (
                               <Badge className="bg-yellow-100 text-yellow-800">
-                                {employeeResults.filter(r => r.status === 'warning').length} Warnings
+                                {
+                                  employeeResults.filter(
+                                    r => r.status === 'warning'
+                                  ).length
+                                }{' '}
+                                Warnings
                               </Badge>
                             )}
                             {!hasErrors && !hasWarnings && (
-                              <Badge className="bg-green-100 text-green-800">Valid</Badge>
+                              <Badge className="bg-green-100 text-green-800">
+                                Valid
+                              </Badge>
                             )}
                             <Button size="sm" variant="outline">
                               <Edit className="h-4 w-4 mr-1" />
@@ -1043,20 +1175,30 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                             </Button>
                           </div>
                         </div>
-                        
+
                         {employeeResults.length > 0 && (
                           <div className="space-y-2">
                             {employeeResults.map((result, idx) => {
                               const Icon = getStatusIcon(result.status);
                               return (
-                                <div key={idx} className="flex items-start gap-2 text-sm">
-                                  <Icon className={`h-4 w-4 mt-0.5 ${getStatusColor(result.status)}`} />
+                                <div
+                                  key={idx}
+                                  className="flex items-start gap-2 text-sm"
+                                >
+                                  <Icon
+                                    className={`h-4 w-4 mt-0.5 ${getStatusColor(result.status)}`}
+                                  />
                                   <div className="flex-1">
                                     <span className="font-medium">
-                                      {locale === 'en' ? result.field.split('_').pop() : result.fieldEl}:
+                                      {locale === 'en'
+                                        ? result.field.split('_').pop()
+                                        : result.fieldEl}
+                                      :
                                     </span>
                                     <span className="ml-2">
-                                      {locale === 'en' ? result.message : result.messageEl}
+                                      {locale === 'en'
+                                        ? result.message
+                                        : result.messageEl}
                                     </span>
                                   </div>
                                 </div>
@@ -1089,41 +1231,66 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {contracts.map((contract) => {
-                    const contractResults = validationResults.filter(r => 
+                  {contracts.map(contract => {
+                    const contractResults = validationResults.filter(r =>
                       r.field.startsWith(`contract_${contract.id}`)
                     );
-                    const hasErrors = contractResults.some(r => r.status === 'invalid');
-                    const hasWarnings = contractResults.some(r => r.status === 'warning');
-                    const employee = employees.find(e => e.id === contract.employeeId);
-                    
+                    const hasErrors = contractResults.some(
+                      r => r.status === 'invalid'
+                    );
+                    const hasWarnings = contractResults.some(
+                      r => r.status === 'warning'
+                    );
+                    const employee = employees.find(
+                      e => e.id === contract.employeeId
+                    );
+
                     return (
-                      <div key={contract.id} className={`p-4 border rounded-lg ${
-                        hasErrors ? 'border-red-200 bg-red-50' : 
-                        hasWarnings ? 'border-yellow-200 bg-yellow-50' : 
-                        'border-green-200 bg-green-50'
-                      }`}>
+                      <div
+                        key={contract.id}
+                        className={`p-4 border rounded-lg ${
+                          hasErrors
+                            ? 'border-red-200 bg-red-50'
+                            : hasWarnings
+                              ? 'border-yellow-200 bg-yellow-50'
+                              : 'border-green-200 bg-green-50'
+                        }`}
+                      >
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <h3 className="font-semibold">{contract.position}</h3>
+                            <h3 className="font-semibold">
+                              {contract.position}
+                            </h3>
                             <p className="text-sm text-gray-600">
-                              {employee?.firstName} {employee?.lastName} • 
+                              {employee?.firstName} {employee?.lastName} •
                               {contract.contractType} • €{contract.salary}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
                             {hasErrors && (
                               <Badge className="bg-red-100 text-red-800">
-                                {contractResults.filter(r => r.status === 'invalid').length} Errors
+                                {
+                                  contractResults.filter(
+                                    r => r.status === 'invalid'
+                                  ).length
+                                }{' '}
+                                Errors
                               </Badge>
                             )}
                             {hasWarnings && (
                               <Badge className="bg-yellow-100 text-yellow-800">
-                                {contractResults.filter(r => r.status === 'warning').length} Warnings
+                                {
+                                  contractResults.filter(
+                                    r => r.status === 'warning'
+                                  ).length
+                                }{' '}
+                                Warnings
                               </Badge>
                             )}
                             {!hasErrors && !hasWarnings && (
-                              <Badge className="bg-green-100 text-green-800">Valid</Badge>
+                              <Badge className="bg-green-100 text-green-800">
+                                Valid
+                              </Badge>
                             )}
                             <Button size="sm" variant="outline">
                               <Edit className="h-4 w-4 mr-1" />
@@ -1131,20 +1298,30 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                             </Button>
                           </div>
                         </div>
-                        
+
                         {contractResults.length > 0 && (
                           <div className="space-y-2">
                             {contractResults.map((result, idx) => {
                               const Icon = getStatusIcon(result.status);
                               return (
-                                <div key={idx} className="flex items-start gap-2 text-sm">
-                                  <Icon className={`h-4 w-4 mt-0.5 ${getStatusColor(result.status)}`} />
+                                <div
+                                  key={idx}
+                                  className="flex items-start gap-2 text-sm"
+                                >
+                                  <Icon
+                                    className={`h-4 w-4 mt-0.5 ${getStatusColor(result.status)}`}
+                                  />
                                   <div className="flex-1">
                                     <span className="font-medium">
-                                      {locale === 'en' ? result.field.split('_').pop() : result.fieldEl}:
+                                      {locale === 'en'
+                                        ? result.field.split('_').pop()
+                                        : result.fieldEl}
+                                      :
                                     </span>
                                     <span className="ml-2">
-                                      {locale === 'en' ? result.message : result.messageEl}
+                                      {locale === 'en'
+                                        ? result.message
+                                        : result.messageEl}
                                     </span>
                                   </div>
                                 </div>
@@ -1177,29 +1354,37 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {workCards.map((workCard) => {
-                    const employee = employees.find(e => e.id === workCard.employeeId);
-                    
+                  {workCards.map(workCard => {
+                    const employee = employees.find(
+                      e => e.id === workCard.employeeId
+                    );
+
                     return (
-                      <div key={workCard.id} className="p-4 border border-green-200 bg-green-50 rounded-lg">
+                      <div
+                        key={workCard.id}
+                        className="p-4 border border-green-200 bg-green-50 rounded-lg"
+                      >
                         <div className="flex items-center justify-between mb-3">
                           <div>
                             <h3 className="font-semibold">
                               {employee?.firstName} {employee?.lastName}
                             </h3>
                             <p className="text-sm text-gray-600">
-                              {workCard.date} • {workCard.startTime} - {workCard.endTime} • {workCard.location}
+                              {workCard.date} • {workCard.startTime} -{' '}
+                              {workCard.endTime} • {workCard.location}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge className="bg-green-100 text-green-800">Valid</Badge>
+                            <Badge className="bg-green-100 text-green-800">
+                              Valid
+                            </Badge>
                             <Button size="sm" variant="outline">
                               <Edit className="h-4 w-4 mr-1" />
                               {t.actions.edit}
                             </Button>
                           </div>
                         </div>
-                        
+
                         <div className="grid grid-cols-3 gap-4 text-sm">
                           <div>
                             <span className="font-medium">Work Type:</span>
@@ -1207,12 +1392,20 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                           </div>
                           <div>
                             <span className="font-medium">Break:</span>
-                            <span className="ml-2">{workCard.breakDuration} min</span>
+                            <span className="ml-2">
+                              {workCard.breakDuration} min
+                            </span>
                           </div>
                           <div className="flex gap-2">
-                            {workCard.overtime && <Badge variant="outline">Overtime</Badge>}
-                            {workCard.nightShift && <Badge variant="outline">Night Shift</Badge>}
-                            {workCard.holidayWork && <Badge variant="outline">Holiday</Badge>}
+                            {workCard.overtime && (
+                              <Badge variant="outline">Overtime</Badge>
+                            )}
+                            {workCard.nightShift && (
+                              <Badge variant="outline">Night Shift</Badge>
+                            )}
+                            {workCard.holidayWork && (
+                              <Badge variant="outline">Holiday</Badge>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1256,15 +1449,24 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                   {validationResults.map((result, index) => {
                     const Icon = getStatusIcon(result.status);
                     return (
-                      <div key={index} className="flex items-start gap-3 p-3 border rounded-lg">
-                        <Icon className={`h-5 w-5 mt-0.5 ${getStatusColor(result.status)}`} />
+                      <div
+                        key={index}
+                        className="flex items-start gap-3 p-3 border rounded-lg"
+                      >
+                        <Icon
+                          className={`h-5 w-5 mt-0.5 ${getStatusColor(result.status)}`}
+                        />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-medium">
                               {locale === 'en' ? result.field : result.fieldEl}
                             </span>
                             <Badge className={getStatusBadge(result.status)}>
-                              {t.validation[result.status as keyof typeof t.validation]}
+                              {
+                                t.validation[
+                                  result.status as keyof typeof t.validation
+                                ]
+                              }
                             </Badge>
                             {result.code && (
                               <Badge variant="outline" className="text-xs">
@@ -1273,11 +1475,16 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                             )}
                           </div>
                           <p className="text-sm text-gray-600 mb-2">
-                            {locale === 'en' ? result.message : result.messageEl}
+                            {locale === 'en'
+                              ? result.message
+                              : result.messageEl}
                           </p>
                           {result.suggestion && (
                             <p className="text-xs text-blue-600">
-                              💡 {locale === 'en' ? result.suggestion : result.suggestionEl}
+                              💡{' '}
+                              {locale === 'en'
+                                ? result.suggestion
+                                : result.suggestionEl}
                             </p>
                           )}
                         </div>
@@ -1297,7 +1504,10 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                   {validationResults.length === 0 && (
                     <div className="text-center py-12 text-gray-500">
                       <CheckCircle className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                      <p>No validation results yet. Click "Validate All" to start.</p>
+                      <p>
+                        No validation results yet. Click "Validate All" to
+                        start.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -1316,15 +1526,24 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-medium mb-4">ERGANI Connection</h3>
+                  <h3 className="text-lg font-medium mb-4">
+                    ERGANI Connection
+                  </h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">ERGANI API Endpoint</label>
+                      <label className="block text-sm font-medium mb-2">
+                        ERGANI API Endpoint
+                      </label>
                       <Input defaultValue="https://api.ergani.gov.gr/v2" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">API Key</label>
-                      <Input type="password" defaultValue="************************" />
+                      <label className="block text-sm font-medium mb-2">
+                        API Key
+                      </label>
+                      <Input
+                        type="password"
+                        defaultValue="************************"
+                      />
                     </div>
                   </div>
                 </div>
@@ -1334,39 +1553,57 @@ export default function ERGANIValidation({ locale = 'en' }: ERGANIValidationProp
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <label className="font-medium">Auto-validate on changes</label>
-                        <p className="text-sm text-gray-600">Automatically run validation when data changes</p>
+                        <label className="font-medium">
+                          Auto-validate on changes
+                        </label>
+                        <p className="text-sm text-gray-600">
+                          Automatically run validation when data changes
+                        </p>
                       </div>
                       <Button
-                        variant={autoValidate ? "default" : "outline"}
+                        variant={autoValidate ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setAutoValidate(!autoValidate)}
                       >
                         {autoValidate ? 'Enabled' : 'Disabled'}
                       </Button>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
-                        <label className="font-medium">Strict AFM validation</label>
-                        <p className="text-sm text-gray-600">Enable checksum validation for AFM numbers</p>
+                        <label className="font-medium">
+                          Strict AFM validation
+                        </label>
+                        <p className="text-sm text-gray-600">
+                          Enable checksum validation for AFM numbers
+                        </p>
                       </div>
-                      <Button variant="default" size="sm">Enabled</Button>
+                      <Button variant="default" size="sm">
+                        Enabled
+                      </Button>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
-                        <label className="font-medium">Salary threshold warnings</label>
-                        <p className="text-sm text-gray-600">Warn for unusually high or low salaries</p>
+                        <label className="font-medium">
+                          Salary threshold warnings
+                        </label>
+                        <p className="text-sm text-gray-600">
+                          Warn for unusually high or low salaries
+                        </p>
                       </div>
-                      <Button variant="default" size="sm">Enabled</Button>
+                      <Button variant="default" size="sm">
+                        Enabled
+                      </Button>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex justify-end gap-3">
                   <Button variant="outline">Reset to Defaults</Button>
-                  <Button className="bg-blue-600 hover:bg-blue-700">Save Settings</Button>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    Save Settings
+                  </Button>
                 </div>
               </CardContent>
             </Card>

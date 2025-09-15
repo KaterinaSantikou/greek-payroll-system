@@ -5,7 +5,13 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -37,7 +43,10 @@ interface FreezeResult {
   kitSize?: number;
 }
 
-export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps) {
+export function OneClickFlowButton({
+  runId,
+  disabled,
+}: OneClickFlowButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [password, setPassword] = useState('');
@@ -70,15 +79,17 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
       }
       return response.json();
     },
-    onSuccess: (result) => {
+    onSuccess: result => {
       if (result.success) {
         toast({
           title: 'Disaster Mode Activated',
           description: `Offline kit generated in ${result.processingTime}ms. Download ready.`,
         });
-        queryClient.invalidateQueries({ queryKey: ['/api/one-click-flow/status'] });
+        queryClient.invalidateQueries({
+          queryKey: ['/api/one-click-flow/status'],
+        });
         setIsOpen(false);
-        
+
         // Trigger download
         if (result.downloadUrl) {
           window.open(result.downloadUrl, '_blank');
@@ -91,7 +102,7 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
         });
       }
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: 'Error',
         description: error.message,
@@ -124,7 +135,9 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
       <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
         <AlertTriangle className="w-5 h-5 text-orange-600" />
         <div className="flex-1">
-          <div className="font-medium text-orange-800">Disaster Mode Active</div>
+          <div className="font-medium text-orange-800">
+            Disaster Mode Active
+          </div>
           <div className="text-sm text-orange-600">
             Frozen at {new Date(disasterStatus.frozenAt).toLocaleString()}
           </div>
@@ -132,7 +145,12 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
         <Button
           size="sm"
           variant="outline"
-          onClick={() => window.open(`/api/one-click-flow/download/${disasterStatus.freezeId}`, '_blank')}
+          onClick={() =>
+            window.open(
+              `/api/one-click-flow/download/${disasterStatus.freezeId}`,
+              '_blank'
+            )
+          }
         >
           <Download className="w-4 h-4 mr-1" />
           Download Kit
@@ -144,8 +162,8 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           disabled={disabled}
           className="border-red-200 text-red-700 hover:bg-red-50"
         >
@@ -153,7 +171,7 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
           Enter Disaster Mode
         </Button>
       </DialogTrigger>
-      
+
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -174,25 +192,35 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
               <div className="text-sm font-medium">Pre-flight Checks</div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${preChecks.runStatus === 'finalized' ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${preChecks.runStatus === 'finalized' ? 'bg-green-500' : 'bg-red-500'}`}
+                  />
                   Run Status: {preChecks.runStatus}
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${preChecks.blockingExceptions === 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${preChecks.blockingExceptions === 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                  />
                   Blocking Exceptions: {preChecks.blockingExceptions}
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${preChecks.bankChannelHealth === 'green' ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${preChecks.bankChannelHealth === 'green' ? 'bg-green-500' : 'bg-red-500'}`}
+                  />
                   Bank Channel: {preChecks.bankChannelHealth}
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${preChecks.eligibleForFreeze ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <div
+                    className={`w-2 h-2 rounded-full ${preChecks.eligibleForFreeze ? 'bg-green-500' : 'bg-red-500'}`}
+                  />
                   Eligible: {preChecks.eligibleForFreeze ? 'Yes' : 'No'}
                 </div>
               </div>
               {preChecks.warnings?.length > 0 && (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <div className="text-sm font-medium text-yellow-800">Warnings:</div>
+                  <div className="text-sm font-medium text-yellow-800">
+                    Warnings:
+                  </div>
                   <ul className="mt-1 text-sm text-yellow-700">
                     {preChecks.warnings.map((warning, i) => (
                       <li key={i}>• {warning}</li>
@@ -211,10 +239,16 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
                 <div className="font-medium mb-1">What this does:</div>
                 <ul className="space-y-1">
                   <li>• Locks the payroll run to prevent further edits</li>
-                  <li>• Generates bank-specific CSV templates for manual import</li>
+                  <li>
+                    • Generates bank-specific CSV templates for manual import
+                  </li>
                   <li>• Creates encrypted offline kit with all payment data</li>
-                  <li>• Protects against double payments with disbursement keys</li>
-                  <li>• Provides reconciliation template for when systems recover</li>
+                  <li>
+                    • Protects against double payments with disbursement keys
+                  </li>
+                  <li>
+                    • Provides reconciliation template for when systems recover
+                  </li>
                 </ul>
               </div>
             </div>
@@ -228,7 +262,7 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
                 id="reason"
                 placeholder="e.g., Bank API down, urgent payroll deadline, system maintenance..."
                 value={reason}
-                onChange={(e) => setReason(e.target.value)}
+                onChange={e => setReason(e.target.value)}
                 className="mt-1"
                 rows={3}
               />
@@ -241,7 +275,7 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
                 type="password"
                 placeholder="Strong password for AES-256 encryption"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 className="mt-1"
               />
               <div className="text-xs text-muted-foreground mt-1">
@@ -253,7 +287,7 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
               <Checkbox
                 id="sepa"
                 checked={includeSepa}
-                onCheckedChange={(checked) => setIncludeSepa(checked === true)}
+                onCheckedChange={checked => setIncludeSepa(checked === true)}
               />
               <Label htmlFor="sepa" className="text-sm">
                 Include SEPA pain.001 XML (optional)
@@ -268,7 +302,9 @@ export function OneClickFlowButton({ runId, disabled }: OneClickFlowButtonProps)
             </Button>
             <Button
               onClick={handleFreeze}
-              disabled={freezeMutation.isPending || !reason.trim() || !password.trim()}
+              disabled={
+                freezeMutation.isPending || !reason.trim() || !password.trim()
+              }
               className="bg-red-600 hover:bg-red-700"
             >
               {freezeMutation.isPending ? (

@@ -1,12 +1,25 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Zap, Clock, TrendingUp, AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import {
+  Zap,
+  Clock,
+  TrendingUp,
+  AlertCircle,
+  CheckCircle,
+  RefreshCw,
+} from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface InstantPaymentCapabilities {
   instantSupported: boolean;
@@ -61,38 +74,38 @@ export function InstantPaymentWidget() {
     },
     onSuccess: (result: any) => {
       toast({
-        title: "🚀 Άμεση πληρωμή προσομοιώθηκε",
+        title: '🚀 Άμεση πληρωμή προσομοιώθηκε',
         description: `Πληρωμή ${result.data.amount}€ ολοκληρώθηκε σε ${result.data.processingTime}`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Σφάλμα προσομοίωσης",
-        description: "Δεν ήταν δυνατή η προσομοίωση της άμεσης πληρωμής",
-        variant: "destructive",
+        title: 'Σφάλμα προσομοίωσης',
+        description: 'Δεν ήταν δυνατή η προσομοίωση της άμεσης πληρωμής',
+        variant: 'destructive',
       });
     },
   });
 
   const handleSimulatePayment = () => {
     simulatePaymentMutation.mutate({
-      amount: 1250.50,
-      employeeName: "Μαρία Παπαδοπούλου",
-      iban: "GR1601101250000000012345678",
-      urgencyLevel: "URGENT"
+      amount: 1250.5,
+      employeeName: 'Μαρία Παπαδοπούλου',
+      iban: 'GR1601101250000000012345678',
+      urgencyLevel: 'URGENT',
     });
   };
 
   const getComplianceStatusColor = (isCompliant: boolean) => {
-    return isCompliant 
-      ? "text-green-600 dark:text-green-400" 
-      : "text-orange-600 dark:text-orange-400";
+    return isCompliant
+      ? 'text-green-600 dark:text-green-400'
+      : 'text-orange-600 dark:text-orange-400';
   };
 
   const getReadinessColor = (score: number) => {
-    if (score >= 75) return "text-green-600";
-    if (score >= 50) return "text-orange-600";
-    return "text-red-600";
+    if (score >= 75) return 'text-green-600';
+    if (score >= 50) return 'text-orange-600';
+    return 'text-red-600';
   };
 
   const formatCurrency = (amount: number) => {
@@ -130,12 +143,12 @@ export function InstantPaymentWidget() {
           SCT Inst για επείγουσες διορθώσεις και off-cycle μισθοδοσία
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="space-y-6">
         {/* Capabilities Overview */}
         <div className="space-y-4">
           <h4 className="font-medium text-sm">Δυνατότητες Συστήματος</h4>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -145,7 +158,9 @@ export function InstantPaymentWidget() {
                   <AlertCircle className="h-4 w-4 text-orange-500" />
                 )}
                 <span className="text-sm font-medium">
-                  {capabilities?.data.instantSupported ? "Διαθέσιμες" : "Μη διαθέσιμες"}
+                  {capabilities?.data.instantSupported
+                    ? 'Διαθέσιμες'
+                    : 'Μη διαθέσιμες'}
                 </span>
               </div>
               <p className="text-xs text-gray-500">Άμεσες πληρωμές</p>
@@ -155,7 +170,7 @@ export function InstantPaymentWidget() {
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-blue-500" />
                 <span className="text-sm font-medium">
-                  {capabilities?.data.averageProcessingTime || "N/A"}
+                  {capabilities?.data.averageProcessingTime || 'N/A'}
                 </span>
               </div>
               <p className="text-xs text-gray-500">Μέσος χρόνος</p>
@@ -181,18 +196,21 @@ export function InstantPaymentWidget() {
             </div>
           </div>
 
-          {capabilities?.data.supportedBanks && capabilities.data.supportedBanks.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs text-gray-600 dark:text-gray-400">Υποστηριζόμενες τράπεζες:</p>
-              <div className="flex gap-1 flex-wrap">
-                {capabilities.data.supportedBanks.map((bank) => (
-                  <Badge key={bank} variant="secondary" className="text-xs">
-                    {bank}
-                  </Badge>
-                ))}
+          {capabilities?.data.supportedBanks &&
+            capabilities.data.supportedBanks.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Υποστηριζόμενες τράπεζες:
+                </p>
+                <div className="flex gap-1 flex-wrap">
+                  {capabilities.data.supportedBanks.map(bank => (
+                    <Badge key={bank} variant="secondary" className="text-xs">
+                      {bank}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
 
         <Separator />
@@ -200,19 +218,21 @@ export function InstantPaymentWidget() {
         {/* EU 2025 Compliance */}
         <div className="space-y-4">
           <h4 className="font-medium text-sm">Συμμόρφωση ΕΕ 2025</h4>
-          
+
           {compliance?.data && (
             <div className="space-y-3">
               {/* Readiness Score */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Σκορ Ετοιμότητας</span>
-                  <span className={`text-sm font-medium ${getReadinessColor(compliance.data.readinessScore)}`}>
+                  <span
+                    className={`text-sm font-medium ${getReadinessColor(compliance.data.readinessScore)}`}
+                  >
                     {compliance.data.readinessScore}%
                   </span>
                 </div>
-                <Progress 
-                  value={compliance.data.readinessScore} 
+                <Progress
+                  value={compliance.data.readinessScore}
                   className="h-2"
                 />
               </div>
@@ -225,8 +245,12 @@ export function InstantPaymentWidget() {
                     <p className="text-xs text-gray-500">PSPs reachability</p>
                   </div>
                   <div className="text-right">
-                    <span className={`text-xs font-medium ${getComplianceStatusColor(compliance.data.phase1Status.isCompliant)}`}>
-                      {compliance.data.phase1Status.isCompliant ? "✓ Συμμορφώθηκε" : `${compliance.data.phase1Status.daysRemaining} ημέρες`}
+                    <span
+                      className={`text-xs font-medium ${getComplianceStatusColor(compliance.data.phase1Status.isCompliant)}`}
+                    >
+                      {compliance.data.phase1Status.isCompliant
+                        ? '✓ Συμμορφώθηκε'
+                        : `${compliance.data.phase1Status.daysRemaining} ημέρες`}
                     </span>
                   </div>
                 </div>
@@ -237,8 +261,12 @@ export function InstantPaymentWidget() {
                     <p className="text-xs text-gray-500">All PSPs support</p>
                   </div>
                   <div className="text-right">
-                    <span className={`text-xs font-medium ${getComplianceStatusColor(compliance.data.phase2Status.isCompliant)}`}>
-                      {compliance.data.phase2Status.isCompliant ? "✓ Συμμορφώθηκε" : `${compliance.data.phase2Status.daysRemaining} ημέρες`}
+                    <span
+                      className={`text-xs font-medium ${getComplianceStatusColor(compliance.data.phase2Status.isCompliant)}`}
+                    >
+                      {compliance.data.phase2Status.isCompliant
+                        ? '✓ Συμμορφώθηκε'
+                        : `${compliance.data.phase2Status.daysRemaining} ημέρες`}
                     </span>
                   </div>
                 </div>
@@ -264,16 +292,17 @@ export function InstantPaymentWidget() {
           </Button>
 
           {/* Top Recommendations */}
-          {capabilities?.recommendations && capabilities.recommendations.length > 0 && (
-            <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-              <p className="font-medium">Συστάσεις:</p>
-              <ul className="list-disc list-inside space-y-1">
-                {capabilities.recommendations.slice(0, 2).map((rec, idx) => (
-                  <li key={idx}>{rec}</li>
-                ))}
-              </ul>
-            </div>
-          )}
+          {capabilities?.recommendations &&
+            capabilities.recommendations.length > 0 && (
+              <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                <p className="font-medium">Συστάσεις:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {capabilities.recommendations.slice(0, 2).map((rec, idx) => (
+                    <li key={idx}>{rec}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
         </div>
       </CardContent>
     </Card>

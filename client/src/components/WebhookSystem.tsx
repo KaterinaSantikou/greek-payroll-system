@@ -9,7 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -75,7 +81,7 @@ import {
   TrendingDown,
   Star,
   Flag,
-  MapPin
+  MapPin,
 } from 'lucide-react';
 
 interface WebhookEndpoint {
@@ -169,25 +175,25 @@ const WEBHOOK_ENDPOINTS: WebhookEndpoint[] = [
     events: ['employee.created', 'employee.updated', 'payroll.processed'],
     headers: {
       'Content-Type': 'application/json',
-      'X-API-Version': '2.1'
+      'X-API-Version': '2.1',
     },
     authentication: {
       type: 'bearer',
-      token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...'
+      token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
     },
     retryPolicy: {
       maxRetries: 3,
       backoffMultiplier: 2,
-      initialDelay: 1000
+      initialDelay: 1000,
     },
     filters: {
-      conditions: {}
+      conditions: {},
     },
     createdAt: '2025-01-15T10:30:00Z',
     lastTriggered: '2025-01-20T14:22:15Z',
     successRate: 98.5,
     totalCalls: 1247,
-    failedCalls: 18
+    failedCalls: 18,
   },
   {
     id: 'accounting-integration',
@@ -199,27 +205,27 @@ const WEBHOOK_ENDPOINTS: WebhookEndpoint[] = [
     events: ['payroll.completed', 'expense.created', 'payment.processed'],
     headers: {
       'Content-Type': 'application/json',
-      'X-Company-ID': 'GR123456789'
+      'X-Company-ID': 'GR123456789',
     },
     authentication: {
       type: 'signature',
-      secret: 'webhook_secret_key_2024'
+      secret: 'webhook_secret_key_2024',
     },
     retryPolicy: {
       maxRetries: 5,
       backoffMultiplier: 1.5,
-      initialDelay: 2000
+      initialDelay: 2000,
     },
     filters: {
       conditions: {
-        'amount': { 'gte': 100 }
-      }
+        amount: { gte: 100 },
+      },
     },
     createdAt: '2025-01-10T09:15:00Z',
     lastTriggered: '2025-01-20T13:45:30Z',
     successRate: 94.2,
     totalCalls: 892,
-    failedCalls: 52
+    failedCalls: 52,
   },
   {
     id: 'bank-api-connector',
@@ -231,25 +237,25 @@ const WEBHOOK_ENDPOINTS: WebhookEndpoint[] = [
     events: ['payment.initiated', 'payment.completed', 'sepa.processed'],
     headers: {
       'Content-Type': 'application/json',
-      'X-Bank-Code': 'CRBAGRAA'
+      'X-Bank-Code': 'CRBAGRAA',
     },
     authentication: {
       type: 'basic',
-      token: 'Y29ycG9yYXRlX3VzZXI6cGFzc3dvcmQxMjM='
+      token: 'Y29ycG9yYXRlX3VzZXI6cGFzc3dvcmQxMjM=',
     },
     retryPolicy: {
       maxRetries: 3,
       backoffMultiplier: 2,
-      initialDelay: 1500
+      initialDelay: 1500,
     },
     filters: {
-      conditions: {}
+      conditions: {},
     },
     createdAt: '2025-01-18T16:20:00Z',
     lastTriggered: '2025-01-20T08:30:12Z',
     successRate: 76.3,
     totalCalls: 156,
-    failedCalls: 37
+    failedCalls: 37,
   },
   {
     id: 'ergani-compliance-sync',
@@ -261,25 +267,25 @@ const WEBHOOK_ENDPOINTS: WebhookEndpoint[] = [
     events: ['declaration.submitted', 'employee.registered', 'hours.reported'],
     headers: {
       'Content-Type': 'application/json',
-      'X-Source-System': 'PayrollSync'
+      'X-Source-System': 'PayrollSync',
     },
     authentication: {
       type: 'bearer',
-      token: 'Bearer_Token_ERGANI_2025'
+      token: 'Bearer_Token_ERGANI_2025',
     },
     retryPolicy: {
       maxRetries: 2,
       backoffMultiplier: 3,
-      initialDelay: 5000
+      initialDelay: 5000,
     },
     filters: {
-      conditions: {}
+      conditions: {},
     },
     createdAt: '2025-01-12T11:45:00Z',
     lastTriggered: '2025-01-20T15:10:45Z',
     successRate: 99.1,
     totalCalls: 2143,
-    failedCalls: 19
+    failedCalls: 19,
   },
   {
     id: 'analytics-dashboard',
@@ -290,25 +296,25 @@ const WEBHOOK_ENDPOINTS: WebhookEndpoint[] = [
     status: 'inactive',
     events: ['metrics.calculated', 'report.generated', 'kpi.updated'],
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
     authentication: {
-      type: 'none'
+      type: 'none',
     },
     retryPolicy: {
       maxRetries: 1,
       backoffMultiplier: 1,
-      initialDelay: 1000
+      initialDelay: 1000,
     },
     filters: {
-      conditions: {}
+      conditions: {},
     },
     createdAt: '2025-01-08T14:30:00Z',
     lastTriggered: '2025-01-19T12:20:18Z',
     successRate: 100.0,
     totalCalls: 67,
-    failedCalls: 0
-  }
+    failedCalls: 0,
+  },
 ];
 
 const WEBHOOK_EVENTS: WebhookEvent[] = [
@@ -317,7 +323,8 @@ const WEBHOOK_EVENTS: WebhookEvent[] = [
     name: 'Employee Created',
     nameEl: 'Εργαζόμενος Δημιουργήθηκε',
     description: 'Triggered when a new employee is added to the system',
-    descriptionEl: 'Ενεργοποιείται όταν προστίθεται νέος εργαζόμενος στο σύστημα',
+    descriptionEl:
+      'Ενεργοποιείται όταν προστίθεται νέος εργαζόμενος στο σύστημα',
     category: 'Employee Management',
     categoryEl: 'Διαχείριση Εργαζομένων',
     schema: {
@@ -326,20 +333,21 @@ const WEBHOOK_EVENTS: WebhookEvent[] = [
       email: 'string',
       hire_date: 'date',
       position: 'string',
-      department: 'string'
+      department: 'string',
     },
     frequency: 'medium',
     enabled: true,
     lastTriggered: '2025-01-20T14:22:15Z',
     totalTriggers: 47,
-    subscribedEndpoints: 3
+    subscribedEndpoints: 3,
   },
   {
     id: 'payroll.processed',
     name: 'Payroll Processed',
     nameEl: 'Μισθοδοσία Επεξεργάστηκε',
     description: 'Triggered when monthly payroll processing is completed',
-    descriptionEl: 'Ενεργοποιείται όταν ολοκληρώνεται η μηνιαία επεξεργασία μισθοδοσίας',
+    descriptionEl:
+      'Ενεργοποιείται όταν ολοκληρώνεται η μηνιαία επεξεργασία μισθοδοσίας',
     category: 'Payroll',
     categoryEl: 'Μισθοδοσία',
     schema: {
@@ -347,20 +355,21 @@ const WEBHOOK_EVENTS: WebhookEvent[] = [
       period: 'string',
       total_amount: 'number',
       employee_count: 'number',
-      processed_date: 'date'
+      processed_date: 'date',
     },
     frequency: 'low',
     enabled: true,
     lastTriggered: '2025-01-20T13:45:30Z',
     totalTriggers: 12,
-    subscribedEndpoints: 4
+    subscribedEndpoints: 4,
   },
   {
     id: 'compliance.alert',
     name: 'Compliance Alert',
     nameEl: 'Ειδοποίηση Συμμόρφωσης',
     description: 'Triggered when compliance risks or violations are detected',
-    descriptionEl: 'Ενεργοποιείται όταν εντοπίζονται κίνδυνοι ή παραβάσεις συμμόρφωσης',
+    descriptionEl:
+      'Ενεργοποιείται όταν εντοπίζονται κίνδυνοι ή παραβάσεις συμμόρφωσης',
     category: 'Compliance',
     categoryEl: 'Συμμόρφωση',
     schema: {
@@ -368,20 +377,22 @@ const WEBHOOK_EVENTS: WebhookEvent[] = [
       type: 'string',
       severity: 'string',
       description: 'string',
-      deadline: 'date'
+      deadline: 'date',
     },
     frequency: 'high',
     enabled: true,
     lastTriggered: '2025-01-20T15:10:45Z',
     totalTriggers: 156,
-    subscribedEndpoints: 2
+    subscribedEndpoints: 2,
   },
   {
     id: 'payment.initiated',
     name: 'Payment Initiated',
     nameEl: 'Πληρωμή Εκκινήθηκε',
-    description: 'Triggered when a salary payment is initiated to banking system',
-    descriptionEl: 'Ενεργοποιείται όταν εκκινείται πληρωμή μισθού στο τραπεζικό σύστημα',
+    description:
+      'Triggered when a salary payment is initiated to banking system',
+    descriptionEl:
+      'Ενεργοποιείται όταν εκκινείται πληρωμή μισθού στο τραπεζικό σύστημα',
     category: 'Payments',
     categoryEl: 'Πληρωμές',
     schema: {
@@ -389,20 +400,21 @@ const WEBHOOK_EVENTS: WebhookEvent[] = [
       employee_id: 'string',
       amount: 'number',
       currency: 'string',
-      bank_account: 'string'
+      bank_account: 'string',
     },
     frequency: 'medium',
     enabled: true,
     lastTriggered: '2025-01-20T12:30:22Z',
     totalTriggers: 89,
-    subscribedEndpoints: 2
+    subscribedEndpoints: 2,
   },
   {
     id: 'report.generated',
     name: 'Report Generated',
     nameEl: 'Αναφορά Δημιουργήθηκε',
     description: 'Triggered when scheduled reports are generated and ready',
-    descriptionEl: 'Ενεργοποιείται όταν προγραμματισμένες αναφορές δημιουργούνται και είναι έτοιμες',
+    descriptionEl:
+      'Ενεργοποιείται όταν προγραμματισμένες αναφορές δημιουργούνται και είναι έτοιμες',
     category: 'Reporting',
     categoryEl: 'Αναφορές',
     schema: {
@@ -410,14 +422,14 @@ const WEBHOOK_EVENTS: WebhookEvent[] = [
       type: 'string',
       period: 'string',
       format: 'string',
-      download_url: 'string'
+      download_url: 'string',
     },
     frequency: 'low',
     enabled: false,
     lastTriggered: '2025-01-19T12:20:18Z',
     totalTriggers: 23,
-    subscribedEndpoints: 1
-  }
+    subscribedEndpoints: 1,
+  },
 ];
 
 const RECENT_DELIVERIES: WebhookDelivery[] = [
@@ -436,11 +448,11 @@ const RECENT_DELIVERIES: WebhookDelivery[] = [
       type: 'overtime_violation',
       severity: 'high',
       description: 'Employee overtime exceeds legal limits',
-      deadline: '2025-01-25T00:00:00Z'
+      deadline: '2025-01-25T00:00:00Z',
     },
     error: null,
     timestamp: '2025-01-20T15:10:45Z',
-    nextRetry: null
+    nextRetry: null,
   },
   {
     id: 'delivery-002',
@@ -458,11 +470,11 @@ const RECENT_DELIVERIES: WebhookDelivery[] = [
       email: 'maria.papadopoulos@company.com',
       hire_date: '2025-01-20',
       position: 'Software Developer',
-      department: 'Engineering'
+      department: 'Engineering',
     },
     error: null,
     timestamp: '2025-01-20T14:22:15Z',
-    nextRetry: null
+    nextRetry: null,
   },
   {
     id: 'delivery-003',
@@ -477,13 +489,13 @@ const RECENT_DELIVERIES: WebhookDelivery[] = [
     payload: {
       payment_id: 'pay-54321',
       employee_id: 'emp-11111',
-      amount: 2450.00,
+      amount: 2450.0,
       currency: 'EUR',
-      bank_account: 'GR1601101250000000012300695'
+      bank_account: 'GR1601101250000000012300695',
     },
     error: 'Internal server error: Database connection timeout',
     timestamp: '2025-01-20T13:15:30Z',
-    nextRetry: '2025-01-20T16:15:30Z'
+    nextRetry: '2025-01-20T16:15:30Z',
   },
   {
     id: 'delivery-004',
@@ -498,13 +510,13 @@ const RECENT_DELIVERIES: WebhookDelivery[] = [
     payload: {
       payroll_id: 'payroll-202501',
       period: '2025-01',
-      total_amount: 125600.50,
+      total_amount: 125600.5,
       employee_count: 48,
-      processed_date: '2025-01-20T13:45:30Z'
+      processed_date: '2025-01-20T13:45:30Z',
     },
     error: null,
     timestamp: '2025-01-20T13:45:30Z',
-    nextRetry: null
+    nextRetry: null,
   },
   {
     id: 'delivery-005',
@@ -521,12 +533,12 @@ const RECENT_DELIVERIES: WebhookDelivery[] = [
       type: 'weekly_summary',
       period: '2025-01-13_2025-01-19',
       format: 'pdf',
-      download_url: 'https://storage.company.com/reports/weekly-001.pdf'
+      download_url: 'https://storage.company.com/reports/weekly-001.pdf',
     },
     error: 'Rate limit exceeded',
     timestamp: '2025-01-20T12:20:18Z',
-    nextRetry: '2025-01-20T13:20:18Z'
-  }
+    nextRetry: '2025-01-20T13:20:18Z',
+  },
 ];
 
 const INTEGRATION_TEMPLATES: IntegrationTemplate[] = [
@@ -535,28 +547,30 @@ const INTEGRATION_TEMPLATES: IntegrationTemplate[] = [
     name: 'Workday HCM',
     nameEl: 'Workday HCM',
     description: 'Sync employee data and payroll information with Workday',
-    descriptionEl: 'Συγχρονισμός δεδομένων εργαζομένων και μισθοδοσίας με Workday',
+    descriptionEl:
+      'Συγχρονισμός δεδομένων εργαζομένων και μισθοδοσίας με Workday',
     provider: 'Workday',
     category: 'hr',
     logo: '🏢',
     events: ['employee.created', 'employee.updated', 'payroll.processed'],
     authRequired: true,
     configurable: true,
-    popular: true
+    popular: true,
   },
   {
     id: 'sage-accounting',
     name: 'Sage Accounting',
     nameEl: 'Sage Λογιστικά',
     description: 'Integrate payroll data with Sage accounting software',
-    descriptionEl: 'Ολοκλήρωση δεδομένων μισθοδοσίας με λογισμικό λογιστικής Sage',
+    descriptionEl:
+      'Ολοκλήρωση δεδομένων μισθοδοσίας με λογισμικό λογιστικής Sage',
     provider: 'Sage',
     category: 'accounting',
     logo: '📊',
     events: ['payroll.completed', 'expense.created', 'payment.processed'],
     authRequired: true,
     configurable: true,
-    popular: true
+    popular: true,
   },
   {
     id: 'power-bi-analytics',
@@ -570,7 +584,7 @@ const INTEGRATION_TEMPLATES: IntegrationTemplate[] = [
     events: ['metrics.calculated', 'report.generated', 'kpi.updated'],
     authRequired: true,
     configurable: false,
-    popular: false
+    popular: false,
   },
   {
     id: 'slack-notifications',
@@ -584,22 +598,23 @@ const INTEGRATION_TEMPLATES: IntegrationTemplate[] = [
     events: ['compliance.alert', 'employee.created', 'payroll.completed'],
     authRequired: true,
     configurable: true,
-    popular: true
+    popular: true,
   },
   {
     id: 'adp-payroll',
     name: 'ADP Payroll',
     nameEl: 'ADP Μισθοδοσία',
     description: 'Sync payroll data with ADP payroll management system',
-    descriptionEl: 'Συγχρονισμός δεδομένων μισθοδοσίας με σύστημα διαχείρισης ADP',
+    descriptionEl:
+      'Συγχρονισμός δεδομένων μισθοδοσίας με σύστημα διαχείρισης ADP',
     provider: 'ADP',
     category: 'payroll',
     logo: '💰',
     events: ['payroll.processed', 'employee.updated', 'payment.initiated'],
     authRequired: true,
     configurable: true,
-    popular: false
-  }
+    popular: false,
+  },
 ];
 
 export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
@@ -619,7 +634,7 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
         events: 'Events',
         deliveries: 'Deliveries',
         templates: 'Templates',
-        settings: 'Settings'
+        settings: 'Settings',
       },
       dashboard: {
         activeEndpoints: 'Active Endpoints',
@@ -629,7 +644,7 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
         recentActivity: 'Recent Activity',
         topEvents: 'Top Events',
         endpointStatus: 'Endpoint Status',
-        deliveryMetrics: 'Delivery Metrics'
+        deliveryMetrics: 'Delivery Metrics',
       },
       status: {
         active: 'Active',
@@ -637,18 +652,18 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
         failed: 'Failed',
         success: 'Success',
         pending: 'Pending',
-        retrying: 'Retrying'
+        retrying: 'Retrying',
       },
       frequency: {
         high: 'High Frequency',
         medium: 'Medium Frequency',
-        low: 'Low Frequency'
+        low: 'Low Frequency',
       },
       authentication: {
         none: 'No Authentication',
         bearer: 'Bearer Token',
         basic: 'Basic Auth',
-        signature: 'Signature Verification'
+        signature: 'Signature Verification',
       },
       actions: {
         create: 'Create Webhook',
@@ -665,21 +680,21 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
         refreshData: 'Refresh Data',
         configure: 'Configure',
         install: 'Install',
-        connect: 'Connect'
+        connect: 'Connect',
       },
       filters: {
         endpoint: 'Filter by Endpoint',
         event: 'Filter by Event',
         status: 'Filter by Status',
-        all: 'All'
+        all: 'All',
       },
       categories: {
         hr: 'HR Systems',
         accounting: 'Accounting',
         analytics: 'Analytics',
         compliance: 'Compliance',
-        payroll: 'Payroll'
-      }
+        payroll: 'Payroll',
+      },
     },
     el: {
       title: 'Σύστημα Webhooks',
@@ -690,7 +705,7 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
         events: 'Γεγονότα',
         deliveries: 'Παραδόσεις',
         templates: 'Πρότυπα',
-        settings: 'Ρυθμίσεις'
+        settings: 'Ρυθμίσεις',
       },
       dashboard: {
         activeEndpoints: 'Ενεργά Σημεία Τερματισμού',
@@ -700,7 +715,7 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
         recentActivity: 'Πρόσφατη Δραστηριότητα',
         topEvents: 'Κυριότερα Γεγονότα',
         endpointStatus: 'Κατάσταση Σημείων Τερματισμού',
-        deliveryMetrics: 'Μετρικές Παράδοσης'
+        deliveryMetrics: 'Μετρικές Παράδοσης',
       },
       status: {
         active: 'Ενεργό',
@@ -708,18 +723,18 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
         failed: 'Αποτυχημένο',
         success: 'Επιτυχία',
         pending: 'Εκκρεμές',
-        retrying: 'Επανάληψη'
+        retrying: 'Επανάληψη',
       },
       frequency: {
         high: 'Υψηλή Συχνότητα',
         medium: 'Μέτρια Συχνότητα',
-        low: 'Χαμηλή Συχνότητα'
+        low: 'Χαμηλή Συχνότητα',
       },
       authentication: {
         none: 'Χωρίς Πιστοποίηση',
         bearer: 'Bearer Token',
         basic: 'Βασική Πιστοποίηση',
-        signature: 'Επαλήθευση Υπογραφής'
+        signature: 'Επαλήθευση Υπογραφής',
       },
       actions: {
         create: 'Δημιουργία Webhook',
@@ -736,22 +751,22 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
         refreshData: 'Ανανέωση Δεδομένων',
         configure: 'Διαμόρφωση',
         install: 'Εγκατάσταση',
-        connect: 'Σύνδεση'
+        connect: 'Σύνδεση',
       },
       filters: {
         endpoint: 'Φιλτράρισμα κατά Σημείο Τερματισμού',
         event: 'Φιλτράρισμα κατά Γεγονός',
         status: 'Φιλτράρισμα κατά Κατάσταση',
-        all: 'Όλα'
+        all: 'Όλα',
       },
       categories: {
         hr: 'Συστήματα ΑΠ',
         accounting: 'Λογιστικά',
         analytics: 'Αναλυτικά',
         compliance: 'Συμμόρφωση',
-        payroll: 'Μισθοδοσία'
-      }
-    }
+        payroll: 'Μισθοδοσία',
+      },
+    },
   };
 
   const t = translations[locale];
@@ -759,37 +774,54 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-      case 'success': return 'text-green-600 bg-green-100';
-      case 'inactive': return 'text-gray-600 bg-gray-100';
-      case 'failed': return 'text-red-600 bg-red-100';
-      case 'pending': return 'text-blue-600 bg-blue-100';
-      case 'retrying': return 'text-yellow-600 bg-yellow-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'success':
+        return 'text-green-600 bg-green-100';
+      case 'inactive':
+        return 'text-gray-600 bg-gray-100';
+      case 'failed':
+        return 'text-red-600 bg-red-100';
+      case 'pending':
+        return 'text-blue-600 bg-blue-100';
+      case 'retrying':
+        return 'text-yellow-600 bg-yellow-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
     }
   };
 
   const getFrequencyColor = (frequency: string) => {
     switch (frequency) {
-      case 'high': return 'text-red-600 bg-red-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
-      case 'low': return 'text-green-600 bg-green-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'high':
+        return 'text-red-600 bg-red-100';
+      case 'medium':
+        return 'text-yellow-600 bg-yellow-100';
+      case 'low':
+        return 'text-green-600 bg-green-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
     }
   };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'hr': return Users;
-      case 'accounting': return Calculator;
-      case 'analytics': return BarChart3;
-      case 'compliance': return Scale;
-      case 'payroll': return Euro;
-      default: return Globe;
+      case 'hr':
+        return Users;
+      case 'accounting':
+        return Calculator;
+      case 'analytics':
+        return BarChart3;
+      case 'compliance':
+        return Scale;
+      case 'payroll':
+        return Euro;
+      default:
+        return Globe;
     }
   };
 
   const filteredEndpoints = WEBHOOK_ENDPOINTS.filter(endpoint => {
-    if (selectedEndpoint !== 'all' && endpoint.id !== selectedEndpoint) return false;
+    if (selectedEndpoint !== 'all' && endpoint.id !== selectedEndpoint)
+      return false;
     return true;
   });
 
@@ -799,14 +831,27 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
   });
 
   const filteredDeliveries = RECENT_DELIVERIES.filter(delivery => {
-    if (deliveryFilter !== 'all' && delivery.status !== deliveryFilter) return false;
+    if (deliveryFilter !== 'all' && delivery.status !== deliveryFilter)
+      return false;
     return true;
   });
 
-  const activeEndpoints = WEBHOOK_ENDPOINTS.filter(e => e.status === 'active').length;
-  const totalDeliveries = WEBHOOK_ENDPOINTS.reduce((sum, e) => sum + e.totalCalls, 0);
-  const overallSuccessRate = (totalDeliveries - WEBHOOK_ENDPOINTS.reduce((sum, e) => sum + e.failedCalls, 0)) / totalDeliveries * 100;
-  const averageResponseTime = Math.round(RECENT_DELIVERIES.reduce((sum, d) => sum + d.responseTime, 0) / RECENT_DELIVERIES.length);
+  const activeEndpoints = WEBHOOK_ENDPOINTS.filter(
+    e => e.status === 'active'
+  ).length;
+  const totalDeliveries = WEBHOOK_ENDPOINTS.reduce(
+    (sum, e) => sum + e.totalCalls,
+    0
+  );
+  const overallSuccessRate =
+    ((totalDeliveries -
+      WEBHOOK_ENDPOINTS.reduce((sum, e) => sum + e.failedCalls, 0)) /
+      totalDeliveries) *
+    100;
+  const averageResponseTime = Math.round(
+    RECENT_DELIVERIES.reduce((sum, d) => sum + d.responseTime, 0) /
+      RECENT_DELIVERIES.length
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-6">
@@ -840,28 +885,42 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
             <Card className="p-4 bg-gradient-to-r from-green-500 to-green-600 text-white">
               <div className="text-center">
                 <div className="text-3xl font-bold">{activeEndpoints}</div>
-                <div className="text-xs text-green-100">{t.dashboard.activeEndpoints}</div>
+                <div className="text-xs text-green-100">
+                  {t.dashboard.activeEndpoints}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
               <div className="text-center">
-                <div className="text-3xl font-bold">{totalDeliveries.toLocaleString()}</div>
-                <div className="text-xs text-blue-100">{t.dashboard.totalDeliveries}</div>
+                <div className="text-3xl font-bold">
+                  {totalDeliveries.toLocaleString()}
+                </div>
+                <div className="text-xs text-blue-100">
+                  {t.dashboard.totalDeliveries}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
               <div className="text-center">
-                <div className="text-3xl font-bold">{overallSuccessRate.toFixed(1)}%</div>
-                <div className="text-xs text-purple-100">{t.dashboard.successRate}</div>
+                <div className="text-3xl font-bold">
+                  {overallSuccessRate.toFixed(1)}%
+                </div>
+                <div className="text-xs text-purple-100">
+                  {t.dashboard.successRate}
+                </div>
               </div>
             </Card>
 
             <Card className="p-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
               <div className="text-center">
-                <div className="text-3xl font-bold">{averageResponseTime}ms</div>
-                <div className="text-xs text-orange-100">{t.dashboard.averageResponseTime}</div>
+                <div className="text-3xl font-bold">
+                  {averageResponseTime}ms
+                </div>
+                <div className="text-xs text-orange-100">
+                  {t.dashboard.averageResponseTime}
+                </div>
               </div>
             </Card>
           </div>
@@ -891,16 +950,26 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {RECENT_DELIVERIES.slice(0, 4).map((delivery) => (
-                        <div key={delivery.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      {RECENT_DELIVERIES.slice(0, 4).map(delivery => (
+                        <div
+                          key={delivery.id}
+                          className="flex items-center justify-between p-3 border rounded-lg"
+                        >
                           <div className="flex items-center gap-3">
                             <Badge className={getStatusColor(delivery.status)}>
-                              {t.status[delivery.status as keyof typeof t.status]}
+                              {
+                                t.status[
+                                  delivery.status as keyof typeof t.status
+                                ]
+                              }
                             </Badge>
                             <div>
-                              <div className="font-medium text-sm">{delivery.endpointName}</div>
+                              <div className="font-medium text-sm">
+                                {delivery.endpointName}
+                              </div>
                               <div className="text-xs text-gray-600">
-                                {delivery.event} • {new Date(delivery.timestamp).toLocaleString()}
+                                {delivery.event} •{' '}
+                                {new Date(delivery.timestamp).toLocaleString()}
                               </div>
                             </div>
                           </div>
@@ -929,10 +998,15 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {['active', 'inactive', 'failed'].map((status) => {
-                      const count = WEBHOOK_ENDPOINTS.filter(e => e.status === status).length;
+                    {['active', 'inactive', 'failed'].map(status => {
+                      const count = WEBHOOK_ENDPOINTS.filter(
+                        e => e.status === status
+                      ).length;
                       return (
-                        <div key={status} className="flex items-center justify-between">
+                        <div
+                          key={status}
+                          className="flex items-center justify-between"
+                        >
                           <div className="flex items-center gap-2">
                             <Badge className={getStatusColor(status)}>
                               {t.status[status as keyof typeof t.status]}
@@ -957,11 +1031,15 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-3 gap-4">
-                  {WEBHOOK_EVENTS.slice(0, 3).map((event) => (
+                  {WEBHOOK_EVENTS.slice(0, 3).map(event => (
                     <div key={event.id} className="p-4 border rounded-lg">
                       <div className="flex items-center gap-2 mb-3">
                         <Badge className={getFrequencyColor(event.frequency)}>
-                          {t.frequency[event.frequency as keyof typeof t.frequency]}
+                          {
+                            t.frequency[
+                              event.frequency as keyof typeof t.frequency
+                            ]
+                          }
                         </Badge>
                         <Badge variant="outline">
                           {event.subscribedEndpoints} endpoints
@@ -974,7 +1052,8 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                         {locale === 'en' ? event.category : event.categoryEl}
                       </div>
                       <div className="text-xs text-gray-500">
-                        {event.totalTriggers} triggers • Last: {new Date(event.lastTriggered).toLocaleDateString()}
+                        {event.totalTriggers} triggers • Last:{' '}
+                        {new Date(event.lastTriggered).toLocaleDateString()}
                       </div>
                     </div>
                   ))}
@@ -995,13 +1074,16 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-3 gap-4">
-                  <Select value={selectedEndpoint} onValueChange={setSelectedEndpoint}>
+                  <Select
+                    value={selectedEndpoint}
+                    onValueChange={setSelectedEndpoint}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder={t.filters.endpoint} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">{t.filters.all}</SelectItem>
-                      {WEBHOOK_ENDPOINTS.map((endpoint) => (
+                      {WEBHOOK_ENDPOINTS.map(endpoint => (
                         <SelectItem key={endpoint.id} value={endpoint.id}>
                           {locale === 'en' ? endpoint.name : endpoint.nameEl}
                         </SelectItem>
@@ -1009,7 +1091,10 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                     </SelectContent>
                   </Select>
 
-                  <Button variant="outline" onClick={() => setSelectedEndpoint('all')}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedEndpoint('all')}
+                  >
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Reset
                   </Button>
@@ -1024,8 +1109,11 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
 
             {/* Endpoints List */}
             <div className="space-y-4">
-              {filteredEndpoints.map((endpoint) => (
-                <Card key={endpoint.id} className="hover:shadow-md transition-shadow">
+              {filteredEndpoints.map(endpoint => (
+                <Card
+                  key={endpoint.id}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -1036,9 +1124,7 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                           <Badge className={getStatusColor(endpoint.status)}>
                             {t.status[endpoint.status as keyof typeof t.status]}
                           </Badge>
-                          <Badge variant="outline">
-                            {endpoint.method}
-                          </Badge>
+                          <Badge variant="outline">{endpoint.method}</Badge>
                         </div>
                         <div className="text-sm text-gray-600 mb-3">
                           {endpoint.url}
@@ -1047,40 +1133,68 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                           <span>Events: {endpoint.events.length}</span>
                           <span>Success Rate: {endpoint.successRate}%</span>
                           <span>Total Calls: {endpoint.totalCalls}</span>
-                          <span>Last Triggered: {new Date(endpoint.lastTriggered).toLocaleDateString()}</span>
+                          <span>
+                            Last Triggered:{' '}
+                            {new Date(
+                              endpoint.lastTriggered
+                            ).toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
                     </div>
 
                     <div className="mb-4">
-                      <div className="text-sm font-medium text-gray-700 mb-2">Success Rate</div>
+                      <div className="text-sm font-medium text-gray-700 mb-2">
+                        Success Rate
+                      </div>
                       <Progress value={endpoint.successRate} className="h-2" />
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-4 mb-4">
                       <div>
-                        <div className="text-xs font-medium text-gray-700">Authentication</div>
+                        <div className="text-xs font-medium text-gray-700">
+                          Authentication
+                        </div>
                         <div className="text-sm">
-                          {t.authentication[endpoint.authentication.type as keyof typeof t.authentication]}
+                          {
+                            t.authentication[
+                              endpoint.authentication
+                                .type as keyof typeof t.authentication
+                            ]
+                          }
                         </div>
                       </div>
 
                       <div>
-                        <div className="text-xs font-medium text-gray-700">Max Retries</div>
-                        <div className="text-sm">{endpoint.retryPolicy.maxRetries}</div>
+                        <div className="text-xs font-medium text-gray-700">
+                          Max Retries
+                        </div>
+                        <div className="text-sm">
+                          {endpoint.retryPolicy.maxRetries}
+                        </div>
                       </div>
 
                       <div>
-                        <div className="text-xs font-medium text-gray-700">Created</div>
-                        <div className="text-sm">{new Date(endpoint.createdAt).toLocaleDateString()}</div>
+                        <div className="text-xs font-medium text-gray-700">
+                          Created
+                        </div>
+                        <div className="text-sm">
+                          {new Date(endpoint.createdAt).toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
 
                     <div className="mb-4">
-                      <div className="text-sm font-medium text-gray-700 mb-2">Subscribed Events</div>
+                      <div className="text-sm font-medium text-gray-700 mb-2">
+                        Subscribed Events
+                      </div>
                       <div className="flex flex-wrap gap-2">
                         {endpoint.events.map((event, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
+                          <Badge
+                            key={index}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {event}
                           </Badge>
                         ))}
@@ -1104,7 +1218,7 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                           <Eye className="h-4 w-4 mr-1" />
                           {t.actions.viewLogs}
                         </Button>
-                        <Switch 
+                        <Switch
                           checked={endpoint.status === 'active'}
                           disabled={endpoint.status === 'failed'}
                         />
@@ -1127,7 +1241,7 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {filteredEvents.map((event) => (
+                  {filteredEvents.map(event => (
                     <div key={event.id} className="p-4 border rounded-lg">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
@@ -1135,18 +1249,29 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                             <h3 className="font-semibold">
                               {locale === 'en' ? event.name : event.nameEl}
                             </h3>
-                            <Badge className={getFrequencyColor(event.frequency)}>
-                              {t.frequency[event.frequency as keyof typeof t.frequency]}
+                            <Badge
+                              className={getFrequencyColor(event.frequency)}
+                            >
+                              {
+                                t.frequency[
+                                  event.frequency as keyof typeof t.frequency
+                                ]
+                              }
                             </Badge>
                             <Badge variant="outline">
                               {event.subscribedEndpoints} endpoints
                             </Badge>
                           </div>
                           <div className="text-sm text-gray-600 mb-2">
-                            {locale === 'en' ? event.description : event.descriptionEl}
+                            {locale === 'en'
+                              ? event.description
+                              : event.descriptionEl}
                           </div>
                           <div className="text-xs text-gray-500">
-                            Category: {locale === 'en' ? event.category : event.categoryEl}
+                            Category:{' '}
+                            {locale === 'en'
+                              ? event.category
+                              : event.categoryEl}
                           </div>
                         </div>
                         <Switch checked={event.enabled} />
@@ -1154,23 +1279,37 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
 
                       <div className="grid md:grid-cols-3 gap-4 mb-3">
                         <div>
-                          <div className="text-xs font-medium text-gray-700">Total Triggers</div>
-                          <div className="text-lg font-bold text-blue-600">{event.totalTriggers}</div>
+                          <div className="text-xs font-medium text-gray-700">
+                            Total Triggers
+                          </div>
+                          <div className="text-lg font-bold text-blue-600">
+                            {event.totalTriggers}
+                          </div>
                         </div>
 
                         <div>
-                          <div className="text-xs font-medium text-gray-700">Subscribed Endpoints</div>
-                          <div className="text-lg font-bold text-green-600">{event.subscribedEndpoints}</div>
+                          <div className="text-xs font-medium text-gray-700">
+                            Subscribed Endpoints
+                          </div>
+                          <div className="text-lg font-bold text-green-600">
+                            {event.subscribedEndpoints}
+                          </div>
                         </div>
 
                         <div>
-                          <div className="text-xs font-medium text-gray-700">Last Triggered</div>
-                          <div className="text-sm">{new Date(event.lastTriggered).toLocaleDateString()}</div>
+                          <div className="text-xs font-medium text-gray-700">
+                            Last Triggered
+                          </div>
+                          <div className="text-sm">
+                            {new Date(event.lastTriggered).toLocaleDateString()}
+                          </div>
                         </div>
                       </div>
 
                       <div>
-                        <div className="text-sm font-medium text-gray-700 mb-2">Data Schema</div>
+                        <div className="text-sm font-medium text-gray-700 mb-2">
+                          Data Schema
+                        </div>
                         <div className="bg-gray-50 p-3 rounded text-xs font-mono">
                           <pre>{JSON.stringify(event.schema, null, 2)}</pre>
                         </div>
@@ -1191,7 +1330,10 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                     <Send className="h-5 w-5" />
                     Recent Deliveries
                   </CardTitle>
-                  <Select value={deliveryFilter} onValueChange={setDeliveryFilter}>
+                  <Select
+                    value={deliveryFilter}
+                    onValueChange={setDeliveryFilter}
+                  >
                     <SelectTrigger className="w-48">
                       <SelectValue placeholder={t.filters.status} />
                     </SelectTrigger>
@@ -1207,24 +1349,32 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {filteredDeliveries.map((delivery) => (
+                  {filteredDeliveries.map(delivery => (
                     <div key={delivery.id} className="p-4 border rounded-lg">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <Badge className={getStatusColor(delivery.status)}>
-                              {t.status[delivery.status as keyof typeof t.status]}
+                              {
+                                t.status[
+                                  delivery.status as keyof typeof t.status
+                                ]
+                              }
                             </Badge>
                             <Badge variant="outline">
                               {delivery.responseCode || 'N/A'}
                             </Badge>
                             <span className="text-sm text-gray-600">
-                              {delivery.attempts}/{delivery.maxAttempts} attempts
+                              {delivery.attempts}/{delivery.maxAttempts}{' '}
+                              attempts
                             </span>
                           </div>
-                          <h3 className="font-semibold mb-1">{delivery.endpointName}</h3>
+                          <h3 className="font-semibold mb-1">
+                            {delivery.endpointName}
+                          </h3>
                           <div className="text-sm text-gray-600">
-                            Event: {delivery.event} • {new Date(delivery.timestamp).toLocaleString()}
+                            Event: {delivery.event} •{' '}
+                            {new Date(delivery.timestamp).toLocaleString()}
                           </div>
                         </div>
                         <div className="text-right">
@@ -1233,7 +1383,8 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                           </div>
                           {delivery.nextRetry && (
                             <div className="text-xs text-gray-500">
-                              Next retry: {new Date(delivery.nextRetry).toLocaleString()}
+                              Next retry:{' '}
+                              {new Date(delivery.nextRetry).toLocaleString()}
                             </div>
                           )}
                         </div>
@@ -1246,20 +1397,23 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                       )}
 
                       <div className="text-sm">
-                        <div className="font-medium text-gray-700 mb-2">Payload Preview</div>
+                        <div className="font-medium text-gray-700 mb-2">
+                          Payload Preview
+                        </div>
                         <div className="bg-gray-50 p-3 rounded text-xs font-mono max-h-32 overflow-y-auto">
                           <pre>{JSON.stringify(delivery.payload, null, 2)}</pre>
                         </div>
                       </div>
 
-                      {delivery.status === 'failed' && delivery.attempts < delivery.maxAttempts && (
-                        <div className="flex justify-end mt-3">
-                          <Button size="sm" variant="outline">
-                            <Repeat className="h-4 w-4 mr-1" />
-                            {t.actions.retry}
-                          </Button>
-                        </div>
-                      )}
+                      {delivery.status === 'failed' &&
+                        delivery.attempts < delivery.maxAttempts && (
+                          <div className="flex justify-end mt-3">
+                            <Button size="sm" variant="outline">
+                              <Repeat className="h-4 w-4 mr-1" />
+                              {t.actions.retry}
+                            </Button>
+                          </div>
+                        )}
                     </div>
                   ))}
                 </div>
@@ -1278,17 +1432,22 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
               </CardHeader>
               <CardContent>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {INTEGRATION_TEMPLATES.map((template) => {
+                  {INTEGRATION_TEMPLATES.map(template => {
                     const CategoryIcon = getCategoryIcon(template.category);
-                    
+
                     return (
-                      <div key={template.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
+                      <div
+                        key={template.id}
+                        className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                      >
                         <div className="flex items-start gap-3 mb-4">
                           <div className="text-3xl">{template.logo}</div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-semibold">
-                                {locale === 'en' ? template.name : template.nameEl}
+                                {locale === 'en'
+                                  ? template.name
+                                  : template.nameEl}
                               </h3>
                               {template.popular && (
                                 <Badge className="bg-yellow-100 text-yellow-800">
@@ -1302,20 +1461,32 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                             </div>
                             <Badge className="text-xs" variant="outline">
                               <CategoryIcon className="h-3 w-3 mr-1" />
-                              {t.categories[template.category as keyof typeof t.categories]}
+                              {
+                                t.categories[
+                                  template.category as keyof typeof t.categories
+                                ]
+                              }
                             </Badge>
                           </div>
                         </div>
 
                         <p className="text-sm text-gray-600 mb-4">
-                          {locale === 'en' ? template.description : template.descriptionEl}
+                          {locale === 'en'
+                            ? template.description
+                            : template.descriptionEl}
                         </p>
 
                         <div className="mb-4">
-                          <div className="text-xs font-medium text-gray-700 mb-2">Events ({template.events.length})</div>
+                          <div className="text-xs font-medium text-gray-700 mb-2">
+                            Events ({template.events.length})
+                          </div>
                           <div className="flex flex-wrap gap-1">
                             {template.events.slice(0, 3).map((event, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
+                              <Badge
+                                key={index}
+                                variant="outline"
+                                className="text-xs"
+                              >
                                 {event}
                               </Badge>
                             ))}
@@ -1342,7 +1513,10 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                               </div>
                             )}
                           </div>
-                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                          <Button
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
                             <Link className="h-4 w-4 mr-1" />
                             {t.actions.connect}
                           </Button>
@@ -1371,37 +1545,47 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
                     <div className="flex items-center justify-between">
                       <div>
                         <label className="font-medium">Default Timeout</label>
-                        <p className="text-sm text-gray-600">Default request timeout for all webhooks</p>
+                        <p className="text-sm text-gray-600">
+                          Default request timeout for all webhooks
+                        </p>
                       </div>
                       <div className="w-32">
                         <Input type="number" defaultValue="30" />
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
-                        <label className="font-medium">Max Retry Attempts</label>
-                        <p className="text-sm text-gray-600">Maximum number of retry attempts</p>
+                        <label className="font-medium">
+                          Max Retry Attempts
+                        </label>
+                        <p className="text-sm text-gray-600">
+                          Maximum number of retry attempts
+                        </p>
                       </div>
                       <div className="w-32">
                         <Input type="number" defaultValue="3" />
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <label className="font-medium">Rate Limiting</label>
-                        <p className="text-sm text-gray-600">Maximum requests per minute</p>
+                        <p className="text-sm text-gray-600">
+                          Maximum requests per minute
+                        </p>
                       </div>
                       <div className="w-32">
                         <Input type="number" defaultValue="100" />
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <label className="font-medium">Enable Logging</label>
-                        <p className="text-sm text-gray-600">Log all webhook requests and responses</p>
+                        <p className="text-sm text-gray-600">
+                          Log all webhook requests and responses
+                        </p>
                       </div>
                       <Switch defaultChecked />
                     </div>
@@ -1410,7 +1594,9 @@ export default function WebhookSystem({ locale = 'en' }: WebhookSystemProps) {
 
                 <div className="flex justify-end gap-3">
                   <Button variant="outline">Reset to Defaults</Button>
-                  <Button className="bg-blue-600 hover:bg-blue-700">Save Settings</Button>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    Save Settings
+                  </Button>
                 </div>
               </CardContent>
             </Card>

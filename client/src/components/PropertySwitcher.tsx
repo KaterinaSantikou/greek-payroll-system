@@ -1,22 +1,22 @@
-import { useProperty } from "@/contexts/PropertyContext";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useProperty } from '@/contexts/PropertyContext';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { Building2, ChevronDown, Users } from "lucide-react";
+} from '@/components/ui/dropdown-menu';
+import { Building2, ChevronDown, Users } from 'lucide-react';
 
 export function PropertySwitcher() {
-  const { 
-    selectedProperty, 
-    setSelectedProperty, 
-    properties, 
-    isGroupView, 
-    setIsGroupView 
+  const {
+    selectedProperty,
+    setSelectedProperty,
+    properties,
+    isGroupView,
+    setIsGroupView,
   } = useProperty();
 
   return (
@@ -25,7 +25,9 @@ export function PropertySwitcher() {
         <Button variant="outline" className="flex items-center space-x-2">
           <Building2 className="w-4 h-4" />
           <span>
-            {isGroupView ? "Group View" : selectedProperty?.name || "Select Property"}
+            {isGroupView
+              ? 'Group View'
+              : selectedProperty?.name || 'Select Property'}
           </span>
           <ChevronDown className="w-4 h-4" />
         </Button>
@@ -33,7 +35,7 @@ export function PropertySwitcher() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuItem
           onClick={() => setIsGroupView(true)}
-          className={isGroupView ? "bg-accent" : ""}
+          className={isGroupView ? 'bg-accent' : ''}
         >
           <Users className="w-4 h-4 mr-2" />
           <div className="flex flex-col">
@@ -43,10 +45,10 @@ export function PropertySwitcher() {
             </span>
           </div>
         </DropdownMenuItem>
-        
+
         <DropdownMenuSeparator />
-        
-        {properties.map((property) => (
+
+        {properties.map(property => (
           <DropdownMenuItem
             key={property.propertyId}
             onClick={() => {
@@ -54,9 +56,10 @@ export function PropertySwitcher() {
               setIsGroupView(false);
             }}
             className={
-              selectedProperty?.propertyId === property.propertyId && !isGroupView 
-                ? "bg-accent" 
-                : ""
+              selectedProperty?.propertyId === property.propertyId &&
+              !isGroupView
+                ? 'bg-accent'
+                : ''
             }
           >
             <Building2 className="w-4 h-4 mr-2" />

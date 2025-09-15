@@ -1,19 +1,25 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  InfoIcon, 
-  TrendingUpIcon, 
-  TrendingDownIcon, 
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  InfoIcon,
+  TrendingUpIcon,
+  TrendingDownIcon,
   EuroIcon,
   ExternalLinkIcon,
-  LanguagesIcon
-} from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+  LanguagesIcon,
+} from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 interface PayExplanationProps {
   paycheckId: string;
@@ -86,13 +92,18 @@ const ExplanationItemRow = ({ item }: { item: ExplanationItem }) => {
           <div className="mt-1 text-xs text-gray-600 dark:text-gray-400 space-x-2">
             {item.quantity && <span>{item.quantity}</span>}
             {item.rate && <span>@ {item.rate}</span>}
-            {item.calculation && <span className="font-mono">= {item.calculation}</span>}
+            {item.calculation && (
+              <span className="font-mono">= {item.calculation}</span>
+            )}
           </div>
         )}
       </div>
       <div className="text-right">
-        <span className={`font-semibold ${item.amount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-          {item.amount >= 0 ? '+' : ''}{formatCurrency(item.amount)}
+        <span
+          className={`font-semibold ${item.amount >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
+        >
+          {item.amount >= 0 ? '+' : ''}
+          {formatCurrency(item.amount)}
         </span>
       </div>
     </div>
@@ -130,7 +141,15 @@ const ExplanationBlockCard = ({ block }: { block: ExplanationBlock }) => {
             {getBlockIcon()}
             <CardTitle className="text-lg">{block.title}</CardTitle>
           </div>
-          <Badge variant={block.type === 'earnings' ? 'default' : block.type === 'deductions' ? 'destructive' : 'secondary'}>
+          <Badge
+            variant={
+              block.type === 'earnings'
+                ? 'default'
+                : block.type === 'deductions'
+                  ? 'destructive'
+                  : 'secondary'
+            }
+          >
             {formatCurrency(block.amount)}
           </Badge>
         </div>
@@ -161,7 +180,11 @@ const ExplanationBlockCard = ({ block }: { block: ExplanationBlock }) => {
                     className="h-7 text-xs"
                     asChild
                   >
-                    <a href={link.url} target="_blank" rel="noopener noreferrer">
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
                       <PolicyLinkIcon type={link.type} />
                       {link.text}
                     </a>
@@ -174,9 +197,16 @@ const ExplanationBlockCard = ({ block }: { block: ExplanationBlock }) => {
 
         <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
           <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-            <div><strong>Source:</strong> {block.provenance.source}</div>
-            <div><strong>Method:</strong> {block.provenance.calculationMethod}</div>
-            <div><strong>Updated:</strong> {new Date(block.provenance.lastUpdated).toLocaleDateString()}</div>
+            <div>
+              <strong>Source:</strong> {block.provenance.source}
+            </div>
+            <div>
+              <strong>Method:</strong> {block.provenance.calculationMethod}
+            </div>
+            <div>
+              <strong>Updated:</strong>{' '}
+              {new Date(block.provenance.lastUpdated).toLocaleDateString()}
+            </div>
           </div>
         </div>
       </CardContent>
@@ -184,17 +214,30 @@ const ExplanationBlockCard = ({ block }: { block: ExplanationBlock }) => {
   );
 };
 
-export function PayExplanation({ paycheckId, language = 'el', className }: PayExplanationProps) {
-  const [selectedLanguage, setSelectedLanguage] = useState<'el' | 'en'>(language);
-  
+export function PayExplanation({
+  paycheckId,
+  language = 'el',
+  className,
+}: PayExplanationProps) {
+  const [selectedLanguage, setSelectedLanguage] = useState<'el' | 'en'>(
+    language
+  );
+
   const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/paycheck', paycheckId, 'explanation', { language: selectedLanguage }],
+    queryKey: [
+      '/api/paycheck',
+      paycheckId,
+      'explanation',
+      { language: selectedLanguage },
+    ],
     queryFn: async () => {
-      const response = await fetch(`/api/paycheck/${paycheckId}/explanation?language=${selectedLanguage}&includePolicy=true`);
+      const response = await fetch(
+        `/api/paycheck/${paycheckId}/explanation?language=${selectedLanguage}&includePolicy=true`
+      );
       if (!response.ok) throw new Error('Failed to fetch pay explanation');
       return response.json();
     },
-    retry: 1
+    retry: 1,
   });
 
   if (isLoading) {
@@ -267,7 +310,9 @@ export function PayExplanation({ paycheckId, language = 'el', className }: PayEx
           {explanation.significantChanges.length > 0 && (
             <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-700">
               <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                {selectedLanguage === 'el' ? 'Σημαντικές Αλλαγές:' : 'Significant Changes:'}
+                {selectedLanguage === 'el'
+                  ? 'Σημαντικές Αλλαγές:'
+                  : 'Significant Changes:'}
               </h4>
               <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                 {explanation.significantChanges.map((change, index) => (
@@ -293,14 +338,21 @@ export function PayExplanation({ paycheckId, language = 'el', className }: PayEx
       <div className="text-xs text-gray-500 dark:text-gray-400 text-center space-y-1 pt-4 border-t">
         <div className="flex items-center justify-center gap-4">
           <span>
-            {selectedLanguage === 'el' ? 'Σύγκριση:' : 'Comparison:'} {metadata?.hasComparison ? '✓' : '✗'}
+            {selectedLanguage === 'el' ? 'Σύγκριση:' : 'Comparison:'}{' '}
+            {metadata?.hasComparison ? '✓' : '✗'}
           </span>
           <span>
-            {selectedLanguage === 'el' ? 'Λεπτομερής Ανάλυση:' : 'Detailed Breakdown:'} {metadata?.hasDetailedBreakdown ? '✓' : '✗'}
+            {selectedLanguage === 'el'
+              ? 'Λεπτομερής Ανάλυση:'
+              : 'Detailed Breakdown:'}{' '}
+            {metadata?.hasDetailedBreakdown ? '✓' : '✗'}
           </span>
         </div>
         <div>
-          {selectedLanguage === 'el' ? 'Δημιουργήθηκε:' : 'Generated:'} {new Date(metadata?.generatedAt || '').toLocaleString(selectedLanguage === 'el' ? 'el-GR' : 'en-US')}
+          {selectedLanguage === 'el' ? 'Δημιουργήθηκε:' : 'Generated:'}{' '}
+          {new Date(metadata?.generatedAt || '').toLocaleString(
+            selectedLanguage === 'el' ? 'el-GR' : 'en-US'
+          )}
         </div>
       </div>
     </div>

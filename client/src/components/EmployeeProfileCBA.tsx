@@ -1,10 +1,25 @@
-import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Calendar, TrendingUp, Award, Clock, Euro, ArrowUp, FileText, History } from "lucide-react";
+import React from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import {
+  Calendar,
+  TrendingUp,
+  Award,
+  Clock,
+  Euro,
+  ArrowUp,
+  FileText,
+  History,
+} from 'lucide-react';
 
 interface EmployeeCBAProfile {
   contractId: string;
@@ -34,10 +49,17 @@ interface Props {
 }
 
 export default function EmployeeProfileCBA({ employeeId, profile }: Props) {
-  const stepProgress = profile.maxSteps > 0 ? (profile.seniorityStep / profile.maxSteps) * 100 : 0;
+  const stepProgress =
+    profile.maxSteps > 0 ? (profile.seniorityStep / profile.maxSteps) * 100 : 0;
   const hasNextStep = profile.nextStepWage !== null;
-  const monthsToNextStep = profile.nextStepDate 
-    ? Math.max(0, Math.ceil((new Date(profile.nextStepDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30)))
+  const monthsToNextStep = profile.nextStepDate
+    ? Math.max(
+        0,
+        Math.ceil(
+          (new Date(profile.nextStepDate).getTime() - new Date().getTime()) /
+            (1000 * 60 * 60 * 24 * 30)
+        )
+      )
     : null;
 
   return (
@@ -57,7 +79,9 @@ export default function EmployeeProfileCBA({ employeeId, profile }: Props) {
           {/* Current Classification */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-600">Category</label>
+              <label className="text-sm font-medium text-gray-600">
+                Category
+              </label>
               <div className="mt-1">
                 <Badge variant="secondary" className="text-base px-3 py-1">
                   {profile.category}
@@ -73,7 +97,9 @@ export default function EmployeeProfileCBA({ employeeId, profile }: Props) {
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600">Seniority Step</label>
+              <label className="text-sm font-medium text-gray-600">
+                Seniority Step
+              </label>
               <div className="mt-1 flex items-center gap-2">
                 <Badge variant="default" className="text-base px-3 py-1">
                   Step {profile.seniorityStep}
@@ -89,12 +115,18 @@ export default function EmployeeProfileCBA({ employeeId, profile }: Props) {
 
           {/* CBA Pack Info */}
           <div>
-            <label className="text-sm font-medium text-gray-600">Applied CBA Pack</label>
+            <label className="text-sm font-medium text-gray-600">
+              Applied CBA Pack
+            </label>
             <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-blue-600" />
-                <span className="font-medium text-blue-900">{profile.cbaPackName}</span>
-                <Badge variant="outline" className="text-xs">Active</Badge>
+                <span className="font-medium text-blue-900">
+                  {profile.cbaPackName}
+                </span>
+                <Badge variant="outline" className="text-xs">
+                  Active
+                </Badge>
               </div>
             </div>
           </div>
@@ -114,7 +146,9 @@ export default function EmployeeProfileCBA({ employeeId, profile }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-green-700">Current Monthly Wage</span>
+                <span className="text-sm font-medium text-green-700">
+                  Current Monthly Wage
+                </span>
                 <TrendingUp className="w-4 h-4 text-green-600" />
               </div>
               <div className="text-2xl font-bold text-green-900">
@@ -128,7 +162,9 @@ export default function EmployeeProfileCBA({ employeeId, profile }: Props) {
             {hasNextStep ? (
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-amber-700">Next Step Wage</span>
+                  <span className="text-sm font-medium text-amber-700">
+                    Next Step Wage
+                  </span>
                   <ArrowUp className="w-4 h-4 text-amber-600" />
                 </div>
                 <div className="text-2xl font-bold text-amber-900">
@@ -141,7 +177,9 @@ export default function EmployeeProfileCBA({ employeeId, profile }: Props) {
             ) : (
               <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-600">Progression Status</span>
+                  <span className="text-sm font-medium text-gray-600">
+                    Progression Status
+                  </span>
                   <Award className="w-4 h-4 text-gray-500" />
                 </div>
                 <div className="text-lg font-bold text-gray-700">
@@ -157,7 +195,9 @@ export default function EmployeeProfileCBA({ employeeId, profile }: Props) {
           {/* Step Progress */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-600">Seniority Progression</span>
+              <span className="text-sm font-medium text-gray-600">
+                Seniority Progression
+              </span>
               <span className="text-sm text-gray-500">
                 Step {profile.seniorityStep} of {profile.maxSteps}
               </span>
@@ -176,13 +216,13 @@ export default function EmployeeProfileCBA({ employeeId, profile }: Props) {
                 <Calendar className="w-5 h-5 text-blue-600" />
                 <div className="flex-1">
                   <div className="font-medium text-blue-900">
-                    Next Step Review: {new Date(profile.nextStepDate).toLocaleDateString()}
+                    Next Step Review:{' '}
+                    {new Date(profile.nextStepDate).toLocaleDateString()}
                   </div>
                   <div className="text-sm text-blue-700 mt-1">
-                    {monthsToNextStep !== null && monthsToNextStep > 0 
+                    {monthsToNextStep !== null && monthsToNextStep > 0
                       ? `${monthsToNextStep} month${monthsToNextStep !== 1 ? 's' : ''} remaining`
-                      : 'Due for review'
-                    }
+                      : 'Due for review'}
                   </div>
                 </div>
                 {monthsToNextStep !== null && monthsToNextStep === 0 && (
@@ -208,11 +248,15 @@ export default function EmployeeProfileCBA({ employeeId, profile }: Props) {
           {/* Service Summary */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">{profile.yearsOfService}</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {profile.yearsOfService}
+              </div>
               <div className="text-sm text-gray-600">Years of Service</div>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <div className="text-2xl font-bold text-gray-900">{profile.totalStepIncreases}</div>
+              <div className="text-2xl font-bold text-gray-900">
+                {profile.totalStepIncreases}
+              </div>
               <div className="text-sm text-gray-600">Step Increases</div>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
@@ -232,7 +276,10 @@ export default function EmployeeProfileCBA({ employeeId, profile }: Props) {
               </h4>
               <div className="space-y-2">
                 {profile.stepHistory.slice(0, 5).map((change, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
                     <div className="flex items-center gap-3">
                       <Badge variant="outline" className="text-xs">
                         {change.eventType}

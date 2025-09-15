@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 
@@ -22,7 +28,9 @@ interface UserRoleContextType {
   getRoleBasedLandingPage: () => string;
 }
 
-const UserRoleContext = createContext<UserRoleContextType | undefined>(undefined);
+const UserRoleContext = createContext<UserRoleContextType | undefined>(
+  undefined
+);
 
 interface UserRoleProviderProps {
   children: ReactNode;
@@ -30,9 +38,9 @@ interface UserRoleProviderProps {
 
 export function UserRoleProvider({ children }: UserRoleProviderProps) {
   const { user, isAuthenticated } = useAuth();
-  
+
   const { data: userProfile, isLoading } = useQuery<UserProfile>({
-    queryKey: ["/api/user/profile"],
+    queryKey: ['/api/user/profile'],
     enabled: isAuthenticated && !!user,
   });
 
@@ -42,7 +50,7 @@ export function UserRoleProvider({ children }: UserRoleProviderProps) {
 
   const getRoleBasedLandingPage = (): string => {
     if (!userProfile) return '/';
-    
+
     switch (userProfile.role) {
       case 'hr':
         return '/payroll'; // HR sees filings & payroll modules first
@@ -87,18 +95,18 @@ export const PERMISSIONS = {
   MANAGE_PAYROLL: 'manage_payroll',
   VIEW_FILINGS: 'view_filings',
   MANAGE_EMPLOYEES: 'manage_employees',
-  
+
   // Manager Permissions
   VIEW_SCHEDULES: 'view_schedules',
   MANAGE_SCHEDULES: 'manage_schedules',
   APPROVE_OVERTIME: 'approve_overtime',
   VIEW_TEAM_ANALYTICS: 'view_team_analytics',
-  
+
   // Employee Permissions
   VIEW_PAYSLIPS: 'view_payslips',
   VIEW_TIME_LOGS: 'view_time_logs',
   SUBMIT_LEAVE: 'submit_leave',
-  
+
   // Admin Permissions
   MANAGE_PROPERTIES: 'manage_properties',
   VIEW_ALL_DATA: 'view_all_data',

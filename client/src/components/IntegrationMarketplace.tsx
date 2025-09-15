@@ -31,7 +31,7 @@ import {
   Globe,
   Settings,
   ArrowRight,
-  Sparkles
+  Sparkles,
 } from 'lucide-react';
 
 interface Integration {
@@ -66,15 +66,60 @@ interface Integration {
 }
 
 const INTEGRATION_CATEGORIES = [
-  { id: 'all', name: 'All Categories', nameEl: 'Όλες οι Κατηγορίες', icon: Grid3X3 },
-  { id: 'government', name: 'Government & Compliance', nameEl: 'Κυβέρνηση & Συμμόρφωση', icon: Shield },
-  { id: 'banking', name: 'Banking & Finance', nameEl: 'Τραπεζικά & Χρηματοοικονομικά', icon: CreditCard },
-  { id: 'accounting', name: 'Accounting & ERP', nameEl: 'Λογιστική & ERP', icon: FileText },
-  { id: 'hr', name: 'HR & Workforce', nameEl: 'Ανθρώπινο Δυναμικό', icon: Users },
-  { id: 'time', name: 'Time & Attendance', nameEl: 'Χρόνος & Παρουσίες', icon: Clock },
-  { id: 'communication', name: 'Communication', nameEl: 'Επικοινωνία', icon: MessageSquare },
-  { id: 'analytics', name: 'Analytics & BI', nameEl: 'Αναλυτικά & BI', icon: BarChart },
-  { id: 'productivity', name: 'Productivity', nameEl: 'Παραγωγικότητα', icon: Zap }
+  {
+    id: 'all',
+    name: 'All Categories',
+    nameEl: 'Όλες οι Κατηγορίες',
+    icon: Grid3X3,
+  },
+  {
+    id: 'government',
+    name: 'Government & Compliance',
+    nameEl: 'Κυβέρνηση & Συμμόρφωση',
+    icon: Shield,
+  },
+  {
+    id: 'banking',
+    name: 'Banking & Finance',
+    nameEl: 'Τραπεζικά & Χρηματοοικονομικά',
+    icon: CreditCard,
+  },
+  {
+    id: 'accounting',
+    name: 'Accounting & ERP',
+    nameEl: 'Λογιστική & ERP',
+    icon: FileText,
+  },
+  {
+    id: 'hr',
+    name: 'HR & Workforce',
+    nameEl: 'Ανθρώπινο Δυναμικό',
+    icon: Users,
+  },
+  {
+    id: 'time',
+    name: 'Time & Attendance',
+    nameEl: 'Χρόνος & Παρουσίες',
+    icon: Clock,
+  },
+  {
+    id: 'communication',
+    name: 'Communication',
+    nameEl: 'Επικοινωνία',
+    icon: MessageSquare,
+  },
+  {
+    id: 'analytics',
+    name: 'Analytics & BI',
+    nameEl: 'Αναλυτικά & BI',
+    icon: BarChart,
+  },
+  {
+    id: 'productivity',
+    name: 'Productivity',
+    nameEl: 'Παραγωγικότητα',
+    icon: Zap,
+  },
 ];
 
 const INTEGRATIONS: Integration[] = [
@@ -95,8 +140,16 @@ const INTEGRATIONS: Integration[] = [
     price: 'free',
     tags: ['Government', 'Compliance', 'Required', 'Official'],
     tagsEl: ['Κυβέρνηση', 'Συμμόρφωση', 'Απαιτούμενο', 'Επίσημο'],
-    features: ['Real-time employee reporting', 'Automatic compliance checks', 'Digital work card integration'],
-    featuresEl: ['Αναφορά υπαλλήλων σε πραγματικό χρόνο', 'Αυτόματοι έλεγχοι συμμόρφωσης', 'Ενσωμάτωση ψηφιακής κάρτας εργασίας'],
+    features: [
+      'Real-time employee reporting',
+      'Automatic compliance checks',
+      'Digital work card integration',
+    ],
+    featuresEl: [
+      'Αναφορά υπαλλήλων σε πραγματικό χρόνο',
+      'Αυτόματοι έλεγχοι συμμόρφωσης',
+      'Ενσωμάτωση ψηφιακής κάρτας εργασίας',
+    ],
     isInstalled: true,
     isPopular: true,
     isFeatured: true,
@@ -106,7 +159,7 @@ const INTEGRATIONS: Integration[] = [
     integrationComplexity: 'complex',
     setupTime: '2-3 days',
     businessImpact: 'high',
-    networkEffect: 95
+    networkEffect: 95,
   },
   {
     id: 'e-efka',
@@ -124,8 +177,16 @@ const INTEGRATIONS: Integration[] = [
     price: 'free',
     tags: ['Social Security', 'Contributions', 'Required', 'Official'],
     tagsEl: ['Κοινωνική Ασφάλιση', 'Εισφορές', 'Απαιτούμενο', 'Επίσημο'],
-    features: ['Automatic contribution calculations', 'Monthly reporting', 'Penalty prevention'],
-    featuresEl: ['Αυτόματοι υπολογισμοί εισφορών', 'Μηνιαία αναφορά', 'Πρόληψη προστίμων'],
+    features: [
+      'Automatic contribution calculations',
+      'Monthly reporting',
+      'Penalty prevention',
+    ],
+    featuresEl: [
+      'Αυτόματοι υπολογισμοί εισφορών',
+      'Μηνιαία αναφορά',
+      'Πρόληψη προστίμων',
+    ],
     isInstalled: true,
     isPopular: true,
     isFeatured: true,
@@ -135,7 +196,7 @@ const INTEGRATIONS: Integration[] = [
     integrationComplexity: 'complex',
     setupTime: '1-2 days',
     businessImpact: 'high',
-    networkEffect: 92
+    networkEffect: 92,
   },
   // Greek Banking Integrations
   {
@@ -154,8 +215,16 @@ const INTEGRATIONS: Integration[] = [
     price: 'free',
     tags: ['SEPA', 'Mass Payments', 'Banking', 'Greek'],
     tagsEl: ['SEPA', 'Μαζικές Πληρωμές', 'Τραπεζικά', 'Ελληνικό'],
-    features: ['SEPA bulk payments', 'Real-time status updates', 'Payment reconciliation'],
-    featuresEl: ['Μαζικές πληρωμές SEPA', 'Ενημερώσεις κατάστασης', 'Συμφωνία πληρωμών'],
+    features: [
+      'SEPA bulk payments',
+      'Real-time status updates',
+      'Payment reconciliation',
+    ],
+    featuresEl: [
+      'Μαζικές πληρωμές SEPA',
+      'Ενημερώσεις κατάστασης',
+      'Συμφωνία πληρωμών',
+    ],
     isInstalled: false,
     isPopular: true,
     isFeatured: true,
@@ -165,7 +234,7 @@ const INTEGRATIONS: Integration[] = [
     integrationComplexity: 'medium',
     setupTime: '3-5 hours',
     businessImpact: 'high',
-    networkEffect: 85
+    networkEffect: 85,
   },
   {
     id: 'nbg-business',
@@ -183,8 +252,16 @@ const INTEGRATIONS: Integration[] = [
     price: 'free',
     tags: ['Corporate Banking', 'SEPA', 'Greek', 'Bulk Payments'],
     tagsEl: ['Εταιρικά Τραπεζικά', 'SEPA', 'Ελληνικό', 'Μαζικές Πληρωμές'],
-    features: ['Advanced bulk file management', 'SEPA Instant payments', 'Multi-currency support'],
-    featuresEl: ['Προηγμένη διαχείριση αρχείων', 'Άμεσες πληρωμές SEPA', 'Υποστήριξη πολλών νομισμάτων'],
+    features: [
+      'Advanced bulk file management',
+      'SEPA Instant payments',
+      'Multi-currency support',
+    ],
+    featuresEl: [
+      'Προηγμένη διαχείριση αρχείων',
+      'Άμεσες πληρωμές SEPA',
+      'Υποστήριξη πολλών νομισμάτων',
+    ],
     isInstalled: false,
     isPopular: true,
     isFeatured: false,
@@ -194,7 +271,7 @@ const INTEGRATIONS: Integration[] = [
     integrationComplexity: 'medium',
     setupTime: '2-4 hours',
     businessImpact: 'high',
-    networkEffect: 82
+    networkEffect: 82,
   },
   // International Popular Tools
   {
@@ -214,8 +291,16 @@ const INTEGRATIONS: Integration[] = [
     priceAmount: '€6/month per user',
     tags: ['Communication', 'Notifications', 'Popular', 'Global'],
     tagsEl: ['Επικοινωνία', 'Ειδοποιήσεις', 'Δημοφιλές', 'Παγκόσμιο'],
-    features: ['Payroll notifications', 'Employee onboarding alerts', 'HR announcements'],
-    featuresEl: ['Ειδοποιήσεις μισθοδοσίας', 'Ειδοποιήσεις onboarding', 'Ανακοινώσεις HR'],
+    features: [
+      'Payroll notifications',
+      'Employee onboarding alerts',
+      'HR announcements',
+    ],
+    featuresEl: [
+      'Ειδοποιήσεις μισθοδοσίας',
+      'Ειδοποιήσεις onboarding',
+      'Ανακοινώσεις HR',
+    ],
     isInstalled: false,
     isPopular: true,
     isFeatured: true,
@@ -225,7 +310,7 @@ const INTEGRATIONS: Integration[] = [
     integrationComplexity: 'simple',
     setupTime: '30 minutes',
     businessImpact: 'medium',
-    networkEffect: 78
+    networkEffect: 78,
   },
   {
     id: 'microsoft-teams',
@@ -244,8 +329,16 @@ const INTEGRATIONS: Integration[] = [
     priceAmount: '€4/month per user',
     tags: ['Enterprise', 'Communication', 'Microsoft', 'Popular'],
     tagsEl: ['Εταιρικό', 'Επικοινωνία', 'Microsoft', 'Δημοφιλές'],
-    features: ['HR bot integration', 'Leave approval workflows', 'Team notifications'],
-    featuresEl: ['Ενσωμάτωση HR bot', 'Ροές εγκρίσεων αδειών', 'Ειδοποιήσεις ομάδας'],
+    features: [
+      'HR bot integration',
+      'Leave approval workflows',
+      'Team notifications',
+    ],
+    featuresEl: [
+      'Ενσωμάτωση HR bot',
+      'Ροές εγκρίσεων αδειών',
+      'Ειδοποιήσεις ομάδας',
+    ],
     isInstalled: true,
     isPopular: true,
     isFeatured: false,
@@ -255,7 +348,7 @@ const INTEGRATIONS: Integration[] = [
     integrationComplexity: 'medium',
     setupTime: '1-2 hours',
     businessImpact: 'medium',
-    networkEffect: 75
+    networkEffect: 75,
   },
   // Greek Accounting Software
   {
@@ -275,8 +368,16 @@ const INTEGRATIONS: Integration[] = [
     priceAmount: '€45/month',
     tags: ['ERP', 'Greek', 'Accounting', 'Popular'],
     tagsEl: ['ERP', 'Ελληνικό', 'Λογιστική', 'Δημοφιλές'],
-    features: ['Automatic journal entries', 'Greek tax compliance', 'Financial reporting'],
-    featuresEl: ['Αυτόματες λογιστικές εγγραφές', 'Ελληνική φορολογική συμμόρφωση', 'Οικονομικές αναφορές'],
+    features: [
+      'Automatic journal entries',
+      'Greek tax compliance',
+      'Financial reporting',
+    ],
+    featuresEl: [
+      'Αυτόματες λογιστικές εγγραφές',
+      'Ελληνική φορολογική συμμόρφωση',
+      'Οικονομικές αναφορές',
+    ],
     isInstalled: false,
     isPopular: true,
     isFeatured: true,
@@ -286,7 +387,7 @@ const INTEGRATIONS: Integration[] = [
     integrationComplexity: 'complex',
     setupTime: '1-2 days',
     businessImpact: 'high',
-    networkEffect: 88
+    networkEffect: 88,
   },
   // Time Tracking
   {
@@ -306,8 +407,16 @@ const INTEGRATIONS: Integration[] = [
     priceAmount: '€9/month per user',
     tags: ['Time Tracking', 'Projects', 'Popular', 'Global'],
     tagsEl: ['Παρακολούθηση Χρόνου', 'Έργα', 'Δημοφιλές', 'Παγκόσμιο'],
-    features: ['Project time tracking', 'Automated timesheets', 'Client billing integration'],
-    featuresEl: ['Παρακολούθηση χρόνου έργων', 'Αυτοματοποιημένα φύλλα χρόνου', 'Ενσωμάτωση τιμολόγησης'],
+    features: [
+      'Project time tracking',
+      'Automated timesheets',
+      'Client billing integration',
+    ],
+    featuresEl: [
+      'Παρακολούθηση χρόνου έργων',
+      'Αυτοματοποιημένα φύλλα χρόνου',
+      'Ενσωμάτωση τιμολόγησης',
+    ],
     isInstalled: false,
     isPopular: true,
     isFeatured: false,
@@ -317,17 +426,23 @@ const INTEGRATIONS: Integration[] = [
     integrationComplexity: 'simple',
     setupTime: '1-2 hours',
     businessImpact: 'medium',
-    networkEffect: 70
-  }
+    networkEffect: 70,
+  },
 ];
 
 function Grid3X3(props: any) {
   return (
-    <svg {...props} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="3" y="3" width="7" height="7"/>
-      <rect x="14" y="3" width="7" height="7"/>
-      <rect x="3" y="14" width="7" height="7"/>
-      <rect x="14" y="14" width="7" height="7"/>
+    <svg
+      {...props}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <rect x="3" y="3" width="7" height="7" />
+      <rect x="14" y="3" width="7" height="7" />
+      <rect x="3" y="14" width="7" height="7" />
+      <rect x="14" y="14" width="7" height="7" />
     </svg>
   );
 }
@@ -336,12 +451,17 @@ interface IntegrationMarketplaceProps {
   locale?: 'en' | 'el';
 }
 
-export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMarketplaceProps) {
+export default function IntegrationMarketplace({
+  locale = 'en',
+}: IntegrationMarketplaceProps) {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [view, setView] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'recent'>('popular');
-  const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
+  const [sortBy, setSortBy] = useState<'popular' | 'rating' | 'recent'>(
+    'popular'
+  );
+  const [selectedIntegration, setSelectedIntegration] =
+    useState<Integration | null>(null);
 
   const translations = {
     en: {
@@ -371,12 +491,13 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
         totalIntegrations: 'Total Integrations',
         activeConnections: 'Active Connections',
         networkValue: 'Network Value',
-        monthlyGrowth: 'Monthly Growth'
-      }
+        monthlyGrowth: 'Monthly Growth',
+      },
     },
     el: {
       title: 'Αγορά Ενσωματώσεων',
-      subtitle: 'Συνδέστε το PayrollSync με τα αγαπημένα σας επιχειρηματικά εργαλεία',
+      subtitle:
+        'Συνδέστε το PayrollSync με τα αγαπημένα σας επιχειρηματικά εργαλεία',
       search: 'Αναζήτηση ενσωματώσεων...',
       installed: 'Εγκατεστημένο',
       install: 'Εγκατάσταση',
@@ -401,18 +522,24 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
         totalIntegrations: 'Συνολικές Ενσωματώσεις',
         activeConnections: 'Ενεργές Συνδέσεις',
         networkValue: 'Αξία Δικτύου',
-        monthlyGrowth: 'Μηνιαία Αύξηση'
-      }
-    }
+        monthlyGrowth: 'Μηνιαία Αύξηση',
+      },
+    },
   };
 
   const t = translations[locale];
 
   const filteredIntegrations = INTEGRATIONS.filter(integration => {
-    const matchesCategory = selectedCategory === 'all' || integration.category === selectedCategory;
-    const matchesSearch = integration.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         integration.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         integration.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory =
+      selectedCategory === 'all' || integration.category === selectedCategory;
+    const matchesSearch =
+      integration.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      integration.description
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      integration.tags.some(tag =>
+        tag.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     return matchesCategory && matchesSearch;
   });
 
@@ -423,7 +550,9 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
       case 'rating':
         return b.rating - a.rating;
       case 'recent':
-        return new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime();
+        return (
+          new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
+        );
       default:
         return 0;
     }
@@ -436,19 +565,27 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
 
   const getPriceColor = (price: string) => {
     switch (price) {
-      case 'free': return 'bg-green-100 text-green-800';
-      case 'paid': return 'bg-blue-100 text-blue-800';
-      case 'freemium': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'free':
+        return 'bg-green-100 text-green-800';
+      case 'paid':
+        return 'bg-blue-100 text-blue-800';
+      case 'freemium':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getBusinessImpactColor = (impact: string) => {
     switch (impact) {
-      case 'high': return 'text-green-600';
-      case 'medium': return 'text-yellow-600';
-      case 'low': return 'text-gray-600';
-      default: return 'text-gray-600';
+      case 'high':
+        return 'text-green-600';
+      case 'medium':
+        return 'text-yellow-600';
+      case 'low':
+        return 'text-gray-600';
+      default:
+        return 'text-gray-600';
     }
   };
 
@@ -456,7 +593,11 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
     const Icon = selectedIntegration.icon;
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <Button variant="ghost" onClick={() => setSelectedIntegration(null)} className="mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => setSelectedIntegration(null)}
+          className="mb-6"
+        >
           <ArrowRight className="h-4 w-4 mr-2 rotate-180" />
           {t.backToMarketplace}
         </Button>
@@ -472,29 +613,44 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <CardTitle className="text-2xl">
-                        {locale === 'en' ? selectedIntegration.name : selectedIntegration.nameEl}
+                        {locale === 'en'
+                          ? selectedIntegration.name
+                          : selectedIntegration.nameEl}
                       </CardTitle>
                       {selectedIntegration.isGreekSpecific && (
-                        <Badge className="bg-blue-100 text-blue-800">{t.greek}</Badge>
+                        <Badge className="bg-blue-100 text-blue-800">
+                          {t.greek}
+                        </Badge>
                       )}
                       {selectedIntegration.isFeatured && (
-                        <Badge className="bg-yellow-100 text-yellow-800">{t.featured}</Badge>
+                        <Badge className="bg-yellow-100 text-yellow-800">
+                          {t.featured}
+                        </Badge>
                       )}
                     </div>
                     <p className="text-gray-600">
-                      {locale === 'en' ? selectedIntegration.description : selectedIntegration.descriptionEl}
+                      {locale === 'en'
+                        ? selectedIntegration.description
+                        : selectedIntegration.descriptionEl}
                     </p>
                     <div className="flex items-center gap-4 mt-3">
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">{selectedIntegration.rating}</span>
+                        <span className="font-medium">
+                          {selectedIntegration.rating}
+                        </span>
                         <span className="text-sm text-gray-500">
                           ({selectedIntegration.reviews} {t.reviews})
                         </span>
                       </div>
-                      <Badge className={getPriceColor(selectedIntegration.price)}>
-                        {selectedIntegration.price === 'free' ? t.free : 
-                         selectedIntegration.price === 'paid' ? t.paid : t.freemium}
+                      <Badge
+                        className={getPriceColor(selectedIntegration.price)}
+                      >
+                        {selectedIntegration.price === 'free'
+                          ? t.free
+                          : selectedIntegration.price === 'paid'
+                            ? t.paid
+                            : t.freemium}
                       </Badge>
                     </div>
                   </div>
@@ -505,7 +661,10 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
                   <div>
                     <h4 className="font-semibold mb-3">Key Features</h4>
                     <div className="grid gap-2">
-                      {(locale === 'en' ? selectedIntegration.features : selectedIntegration.featuresEl).map((feature, index) => (
+                      {(locale === 'en'
+                        ? selectedIntegration.features
+                        : selectedIntegration.featuresEl
+                      ).map((feature, index) => (
                         <div key={index} className="flex items-center gap-3">
                           <CheckCircle className="h-4 w-4 text-green-600" />
                           <span className="text-sm">{feature}</span>
@@ -517,21 +676,30 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <h4 className="font-semibold mb-2">{t.businessImpact}</h4>
-                      <span className={`font-medium capitalize ${getBusinessImpactColor(selectedIntegration.businessImpact)}`}>
+                      <span
+                        className={`font-medium capitalize ${getBusinessImpactColor(selectedIntegration.businessImpact)}`}
+                      >
                         {selectedIntegration.businessImpact}
                       </span>
                     </div>
                     <div>
                       <h4 className="font-semibold mb-2">{t.setupTime}</h4>
-                      <span className="text-gray-700">{selectedIntegration.setupTime}</span>
+                      <span className="text-gray-700">
+                        {selectedIntegration.setupTime}
+                      </span>
                     </div>
                   </div>
 
                   <div>
                     <h4 className="font-semibold mb-2">{t.networkEffect}</h4>
                     <div className="flex items-center gap-3">
-                      <Progress value={selectedIntegration.networkEffect} className="flex-1" />
-                      <span className="font-medium">{selectedIntegration.networkEffect}/100</span>
+                      <Progress
+                        value={selectedIntegration.networkEffect}
+                        className="flex-1"
+                      />
+                      <span className="font-medium">
+                        {selectedIntegration.networkEffect}/100
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -551,21 +719,27 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
                       </Button>
                       <div className="flex items-center justify-center gap-2 text-green-600">
                         <CheckCircle className="h-4 w-4" />
-                        <span className="text-sm font-medium">{t.installed}</span>
+                        <span className="text-sm font-medium">
+                          {t.installed}
+                        </span>
                       </div>
                     </>
                   ) : (
-                    <Button 
-                      className="w-full" 
-                      onClick={() => handleInstallIntegration(selectedIntegration)}
+                    <Button
+                      className="w-full"
+                      onClick={() =>
+                        handleInstallIntegration(selectedIntegration)
+                      }
                     >
                       <Download className="h-4 w-4 mr-2" />
                       {t.installIntegration}
                     </Button>
                   )}
-                  
+
                   {selectedIntegration.priceAmount && (
-                    <p className="text-sm text-gray-600">{selectedIntegration.priceAmount}</p>
+                    <p className="text-sm text-gray-600">
+                      {selectedIntegration.priceAmount}
+                    </p>
                   )}
                 </div>
               </CardContent>
@@ -578,19 +752,27 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Installations</span>
-                  <span className="font-medium">{selectedIntegration.installations.toLocaleString()}</span>
+                  <span className="font-medium">
+                    {selectedIntegration.installations.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Developer</span>
-                  <span className="font-medium">{selectedIntegration.developer}</span>
+                  <span className="font-medium">
+                    {selectedIntegration.developer}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">{t.lastUpdated}</span>
-                  <span className="font-medium">{selectedIntegration.lastUpdated}</span>
+                  <span className="font-medium">
+                    {selectedIntegration.lastUpdated}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Countries</span>
-                  <span className="font-medium">{selectedIntegration.supportedCountries.join(', ')}</span>
+                  <span className="font-medium">
+                    {selectedIntegration.supportedCountries.join(', ')}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -602,7 +784,10 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
 
   const totalIntegrations = INTEGRATIONS.length;
   const installedCount = INTEGRATIONS.filter(i => i.isInstalled).length;
-  const networkValue = INTEGRATIONS.reduce((acc, integration) => acc + integration.networkEffect, 0);
+  const networkValue = INTEGRATIONS.reduce(
+    (acc, integration) => acc + integration.networkEffect,
+    0
+  );
   const averageNetworkEffect = Math.round(networkValue / totalIntegrations);
 
   return (
@@ -637,20 +822,34 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
           <CardContent>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{totalIntegrations}</div>
-                <div className="text-sm text-gray-600">{t.networkEffects.totalIntegrations}</div>
+                <div className="text-2xl font-bold text-blue-600">
+                  {totalIntegrations}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {t.networkEffects.totalIntegrations}
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{installedCount}</div>
-                <div className="text-sm text-gray-600">{t.networkEffects.activeConnections}</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {installedCount}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {t.networkEffects.activeConnections}
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{averageNetworkEffect}/100</div>
-                <div className="text-sm text-gray-600">{t.networkEffects.networkValue}</div>
+                <div className="text-2xl font-bold text-purple-600">
+                  {averageNetworkEffect}/100
+                </div>
+                <div className="text-sm text-gray-600">
+                  {t.networkEffects.networkValue}
+                </div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-600">+23%</div>
-                <div className="text-sm text-gray-600">{t.networkEffects.monthlyGrowth}</div>
+                <div className="text-sm text-gray-600">
+                  {t.networkEffects.monthlyGrowth}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -665,7 +864,7 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
             <Input
               placeholder={t.search}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -673,7 +872,7 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
         <div className="flex gap-2">
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={e => setSortBy(e.target.value as any)}
             className="px-3 py-2 border rounded-md"
           >
             <option value="popular">{t.popular}</option>
@@ -685,13 +884,13 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
 
       {/* Categories */}
       <div className="flex flex-wrap gap-2 mb-8">
-        {INTEGRATION_CATEGORIES.map((category) => {
+        {INTEGRATION_CATEGORIES.map(category => {
           const Icon = category.icon;
           const isActive = selectedCategory === category.id;
           return (
             <Button
               key={category.id}
-              variant={isActive ? "default" : "outline"}
+              variant={isActive ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedCategory(category.id)}
               className="flex items-center gap-2"
@@ -705,11 +904,11 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
 
       {/* Integrations Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedIntegrations.map((integration) => {
+        {sortedIntegrations.map(integration => {
           const Icon = integration.icon;
           return (
-            <Card 
-              key={integration.id} 
+            <Card
+              key={integration.id}
               className="cursor-pointer hover:shadow-lg transition-shadow"
               onClick={() => setSelectedIntegration(integration)}
             >
@@ -721,7 +920,9 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
                     </div>
                     <div>
                       <CardTitle className="text-lg">
-                        {locale === 'en' ? integration.name : integration.nameEl}
+                        {locale === 'en'
+                          ? integration.name
+                          : integration.nameEl}
                       </CardTitle>
                       <p className="text-sm text-gray-600">
                         {integration.developer}
@@ -732,50 +933,72 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
                     <CheckCircle className="h-5 w-5 text-green-600" />
                   )}
                 </div>
-                
+
                 <div className="flex flex-wrap gap-1 mt-3">
                   {integration.isFeatured && (
-                    <Badge className="bg-yellow-100 text-yellow-800 text-xs">{t.featured}</Badge>
+                    <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                      {t.featured}
+                    </Badge>
                   )}
                   {integration.isPopular && (
-                    <Badge className="bg-orange-100 text-orange-800 text-xs">{t.popular}</Badge>
+                    <Badge className="bg-orange-100 text-orange-800 text-xs">
+                      {t.popular}
+                    </Badge>
                   )}
                   {integration.isGreekSpecific && (
-                    <Badge className="bg-blue-100 text-blue-800 text-xs">{t.greek}</Badge>
+                    <Badge className="bg-blue-100 text-blue-800 text-xs">
+                      {t.greek}
+                    </Badge>
                   )}
-                  <Badge className={`${getPriceColor(integration.price)} text-xs`}>
-                    {integration.price === 'free' ? t.free : 
-                     integration.price === 'paid' ? t.paid : t.freemium}
+                  <Badge
+                    className={`${getPriceColor(integration.price)} text-xs`}
+                  >
+                    {integration.price === 'free'
+                      ? t.free
+                      : integration.price === 'paid'
+                        ? t.paid
+                        : t.freemium}
                   </Badge>
                 </div>
               </CardHeader>
-              
+
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">
-                  {locale === 'en' ? integration.description : integration.descriptionEl}
+                  {locale === 'en'
+                    ? integration.description
+                    : integration.descriptionEl}
                 </p>
-                
+
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                       <span>{integration.rating}</span>
-                      <span className="text-gray-500">({integration.reviews})</span>
+                      <span className="text-gray-500">
+                        ({integration.reviews})
+                      </span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Download className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-600">{integration.installations.toLocaleString()}</span>
+                      <span className="text-gray-600">
+                        {integration.installations.toLocaleString()}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">{t.networkEffect}</span>
                     <div className="flex items-center gap-2">
-                      <Progress value={integration.networkEffect} className="w-16 h-2" />
-                      <span className="font-medium">{integration.networkEffect}</span>
+                      <Progress
+                        value={integration.networkEffect}
+                        className="w-16 h-2"
+                      />
+                      <span className="font-medium">
+                        {integration.networkEffect}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div className="pt-3 border-t">
                     {integration.isInstalled ? (
                       <Button variant="outline" className="w-full" size="sm">
@@ -783,10 +1006,10 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
                         {t.configure}
                       </Button>
                     ) : (
-                      <Button 
-                        className="w-full" 
+                      <Button
+                        className="w-full"
                         size="sm"
-                        onClick={(e) => {
+                        onClick={e => {
                           e.stopPropagation();
                           handleInstallIntegration(integration);
                         }}
@@ -805,11 +1028,16 @@ export default function IntegrationMarketplace({ locale = 'en' }: IntegrationMar
 
       {sortedIntegrations.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-gray-500 mb-4">No integrations found matching your criteria</div>
-          <Button variant="outline" onClick={() => {
-            setSearchTerm('');
-            setSelectedCategory('all');
-          }}>
+          <div className="text-gray-500 mb-4">
+            No integrations found matching your criteria
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedCategory('all');
+            }}
+          >
             Clear Filters
           </Button>
         </div>

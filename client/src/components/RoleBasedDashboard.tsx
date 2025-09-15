@@ -1,12 +1,16 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-import { getUserRole, getRoleConfiguration, getRoleDisplayName } from "@/lib/roleBasedRouting";
-import { 
-  PlayCircle, 
-  FileText, 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  getUserRole,
+  getRoleConfiguration,
+  getRoleDisplayName,
+} from '@/lib/roleBasedRouting';
+import {
+  PlayCircle,
+  FileText,
   Euro,
   Users,
   Clock,
@@ -14,15 +18,18 @@ import {
   CheckCircle,
   BarChart3,
   Calendar,
-  Shield
-} from "lucide-react";
+  Shield,
+} from 'lucide-react';
 
 interface DashboardWidgetProps {
   widgetId: string;
   role: string;
 }
 
-const DashboardWidget: React.FC<DashboardWidgetProps> = ({ widgetId, role }) => {
+const DashboardWidget: React.FC<DashboardWidgetProps> = ({
+  widgetId,
+  role,
+}) => {
   const renderWidget = () => {
     switch (widgetId) {
       case 'payroll-runs-status':
@@ -258,9 +265,7 @@ export default function RoleBasedDashboard() {
             Customized view for your role
           </p>
         </div>
-        <Badge variant="outline">
-          {getRoleDisplayName(userRole)}
-        </Badge>
+        <Badge variant="outline">{getRoleDisplayName(userRole)}</Badge>
       </div>
 
       {/* Quick Actions */}
@@ -275,11 +280,7 @@ export default function RoleBasedDashboard() {
       {/* Dashboard Widgets */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {roleConfig.defaultDashboardWidgets.map((widgetId, index) => (
-          <DashboardWidget 
-            key={index} 
-            widgetId={widgetId} 
-            role={userRole}
-          />
+          <DashboardWidget key={index} widgetId={widgetId} role={userRole} />
         ))}
       </div>
     </div>

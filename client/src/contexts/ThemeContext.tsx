@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -26,7 +32,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    
+
     const updateTheme = (newTheme: 'light' | 'dark') => {
       root.classList.remove('light', 'dark');
       root.classList.add(newTheme);
@@ -34,7 +40,10 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     };
 
     if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+        .matches
+        ? 'dark'
+        : 'light';
       updateTheme(systemTheme);
     } else {
       updateTheme(theme);
@@ -67,9 +76,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   };
 
   return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
   );
 }
 

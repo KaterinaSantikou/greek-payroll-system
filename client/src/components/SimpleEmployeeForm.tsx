@@ -1,13 +1,19 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { Save, X } from "lucide-react";
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useMutation } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { Save, X } from 'lucide-react';
 
 interface SimpleEmployee {
   employeeId?: string;
@@ -26,7 +32,11 @@ interface SimpleEmployeeFormProps {
   onCancel: () => void;
 }
 
-export default function SimpleEmployeeForm({ employee, onSuccess, onCancel }: SimpleEmployeeFormProps) {
+export default function SimpleEmployeeForm({
+  employee,
+  onSuccess,
+  onCancel,
+}: SimpleEmployeeFormProps) {
   const { toast } = useToast();
 
   const {
@@ -35,34 +45,38 @@ export default function SimpleEmployeeForm({ employee, onSuccess, onCancel }: Si
     formState: { errors, isSubmitting },
   } = useForm<SimpleEmployee>({
     defaultValues: employee || {
-      name: "",
-      employeeNumber: "",
-      role: "",
-      employmentType: "indefinite",
+      name: '',
+      employeeNumber: '',
+      role: '',
+      employmentType: 'indefinite',
       hireDate: new Date().toISOString().split('T')[0],
-      afm: "",
-      defaultPropertyId: "prop-princess",
-    }
+      afm: '',
+      defaultPropertyId: 'prop-princess',
+    },
   });
 
   const mutation = useMutation({
     mutationFn: async (data: SimpleEmployee) => {
-      const url = employee ? `/api/employees/${employee.employeeId}` : "/api/employees";
-      const method = employee ? "PUT" : "POST";
+      const url = employee
+        ? `/api/employees/${employee.employeeId}`
+        : '/api/employees';
+      const method = employee ? 'PUT' : 'POST';
       return await apiRequest(method, url, data);
     },
     onSuccess: () => {
       toast({
-        title: "Επιτυχία",
-        description: employee ? "Ο εργαζόμενος ενημερώθηκε επιτυχώς" : "Ο εργαζόμενος δημιουργήθηκε επιτυχώς",
+        title: 'Επιτυχία',
+        description: employee
+          ? 'Ο εργαζόμενος ενημερώθηκε επιτυχώς'
+          : 'Ο εργαζόμενος δημιουργήθηκε επιτυχώς',
       });
       onSuccess();
     },
     onError: (error: any) => {
       toast({
-        title: "Σφάλμα",
-        description: error.message || "Παρουσιάστηκε σφάλμα",
-        variant: "destructive",
+        title: 'Σφάλμα',
+        description: error.message || 'Παρουσιάστηκε σφάλμα',
+        variant: 'destructive',
       });
     },
   });
@@ -79,7 +93,9 @@ export default function SimpleEmployeeForm({ employee, onSuccess, onCancel }: Si
             <Label htmlFor="name">Ονοματεπώνυμο *</Label>
             <Input
               id="name"
-              {...register("name", { required: "Το ονοματεπώνυμο είναι υποχρεωτικό" })}
+              {...register('name', {
+                required: 'Το ονοματεπώνυμο είναι υποχρεωτικό',
+              })}
               placeholder="π.χ. Γιάννης Παπαδόπουλος"
             />
             {errors.name && (
@@ -91,11 +107,15 @@ export default function SimpleEmployeeForm({ employee, onSuccess, onCancel }: Si
             <Label htmlFor="employeeNumber">Αριθμός Εργαζομένου *</Label>
             <Input
               id="employeeNumber"
-              {...register("employeeNumber", { required: "Ο αριθμός εργαζομένου είναι υποχρεωτικός" })}
+              {...register('employeeNumber', {
+                required: 'Ο αριθμός εργαζομένου είναι υποχρεωτικός',
+              })}
               placeholder="π.χ. EMP-001"
             />
             {errors.employeeNumber && (
-              <p className="text-sm text-red-600">{errors.employeeNumber.message}</p>
+              <p className="text-sm text-red-600">
+                {errors.employeeNumber.message}
+              </p>
             )}
           </div>
 
@@ -103,7 +123,9 @@ export default function SimpleEmployeeForm({ employee, onSuccess, onCancel }: Si
             <Label htmlFor="role">Θέση Εργασίας *</Label>
             <Input
               id="role"
-              {...register("role", { required: "Η θέση εργασίας είναι υποχρεωτική" })}
+              {...register('role', {
+                required: 'Η θέση εργασίας είναι υποχρεωτική',
+              })}
               placeholder="π.χ. Υπάλληλος Υποδοχής"
             />
             {errors.role && (
@@ -131,7 +153,9 @@ export default function SimpleEmployeeForm({ employee, onSuccess, onCancel }: Si
             <Input
               id="hireDate"
               type="date"
-              {...register("hireDate", { required: "Η ημερομηνία πρόσληψης είναι υποχρεωτική" })}
+              {...register('hireDate', {
+                required: 'Η ημερομηνία πρόσληψης είναι υποχρεωτική',
+              })}
             />
             {errors.hireDate && (
               <p className="text-sm text-red-600">{errors.hireDate.message}</p>
@@ -142,7 +166,7 @@ export default function SimpleEmployeeForm({ employee, onSuccess, onCancel }: Si
             <Label htmlFor="afm">ΑΦΜ</Label>
             <Input
               id="afm"
-              {...register("afm")}
+              {...register('afm')}
               placeholder="π.χ. 123456789"
               maxLength={9}
             />
@@ -161,7 +185,7 @@ export default function SimpleEmployeeForm({ employee, onSuccess, onCancel }: Si
           </Button>
           <Button type="submit" disabled={isSubmitting}>
             <Save className="mr-2 h-4 w-4" />
-            {isSubmitting ? "Αποθήκευση..." : "Αποθήκευση"}
+            {isSubmitting ? 'Αποθήκευση...' : 'Αποθήκευση'}
           </Button>
         </div>
       </form>

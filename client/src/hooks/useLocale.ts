@@ -110,16 +110,16 @@ const translations: Record<Locale, Record<string, string>> = {
     'portal.time-summary': 'Σύνοψη Ωρών',
     'portal.leave-balance': 'Υπόλοιπο Αδειών',
     'portal.pending-requests': 'Εκκρεμή Αιτήματα',
-  }
+  },
 };
 
 export function useLocale() {
   const [locale, setLocale] = useState<Locale>('en');
-  
+
   const t = (key: string) => {
     return translations[locale]?.[key] || key;
   };
-  
+
   return { locale, setLocale, t };
 }
 

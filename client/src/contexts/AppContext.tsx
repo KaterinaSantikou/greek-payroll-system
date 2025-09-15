@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, ReactNode } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { createContext, useContext, useState, ReactNode } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ViewingMode {
-  type: "normal" | "impersonation" | "employee_view";
+  type: 'normal' | 'impersonation' | 'employee_view';
   originalRole?: string;
   targetEmployee?: {
     id: string;
@@ -26,7 +26,7 @@ const AppContext = createContext<AppContextValue | undefined>(undefined);
 export function useAppContext() {
   const context = useContext(AppContext);
   if (context === undefined) {
-    throw new Error("useAppContext must be used within an AppProvider");
+    throw new Error('useAppContext must be used within an AppProvider');
   }
   return context;
 }
@@ -37,14 +37,16 @@ interface AppProviderProps {
 
 export function AppProvider({ children }: AppProviderProps) {
   const { user } = useAuth();
-  const [viewingMode, setViewingMode] = useState<ViewingMode>({ type: "normal" });
+  const [viewingMode, setViewingMode] = useState<ViewingMode>({
+    type: 'normal',
+  });
   const [currentProperty, setCurrentProperty] = useState({
-    propertyId: "prop-princess",
-    name: "Princess Resort & Spa"
+    propertyId: 'prop-princess',
+    name: 'Princess Resort & Spa',
   });
 
   const exitViewingMode = () => {
-    setViewingMode({ type: "normal" });
+    setViewingMode({ type: 'normal' });
   };
 
   const value: AppContextValue = {
@@ -52,12 +54,8 @@ export function AppProvider({ children }: AppProviderProps) {
     setViewingMode,
     currentProperty,
     setCurrentProperty,
-    exitViewingMode
+    exitViewingMode,
   };
 
-  return (
-    <AppContext.Provider value={value}>
-      {children}
-    </AppContext.Provider>
-  );
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

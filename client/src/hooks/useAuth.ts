@@ -1,6 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from 'react';
 
-type AuthState = "loading" | "authenticated" | "unauthenticated";
+type AuthState = 'loading' | 'authenticated' | 'unauthenticated';
 export interface User {
   id: string;
   email?: string;
@@ -9,7 +9,7 @@ export interface User {
 }
 
 export function useAuth() {
-  const [state, setState] = useState<AuthState>("loading");
+  const [state, setState] = useState<AuthState>('loading');
   const [user, setUser] = useState<User | null>(null);
   const tried = useRef(false);
 
@@ -19,26 +19,26 @@ export function useAuth() {
     const ctrl = new AbortController();
     (async () => {
       try {
-        const res = await fetch("/api/auth/user", {
-          credentials: "include",
+        const res = await fetch('/api/auth/user', {
+          credentials: 'include',
           signal: ctrl.signal,
         });
-        console.log("result of user", res);
+        console.log('result of user', res);
         if (res.ok) {
           const data = await res.json();
           setUser(data?.user ?? null);
-          setState("authenticated");
+          setState('authenticated');
         } else if (res.status === 401) {
           setUser(null);
-          setState("unauthenticated");
+          setState('unauthenticated');
         } else {
           // Non-401 errors: treat as unauth but don't loop
           setUser(null);
-          setState("unauthenticated");
+          setState('unauthenticated');
           // optionally console.warn('[auth] unexpected', res.status);
         }
       } catch {
-        setState("unauthenticated");
+        setState('unauthenticated');
       } finally {
         tried.current = true;
       }
@@ -47,8 +47,8 @@ export function useAuth() {
   }, []);
 
   return {
-    isLoading: state === "loading",
-    isAuthenticated: state === "authenticated",
+    isLoading: state === 'loading',
+    isAuthenticated: state === 'authenticated',
     user,
   };
 }

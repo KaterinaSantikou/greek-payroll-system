@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
+import {
   Search,
   HelpCircle,
   FileText,
@@ -16,7 +22,7 @@ import {
   ChevronRight,
   Clock,
   Users,
-  Star
+  Star,
 } from 'lucide-react';
 
 interface HelpArticle {
@@ -59,11 +65,11 @@ const helpArticles: HelpArticle[] = [
     id: 'payroll-setup',
     title: {
       el: 'Ρύθμιση Μισθοδοσίας για Ελληνικές Επιχειρήσεις',
-      en: 'Payroll Setup for Greek Companies'
+      en: 'Payroll Setup for Greek Companies',
     },
     content: {
       el: 'Πλήρης οδηγός για τη ρύθμιση μισθοδοσίας σύμφωνα με την ελληνική νομοθεσία. Περιλαμβάνει ρυθμίσεις ΕΦΚΑ, φορολογικές κλίμακες, και συλλογικές συμβάσεις.',
-      en: 'Complete guide for setting up payroll according to Greek legislation. Includes EFKA settings, tax scales, and collective agreements.'
+      en: 'Complete guide for setting up payroll according to Greek legislation. Includes EFKA settings, tax scales, and collective agreements.',
     },
     category: 'payroll',
     tags: ['εφκα', 'φορολογία', 'ρύθμιση'],
@@ -73,17 +79,17 @@ const helpArticles: HelpArticle[] = [
     views: 2847,
     lastUpdated: '2024-12-20',
     hasVideo: true,
-    hasDownload: true
+    hasDownload: true,
   },
   {
     id: 'ergani-integration',
     title: {
       el: 'Ενσωμάτωση ΕΡΓΑΝΗ II - Βήμα προς Βήμα',
-      en: 'ERGANI II Integration - Step by Step'
+      en: 'ERGANI II Integration - Step by Step',
     },
     content: {
       el: 'Αναλυτικές οδηγίες για την ενσωμάτωση του συστήματος με την ΕΡΓΑΝΗ II. Πιστοποιητικά, ψηφιακές κάρτες εργασίας, και αυτόματες δηλώσεις.',
-      en: 'Detailed instructions for integrating the system with ERGANI II. Certificates, digital work cards, and automated declarations.'
+      en: 'Detailed instructions for integrating the system with ERGANI II. Certificates, digital work cards, and automated declarations.',
     },
     category: 'ergani',
     tags: ['εργανη', 'ψηφιακές κάρτες', 'πιστοποιητικά'],
@@ -93,17 +99,17 @@ const helpArticles: HelpArticle[] = [
     views: 1923,
     lastUpdated: '2024-12-18',
     hasVideo: true,
-    hasDownload: false
+    hasDownload: false,
   },
   {
     id: 'minimum-wage-2025',
     title: {
       el: 'Ενημέρωση Κατώτατου Μισθού 2025',
-      en: 'Minimum Wage Update 2025'
+      en: 'Minimum Wage Update 2025',
     },
     content: {
       el: 'Οδηγίες για την εφαρμογή του νέου κατώτατου μισθού €830. Ενημέρωση συμβάσεων, επαναϋπολογισμός μισθοδοσίας, και δηλώσεις ΕΦΚΑ.',
-      en: 'Instructions for implementing the new minimum wage of €830. Contract updates, payroll recalculation, and EFKA declarations.'
+      en: 'Instructions for implementing the new minimum wage of €830. Contract updates, payroll recalculation, and EFKA declarations.',
     },
     category: 'payroll',
     tags: ['κατώτατος μισθός', '2025', 'ενημέρωση'],
@@ -113,17 +119,17 @@ const helpArticles: HelpArticle[] = [
     views: 3621,
     lastUpdated: '2024-12-15',
     hasVideo: false,
-    hasDownload: true
+    hasDownload: true,
   },
   {
     id: 'digital-work-cards',
     title: {
       el: 'Ψηφιακές Κάρτες Εργασίας - Υλοποίηση',
-      en: 'Digital Work Cards - Implementation'
+      en: 'Digital Work Cards - Implementation',
     },
     content: {
       el: 'Πώς να ρυθμίσετε και να χρησιμοποιήσετε ψηφιακές κάρτες εργασίας. QR codes, NFC, mobile app, και συχρονισμός με ΕΡΓΑΝΗ II.',
-      en: 'How to set up and use digital work cards. QR codes, NFC, mobile app, and synchronization with ERGANI II.'
+      en: 'How to set up and use digital work cards. QR codes, NFC, mobile app, and synchronization with ERGANI II.',
     },
     category: 'ergani',
     tags: ['ψηφιακές κάρτες', 'qr', 'nfc', 'mobile'],
@@ -133,17 +139,17 @@ const helpArticles: HelpArticle[] = [
     views: 1547,
     lastUpdated: '2024-12-10',
     hasVideo: true,
-    hasDownload: false
+    hasDownload: false,
   },
   {
     id: 'tax-calculations',
     title: {
       el: 'Υπολογισμοί Φορολογίας 2025',
-      en: 'Tax Calculations 2025'
+      en: 'Tax Calculations 2025',
     },
     content: {
       el: 'Ενημερωμένοι υπολογισμοί φορολογίας για το 2025. Νέο αφορολόγητο όριο €9.100, κλίμακες, και ειδικές περιπτώσεις.',
-      en: 'Updated tax calculations for 2025. New tax-free threshold €9.100, scales, and special cases.'
+      en: 'Updated tax calculations for 2025. New tax-free threshold €9.100, scales, and special cases.',
     },
     category: 'payroll',
     tags: ['φορολογία', 'αφορολόγητο', 'κλίμακες'],
@@ -153,8 +159,8 @@ const helpArticles: HelpArticle[] = [
     views: 2134,
     lastUpdated: '2024-12-05',
     hasVideo: false,
-    hasDownload: true
-  }
+    hasDownload: true,
+  },
 ];
 
 const faqs: FAQ[] = [
@@ -162,61 +168,63 @@ const faqs: FAQ[] = [
     id: 'faq-001',
     question: {
       el: 'Πώς ενημερώνω τον κατώτατο μισθό για το 2025;',
-      en: 'How do I update the minimum wage for 2025?'
+      en: 'How do I update the minimum wage for 2025?',
     },
     answer: {
       el: 'Μεταβείτε στο Μισθοδοσία > Ρυθμίσεις > Κατώτατος Μισθός και ενημερώστε το ποσό σε €830. Το σύστημα θα επαναϋπολογίσει αυτόματα όλους τους μισθούς που επηρεάζονται.',
-      en: 'Go to Payroll > Settings > Minimum Wage and update the amount to €830. The system will automatically recalculate all affected salaries.'
+      en: 'Go to Payroll > Settings > Minimum Wage and update the amount to €830. The system will automatically recalculate all affected salaries.',
     },
     category: 'payroll',
-    popularity: 95
+    popularity: 95,
   },
   {
     id: 'faq-002',
     question: {
       el: 'Γιατί αποτυγχάνει η υποβολή στην ΕΡΓΑΝΗ;',
-      en: 'Why is my ERGANI submission failing?'
+      en: 'Why is my ERGANI submission failing?',
     },
     answer: {
       el: 'Συνήθως οφείλεται σε λάθος στοιχεία εργαζομένου (ΑΦΜ/ΑΜΚΑ) ή ληγμένα πιστοποιητικά. Ελέγξτε τα στοιχεία και ανανεώστε τα πιστοποιητικά από Ρυθμίσεις > ΕΡΓΑΝΗ > Πιστοποιητικά.',
-      en: 'Usually due to incorrect employee data (AFM/AMKA) or expired certificates. Check the data and renew certificates from Settings > ERGANI > Certificates.'
+      en: 'Usually due to incorrect employee data (AFM/AMKA) or expired certificates. Check the data and renew certificates from Settings > ERGANI > Certificates.',
     },
     category: 'ergani',
-    popularity: 89
+    popularity: 89,
   },
   {
     id: 'faq-003',
     question: {
       el: 'Πώς λειτουργούν οι ψηφιακές κάρτες εργασίας;',
-      en: 'How do digital work cards work?'
+      en: 'How do digital work cards work?',
     },
     answer: {
       el: 'Οι εργαζόμενοι σαρώνουν QR code ή χρησιμοποιούν NFC για check-in/out. Τα δεδομένα στέλνονται αυτόματα στην ΕΡΓΑΝΗ II. Ρύθμιση: Ψηφιακές Κάρτες > Εγκατάσταση.',
-      en: 'Employees scan QR code or use NFC for check-in/out. Data is automatically sent to ERGANI II. Setup: Digital Cards > Installation.'
+      en: 'Employees scan QR code or use NFC for check-in/out. Data is automatically sent to ERGANI II. Setup: Digital Cards > Installation.',
     },
     category: 'ergani',
-    popularity: 82
+    popularity: 82,
   },
   {
     id: 'faq-004',
     question: {
       el: 'Πώς υπολογίζονται οι εισφορές ΕΦΚΑ;',
-      en: 'How are EFKA contributions calculated?'
+      en: 'How are EFKA contributions calculated?',
     },
     answer: {
       el: 'Εργαζόμενος: 16%, Εργοδότης: 24.78%. Υπολογίζονται επί του μικτού μισθού. Για 2025 έχουν αυξηθεί κατά 0.2%. Ρυθμίσεις: Μισθοδοσία > Εισφορές ΕΦΚΑ.',
-      en: 'Employee: 16%, Employer: 24.78%. Calculated on gross salary. For 2025 increased by 0.2%. Settings: Payroll > EFKA Contributions.'
+      en: 'Employee: 16%, Employer: 24.78%. Calculated on gross salary. For 2025 increased by 0.2%. Settings: Payroll > EFKA Contributions.',
     },
     category: 'efka',
-    popularity: 76
-  }
+    popularity: 76,
+  },
 ];
 
 interface HelpCenterProps {
   defaultLanguage?: 'el' | 'en';
 }
 
-export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) {
+export default function HelpCenter({
+  defaultLanguage = 'el',
+}: HelpCenterProps) {
   const [language, setLanguage] = useState<'el' | 'en'>(defaultLanguage);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -228,28 +236,40 @@ export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) 
     { value: 'ergani', label: { el: 'ΕΡΓΑΝΗ', en: 'ERGANI' } },
     { value: 'efka', label: { el: 'ΕΦΚΑ', en: 'EFKA' } },
     { value: 'setup', label: { el: 'Εγκατάσταση', en: 'Setup' } },
-    { value: 'general', label: { el: 'Γενικά', en: 'General' } }
+    { value: 'general', label: { el: 'Γενικά', en: 'General' } },
   ];
 
   const filteredArticles = helpArticles.filter(article => {
-    const matchesSearch = searchQuery === '' || 
-      article.title[language].toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesCategory = selectedCategory === 'all' || article.category === selectedCategory;
-    
+    const matchesSearch =
+      searchQuery === '' ||
+      article.title[language]
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      article.tags.some(tag =>
+        tag.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+    const matchesCategory =
+      selectedCategory === 'all' || article.category === selectedCategory;
+
     return matchesSearch && matchesCategory;
   });
 
-  const filteredFaqs = faqs.filter(faq => {
-    const matchesSearch = searchQuery === '' ||
-      faq.question[language].toLowerCase().includes(searchQuery.toLowerCase()) ||
-      faq.answer[language].toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
-  }).sort((a, b) => b.popularity - a.popularity);
+  const filteredFaqs = faqs
+    .filter(faq => {
+      const matchesSearch =
+        searchQuery === '' ||
+        faq.question[language]
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        faq.answer[language].toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchesCategory =
+        selectedCategory === 'all' || faq.category === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => b.popularity - a.popularity);
 
   const toggleFaq = (faqId: string) => {
     const newExpanded = new Set(expandedFaqs);
@@ -263,10 +283,14 @@ export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) 
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'beginner': return 'bg-green-100 text-green-800';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'beginner':
+        return 'bg-green-100 text-green-800';
+      case 'intermediate':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'advanced':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -274,7 +298,7 @@ export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) 
     const labels = {
       beginner: { el: 'Αρχάριος', en: 'Beginner' },
       intermediate: { el: 'Μέτριος', en: 'Intermediate' },
-      advanced: { el: 'Προχωρημένος', en: 'Advanced' }
+      advanced: { el: 'Προχωρημένος', en: 'Advanced' },
     };
     return labels[difficulty as keyof typeof labels]?.[language] || difficulty;
   };
@@ -307,10 +331,9 @@ export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) 
           </div>
         </div>
         <CardDescription>
-          {language === 'el' 
-            ? 'Αναζητήστε οδηγούς, FAQs και τεκμηρίωση για το PayrollSync' 
-            : 'Search guides, FAQs and documentation for PayrollSync'
-          }
+          {language === 'el'
+            ? 'Αναζητήστε οδηγούς, FAQs και τεκμηρίωση για το PayrollSync'
+            : 'Search guides, FAQs and documentation for PayrollSync'}
         </CardDescription>
       </CardHeader>
 
@@ -320,9 +343,11 @@ export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) 
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={language === 'el' ? 'Αναζήτηση βοήθειας...' : 'Search help...'}
+              placeholder={
+                language === 'el' ? 'Αναζήτηση βοήθειας...' : 'Search help...'
+              }
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="pl-9"
             />
           </div>
@@ -331,7 +356,9 @@ export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) 
             {categories.map(category => (
               <Button
                 key={category.value}
-                variant={selectedCategory === category.value ? 'default' : 'outline'}
+                variant={
+                  selectedCategory === category.value ? 'default' : 'outline'
+                }
                 size="sm"
                 onClick={() => setSelectedCategory(category.value)}
               >
@@ -356,7 +383,10 @@ export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) 
           <TabsContent value="articles">
             <div className="grid gap-4">
               {filteredArticles.map(article => (
-                <Card key={article.id} className="hover:shadow-md transition-shadow">
+                <Card
+                  key={article.id}
+                  className="hover:shadow-md transition-shadow"
+                >
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-lg font-semibold text-foreground">
@@ -384,13 +414,16 @@ export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) 
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Badge className={`text-xs ${getDifficultyColor(article.difficulty)}`}>
+                        <Badge
+                          className={`text-xs ${getDifficultyColor(article.difficulty)}`}
+                        >
                           {getDifficultyLabel(article.difficulty)}
                         </Badge>
-                        
+
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          {article.readTime} {language === 'el' ? 'λεπτά' : 'min'}
+                          {article.readTime}{' '}
+                          {language === 'el' ? 'λεπτά' : 'min'}
                         </div>
 
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -412,7 +445,11 @@ export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) 
 
                     <div className="flex flex-wrap gap-1 mt-3">
                       {article.tags.map(tag => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
+                        <Badge
+                          key={tag}
+                          variant="secondary"
+                          className="text-xs"
+                        >
                           {tag}
                         </Badge>
                       ))}
@@ -432,14 +469,16 @@ export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) 
                       className="w-full p-4 text-left hover:bg-muted/50 transition-colors flex items-center justify-between"
                       onClick={() => toggleFaq(faq.id)}
                     >
-                      <span className="font-medium">{faq.question[language]}</span>
+                      <span className="font-medium">
+                        {faq.question[language]}
+                      </span>
                       {expandedFaqs.has(faq.id) ? (
                         <ChevronDown className="h-4 w-4" />
                       ) : (
                         <ChevronRight className="h-4 w-4" />
                       )}
                     </button>
-                    
+
                     {expandedFaqs.has(faq.id) && (
                       <div className="px-4 pb-4">
                         <div className="border-t pt-4">
@@ -448,7 +487,8 @@ export default function HelpCenter({ defaultLanguage = 'el' }: HelpCenterProps) 
                           </p>
                           <div className="flex items-center gap-2 mt-3">
                             <Badge variant="outline" className="text-xs">
-                              {language === 'el' ? 'Δημοφιλία' : 'Popularity'}: {faq.popularity}%
+                              {language === 'el' ? 'Δημοφιλία' : 'Popularity'}:{' '}
+                              {faq.popularity}%
                             </Badge>
                           </div>
                         </div>

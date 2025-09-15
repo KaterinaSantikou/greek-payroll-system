@@ -1,14 +1,23 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useLocale } from "@/lib/i18n";
-import { useAuth } from "@/hooks/useAuth";
-import { cn } from "@/lib/utils";
-import { 
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { useLocale } from '@/lib/i18n';
+import { useAuth } from '@/hooks/useAuth';
+import { cn } from '@/lib/utils';
+import {
   LayoutDashboard,
   Users,
   User,
@@ -40,8 +49,8 @@ import {
   TrendingUp,
   Database,
   Zap,
-  Briefcase
-} from "lucide-react";
+  Briefcase,
+} from 'lucide-react';
 
 interface NavigationItem {
   id: string;
@@ -62,16 +71,28 @@ interface StructuredNavigationProps {
 }
 
 // Utility function to truncate labels and provide tooltip
-function truncateLabel(label: string, maxLength: number = 24): { truncated: string; isTruncated: boolean } {
+function truncateLabel(
+  label: string,
+  maxLength: number = 24
+): { truncated: string; isTruncated: boolean } {
   if (label.length <= maxLength) {
     return { truncated: label, isTruncated: false };
   }
-  return { truncated: label.substring(0, maxLength - 1) + '…', isTruncated: true };
+  return {
+    truncated: label.substring(0, maxLength - 1) + '…',
+    isTruncated: true,
+  };
 }
 
-export function StructuredNavigation({ collapsed = false, isMobile = false, isTablet = false }: StructuredNavigationProps) {
+export function StructuredNavigation({
+  collapsed = false,
+  isMobile = false,
+  isTablet = false,
+}: StructuredNavigationProps) {
   const [location] = useLocation();
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['dashboard', 'people']));
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(['dashboard', 'people'])
+  );
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const { user } = useAuth();
   const { t } = useLocale();
@@ -85,7 +106,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       id: 'dashboard',
       label: t('nav.dashboard'),
       icon: LayoutDashboard,
-      href: '/'
+      href: '/',
     },
     {
       id: 'people',
@@ -98,7 +119,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: User,
           href: '/employees',
           badge: '147',
-          badgeType: 'inventory'
+          badgeType: 'inventory',
         },
         {
           id: 'onboarding',
@@ -106,7 +127,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: UserPlus,
           href: '/onboarding',
           badge: '5',
-          badgeType: 'todo-medium'
+          badgeType: 'todo-medium',
         },
         {
           id: 'exits',
@@ -114,15 +135,15 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: UserMinus,
           href: '/exits',
           badge: '2',
-          badgeType: 'todo-low'
+          badgeType: 'todo-low',
         },
         {
           id: 'teams-roles',
           label: t('nav.teams-roles'),
           icon: UserCheck,
-          href: '/teams-roles'
-        }
-      ]
+          href: '/teams-roles',
+        },
+      ],
     },
     {
       id: 'time',
@@ -135,7 +156,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: Timer,
           href: '/punches',
           badge: '23',
-          badgeType: 'inventory'
+          badgeType: 'inventory',
         },
         {
           id: 'exceptions',
@@ -143,13 +164,13 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: AlertTriangle,
           href: '/exceptions',
           badge: '7',
-          badgeType: 'todo-high'
+          badgeType: 'todo-high',
         },
         {
           id: 'schedules',
           label: t('nav.schedules'),
           icon: CalendarDays,
-          href: '/schedules'
+          href: '/schedules',
         },
         {
           id: 'overtime',
@@ -157,15 +178,15 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: Clock,
           href: '/overtime',
           badge: '15',
-          badgeType: 'inventory'
+          badgeType: 'inventory',
         },
         {
           id: 'digital-work-card',
           label: t('nav.digital-work-card'),
           icon: Smartphone,
-          href: '/digital-work-card'
-        }
-      ]
+          href: '/digital-work-card',
+        },
+      ],
     },
     {
       id: 'payroll',
@@ -178,27 +199,27 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: Zap,
           href: '/payroll',
           badge: '1',
-          badgeType: 'todo-high'
+          badgeType: 'todo-high',
         },
         {
           id: 'components',
           label: t('nav.components'),
           icon: Building2,
-          href: '/earnings-codes'
+          href: '/earnings-codes',
         },
         {
           id: 'bonuses',
           label: t('nav.bonuses'),
           icon: Euro,
-          href: '/allowances'
+          href: '/allowances',
         },
         {
           id: 'simulations',
           label: t('nav.simulations'),
           icon: BarChart3,
-          href: '/payroll-preview'
-        }
-      ]
+          href: '/payroll-preview',
+        },
+      ],
     },
     {
       id: 'filings',
@@ -211,7 +232,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: Shield,
           href: '/filings/ergani',
           badge: '2',
-          badgeType: 'todo-high'
+          badgeType: 'todo-high',
         },
         {
           id: 'efka-apd',
@@ -219,7 +240,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: Receipt,
           href: '/filings/efka',
           badge: '1',
-          badgeType: 'todo-medium'
+          badgeType: 'todo-medium',
         },
         {
           id: 'aade-fmy',
@@ -227,7 +248,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: FileText,
           href: '/filings/aade',
           badge: '3',
-          badgeType: 'todo-low'
+          badgeType: 'todo-low',
         },
         {
           id: 'inspector-pack',
@@ -235,9 +256,9 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: Briefcase,
           href: '/filings/inspector',
           badge: '1',
-          badgeType: 'inventory'
-        }
-      ]
+          badgeType: 'inventory',
+        },
+      ],
     },
     {
       id: 'payments',
@@ -248,13 +269,13 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           id: 'sepa',
           label: t('nav.sepa'),
           icon: Euro,
-          href: '/sepa-payments'
+          href: '/sepa-payments',
         },
         {
           id: 'off-cycle',
           label: t('nav.off-cycle'),
           icon: DollarSign,
-          href: '/payments'
+          href: '/payments',
         },
         {
           id: 'reconciliation',
@@ -262,9 +283,9 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           icon: BookOpen,
           href: '/payments',
           badge: '4',
-          badgeType: 'todo-medium'
-        }
-      ]
+          badgeType: 'todo-medium',
+        },
+      ],
     },
     {
       id: 'accounting',
@@ -275,15 +296,15 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           id: 'gl-export',
           label: t('nav.gl-export'),
           icon: Database,
-          href: '/accounting'
+          href: '/accounting',
         },
         {
           id: 'postings',
           label: t('nav.postings'),
           icon: FileText,
-          href: '/accounting'
-        }
-      ]
+          href: '/accounting',
+        },
+      ],
     },
     {
       id: 'analytics',
@@ -294,21 +315,21 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           id: 'cost-ot',
           label: t('nav.cost-ot'),
           icon: TrendingUp,
-          href: '/analytics/cost-ot'
+          href: '/analytics/cost-ot',
         },
         {
           id: 'absence-turnover',
           label: t('nav.absence-turnover'),
           icon: PieChart,
-          href: '/analytics'
+          href: '/analytics',
         },
         {
           id: 'custom-reports',
           label: t('nav.custom-reports'),
           icon: BarChart3,
-          href: '/analytics'
-        }
-      ]
+          href: '/analytics',
+        },
+      ],
     },
     {
       id: 'settings',
@@ -319,21 +340,21 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           id: 'policies',
           label: t('nav.policies'),
           icon: Shield,
-          href: '/settings'
+          href: '/settings',
         },
         {
           id: 'compliance',
           label: t('nav.compliance'),
           icon: FileText,
-          href: '/compliance'
+          href: '/compliance',
         },
         {
           id: 'integrations',
           label: t('nav.integrations'),
           icon: Zap,
-          href: '/settings'
-        }
-      ]
+          href: '/settings',
+        },
+      ],
     },
     {
       id: 'help',
@@ -344,22 +365,22 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           id: 'guides',
           label: t('nav.guides'),
           icon: BookOpen,
-          href: '/help'
+          href: '/help',
         },
         {
           id: 'support',
           label: t('nav.support'),
           icon: HelpCircle,
-          href: '/help'
+          href: '/help',
         },
         {
           id: 'audit-log',
           label: t('nav.audit-log'),
           icon: FileText,
-          href: '/help'
-        }
-      ]
-    }
+          href: '/help',
+        },
+      ],
+    },
   ];
 
   const toggleSection = (sectionId: string) => {
@@ -373,63 +394,68 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
   };
 
   // Handle click with modifier keys
-  const handleItemClick = useCallback((
-    event: React.MouseEvent,
-    href?: string,
-    label?: string
-  ) => {
-    if (!href) return;
+  const handleItemClick = useCallback(
+    (event: React.MouseEvent, href?: string, label?: string) => {
+      if (!href) return;
 
-    // Ctrl/Cmd + Click for new tab
-    if (event.ctrlKey || event.metaKey) {
-      event.preventDefault();
-      window.open(href, '_blank');
-      return;
-    }
-  }, []);
+      // Ctrl/Cmd + Click for new tab
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+        window.open(href, '_blank');
+        return;
+      }
+    },
+    []
+  );
 
   // Handle context menu
-  const handleContextMenu = useCallback((
-    event: React.MouseEvent,
-    href?: string,
-    label?: string
-  ) => {
-    if (!href) return;
-    
-    event.preventDefault();
-    
-    // Create simple context menu options
-    const options = [
-      {
-        label: 'Pin to top',
-        action: () => console.log('Pin to top:', label),
-        shortcut: ''
-      },
-      {
-        label: 'Copy link',
-        action: () => {
-          navigator.clipboard.writeText(window.location.origin + href);
-        },
-        shortcut: 'Ctrl+C'
-      },
-      {
-        label: 'Open in new tab',
-        action: () => window.open(href, '_blank'),
-        shortcut: 'Ctrl+Click'
-      }
-    ];
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent, href?: string, label?: string) => {
+      if (!href) return;
 
-    // Simple context menu implementation
-    // In a real app, you'd use a proper context menu component
-    const menuItems = options.map(option => 
-      `${option.label}${option.shortcut ? ` (${option.shortcut})` : ''}`
-    ).join('\n');
-    
-    // For demo, show alert - replace with actual context menu
-    if (confirm(`Context Menu for "${label}":\n\n${menuItems}\n\nClick OK to copy link`)) {
-      options[1].action(); // Copy link
-    }
-  }, []);
+      event.preventDefault();
+
+      // Create simple context menu options
+      const options = [
+        {
+          label: 'Pin to top',
+          action: () => console.log('Pin to top:', label),
+          shortcut: '',
+        },
+        {
+          label: 'Copy link',
+          action: () => {
+            navigator.clipboard.writeText(window.location.origin + href);
+          },
+          shortcut: 'Ctrl+C',
+        },
+        {
+          label: 'Open in new tab',
+          action: () => window.open(href, '_blank'),
+          shortcut: 'Ctrl+Click',
+        },
+      ];
+
+      // Simple context menu implementation
+      // In a real app, you'd use a proper context menu component
+      const menuItems = options
+        .map(
+          option =>
+            `${option.label}${option.shortcut ? ` (${option.shortcut})` : ''}`
+        )
+        .join('\n');
+
+      // For demo, show alert - replace with actual context menu
+      if (
+        confirm(
+          `Context Menu for "${label}":\n\n${menuItems}\n\nClick OK to copy link`
+        )
+      ) {
+        options[1].action(); // Copy link
+      }
+    },
+    []
+  );
 
   const isActive = (href: string) => {
     if (href === '/') {
@@ -439,79 +465,98 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
   };
 
   // Flatten navigation items for keyboard navigation
-  const flattenItems = useCallback((items: NavigationItem[], level = 0): Array<{ item: NavigationItem, level: number, id: string }> => {
-    const flattened: Array<{ item: NavigationItem, level: number, id: string }> = [];
-    
-    items.forEach(item => {
-      // Check role-based access
-      const hasAccess = (sectionId: string, role: string) => {
-        const restrictedSections = {
-          'Employee': ['payroll', 'filings', 'payments', 'accounting'],
-          'Manager': ['filings', 'payments', 'accounting'],
-          'HR': ['payroll', 'payments', 'accounting'],
-        };
-        return !restrictedSections[role]?.includes(sectionId);
-      };
+  const flattenItems = useCallback(
+    (
+      items: NavigationItem[],
+      level = 0
+    ): Array<{ item: NavigationItem; level: number; id: string }> => {
+      const flattened: Array<{
+        item: NavigationItem;
+        level: number;
+        id: string;
+      }> = [];
 
-      if (hasAccess(item.id, userRole)) {
-        flattened.push({ item, level, id: item.id });
-        
-        // Add children if expanded
-        if (item.children && expandedSections.has(item.id)) {
-          flattened.push(...flattenItems(item.children, level + 1));
+      items.forEach(item => {
+        // Check role-based access
+        const hasAccess = (sectionId: string, role: string) => {
+          const restrictedSections = {
+            Employee: ['payroll', 'filings', 'payments', 'accounting'],
+            Manager: ['filings', 'payments', 'accounting'],
+            HR: ['payroll', 'payments', 'accounting'],
+          };
+          return !restrictedSections[role]?.includes(sectionId);
+        };
+
+        if (hasAccess(item.id, userRole)) {
+          flattened.push({ item, level, id: item.id });
+
+          // Add children if expanded
+          if (item.children && expandedSections.has(item.id)) {
+            flattened.push(...flattenItems(item.children, level + 1));
+          }
         }
-      }
-    });
-    
-    return flattened;
-  }, [userRole, expandedSections]);
+      });
+
+      return flattened;
+    },
+    [userRole, expandedSections]
+  );
 
   const flatItems = flattenItems(navigationGroups);
 
   // Keyboard navigation handler
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    const currentItem = flatItems[focusedIndex];
-    
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        setFocusedIndex(prev => Math.min(prev + 1, flatItems.length - 1));
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        setFocusedIndex(prev => Math.max(prev - 1, 0));
-        break;
-      case 'ArrowRight':
-        if (currentItem?.item.children && !expandedSections.has(currentItem.item.id)) {
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const currentItem = flatItems[focusedIndex];
+
+      switch (e.key) {
+        case 'ArrowDown':
           e.preventDefault();
-          toggleSection(currentItem.item.id);
-        }
-        break;
-      case 'ArrowLeft':
-        if (currentItem?.item.children && expandedSections.has(currentItem.item.id)) {
+          setFocusedIndex(prev => Math.min(prev + 1, flatItems.length - 1));
+          break;
+        case 'ArrowUp':
           e.preventDefault();
-          toggleSection(currentItem.item.id);
-        }
-        break;
-      case 'Home':
-        e.preventDefault();
-        setFocusedIndex(0);
-        break;
-      case 'End':
-        e.preventDefault();
-        setFocusedIndex(flatItems.length - 1);
-        break;
-      case 'Enter':
-      case ' ':
-        e.preventDefault();
-        if (currentItem?.item.href) {
-          window.location.href = currentItem.item.href;
-        } else if (currentItem?.item.children) {
-          toggleSection(currentItem.item.id);
-        }
-        break;
-    }
-  }, [focusedIndex, flatItems, expandedSections, toggleSection]);
+          setFocusedIndex(prev => Math.max(prev - 1, 0));
+          break;
+        case 'ArrowRight':
+          if (
+            currentItem?.item.children &&
+            !expandedSections.has(currentItem.item.id)
+          ) {
+            e.preventDefault();
+            toggleSection(currentItem.item.id);
+          }
+          break;
+        case 'ArrowLeft':
+          if (
+            currentItem?.item.children &&
+            expandedSections.has(currentItem.item.id)
+          ) {
+            e.preventDefault();
+            toggleSection(currentItem.item.id);
+          }
+          break;
+        case 'Home':
+          e.preventDefault();
+          setFocusedIndex(0);
+          break;
+        case 'End':
+          e.preventDefault();
+          setFocusedIndex(flatItems.length - 1);
+          break;
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          if (currentItem?.item.href) {
+            window.location.href = currentItem.item.href;
+          } else if (currentItem?.item.children) {
+            toggleSection(currentItem.item.id);
+          }
+          break;
+      }
+    },
+    [focusedIndex, flatItems, expandedSections, toggleSection]
+  );
 
   // Focus management
   useEffect(() => {
@@ -528,53 +573,64 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
   const formatNumber = (num: string | number): string => {
     const numValue = typeof num === 'string' ? parseFloat(num) : num;
     if (isNaN(numValue)) return String(num);
-    
+
     // For Greek locale, use comma for decimals
     // For integers, no change needed, but for decimals use comma
-    if (t('nav.dashboard') === 'Πίνακας Ελέγχου') { // Check if Greek locale
+    if (t('nav.dashboard') === 'Πίνακας Ελέγχου') {
+      // Check if Greek locale
       return numValue.toLocaleString('el-GR');
     }
-    
+
     return numValue.toLocaleString('en-US');
   };
 
-  const renderBadge = (badge?: string | number, urgent?: boolean, label?: string, badgeType?: 'info' | 'warning' | 'danger' | 'success') => {
+  const renderBadge = (
+    badge?: string | number,
+    urgent?: boolean,
+    label?: string,
+    badgeType?: 'info' | 'warning' | 'danger' | 'success'
+  ) => {
     if (!badge) return null;
-    
+
     const formattedBadge = formatNumber(badge);
-    
+
     // Create ARIA label in appropriate language
     const getAriaLabel = () => {
       const isGreek = t('nav.dashboard') === 'Πίνακας Ελέγχου';
-      if (urgent) return isGreek ? `${formattedBadge} επείγοντα στοιχεία` : `${formattedBadge} urgent items`;
-      if (typeof badge === 'number' && badge === 1) return isGreek ? `1 στοιχείο` : `1 item`;
+      if (urgent)
+        return isGreek
+          ? `${formattedBadge} επείγοντα στοιχεία`
+          : `${formattedBadge} urgent items`;
+      if (typeof badge === 'number' && badge === 1)
+        return isGreek ? `1 στοιχείο` : `1 item`;
       return isGreek ? `${formattedBadge} στοιχεία` : `${formattedBadge} items`;
     };
-    
+
     // Determine badge type based on context and explicit badgeType
     const getBadgeClass = () => {
       // Inventory pills (neutral)
-      if (badgeType === 'inventory') return "bg-neutral-700 text-neutral-200";
-      
+      if (badgeType === 'inventory') return 'bg-neutral-700 text-neutral-200';
+
       // To-do pills (status-based)
-      if (badgeType === 'todo-low') return "bg-amber-900/40 text-amber-300";
-      if (badgeType === 'todo-medium') return "bg-orange-900/40 text-orange-300";
-      if (badgeType === 'todo-high') return "bg-red-900/40 text-red-300";
-      
+      if (badgeType === 'todo-low') return 'bg-amber-900/40 text-amber-300';
+      if (badgeType === 'todo-medium')
+        return 'bg-orange-900/40 text-orange-300';
+      if (badgeType === 'todo-high') return 'bg-red-900/40 text-red-300';
+
       // Legacy support
-      if (badgeType === 'danger') return "bg-red-900/40 text-red-300";
-      if (badgeType === 'warning') return "bg-amber-900/40 text-amber-300";
-      if (badgeType === 'success') return "bg-green-900/40 text-green-300";
-      if (badgeType === 'info') return "bg-neutral-700 text-neutral-200";
-      
+      if (badgeType === 'danger') return 'bg-red-900/40 text-red-300';
+      if (badgeType === 'warning') return 'bg-amber-900/40 text-amber-300';
+      if (badgeType === 'success') return 'bg-green-900/40 text-green-300';
+      if (badgeType === 'info') return 'bg-neutral-700 text-neutral-200';
+
       // Default to inventory style
-      return "bg-neutral-700 text-neutral-200";
+      return 'bg-neutral-700 text-neutral-200';
     };
-    
+
     return (
       <div
         className={cn(
-          "px-2 py-0.5 rounded-full text-xs font-semibold min-w-[20px] h-[20px] flex items-center justify-center",
+          'px-2 py-0.5 rounded-full text-xs font-semibold min-w-[20px] h-[20px] flex items-center justify-center',
           getBadgeClass()
         )}
         aria-label={getAriaLabel()}
@@ -598,9 +654,9 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     // Check role-based access - simplified for demo
     const hasAccess = (sectionId: string, role: string) => {
       const restrictedSections = {
-        'Employee': ['payroll', 'filings', 'payments', 'accounting'],
-        'Manager': ['filings', 'payments', 'accounting'],
-        'HR': ['payroll', 'payments', 'accounting'],
+        Employee: ['payroll', 'filings', 'payments', 'accounting'],
+        Manager: ['filings', 'payments', 'accounting'],
+        HR: ['payroll', 'payments', 'accounting'],
       };
       return !restrictedSections[role]?.includes(sectionId);
     };
@@ -616,27 +672,32 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     const disabled = false; // Can be dynamic based on user permissions or system state
 
     // Base button classes with all states and reduced motion support
-    const getButtonClasses = (isLeaf: boolean = false) => cn(
-      // Base styles
-      "w-full justify-start px-4 text-gray-700 dark:text-gray-200 relative group",
-      // Size and typography hierarchy
-      level === 0 ? "h-11 text-sm font-medium" : "h-10 text-sm font-medium",
-      // Child indentation (18px for better hierarchy)
-      level > 0 && "ml-[18px] before:absolute before:left-[-18px] before:top-0 before:bottom-0 before:w-0.5 before:bg-gray-300 dark:before:bg-gray-600",
-      // Default state with motion preferences
-      "hover:bg-gray-50 dark:hover:bg-gray-800/50",
-      "transition-all motion-reduce:transition-none duration-200 motion-reduce:duration-0",
-      // Stronger active state with accent bar
-      active && "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-semibold before:!absolute before:!left-0 before:!top-1 before:!bottom-1 before:!w-[3px] before:!bg-blue-600 before:!rounded-r-md before:!z-10 shadow-sm",
-      // Parent becomes bold when child is active
-      parentHasActiveChild && level === 0 && "font-semibold text-gray-900 dark:text-gray-100",
-      // Focus ring for keyboard navigation
-      "focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none",
-      // Disabled state
-      disabled && "opacity-50 cursor-not-allowed hover:bg-transparent",
-      // Collapsed mode adjustments
-      collapsed && "px-2 justify-center"
-    );
+    const getButtonClasses = (isLeaf: boolean = false) =>
+      cn(
+        // Base styles
+        'w-full justify-start px-4 text-gray-700 dark:text-gray-200 relative group',
+        // Size and typography hierarchy
+        level === 0 ? 'h-11 text-sm font-medium' : 'h-10 text-sm font-medium',
+        // Child indentation (18px for better hierarchy)
+        level > 0 &&
+          'ml-[18px] before:absolute before:left-[-18px] before:top-0 before:bottom-0 before:w-0.5 before:bg-gray-300 dark:before:bg-gray-600',
+        // Default state with motion preferences
+        'hover:bg-gray-50 dark:hover:bg-gray-800/50',
+        'transition-all motion-reduce:transition-none duration-200 motion-reduce:duration-0',
+        // Stronger active state with accent bar
+        active &&
+          'bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-semibold before:!absolute before:!left-0 before:!top-1 before:!bottom-1 before:!w-[3px] before:!bg-blue-600 before:!rounded-r-md before:!z-10 shadow-sm',
+        // Parent becomes bold when child is active
+        parentHasActiveChild &&
+          level === 0 &&
+          'font-semibold text-gray-900 dark:text-gray-100',
+        // Focus ring for keyboard navigation
+        'focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:outline-none',
+        // Disabled state
+        disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent',
+        // Collapsed mode adjustments
+        collapsed && 'px-2 justify-center'
+      );
 
     // Render collapsible parent item
     if (hasChildren) {
@@ -645,45 +706,52 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           variant="ghost"
           disabled={disabled}
           className={getButtonClasses(false)}
-          onClick={(e) => {
+          onClick={e => {
             e.preventDefault();
             if (!disabled) toggleSection(item.id);
           }}
-          ref={(el) => {
+          ref={el => {
             if (el) itemRefs.current.set(item.id, el);
           }}
           role="treeitem"
           aria-expanded={isExpanded}
-          aria-current={active ? "page" : undefined}
+          aria-current={active ? 'page' : undefined}
           tabIndex={-1}
         >
           <div className="flex items-center flex-1 min-w-0">
-            <item.icon className={cn("flex-shrink-0", level === 0 ? "h-[22px] w-[22px]" : "h-[18px] w-[18px]")} />
+            <item.icon
+              className={cn(
+                'flex-shrink-0',
+                level === 0 ? 'h-[22px] w-[22px]' : 'h-[18px] w-[18px]'
+              )}
+            />
             {!collapsed && (
               <>
                 {(() => {
                   const { truncated, isTruncated } = truncateLabel(item.label);
-                  const labelSpan = <span className="truncate ml-3">{truncated}</span>;
+                  const labelSpan = (
+                    <span className="truncate ml-3">{truncated}</span>
+                  );
                   return isTruncated ? (
                     <TooltipProvider delayDuration={300}>
                       <Tooltip>
-                        <TooltipTrigger asChild>
-                          {labelSpan}
-                        </TooltipTrigger>
+                        <TooltipTrigger asChild>{labelSpan}</TooltipTrigger>
                         <TooltipContent side="bottom" className="max-w-xs">
                           <div className="font-medium">{item.label}</div>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                  ) : labelSpan;
+                  ) : (
+                    labelSpan
+                  );
                 })()}
                 <div className="flex items-center gap-2 ml-auto">
                   {/* Parent rows are label-only - no badges */}
-                  <ChevronDown 
+                  <ChevronDown
                     className={cn(
-                      "h-5 w-5 text-gray-500 transition-transform duration-200 motion-reduce:transition-none motion-reduce:duration-0",
-                      isExpanded ? "rotate-0" : "-rotate-90"
-                    )} 
+                      'h-5 w-5 text-gray-500 transition-transform duration-200 motion-reduce:transition-none motion-reduce:duration-0',
+                      isExpanded ? 'rotate-0' : '-rotate-90'
+                    )}
                   />
                 </div>
               </>
@@ -694,18 +762,19 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
 
       return (
         <div key={item.id} className="mb-2">
-          <Collapsible open={isExpanded} onOpenChange={() => !disabled && toggleSection(item.id)}>
+          <Collapsible
+            open={isExpanded}
+            onOpenChange={() => !disabled && toggleSection(item.id)}
+          >
             <CollapsibleTrigger asChild>
-              <div 
-                onContextMenu={(e) => handleContextMenu(e, item.href, item.label)}
+              <div
+                onContextMenu={e => handleContextMenu(e, item.href, item.label)}
                 className="w-full"
               >
                 {collapsed ? (
                   <TooltipProvider delayDuration={300}>
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        {triggerButton}
-                      </TooltipTrigger>
+                      <TooltipTrigger asChild>{triggerButton}</TooltipTrigger>
                       <TooltipContent side="right" className="max-w-xs">
                         <div className="font-medium">{item.label}</div>
                         {item.badge && (
@@ -724,12 +793,14 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
                 )}
               </div>
             </CollapsibleTrigger>
-            <CollapsibleContent 
+            <CollapsibleContent
               className="space-y-2 pt-2"
               role="group"
               aria-label={`${item.label} υποστοιχεία`}
             >
-              {item.children?.map((child) => renderNavigationItem(child, level + 1))}
+              {item.children?.map(child =>
+                renderNavigationItem(child, level + 1)
+              )}
             </CollapsibleContent>
           </Collapsible>
         </div>
@@ -742,37 +813,49 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
         variant="ghost"
         disabled={disabled}
         className={getButtonClasses(true)}
-        onClick={(e) => item.href && handleItemClick(e, item.href, item.label)}
-        onContextMenu={(e) => handleContextMenu(e, item.href, item.label)}
-        ref={(el) => {
+        onClick={e => item.href && handleItemClick(e, item.href, item.label)}
+        onContextMenu={e => handleContextMenu(e, item.href, item.label)}
+        ref={el => {
           if (el) itemRefs.current.set(item.id, el);
         }}
         role="treeitem"
-        aria-current={active ? "page" : undefined}
+        aria-current={active ? 'page' : undefined}
         tabIndex={-1}
       >
         <div className="flex items-center flex-1 min-w-0">
-          <item.icon className={cn("flex-shrink-0", level === 0 ? "h-[22px] w-[22px]" : "h-[18px] w-[18px]")} />
+          <item.icon
+            className={cn(
+              'flex-shrink-0',
+              level === 0 ? 'h-[22px] w-[22px]' : 'h-[18px] w-[18px]'
+            )}
+          />
           {!collapsed && (
             <>
               {(() => {
                 const { truncated, isTruncated } = truncateLabel(item.label);
-                const labelSpan = <span className="truncate ml-3">{truncated}</span>;
+                const labelSpan = (
+                  <span className="truncate ml-3">{truncated}</span>
+                );
                 return isTruncated ? (
                   <TooltipProvider delayDuration={300}>
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        {labelSpan}
-                      </TooltipTrigger>
+                      <TooltipTrigger asChild>{labelSpan}</TooltipTrigger>
                       <TooltipContent side="bottom" className="max-w-xs">
                         <div className="font-medium">{item.label}</div>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                ) : labelSpan;
+                ) : (
+                  labelSpan
+                );
               })()}
               <div className="ml-auto">
-                {renderBadge(item.badge, item.urgent, item.label, item.badgeType)}
+                {renderBadge(
+                  item.badge,
+                  item.urgent,
+                  item.label,
+                  item.badgeType
+                )}
               </div>
             </>
           )}
@@ -783,9 +866,7 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
     const buttonWithTooltip = collapsed ? (
       <TooltipProvider delayDuration={300}>
         <Tooltip>
-          <TooltipTrigger asChild>
-            {leafButton}
-          </TooltipTrigger>
+          <TooltipTrigger asChild>{leafButton}</TooltipTrigger>
           <TooltipContent side="right" className="max-w-xs">
             <div className="font-medium">{item.label}</div>
             {item.badge && (
@@ -807,11 +888,11 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
 
     if (item.href) {
       return (
-        <Link 
-          key={item.id} 
-          to={item.href} 
+        <Link
+          key={item.id}
+          to={item.href}
           className="block mb-2"
-          onClick={(e) => {
+          onClick={e => {
             // Handle modifier keys before Link navigation
             if (e.ctrlKey || e.metaKey) {
               e.preventDefault();
@@ -835,22 +916,30 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
       return (
         <Link key={item.id} to={item.href} className="block mb-2">
           <Button
-          variant="ghost"
-          className={cn(
-            "w-full justify-start px-4 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors relative",
-            level === 0 ? "h-10 text-[15px] font-medium" : "h-9 text-[14px] ml-6 before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
-            active && "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-blue-600 before:rounded-r-sm"
-          )}
-        >
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <item.icon className={cn("flex-shrink-0", level === 0 ? "h-[22px] w-[22px]" : "h-[18px] w-[18px]")} />
-            {!collapsed && (
-              <>
-                <span className="truncate">{item.label}</span>
-                {renderBadge(item.badge, item.urgent)}
-              </>
+            variant="ghost"
+            className={cn(
+              'w-full justify-start px-4 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors relative',
+              level === 0
+                ? 'h-10 text-[15px] font-medium'
+                : 'h-9 text-[14px] ml-6 before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700',
+              active &&
+                'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-blue-600 before:rounded-r-sm'
             )}
-          </div>
+          >
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <item.icon
+                className={cn(
+                  'flex-shrink-0',
+                  level === 0 ? 'h-[22px] w-[22px]' : 'h-[18px] w-[18px]'
+                )}
+              />
+              {!collapsed && (
+                <>
+                  <span className="truncate">{item.label}</span>
+                  {renderBadge(item.badge, item.urgent)}
+                </>
+              )}
+            </div>
           </Button>
         </Link>
       );
@@ -860,13 +949,21 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           <Button
             variant="ghost"
             className={cn(
-              "w-full justify-start px-4 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors relative",
-              level === 0 ? "h-10 text-[15px] font-medium" : "h-9 text-[14px] ml-6 before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700",
-              active && "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-blue-600 before:rounded-r-sm"
+              'w-full justify-start px-4 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors relative',
+              level === 0
+                ? 'h-10 text-[15px] font-medium'
+                : 'h-9 text-[14px] ml-6 before:absolute before:left-[-16px] before:top-0 before:bottom-0 before:w-px before:bg-gray-200 dark:before:bg-gray-700',
+              active &&
+                'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 before:absolute before:left-0 before:top-2 before:bottom-2 before:w-[3px] before:bg-blue-600 before:rounded-r-sm'
             )}
           >
             <div className="flex items-center flex-1 min-w-0">
-              <item.icon className={cn("flex-shrink-0", level === 0 ? "h-[22px] w-[22px]" : "h-[18px] w-[18px]")} />
+              <item.icon
+                className={cn(
+                  'flex-shrink-0',
+                  level === 0 ? 'h-[22px] w-[22px]' : 'h-[18px] w-[18px]'
+                )}
+              />
               {!collapsed && (
                 <>
                   <span className="truncate ml-3">{item.label}</span>
@@ -883,9 +980,9 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
   };
 
   return (
-    <nav 
+    <nav
       ref={navRef}
-      className="flex flex-col h-full font-sans" 
+      className="flex flex-col h-full font-sans"
       aria-label="Κύριο Μενού"
       role="tree"
       tabIndex={0}
@@ -902,7 +999,11 @@ export function StructuredNavigation({ collapsed = false, isMobile = false, isTa
           <div key={group.id} role="none" className={index > 0 ? 'mt-4' : ''}>
             {/* Add divider only before Settings */}
             {group.id === 'settings' && (
-              <div className="h-px bg-gray-200 dark:bg-gray-700 mx-4 mb-4" role="separator" aria-hidden="true" />
+              <div
+                className="h-px bg-gray-200 dark:bg-gray-700 mx-4 mb-4"
+                role="separator"
+                aria-hidden="true"
+              />
             )}
             {renderNavigationItem(group)}
           </div>

@@ -25,7 +25,11 @@ export function PageTransition({ children, className }: MotionWrapperProps) {
 }
 
 // Card entrance animation
-export function CardEntrance({ children, delay = 0, className }: MotionWrapperProps & { delay?: number }) {
+export function CardEntrance({
+  children,
+  delay = 0,
+  className,
+}: MotionWrapperProps & { delay?: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -37,7 +41,7 @@ export function CardEntrance({ children, delay = 0, className }: MotionWrapperPr
       }}
       whileHover={{
         scale: 1.02,
-        transition: { duration: 0.2 }
+        transition: { duration: 0.2 },
       }}
       className={className}
     >
@@ -65,10 +69,10 @@ export function ButtonMotion({ children, className }: MotionWrapperProps) {
 }
 
 // Fade in animation for lists
-export function ListItemMotion({ 
-  children, 
-  index = 0, 
-  className 
+export function ListItemMotion({
+  children,
+  index = 0,
+  className,
 }: MotionWrapperProps & { index?: number }) {
   return (
     <motion.div

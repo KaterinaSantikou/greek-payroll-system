@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils';
 
 interface SidebarSectionProps {
   title?: string;
@@ -6,9 +6,13 @@ interface SidebarSectionProps {
   className?: string;
 }
 
-export function SidebarSection({ title, children, className }: SidebarSectionProps) {
+export function SidebarSection({
+  title,
+  children,
+  className,
+}: SidebarSectionProps) {
   return (
-    <div className={cn("space-y-1", className)}>
+    <div className={cn('space-y-1', className)}>
       {title && (
         <div className="px-3 py-2">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
@@ -26,7 +30,5 @@ interface SidebarDividerProps {
 }
 
 export function SidebarDivider({ className }: SidebarDividerProps) {
-  return (
-    <div className={cn("my-3 border-t border-border", className)} />
-  );
+  return <div className={cn('my-3 border-t border-border', className)} />;
 }

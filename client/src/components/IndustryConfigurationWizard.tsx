@@ -22,7 +22,7 @@ import {
   Euro,
   FileCheck,
   Settings,
-  Zap
+  Zap,
 } from 'lucide-react';
 
 interface IndustryConfig {
@@ -60,12 +60,42 @@ interface IndustryConfig {
 }
 
 const WIZARD_STEPS = [
-  { id: 'company', title: 'Company Information', titleEl: 'Στοιχεία Εταιρείας', icon: Building2 },
-  { id: 'payroll', title: 'Payroll Settings', titleEl: 'Ρυθμίσεις Μισθοδοσίας', icon: Euro },
-  { id: 'allowances', title: 'Allowances & Premiums', titleEl: 'Επιδόματα & Πρόσθετα', icon: Clock },
-  { id: 'agreements', title: 'Collective Agreements', titleEl: 'Συλλογικές Συμβάσεις', icon: FileCheck },
-  { id: 'compliance', title: 'Greek Compliance', titleEl: 'Ελληνική Συμμόρφωση', icon: Settings },
-  { id: 'review', title: 'Review & Deploy', titleEl: 'Επισκόπηση & Εγκατάσταση', icon: Zap }
+  {
+    id: 'company',
+    title: 'Company Information',
+    titleEl: 'Στοιχεία Εταιρείας',
+    icon: Building2,
+  },
+  {
+    id: 'payroll',
+    title: 'Payroll Settings',
+    titleEl: 'Ρυθμίσεις Μισθοδοσίας',
+    icon: Euro,
+  },
+  {
+    id: 'allowances',
+    title: 'Allowances & Premiums',
+    titleEl: 'Επιδόματα & Πρόσθετα',
+    icon: Clock,
+  },
+  {
+    id: 'agreements',
+    title: 'Collective Agreements',
+    titleEl: 'Συλλογικές Συμβάσεις',
+    icon: FileCheck,
+  },
+  {
+    id: 'compliance',
+    title: 'Greek Compliance',
+    titleEl: 'Ελληνική Συμμόρφωση',
+    icon: Settings,
+  },
+  {
+    id: 'review',
+    title: 'Review & Deploy',
+    titleEl: 'Επισκόπηση & Εγκατάσταση',
+    icon: Zap,
+  },
 ];
 
 interface IndustryConfigurationWizardProps {
@@ -79,7 +109,7 @@ export default function IndustryConfigurationWizard({
   industryTemplate,
   onComplete,
   onBack,
-  locale = 'en'
+  locale = 'en',
 }: IndustryConfigurationWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [config, setConfig] = useState<IndustryConfig>({
@@ -87,33 +117,37 @@ export default function IndustryConfigurationWizard({
       name: '',
       industry: industryTemplate.name,
       size: '',
-      locations: 1
+      locations: 1,
     },
     payrollSettings: {
       payPeriod: 'monthly',
       overtimeThreshold: 40,
       nightShiftStart: '22:00',
       nightShiftEnd: '06:00',
-      enableTipTracking: industryTemplate.id === 'hotel-tourism' || industryTemplate.id === 'restaurant-food',
-      enableShiftDifferentials: true
+      enableTipTracking:
+        industryTemplate.id === 'hotel-tourism' ||
+        industryTemplate.id === 'restaurant-food',
+      enableShiftDifferentials: true,
     },
     allowances: industryTemplate.specialAllowances.map((allowance: string) => ({
       name: allowance,
       type: 'percentage' as const,
       value: 25,
-      enabled: true
+      enabled: true,
     })),
-    collectiveAgreements: industryTemplate.collectiveAgreements.map((agreement: string) => ({
-      name: agreement,
-      effectiveDate: new Date().toISOString().split('T')[0],
-      enabled: true
-    })),
+    collectiveAgreements: industryTemplate.collectiveAgreements.map(
+      (agreement: string) => ({
+        name: agreement,
+        effectiveDate: new Date().toISOString().split('T')[0],
+        enabled: true,
+      })
+    ),
     complianceSettings: {
       erganiEnabled: true,
       efkaEnabled: true,
       digitalWorkCard: true,
-      automaticFilings: true
-    }
+      automaticFilings: true,
+    },
   });
 
   const translations = {
@@ -143,9 +177,10 @@ export default function IndustryConfigurationWizard({
       digitalWorkCard: 'Digital Work Card',
       automaticFilings: 'Automatic Government Filings',
       configurationSummary: 'Configuration Summary',
-      deploymentReady: 'Your industry-specific payroll system is ready to deploy',
+      deploymentReady:
+        'Your industry-specific payroll system is ready to deploy',
       estimatedSetupTime: 'Estimated Setup Time',
-      includedFeatures: 'Included Features'
+      includedFeatures: 'Included Features',
     },
     el: {
       title: 'Διαμόρφωση Προτύπου Κλάδου',
@@ -173,10 +208,11 @@ export default function IndustryConfigurationWizard({
       digitalWorkCard: 'Ψηφιακή Κάρτα Εργασίας',
       automaticFilings: 'Αυτόματες Κυβερνητικές Υποβολές',
       configurationSummary: 'Περίληψη Διαμόρφωσης',
-      deploymentReady: 'Το εξειδικευμένο σύστημα μισθοδοσίας σας είναι έτοιμο για εγκατάσταση',
+      deploymentReady:
+        'Το εξειδικευμένο σύστημα μισθοδοσίας σας είναι έτοιμο για εγκατάσταση',
       estimatedSetupTime: 'Εκτιμώμενος Χρόνος Εγκατάστασης',
-      includedFeatures: 'Συμπεριλαμβανόμενα Χαρακτηριστικά'
-    }
+      includedFeatures: 'Συμπεριλαμβανόμενα Χαρακτηριστικά',
+    },
   };
 
   const t = translations[locale];
@@ -184,7 +220,7 @@ export default function IndustryConfigurationWizard({
   const updateConfig = (section: keyof IndustryConfig, updates: any) => {
     setConfig(prev => ({
       ...prev,
-      [section]: { ...prev[section], ...updates }
+      [section]: { ...prev[section], ...updates },
     }));
   };
 
@@ -216,7 +252,9 @@ export default function IndustryConfigurationWizard({
               <Input
                 id="companyName"
                 value={config.companyInfo.name}
-                onChange={(e) => updateConfig('companyInfo', { name: e.target.value })}
+                onChange={e =>
+                  updateConfig('companyInfo', { name: e.target.value })
+                }
                 placeholder="Santikos Princess Hotel"
               />
             </div>
@@ -225,7 +263,9 @@ export default function IndustryConfigurationWizard({
               <Input
                 id="companySize"
                 value={config.companyInfo.size}
-                onChange={(e) => updateConfig('companyInfo', { size: e.target.value })}
+                onChange={e =>
+                  updateConfig('companyInfo', { size: e.target.value })
+                }
                 placeholder="25"
               />
             </div>
@@ -235,7 +275,11 @@ export default function IndustryConfigurationWizard({
                 id="locations"
                 type="number"
                 value={config.companyInfo.locations}
-                onChange={(e) => updateConfig('companyInfo', { locations: parseInt(e.target.value) })}
+                onChange={e =>
+                  updateConfig('companyInfo', {
+                    locations: parseInt(e.target.value),
+                  })
+                }
               />
             </div>
           </div>
@@ -249,7 +293,9 @@ export default function IndustryConfigurationWizard({
               <select
                 id="payPeriod"
                 value={config.payrollSettings.payPeriod}
-                onChange={(e) => updateConfig('payrollSettings', { payPeriod: e.target.value })}
+                onChange={e =>
+                  updateConfig('payrollSettings', { payPeriod: e.target.value })
+                }
                 className="w-full p-2 border rounded"
               >
                 <option value="weekly">Weekly</option>
@@ -263,7 +309,11 @@ export default function IndustryConfigurationWizard({
                 id="overtime"
                 type="number"
                 value={config.payrollSettings.overtimeThreshold}
-                onChange={(e) => updateConfig('payrollSettings', { overtimeThreshold: parseInt(e.target.value) })}
+                onChange={e =>
+                  updateConfig('payrollSettings', {
+                    overtimeThreshold: parseInt(e.target.value),
+                  })
+                }
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -273,7 +323,11 @@ export default function IndustryConfigurationWizard({
                   id="nightStart"
                   type="time"
                   value={config.payrollSettings.nightShiftStart}
-                  onChange={(e) => updateConfig('payrollSettings', { nightShiftStart: e.target.value })}
+                  onChange={e =>
+                    updateConfig('payrollSettings', {
+                      nightShiftStart: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div>
@@ -282,7 +336,11 @@ export default function IndustryConfigurationWizard({
                   id="nightEnd"
                   type="time"
                   value={config.payrollSettings.nightShiftEnd}
-                  onChange={(e) => updateConfig('payrollSettings', { nightShiftEnd: e.target.value })}
+                  onChange={e =>
+                    updateConfig('payrollSettings', {
+                      nightShiftEnd: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -291,14 +349,22 @@ export default function IndustryConfigurationWizard({
                 <Label>{t.enableTipTracking}</Label>
                 <Switch
                   checked={config.payrollSettings.enableTipTracking}
-                  onCheckedChange={(checked) => updateConfig('payrollSettings', { enableTipTracking: checked })}
+                  onCheckedChange={checked =>
+                    updateConfig('payrollSettings', {
+                      enableTipTracking: checked,
+                    })
+                  }
                 />
               </div>
               <div className="flex items-center justify-between">
                 <Label>{t.enableShiftDifferentials}</Label>
                 <Switch
                   checked={config.payrollSettings.enableShiftDifferentials}
-                  onCheckedChange={(checked) => updateConfig('payrollSettings', { enableShiftDifferentials: checked })}
+                  onCheckedChange={checked =>
+                    updateConfig('payrollSettings', {
+                      enableShiftDifferentials: checked,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -315,10 +381,13 @@ export default function IndustryConfigurationWizard({
                     <h4 className="font-medium">{allowance.name}</h4>
                     <Switch
                       checked={allowance.enabled}
-                      onCheckedChange={(checked) => {
+                      onCheckedChange={checked => {
                         const newAllowances = [...config.allowances];
                         newAllowances[index].enabled = checked;
-                        setConfig(prev => ({ ...prev, allowances: newAllowances }));
+                        setConfig(prev => ({
+                          ...prev,
+                          allowances: newAllowances,
+                        }));
                       }}
                     />
                   </div>
@@ -327,10 +396,15 @@ export default function IndustryConfigurationWizard({
                       <Label>{t.allowanceType}</Label>
                       <select
                         value={allowance.type}
-                        onChange={(e) => {
+                        onChange={e => {
                           const newAllowances = [...config.allowances];
-                          newAllowances[index].type = e.target.value as 'percentage' | 'fixed';
-                          setConfig(prev => ({ ...prev, allowances: newAllowances }));
+                          newAllowances[index].type = e.target.value as
+                            | 'percentage'
+                            | 'fixed';
+                          setConfig(prev => ({
+                            ...prev,
+                            allowances: newAllowances,
+                          }));
                         }}
                         className="w-full p-2 border rounded"
                         disabled={!allowance.enabled}
@@ -344,10 +418,15 @@ export default function IndustryConfigurationWizard({
                       <Input
                         type="number"
                         value={allowance.value}
-                        onChange={(e) => {
+                        onChange={e => {
                           const newAllowances = [...config.allowances];
-                          newAllowances[index].value = parseFloat(e.target.value);
-                          setConfig(prev => ({ ...prev, allowances: newAllowances }));
+                          newAllowances[index].value = parseFloat(
+                            e.target.value
+                          );
+                          setConfig(prev => ({
+                            ...prev,
+                            allowances: newAllowances,
+                          }));
                         }}
                         disabled={!allowance.enabled}
                       />
@@ -369,10 +448,13 @@ export default function IndustryConfigurationWizard({
                     <h4 className="font-medium">{agreement.name}</h4>
                     <Switch
                       checked={agreement.enabled}
-                      onCheckedChange={(checked) => {
+                      onCheckedChange={checked => {
                         const newAgreements = [...config.collectiveAgreements];
                         newAgreements[index].enabled = checked;
-                        setConfig(prev => ({ ...prev, collectiveAgreements: newAgreements }));
+                        setConfig(prev => ({
+                          ...prev,
+                          collectiveAgreements: newAgreements,
+                        }));
                       }}
                     />
                   </div>
@@ -381,10 +463,13 @@ export default function IndustryConfigurationWizard({
                     <Input
                       type="date"
                       value={agreement.effectiveDate}
-                      onChange={(e) => {
+                      onChange={e => {
                         const newAgreements = [...config.collectiveAgreements];
                         newAgreements[index].effectiveDate = e.target.value;
-                        setConfig(prev => ({ ...prev, collectiveAgreements: newAgreements }));
+                        setConfig(prev => ({
+                          ...prev,
+                          collectiveAgreements: newAgreements,
+                        }));
                       }}
                       disabled={!agreement.enabled}
                     />
@@ -401,41 +486,61 @@ export default function IndustryConfigurationWizard({
             <div className="flex items-center justify-between">
               <div>
                 <Label>{t.erganiIntegration}</Label>
-                <p className="text-sm text-gray-600">Automatic ERGANI II submissions</p>
+                <p className="text-sm text-gray-600">
+                  Automatic ERGANI II submissions
+                </p>
               </div>
               <Switch
                 checked={config.complianceSettings.erganiEnabled}
-                onCheckedChange={(checked) => updateConfig('complianceSettings', { erganiEnabled: checked })}
+                onCheckedChange={checked =>
+                  updateConfig('complianceSettings', { erganiEnabled: checked })
+                }
               />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <Label>{t.efkaIntegration}</Label>
-                <p className="text-sm text-gray-600">e-EFKA contribution calculations</p>
+                <p className="text-sm text-gray-600">
+                  e-EFKA contribution calculations
+                </p>
               </div>
               <Switch
                 checked={config.complianceSettings.efkaEnabled}
-                onCheckedChange={(checked) => updateConfig('complianceSettings', { efkaEnabled: checked })}
+                onCheckedChange={checked =>
+                  updateConfig('complianceSettings', { efkaEnabled: checked })
+                }
               />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <Label>{t.digitalWorkCard}</Label>
-                <p className="text-sm text-gray-600">Digital work card integration</p>
+                <p className="text-sm text-gray-600">
+                  Digital work card integration
+                </p>
               </div>
               <Switch
                 checked={config.complianceSettings.digitalWorkCard}
-                onCheckedChange={(checked) => updateConfig('complianceSettings', { digitalWorkCard: checked })}
+                onCheckedChange={checked =>
+                  updateConfig('complianceSettings', {
+                    digitalWorkCard: checked,
+                  })
+                }
               />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <Label>{t.automaticFilings}</Label>
-                <p className="text-sm text-gray-600">Automatic government filings</p>
+                <p className="text-sm text-gray-600">
+                  Automatic government filings
+                </p>
               </div>
               <Switch
                 checked={config.complianceSettings.automaticFilings}
-                onCheckedChange={(checked) => updateConfig('complianceSettings', { automaticFilings: checked })}
+                onCheckedChange={checked =>
+                  updateConfig('complianceSettings', {
+                    automaticFilings: checked,
+                  })
+                }
               />
             </div>
           </div>
@@ -451,18 +556,26 @@ export default function IndustryConfigurationWizard({
               <CardContent className="space-y-4">
                 <div>
                   <h4 className="font-semibold">Company Information</h4>
-                  <p>{config.companyInfo.name} - {config.companyInfo.size} employees</p>
+                  <p>
+                    {config.companyInfo.name} - {config.companyInfo.size}{' '}
+                    employees
+                  </p>
                   <p>{config.companyInfo.locations} location(s)</p>
                 </div>
                 <div>
                   <h4 className="font-semibold">Payroll Settings</h4>
                   <p>Pay Period: {config.payrollSettings.payPeriod}</p>
-                  <p>Overtime: {config.payrollSettings.overtimeThreshold} hours</p>
+                  <p>
+                    Overtime: {config.payrollSettings.overtimeThreshold} hours
+                  </p>
                 </div>
                 <div>
                   <h4 className="font-semibold">{t.includedFeatures}</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    {(locale === 'en' ? industryTemplate.features : industryTemplate.featuresEl).map((feature: string, index: number) => (
+                    {(locale === 'en'
+                      ? industryTemplate.features
+                      : industryTemplate.featuresEl
+                    ).map((feature: string, index: number) => (
                       <div key={index} className="flex items-center gap-2">
                         <Check className="h-4 w-4 text-green-600" />
                         {feature}
@@ -473,8 +586,12 @@ export default function IndustryConfigurationWizard({
               </CardContent>
             </Card>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h4 className="font-semibold text-green-800 mb-2">{t.deploymentReady}</h4>
-              <p className="text-green-700 text-sm">{t.estimatedSetupTime}: {industryTemplate.setupTime}</p>
+              <h4 className="font-semibold text-green-800 mb-2">
+                {t.deploymentReady}
+              </h4>
+              <p className="text-green-700 text-sm">
+                {t.estimatedSetupTime}: {industryTemplate.setupTime}
+              </p>
             </div>
           </div>
         );
@@ -498,7 +615,10 @@ export default function IndustryConfigurationWizard({
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{t.title}</h1>
             <p className="text-gray-600">
-              {locale === 'en' ? industryTemplate.name : industryTemplate.nameEl} • {t.subtitle}
+              {locale === 'en'
+                ? industryTemplate.name
+                : industryTemplate.nameEl}{' '}
+              • {t.subtitle}
             </p>
           </div>
         </div>
@@ -510,7 +630,8 @@ export default function IndustryConfigurationWizard({
               Step {currentStep + 1} of {WIZARD_STEPS.length}
             </span>
             <span className="text-sm text-gray-600">
-              {Math.round(((currentStep + 1) / WIZARD_STEPS.length) * 100)}% Complete
+              {Math.round(((currentStep + 1) / WIZARD_STEPS.length) * 100)}%
+              Complete
             </span>
           </div>
           <Progress value={((currentStep + 1) / WIZARD_STEPS.length) * 100} />
@@ -522,21 +643,27 @@ export default function IndustryConfigurationWizard({
             const Icon = step.icon;
             const isActive = index === currentStep;
             const isCompleted = index < currentStep;
-            
+
             return (
-              <div 
+              <div
                 key={step.id}
                 className={`flex flex-col items-center gap-2 ${
-                  isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-400'
+                  isActive
+                    ? 'text-blue-600'
+                    : isCompleted
+                      ? 'text-green-600'
+                      : 'text-gray-400'
                 }`}
               >
-                <div className={`p-2 rounded-full border-2 ${
-                  isActive 
-                    ? 'border-blue-600 bg-blue-50' 
-                    : isCompleted 
-                    ? 'border-green-600 bg-green-50'
-                    : 'border-gray-300'
-                }`}>
+                <div
+                  className={`p-2 rounded-full border-2 ${
+                    isActive
+                      ? 'border-blue-600 bg-blue-50'
+                      : isCompleted
+                        ? 'border-green-600 bg-green-50'
+                        : 'border-gray-300'
+                  }`}
+                >
                   {isCompleted ? (
                     <Check className="h-4 w-4" />
                   ) : (
@@ -556,13 +683,15 @@ export default function IndustryConfigurationWizard({
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
-            {React.createElement(WIZARD_STEPS[currentStep].icon, { className: "h-5 w-5" })}
-            {locale === 'en' ? WIZARD_STEPS[currentStep].title : WIZARD_STEPS[currentStep].titleEl}
+            {React.createElement(WIZARD_STEPS[currentStep].icon, {
+              className: 'h-5 w-5',
+            })}
+            {locale === 'en'
+              ? WIZARD_STEPS[currentStep].title
+              : WIZARD_STEPS[currentStep].titleEl}
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {renderStepContent()}
-        </CardContent>
+        <CardContent>{renderStepContent()}</CardContent>
       </Card>
 
       {/* Navigation */}
@@ -571,12 +700,10 @@ export default function IndustryConfigurationWizard({
           <ArrowLeft className="h-4 w-4 mr-2" />
           {currentStep === 0 ? 'Back to Templates' : t.previous}
         </Button>
-        
+
         <div className="flex gap-3">
           {currentStep < WIZARD_STEPS.length - 1 && (
-            <Button variant="ghost">
-              {t.skip}
-            </Button>
+            <Button variant="ghost">{t.skip}</Button>
           )}
           <Button onClick={handleNext}>
             {currentStep === WIZARD_STEPS.length - 1 ? t.finish : t.next}

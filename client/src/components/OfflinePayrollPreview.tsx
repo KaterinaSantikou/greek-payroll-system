@@ -9,21 +9,24 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Calculator, 
-  Download, 
-  RefreshCw, 
-  Wifi, 
-  WifiOff, 
-  CheckCircle2, 
+import {
+  Calculator,
+  Download,
+  RefreshCw,
+  Wifi,
+  WifiOff,
+  CheckCircle2,
   AlertTriangle,
   Eye,
   Clock,
   Users,
-  Euro
+  Euro,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { offlineStorage, type OfflinePayrollPreview } from '@/lib/offlineStorage';
+import {
+  offlineStorage,
+  type OfflinePayrollPreview,
+} from '@/lib/offlineStorage';
 import { syncService } from '@/lib/syncService';
 import { useToast } from '@/hooks/use-toast';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
@@ -59,12 +62,13 @@ interface OfflinePayrollPreviewProps {
   propertyId: string;
 }
 
-export function OfflinePayrollPreview({ 
-  payPeriod = format(new Date(), 'yyyy-MM'), 
-  propertyId 
+export function OfflinePayrollPreview({
+  payPeriod = format(new Date(), 'yyyy-MM'),
+  propertyId,
 }: OfflinePayrollPreviewProps) {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [localPreview, setLocalPreview] = useState<OfflinePayrollPreview | null>(null);
+  const [localPreview, setLocalPreview] =
+    useState<OfflinePayrollPreview | null>(null);
   const [syncProgress, setSyncProgress] = useState(0);
   const [hasConflicts, setHasConflicts] = useState(false);
   const { toast } = useToast();
@@ -98,21 +102,33 @@ export function OfflinePayrollPreview({
     const handleSyncCompleted = (event: CustomEvent) => {
       setSyncProgress(100);
       loadCachedPreview();
-      
+
       if (event.detail.success) {
         toast({
-          title: "Payroll Data Synced",
-          description: "Latest payroll calculations are now available",
+          title: 'Payroll Data Synced',
+          description: 'Latest payroll calculations are now available',
         });
       }
     };
 
-    window.addEventListener('syncProgress', handleSyncProgress as EventListener);
-    window.addEventListener('syncCompleted', handleSyncCompleted as EventListener);
-    
+    window.addEventListener(
+      'syncProgress',
+      handleSyncProgress as EventListener
+    );
+    window.addEventListener(
+      'syncCompleted',
+      handleSyncCompleted as EventListener
+    );
+
     return () => {
-      window.removeEventListener('syncProgress', handleSyncProgress as EventListener);
-      window.removeEventListener('syncCompleted', handleSyncCompleted as EventListener);
+      window.removeEventListener(
+        'syncProgress',
+        handleSyncProgress as EventListener
+      );
+      window.removeEventListener(
+        'syncCompleted',
+        handleSyncCompleted as EventListener
+      );
     };
   }, [toast]);
 
@@ -126,7 +142,11 @@ export function OfflinePayrollPreview({
   };
 
   // Fetch online payroll data
-  const { data: onlinePreview, isLoading, error } = useQuery<PayrollSummary & { employees: PayrollData[] }>({
+  const {
+    data: onlinePreview,
+    isLoading,
+    error,
+  } = useQuery<PayrollSummary & { employees: PayrollData[] }>({
     queryKey: ['/api/payroll/preview', payPeriod, propertyId],
     enabled: isOnline,
     retry: false,
@@ -148,18 +168,18 @@ export function OfflinePayrollPreview({
               totalDeductions: onlinePreview.totalDeductions,
               payPeriod: onlinePreview.payPeriod,
               calculationDate: onlinePreview.calculationDate,
-              isComplete: onlinePreview.isComplete
-            }
+              isComplete: onlinePreview.isComplete,
+            },
           },
           syncStatus: 'synced',
           lastSync: new Date().toISOString(),
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
         };
 
         await offlineStorage.savePayrollPreview(offlineData);
         setLocalPreview(offlineData);
       };
-      
+
       cacheData().catch(console.error);
     }
   }, [onlinePreview, payPeriod, propertyId]);
@@ -180,24 +200,24 @@ export function OfflinePayrollPreview({
             totalDeductions: 0,
             payPeriod,
             calculationDate: new Date().toISOString(),
-            isComplete: false
-          }
+            isComplete: false,
+          },
         },
         syncStatus: 'pending',
         lastSync: 'never',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       await offlineStorage.savePayrollPreview(mockData);
       return mockData;
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       setLocalPreview(data);
       toast({
-        title: "Offline Preview Generated",
-        description: "Basic payroll preview created from local data",
+        title: 'Offline Preview Generated',
+        description: 'Basic payroll preview created from local data',
       });
-    }
+    },
   });
 
   // Force sync mutation
@@ -208,32 +228,37 @@ export function OfflinePayrollPreview({
       setSyncProgress(100);
       return result;
     },
-    onSuccess: (result) => {
+    onSuccess: result => {
       if (result.conflicts.length > 0) {
         setHasConflicts(true);
         toast({
-          title: "Sync Conflicts Detected",
+          title: 'Sync Conflicts Detected',
           description: `${result.conflicts.length} conflicts need resolution`,
-          variant: "destructive"
+          variant: 'destructive',
         });
       } else {
         toast({
-          title: "Sync Complete",
+          title: 'Sync Complete',
           description: `${result.syncedItems} items synced successfully`,
         });
       }
       queryClient.invalidateQueries({ queryKey: ['/api/payroll/preview'] });
-    }
+    },
   });
 
   // Get the data to display (online or cached)
-  const displayData = onlinePreview || (localPreview ? {
-    ...localPreview.calculations.summary,
-    employees: localPreview.employeeData
-  } : null);
+  const displayData =
+    onlinePreview ||
+    (localPreview
+      ? {
+          ...localPreview.calculations.summary,
+          employees: localPreview.employeeData,
+        }
+      : null);
 
   const isDataStale = localPreview && localPreview.syncStatus !== 'synced';
-  const lastSyncTime = localPreview?.lastSync === 'never' ? null : localPreview?.lastSync;
+  const lastSyncTime =
+    localPreview?.lastSync === 'never' ? null : localPreview?.lastSync;
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
@@ -245,20 +270,28 @@ export function OfflinePayrollPreview({
             Payroll Preview - {format(new Date(payPeriod + '-01'), 'MMMM yyyy')}
           </h1>
           <p className="text-muted-foreground">
-            {isOnline ? 'Live payroll calculations' : 'Offline mode - showing cached data'}
+            {isOnline
+              ? 'Live payroll calculations'
+              : 'Offline mode - showing cached data'}
           </p>
         </div>
-        
+
         <div className="flex items-center gap-4">
           {/* Connection Status */}
           <div className="flex items-center gap-2">
             {isOnline ? (
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-800"
+              >
                 <Wifi className="h-3 w-3 mr-1" />
                 Online
               </Badge>
             ) : (
-              <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+              <Badge
+                variant="secondary"
+                className="bg-orange-100 text-orange-800"
+              >
                 <WifiOff className="h-3 w-3 mr-1" />
                 Offline
               </Badge>
@@ -272,7 +305,9 @@ export function OfflinePayrollPreview({
             variant="outline"
             size="sm"
           >
-            <RefreshCw className={`h-3 w-3 mr-1 ${syncMutation.isPending ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-3 w-3 mr-1 ${syncMutation.isPending ? 'animate-spin' : ''}`}
+            />
             Sync
           </Button>
         </div>
@@ -298,9 +333,8 @@ export function OfflinePayrollPreview({
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            Payroll data may be outdated. Last sync: {
-              lastSyncTime ? format(new Date(lastSyncTime), 'PPp') : 'Never'
-            }
+            Payroll data may be outdated. Last sync:{' '}
+            {lastSyncTime ? format(new Date(lastSyncTime), 'PPp') : 'Never'}
             {isOnline && '. Click Sync to get the latest data.'}
           </AlertDescription>
         </Alert>
@@ -320,9 +354,12 @@ export function OfflinePayrollPreview({
         <Card>
           <CardContent className="pt-6 text-center">
             <WifiOff className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">No Offline Data Available</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              No Offline Data Available
+            </h3>
             <p className="text-muted-foreground mb-4">
-              Connect to the internet to load payroll data, or generate a basic preview from local data.
+              Connect to the internet to load payroll data, or generate a basic
+              preview from local data.
             </p>
             <Button
               onClick={() => generateOfflinePreviewMutation.mutate()}
@@ -340,14 +377,18 @@ export function OfflinePayrollPreview({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Employees</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Employees
+                </CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{displayData.totalEmployees}</div>
+                <div className="text-2xl font-bold">
+                  {displayData.totalEmployees}
+                </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Gross Pay</CardTitle>
@@ -359,7 +400,7 @@ export function OfflinePayrollPreview({
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Net Pay</CardTitle>
@@ -371,14 +412,16 @@ export function OfflinePayrollPreview({
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Status</CardTitle>
                 <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <Badge variant={displayData.isComplete ? "default" : "secondary"}>
+                <Badge
+                  variant={displayData.isComplete ? 'default' : 'secondary'}
+                >
                   {displayData.isComplete ? 'Complete' : 'Draft'}
                 </Badge>
               </CardContent>
@@ -396,25 +439,55 @@ export function OfflinePayrollPreview({
                   <table className="w-full border-collapse border border-border">
                     <thead>
                       <tr className="bg-muted">
-                        <th className="border border-border px-4 py-2 text-left">Employee</th>
-                        <th className="border border-border px-4 py-2 text-right">Regular Hours</th>
-                        <th className="border border-border px-4 py-2 text-right">Overtime</th>
-                        <th className="border border-border px-4 py-2 text-right">Gross Pay</th>
-                        <th className="border border-border px-4 py-2 text-right">Deductions</th>
-                        <th className="border border-border px-4 py-2 text-right">Net Pay</th>
+                        <th className="border border-border px-4 py-2 text-left">
+                          Employee
+                        </th>
+                        <th className="border border-border px-4 py-2 text-right">
+                          Regular Hours
+                        </th>
+                        <th className="border border-border px-4 py-2 text-right">
+                          Overtime
+                        </th>
+                        <th className="border border-border px-4 py-2 text-right">
+                          Gross Pay
+                        </th>
+                        <th className="border border-border px-4 py-2 text-right">
+                          Deductions
+                        </th>
+                        <th className="border border-border px-4 py-2 text-right">
+                          Net Pay
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {displayData.employees.map((employee: PayrollData) => (
-                        <tr key={employee.employeeId} className="hover:bg-muted/50">
-                          <td className="border border-border px-4 py-2">{employee.employeeName}</td>
-                          <td className="border border-border px-4 py-2 text-right">{employee.regularHours}</td>
-                          <td className="border border-border px-4 py-2 text-right">{employee.overtimeHours}</td>
-                          <td className="border border-border px-4 py-2 text-right">€{employee.grossPay?.toLocaleString()}</td>
-                          <td className="border border-border px-4 py-2 text-right">
-                            €{(employee.deductions?.tax + employee.deductions?.socialSecurity + employee.deductions?.other)?.toLocaleString()}
+                        <tr
+                          key={employee.employeeId}
+                          className="hover:bg-muted/50"
+                        >
+                          <td className="border border-border px-4 py-2">
+                            {employee.employeeName}
                           </td>
-                          <td className="border border-border px-4 py-2 text-right font-semibold">€{employee.netPay?.toLocaleString()}</td>
+                          <td className="border border-border px-4 py-2 text-right">
+                            {employee.regularHours}
+                          </td>
+                          <td className="border border-border px-4 py-2 text-right">
+                            {employee.overtimeHours}
+                          </td>
+                          <td className="border border-border px-4 py-2 text-right">
+                            €{employee.grossPay?.toLocaleString()}
+                          </td>
+                          <td className="border border-border px-4 py-2 text-right">
+                            €
+                            {(
+                              employee.deductions?.tax +
+                              employee.deductions?.socialSecurity +
+                              employee.deductions?.other
+                            )?.toLocaleString()}
+                          </td>
+                          <td className="border border-border px-4 py-2 text-right font-semibold">
+                            €{employee.netPay?.toLocaleString()}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -446,9 +519,16 @@ export function OfflinePayrollPreview({
             <CardContent className="pt-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-3 w-3" />
-                Last calculated: {format(new Date(displayData.calculationDate || Date.now()), 'PPp')}
+                Last calculated:{' '}
+                {format(
+                  new Date(displayData.calculationDate || Date.now()),
+                  'PPp'
+                )}
                 {lastSyncTime && lastSyncTime !== 'never' && (
-                  <span> • Last synced: {format(new Date(lastSyncTime), 'PPp')}</span>
+                  <span>
+                    {' '}
+                    • Last synced: {format(new Date(lastSyncTime), 'PPp')}
+                  </span>
                 )}
               </div>
             </CardContent>

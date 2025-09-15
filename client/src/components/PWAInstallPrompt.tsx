@@ -15,7 +15,7 @@ import {
   Clock,
   Bell,
   Shield,
-  Zap
+  Zap,
 } from 'lucide-react';
 
 interface PWAInstallPromptProps {
@@ -24,10 +24,10 @@ interface PWAInstallPromptProps {
   locale?: 'en' | 'el';
 }
 
-export default function PWAInstallPrompt({ 
-  onDismiss, 
+export default function PWAInstallPrompt({
+  onDismiss,
   variant = 'banner',
-  locale = 'en' 
+  locale = 'en',
 }: PWAInstallPromptProps) {
   const [pwaState, pwaActions] = usePWA();
   const [dismissed, setDismissed] = useState(false);
@@ -40,45 +40,45 @@ export default function PWAInstallPrompt({
 
   const translations = {
     en: {
-      title: "Install PayrollSync App",
-      subtitle: "Get the full Greek payroll experience",
+      title: 'Install PayrollSync App',
+      subtitle: 'Get the full Greek payroll experience',
       features: {
-        offline: "Work offline with cached data",
-        notifications: "Greek payroll deadline alerts", 
-        performance: "Faster than website version",
-        homescreen: "Quick access from home screen"
+        offline: 'Work offline with cached data',
+        notifications: 'Greek payroll deadline alerts',
+        performance: 'Faster than website version',
+        homescreen: 'Quick access from home screen',
       },
       benefits: [
-        "ERGANI II notifications",
-        "Offline payroll access",
-        "Lightning fast performance",
-        "Professional mobile experience"
+        'ERGANI II notifications',
+        'Offline payroll access',
+        'Lightning fast performance',
+        'Professional mobile experience',
       ],
-      install: "Install App",
-      dismiss: "Maybe Later",
-      details: "See Benefits",
-      installing: "Installing..."
+      install: 'Install App',
+      dismiss: 'Maybe Later',
+      details: 'See Benefits',
+      installing: 'Installing...',
     },
     el: {
-      title: "Εγκατάσταση PayrollSync App",
-      subtitle: "Λάβετε την πλήρη ελληνική εμπειρία μισθοδοσίας",
+      title: 'Εγκατάσταση PayrollSync App',
+      subtitle: 'Λάβετε την πλήρη ελληνική εμπειρία μισθοδοσίας',
       features: {
-        offline: "Εργασία offline με cached δεδομένα",
-        notifications: "Ειδοποιήσεις ελληνικών προθεσμιών μισθοδοσίας",
-        performance: "Γρηγορότερο από την ιστοσελίδα",
-        homescreen: "Γρήγορη πρόσβαση από την αρχική οθόνη"
+        offline: 'Εργασία offline με cached δεδομένα',
+        notifications: 'Ειδοποιήσεις ελληνικών προθεσμιών μισθοδοσίας',
+        performance: 'Γρηγορότερο από την ιστοσελίδα',
+        homescreen: 'Γρήγορη πρόσβαση από την αρχική οθόνη',
       },
       benefits: [
-        "Ειδοποιήσεις ΕΡΓΑΝΗ ΙΙ",
-        "Offline πρόσβαση μισθοδοσίας", 
-        "Αστραπιαία γρήγορη απόδοση",
-        "Επαγγελματική mobile εμπειρία"
+        'Ειδοποιήσεις ΕΡΓΑΝΗ ΙΙ',
+        'Offline πρόσβαση μισθοδοσίας',
+        'Αστραπιαία γρήγορη απόδοση',
+        'Επαγγελματική mobile εμπειρία',
       ],
-      install: "Εγκατάσταση App",
-      dismiss: "Ίσως Αργότερα",
-      details: "Δείτε τα Οφέλη",
-      installing: "Εγκατάσταση..."
-    }
+      install: 'Εγκατάσταση App',
+      dismiss: 'Ίσως Αργότερα',
+      details: 'Δείτε τα Οφέλη',
+      installing: 'Εγκατάσταση...',
+    },
   };
 
   const t = translations[locale];
@@ -86,15 +86,15 @@ export default function PWAInstallPrompt({
 
   const handleInstall = async () => {
     setIsInstalling(true);
-    
+
     try {
       await pwaActions.promptInstall();
-      
+
       // Track installation attempt
       if (typeof window !== 'undefined' && (window as any).gtag) {
         (window as any).gtag('event', 'pwa_install_attempt', {
           event_category: 'pwa',
-          event_label: locale
+          event_label: locale,
         });
       }
     } catch (error) {
@@ -107,12 +107,12 @@ export default function PWAInstallPrompt({
   const handleDismiss = () => {
     setDismissed(true);
     onDismiss?.();
-    
+
     // Track dismissal
     if (typeof window !== 'undefined' && (window as any).gtag) {
       (window as any).gtag('event', 'pwa_install_dismissed', {
         event_category: 'pwa',
-        event_label: locale
+        event_label: locale,
       });
     }
   };
@@ -131,7 +131,7 @@ export default function PWAInstallPrompt({
               <div className="text-blue-100 text-sm">{t.subtitle}</div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <Button
               size="sm"
@@ -168,7 +168,7 @@ export default function PWAInstallPrompt({
             </Button>
           </div>
         </div>
-        
+
         {/* Expandable details */}
         {showDetails && (
           <div className="mt-4 pt-4 border-t border-white/20">

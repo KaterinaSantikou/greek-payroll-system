@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
-import { PayrollRunWizard } from "./PayrollRunWizard";
-import { ExceptionsReview } from "./ExceptionsReview";
-import { FilingsPanel } from "./FilingsPanel";
-import { PaymentsCockpit } from "./PaymentsCockpit";
+import { useEffect, useState } from 'react';
+import { PayrollRunWizard } from './PayrollRunWizard';
+import { ExceptionsReview } from './ExceptionsReview';
+import { FilingsPanel } from './FilingsPanel';
+import { PaymentsCockpit } from './PaymentsCockpit';
 
 interface EmbedFrameProps {
-  surface: 'payroll_run' | 'exceptions_review' | 'filings_panel' | 'payments_cockpit';
+  surface:
+    | 'payroll_run'
+    | 'exceptions_review'
+    | 'filings_panel'
+    | 'payments_cockpit';
   token: string;
   tenantId: string;
   locale?: string;
@@ -13,24 +17,27 @@ interface EmbedFrameProps {
   runId?: string;
 }
 
-export function EmbedFrame({ 
-  surface, 
-  token, 
-  tenantId, 
-  locale = 'en', 
+export function EmbedFrame({
+  surface,
+  token,
+  tenantId,
+  locale = 'en',
   theme = 'light',
-  runId 
+  runId,
 }: EmbedFrameProps) {
   const [ready, setReady] = useState(false);
 
   // Handle postMessage communication with parent
   const sendEvent = (eventName: string, data: any) => {
     if (window.parent !== window) {
-      window.parent.postMessage({
-        type: 'payroll_event',
-        eventName,
-        data,
-      }, '*');
+      window.parent.postMessage(
+        {
+          type: 'payroll_event',
+          eventName,
+          data,
+        },
+        '*'
+      );
     }
   };
 
@@ -53,7 +60,7 @@ export function EmbedFrame({
     };
 
     window.addEventListener('message', handleMessage);
-    
+
     // Send initial ready signal
     setTimeout(() => {
       if (window.parent !== window) {
@@ -83,19 +90,17 @@ export function EmbedFrame({
   };
 
   return (
-    <div className={`p-4 ${theme === 'dark' ? 'dark bg-gray-900 text-white' : 'bg-white'}`}>
+    <div
+      className={`p-4 ${theme === 'dark' ? 'dark bg-gray-900 text-white' : 'bg-white'}`}
+    >
       {surface === 'payroll_run' && (
         <PayrollRunWizard {...surfaceProps} runId={runId} />
       )}
       {surface === 'exceptions_review' && (
         <ExceptionsReview {...surfaceProps} />
       )}
-      {surface === 'filings_panel' && (
-        <FilingsPanel {...surfaceProps} />
-      )}
-      {surface === 'payments_cockpit' && (
-        <PaymentsCockpit {...surfaceProps} />
-      )}
+      {surface === 'filings_panel' && <FilingsPanel {...surfaceProps} />}
+      {surface === 'payments_cockpit' && <PaymentsCockpit {...surfaceProps} />}
     </div>
   );
 }
