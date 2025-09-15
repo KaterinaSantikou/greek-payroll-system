@@ -89,6 +89,22 @@ else
     exit 1
 fi
 
+print_info "7. Running payroll run integration tests..."
+if npx jest tests/payroll/payroll-run-integration.test.ts --coverage --collectCoverageFrom="lib/payroll/**/*.ts,server/services/SeveranceRulesService.ts" --coverageDirectory=coverage/payroll/payroll-runs --testTimeout=30000; then
+    print_status "Payroll run integration tests passed"
+else
+    print_error "Payroll run integration tests failed"
+    exit 1
+fi
+
+print_info "8. Running system integration tests..."
+if npx jest tests/payroll/payroll-system-integration.test.ts --coverage --collectCoverageFrom="lib/payroll/**/*.ts,server/services/**/*.ts" --coverageDirectory=coverage/payroll/system --testTimeout=60000; then
+    print_status "System integration tests passed"
+else
+    print_error "System integration tests failed"
+    exit 1
+fi
+
 # Run all payroll tests together with comprehensive coverage
 print_info "7. Running complete payroll test suite..."
 if npx jest tests/payroll/ --coverage --collectCoverageFrom="lib/payroll/**/*.ts,server/services/SeveranceRulesService.ts" --coverageDirectory=coverage/payroll/complete --coverageReporters=["text", "lcov", "html"] --coverageThreshold='{"global":{"branches":85,"functions":85,"lines":85,"statements":85}}'; then
