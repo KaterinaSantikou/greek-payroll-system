@@ -6,8 +6,9 @@ BACKLOG_DIR = ROOT / "tasks" / "backlog"
 PENDING = ROOT / "tasks" / "pending"
 DONE = ROOT / "tasks" / "done"
 
-LOGIC_FILE = BACKLOG_DIR / "improvement_ideas.md"
-UI_FILE = BACKLOG_DIR / "ui_ux_improvement_ideas.md"
+BACKLOG_FILES = [
+    BACKLOG_DIR / "analytical_improvements.md"
+]
 
 GITHUB_REPO = "KaterinaSantikou/greek-payroll-system"  # Updated to your actual repo
 
