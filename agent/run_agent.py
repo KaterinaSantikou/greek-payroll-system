@@ -627,6 +627,13 @@ def main():
             print("❌ Payroll math validation failed.")
             validation_failed = True
     
+    if not validation_failed:
+        print("🗄️ Running schema migration validation...")
+        schema_valid = validate_schema_migrations(changed)
+        if not schema_valid:
+            print("❌ Schema migration validation failed.")
+            validation_failed = True
+    
     if validation_failed:
         if backup_created:
             print("🔄 Rolling back changes due to validation failure...")
