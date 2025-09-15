@@ -6,85 +6,66 @@
  * updated when labor laws change without code modifications.
  */
 
-import { getGreekLawConfig } from '../config/greek-law-config.js';
+import { CachedConstants } from '../cache/LegalConstantsCache.js';
 
 // =============================================================================
-// CONFIGURABLE CONSTANTS - LOADED FROM EXTERNAL CONFIGURATION
+// HIGH-PERFORMANCE CACHED CONSTANTS 
 // =============================================================================
 
-let configCache: Awaited<ReturnType<typeof getGreekLawConfig>> | null = null;
-let cacheExpiry: number = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
 /**
- * Get current configuration with caching
- */
-async function getCurrentConfig() {
-  const now = Date.now();
-  if (!configCache || now > cacheExpiry) {
-    configCache = await getGreekLawConfig();
-    cacheExpiry = now + CACHE_TTL;
-  }
-  return configCache;
-}
-
-/**
- * Greek Income Tax Brackets - Configurable
- * Updates automatically when GREEK_LAW_VERSION changes
+ * Greek Income Tax Brackets - High-Performance Cached
+ * Updates automatically when legal version changes
  */
 export async function getGreekTaxBrackets() {
-  const config = await getCurrentConfig();
-  return config.taxBrackets;
+  return CachedConstants.getTaxBrackets();
 }
 
 /**
- * EFKA Social Security Rates - Configurable
- * Updates automatically when EFKA_RATES_VERSION changes
+ * EFKA Social Security Rates - High-Performance Cached
+ * Updates automatically when legal version changes
  */
 export async function getEfkaRates() {
-  const config = await getCurrentConfig();
-  return config.efkaRates;
+  return CachedConstants.getEfkaRates();
 }
 
 /**
- * Solidarity Tax Brackets - Configurable
+ * Solidarity Tax Brackets - High-Performance Cached
  */
 export async function getSolidarityTaxBrackets() {
-  const config = await getCurrentConfig();
-  return config.solidarityTaxBrackets;
+  const constants = await CachedConstants.getAllConstants();
+  return constants.solidarityTaxBrackets;
 }
 
 /**
- * Minimum Wage Regulations - Configurable
- * Updates automatically when MINIMUM_WAGE_VERSION changes
+ * Minimum Wage Regulations - High-Performance Cached
+ * Updates automatically when legal version changes
  */
 export async function getMinimumWage() {
-  const config = await getCurrentConfig();
-  return config.minimumWage;
+  return CachedConstants.getMinimumWage();
 }
 
 /**
- * Working Time Limits - Configurable
+ * Working Time Limits - High-Performance Cached
  */
 export async function getWorkingTimeLimits() {
-  const config = await getCurrentConfig();
-  return config.workingTimeLimits;
+  const constants = await CachedConstants.getAllConstants();
+  return constants.workingTimeLimits;
 }
 
 /**
- * Tax-Free Benefits Limits - Configurable
+ * Tax-Free Benefits Limits - High-Performance Cached
  */
 export async function getTaxFreeLimits() {
-  const config = await getCurrentConfig();
-  return config.taxFreeLimits;
+  const constants = await CachedConstants.getAllConstants();
+  return constants.taxFreeLimits;
 }
 
 /**
- * Tips Taxation Rules - Configurable
+ * Tips Taxation Rules - High-Performance Cached
  */
 export async function getTipsRules() {
-  const config = await getCurrentConfig();
-  return config.tipsRules;
+  const constants = await CachedConstants.getAllConstants();
+  return constants.tipsRules;
 }
 
 // =============================================================================
