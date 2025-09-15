@@ -103,9 +103,156 @@ def apply_file_blocks(response_text):
         text = text[end+len(FILE_BLOCK_END):]
     return changed
 
+def parse_task_metadata(task_file_path):
+    """Parse metadata from the top of a task file"""
+    try:
+        content = pathlib.Path(task_file_path).read_text(encoding="utf-8")
+        lines = content.split('\n')
+        
+        metadata = {}
+        i = 0
+        
+        # Parse metadata from top of file (before any markdown headers)
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            # Stop at first markdown header or empty line after metadata
+            if line.startswith('#') or (line == '' and metadata):
+                break
+                
+            # Parse key: value pairs
+            if ':' in line and not line.startswith('#'):
+                key, value = line.split(':', 1)
+                key = key.strip().lower()
+                value = value.strip()
+                
+                if key == 'priority':
+                    metadata['priority'] = value.lower()
+                elif key == 'depends_on':
+                    # Support comma-separated dependencies
+                    deps = [d.strip() for d in value.split(',') if d.strip()]
+                    metadata['depends_on'] = deps
+                elif key in ['tags', 'category', 'type']:
+                    metadata[key] = value
+                    
+            i += 1
+            
+        return metadata
+    except Exception as e:
+        print(f"⚠️ Could not parse metadata from {task_file_path}: {e}")
+        return {}
+
+def check_dependencies_met(dependencies):
+    """Check if all dependencies are completed (exist in /done folder)"""
+    if not dependencies:
+        return True, []
+    
+    done_files = list((ROOT / "tasks/done").glob("*.md"))
+    done_names = {f.stem.lower() for f in done_files}
+    
+    # Also check for partial matches (task names might have timestamps)
+    done_content = set()
+    for done_file in done_files:
+        try:
+            content = done_file.read_text(encoding="utf-8").lower()
+            done_content.add(content)
+        except:
+            pass
+    
+    unmet_deps = []
+    for dep in dependencies:
+        dep_lower = dep.lower()
+        
+        # Check exact name match
+        if dep_lower in done_names:
+            continue
+            
+        # Check partial name match
+        if any(dep_lower in name for name in done_names):
+            continue
+            
+        # Check content match (dependency mentioned in completed task)
+        if any(dep_lower in content for content in done_content):
+            continue
+            
+        unmet_deps.append(dep)
+    
+    return len(unmet_deps) == 0, unmet_deps
+
+def get_task_priority_score(priority):
+    """Convert priority string to numeric score (higher = more important)"""
+    priority_map = {
+        'critical': 100,
+        'high': 80,
+        'medium': 50,
+        'normal': 50,
+        'low': 20,
+        'background': 10
+    }
+    return priority_map.get(priority, 50)  # Default to medium
+
 def pick_next_task():
-    pending = sorted(glob.glob(str(ROOT / "tasks/pending/*.md")))
-    return pending[0] if pending else None
+    """Pick the next task based on priority and dependencies"""
+    pending_files = list((ROOT / "tasks/pending").glob("*.md"))
+    if not pending_files:
+        return None
+    
+    print(f"📋 Evaluating {len(pending_files)} pending tasks...")
+    
+    # Parse all tasks with metadata
+    task_candidates = []
+    blocked_tasks = []
+    
+    for task_file in pending_files:
+        metadata = parse_task_metadata(task_file)
+        priority = metadata.get('priority', 'medium')
+        dependencies = metadata.get('depends_on', [])
+        
+        # Check if dependencies are met
+        deps_met, unmet_deps = check_dependencies_met(dependencies)
+        
+        if deps_met:
+            priority_score = get_task_priority_score(priority)
+            task_candidates.append({
+                'file': str(task_file),
+                'priority_score': priority_score,
+                'priority': priority,
+                'dependencies': dependencies
+            })
+        else:
+            blocked_tasks.append({
+                'file': str(task_file),
+                'unmet_deps': unmet_deps,
+                'priority': priority
+            })
+    
+    # Report blocked tasks
+    if blocked_tasks:
+        print("⏸️ Blocked tasks waiting for dependencies:")
+        for blocked in blocked_tasks:
+            task_name = pathlib.Path(blocked['file']).stem
+            deps = ', '.join(blocked['unmet_deps'])
+            print(f"  - {task_name} (priority: {blocked['priority']}) → waiting for: {deps}")
+    
+    # No runnable tasks
+    if not task_candidates:
+        if blocked_tasks:
+            print("❌ All tasks are blocked by dependencies")
+        else:
+            print("❌ No pending tasks found")
+        return None
+    
+    # Sort by priority (highest first), then by filename for consistency
+    task_candidates.sort(key=lambda t: (-t['priority_score'], t['file']))
+    
+    selected = task_candidates[0]
+    task_name = pathlib.Path(selected['file']).stem
+    print(f"🎯 Selected task: {task_name} (priority: {selected['priority']})")
+    
+    if selected['dependencies']:
+        print(f"✅ Dependencies satisfied: {', '.join(selected['dependencies'])}")
+    
+    return selected['file']
 
 def read_knowledge():
     """Read the current AI knowledge base"""
