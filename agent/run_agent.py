@@ -2869,6 +2869,14 @@ def main():
             print("💾 Creating git checkpoint after merging validated changes...")
             try:
                 safe_run(["git", "add", "."])
+                
+                # Run pre-commit validation before committing
+                print("🛡️ Running pre-commit validation before committing...")
+                if not run_pre_commit_validation():
+                    print("❌ Pre-commit validation failed - commit canceled!")
+                    print("🔄 Changes are staged but not committed. Fix validation errors and run again.")
+                    return
+                
                 safe_run(["git", "commit", "-m", f"AI Agent: Completed task from sandbox"])
                 print("✅ Changes committed to main repository")
             except subprocess.CalledProcessError:
