@@ -9,8 +9,6 @@ DONE = ROOT / "tasks" / "done"
 LOGIC_FILE = BACKLOG_DIR / "improvement_ideas.md"
 UI_FILE = BACKLOG_DIR / "ui_ux_improvement_ideas.md"
 
-next_type = "logic"
-
 def pop_first_idea(file_path):
     if not file_path.exists():
         return None
@@ -39,6 +37,7 @@ def get_last_done_task_title():
     # fallback to filename
     return done_tasks[0].stem
 
+next_type = "logic"
 while True:
     if backlog_empty() and not any(PENDING.glob("*.md")):
         print("✅ All backlog tasks are complete. No tasks left to build. Exiting cleanly.")
