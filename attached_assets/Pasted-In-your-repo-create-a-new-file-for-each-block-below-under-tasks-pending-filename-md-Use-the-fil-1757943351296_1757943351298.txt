@@ -1,0 +1,173 @@
+In your repo, create a new file for each block below under:
+tasks/pending/<filename>.md
+(Use the filenames I provide.)
+
+Start your agent (continuous mode or single-run).
+It will pick up each task, build it, push to dev, and move it to /tasks/done.
+
+01 — Law Constants Registry & Versioning
+
+File: tasks/pending/01-law-constants-registry.md
+
+Goal
+Centralize all legal constants (EFKA employee/employer percentages, min wage monthly/weekly/daily, Christmas/Easter/Leave bonus rules, 5-day/6-day rules, overtime premiums, severance multipliers) with date-based versioning so payroll uses the correct law version per pay period.
+
+Acceptance Criteria
+
+ Add shared/law-constants.ts exporting a LAW object keyed by YYYY-MM-DD effective dates, and lawFor(dateISO) resolver.
+
+ Replace any hardcoded rates in server/greekPayrollCalculator.ts, overtimePreventionEngine.ts, etc. with reads from lawFor(payPeriod).
+
+ Preserve past law versions; never overwrite historical entries.
+
+ Unit tests verify correct version selection for edge dates (law change mid-month).
+
+ Baseline tests keep passing (no regression).
+
+Files Allowed/Touch
+
+Create: shared/law-constants.ts
+
+Update: server/greekPayrollCalculator.ts, server/overtimePreventionEngine.ts, server/modernPayrollEngine.ts, server/services/PayrollBusinessRulesService.ts, tests/*
+
+Tests
+
+tests/law-constants-resolver.test.ts: select old vs new versions by date.
+
+Update baseline suite to use resolver.
+
+Dependencies
+None (do this first).
+
+Non-Goals
+No UI; no DB changes today.
+
+02 — Compliance Guardrails v1 (EFKA/min-wage/overtime sanity)
+
+File: tasks/pending/02-compliance-guardrails-v1.md
+
+Goal
+Create runtime guardrails to block illegal or nonsensical outputs.
+
+Acceptance Criteria
+
+ Expand server/complianceGuardrails.ts with checks:
+
+min wage enforcement (monthly/weekly/daily as applicable)
+
+EFKA ceilings/floors if relevant; negative/NaN amounts forbidden
+
+overtime caps: legal overtime tiers and maximums per ΣΣΕ/Ν.4093/2012
+
+ If guard fails: return structured error { code, message, details } and abort payroll write.
+
+ Cover these with unit tests.
+
+ Add logging to categorize violations (Logic/Input/LawConflict).
+
+Files
+
+Update: server/complianceGuardrails.ts, server/modernPayrollEngine.ts (guardrail call)
+
+Tests: tests/compliance-guardrails.test.ts
+
+Dependencies
+01-law-constants-registry.md (to read constants).
+
+Non-Goals
+No external submissions yet (EFKA/ERGANI).
+
+03 — Domain Split: Pure Rules vs Engine vs Services
+
+File: tasks/pending/03-domain-split-core-engine-services.md
+
+Goal
+Refactor to DDD structure so pure Greek payroll formulas are isolated from IO and DB.
+
+Acceptance Criteria
+
+ Create server/core/greekRules/ with pure functions (no DB):
+
+salary proration, EFKA calc, overtime calc, allowances, severance
+
+ Engine orchestration in server/engine/ (compose pure functions, call guardrails).
+
+ Service layer in server/services/ (DB, external connectors, files).
+
+ Update imports in server/greekPayrollCalculator.ts to call new modules.
+
+ Update tests to import pure functions for unit tests.
+
+Files
+
+Create: server/core/greekRules/*, server/engine/*
+
+Update: server/greekPayrollCalculator.ts, server/services/*, tests
+
+Dependencies
+01, 02
+
+Non-Goals
+No UI work.
+
+04 — Golden Regression Suite (JSON snapshots)
+
+File: tasks/pending/04-golden-regression-suite.md
+
+Goal
+Prevent regressions in core math via snapshot tests for multiple personas.
+
+Acceptance Criteria
+
+ Add tests/regression/cases/*.json (10+ personas):
+
+full-time 5-day, 6-day; part-time; seasonal; new hire mid-month; termination mid-month; split shift; unpaid leave; maternity; under-25; min-wage worker.
+
+ Add tests/regression/payroll-regression.test.ts that runs engine on each case and compares JSON to saved snapshots.
+
+ Command npm run test:baseline also runs these.
+
+Files
+
+Create: tests/regression/cases/*.json, tests/regression/payroll-regression.test.ts
+
+Update: package.json scripts
+
+Dependencies
+03 (so tests target pure functions/engine).
+
+Non-Goals
+No external APIs.
+
+05 — Time & Attendance Integration (Phase 1: Abstraction)
+
+File: tasks/pending/05-time-attendance-abstraction.md
+
+Goal
+Prepare for Ψηφιακή Κάρτα Εργασίας (Digital Work Card) and T&A vendors by building a normalized T&A ingestion layer that feeds payroll.
+
+Acceptance Criteria
+
+ Create server/services/TimeAttendanceService.ts with:
+
+ingestShifts(profile, events) → normalized daily hours/overtime candidates
+
+handles midnight crossing, breaks, geo/OTP placeholders
+
+ Add matching types in shared/schema.ts or shared/time-schema.ts.
+
+ Engine consumes normalized hours; apply guardrails for illegal schedules.
+
+ Unit tests for split shifts, >24h/day prevention, day-of-rest validation.
+
+Files
+
+Create: server/services/TimeAttendanceService.ts, shared/time-schema.ts
+
+Update: engine to consume normalized hours; tests
+
+Dependencies
+03
+
+Non-Goals
+No vendor adapters yet (that’s Phase 2).
