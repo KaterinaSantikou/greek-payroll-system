@@ -2448,8 +2448,8 @@ def main():
                 return
         
             # Create git checkpoint before applying changes
-        print("💾 Creating git checkpoint before applying changes...")
-        try:
+            print("💾 Creating git checkpoint before applying changes...")
+            try:
             safe_run(["git", "stash", "push", "-m", "agent-backup", "--include-untracked"])
             backup_created = True
             print("✅ Git checkpoint created")
