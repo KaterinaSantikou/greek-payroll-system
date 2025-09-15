@@ -2312,9 +2312,9 @@ def main():
             initial_analysis = run_change_impact_analysis()
             impact_context = format_impact_analysis_for_prompt(initial_analysis)
 
-        # PHASE 1: PLANNING
-        print("🎯 PHASE 1: Creating detailed implementation plan...")
-        implementation_plan = execute_planning_phase(
+            # PHASE 1: PLANNING
+            print("🎯 PHASE 1: Creating detailed implementation plan...")
+            implementation_plan = execute_planning_phase(
             task_text, tree, knowledge, architecture_guide, dependency_summary, evolved_guidelines, impact_context
         )
         
