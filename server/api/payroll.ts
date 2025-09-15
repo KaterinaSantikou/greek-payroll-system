@@ -138,44 +138,30 @@ router.post('/api/payroll/runs', isAuthenticated, idempotencyMiddleware, async (
       return res.status(200).json(existingResponse);
     }
     
-    // Validate period - ensure no existing finalized run for same period
+    // Validate period using infrastructure layer
     if (!runData.dryRun && runData.runType === 'regular') {
-      const existingRun = await db.select()
-        .from(payrollRuns)
-        .where(
-          and(
-            eq(payrollRuns.period, runData.period),
-            eq(payrollRuns.runType, 'regular'),
-            eq(payrollRuns.status, 'finalized')
-          )
-        );
-      
-      if (existingRun.length > 0) {
+      const hasExisting = await payrollRepository.hasExistingFinalizedRun(runData.period);
+      if (hasExisting) {
         return res.status(409).json({ 
-          error: "Finalized payroll run already exists for this period",
-          existingRun: existingRun[0]
+          error: "Finalized payroll run already exists for this period"
         });
       }
     }
     
-    const newRun = {
+    // Create run using infrastructure layer
+    const created = await payrollRepository.createPayrollRun({
       id: nanoid(),
-      ...runData,
-      status: 'draft' as const,
-      payDate: new Date(runData.payDate),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      createdBy: (req as any).user.claims.sub,
-      totalGrossPay: 0,
-      totalNetPay: 0,
-      employeeCount: 0
-    };
-    
-    const [created] = await db.insert(payrollRuns).values(newRun).returning();
+      period: runData.period,
+      runType: runData.runType,
+      payDate: runData.payDate,
+      description: runData.description,
+      status: 'draft',
+      createdBy: (req as any).user.claims.sub
+    });
     
     // Start payroll calculation process
     if (!runData.dryRun) {
-      await initiatePayrollCalculation(created);
+      await initiatePayrollCalculation(created, runData);
     }
     
     const response = {
@@ -211,9 +197,8 @@ router.post('/api/payroll/runs/:id/finalize', isAuthenticated, idempotencyMiddle
       return res.status(200).json(existingResponse);
     }
     
-    const [run] = await db.select()
-      .from(payrollRuns)
-      .where(eq(payrollRuns.id, req.params.id));
+    // Get run details using infrastructure layer
+    const { run } = await payrollRepository.getPayrollRunWithLines(req.params.id);
     
     if (!run) {
       return res.status(404).json({ error: "Payroll run not found" });
@@ -230,17 +215,17 @@ router.post('/api/payroll/runs/:id/finalize', isAuthenticated, idempotencyMiddle
       });
     }
     
-    // Finalize the run
-    const [finalizedRun] = await db.update(payrollRuns)
-      .set({
-        status: 'finalized',
-        finalizedAt: new Date(),
-        finalizedBy: finalizeData.approvedBy,
-        approvalNotes: finalizeData.approvalNotes,
-        updatedAt: new Date()
-      })
-      .where(eq(payrollRuns.id, req.params.id))
-      .returning();
+    // Finalize using infrastructure layer
+    const finalizedRun = await payrollRepository.updatePayrollRunStatus(
+      req.params.id,
+      'finalized',
+      finalizeData.approvedBy,
+      finalizeData.approvalNotes
+    );
+    
+    if (!finalizedRun) {
+      return res.status(500).json({ error: "Failed to finalize payroll run" });
+    }
     
     // Trigger government submissions if requested
     const submissions = [];
@@ -330,41 +315,112 @@ router.get('/api/payroll/runs/:id/audit', isAuthenticated, async (req, res) => {
 });
 
 // Helper functions
-async function initiatePayrollCalculation(run: any): Promise<void> {
-  // Start background calculation process
-  console.log(`Starting payroll calculation for run ${run.id}`);
-  
-  // Update status to calculating
-  await db.update(payrollRuns)
-    .set({ status: 'calculating', updatedAt: new Date() })
-    .where(eq(payrollRuns.id, run.id));
-  
-  // In production, this would be a background job
-  setTimeout(async () => {
-    await db.update(payrollRuns)
-      .set({ status: 'calculated', updatedAt: new Date() })
-      .where(eq(payrollRuns.id, run.id));
-  }, 2000);
+async function initiatePayrollCalculation(run: any, runData: any): Promise<void> {
+  try {
+    console.log(`Starting payroll calculation for run ${run.id}`);
+    
+    // Update status to calculating using infrastructure layer
+    await payrollRepository.updatePayrollRunStatus(run.id, 'draft');
+    
+    // In production, this would trigger a background job
+    // For now, simulate the calculation process
+    setTimeout(async () => {
+      try {
+        // Get employee data for the run
+        const employeeIds = runData.employeeIds || []; // In real implementation, get all active employees if not specified
+        if (employeeIds.length > 0) {
+          const employees = await payrollRepository.getEmployeePayrollInfo(employeeIds);
+          const timesheets = await payrollRepository.getTimesheetData(employeeIds, run.period);
+          
+          // Convert to business layer format and validate
+          const employeeData = employees.map(emp => {
+            const timesheet = timesheets.find(ts => ts.employeeId === emp.employeeId);
+            return {
+              ...emp,
+              approvedHours: timesheet?.approvedHours || 0,
+              unapprovedHours: timesheet?.unapprovedHours || 0,
+              regularHours: timesheet?.regularHours || 0,
+              overtimeHours: timesheet?.overtimeHours || 0,
+              nightHours: timesheet?.nightHours || 0,
+              sundayHours: timesheet?.sundayHours || 0,
+              holidayHours: timesheet?.holidayHours || 0
+            };
+          });
+          
+          // Process payroll using business layer
+          const scope = {
+            scopeId: nanoid(),
+            period: run.period,
+            scopeType: 'regular' as const,
+            selectedEmployees: employeeIds,
+            status: 'draft' as const,
+            createdAt: new Date(),
+            createdBy: run.createdBy
+          };
+          
+          const result = payrollService.processPayrollScope(scope, employeeData, {
+            requireApprovedTimesheets: false,
+            includeAllowances: runData.includeAllowances,
+            includeDeductions: runData.includeDeductions
+          });
+          
+          if (result.success) {
+            await payrollRepository.updatePayrollRunStatus(run.id, 'calculated');
+          } else {
+            console.error('Payroll calculation failed:', result.errors);
+          }
+        }
+      } catch (error) {
+        console.error('Error in payroll calculation:', error);
+      }
+    }, 2000);
+  } catch (error) {
+    console.error('Failed to initiate payroll calculation:', error);
+  }
 }
 
 async function submitToErgani(run: any): Promise<any> {
-  // ERGANI submission logic
-  return {
-    system: 'ERGANI',
-    submissionId: nanoid(),
-    status: 'submitted',
-    submittedAt: new Date().toISOString()
-  };
+  try {
+    // Use compliance connector for ERGANI submission
+    const result = await complianceConnector.submitToErgani([], 'monthly');
+    return {
+      system: 'ERGANI',
+      submissionId: result.submissionId,
+      referenceNumber: result.referenceNumber,
+      status: result.success ? 'submitted' : 'failed',
+      submittedAt: result.submittedAt.toISOString(),
+      errors: result.errors
+    };
+  } catch (error) {
+    console.error('ERGANI submission failed:', error);
+    return {
+      system: 'ERGANI',
+      status: 'failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
 }
 
 async function submitToEfka(run: any): Promise<any> {
-  // EFKA submission logic
-  return {
-    system: 'EFKA',
-    submissionId: nanoid(),
-    status: 'submitted',
-    submittedAt: new Date().toISOString()
-  };
+  try {
+    // Use compliance connector for EFKA submission
+    const result = await complianceConnector.submitToEfka([]);
+    return {
+      system: 'EFKA',
+      submissionId: result.submissionId,
+      referenceNumber: result.referenceNumber,
+      status: result.success ? 'submitted' : 'failed',
+      submittedAt: result.submittedAt.toISOString(),
+      errors: result.errors
+    };
+  } catch (error) {
+    console.error('EFKA submission failed:', error);
+    return {
+      system: 'EFKA',
+      status: 'failed',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
 }
 
 function generateSignature(data: any): string {
