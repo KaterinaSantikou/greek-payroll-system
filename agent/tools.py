@@ -264,14 +264,35 @@ class BuildTool:
 
     @staticmethod
     def build_project(cwd: Optional[pathlib.Path] = None) -> ToolResult:
-        """Build the project and clean up artifacts"""
-        print("🏗️ Building project...")
+        """Build the project with static analysis validation"""
+        print("🏗️ Building project with static analysis...")
+        working_dir = cwd or ROOT
+        
+        # 1. Run ESLint check
+        print("🔍 Running ESLint static analysis...")
+        lint_result = BuildTool.run_eslint(cwd)
+        if not lint_result.success:
+            return lint_result
+        
+        # 2. Run Prettier format check
+        print("📐 Running Prettier format check...")
+        format_result = BuildTool.run_prettier_check(cwd)
+        if not format_result.success:
+            return format_result
+        
+        # 3. Run TypeScript check
+        print("🔍 Running TypeScript compilation check...")
+        ts_result = BuildTool.typescript_check(cwd)
+        if not ts_result.success:
+            return ts_result
+        
+        # 4. Run build command
+        print("🔧 Running build process...")
         result = BuildTool.run_npm_command(["npm", "run", "build"], timeout=180, cwd=cwd)
         
         # Clean up build artifacts to avoid repo pollution
         if result.success:
             try:
-                working_dir = cwd or ROOT
                 build_dir = working_dir / "dist"
                 if build_dir.exists():
                     shutil.rmtree(build_dir)
@@ -280,6 +301,122 @@ class BuildTool:
                 pass  # Don't fail the build for cleanup issues
                 
         return result
+    
+    @staticmethod
+    def run_eslint(cwd: Optional[pathlib.Path] = None) -> ToolResult:
+        """Run ESLint static analysis"""
+        start_time = time.time()
+        working_dir = cwd or ROOT
+        
+        try:
+            result = subprocess.run(
+                ["npx", "eslint", ".", "--ext", ".ts,.tsx,.js,.jsx", "--max-warnings", "0"],
+                cwd=working_dir,
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+            
+            duration = time.time() - start_time
+            
+            if result.returncode == 0:
+                return ToolResult(
+                    success=True,
+                    message=f"ESLint passed - no linting errors in {duration:.1f}s",
+                    duration=duration
+                )
+            else:
+                safe_log_subprocess_output(result, "ESLint")
+                return ToolResult(
+                    success=False,
+                    message="ESLint failed - linting errors found",
+                    error=result.stdout + "\n" + result.stderr,
+                    duration=duration
+                )
+                
+        except subprocess.TimeoutExpired:
+            duration = time.time() - start_time
+            return ToolResult(
+                success=False,
+                message="ESLint timed out",
+                error="ESLint process exceeded timeout",
+                duration=duration
+            )
+        except Exception as e:
+            duration = time.time() - start_time
+            return ToolResult(
+                success=False,
+                message="ESLint error",
+                error=str(e),
+                duration=duration
+            )
+    
+    @staticmethod
+    def run_prettier_check(cwd: Optional[pathlib.Path] = None) -> ToolResult:
+        """Run Prettier format check"""
+        start_time = time.time()
+        working_dir = cwd or ROOT
+        
+        try:
+            result = subprocess.run(
+                ["npx", "prettier", "--check", "."],
+                cwd=working_dir,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            
+            duration = time.time() - start_time
+            
+            if result.returncode == 0:
+                return ToolResult(
+                    success=True,
+                    message=f"Prettier check passed - code is properly formatted in {duration:.1f}s",
+                    duration=duration
+                )
+            else:
+                safe_log_subprocess_output(result, "Prettier check")
+                return ToolResult(
+                    success=False,
+                    message="Prettier check failed - code formatting issues found",
+                    error=result.stdout + "\n" + result.stderr,
+                    duration=duration
+                )
+                
+        except subprocess.TimeoutExpired:
+            duration = time.time() - start_time
+            return ToolResult(
+                success=False,
+                message="Prettier check timed out",
+                error="Prettier process exceeded timeout",
+                duration=duration
+            )
+        except Exception as e:
+            duration = time.time() - start_time
+            return ToolResult(
+                success=False,
+                message="Prettier check error",
+                error=str(e),
+                duration=duration
+            )
+    
+    @staticmethod
+    def run_static_analysis(cwd: Optional[pathlib.Path] = None) -> Dict[str, ToolResult]:
+        """Run comprehensive static analysis checks"""
+        print("🔍 Running comprehensive static analysis...")
+        
+        results = {}
+        
+        # Run ESLint
+        results['eslint'] = BuildTool.run_eslint(cwd)
+        
+        # Run Prettier check
+        results['prettier'] = BuildTool.run_prettier_check(cwd)
+        
+        # Run TypeScript check
+        results['typescript'] = BuildTool.typescript_check(cwd)
+        
+        return results
 
     @staticmethod
     def install_dependencies(cwd: Optional[pathlib.Path] = None) -> ToolResult:
