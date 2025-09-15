@@ -1,0 +1,198 @@
+{
+  "documentRegistry": {
+    "lastUpdated": "2024-12-15T00:00:00Z",
+    "version": "1.0.0",
+    "documents": [
+      {
+        "documentId": "greek-labor-law-4808-2021",
+        "title": "Law 4808/2021 - Labor Relations Reform",
+        "type": "PRIMARY_LEGISLATION",
+        "category": "LABOR_LAW",
+        "status": "ACTIVE",
+        "currentVersion": "2.1",
+        "effectiveDate": "2024-12-01",
+        "expiryDate": null,
+        "legalAuthority": "Hellenic Parliament",
+        "officialUrl": "https://www.et.gr/api/Download/?fek_pdf=20210A167",
+        "localPath": "greek-labor-law/current/LaborLaw_4808_v2.1_2024-12-01_ACTIVE.pdf",
+        "checksumSHA256": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6",
+        "impactedConfigSections": [
+          "workingTimeLimits",
+          "overtimeRules",
+          "leaveEntitlements"
+        ],
+        "relatedDocuments": [
+          "presidential-decree-81-2023",
+          "ministerial-decision-a1002-2024"
+        ],
+        "complianceRequirements": [
+          "ERGANI_SUBMISSION",
+          "DIGITAL_WORK_CARD"
+        ],
+        "versionHistory": [
+          {
+            "version": "2.1",
+            "date": "2024-12-01",
+            "changes": "Updated overtime calculation rules, clarified night shift definitions",
+            "approvedBy": "Legal Team",
+            "status": "ACTIVE"
+          },
+          {
+            "version": "2.0",
+            "date": "2024-04-01", 
+            "changes": "Major reform including flexible work arrangements, right to disconnect",
+            "approvedBy": "Legal Team",
+            "status": "ARCHIVED"
+          }
+        ]
+      },
+      {
+        "documentId": "presidential-decree-81-2023",
+        "title": "Presidential Decree 81/2023 - EFKA Contribution Rates",
+        "type": "REGULATORY_DECREE",
+        "category": "SOCIAL_SECURITY",
+        "status": "ACTIVE",
+        "currentVersion": "1.2",
+        "effectiveDate": "2024-01-01",
+        "expiryDate": null,
+        "legalAuthority": "Ministry of Labor and Social Affairs",
+        "officialUrl": "https://www.efka.gov.gr/el/regulations/decree-81-2023",
+        "localPath": "regulatory-compliance/efka/EfkaRates_PD81_v1.2_2024-01-01_ACTIVE.pdf",
+        "checksumSHA256": "b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a1",
+        "impactedConfigSections": [
+          "efkaRates.employee",
+          "efkaRates.employer"
+        ],
+        "relatedDocuments": [
+          "greek-labor-law-4808-2021"
+        ],
+        "complianceRequirements": [
+          "EFKA_REPORTING",
+          "PAYROLL_CALCULATION"
+        ],
+        "versionHistory": [
+          {
+            "version": "1.2",
+            "date": "2024-01-01",
+            "changes": "Updated employer work accident insurance rates from 0.65% to 0.67%",
+            "approvedBy": "Compliance Team",
+            "status": "ACTIVE"
+          }
+        ]
+      },
+      {
+        "documentId": "ministerial-decision-a1002-2024",
+        "title": "Ministerial Decision A.1002/2024 - Minimum Wage Adjustment",
+        "type": "MINISTERIAL_DECISION",
+        "category": "WAGES",
+        "status": "ACTIVE",
+        "currentVersion": "1.0",
+        "effectiveDate": "2024-04-01",
+        "expiryDate": null,
+        "legalAuthority": "Ministry of Labor and Social Affairs",
+        "officialUrl": "https://www.ministryoflabor.gov.gr/decisions/a1002-2024",
+        "localPath": "greek-labor-law/current/MinimumWage_A1002_v1.0_2024-04-01_ACTIVE.pdf",
+        "checksumSHA256": "c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a1b2",
+        "impactedConfigSections": [
+          "minimumWage.monthly",
+          "minimumWage.daily", 
+          "minimumWage.hourly"
+        ],
+        "relatedDocuments": [
+          "greek-labor-law-4808-2021"
+        ],
+        "complianceRequirements": [
+          "PAYROLL_CALCULATION",
+          "MINIMUM_WAGE_COMPLIANCE"
+        ],
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "2024-04-01",
+            "changes": "Increased minimum wage from €760 to €830 per month",
+            "approvedBy": "Legal Team",
+            "status": "ACTIVE"
+          }
+        ]
+      },
+      {
+        "documentId": "ergani-ii-regulation-2023",
+        "title": "ERGANI II System Regulation - Digital Work Cards",
+        "type": "REGULATORY_FRAMEWORK",
+        "category": "DIGITAL_COMPLIANCE",
+        "status": "ACTIVE",
+        "currentVersion": "3.1",
+        "effectiveDate": "2024-06-01",
+        "expiryDate": null,
+        "legalAuthority": "Ministry of Labor and Social Affairs",
+        "officialUrl": "https://www.ergani.gov.gr/regulations/ergani-ii-2023",
+        "localPath": "regulatory-compliance/ergani/ErganiII_Regulation_v3.1_2024-06-01_ACTIVE.pdf",
+        "checksumSHA256": "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a1b2c3",
+        "impactedConfigSections": [
+          "digitalWorkCard.validationRules",
+          "erganiSubmission.requirements"
+        ],
+        "relatedDocuments": [
+          "greek-labor-law-4808-2021"
+        ],
+        "complianceRequirements": [
+          "ERGANI_SUBMISSION",
+          "DIGITAL_WORK_CARD",
+          "REAL_TIME_REPORTING"
+        ],
+        "versionHistory": [
+          {
+            "version": "3.1",
+            "date": "2024-06-01",
+            "changes": "Added biometric authentication requirements, updated data retention policies",
+            "approvedBy": "Compliance Team",
+            "status": "ACTIVE"
+          }
+        ]
+      },
+      {
+        "documentId": "hotel-cba-2024",
+        "title": "Hotel Industry Collective Bargaining Agreement 2024-2026",
+        "type": "COLLECTIVE_AGREEMENT",
+        "category": "SECTOR_SPECIFIC",
+        "status": "ACTIVE",
+        "currentVersion": "1.0",
+        "effectiveDate": "2024-01-01",
+        "expiryDate": "2026-12-31",
+        "legalAuthority": "Hotel Workers Union / Hellenic Hotel Association",
+        "officialUrl": "https://www.hotelworkersunion.gr/cba/2024-2026",
+        "localPath": "collective-agreements/hotel/HotelCBA_v1.0_2024-01-01_ACTIVE.pdf",
+        "checksumSHA256": "e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a1b2c3d4",
+        "impactedConfigSections": [
+          "premiumRates.hotel",
+          "tipPooling.rules",
+          "seasonalWork.bonuses"
+        ],
+        "relatedDocuments": [
+          "greek-labor-law-4808-2021"
+        ],
+        "complianceRequirements": [
+          "SECTOR_COMPLIANCE",
+          "TIP_REPORTING"
+        ],
+        "versionHistory": [
+          {
+            "version": "1.0",
+            "date": "2024-01-01",
+            "changes": "New 3-year agreement with updated tip pooling rules and seasonal bonuses",
+            "approvedBy": "Legal Team",
+            "status": "ACTIVE"
+          }
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "totalDocuments": 5,
+    "activeDocuments": 5,
+    "archivedDocuments": 0,
+    "lastComplianceReview": "2024-12-01",
+    "nextScheduledReview": "2025-03-01",
+    "complianceStatus": "CURRENT"
+  }
+}
