@@ -55,19 +55,54 @@ export function GreekFormattedDisplay({
         
       case 'percentage':
         const pctValue = typeof value === 'string' ? parseFloat(value) : value as number;
-        return GreekNumericFormatter.formatPercentage(pctValue, decimals);
+        if (isGreek) {
+          return GreekNumericFormatter.formatPercentage(pctValue, decimals);
+        } else {
+          return new Intl.NumberFormat('en-US', {
+            style: 'percent',
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+          }).format(pctValue / 100);
+        }
         
       case 'date':
         const dateValue = typeof value === 'string' ? new Date(value) : value as Date;
-        return GreekDateTimeFormatter.formatOfficialDate(dateValue);
+        if (isGreek) {
+          return GreekDateTimeFormatter.formatOfficialDate(dateValue);
+        } else {
+          return new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          }).format(dateValue);
+        }
         
       case 'datetime':
         const dateTimeValue = typeof value === 'string' ? new Date(value) : value as Date;
-        return GreekDateTimeFormatter.formatOfficialDateTime(dateTimeValue);
+        if (isGreek) {
+          return GreekDateTimeFormatter.formatOfficialDateTime(dateTimeValue);
+        } else {
+          return new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }).format(dateTimeValue);
+        }
         
       case 'time':
         const timeValue = typeof value === 'string' ? new Date(value) : value as Date;
-        return GreekDateTimeFormatter.formatTime(timeValue);
+        if (isGreek) {
+          return GreekDateTimeFormatter.formatTime(timeValue);
+        } else {
+          return new Intl.DateTimeFormat('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          }).format(timeValue);
+        }
         
       default:
         return String(value);
