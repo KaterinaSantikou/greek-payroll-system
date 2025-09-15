@@ -1,6 +1,6 @@
 /**
  * Legal Document Version Tracking System
- * 
+ *
  * This module provides integration between the configuration system and
  * legal document version control for compliance traceability and audit trails.
  */
@@ -15,10 +15,20 @@ import { resolve } from 'path';
 export interface LegalDocument {
   documentId: string;
   title: string;
-  type: 'PRIMARY_LEGISLATION' | 'REGULATORY_DECREE' | 'MINISTERIAL_DECISION' | 
-        'REGULATORY_FRAMEWORK' | 'COLLECTIVE_AGREEMENT' | 'COURT_DECISION';
-  category: 'LABOR_LAW' | 'SOCIAL_SECURITY' | 'WAGES' | 'TAX_LAW' | 
-           'DIGITAL_COMPLIANCE' | 'SECTOR_SPECIFIC';
+  type:
+    | 'PRIMARY_LEGISLATION'
+    | 'REGULATORY_DECREE'
+    | 'MINISTERIAL_DECISION'
+    | 'REGULATORY_FRAMEWORK'
+    | 'COLLECTIVE_AGREEMENT'
+    | 'COURT_DECISION';
+  category:
+    | 'LABOR_LAW'
+    | 'SOCIAL_SECURITY'
+    | 'WAGES'
+    | 'TAX_LAW'
+    | 'DIGITAL_COMPLIANCE'
+    | 'SECTOR_SPECIFIC';
   status: 'DRAFT' | 'REVIEW' | 'ACTIVE' | 'ARCHIVED' | 'SUPERSEDED';
   currentVersion: string;
   effectiveDate: string;
@@ -73,7 +83,10 @@ export interface LegalReference {
 class LegalDocumentTracker {
   private static instance: LegalDocumentTracker;
   private registry: DocumentRegistry | null = null;
-  private registryPath = resolve(process.cwd(), 'legal-docs/version-control/legal-document-registry.json');
+  private registryPath = resolve(
+    process.cwd(),
+    'legal-docs/version-control/legal-document-registry.json'
+  );
 
   private constructor() {}
 
@@ -94,19 +107,23 @@ class LegalDocumentTracker {
 
     try {
       if (!existsSync(this.registryPath)) {
-        throw new Error(`Legal document registry not found at: ${this.registryPath}`);
+        throw new Error(
+          `Legal document registry not found at: ${this.registryPath}`
+        );
       }
 
       const registryContent = readFileSync(this.registryPath, 'utf-8');
       this.registry = JSON.parse(registryContent);
-      
+
       // Validate registry structure
       this.validateRegistry(this.registry!);
-      
+
       return this.registry!;
     } catch (error) {
       console.error('Failed to load legal document registry:', error);
-      throw new Error('Legal document registry is required for compliance operations');
+      throw new Error(
+        'Legal document registry is required for compliance operations'
+      );
     }
   }
 
@@ -115,9 +132,10 @@ class LegalDocumentTracker {
    */
   getDocumentsForCompliance(requirement: string): LegalDocument[] {
     const registry = this.loadRegistry();
-    return registry.documentRegistry.documents.filter(doc => 
-      doc.status === 'ACTIVE' && 
-      doc.complianceRequirements.includes(requirement)
+    return registry.documentRegistry.documents.filter(
+      doc =>
+        doc.status === 'ACTIVE' &&
+        doc.complianceRequirements.includes(requirement)
     );
   }
 
@@ -126,9 +144,13 @@ class LegalDocumentTracker {
    */
   getDocumentsForConfigSection(configSection: string): LegalDocument[] {
     const registry = this.loadRegistry();
-    return registry.documentRegistry.documents.filter(doc =>
-      doc.status === 'ACTIVE' &&
-      doc.impactedConfigSections.some(section => section === configSection || section.startsWith(configSection + '.'))
+    return registry.documentRegistry.documents.filter(
+      doc =>
+        doc.status === 'ACTIVE' &&
+        doc.impactedConfigSections.some(
+          section =>
+            section === configSection || section.startsWith(configSection + '.')
+        )
     );
   }
 
@@ -141,23 +163,47 @@ class LegalDocumentTracker {
 
     // Map config sections to legal documents
     const configMappings = [
-      { section: 'minimumWage', requirement: 'MINIMUM_WAGE_COMPLIANCE', impact: 'CRITICAL' as const },
-      { section: 'efkaRates', requirement: 'EFKA_REPORTING', impact: 'CRITICAL' as const },
-      { section: 'taxBrackets', requirement: 'PAYROLL_CALCULATION', impact: 'HIGH' as const },
-      { section: 'workingTimeLimits', requirement: 'ERGANI_SUBMISSION', impact: 'HIGH' as const },
-      { section: 'premiumRates', requirement: 'PAYROLL_CALCULATION', impact: 'MEDIUM' as const }
+      {
+        section: 'minimumWage',
+        requirement: 'MINIMUM_WAGE_COMPLIANCE',
+        impact: 'CRITICAL' as const,
+      },
+      {
+        section: 'efkaRates',
+        requirement: 'EFKA_REPORTING',
+        impact: 'CRITICAL' as const,
+      },
+      {
+        section: 'taxBrackets',
+        requirement: 'PAYROLL_CALCULATION',
+        impact: 'HIGH' as const,
+      },
+      {
+        section: 'workingTimeLimits',
+        requirement: 'ERGANI_SUBMISSION',
+        impact: 'HIGH' as const,
+      },
+      {
+        section: 'premiumRates',
+        requirement: 'PAYROLL_CALCULATION',
+        impact: 'MEDIUM' as const,
+      },
     ];
 
     configMappings.forEach(mapping => {
       const docs = this.getDocumentsForCompliance(mapping.requirement);
       docs.forEach(doc => {
-        if (doc.impactedConfigSections.some(section => section.startsWith(mapping.section))) {
+        if (
+          doc.impactedConfigSections.some(section =>
+            section.startsWith(mapping.section)
+          )
+        ) {
           references.push({
             documentId: doc.documentId,
             version: doc.currentVersion,
             effectiveDate: doc.effectiveDate,
             configSection: mapping.section,
-            impactLevel: mapping.impact
+            impactLevel: mapping.impact,
           });
         }
       });
@@ -171,7 +217,9 @@ class LegalDocumentTracker {
    */
   private validateRegistry(registry: DocumentRegistry): void {
     if (!registry.documentRegistry || !registry.metadata) {
-      throw new Error('Invalid registry structure: missing documentRegistry or metadata');
+      throw new Error(
+        'Invalid registry structure: missing documentRegistry or metadata'
+      );
     }
 
     if (!Array.isArray(registry.documentRegistry.documents)) {
@@ -181,7 +229,9 @@ class LegalDocumentTracker {
     // Check for required fields in each document
     registry.documentRegistry.documents.forEach((doc, index) => {
       if (!doc.documentId || !doc.title || !doc.currentVersion) {
-        throw new Error(`Invalid document at index ${index}: missing required fields`);
+        throw new Error(
+          `Invalid document at index ${index}: missing required fields`
+        );
       }
     });
   }
@@ -203,7 +253,9 @@ class LegalDocumentTracker {
       if (doc.expiryDate) {
         const expiryDate = new Date(doc.expiryDate);
         if (expiryDate <= now && doc.status === 'ACTIVE') {
-          issues.push(`Document ${doc.documentId} has expired but is still marked as ACTIVE`);
+          issues.push(
+            `Document ${doc.documentId} has expired but is still marked as ACTIVE`
+          );
         }
       }
     });
@@ -217,7 +269,9 @@ class LegalDocumentTracker {
     // Determine overall status
     let status: 'CURRENT' | 'WARNING' | 'OVERDUE' | 'CRITICAL' = 'CURRENT';
     if (issues.length > 0) {
-      status = issues.some(issue => issue.includes('expired')) ? 'CRITICAL' : 'WARNING';
+      status = issues.some(issue => issue.includes('expired'))
+        ? 'CRITICAL'
+        : 'WARNING';
     }
     if (nextReviewDate <= now) {
       status = 'OVERDUE';
@@ -226,7 +280,7 @@ class LegalDocumentTracker {
     return {
       status,
       issues,
-      nextReviewDue: registry.metadata.nextScheduledReview
+      nextReviewDue: registry.metadata.nextScheduledReview,
     };
   }
 
@@ -269,8 +323,8 @@ class LegalDocumentTracker {
         total: documents.length,
         active: documents.filter(doc => doc.status === 'ACTIVE').length,
         byCategory,
-        byType
-      }
+        byType,
+      },
     };
   }
 
@@ -279,7 +333,11 @@ class LegalDocumentTracker {
    */
   getDocument(documentId: string): LegalDocument | null {
     const registry = this.loadRegistry();
-    return registry.documentRegistry.documents.find(doc => doc.documentId === documentId) || null;
+    return (
+      registry.documentRegistry.documents.find(
+        doc => doc.documentId === documentId
+      ) || null
+    );
   }
 
   /**
@@ -292,7 +350,9 @@ class LegalDocumentTracker {
   } {
     const registry = this.loadRegistry();
     const now = new Date();
-    const thirtyDaysFromNow = new Date(now.getTime() + (30 * 24 * 60 * 60 * 1000));
+    const thirtyDaysFromNow = new Date(
+      now.getTime() + 30 * 24 * 60 * 60 * 1000
+    );
 
     const expiringSoon = registry.documentRegistry.documents.filter(doc => {
       if (!doc.expiryDate || doc.status !== 'ACTIVE') return false;
@@ -300,18 +360,18 @@ class LegalDocumentTracker {
       return expiryDate <= thirtyDaysFromNow && expiryDate > now;
     });
 
-    const underReview = registry.documentRegistry.documents.filter(doc => 
-      doc.status === 'REVIEW' || doc.status === 'DRAFT'
+    const underReview = registry.documentRegistry.documents.filter(
+      doc => doc.status === 'REVIEW' || doc.status === 'DRAFT'
     );
 
-    const missingChecksums = registry.documentRegistry.documents.filter(doc => 
-      !doc.checksumSHA256 || doc.checksumSHA256.length !== 64
+    const missingChecksums = registry.documentRegistry.documents.filter(
+      doc => !doc.checksumSHA256 || doc.checksumSHA256.length !== 64
     );
 
     return {
       expiringSoon,
       underReview,
-      missingChecksums
+      missingChecksums,
     };
   }
 
@@ -330,8 +390,12 @@ class LegalDocumentTracker {
 export const legalDocumentTracker = LegalDocumentTracker.getInstance();
 
 // Helper functions for easy access
-export async function getLegalReferencesForPayroll(configVersion?: string): Promise<LegalReference[]> {
-  return legalDocumentTracker.getLegalReferencesForConfig(configVersion || process.env.GREEK_LAW_VERSION || '2024.12');
+export async function getLegalReferencesForPayroll(
+  configVersion?: string
+): Promise<LegalReference[]> {
+  return legalDocumentTracker.getLegalReferencesForConfig(
+    configVersion || process.env.GREEK_LAW_VERSION || '2024.12'
+  );
 }
 
 export async function validateConfigCompliance(configSection: string): Promise<{
@@ -339,18 +403,23 @@ export async function validateConfigCompliance(configSection: string): Promise<{
   supportingDocuments: LegalDocument[];
   issues: string[];
 }> {
-  const documents = legalDocumentTracker.getDocumentsForConfigSection(configSection);
+  const documents =
+    legalDocumentTracker.getDocumentsForConfigSection(configSection);
   const issues: string[] = [];
 
   // Check if we have supporting documents
   if (documents.length === 0) {
-    issues.push(`No legal documents found supporting configuration section: ${configSection}`);
+    issues.push(
+      `No legal documents found supporting configuration section: ${configSection}`
+    );
   }
 
   // Check if all documents are active and current
   documents.forEach(doc => {
     if (doc.status !== 'ACTIVE') {
-      issues.push(`Supporting document ${doc.documentId} is not active (status: ${doc.status})`);
+      issues.push(
+        `Supporting document ${doc.documentId} is not active (status: ${doc.status})`
+      );
     }
     if (doc.expiryDate) {
       const expiryDate = new Date(doc.expiryDate);
@@ -363,7 +432,7 @@ export async function validateConfigCompliance(configSection: string): Promise<{
   return {
     isCompliant: issues.length === 0,
     supportingDocuments: documents,
-    issues
+    issues,
   };
 }
 
