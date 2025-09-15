@@ -2562,10 +2562,10 @@ def main():
         print("2) Open changed files to review the validated implementation.")
         print("3) Run the app to verify everything works as expected.")
         
-        except Exception as e:
-            print(f"❌ Error during task execution: {e}")
-            print("🗑️ Discarding any partial changes due to error.")
-            return
+    except Exception as e:
+        print(f"❌ Error during task execution: {e}")
+        print("🗑️ Discarding any partial changes due to error.")
+        return
         
     finally:
         # Always clean up sandbox environment and release execution slot
