@@ -27,7 +27,7 @@ import {
   WORKING_TIME_LIMITS,
   TAX_FREE_LIMITS,
   TIPS_TAX_RULES,
-} from '../domain/greek-labor-law';
+} from '../rules/greek-labor-law.js';
 
 import {
   GREEK_BONUSES,
@@ -36,7 +36,11 @@ import {
   LEAVE_ENTITLEMENTS,
   BENEFITS_IN_KIND,
   CONTRACT_TYPE_RULES,
-} from '../domain/payroll-rules';
+} from '../rules/payroll-rules.js';
+
+// HIGH-PERFORMANCE CACHED CALCULATIONS
+import { MemoizedCalculations } from './MemoizedCalculations.js';
+import { CachedConstants } from '../cache/LegalConstantsCache.js';
 
 /**
  * Custom Error Class for Payroll Calculation Failures
