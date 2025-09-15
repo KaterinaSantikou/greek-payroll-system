@@ -1,0 +1,146 @@
+# 🧠 Greek Payroll System — Architecture & Development Rules
+
+This document gives AI developers full context about this codebase so they can safely contribute without breaking anything.
+
+---
+
+## ⚙️ Overview
+
+**Goal:** A full-stack system for calculating and processing payroll in Greece, fully compliant with Greek labor law (Ν. 4093/2012, ΣΣΕ Ξενοδοχοϋπαλλήλων, EFKA regulations).
+
+**Tech Stack:**
+- Backend: Node.js (Express) + TypeScript
+- Database: PostgreSQL via Drizzle ORM (`@neondatabase/serverless`, `drizzle-orm`)
+- Frontend: React (Vite + shadcn/ui)
+- Continuous AI Development Agent: Python scripts in `/agent`
+- Infrastructure: GitHub repo (main + dev branches), CI/CD
+
+---
+
+## 📁 Folder Structure
+
+```
+agent/                              # Python continuous AI dev agent
+client/                             # React frontend app (Vite + TypeScript)
+server/                             # Backend business logic and services
+  greekPayrollCalculator.ts
+  modernPayrollEngine.ts
+  overtimePreventionEngine.ts
+  complianceConnector.ts
+  complianceGuardrails.ts
+  erganiConnector.ts
+  hotelTipPooling.ts
+  standardizedEarningsCodesService.ts
+  services/
+    PayrollEngineService.ts
+    PayrollBusinessRulesService.ts
+shared/                             # Shared schemas, constants, and types
+  schema.ts
+  payments-schema.ts
+tests/                              # Unit & integration tests
+tasks/                              # AI agent task backlog (pending/done/backlog)
+context/                            # AI context files (like this one)
+migrations/                         # Database migrations
+docs/                               # Documentation
+```
+
+---
+
+## 🧩 Domain Layer Design
+
+**Core Domain Rules:**
+- All payroll logic (salary, bonuses, overtime, severance, allowances) must follow Greek law.
+- Law constants (minimum wage, EFKA %, bonus % etc.) must be stored in one place, versioned by year.
+- Logic should not directly talk to DB or APIs — only pure functions.
+
+**Planned structure (to migrate toward):**
+
+```
+server/core/greekRules/             # Law formulas and constants (pure logic)
+server/engine/                      # Orchestrates payroll runs
+server/services/                    # DB, API, compliance layers
+```
+
+---
+
+## 💾 Database & Data Layer
+
+- `shared/schema.ts` defines Drizzle ORM schema
+- `shared/payments-schema.ts` defines payment flows
+- `migrations/` holds database migration scripts
+- Keep schema (data shape) separate from domain logic (business formulas)
+
+---
+
+## 📋 Payroll Logic Modules
+
+| File | Responsibility |
+|---|---|
+| `greekPayrollCalculator.ts` | Base payroll computation logic (net/gross math, contributions) |
+| `modernPayrollEngine.ts` | High-level orchestration engine for full payroll runs |
+| `PayrollEngineService.ts` | Service wrapper around engine, used by API routes |
+| `PayrollBusinessRulesService.ts` | Implements business constraints and policies |
+| `overtimePreventionEngine.ts` | Calculates legal overtime, prevents unlawful assignments |
+| `hotelTipPooling.ts` | Handles pooled tips for hotel staff |
+| `standardizedEarningsCodesService.ts` | Maps earnings to official code table |
+| `complianceConnector.ts` | Integrates with EFKA (social security) systems |
+| `erganiConnector.ts` | Integrates with ERGANI (employment registry) |
+| `complianceGuardrails.ts` | Validates compliance of outputs before submission |
+
+---
+
+## ✅ Development Rules for AI Agent
+
+- Only modify files inside `server/`, `shared/`, or `tests/`.
+- Never delete existing logic without tests proving the replacement is correct.
+- Always run:
+  - `npm run build`
+  - `npm test`
+  - Ensure both pass before committing
+- If editing schema, update migrations + `tests/schema-migration.test.ts`
+- Keep functions small and focused (<100 lines)
+- Use TypeScript strict mode, no `any`
+- Use functional pure logic for all domain calculations
+- Always update or create tests for new logic
+- Always document:
+  - What law or article each formula implements
+  - Any assumptions about employee types
+
+---
+
+## 📊 Testing & Validation Strategy
+
+- Every payroll run must be validated against known regression cases in `tests/`.
+- Add new regression scenarios for each new law edge case you support.
+- Ensure coverage does not drop below 80%.
+- Use `complianceGuardrails.ts` to catch invalid outputs before DB commit.
+
+---
+
+## 📜 Legal Reference Strategy
+
+- Store all legal constants and thresholds in `shared/law-constants.ts` (to create).
+- Annotate each with:
+  - Article number
+  - Year of law
+  - Effective date
+- When laws change, add new version entries (do NOT overwrite old).
+
+---
+
+## 🚫 Forbidden Actions
+
+- Do not edit files outside `server/`, `shared/`, `tests/` without explicit instruction.
+- Do not hardcode database credentials or API keys.
+- Do not push to `main` branch (use `dev` + PR workflow).
+
+---
+
+## 📌 Summary
+
+This system is a **domain-driven payroll platform**.  
+The agent must:
+- keep domain logic pure and tested  
+- keep infrastructure isolated  
+- keep schema stable  
+- and always respect Greek labor law accuracy.
