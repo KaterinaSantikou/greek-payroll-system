@@ -14,10 +14,15 @@ def safe_run(cmd):
         raise
 
 def call_with_retry(func, max_tries=3):
-    """Call function with exponential backoff retry logic"""
+    """Call function with exponential backoff retry logic and rate limiting"""
     delay = 10
     for attempt in range(max_tries):
         try:
+            # Check rate limiting before task execution
+            if not rate_limiter.can_make_call():
+                print("⏱️ Rate limit reached. Skipping task execution until rate limit resets...")
+                return None
+            
             return func()
         except Exception as e:
             # Special handling for rate limit errors
