@@ -2,26 +2,17 @@ import { Router } from "express";
 import { isAuthenticated } from "../replitAuth";
 import { z } from "zod";
 import { nanoid } from "nanoid";
-import { db } from "../db";
-import { 
-  payrollRuns, 
-  payrollLines, 
-  payrollScopes,
-  employeePeriodState,
-  periodLedgers,
-  payrollScopeLines,
-  paymentBatches,
-  employees,
-  properties,
-  contracts,
-  timesheets,
-  insertPayrollScopeSchema,
-  insertEmployeePeriodStateSchema,
-  insertPeriodLedgerSchema,
-  insertPayrollScopeLineSchema,
-  insertPaymentBatchSchema
-} from "@shared/schema";
-import { eq, and, like, inArray, sql, desc, asc } from "drizzle-orm";
+
+// Business layer imports
+import { payrollService } from "../business/payroll-service";
+import { payrollValidator } from "../business/payroll-validator";
+import { payrollCalculator } from "../business/payroll-calculator";
+
+// Infrastructure layer imports
+import { payrollRepository } from "../infrastructure/payroll-repository";
+import { complianceConnector } from "../infrastructure/compliance-connector";
+
+// Legacy service imports (to be phased out)
 import { GarnishmentService } from "../services/GarnishmentService";
 import { GLExportService } from "../glExportService";
 
@@ -61,27 +52,19 @@ router.get('/api/payroll/runs', isAuthenticated, async (req, res) => {
   try {
     const { period, status, runType, limit = '20', offset = '0' } = req.query;
     
-    let query = db.select().from(payrollRuns);
+    const filters = {
+      period: period as string,
+      status: status as string,
+      runType: runType as string
+    };
     
-    const conditions = [];
-    if (period) {
-      conditions.push(eq(payrollRuns.period, period as string));
-    }
-    if (status) {
-      conditions.push(eq(payrollRuns.status, status as any));
-    }
-    if (runType) {
-      conditions.push(eq(payrollRuns.runType, runType as any));
-    }
+    const pagination = {
+      limit: parseInt(limit as string),
+      offset: parseInt(offset as string)
+    };
     
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-    
-    const result = await query
-      .limit(parseInt(limit as string))
-      .offset(parseInt(offset as string))
-      .orderBy(payrollRuns.createdAt);
+    // Delegate to infrastructure layer
+    const result = await payrollRepository.getPayrollRuns(filters, pagination);
     
     const signature = generateSignature(result);
     
@@ -102,29 +85,22 @@ router.get('/api/payroll/runs', isAuthenticated, async (req, res) => {
 // GET /api/payroll/runs/:id - Get single payroll run with details
 router.get('/api/payroll/runs/:id', isAuthenticated, async (req, res) => {
   try {
-    const [run] = await db.select()
-      .from(payrollRuns)
-      .where(eq(payrollRuns.id, req.params.id));
+    // Delegate to infrastructure layer
+    const { run, lines } = await payrollRepository.getPayrollRunWithLines(req.params.id);
     
     if (!run) {
       return res.status(404).json({ error: "Payroll run not found" });
     }
     
-    // Get payroll lines for this run
-    const lines = await db.select()
-      .from(payrollLines)
-      .where(eq(payrollLines.payrollRunId, req.params.id));
-    
-    // Calculate totals
-    // Calculate totals including garnishments
+    // Calculate totals using business logic
     const garnishmentLines = lines.filter(line => line.lineType?.startsWith('GARN_'));
-    const totalGarnishments = garnishmentLines.reduce((sum, line) => sum + Math.abs(line.amount || 0), 0);
+    const totalGarnishments = garnishmentLines.reduce((sum, line) => sum + Math.abs(parseFloat(line.amount || '0')), 0);
     
     const totals = {
-      totalGrossPay: lines.reduce((sum, line) => sum + (line.grossAmount || 0), 0),
-      totalNetPay: lines.reduce((sum, line) => sum + (line.netAmount || 0), 0),
-      totalTax: lines.reduce((sum, line) => sum + (line.taxAmount || 0), 0),
-      totalEfka: lines.reduce((sum, line) => sum + (line.efkaAmount || 0), 0),
+      totalGrossPay: lines.reduce((sum, line) => sum + parseFloat(line.grossAmount || '0'), 0),
+      totalNetPay: lines.reduce((sum, line) => sum + parseFloat(line.netAmount || '0'), 0),
+      totalTax: lines.reduce((sum, line) => sum + parseFloat(line.taxAmount || '0'), 0),
+      totalEfka: lines.reduce((sum, line) => sum + parseFloat(line.efkaAmount || '0'), 0),
       totalGarnishments,
       employeeCount: lines.length,
       garnishmentCount: garnishmentLines.length
