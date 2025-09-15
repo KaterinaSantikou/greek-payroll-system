@@ -81,7 +81,7 @@ while True:
         subprocess.run(["git", "checkout", "dev"], check=False)
         subprocess.run(["git", "add", "."], check=True)
         subprocess.run(["git", "commit", "-m", f"AI Agent: Completed task — {task_title}"], check=False)
-        subprocess.run(["git", "push", "https://$GITHUB_TOKEN@github.com/<YOUR-USERNAME>/<YOUR-REPO>.git", "dev"], check=True)
+        subprocess.run(["git", "push", "https://$GITHUB_TOKEN@github.com/KaterinaSantikou/greek-payroll-system.git", "dev"], check=True)
         print("✅ Pushed to dev branch.")
     except subprocess.CalledProcessError as e:
         print(f"⚠️ Git push failed: {e}")
