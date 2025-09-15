@@ -1017,16 +1017,49 @@ export class PayrollCalculator {
   }
 
   /**
-   * Utility method to calculate months worked for bonus pro-ration
+   * Calculate months worked between dates with comprehensive validation
+   * 
+   * VALIDATION STRATEGY:
+   * - Validates date inputs for null, undefined, invalid Date objects
+   * - Prevents future dates where not appropriate (e.g., employment start dates)
+   * - Ensures logical date order (start date before end date)
+   * - Handles extreme values (dates too far in past/future)
+   * - Provides meaningful error messages in both Greek and English
    */
-  private calculateMonthsWorked(startDate: Date, endDate: Date): number {
-    const yearDiff = endDate.getFullYear() - startDate.getFullYear();
-    const monthDiff = endDate.getMonth() - startDate.getMonth();
-    const dayDiff = endDate.getDate() - startDate.getDate();
+  private calculateMonthsWorked(startDate: any, endDate: any): number {
+    // Validate both dates with business-appropriate constraints
+    const validStartDate = this.validateDateInput(startDate, 'employmentStartDate', { 
+      required: true,
+      allowFutureDate: false,  // Employment cannot start in future
+      maxYearsInPast: 50      // Maximum 50 years employment history
+    });
+
+    const validEndDate = this.validateDateInput(endDate, 'periodEndDate', { 
+      required: true,
+      allowFutureDate: true,  // End date can be in future for projections
+      maxYearsInPast: 50
+    });
+
+    // Validate date order - start must be before or equal to end
+    if (validStartDate > validEndDate) {
+      throw new PayrollCalculationError(
+        'INVALID_DATE_ORDER',
+        'dateRange',
+        'BUSINESS_RULE_VIOLATION',
+        `Employment start date (${validStartDate.toISOString()}) cannot be after end date (${validEndDate.toISOString()})`,
+        `Η ημερομηνία έναρξης εργασίας (${validStartDate.toISOString()}) δεν μπορεί να είναι μετά την ημερομηνία λήξης (${validEndDate.toISOString()})`,
+        { startDate: validStartDate, endDate: validEndDate }
+      );
+    }
+
+    const yearDiff = validEndDate.getFullYear() - validStartDate.getFullYear();
+    const monthDiff = validEndDate.getMonth() - validStartDate.getMonth();
+    const dayDiff = validEndDate.getDate() - validStartDate.getDate();
 
     let months = yearDiff * 12 + monthDiff;
 
-    // If the end date is before the start date in the month, subtract one month
+    // Greek payroll practice: If end day is before start day, subtract one month
+    // This ensures partial months are not over-credited
     if (dayDiff < 0) {
       months -= 1;
     }
