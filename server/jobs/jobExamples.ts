@@ -244,7 +244,7 @@ async function getPendingERGANISubmissions() {
   return [];
 }
 
-async function submitToERGANI(payroll: any, options: any) {
+async function submitToERGANI(payroll: { id: string; [key: string]: unknown }, options: Record<string, unknown>) {
   // Mock: Submit to ERGANI with idempotency
   console.log(`Submitting payroll ${payroll.id} to ERGANI`);
 }
@@ -259,7 +259,7 @@ async function getPendingEmails(limit: number) {
   return [];
 }
 
-function generateEmailHash(email: any): string {
+function generateEmailHash(email: { content?: string; [key: string]: unknown }): string {
   // Mock: Generate hash of email content to prevent duplicates
   return 'mock-hash';
 }
@@ -269,7 +269,7 @@ async function isEmailRecentlySent(hash: string): Promise<boolean> {
   return false;
 }
 
-async function sendEmail(email: any) {
+async function sendEmail(email: { to: string; [key: string]: unknown }) {
   // Mock: Send email via SMTP
   console.log(`Sending email to ${email.to}`);
 }
