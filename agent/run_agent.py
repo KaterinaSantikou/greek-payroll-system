@@ -1119,17 +1119,24 @@ def main():
         print("Fix validation errors and run again.")
         return
     
-    # Clear the backup stash since validation passed
-    if backup_created:
-        try:
-            safe_run(["git", "stash", "drop"])
-            print("🗑️ Removed git checkpoint (validation passed)")
-        except subprocess.CalledProcessError:
-            print("⚠️ Could not remove git checkpoint")
+    print("✅ All validation checks passed in sandbox!")
     
-    print("✅ All validation checks passed!")
+    # Merge validated changes from sandbox to main repository
+    merge_success = merge_sandbox_changes(changed)
+    if not merge_success:
+        print("❌ Failed to merge changes from sandbox")
+        return
     
-    # Run quality critic evaluation
+    # Create git checkpoint after merging (for continuous agent)
+    print("💾 Creating git checkpoint after merging validated changes...")
+    try:
+        safe_run(["git", "add", "."])
+        safe_run(["git", "commit", "-m", f"AI Agent: Completed task from sandbox"])
+        print("✅ Changes committed to main repository")
+    except subprocess.CalledProcessError:
+        print("⚠️ Could not commit merged changes")
+    
+    # Run quality critic evaluation on merged changes
     task_title = pathlib.Path(task_file).stem
     task_summary = task_text[:200] if task_text else "Task completed"
     run_quality_critic(task_file, changed, task_summary)
