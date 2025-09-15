@@ -1623,8 +1623,17 @@ def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolv
         if not parsed_plan:
             print("⚠️ Plan parsing failed, but continuing with raw plan")
         
+        # Validate task size and split if necessary
+        validated_plan, created_subtasks = validate_task_size_during_planning(response, "current_task")
+        
+        # If subtasks were created, this task becomes a coordination task
+        if created_subtasks:
+            print("📋 Task has been split into subtasks. Saving coordination plan.")
+            PLANNING_OUTPUT_FILE.write_text(validated_plan, encoding="utf-8")
+            return "TASK_SPLIT_INTO_SUBTASKS"  # Special return value to indicate splitting
+        
         # Run impact analysis on planned files
-        planned_files = get_planned_files_from_response(response)
+        planned_files = get_planned_files_from_response(validated_plan)
         if planned_files:
             print(f"📊 Running impact analysis on {len(planned_files)} planned files...")
             impact_analysis = run_change_impact_analysis(planned_files)
@@ -1637,7 +1646,7 @@ def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolv
                 print(f"      - Indirectly affected files: {len(impact.get('indirectlyAffected', []))}")
                 
                 # Save enhanced plan with impact analysis
-                enhanced_response = response + f"\n\n## CHANGE IMPACT ANALYSIS\n\n"
+                enhanced_response = validated_plan + f"\n\n## CHANGE IMPACT ANALYSIS\n\n"
                 enhanced_response += f"**Risk Level:** {impact.get('riskLevel', 'UNKNOWN')}\n\n"
                 enhanced_response += f"**Files Directly Affected:** {len(impact.get('directlyAffected', []))}\n"
                 enhanced_response += f"**Files Indirectly Affected:** {len(impact.get('indirectlyAffected', []))}\n\n"
@@ -1655,7 +1664,7 @@ def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolv
                 PLANNING_OUTPUT_FILE.write_text(enhanced_response, encoding="utf-8")
                 return enhanced_response
         
-        return response
+        return validated_plan
         
     except Exception as e:
         print(f"❌ Error in planning phase: {e}")
