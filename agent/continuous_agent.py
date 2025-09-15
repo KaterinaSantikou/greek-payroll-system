@@ -30,6 +30,7 @@ ROOT = pathlib.Path(".")
 BACKLOG_DIR = ROOT / "tasks" / "backlog"
 PENDING = ROOT / "tasks" / "pending"
 DONE = ROOT / "tasks" / "done"
+LOCKFILE = ROOT / ".agent.lock"
 
 BACKLOG_FILES = [
     BACKLOG_DIR / "analytical_improvements.md"
@@ -66,7 +67,16 @@ def get_last_done_task_title():
         return match.group(1).strip()
     return done_tasks[0].stem
 
-while True:
+# Concurrency protection - ensure only one agent instance runs
+if LOCKFILE.exists():
+    print("⚠️ Agent already running. Exiting.")
+    sys.exit(1)
+
+LOCKFILE.touch()
+print(f"🔒 Agent lock acquired: {LOCKFILE}")
+
+try:
+    while True:
     if backlog_empty() and not any(PENDING.glob("*.md")):
         print("✅ All backlog tasks are complete. No tasks left to build. Exiting cleanly.")
         sys.exit(0)
