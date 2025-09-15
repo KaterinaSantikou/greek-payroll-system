@@ -173,6 +173,255 @@ export interface PayrollCalculationResult {
 }
 
 export class PayrollCalculator {
+  
+  /**
+   * Validate numeric input with comprehensive checks
+   */
+  private validateNumericInput(
+    value: any, 
+    fieldName: string, 
+    options: {
+      required?: boolean;
+      min?: number;
+      max?: number;
+      allowZero?: boolean;
+      fallback?: number;
+    } = {}
+  ): number {
+    const { required = false, min, max, allowZero = true, fallback = 0 } = options;
+
+    // Handle missing/undefined values
+    if (value === null || value === undefined || value === '') {
+      if (required) {
+        throw new PayrollCalculationError(
+          'MISSING_REQUIRED_FIELD',
+          fieldName,
+          'MISSING_FIELD',
+          `${fieldName} is required but was not provided`,
+          `Το πεδίο ${fieldName} είναι υποχρεωτικό αλλά δεν παρασχέθη`,
+          { providedValue: value }
+        );
+      }
+      return fallback;
+    }
+
+    // Convert to number if string
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+
+    // Check for invalid numbers (NaN, Infinity)
+    if (!Number.isFinite(numValue)) {
+      throw new PayrollCalculationError(
+        'INVALID_NUMERIC_VALUE',
+        fieldName,
+        'INVALID_INPUT',
+        `${fieldName} must be a valid finite number, got: ${value}`,
+        `Το πεδίο ${fieldName} πρέπει να είναι έγκυρος πεπερασμένος αριθμός, έλαβε: ${value}`,
+        { providedValue: value, convertedValue: numValue }
+      );
+    }
+
+    // Check for negative values when not allowed
+    if (!allowZero && numValue < 0) {
+      throw new PayrollCalculationError(
+        'NEGATIVE_VALUE_NOT_ALLOWED',
+        fieldName,
+        'INVALID_INPUT',
+        `${fieldName} cannot be negative, got: ${numValue}`,
+        `Το πεδίο ${fieldName} δεν μπορεί να είναι αρνητικό, έλαβε: ${numValue}`,
+        { providedValue: value }
+      );
+    }
+
+    // Check minimum value constraint
+    if (min !== undefined && numValue < min) {
+      throw new PayrollCalculationError(
+        'VALUE_BELOW_MINIMUM',
+        fieldName,
+        'BUSINESS_RULE_VIOLATION',
+        `${fieldName} must be at least ${min}, got: ${numValue}`,
+        `Το πεδίο ${fieldName} πρέπει να είναι τουλάχιστον ${min}, έλαβε: ${numValue}`,
+        { providedValue: value, minimumRequired: min }
+      );
+    }
+
+    // Check maximum value constraint  
+    if (max !== undefined && numValue > max) {
+      throw new PayrollCalculationError(
+        'VALUE_EXCEEDS_MAXIMUM',
+        fieldName,
+        'EXTREME_VALUE',
+        `${fieldName} cannot exceed ${max}, got: ${numValue}`,
+        `Το πεδίο ${fieldName} δεν μπορεί να υπερβαίνει ${max}, έλαβε: ${numValue}`,
+        { providedValue: value, maximumAllowed: max }
+      );
+    }
+
+    return numValue;
+  }
+
+  /**
+   * Validate date input with comprehensive checks
+   */
+  private validateDateInput(
+    value: any,
+    fieldName: string,
+    options: {
+      required?: boolean;
+      allowFutureDate?: boolean;
+      maxYearsInPast?: number;
+      fallback?: Date;
+    } = {}
+  ): Date {
+    const { required = false, allowFutureDate = false, maxYearsInPast = 100, fallback } = options;
+
+    // Handle missing/undefined dates
+    if (value === null || value === undefined || value === '') {
+      if (required) {
+        throw new PayrollCalculationError(
+          'MISSING_REQUIRED_DATE',
+          fieldName,
+          'MISSING_FIELD',
+          `${fieldName} date is required but was not provided`,
+          `Η ημερομηνία ${fieldName} είναι υποχρεωτική αλλά δεν παρασχέθη`,
+          { providedValue: value }
+        );
+      }
+      return fallback || new Date();
+    }
+
+    // Convert to Date object
+    const dateValue = value instanceof Date ? value : new Date(value);
+
+    // Check for invalid Date objects
+    if (isNaN(dateValue.getTime())) {
+      throw new PayrollCalculationError(
+        'INVALID_DATE_FORMAT',
+        fieldName,
+        'INVALID_INPUT',
+        `${fieldName} must be a valid date, got: ${value}`,
+        `Το πεδίο ${fieldName} πρέπει να είναι έγκυρη ημερομηνία, έλαβε: ${value}`,
+        { providedValue: value }
+      );
+    }
+
+    const now = new Date();
+
+    // Check for future dates when not allowed
+    if (!allowFutureDate && dateValue > now) {
+      throw new PayrollCalculationError(
+        'FUTURE_DATE_NOT_ALLOWED',
+        fieldName,
+        'BUSINESS_RULE_VIOLATION',
+        `${fieldName} cannot be in the future, got: ${dateValue.toISOString()}`,
+        `Η ημερομηνία ${fieldName} δεν μπορεί να είναι στο μέλλον, έλαβε: ${dateValue.toISOString()}`,
+        { providedValue: value, currentDate: now.toISOString() }
+      );
+    }
+
+    // Check for dates too far in the past (unrealistic birth dates, hire dates, etc.)
+    const maxPastDate = new Date();
+    maxPastDate.setFullYear(now.getFullYear() - maxYearsInPast);
+    
+    if (dateValue < maxPastDate) {
+      throw new PayrollCalculationError(
+        'DATE_TOO_FAR_IN_PAST',
+        fieldName,
+        'EXTREME_VALUE',
+        `${fieldName} cannot be more than ${maxYearsInPast} years in the past, got: ${dateValue.toISOString()}`,
+        `Η ημερομηνία ${fieldName} δεν μπορεί να είναι περισσότερο από ${maxYearsInPast} χρόνια στο παρελθόν, έλαβε: ${dateValue.toISOString()}`,
+        { providedValue: value, earliestAllowed: maxPastDate.toISOString() }
+      );
+    }
+
+    return dateValue;
+  }
+
+  /**
+   * Validate string input (employee IDs, contract types, etc.)
+   */
+  private validateStringInput(
+    value: any,
+    fieldName: string,
+    options: {
+      required?: boolean;
+      allowedValues?: string[];
+      minLength?: number;
+      maxLength?: number;
+      pattern?: RegExp;
+      fallback?: string;
+    } = {}
+  ): string {
+    const { required = false, allowedValues, minLength, maxLength, pattern, fallback = '' } = options;
+
+    // Handle missing/undefined values
+    if (value === null || value === undefined || value === '') {
+      if (required) {
+        throw new PayrollCalculationError(
+          'MISSING_REQUIRED_STRING',
+          fieldName,
+          'MISSING_FIELD',
+          `${fieldName} is required but was not provided`,
+          `Το πεδίο ${fieldName} είναι υποχρεωτικό αλλά δεν παρασχέθη`,
+          { providedValue: value }
+        );
+      }
+      return fallback;
+    }
+
+    // Convert to string
+    const stringValue = String(value).trim();
+
+    // Check minimum length
+    if (minLength !== undefined && stringValue.length < minLength) {
+      throw new PayrollCalculationError(
+        'STRING_TOO_SHORT',
+        fieldName,
+        'INVALID_INPUT',
+        `${fieldName} must be at least ${minLength} characters, got: ${stringValue.length}`,
+        `Το πεδίο ${fieldName} πρέπει να έχει τουλάχιστον ${minLength} χαρακτήρες, έλαβε: ${stringValue.length}`,
+        { providedValue: value, minimumLength: minLength }
+      );
+    }
+
+    // Check maximum length
+    if (maxLength !== undefined && stringValue.length > maxLength) {
+      throw new PayrollCalculationError(
+        'STRING_TOO_LONG',
+        fieldName,
+        'EXTREME_VALUE',
+        `${fieldName} cannot exceed ${maxLength} characters, got: ${stringValue.length}`,
+        `Το πεδίο ${fieldName} δεν μπορεί να υπερβαίνει ${maxLength} χαρακτήρες, έλαβε: ${stringValue.length}`,
+        { providedValue: value, maximumLength: maxLength }
+      );
+    }
+
+    // Check allowed values
+    if (allowedValues && !allowedValues.includes(stringValue)) {
+      throw new PayrollCalculationError(
+        'INVALID_VALUE_NOT_ALLOWED',
+        fieldName,
+        'BUSINESS_RULE_VIOLATION',
+        `${fieldName} must be one of: ${allowedValues.join(', ')}, got: ${stringValue}`,
+        `Το πεδίο ${fieldName} πρέπει να είναι ένα από: ${allowedValues.join(', ')}, έλαβε: ${stringValue}`,
+        { providedValue: value, allowedValues }
+      );
+    }
+
+    // Check pattern matching
+    if (pattern && !pattern.test(stringValue)) {
+      throw new PayrollCalculationError(
+        'INVALID_FORMAT_PATTERN',
+        fieldName,
+        'INVALID_INPUT',
+        `${fieldName} does not match required format, got: ${stringValue}`,
+        `Το πεδίο ${fieldName} δεν συμφωνεί με την απαιτούμενη μορφή, έλαβε: ${stringValue}`,
+        { providedValue: value, requiredPattern: pattern.toString() }
+      );
+    }
+
+    return stringValue;
+  }
+
   /**
    * Calculate Greek income tax based on progressive brackets
    */
