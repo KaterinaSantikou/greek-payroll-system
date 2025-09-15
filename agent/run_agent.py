@@ -172,8 +172,71 @@ def is_path_allowed(file_path, allowed_config):
     
     return False, "Path not in allowed patterns"
 
-def apply_file_blocks(response_text, target_root=None):
-    """Parses model output: blocks like
+def validate_and_parse_structured_response(response_text):
+    """Validate and parse structured JSON response from OpenAI"""
+    try:
+        # Try to parse as JSON first
+        response_data = json.loads(response_text)
+        
+        # Validate required fields
+        required_fields = ["plan", "test_plan", "files"]
+        for field in required_fields:
+            if field not in response_data:
+                raise ValueError(f"Missing required field: {field}")
+        
+        # Validate files array structure
+        if not isinstance(response_data["files"], list):
+            raise ValueError("Files field must be an array")
+        
+        for i, file_obj in enumerate(response_data["files"]):
+            if not isinstance(file_obj, dict):
+                raise ValueError(f"File {i} must be an object")
+            if "path" not in file_obj or "content" not in file_obj:
+                raise ValueError(f"File {i} missing path or content field")
+        
+        print(f"✅ Structured response validation passed ({len(response_data['files'])} files)")
+        return response_data, True
+        
+    except json.JSONDecodeError as e:
+        print(f"❌ JSON parsing failed: {e}")
+        return None, False
+    except ValueError as e:
+        print(f"❌ Response validation failed: {e}")
+        return None, False
+    except Exception as e:
+        print(f"❌ Unexpected validation error: {e}")
+        return None, False
+
+def convert_structured_to_file_blocks(structured_data):
+    """Convert structured JSON response to traditional file block format"""
+    try:
+        output_parts = []
+        
+        # Add plan section
+        if structured_data.get("plan"):
+            output_parts.append(f"## Implementation Plan\n{structured_data['plan']}\n")
+        
+        # Add test plan section
+        if structured_data.get("test_plan"):
+            output_parts.append(f"## Test Plan\n{structured_data['test_plan']}\n")
+        
+        # Add notes if provided
+        if structured_data.get("notes"):
+            output_parts.append(f"## Notes\n{structured_data['notes']}\n")
+        
+        # Convert files to file blocks
+        for file_obj in structured_data.get("files", []):
+            file_block = f"{FILE_BLOCK_START} {file_obj['path']}\n{file_obj['content']}\n{FILE_BLOCK_END}\n"
+            output_parts.append(file_block)
+        
+        return "\n".join(output_parts)
+    
+    except Exception as e:
+        print(f"❌ Error converting structured response: {e}")
+        return None
+
+def apply_file_blocks(response_text, target_root=None, is_structured=False):
+    """Parses model output: either structured JSON or traditional file blocks
        <<<FILE: relative/path.ext
        ...new content...
        >>>END
@@ -187,33 +250,74 @@ def apply_file_blocks(response_text, target_root=None):
     
     changed = []
     rejected = []
-    text = response_text
     
-    while True:
-        start = text.find(FILE_BLOCK_START)
-        if start == -1: break
-        end = text.find(FILE_BLOCK_END, start)
-        if end == -1: break
-        header_end = text.find("\n", start)
-        header = text[start:header_end]
-        path = header.replace(FILE_BLOCK_START, "").strip().strip(":").strip()
-        content = text[header_end+1:end]
+    # Handle structured JSON response
+    if is_structured:
+        structured_data, is_valid = validate_and_parse_structured_response(response_text)
         
-        # Check if path is allowed
-        is_allowed, reason = is_path_allowed(path, allowed_config)
+        if not is_valid or not structured_data:
+            print("❌ Structured response validation failed, cannot process files")
+            return []
         
-        if is_allowed:
-            target = target_root / path
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(content, encoding="utf-8")
-            changed.append(path)
-            env_label = "sandbox" if target_root == SANDBOX_DIR else "main"
-            print(f"✅ Applied changes to: {path} ({env_label})")
-        else:
-            rejected.append({"path": path, "reason": reason})
-            print(f"🚫 Rejected file change: {path} - {reason}")
+        # Process files from structured response
+        for file_obj in structured_data.get("files", []):
+            path = file_obj["path"]
+            content = file_obj["content"]
+            
+            # Check if path is allowed
+            is_allowed, reason = is_path_allowed(path, allowed_config)
+            
+            if is_allowed:
+                target = target_root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content, encoding="utf-8")
+                changed.append(path)
+                env_label = "sandbox" if target_root == SANDBOX_DIR else "main"
+                print(f"✅ Applied changes to: {path} ({env_label})")
+            else:
+                rejected.append({"path": path, "reason": reason})
+                print(f"🚫 Rejected file change: {path} - {reason}")
         
-        text = text[end+len(FILE_BLOCK_END):]
+        # Save converted format for logging
+        converted = convert_structured_to_file_blocks(structured_data)
+        if converted:
+            response_text = converted  # For summary logging
+    
+    else:
+        # Handle traditional file block format
+        text = response_text
+        
+        while True:
+            start = text.find(FILE_BLOCK_START)
+            if start == -1: break
+            end = text.find(FILE_BLOCK_END, start)
+            if end == -1: 
+                print("❌ Malformed file block: missing end marker")
+                break
+            header_end = text.find("\n", start)
+            if header_end == -1:
+                print("❌ Malformed file block: missing newline after header")
+                break
+                
+            header = text[start:header_end]
+            path = header.replace(FILE_BLOCK_START, "").strip().strip(":").strip()
+            content = text[header_end+1:end]
+            
+            # Check if path is allowed
+            is_allowed, reason = is_path_allowed(path, allowed_config)
+            
+            if is_allowed:
+                target = target_root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content, encoding="utf-8")
+                changed.append(path)
+                env_label = "sandbox" if target_root == SANDBOX_DIR else "main"
+                print(f"✅ Applied changes to: {path} ({env_label})")
+            else:
+                rejected.append({"path": path, "reason": reason})
+                print(f"🚫 Rejected file change: {path} - {reason}")
+            
+            text = text[end+len(FILE_BLOCK_END):]
     
     # Report rejected files
     if rejected:
