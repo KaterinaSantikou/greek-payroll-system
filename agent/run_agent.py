@@ -225,9 +225,8 @@ def run_pre_commit_validation():
             if result.returncode == 0:
                 print("   ✅ TypeScript compilation passed")
             else:
-                print("   ❌ TypeScript compilation failed:")
-                print(f"   stdout: {result.stdout}")
-                print(f"   stderr: {result.stderr}")
+                print("   ❌ TypeScript compilation failed")
+                safe_log_subprocess_output(result, "TypeScript check")
                 failed_checks.append("TypeScript compilation")
         except subprocess.TimeoutExpired:
             print("   ❌ TypeScript check timed out (>120s)")
