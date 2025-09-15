@@ -162,11 +162,16 @@ export class PayrollService {
       };
     }
 
-    // Process each employee
-    for (const employee of employees) {
-      try {
-        // Prepare calculation input
-        const calculationInput: PayrollCalculationInput = {
+    // PERFORMANCE OPTIMIZATION: Process employees in batches with limited concurrency
+    const BATCH_SIZE = 300; // Process 300 employees at a time
+    const employeeBatches = this.chunkArray(employees, BATCH_SIZE);
+    
+    for (const batch of employeeBatches) {
+      // Process batch with limited concurrency (12 parallel calculations)
+      const batchPromises = batch.map(async (employee) => {
+        try {
+          // Prepare calculation input
+          const calculationInput: PayrollCalculationInput = {
           employeeId: employee.employeeId,
           periodId: scope.period,
           baseSalary: employee.salary,
@@ -192,17 +197,33 @@ export class PayrollService {
           periodEndDate: this.getPeriodEndDate(scope.period),
         };
 
-        // Calculate payroll
-        const calculation =
-          payrollCalculator.calculatePayroll(calculationInput);
-        calculations.push(calculation);
-      } catch (error) {
-        errors.push({
-          field: `employee_${employee.employeeId}`,
-          category: 'CALCULATION_ERROR',
-          message: `Failed to calculate payroll for employee ${employee.employeeId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          isCritical: false,
-        });
+          // Calculate payroll
+          const calculation =
+            payrollCalculator.calculatePayroll(calculationInput);
+          return { success: true, calculation };
+        } catch (error) {
+          return {
+            success: false,
+            error: {
+              field: `employee_${employee.employeeId}`,
+              category: 'CALCULATION_ERROR',
+              message: `Failed to calculate payroll for employee ${employee.employeeId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              isCritical: false,
+            }
+          };
+        }
+      });
+      
+      // Process batch with concurrency limit
+      const batchResults = await this.processWithConcurrencyLimit(batchPromises, 12);
+      
+      // Collect results
+      for (const result of batchResults) {
+        if (result.success) {
+          calculations.push(result.calculation!);
+        } else {
+          errors.push(result.error!);
+        }
       }
     }
 
