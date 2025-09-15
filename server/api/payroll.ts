@@ -646,51 +646,23 @@ router.get('/api/payroll/scopes', isAuthenticated, async (req, res) => {
 // POST /api/payroll/scopes - Create new payroll scope
 router.post('/api/payroll/scopes', isAuthenticated, idempotencyMiddleware, async (req, res) => {
   try {
-    const validatedData = insertPayrollScopeSchema.parse(req.body);
+    // Parse and validate request data
+    const validatedData = z.object({
+      period: z.string(),
+      type: z.string().optional().default('regular'),
+      selectedEmployees: z.array(z.string()),
+      description: z.string().optional()
+    }).parse(req.body);
+    
     const userId = (req.user as any)?.claims?.sub;
 
-    // Get next sequence number for this period
-    const sequenceResult = await db
-      .select({
-        maxSequence: sql<number>`COALESCE(MAX(${payrollScopes.sequence}), 0)`
-      })
-      .from(payrollScopes)
-      .where(eq(payrollScopes.period, validatedData.period));
-
-    const nextSequence = (sequenceResult[0]?.maxSequence || 0) + 1;
-
-    // Create new scope
-    const [newScope] = await db
-      .insert(payrollScopes)
-      .values({
-        ...validatedData,
-        sequence: nextSequence,
-        status: 'draft',
-        createdBy: userId
-      })
-      .returning();
-
-    // Initialize employee period state for selected employees
-    const employeePeriodStates = validatedData.selectedEmployees.map(employeeId => ({
-      employeeId: employeeId as string,
-      period: validatedData.period,
-      status: 'unprocessed' as const,
-      processedInScopeId: newScope.scopeId
-    }));
-
-    if (employeePeriodStates.length > 0) {
-      await db
-        .insert(employeePeriodState)
-        .values(employeePeriodStates)
-        .onConflictDoUpdate({
-          target: [employeePeriodState.employeeId, employeePeriodState.period],
-          set: {
-            status: sql`CASE WHEN ${employeePeriodState.status} = 'unprocessed' THEN 'unprocessed' ELSE 'adjusted' END`,
-            adjustedInScopeId: newScope.scopeId,
-            updatedAt: sql`NOW()`
-          }
-        });
-    }
+    // Delegate to infrastructure layer
+    const scopeData = {
+      ...validatedData,
+      createdBy: userId
+    };
+    
+    const newScope = await payrollRepository.createPayrollScope(scopeData);
 
     res.status(201).json(newScope);
   } catch (error) {
@@ -710,10 +682,8 @@ router.get('/api/payroll/scopes/:scopeId', isAuthenticated, async (req, res) => 
   try {
     const { scopeId } = req.params;
 
-    const [scope] = await db
-      .select()
-      .from(payrollScopes)
-      .where(eq(payrollScopes.scopeId, scopeId));
+    // Delegate to infrastructure layer
+    const scope = await payrollRepository.getPayrollScope(scopeId);
 
     if (!scope) {
       return res.status(404).json({ error: 'Scope not found' });
