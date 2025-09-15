@@ -14,6 +14,10 @@ import {
   GREEK_TIMEZONE
 } from '../../../lib/localization/GreekLocalization.js';
 
+// Bilingual message support
+import { useTranslation } from '../contexts/LanguageContext';
+import type { SupportedLanguage } from '../../../lib/localization/BilingualMessages';
+
 // Re-export server-side formatters for client use
 export {
   GreekDateTimeFormatter,
