@@ -19,6 +19,7 @@ ALLOWED_PATHS_FILE = AGENT_DIR / "allowed_paths.json"
 SANDBOX_DIR = pathlib.Path("/tmp/agent_build")
 PROMPT_EVOLUTION_FILE = AGENT_DIR / "prompt_evolution.json"
 LEARNED_PATTERNS_FILE = CONTEXT_DIR / "learned_patterns.md"
+PLANNING_OUTPUT_FILE = AGENT_DIR / "current_plan.md"
 CONFIG = json.loads(json.dumps({}))  # placeholder if you expand
 FILE_BLOCK_START = "<<<FILE:"
 FILE_BLOCK_END = ">>>END"
