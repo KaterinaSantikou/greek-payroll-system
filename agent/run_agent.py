@@ -119,12 +119,16 @@ def is_path_allowed(file_path, allowed_config):
     
     return False, "Path not in allowed patterns"
 
-def apply_file_blocks(response_text):
+def apply_file_blocks(response_text, target_root=None):
     """Parses model output: blocks like
        <<<FILE: relative/path.ext
        ...new content...
        >>>END
     """
+    # Use sandbox directory if specified, otherwise use main ROOT
+    if target_root is None:
+        target_root = ROOT
+    
     # Load file permission whitelist
     allowed_config = load_allowed_paths()
     
@@ -146,11 +150,12 @@ def apply_file_blocks(response_text):
         is_allowed, reason = is_path_allowed(path, allowed_config)
         
         if is_allowed:
-            target = ROOT / path
+            target = target_root / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8")
             changed.append(path)
-            print(f"✅ Applied changes to: {path}")
+            env_label = "sandbox" if target_root == SANDBOX_DIR else "main"
+            print(f"✅ Applied changes to: {path} ({env_label})")
         else:
             rejected.append({"path": path, "reason": reason})
             print(f"🚫 Rejected file change: {path} - {reason}")
