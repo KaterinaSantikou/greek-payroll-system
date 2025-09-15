@@ -2563,12 +2563,16 @@ def main():
         print("3) Run the app to verify everything works as expected.")
         
     finally:
-        # Always clean up sandbox environment
-        cleanup_sandbox()
+        # Always clean up sandbox environment and release execution slot
+        try:
+            cleanup_sandbox()
+        except Exception as e:
+            print(f"⚠️ Error during sandbox cleanup: {e}")
         
-    finally:
-        # Always release the concurrent execution slot
-        rate_limiter.release_concurrent_slot()
+        try:
+            rate_limiter.release_concurrent_slot()
+        except Exception as e:
+            print(f"⚠️ Error releasing execution slot: {e}")
 
 if __name__ == "__main__":
     main()
