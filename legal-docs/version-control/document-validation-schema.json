@@ -1,0 +1,197 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Legal Document Registry Schema",
+  "description": "Schema for validating legal document metadata in the version control system",
+  "type": "object",
+  "properties": {
+    "documentRegistry": {
+      "type": "object",
+      "properties": {
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of last registry update"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Semantic version of registry schema"
+        },
+        "documents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/legalDocument"
+          }
+        }
+      },
+      "required": ["lastUpdated", "version", "documents"]
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "totalDocuments": {"type": "integer", "minimum": 0},
+        "activeDocuments": {"type": "integer", "minimum": 0},
+        "archivedDocuments": {"type": "integer", "minimum": 0},
+        "lastComplianceReview": {"type": "string", "format": "date"},
+        "nextScheduledReview": {"type": "string", "format": "date"},
+        "complianceStatus": {
+          "type": "string",
+          "enum": ["CURRENT", "WARNING", "OVERDUE", "CRITICAL"]
+        }
+      },
+      "required": ["totalDocuments", "activeDocuments", "complianceStatus"]
+    }
+  },
+  "required": ["documentRegistry", "metadata"],
+  "definitions": {
+    "legalDocument": {
+      "type": "object",
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$",
+          "description": "Unique identifier for the document"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Official title of the legal document"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "PRIMARY_LEGISLATION",
+            "REGULATORY_DECREE", 
+            "MINISTERIAL_DECISION",
+            "REGULATORY_FRAMEWORK",
+            "COLLECTIVE_AGREEMENT",
+            "COURT_DECISION",
+            "ADMINISTRATIVE_RULING"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "LABOR_LAW",
+            "SOCIAL_SECURITY",
+            "WAGES",
+            "TAX_LAW",
+            "DIGITAL_COMPLIANCE",
+            "SECTOR_SPECIFIC",
+            "HEALTH_SAFETY"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["DRAFT", "REVIEW", "ACTIVE", "ARCHIVED", "SUPERSEDED"]
+        },
+        "currentVersion": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+        },
+        "effectiveDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "expiryDate": {
+          "type": ["string", "null"],
+          "format": "date"
+        },
+        "legalAuthority": {
+          "type": "string",
+          "minLength": 1
+        },
+        "officialUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "localPath": {
+          "type": "string",
+          "description": "Relative path to document in legal-docs directory"
+        },
+        "checksumSHA256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 hash for document integrity verification"
+        },
+        "impactedConfigSections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Configuration sections affected by this document"
+        },
+        "relatedDocuments": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "IDs of related documents"
+        },
+        "complianceRequirements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "ERGANI_SUBMISSION",
+              "EFKA_REPORTING", 
+              "DIGITAL_WORK_CARD",
+              "PAYROLL_CALCULATION",
+              "MINIMUM_WAGE_COMPLIANCE",
+              "REAL_TIME_REPORTING",
+              "SECTOR_COMPLIANCE",
+              "TIP_REPORTING"
+            ]
+          }
+        },
+        "versionHistory": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/versionEntry"
+          }
+        }
+      },
+      "required": [
+        "documentId",
+        "title", 
+        "type",
+        "category",
+        "status",
+        "currentVersion",
+        "effectiveDate",
+        "legalAuthority",
+        "localPath",
+        "checksumSHA256",
+        "impactedConfigSections",
+        "complianceRequirements",
+        "versionHistory"
+      ]
+    },
+    "versionEntry": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?$"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "changes": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approvedBy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string",
+          "enum": ["DRAFT", "REVIEW", "ACTIVE", "ARCHIVED", "SUPERSEDED"]
+        }
+      },
+      "required": ["version", "date", "changes", "approvedBy", "status"]
+    }
+  }
+}
