@@ -479,63 +479,69 @@ class DatabaseTool:
         
         db_url = database_url or os.environ.get("DATABASE_URL")
         if not db_url:
+            duration = time.time() - start_time
             return ToolResult(
                 success=True,
                 message="No DATABASE_URL found, skipping database test",
-                data="skipped"
+                data="skipped",
+                duration=duration
             )
         
         try:
             # Try neon client first
             try:
-                from neon import neon
-                with neon(db_url) as conn:
-                    with conn.cursor() as cur:
-                        cur.execute("SELECT 1")
-                        result = cur.fetchone()
-                        if result and result[0] == 1:
-                            duration = time.time() - start_time
-                            return ToolResult(
-                                success=True,
-                                message=f"Database connection successful in {duration:.1f}s",
-                                duration=duration
-                            )
+                # Note: neon import commented out due to availability issues
+                # from neon import neon
+                # with neon(db_url) as conn:
+                #     with conn.cursor() as cur:
+                #         cur.execute("SELECT 1")
+                #         result = cur.fetchone()
+                #         if result and result[0] == 1:
+                #             duration = time.time() - start_time
+                #             return ToolResult(
+                #                 success=True,
+                #                 message=f"Database connection successful in {duration:.1f}s",
+                #                 duration=duration
+                #             )
+                pass
             except ImportError:
-                # Fallback to Node.js method
-                result = subprocess.run(
-                    ["node", "-e", """
-                    const { neon } = require('@neondatabase/serverless');
-                    const sql = neon(process.env.DATABASE_URL);
-                    sql`SELECT 1`.then(() => {
-                        console.log('DB_OK');
-                        process.exit(0);
-                    }).catch((e) => {
-                        console.error('DB_ERROR:', e.message);
-                        process.exit(1);
-                    });
-                    """],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    env=dict(os.environ, DATABASE_URL=db_url)
+                pass
+                
+            # Fallback to Node.js method
+            result = subprocess.run(
+                ["node", "-e", """
+                const { neon } = require('@neondatabase/serverless');
+                const sql = neon(process.env.DATABASE_URL);
+                sql`SELECT 1`.then(() => {
+                    console.log('DB_OK');
+                    process.exit(0);
+                }).catch((e) => {
+                    console.error('DB_ERROR:', e.message);
+                    process.exit(1);
+                });
+                """],
+                capture_output=True,
+                text=True,
+                timeout=30,
+                env=dict(os.environ, DATABASE_URL=db_url)
+            )
+            
+            duration = time.time() - start_time
+            
+            if result.returncode == 0 and "DB_OK" in result.stdout:
+                return ToolResult(
+                    success=True,
+                    message=f"Database connection successful in {duration:.1f}s",
+                    duration=duration
                 )
-                
-                duration = time.time() - start_time
-                
-                if result.returncode == 0 and "DB_OK" in result.stdout:
-                    return ToolResult(
-                        success=True,
-                        message=f"Database connection successful in {duration:.1f}s",
-                        duration=duration
-                    )
-                else:
-                    safe_log_subprocess_output(result, "Database connection")
-                    return ToolResult(
-                        success=False,
-                        message="Database connection failed",
-                        error=result.stderr,
-                        duration=duration
-                    )
+            else:
+                safe_log_subprocess_output(result, "Database connection")
+                return ToolResult(
+                    success=False,
+                    message="Database connection failed",
+                    error=result.stderr,
+                    duration=duration
+                )
                     
         except Exception as e:
             duration = time.time() - start_time
@@ -614,7 +620,7 @@ class CodebaseTool:
     """Codebase analysis and file operations tool"""
     
     @staticmethod
-    def search_codebase(pattern: str, file_extensions: List[str] = None) -> ToolResult:
+    def search_codebase(pattern: str, file_extensions: Optional[List[str]] = None) -> ToolResult:
         """Search codebase for patterns"""
         start_time = time.time()
         print(f"🔍 Searching codebase for: {pattern}")
