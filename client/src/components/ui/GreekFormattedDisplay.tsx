@@ -10,6 +10,7 @@ import {
   GreekNumericFormatter,
   type GreekFormattedDisplayProps 
 } from '../lib/GreekFormats';
+import { useTranslation } from '../contexts/LanguageContext';
 
 export function GreekFormattedDisplay({
   value,

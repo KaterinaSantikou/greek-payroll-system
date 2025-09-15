@@ -190,33 +190,37 @@ export const useBilingualText = () => {
 };
 
 /**
- * Table column headers for payroll data in Greek
+ * Bilingual Payroll Columns Hook
  */
-export const GREEK_PAYROLL_COLUMNS = {
-  employeeId: 'Κωδικός Εργαζομένου',
-  employeeName: 'Ονοματεπώνυμο',
-  afm: 'ΑΦΜ',
-  amka: 'ΑΜΚΑ', 
-  department: 'Τμήμα',
-  position: 'Θέση',
-  hireDate: 'Ημ/νία Πρόσληψης',
-  contractType: 'Τύπος Σύμβασης',
-  workingHours: 'Ώρες Εργασίας',
-  baseSalary: 'Βασικός Μισθός',
-  grossPay: 'Μικτές Αποδοχές',
-  netPay: 'Καθαρές Αποδοχές',
-  incomeTax: 'Φόρος Εισοδήματος',
-  solidarityTax: 'Τέλος Αλληλεγγύης',
-  efkaEmployee: 'Εργαζόμενος ΕΦΚΑ',
-  efkaEmployer: 'Εργοδότης ΕΦΚΑ',
-  overtime: 'Υπερωρίες',
-  nightShift: 'Νυχτερινό',
-  sundayWork: 'Κυριακάτικο',
-  holidayWork: 'Αργίες',
-  allowances: 'Επιδόματα',
-  bonuses: 'Μπόνους',
-  tips: 'Φιλοδωρήματα',
-  totalCost: 'Συνολικό Κόστος'
+export const useBilingualColumns = () => {
+  const { t } = useTranslation();
+  
+  return {
+    employeeId: () => t('employee.employeeId'),
+    employeeName: () => t('employee.fullName'),
+    afm: () => t('employee.afm'),
+    amka: () => t('employee.amka'),
+    department: () => t('employee.department'),
+    position: () => t('employee.position'),
+    hireDate: () => t('employee.hireDate'),
+    contractType: () => t('contract.contractType'),
+    workingHours: () => t('time.workingHours'),
+    baseSalary: () => t('payroll.baseSalary'),
+    grossPay: () => t('payroll.grossPay'),
+    netPay: () => t('payroll.netPay'),
+    incomeTax: () => t('tax.incomeTax'),
+    solidarityTax: () => t('tax.solidarityTax'),
+    efkaEmployee: () => t('tax.efkaEmployee'),
+    efkaEmployer: () => t('tax.efkaEmployer'),
+    overtime: () => t('payroll.overtime'),
+    nightShift: () => t('payroll.nightShift'),
+    sundayWork: () => t('payroll.sundayWork'),
+    holidayWork: () => t('payroll.holidayWork'),
+    allowances: () => t('payroll.allowances'),
+    bonuses: () => t('payroll.bonuses'),
+    tips: () => t('payroll.totalTips'),
+    totalCost: () => t('payroll.totalCost')
+  };
 };
 
 /**
