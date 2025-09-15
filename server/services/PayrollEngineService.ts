@@ -186,22 +186,22 @@ export class PayrollEngineService {
         for (const result of chunkResults) {
           if (result.success) {
             const calculation = result.calculation!;
-          
-          calculations.push(calculation);
-          
-          // Track cap consumption
-          for (const [capType, consumed] of Object.entries(calculation.capConsumption)) {
-            if (consumed > 0) {
-              capConsumption.push({
-                employeeId,
-                capType,
-                consumed,
-                remaining: 0 // Will be updated after actual consumption
-              });
+            calculations.push(calculation);
+            
+            // Track cap consumption
+            for (const [capType, consumed] of Object.entries(calculation.capConsumption)) {
+              if (consumed > 0) {
+                capConsumption.push({
+                  employeeId: result.employeeId,
+                  capType,
+                  consumed,
+                  remaining: 0 // Will be updated after actual consumption
+                });
+              }
             }
+          } else {
+            errors.push(`Employee ${result.employeeId}: ${result.error}`);
           }
-        } catch (error) {
-          errors.push(`Employee ${employeeId}: ${error.message}`);
         }
       }
 
