@@ -1768,7 +1768,13 @@ def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolv
         planning_messages = [planning_system, planning_user]
         
         print("🤖 Generating implementation plan...")
-        response = make_openai_request(planning_messages)
+        
+        # Try structured output for planning (keep traditional for now as planning uses text structure)
+        try:
+            response = make_openai_request(planning_messages, use_structured_output=False)
+        except Exception as e:
+            print(f"❌ Planning request failed: {e}")
+            return None
         
         if not response:
             print("❌ Failed to generate planning response")
@@ -1962,7 +1968,16 @@ def execute_implementation_phase(task_text, tree, knowledge, dependency_summary,
         implementation_messages = [implementation_system, implementation_user]
         
         print("🤖 Implementing the approved plan...")
-        response = make_openai_request(implementation_messages)
+        
+        # Try structured output for implementation for better reliability
+        try:
+            print("📋 Attempting structured implementation output...")
+            response = make_openai_request(implementation_messages, use_structured_output=True)
+            implementation_structured = True
+        except Exception as e:
+            print(f"⚠️ Structured implementation failed ({e}), falling back to traditional...")
+            response = make_openai_request(implementation_messages, use_structured_output=False)
+            implementation_structured = False
         
         if not response:
             print("❌ Failed to generate implementation response")
