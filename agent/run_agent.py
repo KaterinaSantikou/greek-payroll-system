@@ -1637,7 +1637,8 @@ def main():
             resp = execute_implementation_phase(
                 task_text, tree, knowledge, dependency_summary, evolved_guidelines, implementation_plan
             )
-    if not resp:
+        
+        if not resp:
         print("❌ Failed to get response from OpenAI")
         return
     
