@@ -148,20 +148,30 @@ export class ModernPayrollEngine {
     const calculations: DbPayrollCalculation[] = [];
 
     try {
-      for (const employee of employees) {
-        const employeeWageComponent = wageComponents.find(
-          wc => wc.employeeId === employee.employeeId
-        );
-        
-        if (!employeeWageComponent) {
-          console.warn(`No wage component found for employee ${employee.employeeId}`);
-          continue;
-        }
+      // PERFORMANCE OPTIMIZATION: Create Maps for O(1) lookups instead of O(n) Array.find()
+      const wageComponentMap = new Map(
+        wageComponents.map(wc => [wc.employeeId, wc])
+      );
+      const timesheetMap = new Map(
+        timesheetData.map(ts => [ts.employeeId, ts])
+      );
+      
+      // Process employees in batches to handle large datasets efficiently
+      const BATCH_SIZE = 200;
+      const employeeBatches = this.chunkArray(employees, BATCH_SIZE);
+      
+      for (const batch of employeeBatches) {
+        // Process batch with limited concurrency (10 parallel calculations)
+        const batchPromises = batch.map(async (employee) => {
+          const employeeWageComponent = wageComponentMap.get(employee.employeeId);
+          
+          if (!employeeWageComponent) {
+            console.warn(`No wage component found for employee ${employee.employeeId}`);
+            return null;
+          }
 
-        // Get timesheet data for this employee
-        const timesheet = timesheetData.find(
-          ts => ts.employeeId === employee.employeeId
-        );
+          // Get timesheet data for this employee
+          const timesheet = timesheetMap.get(employee.employeeId);
 
         const calculationInput: PayrollCalculationInput = {
           employee,
@@ -180,11 +190,21 @@ export class ModernPayrollEngine {
           isFullTime: true
         };
 
-        const calculation = payrollCalculator.calculatePayroll(calculationInput);
-        calculation.periodId = periodId;
-        calculation.calculationId = randomUUID();
+          const calculation = payrollCalculator.calculatePayroll(calculationInput);
+          calculation.periodId = periodId;
+          calculation.calculationId = randomUUID();
+          
+          return calculation;
+        });
         
-        calculations.push(calculation);
+        // Process batch with concurrency limit
+        const batchResults = await this.processWithConcurrencyLimit(
+          batchPromises.filter(p => p !== null), // Remove null promises
+          10 // Max 10 concurrent calculations
+        );
+        
+        // Add successful calculations
+        calculations.push(...batchResults.filter(calc => calc !== null));
       }
 
       const endTime = Date.now();
