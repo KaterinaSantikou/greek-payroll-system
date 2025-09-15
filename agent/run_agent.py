@@ -105,6 +105,43 @@ def pick_next_task():
     pending = sorted(glob.glob(str(ROOT / "tasks/pending/*.md")))
     return pending[0] if pending else None
 
+def read_knowledge():
+    """Read the current AI knowledge base"""
+    if not KNOWLEDGE_FILE.exists():
+        return "No previous knowledge available."
+    return KNOWLEDGE_FILE.read_text(encoding="utf-8")
+
+def update_knowledge(task_title, changed_files, task_summary):
+    """Update the knowledge base with information from the completed task"""
+    CONTEXT_DIR.mkdir(exist_ok=True)
+    
+    current_knowledge = read_knowledge() if KNOWLEDGE_FILE.exists() else ""
+    
+    # Prepare update entry
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    update_entry = f"""
+## Task Completed: {task_title}
+**Date:** {timestamp}
+**Files Modified:** {', '.join(changed_files) if changed_files else 'None'}
+
+**Summary:** {task_summary[:200]}...
+
+"""
+    
+    # Find the "Recent Changes" section and insert the new entry
+    if "## Recent Changes" in current_knowledge:
+        parts = current_knowledge.split("## Recent Changes")
+        updated_knowledge = parts[0] + "## Recent Changes" + update_entry + parts[1] if len(parts) > 1 else parts[0] + "## Recent Changes" + update_entry
+    else:
+        updated_knowledge = current_knowledge + "\n## Recent Changes" + update_entry
+    
+    # Update the "Last updated" timestamp
+    updated_knowledge = updated_knowledge.replace("*Last updated: Initial setup*", f"*Last updated: {timestamp}*")
+    if "*Last updated:" not in updated_knowledge:
+        updated_knowledge += f"\n\n---\n*Last updated: {timestamp}*"
+    
+    KNOWLEDGE_FILE.write_text(updated_knowledge, encoding="utf-8")
+
 # ---- MAIN ----
 def main():
     if not OPENAI_API_KEY:
