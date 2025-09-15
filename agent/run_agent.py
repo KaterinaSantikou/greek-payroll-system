@@ -607,6 +607,142 @@ ORDER BY table_name;
     
     return True
 
+def run_quality_critic(task_file, changed_files, task_summary):
+    """Run automated quality critic to evaluate the completed task"""
+    try:
+        print("🔍 Running quality critic evaluation...")
+        
+        # Get git diff of recent changes
+        try:
+            diff_result = subprocess.run([
+                "git", "diff", "HEAD~1", "HEAD"
+            ], cwd=ROOT, capture_output=True, text=True, timeout=30)
+            
+            if diff_result.returncode != 0:
+                # If no previous commit, get diff of staged changes
+                diff_result = subprocess.run([
+                    "git", "diff", "--cached"
+                ], cwd=ROOT, capture_output=True, text=True, timeout=30)
+            
+            git_diff = diff_result.stdout if diff_result.returncode == 0 else "No diff available"
+        except:
+            git_diff = "Could not retrieve git diff"
+        
+        # Read original task requirements
+        task_content = read_file(task_file)
+        
+        # Prepare critic prompt
+        critic_system = {
+            "role": "system",
+            "content": textwrap.dedent("""
+            You are a senior code quality critic specializing in Greek payroll systems. Your job is to evaluate completed tasks and provide constructive feedback.
+            
+            EVALUATION CRITERIA:
+            - Does the implementation match the task requirements?
+            - Is the code following Greek labor law requirements correctly?
+            - Are EFKA calculations accurate and compliant?
+            - Is the code maintainable and well-structured?
+            - Are there any potential bugs or edge cases missed?
+            - Does it integrate properly with existing payroll architecture?
+            
+            FEEDBACK FORMAT:
+            Provide feedback in this structure:
+            ## Overall Assessment: [EXCELLENT/GOOD/FAIR/NEEDS_IMPROVEMENT]
+            
+            ## Requirements Compliance: [rating 1-5]
+            - [specific feedback on requirement fulfillment]
+            
+            ## Code Quality: [rating 1-5]  
+            - [feedback on structure, maintainability, patterns]
+            
+            ## Greek Labor Law Compliance: [rating 1-5]
+            - [feedback on legal accuracy and EFKA compliance]
+            
+            ## Potential Issues:
+            - [list any concerns or missing edge cases]
+            
+            ## Recommendations:
+            - [specific suggestions for improvement]
+            
+            Be constructive but thorough. Focus on actionable feedback.
+            """).strip()
+        }
+        
+        critic_user = {
+            "role": "user", 
+            "content": textwrap.dedent(f"""
+            Please evaluate this completed task:
+            
+            ORIGINAL TASK:
+            ---
+            {task_content}
+            
+            IMPLEMENTATION CHANGES:
+            ---
+            {git_diff[:3000]}{"..." if len(git_diff) > 3000 else ""}
+            
+            CHANGED FILES: {', '.join(changed_files) if changed_files else 'None'}
+            
+            TASK SUMMARY: {task_summary}
+            """).strip()
+        }
+        
+        # Call critic AI
+        try:
+            critic_response = call_with_retry(lambda: call_openai([critic_system, critic_user]))
+            
+            if critic_response:
+                # Save critic report
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                task_name = pathlib.Path(task_file).stem
+                critic_file = AGENT_DIR / f"critic_report_{task_name}_{timestamp}.md"
+                
+                report_content = f"""# Quality Critic Report: {task_name}
+
+**Date:** {datetime.now().strftime("%Y-%m-%d %H:%M")}
+**Task File:** {task_file}
+**Changed Files:** {', '.join(changed_files) if changed_files else 'None'}
+
+---
+
+{critic_response}
+
+---
+
+**Git Diff Summary:**
+```
+{git_diff[:1000]}{"..." if len(git_diff) > 1000 else ""}
+```
+"""
+                
+                critic_file.write_text(report_content, encoding="utf-8")
+                print(f"📋 Quality critic report saved: {critic_file}")
+                
+                # Extract overall assessment for quick feedback
+                if "EXCELLENT" in critic_response:
+                    print("⭐ Critic Assessment: EXCELLENT")
+                elif "GOOD" in critic_response:
+                    print("✅ Critic Assessment: GOOD")
+                elif "FAIR" in critic_response:
+                    print("⚠️ Critic Assessment: FAIR")
+                elif "NEEDS_IMPROVEMENT" in critic_response:
+                    print("❌ Critic Assessment: NEEDS IMPROVEMENT")
+                else:
+                    print("📝 Critic Assessment: See report for details")
+                    
+                return True
+            else:
+                print("⚠️ Could not get critic response")
+                return False
+                
+        except Exception as e:
+            print(f"⚠️ Error running critic evaluation: {e}")
+            return False
+            
+    except Exception as e:
+        print(f"⚠️ Error in quality critic: {e}")
+        return False
+
 def update_knowledge(task_title, changed_files, task_summary):
     """Update the knowledge base with information from the completed task"""
     CONTEXT_DIR.mkdir(exist_ok=True)
