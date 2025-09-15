@@ -3,6 +3,16 @@ import { isAuthenticated } from '../replitAuth';
 import { z } from 'zod';
 import { nanoid } from 'nanoid';
 
+// RBAC middleware for sensitive payroll operations
+import { 
+  requirePayrollAccess,
+  requirePayrollCreate, 
+  requirePayrollFinalize,
+  requirePayrollCorrection,
+  requireFinancialRead,
+  addUserContext
+} from '../middleware/rbacMiddleware.js';
+
 // Business layer imports
 import { payrollService } from '../../lib/payroll/services/payroll-service';
 import { payrollValidator } from '../../lib/payroll/calculators/payroll-validator';
@@ -52,7 +62,7 @@ const idempotencyMiddleware = (req: any, res: any, next: any) => {
 };
 
 // GET /api/payroll/runs - List payroll runs
-router.get('/api/payroll/runs', isAuthenticated, async (req, res) => {
+router.get('/api/payroll/runs', isAuthenticated, addUserContext, requirePayrollAccess, async (req, res) => {
   try {
     const { period, status, runType, limit = '20', offset = '0' } = req.query;
 
@@ -87,7 +97,7 @@ router.get('/api/payroll/runs', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/payroll/runs/:id - Get single payroll run with details
-router.get('/api/payroll/runs/:id', isAuthenticated, async (req, res) => {
+router.get('/api/payroll/runs/:id', isAuthenticated, addUserContext, requirePayrollAccess, async (req, res) => {
   try {
     // Delegate to infrastructure layer
     const { run, lines } = await payrollRepository.getPayrollRunWithLines(
@@ -154,6 +164,8 @@ router.get('/api/payroll/runs/:id', isAuthenticated, async (req, res) => {
 router.post(
   '/api/payroll/runs',
   isAuthenticated,
+  addUserContext,
+  requirePayrollCreate,
   idempotencyMiddleware,
   async (req, res) => {
     try {
