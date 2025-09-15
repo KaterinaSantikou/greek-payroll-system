@@ -296,7 +296,28 @@ export class PayrollEngineService {
       }
 
       if (calculations.length === 0) {
+        // Finalize monitoring if no calculations succeeded
+        if (resourceMonitor) {
+          resourceMonitor.endPhase();
+          const finalMetrics = resourceMonitor.finalize();
+          logger.error('No successful payroll calculations - resource usage', {
+            scopeId,
+            peakMemory: `${Math.round(finalMetrics.peakMemoryUsage / 1024 / 1024)}MB`,
+            duration: `${finalMetrics.totalDuration}ms`,
+            alertCount: finalMetrics.alerts.length
+          });
+        }
+        
         throw new Error('No successful payroll calculations');
+      }
+
+      // End calculations phase and start cap consumption
+      if (resourceMonitor) {
+        resourceMonitor.endPhase();
+        resourceMonitor.startPhase('cap_consumption');
+        
+        // Log progress for large runs
+        resourceMonitor.recordMetric('successful_calculations', calculations.length, 'employees');
       }
 
       // Consume caps atomically
