@@ -2754,6 +2754,25 @@ def main():
             # Create git checkpoint after merging (for continuous agent)
             print("💾 Creating git checkpoint after merging validated changes...")
             try:
+                # ===== HUMAN APPROVAL CHECKPOINT =====
+                print("\n🔒 Checking if human approval is required...")
+                
+                # Get git diff for approval assessment
+                diff_result = GitTool.get_diff()
+                git_diff = diff_result.data if diff_result.success and diff_result.data else ""
+                
+                # Request human approval if required
+                approval_granted = require_human_approval(
+                    task_name=task_name,
+                    changed_files=changed or [],
+                    git_diff=git_diff
+                )
+                
+                if not approval_granted:
+                    print("❌ Human approval required but not granted")
+                    print("🔄 Changes are staged but not committed. Approval required to proceed.")
+                    return
+                
                 # Use tool abstraction for git operations
                 print("📝 Committing changes using validation...")
                 commit_result = commit_with_validation(f"AI Agent: Completed task from sandbox")
