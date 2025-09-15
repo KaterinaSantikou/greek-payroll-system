@@ -12,7 +12,7 @@ import { getGreekLawConfig } from '../config/greek-law-config.js';
 // CONFIGURABLE PAYROLL RULES
 // =============================================================================
 
-let configCache: any = null;
+let configCache: Awaited<ReturnType<typeof getGreekLawConfig>> | null = null;
 let cacheExpiry: number = 0;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 

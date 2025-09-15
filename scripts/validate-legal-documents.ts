@@ -124,7 +124,7 @@ class LegalDocumentValidator {
   /**
    * Validate individual document
    */
-  private async validateDocument(doc: any): Promise<{ isValid: boolean; errors: string[] }> {
+  private async validateDocument(doc: LegalDocument): Promise<{ isValid: boolean; errors: string[] }> {
     const errors: string[] = [];
 
     // Check required fields
@@ -184,13 +184,13 @@ class LegalDocumentValidator {
   /**
    * Validate registry metadata
    */
-  private async validateRegistryMetadata(registry: any): Promise<void> {
+  private async validateRegistryMetadata(registry: DocumentRegistry): Promise<void> {
     const metadata = registry.metadata;
     
     // Check document counts
     const actualTotal = registry.documentRegistry.documents.length;
-    const actualActive = registry.documentRegistry.documents.filter((doc: any) => doc.status === 'ACTIVE').length;
-    const actualArchived = registry.documentRegistry.documents.filter((doc: any) => doc.status === 'ARCHIVED').length;
+    const actualActive = registry.documentRegistry.documents.filter((doc: LegalDocument) => doc.status === 'ACTIVE').length;
+    const actualArchived = registry.documentRegistry.documents.filter((doc: LegalDocument) => doc.status === 'ARCHIVED').length;
 
     if (metadata.totalDocuments !== actualTotal) {
       this.warnings.push(`Metadata total count mismatch: reported ${metadata.totalDocuments}, actual ${actualTotal}`);
