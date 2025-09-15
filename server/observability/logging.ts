@@ -77,13 +77,42 @@ class Logger {
         .replace(/\\b\\d{11}\\b/g, '[AMKA_REDACTED]') // Greek AMKA (11 digits)
         .replace(/\\b\\d{3}-?\\d{2}-?\\d{4}\\b/g, '[SSN_REDACTED]') // US SSN
         .replace(/\\b4[0-9]{12}(?:[0-9]{3})?\\b/g, '[CARD_REDACTED]') // Credit card (basic)
+        .replace(/\\b[GR\\d{2}]?\\d{4}\\s?\\d{4}\\s?\\d{4}\\s?\\d{4}\\s?\\d{3,4}\\b/g, '[IBAN_REDACTED]') // Greek IBAN
+        .replace(/\\b\\+30\\s?\\d{2}\\s?\\d{4}\\s?\\d{4}\\b/g, '[PHONE_REDACTED]') // Greek phone number
         .replace(/password[\"']?\\s*[:=]\\s*[\"']?[^\\s,}]+/gi, 'password: [REDACTED]');
     }
     
     if (typeof data === 'object' && data !== null) {
       const sensitiveKeys = [
-        'password', 'token', 'secret', 'key', 'afm', 'amka', 'ssn', 
-        'email', 'phone', 'iban', 'credit_card', 'authorization'
+        // Authentication & Security
+        'password', 'token', 'secret', 'key', 'authorization', 'credential',
+        'api_key', 'access_token', 'refresh_token', 'session_id',
+        
+        // Greek Employee Personal Data (GDPR sensitive)
+        'afm', 'amka', 'adt', 'passport', 'social_security',
+        'first_name', 'last_name', 'full_name', 'name',
+        'email', 'phone', 'mobile', 'address', 'home_address',
+        'birth_date', 'date_of_birth', 'birthday', 'birth_place',
+        
+        // Financial Data
+        'salary', 'wage', 'pay', 'gross_pay', 'net_pay', 'income',
+        'iban', 'bank_account', 'account_number', 'credit_card', 'card_number',
+        'tax_id', 'vat_number', 'tin',
+        
+        // Greek Specific Employment Data
+        'efka_number', 'ika_number', 'insurance_number',
+        'family_status', 'marital_status', 'children',
+        'emergency_contact', 'next_of_kin',
+        
+        // Medical & Personal
+        'medical', 'health', 'disability', 'medical_condition',
+        'emergency_contact_phone', 'emergency_contact_name',
+        
+        // Location Data
+        'ip_address', 'geolocation', 'coordinates', 'location',
+        
+        // HR Sensitive
+        'performance_rating', 'discipline', 'termination_reason'
       ];
       
       if (Array.isArray(data)) {
