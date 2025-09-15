@@ -135,6 +135,17 @@ export interface PayrollCalculationResult {
 
   // Greek Bonuses (Δώρα)
   christmasBonus: number;
+  
+  // Formatted values for Greek locale (display purposes)
+  formatted: {
+    baseSalary: string;
+    netPay: string;
+    grossTotal: string;
+    workingPeriod: string;
+    calculationDate: string;
+    taxAmount: string;
+    efkaAmount: string;
+  };
   easterBonus: number;
   vacationBonus: number;
   totalBonuses: number;
