@@ -1769,6 +1769,9 @@ def execute_planning_phase(task_text, tree, knowledge, architecture_guide, depen
             EXISTING KNOWLEDGE:
             {knowledge}
             
+            ARCHITECTURE GUIDE:
+            {architecture_guide}
+            
             Please create a comprehensive implementation plan for this task.
             Remember: NO CODE, just detailed planning.
             """).strip()
@@ -1966,6 +1969,9 @@ def execute_implementation_phase(task_text, tree, knowledge, architecture_guide,
             
             EXISTING KNOWLEDGE:
             {knowledge}
+            
+            ARCHITECTURE GUIDE:
+            {architecture_guide}
             
             Please implement the complete plan above. Make sure you:
             1. Follow every step in the implementation plan
@@ -2269,6 +2275,10 @@ def main():
                 CURRENT SYSTEM KNOWLEDGE:
                 ---
                 {knowledge}
+
+                ARCHITECTURE & DEVELOPMENT RULES:
+                ---
+                {architecture_guide}
 
                 DEPENDENCY ARCHITECTURE:
                 ---
