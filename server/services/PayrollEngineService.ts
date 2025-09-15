@@ -153,9 +153,42 @@ export class PayrollEngineService {
         throw new Error('No employees selected for scope');
       }
 
+      // Initialize resource monitoring for large payroll runs
+      if (employeeIds.length >= 100) {
+        resourceMonitor = createPayrollResourceMonitor(scopeId, employeeIds.length, {
+          memoryThreshold: employeeIds.length > 1000 ? 2048 : 1024, // 2GB for large runs
+          leakThreshold: Math.max(50, employeeIds.length / 20), // Scale leak threshold with size
+          snapshotInterval: employeeIds.length > 2000 ? 3000 : 5000 // More frequent for very large runs
+        });
+        
+        // Handle resource alerts
+        resourceMonitor.on('alert', (alert) => {
+          logger.error('Payroll resource alert', {
+            scopeId,
+            alertType: alert.type,
+            severity: alert.severity,
+            message: alert.message,
+            recommendations: alert.recommendations
+          });
+        });
+        
+        resourceMonitor.startPhase('employee_data_fetch');
+      }
+
       // Get employee data for validation using infrastructure layer
       const employees = await payrollRepository.getEmployeePayrollInfo(employeeIds);
       const timesheets = await payrollRepository.getTimesheetData(employeeIds, scope.period);
+      
+      // End data fetch phase and start validation
+      if (resourceMonitor) {
+        resourceMonitor.endPhase();
+        resourceMonitor.startPhase('data_validation');
+        
+        // Suggest GC for large datasets to free up memory before intensive processing
+        if (employeeIds.length > 2000) {
+          ResourceMonitoringUtils.suggestGarbageCollection();
+        }
+      }
       
       // PERFORMANCE OPTIMIZATION: Use Map for O(1) timesheet lookups
       const timesheetMap = new Map(timesheets.map(ts => [ts.employeeId, ts]));
