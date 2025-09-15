@@ -236,6 +236,8 @@ router.post(
 router.post(
   '/api/payroll/runs/:id/finalize',
   isAuthenticated,
+  addUserContext,
+  requirePayrollFinalize,
   idempotencyMiddleware,
   async (req, res) => {
     try {
