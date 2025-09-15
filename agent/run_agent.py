@@ -1745,6 +1745,9 @@ def execute_planning_phase(task_text, tree, knowledge, architecture_guide, depen
             - Plan accordingly to stay within size limits when possible
             - Focus on the most critical files for the core functionality
             
+            ARCHITECTURE & DEVELOPMENT RULES:
+            {architecture_guide}
+            
             CONTEXT ABOUT THE CODEBASE:
             {dependency_summary}
             
@@ -1928,6 +1931,9 @@ def execute_implementation_phase(task_text, tree, knowledge, architecture_guide,
             - Include unit tests for complex logic
             - IMPORTANT: Do not exceed {MAX_FILES_PER_TASK} file changes in implementation
             - If the plan includes more files, focus on the most critical ones
+            
+            ARCHITECTURE & DEVELOPMENT RULES:
+            {architecture_guide}
             
             CONTEXT ABOUT THE CODEBASE:
             {dependency_summary}
