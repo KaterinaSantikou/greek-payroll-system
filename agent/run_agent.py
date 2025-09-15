@@ -10,10 +10,18 @@ try:
         GitTool, BuildTool, TestTool, DatabaseTool, CodebaseTool,
         ToolResult, run_full_validation, commit_with_validation
     )
+    from agent.output_validator import (
+        OutputValidator, ValidationConfig, validate_and_handle_task,
+        validate_task_output, should_reject_patch, move_task_back_to_pending
+    )
 except ImportError:
     from tools import (
         GitTool, BuildTool, TestTool, DatabaseTool, CodebaseTool,
         ToolResult, run_full_validation, commit_with_validation
+    )
+    from output_validator import (
+        OutputValidator, ValidationConfig, validate_and_handle_task,
+        validate_task_output, should_reject_patch, move_task_back_to_pending
     )
 
 # ---- CONFIG ----
