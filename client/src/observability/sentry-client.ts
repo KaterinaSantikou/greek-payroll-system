@@ -151,7 +151,8 @@ export function setSentryContext(key: string, context: Record<string, any>) {
  * Capture custom client metrics
  */
 export function captureClientMetric(name: string, value: number, tags?: Record<string, string>) {
-  Sentry.metrics.gauge(name, value, {
+  // Note: Sentry metrics API not available in current version
+  // Sentry.metrics.gauge(name, value, {
     tags: {
       component: 'frontend',
       ...tags
