@@ -1,0 +1,122 @@
+# Greek Labor Law Configuration via Environment Variables
+# =============================================================================
+# 
+# This file shows how to configure Greek labor law constants using environment
+# variables instead of hard-coded values. Copy these to your .env file and
+# adjust values when labor laws change.
+#
+# =============================================================================
+
+# =============================================================================
+# MINIMUM WAGE SETTINGS (Updated when minimum wage changes)
+# =============================================================================
+
+# Current minimum wage values (as of 2024-04-01)
+GREEK_MINIMUM_WAGE_MONTHLY=830
+GREEK_MINIMUM_WAGE_DAILY=27.65
+GREEK_MINIMUM_WAGE_HOURLY=3.45
+GREEK_MINIMUM_WAGE_EFFECTIVE_DATE=2024-04-01
+GREEK_MINIMUM_WAGE_LEGAL_REF=Ministerial Decision A.1002/2024
+
+# =============================================================================
+# EFKA SOCIAL SECURITY RATES (Updated when EFKA rates change)
+# =============================================================================
+
+# Employee contribution rates (percentages as decimals)
+GREEK_EFKA_EMPLOYEE_MAIN=0.1067          # 10.67% main pension
+GREEK_EFKA_EMPLOYEE_AUXILIARY=0.0333     # 3.33% auxiliary pension
+GREEK_EFKA_EMPLOYEE_UNEMPLOYMENT=0.0213  # 2.13% unemployment fund
+
+# Employer contribution rates (percentages as decimals)
+GREEK_EFKA_EMPLOYER_MAIN=0.1542          # 15.42% main pension
+GREEK_EFKA_EMPLOYER_AUXILIARY=0.0333     # 3.33% auxiliary pension
+GREEK_EFKA_EMPLOYER_UNEMPLOYMENT=0.0503  # 5.03% unemployment fund
+GREEK_EFKA_EMPLOYER_SICKNESS=0.0287      # 2.87% sickness benefits
+GREEK_EFKA_EMPLOYER_WORK_ACCIDENT=0.0067 # 0.67% work accident insurance
+
+# =============================================================================
+# TAX BRACKETS (Updated when income tax rates change)
+# =============================================================================
+
+# Income tax brackets (JSON format: min-max:rate)
+GREEK_TAX_BRACKETS=[{"min":0,"max":10000,"rate":0.09},{"min":10000,"max":20000,"rate":0.22},{"min":20000,"max":30000,"rate":0.28},{"min":30000,"max":40000,"rate":0.36},{"min":40000,"max":-1,"rate":0.44}]
+
+# Solidarity tax brackets (JSON format: min-max:rate)
+GREEK_SOLIDARITY_TAX_BRACKETS=[{"min":0,"max":12000,"rate":0},{"min":12000,"max":20000,"rate":0.022},{"min":20000,"max":30000,"rate":0.05},{"min":30000,"max":40000,"rate":0.065},{"min":40000,"max":65000,"rate":0.075},{"min":65000,"max":-1,"rate":0.09}]
+
+# =============================================================================
+# WORKING TIME LIMITS (Updated when labor law changes)
+# =============================================================================
+
+GREEK_STANDARD_MONTHLY_HOURS=173.33  # Standard monthly working hours
+GREEK_MAX_DAILY_HOURS=8              # Maximum daily working hours
+GREEK_MAX_WEEKLY_HOURS=40            # Maximum weekly working hours
+GREEK_MAX_OVERTIME_DAILY=2           # Maximum overtime hours per day
+GREEK_MAX_OVERTIME_WEEKLY=5          # Maximum overtime hours per week
+GREEK_MAX_ANNUAL_OVERTIME=150        # Maximum annual overtime hours
+
+# =============================================================================
+# TAX-FREE BENEFITS LIMITS (Updated with budget law changes)
+# =============================================================================
+
+GREEK_TAX_FREE_MEAL_VOUCHERS=11      # €11 per day tax-free meal vouchers
+GREEK_TAX_FREE_TRANSPORT=150         # €150 per month tax-free transport
+GREEK_TAX_FREE_EDUCATION=200         # €200 per month tax-free education
+GREEK_TAX_FREE_EFFECTIVE_DATE=2024-01-01
+
+# =============================================================================
+# TIPS TAXATION RULES (Updated with tax law changes)
+# =============================================================================
+
+GREEK_TIPS_TAX_RATE=0.15             # 15% flat tax rate on declared tips
+GREEK_TIPS_MIN_DECLARED=0.08         # 8% minimum declared tips of revenue
+
+# =============================================================================
+# OVERTIME PREMIUM RATES (Updated with labor law changes)
+# =============================================================================
+
+GREEK_OVERTIME_TIER1=1.25           # First 2 hours: 25% premium
+GREEK_OVERTIME_TIER2=1.50           # Hours 3-4: 50% premium
+GREEK_OVERTIME_TIER3=1.75           # Beyond 4 hours: 75% premium
+
+# =============================================================================
+# NIGHT, SUNDAY, AND HOLIDAY PREMIUMS
+# =============================================================================
+
+GREEK_NIGHT_PREMIUM=0.25            # 25% night premium (10 PM - 6 AM)
+GREEK_SUNDAY_PREMIUM=0.75           # 75% Sunday premium
+GREEK_HOLIDAY_PREMIUM=1.00          # 100% holiday premium
+GREEK_DANGEROUS_PREMIUM=0.15        # 15% dangerous work premium
+
+# =============================================================================
+# SEVERANCE PAY RULES (JSON format for complex structures)
+# =============================================================================
+
+GREEK_SEVERANCE_RULES={"yearsBrackets":[{"minYears":0,"maxYears":1,"monthsOfPay":0},{"minYears":1,"maxYears":2,"monthsOfPay":1},{"minYears":2,"maxYears":5,"monthsOfPay":2},{"minYears":5,"maxYears":10,"monthsOfPay":3},{"minYears":10,"maxYears":15,"monthsOfPay":4},{"minYears":15,"maxYears":20,"monthsOfPay":5},{"minYears":20,"maxYears":25,"monthsOfPay":6},{"minYears":25,"maxYears":-1,"monthsOfPay":12}],"basedOnLastSalary":true,"maxMonthsCap":24}
+
+# =============================================================================
+# LAW VERSION TRACKING
+# =============================================================================
+
+GREEK_LAW_VERSION=2024.12            # Version for tracking law changes
+GREEK_LAW_EFFECTIVE_DATE=2024-12-01  # When current law version took effect
+GREEK_LAW_REFERENCES=Law 4808/2021 - Labor Relations Reform,Presidential Decree 81/2023 - EFKA Rates,Ministerial Decision A.1002/2024 - Minimum Wage
+
+# =============================================================================
+# USAGE INSTRUCTIONS
+# =============================================================================
+#
+# 1. Copy relevant variables to your .env file
+# 2. Adjust values when Greek labor laws change
+# 3. Use version tracking (GREEK_LAW_VERSION) to manage changes
+# 4. Always include legal references for compliance auditing
+# 5. Test changes in development environment first
+#
+# Example of updating minimum wage:
+# - Update GREEK_MINIMUM_WAGE_* values
+# - Update GREEK_MINIMUM_WAGE_EFFECTIVE_DATE
+# - Update GREEK_MINIMUM_WAGE_LEGAL_REF
+# - Update GREEK_LAW_VERSION to track the change
+#
+# The system will automatically load these values and use them
+# for all payroll calculations instead of hard-coded constants.
