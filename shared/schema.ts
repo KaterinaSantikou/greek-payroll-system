@@ -30,9 +30,14 @@ export const eventQueueStatusEnum = pgEnum('event_queue_status', ['pending', 'pr
 export const eventProcessingStatusEnum = pgEnum('event_processing_status', ['started', 'completed', 'failed', 'timeout']);
 export const deadLetterStatusEnum = pgEnum('dead_letter_status', ['pending', 'investigating', 'resolved', 'discarded']);
 
-// Employment and payroll enums
+// Employment and payroll enums (DB-only)
 export const employmentTypeEnum = pgEnum('employment_type', ['full_time', 'part_time', 'contract', 'temporary', 'seasonal']);
+export const contractTypeEnum = pgEnum('contract_type', ['indefinite', 'fixed_term', 'seasonal']);
 export const payrollStatusEnum = pgEnum('payroll_status', ['draft', 'calculated', 'approved', 'paid', 'cancelled']);
+export const leaveTypeEnum = pgEnum('leave_type', ['annual', 'sick', 'maternity', 'paternity', 'special', 'unpaid']);
+export const paymentMethodEnum = pgEnum('payment_method', ['bank_transfer', 'cash', 'check']);
+export const filingStatusEnum = pgEnum('filing_status', ['pending', 'submitted', 'accepted', 'rejected', 'cancelled']);
+export const complianceSystemTypeEnum = pgEnum('compliance_system_type', ['ergani', 'efka', 'aade', 'general']);
 export const auditResultEnum = pgEnum('audit_result', ['success', 'failure', 'blocked']);
 export const authMethodEnum = pgEnum('auth_method', ['password', 'sso', 'magic_link', 'mfa', 'webauthn']);
 
