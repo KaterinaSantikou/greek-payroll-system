@@ -140,7 +140,7 @@ class GitHubPRWorkflow:
         logger.info("✅ Changes committed and pushed to dev branch")
         return True
 
-    def get_diff_summary(self) -> Dict[str, any]:
+    def get_diff_summary(self) -> Dict[str, Any]:
         """Get summary of changes between dev and main branches"""
         logger.info("Generating diff summary...")
         
@@ -184,7 +184,7 @@ class GitHubPRWorkflow:
             'recent_commits': recent_commits[:5]
         }
 
-    def get_test_results_summary(self) -> Dict[str, any]:
+    def get_test_results_summary(self) -> Dict[str, Any]:
         """Get summary of latest test results"""
         validation_log = self.project_root / "agent" / "validation_log.json"
         
@@ -394,7 +394,7 @@ class GitHubPRWorkflow:
             logger.warning(f"Failed to add labels: {e}")
             return False
 
-    def execute_pr_workflow(self, commit_message: str = None) -> Tuple[bool, str]:
+    def execute_pr_workflow(self, commit_message: Optional[str] = None) -> Tuple[bool, str]:
         """Execute the complete PR workflow"""
         logger.info("🚀 Starting PR workflow...")
         
