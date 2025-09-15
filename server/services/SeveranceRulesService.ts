@@ -216,6 +216,10 @@ export class SeveranceRulesService {
    * - Mid-career (5-15): Substantial protection during prime earning years
    * - Senior years (15-25): High protection recognizing career investment
    * - Veteran (25+): Maximum protection with legal cap to limit employer exposure
+   * 
+   * INPUT VALIDATION:
+   * All inputs are validated for type safety, reasonable ranges, and business rules
+   * to prevent calculation errors and ensure legal compliance.
    */
   static calculateSeveranceAmount(
     monthsOfService: number, 
@@ -227,6 +231,45 @@ export class SeveranceRulesService {
     formula: string;
     formulaGr: string;
   } {
+    // VALIDATE MONTHS OF SERVICE INPUT
+    if (monthsOfService === null || monthsOfService === undefined) {
+      throw new Error('Months of service is required for severance calculation / Οι μήνες υπηρεσίας είναι απαραίτητοι για τον υπολογισμό αποζημίωσης');
+    }
+
+    if (!Number.isFinite(monthsOfService) || monthsOfService < 0) {
+      throw new Error(`Months of service must be a positive number, got: ${monthsOfService} / Οι μήνες υπηρεσίας πρέπει να είναι θετικός αριθμός, έλαβε: ${monthsOfService}`);
+    }
+
+    if (monthsOfService > 600) { // 50 years maximum
+      throw new Error(`Months of service cannot exceed 600 (50 years), got: ${monthsOfService} / Οι μήνες υπηρεσίας δεν μπορούν να υπερβαίνουν τους 600 (50 χρόνια), έλαβε: ${monthsOfService}`);
+    }
+
+    // VALIDATE MONTHLY WAGE INPUT
+    if (monthlyWage === null || monthlyWage === undefined) {
+      throw new Error('Monthly wage is required for severance calculation / Ο μηνιαίος μισθός είναι απαραίτητος για τον υπολογισμό αποζημίωσης');
+    }
+
+    if (!Number.isFinite(monthlyWage) || monthlyWage <= 0) {
+      throw new Error(`Monthly wage must be a positive number, got: ${monthlyWage} / Ο μηνιαίος μισθός πρέπει να είναι θετικός αριθμός, έλαβε: ${monthlyWage}`);
+    }
+
+    if (monthlyWage < 300) { // Below reasonable minimum wage
+      throw new Error(`Monthly wage seems too low (${monthlyWage}), please verify amount / Ο μηνιαίος μισθός φαίνεται πολύ χαμηλός (${monthlyWage}), παρακαλώ επιβεβαιώστε το ποσό`);
+    }
+
+    if (monthlyWage > 100000) { // Above reasonable maximum
+      throw new Error(`Monthly wage seems too high (${monthlyWage}), please verify amount / Ο μηνιαίος μισθός φαίνεται πολύ υψηλός (${monthlyWage}), παρακαλώ επιβεβαιώστε το ποσό`);
+    }
+
+    // VALIDATE SEVERANCE RULES
+    if (!rules) {
+      throw new Error('Severance rules are required for calculation / Οι κανόνες αποζημίωσης είναι απαραίτητοι για τον υπολογισμό');
+    }
+
+    if (!rules.bands || !Array.isArray(rules.bands)) {
+      throw new Error('Severance rules must contain valid bands array / Οι κανόνες αποζημίωσης πρέπει να περιέχουν έγκυρο πίνακα ζωνών');
+    }
+
     const bands = rules.bands as any[];
     
     // BAND SELECTION ALGORITHM:
