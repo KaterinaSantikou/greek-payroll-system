@@ -2417,7 +2417,7 @@ def main():
                     print(f"⚠️ Structured output failed ({e}), falling back to traditional format...")
                     resp = call_with_retry(lambda: call_openai([system, user]))
                     structured_output = False
-        elif implementation_plan == "TASK_SPLIT_INTO_SUBTASKS":
+            elif implementation_plan == "TASK_SPLIT_INTO_SUBTASKS":
             print("📦 Task was split into subtasks. Current task completed.")
             print("✅ Subtasks created successfully. Run the agent again to process them.")
             return
