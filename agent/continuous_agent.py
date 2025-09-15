@@ -1,7 +1,7 @@
 import time, random, pathlib
-from agent.run_agent import main as run_once
+from run_agent import main as run_once
 
-ROOT = pathlib.Path(".")
+ROOT = pathlib.Path("..").resolve()  # Go up to project root
 BACKLOG_DIR = ROOT / "tasks" / "backlog"
 PENDING = ROOT / "tasks" / "pending"
 
@@ -39,5 +39,5 @@ while True:
         else:
             print("💤 No backlog ideas found in either file.")
     
-    print("⏳ Sleeping 1 hour...")
-    time.sleep(3600)
+    print("⏳ Sleeping 1 minute...")
+    time.sleep(60)

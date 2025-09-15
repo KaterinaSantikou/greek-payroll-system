@@ -4,7 +4,7 @@ from datetime import datetime
 # ---- CONFIG ----
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 MODEL = "gpt-4o"   # works well for code; you can change later
-ROOT = pathlib.Path(".").resolve()
+ROOT = pathlib.Path("..").resolve()  # Go up to project root
 AGENT_DIR = ROOT / "agent"
 CONFIG = json.loads(json.dumps({}))  # placeholder if you expand
 FILE_BLOCK_START = "<<<FILE:"
@@ -65,7 +65,7 @@ def apply_file_blocks(response_text):
     return changed
 
 def pick_next_task():
-    pending = sorted(glob.glob("tasks/pending/*.md"))
+    pending = sorted(glob.glob(str(ROOT / "tasks/pending/*.md")))
     return pending[0] if pending else None
 
 # ---- MAIN ----
@@ -121,7 +121,7 @@ def main():
     pathlib.Path(summary_path).write_text(resp, encoding="utf-8")
 
     # Move task to done
-    done_path = task_file.replace("tasks/pending/", "tasks/done/")
+    done_path = task_file.replace(str(ROOT / "tasks/pending"), str(ROOT / "tasks/done"))
     pathlib.Path(done_path).parent.mkdir(parents=True, exist_ok=True)
     pathlib.Path(task_file).rename(done_path)
 
