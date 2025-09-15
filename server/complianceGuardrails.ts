@@ -83,7 +83,12 @@ export interface ComplianceAlert {
     | 'REST_PERIOD_VIOLATION'
     | 'CONTINUOUS_WORK_VIOLATION'
     | 'ERGANI_SUBMISSION_FAILED'
-    | 'POLICY_VIOLATION';
+    | 'POLICY_VIOLATION'
+    | 'PAYROLL_COMPLIANCE_VIOLATION'
+    | 'EFKA_RATE_MISMATCH'
+    | 'TAX_CALCULATION_ERROR'
+    | 'BONUS_COMPLIANCE_ERROR'
+    | 'MATH_CONSISTENCY_ERROR';
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   employeeId: string;
   propertyId?: string;
@@ -92,6 +97,33 @@ export interface ComplianceAlert {
   createdAt: Date;
   resolvedAt?: Date;
   resolvedBy?: string;
+}
+
+// Payroll Guardrail Violation Types
+export interface PayrollGuardrailViolation {
+  code: string;
+  severity: 'error' | 'warning' | 'info';
+  category: 'efka' | 'tax' | 'bonus' | 'overtime' | 'math' | 'legal';
+  message: string;
+  messageGr: string;
+  expectedRange?: { min: number; max: number };
+  actualValue: number;
+  employeeId: string;
+  fieldName: string;
+  lawReference?: string;
+  context?: any;
+}
+
+export interface PayrollComplianceResult {
+  isCompliant: boolean;
+  violations: PayrollGuardrailViolation[];
+  warnings: PayrollGuardrailViolation[];
+  summary: {
+    totalChecks: number;
+    errorCount: number;
+    warningCount: number;
+    complianceRate: number;
+  };
 }
 
 // Immutable Audit Log Entry
