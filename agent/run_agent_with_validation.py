@@ -13,7 +13,7 @@ import logging
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 # Import our validation and PR workflow modules
 from validation_pipeline import ValidationPipeline
@@ -91,7 +91,7 @@ class AgentWithValidation:
             logger.error(f"Failed to validate allowed paths: {e}")
             return False
 
-    def run_pre_commit_validation(self) -> Dict[str, any]:
+    def run_pre_commit_validation(self) -> Dict[str, Any]:
         """Run comprehensive pre-commit validation"""
         logger.info("🔍 Running pre-commit validation pipeline...")
         
@@ -117,7 +117,7 @@ class AgentWithValidation:
             'details': results
         }
 
-    def create_commit_with_validation(self, commit_message: str = None) -> bool:
+    def create_commit_with_validation(self, commit_message: Optional[str] = None) -> bool:
         """Create commit with validation, discard if validation fails"""
         max_attempts = self.config.get('max_commit_attempts', 3)
         

@@ -456,8 +456,8 @@ def main():
     try:
         # Get commit message from command line args or environment
         commit_message = os.getenv('COMMIT_MESSAGE')
-        if len(os.sys.argv) > 1:
-            commit_message = " ".join(os.sys.argv[1:])
+        if len(sys.argv) > 1:
+            commit_message = " ".join(sys.argv[1:])
         
         # Execute PR workflow
         success, message = workflow.execute_pr_workflow(commit_message)
