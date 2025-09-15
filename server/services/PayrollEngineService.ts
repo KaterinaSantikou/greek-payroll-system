@@ -19,47 +19,27 @@ import { eq, and, sql, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { capTrackingService } from "./CapTrackingService";
 import { disbursementKeyService } from "./DisbursementKeyService";
-import { payrollBusinessRulesService } from "./PayrollBusinessRulesService";
+// Business layer imports
+import { payrollService } from "../business/payroll-service";
+import { payrollValidator } from "../business/payroll-validator";
+import { payrollCalculator } from "../business/payroll-calculator";
+
+// Infrastructure layer imports
+import { payrollRepository } from "../infrastructure/payroll-repository";
+import { complianceConnector } from "../infrastructure/compliance-connector";
 import { createHash } from 'crypto';
 
-// Greek payroll calculation rates for 2025
-const GREEK_RATES_2025 = {
-  // Employee EFKA contributions
-  EFKA_EMPLOYEE_MAIN: 0.1667, // 16.67% main pension
-  EFKA_EMPLOYEE_AUX: 0.06, // 6% auxiliary pension 
-  EFKA_EMPLOYEE_UNEMPLOYMENT: 0.0064, // 0.64% unemployment
-  
-  // Employer EFKA contributions
-  EFKA_EMPLOYER_MAIN: 0.2437, // 24.37% main pension
-  EFKA_EMPLOYER_AUX: 0.03, // 3% auxiliary pension
-  EFKA_EMPLOYER_UNEMPLOYMENT: 0.0296, // 2.96% unemployment
-  
-  // Tax rates
-  TAX_BRACKET_1: { min: 0, max: 10000, rate: 0.09 }, // 9% up to €10,000
-  TAX_BRACKET_2: { min: 10001, max: 20000, rate: 0.22 }, // 22% €10,001-€20,000
-  TAX_BRACKET_3: { min: 20001, max: 30000, rate: 0.28 }, // 28% €20,001-€30,000
-  TAX_BRACKET_4: { min: 30001, max: 40000, rate: 0.36 }, // 36% €30,001-€40,000
-  TAX_BRACKET_5: { min: 40001, max: Infinity, rate: 0.44 }, // 44% over €40,000
-  
-  // Special solidarity tax (3.7% on income over €12,000)
-  SOLIDARITY_TAX_THRESHOLD: 12000,
-  SOLIDARITY_TAX_RATE: 0.037,
-  
-  // Minimum wage (2025)
-  MINIMUM_WAGE_MONTHLY: 830,
-  MINIMUM_WAGE_DAILY: 27.65,
-  
-  // Overtime rates
-  OVERTIME_RATE_WEEKDAY: 1.25, // 25% premium
-  OVERTIME_RATE_WEEKEND: 1.75, // 75% premium
-  OVERTIME_RATE_HOLIDAY: 2.0, // 100% premium
-  
-  // Night shift premium (25%)
-  NIGHT_SHIFT_PREMIUM: 0.25,
-  
-  // Sunday work premium (75%)
-  SUNDAY_PREMIUM: 0.75
-};
+// Domain layer imports for Greek labor law constants
+import { 
+  EFKA_RATES, 
+  GREEK_TAX_BRACKETS, 
+  SOLIDARITY_TAX_BRACKETS, 
+  MINIMUM_WAGE, 
+  WORKING_TIME_LIMITS 
+} from "../domain/greek-labor-law";
+import { PREMIUM_RATES } from "../domain/payroll-rules";
+
+// Note: Greek rates are now imported from domain layer instead of being defined here
 
 export interface ScopeComputationResult {
   success: boolean;

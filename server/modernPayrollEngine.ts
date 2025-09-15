@@ -11,7 +11,14 @@ import type {
   TipsPool,
   TipsDistribution 
 } from "@shared/schema";
-import { greekPayrollCalculator, type PayrollCalculationInput } from "./greekPayrollCalculator";
+// Business layer imports
+import { payrollCalculator, type PayrollCalculationInput } from "./business/payroll-calculator";
+import { payrollService } from "./business/payroll-service";
+import { payrollValidator } from "./business/payroll-validator";
+
+// Infrastructure layer imports
+import { payrollRepository } from "./infrastructure/payroll-repository";
+import { complianceConnector } from "./infrastructure/compliance-connector";
 
 export interface PayrollEngine {
   engineId: string;
