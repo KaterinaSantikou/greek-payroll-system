@@ -1,0 +1,19 @@
+{
+  "require_manual_approval": true,
+  "high_risk_threshold": {
+    "files_changed": 5,
+    "lines_changed": 200,
+    "critical_files": [
+      "package.json",
+      "server/index.ts",
+      "shared/schema.ts",
+      "drizzle.config.ts"
+    ]
+  },
+  "auto_approval_conditions": {
+    "test_files_only": true,
+    "documentation_only": true,
+    "small_changes": true
+  },
+  "approval_timeout_minutes": 30
+}
