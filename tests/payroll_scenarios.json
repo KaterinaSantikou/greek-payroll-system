@@ -1,0 +1,195 @@
+{
+  "description": "Greek Payroll System - Expected Calculation Scenarios",
+  "scenarios": [
+    {
+      "name": "basic_monthly_salary",
+      "description": "Standard monthly employee with no overtime",
+      "input": {
+        "employee": {
+          "salary_type": "monthly",
+          "gross_salary": 1000.00,
+          "employment_type": "full_time",
+          "age": 30,
+          "job_category": "office_worker"
+        },
+        "period": {
+          "year": 2024,
+          "month": 1,
+          "working_days": 22,
+          "worked_days": 22
+        },
+        "overtime_hours": 0
+      },
+      "expected": {
+        "gross_pay": 1000.00,
+        "overtime_pay": 0.00,
+        "efka_employee": 80.00,
+        "efka_employer": 250.00,
+        "net_pay": 850.00,
+        "total_cost": 1250.00
+      }
+    },
+    {
+      "name": "overtime_calculation",
+      "description": "Employee with 5 hours overtime (3h at 120%, 2h at 140%)",
+      "input": {
+        "employee": {
+          "salary_type": "monthly",
+          "gross_salary": 1200.00,
+          "employment_type": "full_time",
+          "age": 28,
+          "job_category": "office_worker"
+        },
+        "period": {
+          "year": 2024,
+          "month": 1,
+          "working_days": 22,
+          "worked_days": 22
+        },
+        "overtime_hours": 5
+      },
+      "expected": {
+        "gross_pay": 1200.00,
+        "overtime_pay": 51.43,
+        "total_gross": 1251.43,
+        "efka_employee": 100.11,
+        "net_pay": 1063.89
+      }
+    },
+    {
+      "name": "part_time_employee",
+      "description": "Part-time employee working 4 days per week",
+      "input": {
+        "employee": {
+          "salary_type": "hourly",
+          "hourly_rate": 8.50,
+          "employment_type": "part_time",
+          "age": 24,
+          "job_category": "service_worker"
+        },
+        "period": {
+          "year": 2024,
+          "month": 1,
+          "working_days": 22,
+          "worked_days": 18
+        },
+        "daily_hours": 6
+      },
+      "expected": {
+        "gross_pay": 918.00,
+        "efka_employee": 73.44,
+        "net_pay": 779.88
+      }
+    },
+    {
+      "name": "minimum_wage_under_25",
+      "description": "Under-25 employee at minimum wage",
+      "input": {
+        "employee": {
+          "salary_type": "monthly",
+          "gross_salary": 650.00,
+          "employment_type": "full_time",
+          "age": 23,
+          "job_category": "entry_level"
+        },
+        "period": {
+          "year": 2024,
+          "month": 1,
+          "working_days": 22,
+          "worked_days": 22
+        }
+      },
+      "expected": {
+        "gross_pay": 650.00,
+        "efka_employee": 52.00,
+        "efka_employer": 162.50,
+        "net_pay": 552.00
+      }
+    },
+    {
+      "name": "six_day_work_week",
+      "description": "Employee on 6-day work schedule with allowance",
+      "input": {
+        "employee": {
+          "salary_type": "monthly",
+          "gross_salary": 1100.00,
+          "employment_type": "full_time",
+          "age": 35,
+          "job_category": "hospitality",
+          "work_schedule": "6_day"
+        },
+        "period": {
+          "year": 2024,
+          "month": 1,
+          "working_days": 26,
+          "worked_days": 26
+        }
+      },
+      "expected": {
+        "gross_pay": 1100.00,
+        "six_day_allowance": 110.00,
+        "total_gross": 1210.00,
+        "efka_employee": 96.80,
+        "net_pay": 1028.50
+      }
+    },
+    {
+      "name": "christmas_bonus",
+      "description": "December payroll with Christmas bonus (8.33% of annual salary)",
+      "input": {
+        "employee": {
+          "salary_type": "monthly",
+          "gross_salary": 1300.00,
+          "employment_type": "full_time",
+          "age": 40,
+          "job_category": "manager"
+        },
+        "period": {
+          "year": 2024,
+          "month": 12,
+          "working_days": 21,
+          "worked_days": 21
+        },
+        "months_worked": 12
+      },
+      "expected": {
+        "gross_pay": 1300.00,
+        "christmas_bonus": 1083.33,
+        "total_gross": 2383.33,
+        "efka_employee": 190.67,
+        "net_pay": 2025.89
+      }
+    },
+    {
+      "name": "new_hire_partial_month",
+      "description": "New employee starting mid-month (proration)",
+      "input": {
+        "employee": {
+          "salary_type": "monthly",
+          "gross_salary": 900.00,
+          "employment_type": "full_time",
+          "age": 27,
+          "job_category": "technician",
+          "start_date": "2024-01-15"
+        },
+        "period": {
+          "year": 2024,
+          "month": 1,
+          "working_days": 22,
+          "worked_days": 12
+        }
+      },
+      "expected": {
+        "gross_pay": 490.91,
+        "efka_employee": 39.27,
+        "net_pay": 417.27
+      }
+    }
+  ],
+  "validation_rules": {
+    "tolerance": 0.02,
+    "description": "Allow ±2 cents difference due to rounding variations",
+    "required_fields": ["gross_pay", "efka_employee", "net_pay"],
+    "optional_fields": ["overtime_pay", "christmas_bonus", "six_day_allowance"]
+  }
+}
