@@ -2315,10 +2315,10 @@ def main():
             # PHASE 1: PLANNING
             print("🎯 PHASE 1: Creating detailed implementation plan...")
             implementation_plan = execute_planning_phase(
-            task_text, tree, knowledge, architecture_guide, dependency_summary, evolved_guidelines, impact_context
-        )
-        
-        if not implementation_plan:
+                task_text, tree, knowledge, architecture_guide, dependency_summary, evolved_guidelines, impact_context
+            )
+            
+            if not implementation_plan:
             print("❌ Planning phase failed, falling back to direct implementation")
             # Fallback to old direct implementation
             system = {
