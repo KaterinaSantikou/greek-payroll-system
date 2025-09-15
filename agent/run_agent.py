@@ -132,6 +132,25 @@ def main():
         print("Review the summary to understand why no changes were made.")
         return
     
+    # Run validation checks before marking task complete
+    print("🔍 Running TypeScript validation...")
+    result = subprocess.run(["npm", "run", "tsc", "--", "--noEmit"], cwd=ROOT, capture_output=True)
+    if result.returncode != 0:
+        print("❌ TypeScript check failed. Task will remain in pending.")
+        print(f"Summary saved → {summary_path}")
+        print("Fix TypeScript errors and run again.")
+        return
+
+    print("🧪 Running tests...")
+    tests = subprocess.run(["npm", "test", "--", "--bail"], cwd=ROOT, capture_output=True)
+    if tests.returncode != 0:
+        print("❌ Tests failed. Task will remain in pending.")
+        print(f"Summary saved → {summary_path}")
+        print("Fix failing tests and run again.")
+        return
+    
+    print("✅ All validation checks passed!")
+    
     # Move task to done
     done_path = task_file.replace(str(ROOT / "tasks/pending"), str(ROOT / "tasks/done"))
     pathlib.Path(done_path).parent.mkdir(parents=True, exist_ok=True)
