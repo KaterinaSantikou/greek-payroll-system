@@ -941,9 +941,12 @@ def main():
     
     print("✅ All validation checks passed!")
     
-    # Update knowledge base with task completion info
+    # Run quality critic evaluation
     task_title = pathlib.Path(task_file).stem
     task_summary = task_text[:200] if task_text else "Task completed"
+    run_quality_critic(task_file, changed, task_summary)
+    
+    # Update knowledge base with task completion info
     update_knowledge(task_title, changed, task_summary)
     
     # Move task to done
