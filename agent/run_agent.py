@@ -340,6 +340,16 @@ def main():
         print("❌ Failed to get response from OpenAI")
         return
     
+    # Create git checkpoint before applying changes
+    print("💾 Creating git checkpoint before applying changes...")
+    try:
+        safe_run(["git", "stash", "push", "-m", "agent-backup", "--include-untracked"])
+        backup_created = True
+        print("✅ Git checkpoint created")
+    except subprocess.CalledProcessError:
+        print("⚠️ Could not create git checkpoint (no changes to stash)")
+        backup_created = False
+    
     changed = apply_file_blocks(resp)
 
     summary_path = f"agent/last_run_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
