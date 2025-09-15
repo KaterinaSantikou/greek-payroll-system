@@ -1392,6 +1392,38 @@ def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolv
         if not parsed_plan:
             print("⚠️ Plan parsing failed, but continuing with raw plan")
         
+        # Run impact analysis on planned files
+        planned_files = get_planned_files_from_response(response)
+        if planned_files:
+            print(f"📊 Running impact analysis on {len(planned_files)} planned files...")
+            impact_analysis = run_change_impact_analysis(planned_files)
+            
+            if impact_analysis and impact_analysis.get('impactAnalysis'):
+                impact = impact_analysis['impactAnalysis']
+                print(f"   📈 Planned changes impact analysis:")
+                print(f"      - Risk level: {impact.get('riskLevel', 'UNKNOWN')}")
+                print(f"      - Directly affected files: {len(impact.get('directlyAffected', []))}")
+                print(f"      - Indirectly affected files: {len(impact.get('indirectlyAffected', []))}")
+                
+                # Save enhanced plan with impact analysis
+                enhanced_response = response + f"\n\n## CHANGE IMPACT ANALYSIS\n\n"
+                enhanced_response += f"**Risk Level:** {impact.get('riskLevel', 'UNKNOWN')}\n\n"
+                enhanced_response += f"**Files Directly Affected:** {len(impact.get('directlyAffected', []))}\n"
+                enhanced_response += f"**Files Indirectly Affected:** {len(impact.get('indirectlyAffected', []))}\n\n"
+                
+                if impact.get('directlyAffected'):
+                    enhanced_response += "**Directly Affected Files:**\n"
+                    for file in impact['directlyAffected'][:10]:
+                        enhanced_response += f"- {file}\n"
+                
+                if impact.get('potentialBreakingChanges'):
+                    enhanced_response += "\n**Potential Breaking Changes:**\n"
+                    for change in impact['potentialBreakingChanges']:
+                        enhanced_response += f"- {change['file']}: {change['reason']} (Risk: {change['severity']})\n"
+                
+                PLANNING_OUTPUT_FILE.write_text(enhanced_response, encoding="utf-8")
+                return enhanced_response
+        
         return response
         
     except Exception as e:
