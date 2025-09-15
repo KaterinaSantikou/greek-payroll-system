@@ -10,6 +10,7 @@ import json
 import os
 import pathlib
 import shutil
+import re
 from typing import Dict, List, Optional, Tuple, Any, Union
 from dataclasses import dataclass
 from datetime import datetime
@@ -625,7 +626,7 @@ class CodebaseTool:
         start_time = time.time()
         print(f"🔍 Searching codebase for: {pattern}")
         
-        extensions = file_extensions or ["ts", "tsx", "js", "jsx"]
+        extensions = file_extensions if file_extensions is not None else ["ts", "tsx", "js", "jsx"]
         
         try:
             # Use ripgrep if available, otherwise fallback to grep
