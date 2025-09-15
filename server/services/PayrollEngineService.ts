@@ -208,11 +208,35 @@ export class PayrollEngineService {
 
       if (!businessRules.canCreateScope) {
         const errorMessages = businessRules.overallErrors.filter(e => e.isCritical).map(e => e.message);
+        
+        // Finalize monitoring if validation fails
+        if (resourceMonitor) {
+          resourceMonitor.endPhase();
+          const finalMetrics = resourceMonitor.finalize();
+          logger.info('Payroll validation failed - resource usage', {
+            scopeId,
+            peakMemory: `${Math.round(finalMetrics.peakMemoryUsage / 1024 / 1024)}MB`,
+            duration: `${finalMetrics.totalDuration}ms`
+          });
+        }
+        
         throw new Error(`Business rules validation failed: ${errorMessages.join('; ')}`);
+      }
+
+      // End validation phase and start cap tracking
+      if (resourceMonitor) {
+        resourceMonitor.endPhase();
+        resourceMonitor.startPhase('cap_tracking_initialization');
       }
 
       // Initialize cap tracking for all employees
       const capTrackers = await capTrackingService.getRemainingCaps(employeeIds, scope.period);
+      
+      // End cap tracking phase and start calculations
+      if (resourceMonitor) {
+        resourceMonitor.endPhase();
+        resourceMonitor.startPhase('payroll_calculations');
+      }
 
       // Calculate payroll for each employee
       const calculations = [];
