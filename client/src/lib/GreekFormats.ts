@@ -127,83 +127,66 @@ export const useBilingualValidation = () => {
 };
 
 /**
- * Greek UI Text Constants
+ * Bilingual UI Text Hook
  */
-export const GREEK_UI_TEXT = {
-  // Common actions
-  save: 'Αποθήκευση',
-  cancel: 'Ακύρωση',
-  delete: 'Διαγραφή',
-  edit: 'Επεξεργασία',
-  view: 'Προβολή',
-  add: 'Προσθήκη',
-  remove: 'Αφαίρεση',
-  search: 'Αναζήτηση',
-  filter: 'Φίλτρα',
-  export: 'Εξαγωγή',
-  import: 'Εισαγωγή',
-  print: 'Εκτύπωση',
-  close: 'Κλείσιμο',
+export const useBilingualText = () => {
+  const { t } = useTranslation();
   
-  // Status
-  loading: 'Φόρτωση...',
-  saving: 'Αποθήκευση...',
-  success: 'Επιτυχία',
-  error: 'Σφάλμα',
-  warning: 'Προειδοποίηση',
-  info: 'Πληροφορία',
-  
-  // Payroll specific
-  employee: 'Εργαζόμενος',
-  employees: 'Εργαζόμενοι',
-  salary: 'Μισθός',
-  payroll: 'Μισθοδοσία',
-  payslip: 'Μισθοδοτικό',
-  period: 'Περίοδος',
-  grossPay: 'Μικτές Αποδοχές',
-  netPay: 'Καθαρές Αποδοχές',
-  deductions: 'Κρατήσεις',
-  taxes: 'Φόροι',
-  efka: 'ΕΦΚΑ',
-  overtime: 'Υπερωρίες',
-  allowances: 'Επιδόματα',
-  bonuses: 'Μπόνους',
-  leaves: 'Άδειες',
-  
-  // Date/Time
-  today: 'Σήμερα',
-  yesterday: 'Χθες',
-  tomorrow: 'Αύριο',
-  thisWeek: 'Αυτή την εβδομάδα',
-  thisMonth: 'Αυτόν τον μήνα',
-  thisYear: 'Φέτος',
-  
-  // Greek months
-  months: {
-    january: 'Ιανουάριος',
-    february: 'Φεβρουάριος', 
-    march: 'Μάρτιος',
-    april: 'Απρίλιος',
-    may: 'Μάιος',
-    june: 'Ιούνιος',
-    july: 'Ιούλιος',
-    august: 'Αύγουστος',
-    september: 'Σεπτέμβριος',
-    october: 'Οκτώβριος',
-    november: 'Νοέμβριος',
-    december: 'Δεκέμβριος'
-  },
-  
-  // Greek days
-  days: {
-    monday: 'Δευτέρα',
-    tuesday: 'Τρίτη', 
-    wednesday: 'Τετάρτη',
-    thursday: 'Πέμπτη',
-    friday: 'Παρασκευή',
-    saturday: 'Σάββατο',
-    sunday: 'Κυριακή'
-  }
+  return {
+    // Common actions  
+    save: () => t('actions.save'),
+    cancel: () => t('actions.cancel'),
+    delete: () => t('actions.delete'),
+    edit: () => t('actions.edit'),
+    view: () => t('actions.view'),
+    add: () => t('actions.add'),
+    remove: () => t('actions.remove'),
+    search: () => t('actions.search'),
+    filter: () => t('actions.filter'),
+    export: () => t('actions.export'),
+    import: () => t('actions.import'),
+    print: () => t('actions.print'),
+    close: () => t('actions.close'),
+    
+    // Status
+    loading: () => t('status.loading'),
+    saving: () => t('status.saving'),
+    success: () => t('status.success'),
+    error: () => t('status.error'),
+    warning: () => t('status.warning'),
+    info: () => t('status.info'),
+    
+    // Payroll specific
+    employee: () => t('employee.employee'),
+    employees: () => t('employee.employees'),
+    salary: () => t('contract.salary'),
+    payroll: () => t('payroll.payroll'),
+    payslip: () => t('payroll.payslip'),
+    period: () => t('dateTime.period'),
+    grossPay: () => t('payroll.grossPay'),
+    netPay: () => t('payroll.netPay'),
+    deductions: () => t('payroll.deductions'),
+    taxes: () => t('tax.incomeTax'),
+    efka: () => t('tax.efka'),
+    overtime: () => t('payroll.overtime'),
+    allowances: () => t('payroll.allowances'),
+    bonuses: () => t('payroll.bonuses'),
+    leaves: () => t('leave.leave'),
+    
+    // Date/Time
+    today: () => t('dateTime.today'),
+    yesterday: () => t('dateTime.yesterday'),
+    tomorrow: () => t('dateTime.tomorrow'),
+    thisWeek: () => t('dateTime.thisWeek'),
+    thisMonth: () => t('dateTime.thisMonth'),
+    thisYear: () => t('dateTime.thisYear'),
+    
+    // Months
+    getMonth: (month: string) => t(`months.${month}`),
+    
+    // Days
+    getDay: (day: string) => t(`days.${day}`)
+  };
 };
 
 /**
