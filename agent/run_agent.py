@@ -306,8 +306,8 @@ def run_pre_commit_validation():
                     if result.returncode == 0 and "DB_OK" in result.stdout:
                         print("   ✅ Database connection successful")
                     else:
-                        print("   ❌ Database connection failed:")
-                        print(f"   Error: {result.stderr}")
+                        print("   ❌ Database connection failed")
+                        safe_log_subprocess_output(result, "Database connection")
                         failed_checks.append("Database connection")
                 except Exception as e:
                     print(f"   ⚠️ Database connection test skipped (error: {e})")
@@ -339,8 +339,8 @@ def run_pre_commit_validation():
                     if result.returncode == 0:
                         print(f"   ✅ {schema_file.name} syntax valid")
                     else:
-                        print(f"   ❌ {schema_file.name} syntax errors:")
-                        print(f"   {result.stderr}")
+                        print(f"   ❌ {schema_file.name} syntax errors")
+                        safe_log_subprocess_output(result, f"{schema_file.name} validation")
                         schema_valid = False
                 except Exception as e:
                     print(f"   ❌ {schema_file.name} validation error: {e}")
@@ -374,8 +374,8 @@ def run_pre_commit_validation():
                     if result.returncode == 0:
                         print(f"   ✅ {key_file.name} imports/exports valid")
                     else:
-                        print(f"   ❌ {key_file.name} import/export errors:")
-                        print(f"   {result.stderr}")
+                        print(f"   ❌ {key_file.name} import/export errors")
+                        safe_log_subprocess_output(result, f"{key_file.name} validation")
                         import_export_valid = False
                 except Exception as e:
                     print(f"   ❌ {key_file.name} validation error: {e}")
