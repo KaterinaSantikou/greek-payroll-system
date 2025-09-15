@@ -423,7 +423,43 @@ export class PayrollCalculator {
   }
 
   /**
-   * Calculate benefits in kind and imputed income
+   * Calculate Benefits in Kind and Imputed Income according to Greek Tax Law
+   * 
+   * LEGAL BASIS:
+   * - Income Tax Code (N. 4172/2013): Benefits in kind taxation
+   * - AADE Circulars: Annual updates on tax-free limits and valuations
+   * - myDATA system integration requirements for benefit reporting
+   * 
+   * BENEFITS IN KIND TAXATION PRINCIPLES:
+   * Benefits provided by employer to employee are generally taxable as imputed income
+   * unless specifically exempted by law. Employee pays income tax on benefit value.
+   * 
+   * MEAL VOUCHERS (Article 13, N. 4172/2013):
+   * - Tax-free limit: €11 per working day (updated annually)
+   * - Calculation: Daily limit × working days per month
+   * - Excess amount: Fully taxable as additional income
+   * - Purpose: Support employee meal costs without full taxation
+   * - Employer deduction: Fully deductible business expense
+   * 
+   * COMPANY CAR BENEFIT:
+   * - Taxable value: 20% of car's annual market value per year
+   * - Monthly calculation: (Car Value × 20%) ÷ 12 months
+   * - Includes: Personal use of company vehicle outside work hours
+   * - Records required: Logbook to separate business vs personal use
+   * - Higher rates apply for luxury vehicles above certain thresholds
+   * 
+   * HOUSING BENEFITS:
+   * - Taxation: Fully taxable at market rental value
+   * - Valuation: Fair market rent for equivalent property
+   * - No exemptions: Unlike other benefits, no tax-free portion
+   * - Documentation: Rental agreements or property valuations required
+   * - Applies to: Company-provided housing, rent subsidies, utilities
+   * 
+   * IMPUTED INCOME IMPACT:
+   * - Added to taxable salary for income tax calculation
+   * - Subject to progressive tax rates (9%-44%)  
+   * - May trigger solidarity tax for high earners
+   * - Not subject to EFKA contributions (benefits vs salary distinction)
    */
   calculateBenefitsInKind(
     benefitsInKind: {
@@ -437,26 +473,44 @@ export class PayrollCalculator {
     imputedIncome: number;
   } {
     const mealVouchers = benefitsInKind.mealVouchers || 0;
+    
+    // MEAL VOUCHERS: Apply daily tax-free limit (€11/day in 2025)
+    // Tax-free portion: Up to legal daily limit × working days
     const taxFreeMeals = Math.min(mealVouchers, TAX_FREE_LIMITS.mealVouchers);
+    
+    // Taxable portion: Any amount exceeding the daily tax-free limit
+    // Must be reported as additional taxable income to AADE
     const taxableMeals = Math.max(
       0,
       mealVouchers - TAX_FREE_LIMITS.mealVouchers
     );
 
-    // Company car: percentage of car value as imputed income
+    // COMPANY CAR BENEFIT: 20% of annual car value as yearly taxable benefit
+    // Monthly imputed income = (Car Value × 20% annual rate) ÷ 12 months
+    // Based on car's market value, not purchase price or depreciated value
     const companyCarBenefit =
       ((benefitsInKind.companyCar || 0) *
-        BENEFITS_IN_KIND.companyCar.annualTaxablePercentage) /
-      12;
+        BENEFITS_IN_KIND.companyCar.annualTaxablePercentage) / // 20% annual rate
+      12; // Convert to monthly benefit
 
-    // Housing benefit: fully taxable
+    // HOUSING BENEFIT: Fully taxable at market rental value
+    // No tax-free portion - entire benefit is imputed income
+    // Value should reflect fair market rent for equivalent housing
     const housingBenefit = benefitsInKind.housing || 0;
 
+    // TOTAL IMPUTED INCOME: All taxable benefits combined
+    // This amount is added to employee's taxable salary for income tax purposes
+    // Does NOT count toward EFKA contribution base (benefits vs wages distinction)
     const imputedIncome = taxableMeals + companyCarBenefit + housingBenefit;
 
     return {
+      // Tax-free benefits: Included in gross pay but not in taxable income
       taxFreeBenefits: taxFreeMeals,
+      
+      // Taxable benefits: Added to taxable income for tax calculations
       taxableBenefits: taxableMeals + companyCarBenefit + housingBenefit,
+      
+      // Imputed income: Same as taxable benefits, used in tax calculations
       imputedIncome,
     };
   }
