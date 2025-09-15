@@ -146,7 +146,7 @@ async function ensureCoreTables() {
 }
 
 // MIGRATION SAFETY: Check for blocking operations before proceeding
-async function checkMigrationSafety(pool: any) {
+async function checkMigrationSafety(pool: { query: (sql: string) => Promise<{ rows: unknown[] }> }) {
   try {
     console.log('[MIGRATION_SAFETY] 🔍 Checking for table locks and long-running operations...');
     
@@ -319,7 +319,7 @@ async function sanitycheckTables() {
 }
 
 // DEVELOPMENT SPA SETUP: Direct asset serving + smart catch-all
-async function setupDevSPA(app: express.Express, server: any) {
+async function setupDevSPA(app: express.Express, server: unknown) {
   // 1) Serve built assets directly FIRST (bypass Vite's catch-all)
   const devAssetsPath = path.join(__root, "dist", "public", "assets");
   if (fs.existsSync(devAssetsPath)) {
@@ -360,16 +360,16 @@ async function setupDevSPA(app: express.Express, server: any) {
       disableDotRule: true,
       rewrites: [
         // Keep these as real files - don't rewrite them
-        { from: /^\/assets\/.*$/, to: function(context: any) { 
+        { from: /^\/assets\/.*$/, to: function(context: { parsedUrl: { pathname: string } }) { 
           return context.parsedUrl.pathname; 
         } },
-        { from: /^\/api\/.*$/, to: function(context: any) { 
+        { from: /^\/api\/.*$/, to: function(context: { parsedUrl: { pathname: string } }) { 
           return context.parsedUrl.pathname; 
         } },
-        { from: /^\/health$/, to: function(context: any) { 
+        { from: /^\/health$/, to: function(context: { parsedUrl: { pathname: string } }) { 
           return context.parsedUrl.pathname; 
         } },
-        { from: /^\/ready$/, to: function(context: any) { 
+        { from: /^\/ready$/, to: function(context: { parsedUrl: { pathname: string } }) { 
           return context.parsedUrl.pathname; 
         } },
       ],
