@@ -102,7 +102,7 @@ export const NIGHT_SHIFT_HOURS = {
   end: 6 // 6 AM
 } as const;
 
-// Severance Pay Rules
+/** @deprecated Use getSeveranceRules() instead */
 export const SEVERANCE_PAY_RULES = {
   // Months of salary based on years of service
   yearsBrackets: [
