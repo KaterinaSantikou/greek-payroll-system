@@ -252,8 +252,8 @@ export const employees = pgTable("employees", {
   // Employment Contract Data & ESRS S1 Classification
   employeeFlag: boolean("employee_flag").default(true), // True for employees, false for non-employees
   nonEmployeeFlag: boolean("non_employee_flag").default(false), // Contractors, consultants
-  employmentType: varchar("employment_type", { length: 50 }).notNull(), // indefinite, fixed-term, seasonal
-  contractType: varchar("contract_type", { length: 50 }).notNull(), // ESRS S1 contract type classification
+  employmentType: employmentTypeEnum("employment_type").notNull(), // full_time, part_time, contract, temporary, seasonal
+  contractType: contractTypeEnum("contract_type").notNull(), // indefinite, fixed_term, seasonal
   ftePct: decimal("fte_pct", { precision: 5, scale: 2 }).default("100.00"), // FTE percentage (e.g., 100.00, 50.00)
   grade: varchar("grade", { length: 50 }), // Job grade/level
   unionCbaRef: varchar("union_cba_ref", { length: 100 }), // Collective Bargaining Agreement reference
@@ -2273,7 +2273,7 @@ export const employeeContracts = pgTable("employee_contracts", {
   propertyId: varchar("property_id").references(() => properties.propertyId),
   departmentId: varchar("department_id").references(() => departments.departmentId),
   
-  contractType: varchar("contract_type", { length: 50 }).notNull(), // primary, secondary, seasonal
+  contractType: contractTypeEnum("contract_type").notNull(), // indefinite, fixed_term, seasonal
   jobTitle: varchar("job_title", { length: 255 }).notNull(),
   costCenterCode: varchar("cost_center_code", { length: 20 }),
   
