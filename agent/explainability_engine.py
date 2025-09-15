@@ -360,14 +360,15 @@ class ExplainabilityEngine:
         if not self.current_explanation:
             return ""
         
-        legal_changes = [c for c in self.current_explanation.changes if c.legal_basis]
+        legal_changes = [c for c in self.current_explanation.changes if c.legal_basis is not None]
         
         if not legal_changes:
             return "No specific legal compliance requirements identified for this task."
         
         compliance_notes = ["Legal compliance ensured through:"]
         for change in legal_changes:
-            compliance_notes.append(f"• {change.legal_basis}")
+            if change.legal_basis:
+                compliance_notes.append(f"• {change.legal_basis}")
         
         return "\n".join(compliance_notes)
     
