@@ -318,7 +318,7 @@ router.post(
 );
 
 // GET /api/payroll/runs/:id/audit - Get payroll audit information
-router.get('/api/payroll/runs/:id/audit', isAuthenticated, async (req, res) => {
+router.get('/api/payroll/runs/:id/audit', isAuthenticated, addUserContext, requirePayrollAccess, async (req, res) => {
   try {
     // Delegate to infrastructure layer
     const { run } = await payrollRepository.getPayrollRunWithLines(
@@ -627,7 +627,7 @@ router.get(
 );
 
 // POST /api/payroll/approvals/:id - Approve or reject payroll run
-router.post('/api/payroll/approvals/:id', isAuthenticated, async (req, res) => {
+router.post('/api/payroll/approvals/:id', isAuthenticated, addUserContext, requirePayrollCorrection, async (req, res) => {
   try {
     const { action, comment } = req.body;
     const approvalId = req.params.id;
@@ -665,7 +665,7 @@ router.post('/api/payroll/approvals/:id', isAuthenticated, async (req, res) => {
 // === SELECTIVE PAYROLL RUNS ENDPOINTS ===
 
 // GET /api/payroll/employees - Get filtered employees for selection
-router.get('/api/payroll/employees', isAuthenticated, async (req, res) => {
+router.get('/api/payroll/employees', isAuthenticated, addUserContext, requirePayrollAccess, async (req, res) => {
   try {
     const {
       period,
@@ -700,7 +700,7 @@ router.get('/api/payroll/employees', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/payroll/filter-options - Get filter dropdown options
-router.get('/api/payroll/filter-options', isAuthenticated, async (req, res) => {
+router.get('/api/payroll/filter-options', isAuthenticated, addUserContext, requirePayrollAccess, async (req, res) => {
   try {
     // TODO: Delegate to repository - for now return static options until proper method is implemented
     // This requires new methods in payrollRepository for properties and contract types
