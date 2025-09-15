@@ -1,7 +1,12 @@
 import time, pathlib, sys, subprocess, re, os, random, threading
 from datetime import datetime, timedelta
 from collections import deque
-from agent.run_agent import main as run_once, rate_limiter
+
+# Handle import from both parent directory and agent directory
+try:
+    from agent.run_agent import main as run_once, rate_limiter
+except ImportError:
+    from run_agent import main as run_once, rate_limiter
 
 def safe_run(cmd):
     """Run git command safely, masking tokens from error output"""
