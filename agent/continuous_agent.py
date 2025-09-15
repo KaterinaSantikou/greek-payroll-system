@@ -1,5 +1,5 @@
 import time, pathlib, sys, subprocess, re
-from agent.run_agent import main as run_once
+from run_agent import main as run_once
 
 ROOT = pathlib.Path(".")
 BACKLOG_DIR = ROOT / "tasks" / "backlog"
@@ -48,7 +48,6 @@ while True:
         print("🛠 Found a pending task — running agent...")
         run_once()
     else:
-        global next_type
         if next_type == "logic":
             idea = pop_first_idea(LOGIC_FILE)
             label = "Logic"
