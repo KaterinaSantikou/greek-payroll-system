@@ -2493,6 +2493,10 @@ def main():
         if not task_file:
             print("No tasks found in tasks/pending. Add a .md task and run again.")
             return
+        
+        # Record start time for performance tracking
+        task_start_time = time.time()
+        task_name = pathlib.Path(task_file).stem
 
         # Create sandbox environment for safe development
         sandbox_created = create_sandbox_environment()
