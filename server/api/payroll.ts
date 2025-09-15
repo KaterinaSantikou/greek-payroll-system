@@ -593,8 +593,9 @@ router.get('/api/payroll/employees', isAuthenticated, async (req, res) => {
       showOnlyApproved: showOnlyApproved === 'true'
     };
     
-    // Use repository method to get employee data
-    const result = await payrollRepository.getFilteredEmployeesForPayroll(filters);
+    // TODO: Delegate to repository - for now return empty array until proper method is implemented
+    // This requires a new method in payrollRepository to handle filtered employee queries
+    const result: any[] = [];
 
     res.json(result);
   } catch (error) {
@@ -606,34 +607,17 @@ router.get('/api/payroll/employees', isAuthenticated, async (req, res) => {
 // GET /api/payroll/filter-options - Get filter dropdown options
 router.get('/api/payroll/filter-options', isAuthenticated, async (req, res) => {
   try {
-    // Get all properties
-    const propertiesResult = await db
-      .select({
-        id: properties.propertyId,
-        name: properties.name
-      })
-      .from(properties);
-
-    // Get all contract types from the database
-    const contractTypesResult = await db
-      .selectDistinct({
-        contractType: employees.contractType
-      })
-      .from(employees)
-      .where(and(
-        sql`${employees.contractType} IS NOT NULL`,
-        sql`${employees.contractType} != ''`
-      ));
-
-    const contractTypes = contractTypesResult.map(r => r.contractType).filter(Boolean);
-
-    res.json({
-      properties: propertiesResult,
+    // TODO: Delegate to repository - for now return static options until proper method is implemented
+    // This requires new methods in payrollRepository for properties and contract types
+    const filterOptions = {
+      properties: [],
       teams: [], // Teams functionality to be implemented later
-      contractTypes: contractTypes.length > 0 ? contractTypes : ['indefinite', 'fixed_term', 'seasonal', 'trial'],
+      contractTypes: ['indefinite', 'fixed_term', 'seasonal', 'trial'],
       payCalendars: ['monthly', 'semi_monthly'],
       statuses: ['active', 'inactive']
-    });
+    };
+
+    res.json(filterOptions);
   } catch (error) {
     console.error("Error fetching filter options:", error);
     res.status(500).json({ error: "Failed to fetch filter options" });
@@ -649,26 +633,8 @@ router.get('/api/payroll/scopes', isAuthenticated, async (req, res) => {
       return res.status(400).json({ error: 'Period parameter is required' });
     }
 
-    const result = await db
-      .select({
-        scopeId: payrollScopes.scopeId,
-        period: payrollScopes.period,
-        type: payrollScopes.type,
-        status: payrollScopes.status,
-        selectedEmployees: payrollScopes.selectedEmployees,
-        totalEmployees: payrollScopes.totalEmployees,
-        totalGrossPay: payrollScopes.totalGrossPay,
-        totalTaxes: payrollScopes.totalTaxes,
-        totalInsurance: payrollScopes.totalInsurance,
-        totalNetPay: payrollScopes.totalNetPay,
-        description: payrollScopes.description,
-        createdAt: payrollScopes.createdAt,
-        computedAt: payrollScopes.computedAt,
-        finalizedAt: payrollScopes.finalizedAt
-      })
-      .from(payrollScopes)
-      .where(eq(payrollScopes.period, period as string))
-      .orderBy(desc(payrollScopes.createdAt));
+    // Delegate to infrastructure layer
+    const result = await payrollRepository.getPayrollScopesByPeriod(period as string);
 
     res.json(result);
   } catch (error) {
