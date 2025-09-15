@@ -891,8 +891,15 @@ def run_quality_critic(task_file, changed_files, task_summary):
         # Prepare critic prompt
         critic_system = {
             "role": "system",
-            "content": textwrap.dedent("""
-            You are a senior code quality critic specializing in Greek payroll systems. Your job is to evaluate completed tasks and provide constructive feedback.
+            "content": (
+                "You are a senior code quality critic specializing in Greek payroll systems.\n\n"
+                "Here is the full architecture and coding rules you MUST follow:\n\n"
+                f"{ARCHITECTURE_TEXT}\n\n"
+                "Here is the database schema you MUST respect:\n\n"
+                f"{SCHEMA_TEXT}\n\n"
+                "Here is the existing core payroll calculation logic you must improve and not break:\n\n"
+                f"{PAYROLL_ENGINE_TEXT}\n\n"
+                "Your job is to evaluate completed tasks and provide constructive feedback."
             
             EVALUATION CRITERIA:
             - Does the implementation match the task requirements?
