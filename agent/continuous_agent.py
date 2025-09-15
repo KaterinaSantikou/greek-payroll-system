@@ -8,23 +8,11 @@ try:
 except ImportError:
     from run_agent import main as run_once, rate_limiter, run_pre_commit_validation
 
-def mask_secrets(text):
-    """Mask sensitive information in text output"""
-    if not text:
-        return text
-    
-    # Mask GitHub tokens in URLs
-    masked = re.sub(r"https://[^@]+@", "https://***@", text)
-    
-    # Mask API keys (common patterns)
-    masked = re.sub(r"sk-[a-zA-Z0-9]{48}", "sk-***MASKED***", masked)  # OpenAI API keys
-    masked = re.sub(r"ghp_[a-zA-Z0-9]{36}", "ghp_***MASKED***", masked)  # GitHub personal access tokens
-    masked = re.sub(r"Bearer [a-zA-Z0-9_\-\.]{20,}", "Bearer ***MASKED***", masked)  # Bearer tokens
-    
-    # Mask environment variable values in logs
-    masked = re.sub(r"(OPENAI_API_KEY|GITHUB_TOKEN|DATABASE_URL|API_KEY)=([^\s]+)", r"\1=***MASKED***", masked)
-    
-    return masked
+# Import centralized mask_secrets from run_agent to maintain consistency
+try:
+    from agent.run_agent import mask_secrets, safe_log_subprocess_output
+except ImportError:
+    from run_agent import mask_secrets, safe_log_subprocess_output
 
 def safe_run(cmd):
     """Run git command safely, masking tokens from error output"""
