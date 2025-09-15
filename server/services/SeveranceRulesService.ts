@@ -410,8 +410,10 @@ export class SeveranceRulesService {
       }
     }
     
+    // PROCEED WITH VALIDATED INPUTS TO ELIGIBILITY ANALYSIS
+    
     // EMPLOYER-INITIATED DISMISSAL ANALYSIS
-    if (terminationType === 'dismissal') {
+    if (trimmedType === 'dismissal') {
       // DEFAULT ASSUMPTION: Dismissal without cause = severance eligible
       // Greek law assumes severance entitlement unless proven otherwise
       if (!terminationCause) return true;
@@ -436,7 +438,7 @@ export class SeveranceRulesService {
     }
     
     // EMPLOYEE-INITIATED RESIGNATION ANALYSIS  
-    if (terminationType === 'resignation') {
+    if (trimmedType === 'resignation') {
       // DEFAULT ASSUMPTION: Voluntary resignation = no severance
       // Exception: Constructive dismissal where employer forced resignation
       
