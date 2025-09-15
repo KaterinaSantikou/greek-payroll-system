@@ -915,15 +915,21 @@ class CodebaseTool:
 
 # Convenience functions that combine multiple tools
 def run_full_validation() -> Dict[str, ToolResult]:
-    """Run full pre-commit validation using tools"""
-    print("\n🔒 Running full validation using tools...")
+    """Run full pre-commit validation using tools including static analysis"""
+    print("\n🔒 Running full validation with static analysis using tools...")
     
     results = {}
+    
+    # Static analysis (ESLint)
+    results['eslint'] = BuildTool.run_eslint()
+    
+    # Code formatting (Prettier)
+    results['prettier'] = BuildTool.run_prettier_check()
     
     # TypeScript check
     results['typescript'] = BuildTool.typescript_check()
     
-    # Build validation
+    # Build validation (now includes static analysis)
     results['build'] = BuildTool.build_project()
     
     # Database connection test
