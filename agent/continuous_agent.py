@@ -93,7 +93,7 @@ while True:
             subprocess.run([
                 "git",
                 "push",
-                f"https://{token}@github.com/KaterinaSantikou/greek-payroll-system.git",
+                f"https://{os.environ.get('GITHUB_TOKEN')}@github.com/{GITHUB_REPO}.git",
                 "dev"
             ], check=True)
             print("✅ Pushed to dev branch.")
