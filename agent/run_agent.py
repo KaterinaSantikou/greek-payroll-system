@@ -17,6 +17,7 @@ try:
     from agent.evaluation_loop import (
         performance_tracker, agent_critic, collect_task_metrics, TaskMetrics
     )
+    from agent.human_approval import require_human_approval, approval_config
 except ImportError:
     from tools import (
         GitTool, BuildTool, TestTool, DatabaseTool, CodebaseTool,
@@ -29,6 +30,7 @@ except ImportError:
     from evaluation_loop import (
         performance_tracker, agent_critic, collect_task_metrics, TaskMetrics
     )
+    from human_approval import require_human_approval, approval_config
 
 # ---- CONFIG ----
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
