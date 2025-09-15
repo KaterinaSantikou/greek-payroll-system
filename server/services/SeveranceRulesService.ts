@@ -462,13 +462,13 @@ export class SeveranceRulesService {
     // CONTRACT EXPIRY ANALYSIS
     // Fixed-term contract natural expiration = no severance obligation
     // Rationale: Both parties knew termination date in advance
-    if (terminationType === 'expiry') return false;
+    if (trimmedType === 'expiry') return false;
     
     // MUTUAL AGREEMENT ANALYSIS  
     // Negotiated departure = severance can be agreed upon
     // May include severance above/below statutory minimums
     // Common in executive separations with negotiated packages
-    if (terminationType === 'mutual_agreement') return true;
+    if (trimmedType === 'mutual_agreement') return true;
     
     // UNKNOWN TERMINATION TYPE = DEFAULT NO SEVERANCE
     // Conservative approach for undefined scenarios
