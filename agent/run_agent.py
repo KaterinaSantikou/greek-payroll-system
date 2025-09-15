@@ -2176,43 +2176,75 @@ def execute_planning_phase(task_text, tree, knowledge, architecture_guide, depen
             ) + textwrap.dedent(f"""
             
             PLANNING INSTRUCTIONS:
-            1. Analyze the task requirements thoroughly
-            2. Break down the work into logical steps
-            3. Identify all files that need to be created or modified
-            4. Consider architectural patterns and dependencies
-            5. Plan data flow and integration points
-            6. Anticipate edge cases and validation needs
+            You must create a detailed, numbered routine that explicitly tells the implementation phase exactly what to do.
+            Each step must specify exact file paths, function names, and expected outputs.
             
             OUTPUT FORMAT:
             Your response must follow this EXACT structure:
             
             ## TASK ANALYSIS
-            [Summarize what needs to be built and why]
+            [Summarize what needs to be built and why - focus on business value]
             
-            ## IMPLEMENTATION STEPS
-            1. [Step 1 description]
-            2. [Step 2 description]
-            3. [Continue with all steps...]
+            ## NUMBERED IMPLEMENTATION ROUTINE
             
-            ## FILES TO MODIFY/CREATE
-            - path/to/file1.ts: [Brief description of changes]
-            - path/to/file2.tsx: [Brief description of changes]
-            - [Continue with all files...]
+            **STEP 1: [Specific Action Title]**
+            - File to edit: `exact/path/filename.ts`
+            - Expected output: New function `exactFunctionName()` with signature
+            - Specific changes: [List exact code changes, new exports, imports]
+            - Acceptance criteria: Function returns expected type and handles edge cases
             
-            ## DATA FLOW
-            [Describe how data flows through the system]
+            **STEP 2: [Next Specific Action Title]** 
+            - File to edit: `exact/path/other-file.tsx`
+            - Expected output: New component `ComponentName` with props interface
+            - Specific changes: [List exact JSX elements, state variables, handlers]
+            - Acceptance criteria: Component renders correctly and validates input
             
-            ## INTEGRATION POINTS
-            [List external systems, APIs, or services to integrate]
+            **STEP 3: [Database/Schema Changes]**
+            - File to edit: `shared/schema.ts`
+            - Expected output: New table definition `tableName` with Zod schema
+            - Specific changes: [List exact column names, types, constraints]
+            - Acceptance criteria: Schema validates correctly and migrations run
             
-            ## VALIDATION & TESTING
-            [Describe validation logic and test scenarios]
+            **STEP 4: [API Integration]**
+            - File to edit: `server/routes.ts` 
+            - Expected output: New endpoint `/api/exact/path` with typed handlers
+            - Specific changes: [List request/response schemas, validation middleware]
+            - Acceptance criteria: API returns proper status codes and error handling
             
-            ## GREEK PAYROLL COMPLIANCE
-            [Specific Greek labor law considerations]
+            **STEP 5: [Testing Implementation]**
+            - File to create: `tests/feature-name.test.ts`
+            - Expected output: Test functions `testSpecificFunction()`, `testEdgeCases()`
+            - Specific changes: [List exact test scenarios, mock data, assertions]
+            - Acceptance criteria: All tests pass and cover edge cases
             
-            ## POTENTIAL ISSUES
-            [Anticipate potential problems and solutions]
+            ## EXACT FILE CHANGES REQUIRED
+            ```
+            path/to/file1.ts: Add functions X, Y, Z with specific signatures
+            path/to/file2.tsx: Add component with props interface and state
+            shared/schema.ts: Add table definitions and Zod schemas
+            server/routes.ts: Add API endpoints with typed handlers
+            tests/feature.test.ts: Add comprehensive test suite
+            ```
+            
+            ## FUNCTION SIGNATURES TO IMPLEMENT
+            ```typescript
+            // Exact function signatures expected
+            function specificFunctionName(param1: Type1, param2: Type2): ReturnType
+            interface ComponentProps { prop1: string; prop2: number; }
+            const API_ENDPOINT = '/api/exact/path';
+            ```
+            
+            ## GREEK PAYROLL COMPLIANCE REQUIREMENTS
+            [Specific Greek labor law considerations with exact rule references]
+            
+            ## DATA FLOW DIAGRAM
+            [Step-by-step data flow: Input → Validation → Processing → Storage → Output]
+            
+            ## TESTING STRATEGY
+            [Exact test scenarios with input/output examples and edge cases]
+            
+            ## POTENTIAL ISSUES & SOLUTIONS
+            [Anticipate specific problems with concrete solutions]
             
             DO NOT WRITE ANY CODE. This is PLANNING ONLY.
             Focus on creating a complete, detailed plan that eliminates guesswork during implementation.
