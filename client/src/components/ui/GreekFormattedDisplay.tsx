@@ -19,6 +19,7 @@ export function GreekFormattedDisplay({
   showSymbol = true,
   className = ''
 }: GreekFormattedDisplayProps) {
+  const { isGreek } = useTranslation();
   
   const formatValue = () => {
     if (value === null || value === undefined || value === '') {
