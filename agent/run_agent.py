@@ -59,6 +59,10 @@ def call_with_retry(func, max_tries=5):
 # ---- SIMPLE OPENAI CALLER (no extra installs needed on Replit if using requests) ----
 import requests
 
+def make_openai_request(messages, use_structured_output=False):
+    """Wrapper for OpenAI requests with structured output support"""
+    return call_with_retry(lambda: call_openai(messages, use_structured_output=use_structured_output))
+
 def call_openai(messages, model=MODEL, temperature=0.2, use_structured_output=False):
     url = "https://api.openai.com/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type":"application/json"}
