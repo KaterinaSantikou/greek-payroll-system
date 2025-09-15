@@ -12,8 +12,6 @@ BACKLOG_FILES = [
 
 GITHUB_REPO = "KaterinaSantikou/greek-payroll-system"  # Updated to your actual repo
 
-next_type = "logic"
-
 def pop_first_idea(file_path):
     """Read the first idea from the backlog file, remove it, and return it"""
     if not file_path.exists():
