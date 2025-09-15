@@ -1,3 +1,6 @@
+priority: high
+category: payroll-core
+
 # Task: Implement overtime logic for 6-day week
 
 **Business Context:**
