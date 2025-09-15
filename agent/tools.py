@@ -925,8 +925,8 @@ class CodebaseTool:
 
 # Convenience functions that combine multiple tools
 def run_full_validation() -> Dict[str, ToolResult]:
-    """Run full pre-commit validation using tools including static analysis"""
-    print("\n🔒 Running full validation with static analysis using tools...")
+    """Run full pre-commit validation using tools including static analysis and coverage"""
+    print("\n🔒 Running full validation with static analysis and coverage using tools...")
     
     results = {}
     
@@ -938,6 +938,14 @@ def run_full_validation() -> Dict[str, ToolResult]:
     
     # TypeScript check
     results['typescript'] = BuildTool.typescript_check()
+    
+    # Coverage validation (tests with coverage tracking)
+    try:
+        from agent.coverage_tracker import run_coverage_validation
+        results['coverage'] = run_coverage_validation()
+    except ImportError:
+        from coverage_tracker import run_coverage_validation
+        results['coverage'] = run_coverage_validation()
     
     # Build validation (now includes static analysis)
     results['build'] = BuildTool.build_project()
