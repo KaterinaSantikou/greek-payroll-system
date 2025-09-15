@@ -120,16 +120,28 @@ export class PayrollEngineService {
         throw new Error('No employees selected for scope');
       }
 
-      // Validate business rules
-      const businessRules = await payrollBusinessRulesService.validateScopeCreation(
-        employeeIds,
-        scope.period,
-        scope.scopeType as 'regular' | 'termination',
-        options.requireApprovedTimesheets
-      );
+      // Get employee data for validation using infrastructure layer
+      const employees = await payrollRepository.getEmployeePayrollInfo(employeeIds);
+      const timesheets = await payrollRepository.getTimesheetData(employeeIds, scope.period);
+      
+      // Convert to business layer format for validation
+      const employeeData = employees.map(emp => {
+        const timesheet = timesheets.find(ts => ts.employeeId === emp.employeeId);
+        return {
+          ...emp,
+          approvedHours: timesheet?.approvedHours || 0,
+          unapprovedHours: timesheet?.unapprovedHours || 0
+        };
+      });
+      
+      // Validate using business layer
+      const businessRules = payrollService.validatePayrollScope(employeeData, scope.period, {
+        requireApprovedTimesheets: options.requireApprovedTimesheets
+      });
 
       if (!businessRules.canCreateScope) {
-        throw new Error(`Business rules validation failed: ${businessRules.eligibilityCheck.violations.map(v => v.details).join('; ')}`);
+        const errorMessages = businessRules.overallErrors.filter(e => e.isCritical).map(e => e.message);
+        throw new Error(`Business rules validation failed: ${errorMessages.join('; ')}`);
       }
 
       // Initialize cap tracking for all employees
@@ -351,8 +363,15 @@ export class PayrollEngineService {
     const startTime = Date.now();
 
     try {
-      // Validate no draft/computed scopes remain
-      const validation = await payrollBusinessRulesService.validatePeriodConsolidation(period);
+      // Check if there are any existing finalized runs for this period
+      const hasExistingRun = await payrollRepository.hasExistingFinalizedRun(period);
+      
+      // Get pending scopes for validation
+      const pendingScopes = await payrollRepository.getPayrollScopesByPeriod(period);
+      const validation = {
+        canConsolidate: !hasExistingRun && pendingScopes.every(scope => scope.status === 'finalized'),
+        blockingScopes: pendingScopes.filter(scope => scope.status !== 'finalized')
+      };
       if (!validation.canConsolidate) {
         throw new Error(`Cannot consolidate: ${validation.blockingScopes.length} scopes still in draft/computed state`);
       }
