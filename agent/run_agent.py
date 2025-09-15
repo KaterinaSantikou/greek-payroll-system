@@ -2562,6 +2562,11 @@ def main():
         print("2) Open changed files to review the validated implementation.")
         print("3) Run the app to verify everything works as expected.")
         
+        except Exception as e:
+            print(f"❌ Error during sandbox task execution: {e}")
+            print("🗑️ Discarding sandbox changes due to error.")
+            return
+        
     except Exception as e:
         print(f"❌ Error during task execution: {e}")
         print("🗑️ Discarding any partial changes due to error.")
