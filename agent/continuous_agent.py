@@ -77,7 +77,7 @@ print(f"🔒 Agent lock acquired: {LOCKFILE}")
 
 try:
     while True:
-    if backlog_empty() and not any(PENDING.glob("*.md")):
+        if backlog_empty() and not any(PENDING.glob("*.md")):
         print("✅ All backlog tasks are complete. No tasks left to build. Exiting cleanly.")
         sys.exit(0)
 
