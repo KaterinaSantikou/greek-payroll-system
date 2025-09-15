@@ -2450,37 +2450,37 @@ def main():
             # Create git checkpoint before applying changes
             print("💾 Creating git checkpoint before applying changes...")
             try:
-            safe_run(["git", "stash", "push", "-m", "agent-backup", "--include-untracked"])
-            backup_created = True
-            print("✅ Git checkpoint created")
-        except subprocess.CalledProcessError:
-            print("⚠️ Could not create git checkpoint (no changes to stash)")
-            backup_created = False
+                safe_run(["git", "stash", "push", "-m", "agent-backup", "--include-untracked"])
+                backup_created = True
+                print("✅ Git checkpoint created")
+            except subprocess.CalledProcessError:
+                print("⚠️ Could not create git checkpoint (no changes to stash)")
+                backup_created = False
+            
+            # Apply changes to sandbox environment with structured output support
+            changed = apply_file_blocks(resp, SANDBOX_DIR, is_structured=structured_output)
         
-        # Apply changes to sandbox environment with structured output support
-        changed = apply_file_blocks(resp, SANDBOX_DIR, is_structured=structured_output)
-    
-        # Validate that we're not changing too many files
-        if len(changed) > MAX_FILES_PER_TASK:
-            print(f"⚠️ Implementation changed {len(changed)} files, exceeding limit of {MAX_FILES_PER_TASK}")
-            print("📦 This suggests the task should have been split further.")
-            print("🔄 Consider updating the planning phase to better estimate file changes.")
-            # Continue anyway but warn about the size
+            # Validate that we're not changing too many files
+            if len(changed) > MAX_FILES_PER_TASK:
+                print(f"⚠️ Implementation changed {len(changed)} files, exceeding limit of {MAX_FILES_PER_TASK}")
+                print("📦 This suggests the task should have been split further.")
+                print("🔄 Consider updating the planning phase to better estimate file changes.")
+                # Continue anyway but warn about the size
 
-        summary_path = f"agent/last_run_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        pathlib.Path(summary_path).write_text(resp, encoding="utf-8")
+            summary_path = f"agent/last_run_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+            pathlib.Path(summary_path).write_text(resp, encoding="utf-8")
 
-        # Only move task to done if actual file changes were made
-        if not changed:
-            print("⚠️ No file changes detected. Task will remain in pending.")
-            print(f"Summary saved → {summary_path}")
-            print("Review the summary to understand why no changes were made.")
-            return
-    
-        # Run validation checks in sandbox environment
-        validation_failed = False
+            # Only move task to done if actual file changes were made
+            if not changed:
+                print("⚠️ No file changes detected. Task will remain in pending.")
+                print(f"Summary saved → {summary_path}")
+                print("Review the summary to understand why no changes were made.")
+                return
         
-        print("🔍 Running TypeScript validation in sandbox...")
+            # Run validation checks in sandbox environment
+            validation_failed = False
+            
+            print("🔍 Running TypeScript validation in sandbox...")
         result = subprocess.run(["npm", "run", "tsc", "--", "--noEmit"], cwd=SANDBOX_DIR, capture_output=True)
         if result.returncode != 0:
             print("❌ TypeScript check failed in sandbox.")
