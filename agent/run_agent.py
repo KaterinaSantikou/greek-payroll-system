@@ -1,4 +1,4 @@
-import os, glob, json, textwrap, pathlib, subprocess, re, time, random
+import os, glob, json, textwrap, pathlib, subprocess, re, time, random, fnmatch
 from datetime import datetime
 
 # ---- CONFIG ----
@@ -15,6 +15,7 @@ CONTEXT_DIR = ROOT / "context"
 KNOWLEDGE_FILE = CONTEXT_DIR / "knowledge.md"
 DEPENDENCY_FILE = CONTEXT_DIR / "dependency_graph.json"
 PAYROLL_SCENARIOS_FILE = ROOT / "tests" / "payroll_scenarios.json"
+ALLOWED_PATHS_FILE = AGENT_DIR / "allowed_paths.json"
 CONFIG = json.loads(json.dumps({}))  # placeholder if you expand
 FILE_BLOCK_START = "<<<FILE:"
 FILE_BLOCK_END = ">>>END"
