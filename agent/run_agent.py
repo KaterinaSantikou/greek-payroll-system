@@ -2234,7 +2234,15 @@ def main():
             }
 
             print("🤖 Thinking…")
-            resp = call_with_retry(lambda: call_openai([system, user]))
+            # Try structured output first for more reliable parsing
+            try:
+                print("📋 Attempting structured output for reliability...")
+                resp = call_with_retry(lambda: call_openai([system, user], use_structured_output=True))
+                structured_output = True
+            except Exception as e:
+                print(f"⚠️ Structured output failed ({e}), falling back to traditional format...")
+                resp = call_with_retry(lambda: call_openai([system, user]))
+                structured_output = False
         elif implementation_plan == "TASK_SPLIT_INTO_SUBTASKS":
             print("📦 Task was split into subtasks. Current task completed.")
             print("✅ Subtasks created successfully. Run the agent again to process them.")
@@ -2268,8 +2276,8 @@ def main():
             print("⚠️ Could not create git checkpoint (no changes to stash)")
             backup_created = False
         
-        # Apply changes to sandbox environment
-        changed = apply_file_blocks(resp, SANDBOX_DIR)
+        # Apply changes to sandbox environment with structured output support
+        changed = apply_file_blocks(resp, SANDBOX_DIR, is_structured=structured_output)
     
         # Validate that we're not changing too many files
         if len(changed) > MAX_FILES_PER_TASK:
