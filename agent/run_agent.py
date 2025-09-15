@@ -808,20 +808,21 @@ def is_task_relevant(task_content):
     # Check if any payroll keywords are present
     has_payroll_keywords = any(keyword in content_lower for keyword in payroll_keywords)
     
-    # Technical keywords that should be allowed for payroll system development
-    technical_keywords = [
-        "database", "βάση δεδομένων", "api", "endpoint", "service", "υπηρεσία",
-        "calculation", "υπολογισμός", "validation", "επαλήθευση", "test", "δοκιμή",
-        "authentication", "πιστοποίηση", "authorization", "εξουσιοδότηση",
-        "frontend", "backend", "ui", "interface", "διεπαφή", "form", "φόρμα",
-        "component", "στοιχείο", "module", "μονάδα", "function", "λειτουργία",
-        "bug", "σφάλμα", "fix", "διόρθωση", "improvement", "βελτίωση",
-        "performance", "απόδοση", "security", "ασφάλεια", "migration", "μετανάστευση",
-        "rate", "limiting", "guardrails", "relevance", "classifier", "agent"
+    # System maintenance keywords that are allowed only with explicit metadata
+    system_keywords = [
+        "guardrails", "security", "ασφάλεια", "rate limiting", "validation", "επαλήθευση", 
+        "test harness", "δοκιμή", "performance", "απόδοση", "bug fix", "διόρθωση",
+        "migration", "μετανάστευση", "database optimization", "optimization"
     ]
     
-    # Task must have either payroll keywords OR technical keywords (for system improvements)
-    has_technical_keywords = any(keyword in content_lower for keyword in technical_keywords)
+    # Check for system maintenance tasks
+    has_system_keywords = any(keyword in content_lower for keyword in system_keywords)
+    
+    # Check for explicit system metadata tags
+    has_system_metadata = any(tag in content_lower for tag in [
+        "category: system", "type: system", "category: guardrail", "type: security",
+        "category: infrastructure", "type: maintenance"
+    ])
     
     # Explicitly blocked non-business keywords that indicate unrelated tasks
     blocked_keywords = [
