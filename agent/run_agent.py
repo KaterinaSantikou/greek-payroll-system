@@ -255,9 +255,8 @@ def run_pre_commit_validation():
                 except Exception:
                     pass  # Don't fail validation for cleanup issues
             else:
-                print("   ❌ Build process failed:")
-                print(f"   stdout: {result.stdout}")
-                print(f"   stderr: {result.stderr}")
+                print("   ❌ Build process failed")
+                safe_log_subprocess_output(result, "Build process")
                 failed_checks.append("Build process")
         except subprocess.TimeoutExpired:
             print("   ❌ Build process timed out (>180s)")
