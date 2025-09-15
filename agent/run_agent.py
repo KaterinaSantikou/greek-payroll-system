@@ -493,6 +493,13 @@ def main():
             print("❌ Tests failed.")
             validation_failed = True
     
+    if not validation_failed:
+        print("🧮 Running payroll math validation...")
+        payroll_valid = validate_payroll_math()
+        if not payroll_valid:
+            print("❌ Payroll math validation failed.")
+            validation_failed = True
+    
     if validation_failed:
         if backup_created:
             print("🔄 Rolling back changes due to validation failure...")
