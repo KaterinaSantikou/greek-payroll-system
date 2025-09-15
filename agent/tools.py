@@ -947,6 +947,19 @@ def run_full_validation() -> Dict[str, ToolResult]:
         from coverage_tracker import run_coverage_validation
         results['coverage'] = run_coverage_validation()
     
+    # Greek labor law validation (for payroll-related changes)
+    try:
+        from agent.law_reference_validator import validate_greek_labor_law
+        # Get list of changed files from git
+        git_diff_result = GitTool.get_changed_files()
+        changed_files = git_diff_result.data if git_diff_result.success else []
+        results['labor_law'] = validate_greek_labor_law(changed_files)
+    except ImportError:
+        from law_reference_validator import validate_greek_labor_law
+        git_diff_result = GitTool.get_changed_files()
+        changed_files = git_diff_result.data if git_diff_result.success else []
+        results['labor_law'] = validate_greek_labor_law(changed_files)
+    
     # Build validation (now includes static analysis)
     results['build'] = BuildTool.build_project()
     
