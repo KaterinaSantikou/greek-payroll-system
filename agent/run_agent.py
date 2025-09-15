@@ -1486,7 +1486,7 @@ def parse_implementation_plan(plan_text):
         print(f"⚠️ Error parsing plan: {e}")
         return None
 
-def execute_implementation_phase(task_text, tree, knowledge, dependency_summary, evolved_guidelines, implementation_plan):
+def execute_implementation_phase(task_text, tree, knowledge, dependency_summary, evolved_guidelines, implementation_plan, impact_context=""):
     """Execute implementation phase following the detailed plan"""
     try:
         print("🔨 Starting implementation phase...")
@@ -1517,6 +1517,7 @@ def execute_implementation_phase(task_text, tree, knowledge, dependency_summary,
             
             EVOLVED GUIDELINES FROM EXPERIENCE:
             {evolved_guidelines}
+            {impact_context}
             
             FILE RESTRICTIONS: You can only modify files in allowed paths:
             - Application code: server/, client/, shared/
@@ -1835,10 +1836,18 @@ def main():
             print("🤖 Thinking…")
             resp = call_with_retry(lambda: call_openai([system, user]))
         else:
-            # PHASE 2: IMPLEMENTATION
+            # PHASE 2: IMPLEMENTATION with final impact analysis
+            planned_files = get_planned_files_from_response(implementation_plan)
+            final_impact_context = ""
+            
+            if planned_files:
+                print(f"🔍 Final impact analysis on {len(planned_files)} files before implementation...")
+                final_analysis = run_change_impact_analysis(planned_files)
+                final_impact_context = format_impact_analysis_for_prompt(final_analysis)
+            
             print("🔨 PHASE 2: Implementing the approved plan...")
             resp = execute_implementation_phase(
-                task_text, tree, knowledge, dependency_summary, evolved_guidelines, implementation_plan
+                task_text, tree, knowledge, dependency_summary, evolved_guidelines, implementation_plan, final_impact_context
             )
         
         if not resp:
