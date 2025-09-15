@@ -2839,6 +2839,24 @@ def main():
             # Update knowledge base with task completion info
             update_knowledge(task_title, changed, task_summary)
             
+            # ===== STATE PERSISTENCE - TASK COMPLETION =====
+            try:
+                from agent.state_manager import complete_task, get_state_manager
+                
+                # Mark task as completed in persistent state
+                task_id = f"task_{int(time.time())}_{task_title[:20].replace(' ', '_')}"
+                complete_task(task_id)
+                
+                # Save state after task completion
+                manager = get_state_manager()
+                if manager.current_state:
+                    print(f"💾 Task completed and saved to persistent state: {task_id}")
+                
+            except ImportError:
+                pass  # State manager not available
+            except Exception as e:
+                print(f"⚠️ Error updating task completion state: {e}")
+            
             # ===== EXPLAINABILITY REPORT GENERATION =====
             print("\n📝 Generating explainability report (WHY.md)...")
             try:
