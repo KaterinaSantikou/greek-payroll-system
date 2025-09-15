@@ -20,9 +20,9 @@ import { nanoid } from "nanoid";
 import { capTrackingService } from "./CapTrackingService";
 import { disbursementKeyService } from "./DisbursementKeyService";
 // Business layer imports
-import { payrollService } from "../business/payroll-service";
-import { payrollValidator } from "../business/payroll-validator";
-import { payrollCalculator } from "../business/payroll-calculator";
+import { payrollService } from "../../lib/payroll/services/payroll-service";
+import { payrollValidator } from "../../lib/payroll/calculators/payroll-validator";
+import { payrollCalculator } from "../../lib/payroll/calculators/payroll-calculator";
 
 // Infrastructure layer imports
 import { payrollRepository } from "../infrastructure/payroll-repository";
@@ -36,8 +36,8 @@ import {
   SOLIDARITY_TAX_BRACKETS, 
   MINIMUM_WAGE, 
   WORKING_TIME_LIMITS 
-} from "../domain/greek-labor-law";
-import { PREMIUM_RATES } from "../domain/payroll-rules";
+} from "../../lib/payroll/rules/greek-labor-law";
+import { PREMIUM_RATES } from "../../lib/payroll/rules/payroll-rules";
 
 // Note: Greek rates are now imported from domain layer instead of being defined here
 
