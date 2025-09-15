@@ -236,7 +236,7 @@ export class PayrollRepository {
     scopeId: string, 
     updates: Partial<PayrollScopeData>
   ): Promise<PayrollScope | null> {
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     
     if (updates.status) updateData.status = updates.status;
     if (updates.calculationHash) updateData.calculationHash = updates.calculationHash;
@@ -389,10 +389,10 @@ export class PayrollRepository {
       conditions.push(eq(payrollRuns.period, filters.period));
     }
     if (filters.status) {
-      conditions.push(eq(payrollRuns.status, filters.status as any));
+      conditions.push(eq(payrollRuns.status, filters.status));
     }
     if (filters.runType) {
-      conditions.push(eq(payrollRuns.runType, filters.runType as any));
+      conditions.push(eq(payrollRuns.runType, filters.runType));
     }
     
     if (conditions.length > 0) {
@@ -467,7 +467,7 @@ export class PayrollRepository {
     approvedBy?: string,
     approvalNotes?: string
   ): Promise<PayrollRun | null> {
-    const updateData: any = { 
+    const updateData: Record<string, unknown> = { 
       status,
       updatedAt: new Date()
     };

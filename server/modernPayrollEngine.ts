@@ -132,7 +132,7 @@ export class ModernPayrollEngine {
     periodId: string,
     employees: Employee[],
     wageComponents: WageComponent[],
-    timesheetData: any[] = []
+    timesheetData: Array<{ employeeId: string; [key: string]: unknown }> = []
   ): Promise<{
     success: boolean;
     calculations: DbPayrollCalculation[];
@@ -242,7 +242,7 @@ export class ModernPayrollEngine {
     format: 'csv' | 'xml' | 'json' = 'json'
   ): {
     format: string;
-    data: any;
+    data: Record<string, unknown>;
     filename: string;
   } {
     const calculations = this.calculations.get(periodId) || [];
