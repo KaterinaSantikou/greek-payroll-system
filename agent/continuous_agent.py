@@ -122,6 +122,13 @@ while True:
                 safe_run(["git", "checkout", "dev"])
             
             safe_run(["git", "add", "."])
+            
+            # Check if there are actually changes to commit
+            diff_result = safe_run(["git", "diff", "--quiet", "--cached"])
+            if diff_result.returncode == 0:
+                print("⚠️ No changes to commit, skipping.")
+                return
+            
             safe_run(["git", "commit", "-m", f"AI Agent: Completed task — {task_title}"])
             safe_run([
                 "git",
