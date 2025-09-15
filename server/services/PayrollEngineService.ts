@@ -83,6 +83,35 @@ export interface PayrollCalculation {
 export class PayrollEngineService {
   
   /**
+   * PERFORMANCE HELPER: Split array into chunks for batch processing
+   * Prevents database parameter limit issues with large employee sets
+   */
+  private chunkArray<T>(array: T[], chunkSize: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunks.push(array.slice(i, i + chunkSize));
+    }
+    return chunks;
+  }
+
+  /**
+   * PERFORMANCE HELPER: Process promises with limited concurrency
+   * Prevents overwhelming the database with parallel requests
+   */
+  private async processWithConcurrencyLimit<T>(
+    promises: Promise<T>[],
+    limit: number
+  ): Promise<T[]> {
+    const results: T[] = [];
+    for (let i = 0; i < promises.length; i += limit) {
+      const batch = promises.slice(i, i + limit);
+      const batchResults = await Promise.all(batch);
+      results.push(...batchResults);
+    }
+    return results;
+  }
+  
+  /**
    * Phase 1: Compute Scope
    * Fetch selected employees, load caps, calculate earnings/deductions with Greek rules
    */
