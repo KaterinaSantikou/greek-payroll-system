@@ -1294,6 +1294,236 @@ def get_planned_files_from_response(plan_text):
         print(f"⚠️ Error extracting planned files: {e}")
         return []
 
+def count_files_in_plan(plan_text):
+    """Count the number of files planned to be modified/created"""
+    planned_files = get_planned_files_from_response(plan_text)
+    return len(planned_files)
+
+def create_subtasks_from_large_plan(plan_text, original_task_file):
+    """Split a large plan into smaller subtasks with max 3 files each"""
+    try:
+        print("📦 Task is too large, creating subtasks...")
+        
+        planned_files = get_planned_files_from_response(plan_text)
+        if len(planned_files) <= MAX_FILES_PER_TASK:
+            return []
+        
+        # Parse the plan to extract steps and group related files
+        parsed_plan = parse_implementation_plan(plan_text)
+        if not parsed_plan:
+            # Fallback: simple file-based splitting
+            return create_simple_file_based_subtasks(planned_files, original_task_file)
+        
+        # Group files by functionality/steps
+        subtasks = []
+        implementation_steps = parsed_plan.get('implementation_steps', [])
+        
+        # Try to group files logically based on implementation steps
+        current_subtask = {
+            'files': [],
+            'steps': [],
+            'description': ''
+        }
+        
+        file_to_step_map = create_file_to_step_mapping(planned_files, implementation_steps)
+        
+        for file_path in planned_files:
+            related_steps = file_to_step_map.get(file_path, [])
+            
+            # If adding this file would exceed the limit, create a new subtask
+            if len(current_subtask['files']) >= MAX_FILES_PER_TASK:
+                if current_subtask['files']:
+                    subtasks.append(current_subtask)
+                current_subtask = {
+                    'files': [],
+                    'steps': [],
+                    'description': ''
+                }
+            
+            current_subtask['files'].append(file_path)
+            current_subtask['steps'].extend(related_steps)
+        
+        # Add the last subtask if it has files
+        if current_subtask['files']:
+            subtasks.append(current_subtask)
+        
+        # Create task files for each subtask
+        created_subtasks = []
+        original_task_name = pathlib.Path(original_task_file).stem
+        
+        for i, subtask in enumerate(subtasks, 1):
+            subtask_name = f"{original_task_name}_part{i}"
+            subtask_file = str(ROOT / f"tasks/pending/{subtask_name}.md")
+            
+            # Create subtask content
+            subtask_content = create_subtask_content(
+                subtask, i, len(subtasks), plan_text, parsed_plan
+            )
+            
+            # Write subtask file
+            pathlib.Path(subtask_file).write_text(subtask_content, encoding="utf-8")
+            created_subtasks.append(subtask_file)
+            
+            print(f"   📄 Created subtask {i}/{len(subtasks)}: {subtask_name} ({len(subtask['files'])} files)")
+        
+        return created_subtasks
+        
+    except Exception as e:
+        print(f"⚠️ Error creating subtasks: {e}")
+        return []
+
+def create_file_to_step_mapping(planned_files, implementation_steps):
+    """Map files to related implementation steps"""
+    file_to_step_map = {}
+    
+    for file_path in planned_files:
+        file_name = pathlib.Path(file_path).name
+        file_base = pathlib.Path(file_path).stem
+        
+        related_steps = []
+        for step in implementation_steps:
+            step_lower = step.lower()
+            if (file_name.lower() in step_lower or 
+                file_base.lower() in step_lower or
+                any(part in step_lower for part in file_path.split('/') if len(part) > 2)):
+                related_steps.append(step)
+        
+        file_to_step_map[file_path] = related_steps
+    
+    return file_to_step_map
+
+def create_simple_file_based_subtasks(planned_files, original_task_file):
+    """Simple fallback: split files into groups of MAX_FILES_PER_TASK"""
+    subtasks = []
+    original_task_name = pathlib.Path(original_task_file).stem
+    
+    for i in range(0, len(planned_files), MAX_FILES_PER_TASK):
+        file_group = planned_files[i:i + MAX_FILES_PER_TASK]
+        subtask_num = (i // MAX_FILES_PER_TASK) + 1
+        
+        subtask_name = f"{original_task_name}_part{subtask_num}"
+        subtask_file = str(ROOT / f"tasks/pending/{subtask_name}.md")
+        
+        subtask_content = f"""# {subtask_name}
+
+**Part {subtask_num} of split task from {original_task_name}**
+
+## Files to modify in this subtask:
+{chr(10).join(f'- {file}' for file in file_group)}
+
+## Instructions:
+Continue the implementation focusing only on the files listed above.
+Ensure this part integrates properly with other parts of the split task.
+"""
+        
+        pathlib.Path(subtask_file).write_text(subtask_content, encoding="utf-8")
+        subtasks.append(subtask_file)
+    
+    return subtasks
+
+def create_subtask_content(subtask_info, part_num, total_parts, original_plan, parsed_plan):
+    """Create detailed content for a subtask"""
+    files_list = '\n'.join(f'- {file}' for file in subtask_info['files'])
+    steps_list = '\n'.join(f'{i+1}. {step}' for i, step in enumerate(subtask_info['steps'])) if subtask_info['steps'] else "Continue implementation for the assigned files."
+    
+    content = f"""# Subtask Part {part_num} of {total_parts}
+
+**This is part {part_num} of a larger task that was automatically split for stability.**
+
+## Files to modify in this subtask:
+{files_list}
+
+## Implementation steps for this part:
+{steps_list}
+
+## Context from original plan:
+
+### Task Analysis:
+{parsed_plan.get('task_analysis', 'See original plan for full context')}
+
+### Data Flow (relevant parts):
+{parsed_plan.get('data_flow', 'See original plan for complete data flow')}
+
+### Integration Points:
+{parsed_plan.get('integration_points', 'See original plan for integration details')}
+
+### Greek Payroll Compliance:
+{parsed_plan.get('greek_compliance', 'Follow original compliance requirements')}
+
+## Important Notes:
+- Focus ONLY on the files listed above
+- Ensure your changes integrate with the overall architecture
+- Maintain consistency with other parts of the split task
+- Follow all validation and testing requirements from the original plan
+- Consider the impact on other subtasks when making changes
+
+## Coordination Requirements:
+- Changes must be compatible with other parts of the split task
+- Shared interfaces and types should be handled consistently
+- Database schema changes should be coordinated across all parts
+"""
+
+    return content
+
+def validate_task_size_during_planning(plan_text, task_file):
+    """Validate task size and split if necessary during planning phase"""
+    file_count = count_files_in_plan(plan_text)
+    
+    print(f"📊 Task size validation: {file_count} files planned")
+    
+    if file_count <= MAX_FILES_PER_TASK:
+        print(f"✅ Task size is within limits ({file_count}/{MAX_FILES_PER_TASK} files)")
+        return plan_text, []
+    
+    print(f"⚠️ Task size exceeds limit ({file_count}/{MAX_FILES_PER_TASK} files)")
+    print("📦 Automatically splitting task into smaller subtasks...")
+    
+    # Create subtasks
+    created_subtasks = create_subtasks_from_large_plan(plan_text, task_file)
+    
+    if created_subtasks:
+        print(f"✅ Created {len(created_subtasks)} subtasks:")
+        for subtask in created_subtasks:
+            print(f"   - {pathlib.Path(subtask).name}")
+        
+        # Create a coordination plan for the original task
+        coordination_plan = create_coordination_plan(plan_text, created_subtasks)
+        return coordination_plan, created_subtasks
+    else:
+        print("⚠️ Failed to create subtasks, proceeding with original plan")
+        return plan_text, []
+
+def create_coordination_plan(original_plan, subtask_files):
+    """Create a coordination plan that explains the task splitting"""
+    subtask_names = [pathlib.Path(f).stem for f in subtask_files]
+    
+    coordination_plan = f"""# Task Coordination Plan
+
+**IMPORTANT: This large task has been automatically split into {len(subtask_files)} smaller subtasks for stability.**
+
+## Created Subtasks:
+{chr(10).join(f'{i+1}. {name}' for i, name in enumerate(subtask_names))}
+
+## Coordination Strategy:
+1. Complete subtasks in sequence to avoid conflicts
+2. Ensure compatibility between subtask implementations
+3. Validate integration after each subtask completion
+4. Run full test suite after completing all subtasks
+
+## Original Plan Context:
+{original_plan}
+
+## Next Steps:
+1. Complete the subtasks in order
+2. Each subtask focuses on a subset of files (max {MAX_FILES_PER_TASK} files)
+3. Validate integration between subtasks
+4. Run comprehensive testing after all subtasks are complete
+
+**Note: This coordination plan will not be implemented directly. Instead, work on the individual subtasks.**
+"""
+    
+    return coordination_plan
+
 def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolved_guidelines, impact_context=""):
     """Execute planning phase to create detailed implementation plan"""
     try:
