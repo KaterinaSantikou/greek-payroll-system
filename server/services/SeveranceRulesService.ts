@@ -287,53 +287,125 @@ export class SeveranceRulesService {
   }
 
   /**
-   * Get severance eligibility based on termination type and cause
+   * Determine severance pay eligibility based on termination circumstances
+   * 
+   * LEGAL FRAMEWORK (Ν. 4093/2012, Articles 1-2):
+   * Severance pay is an employee right designed to provide economic security
+   * during unemployment transition, but only applies to involuntary terminations
+   * or employer-caused resignations.
+   * 
+   * ELIGIBLE TERMINATION SCENARIOS:
+   * 
+   * 1. DISMISSAL WITHOUT CAUSE (καταγγελία χωρίς λόγο):
+   *    - Most common severance scenario
+   *    - Employer terminates employment for business reasons
+   *    - No employee fault or misconduct involved
+   *    - Full severance entitlement per service bands
+   *    - Examples: Redundancy, reorganization, economic downturn
+   * 
+   * 2. CONSTRUCTIVE DISMISSAL (κατασκευαστική καταγγελία):
+   *    - Employee forced to resign due to employer violations
+   *    - Treated legally as employer-initiated termination
+   *    - Full severance rights preserved despite resignation form
+   *    - Burden of proof on employee to demonstrate employer breach
+   * 
+   * 3. MUTUAL AGREEMENT (συμφωνία εργοδότη-εργαζομένου):
+   *    - Negotiated termination with agreed terms
+   *    - Severance can be included in agreement terms
+   *    - Amount may differ from statutory minimums
+   *    - Common in senior executive departures
+   * 
+   * SEVERANCE DISQUALIFICATION CASES:
+   * 
+   * SERIOUS MISCONDUCT (Article 2, Ν. 4093/2012):
+   * "Serious cause" (σοβαρός λόγος) that justifies immediate dismissal forfeits
+   * all severance rights. Greek law defines specific misconduct categories:
+   * 
+   * - CRIMINAL_ACTIVITY: Theft, fraud, embezzlement related to employment
+   * - SERIOUS_MISCONDUCT: Willful violation of core job duties after warning
+   * - BREACH_OF_TRUST: Confidentiality violations, conflict of interest
+   * - ABANDONMENT: Unjustified absence from work for consecutive days
+   * - INSUBORDINATION: Repeated refusal to follow lawful work instructions
+   * - DISCLOSURE_SECRETS: Revealing proprietary or confidential information
+   * - COMPETE_WITH_EMPLOYER: Working for competitors during employment
+   * - FALSE_CREDENTIALS: Lying about qualifications or work history
+   * 
+   * CONSTRUCTIVE DISMISSAL TRIGGERS:
+   * Employee resignation qualifies for severance when caused by employer violations:
+   * 
+   * - NON_PAYMENT: Salary delays exceeding 2 months (established case law)
+   * - UNSAFE_CONDITIONS: Workplace hazards violating safety regulations
+   * - HARASSMENT: Discrimination, bullying, or hostile work environment
+   * - MATERIAL_CHANGE: Unilateral changes to job role, location, or compensation
+   * - EMPLOYER_BREACH: Violation of employment contract terms by employer
+   * 
+   * BURDEN OF PROOF REQUIREMENTS:
+   * - Dismissal cases: Employer must prove "serious cause" to deny severance
+   * - Resignation cases: Employee must prove employer violation to claim severance
+   * - Documentation crucial: Written warnings, incident reports, witness statements
    */
   static isSeveranceEligible(terminationType: string, terminationCause?: string): boolean {
-    // According to Ν. 4093/2012, severance is paid for:
-    // 1. Dismissal without cause (employer termination)
-    // 2. Constructive dismissal (employee resignation with cause)
-    // 3. Mutual agreement (if specified in agreement)
     
+    // EMPLOYER-INITIATED DISMISSAL ANALYSIS
     if (terminationType === 'dismissal') {
-      // Dismissal without serious cause qualifies for severance
+      // DEFAULT ASSUMPTION: Dismissal without cause = severance eligible
+      // Greek law assumes severance entitlement unless proven otherwise
       if (!terminationCause) return true;
       
-      // Serious causes that disqualify severance (Article 2, Ν. 4093/2012)
+      // SERIOUS CAUSE EXCLUSIONS (Article 2, Ν. 4093/2012)
+      // These violations are so severe they forfeit severance protection
+      // Employer must prove misconduct occurred and meets legal standards
       const seriousCauses = [
-        'SERIOUS_MISCONDUCT',        // Σοβαρό παράπτωμα
-        'CRIMINAL_ACTIVITY',         // Ποινικό αδίκημα
-        'BREACH_OF_TRUST',          // Παραβίαση εμπιστοσύνης
-        'ABANDONMENT',              // Εγκατάλειψη θέσης
-        'INSUBORDINATION',          // Ανυπακοή
-        'DISCLOSURE_SECRETS',       // Αποκάλυψη μυστικών
-        'COMPETE_WITH_EMPLOYER',    // Ανταγωνισμός εργοδότη
-        'FALSE_CREDENTIALS'         // Ψευδή στοιχεία
+        'SERIOUS_MISCONDUCT',        // Σοβαρό παράπτωμα - willful job duty violations
+        'CRIMINAL_ACTIVITY',         // Ποινικό αδίκημα - work-related criminal acts  
+        'BREACH_OF_TRUST',          // Παραβίαση εμπιστοσύνης - confidentiality/loyalty violations
+        'ABANDONMENT',              // Εγκατάλειψη θέσης - unjustified work absence
+        'INSUBORDINATION',          // Ανυπακοή - repeated refusal to follow instructions
+        'DISCLOSURE_SECRETS',       // Αποκάλυψη μυστικών - revealing proprietary information
+        'COMPETE_WITH_EMPLOYER',    // Ανταγωνισμός εργοδότη - working for competitors
+        'FALSE_CREDENTIALS'         // Ψευδή στοιχεία - falsifying qualifications/history
       ];
       
+      // If termination cause matches serious misconduct = no severance
+      // Otherwise = severance eligible (burden on employer to prove serious cause)
       return !seriousCauses.includes(terminationCause);
     }
     
-    // Resignation typically doesn't qualify unless it's constructive dismissal
+    // EMPLOYEE-INITIATED RESIGNATION ANALYSIS  
     if (terminationType === 'resignation') {
-      // Constructive dismissal causes that qualify for severance
+      // DEFAULT ASSUMPTION: Voluntary resignation = no severance
+      // Exception: Constructive dismissal where employer forced resignation
+      
+      if (!terminationCause) return false; // Pure voluntary resignation
+      
+      // CONSTRUCTIVE DISMISSAL CAUSES
+      // Employee resignation justified by employer violations = severance eligible
+      // These create legal fiction that employer "constructively" dismissed employee
       const constructiveCauses = [
-        'EMPLOYER_BREACH',          // Παραβίαση από εργοδότη
-        'UNSAFE_CONDITIONS',        // Ανασφαλείς συνθήκες
-        'NON_PAYMENT',             // Μη πληρωμή μισθών
-        'HARASSMENT',              // Παρενόχληση
-        'MATERIAL_CHANGE'          // Ουσιώδης αλλαγή όρων
+        'EMPLOYER_BREACH',          // Παραβίαση από εργοδότη - contract violation by employer
+        'UNSAFE_CONDITIONS',        // Ανασφαλείς συνθήκες - workplace safety violations
+        'NON_PAYMENT',             // Μη πληρωμή μισθών - salary payment delays/failures
+        'HARASSMENT',              // Παρενόχληση - workplace discrimination/bullying
+        'MATERIAL_CHANGE'          // Ουσιώδης αλλαγή όρων - unilateral work condition changes
       ];
       
+      // Severance eligible only if resignation caused by employer violation
       return terminationCause ? constructiveCauses.includes(terminationCause) : false;
     }
     
-    // Contract expiry - generally no severance unless specified
+    // CONTRACT EXPIRY ANALYSIS
+    // Fixed-term contract natural expiration = no severance obligation
+    // Rationale: Both parties knew termination date in advance
     if (terminationType === 'expiry') return false;
     
-    // Mutual agreement - severance can be negotiated
+    // MUTUAL AGREEMENT ANALYSIS  
+    // Negotiated departure = severance can be agreed upon
+    // May include severance above/below statutory minimums
+    // Common in executive separations with negotiated packages
     if (terminationType === 'mutual_agreement') return true;
     
+    // UNKNOWN TERMINATION TYPE = DEFAULT NO SEVERANCE
+    // Conservative approach for undefined scenarios
     return false;
   }
 
