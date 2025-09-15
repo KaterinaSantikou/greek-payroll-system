@@ -1149,14 +1149,18 @@ def main():
     pathlib.Path(done_path).parent.mkdir(parents=True, exist_ok=True)
     pathlib.Path(task_file).rename(done_path)
 
-    print("\n✅ Agent run complete.")
-    print(f"Changed files: {changed or 'None (review summary)'}")
-    print(f"Summary saved → {summary_path}")
-    print(f"Task moved to → {done_path}")
-    print("\nNext steps:")
-    print("1) Open the summary file in /agent to review the plan & TEST PLAN.")
-    print("2) Open changed files, scan quickly, then click ▶ Run app to test.")
-    print("3) Commit to dev branch, open a PR, and merge after tests pass.")
+        print("\n✅ Agent run complete with sandbox isolation.")
+        print(f"Changed files: {changed or 'None (review summary)'}")
+        print(f"Summary saved → {summary_path}")
+        print(f"Task moved to → {done_path}")
+        print("\nNext steps:")
+        print("1) Changes were validated in sandbox before merging to main repo.")
+        print("2) Open changed files to review the validated implementation.")
+        print("3) Run the app to verify everything works as expected.")
+        
+    finally:
+        # Always clean up sandbox environment
+        cleanup_sandbox()
 
 if __name__ == "__main__":
     main()
