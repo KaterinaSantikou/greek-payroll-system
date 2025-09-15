@@ -4,9 +4,9 @@ from collections import deque
 
 # Handle import from both parent directory and agent directory
 try:
-    from agent.run_agent import main as run_once, rate_limiter
+    from agent.run_agent import main as run_once, rate_limiter, run_pre_commit_validation
 except ImportError:
-    from run_agent import main as run_once, rate_limiter
+    from run_agent import main as run_once, rate_limiter, run_pre_commit_validation
 
 def mask_secrets(text):
     """Mask sensitive information in text output"""
@@ -188,6 +188,15 @@ try:
                 diff_result = subprocess.run(["git", "diff", "--quiet", "--cached"], capture_output=True)
                 if diff_result.returncode == 0:
                     print("⚠️ No changes to commit, skipping.")
+                    continue
+                
+                # Run pre-commit validation before committing
+                print("🛡️ Running pre-commit validation before committing...")
+                if not run_pre_commit_validation():
+                    print("❌ Pre-commit validation failed - commit canceled!")
+                    print("🔄 Changes are staged but not committed. Fix validation errors before next cycle.")
+                    print("⏳ Waiting 60 seconds before retrying...")
+                    time.sleep(60)
                     continue
                 
                 safe_run(["git", "commit", "-m", f"AI Agent: Completed task — {task_title}"])
