@@ -1687,7 +1687,7 @@ def create_coordination_plan(original_plan, subtask_files):
     
     return coordination_plan
 
-def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolved_guidelines, impact_context=""):
+def execute_planning_phase(task_text, tree, knowledge, architecture_guide, dependency_summary, evolved_guidelines, impact_context=""):
     """Execute planning phase to create detailed implementation plan"""
     try:
         print("🎯 Starting planning phase...")
@@ -1901,7 +1901,7 @@ def parse_implementation_plan(plan_text):
         print(f"⚠️ Error parsing plan: {e}")
         return None
 
-def execute_implementation_phase(task_text, tree, knowledge, dependency_summary, evolved_guidelines, implementation_plan, impact_context=""):
+def execute_implementation_phase(task_text, tree, knowledge, architecture_guide, dependency_summary, evolved_guidelines, implementation_plan, impact_context=""):
     """Execute implementation phase following the detailed plan"""
     try:
         print("🔨 Starting implementation phase...")
