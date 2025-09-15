@@ -2443,9 +2443,9 @@ def main():
                 else:
                     structured_output = False
 
-            if not resp:
-                print("❌ Failed to get response from OpenAI")
-                return
+        if not resp:
+            print("❌ Failed to get response from OpenAI")
+            return
         
         # Create git checkpoint before applying changes
         print("💾 Creating git checkpoint before applying changes...")
