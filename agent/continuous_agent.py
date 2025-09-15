@@ -11,8 +11,10 @@ except ImportError:
 # Import centralized mask_secrets from run_agent to maintain consistency
 try:
     from agent.run_agent import mask_secrets, safe_log_subprocess_output
+    from agent.output_validator import validate_and_handle_task, ValidationConfig
 except ImportError:
     from run_agent import mask_secrets, safe_log_subprocess_output
+    from output_validator import validate_and_handle_task, ValidationConfig
 
 def safe_run(cmd):
     """Run git command safely, masking tokens from error output"""
