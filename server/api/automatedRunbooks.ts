@@ -6,23 +6,23 @@
 import { Router } from 'express';
 import { isAuthenticated } from '../replitAuth';
 import { AutomatedRunbooksService } from '../services/AutomatedRunbooksService';
-import { 
-  insertRunbookSchema, 
+import {
+  insertRunbookSchema,
   insertRunbookExecutionSchema,
   insertRunbookTriggerSchema,
-  insertRunbookTemplateSchema
+  insertRunbookTemplateSchema,
 } from '@shared/schema';
 import { fromZodError } from 'zod-validation-error';
 import { db } from '../db';
-import { 
-  runbooks, 
+import {
+  runbooks,
   runbookExecutions,
   runbookStepExecutions,
   runbookTriggers,
   runbookTemplates,
   runbookExecutionLogs,
   runbookApprovals,
-  users
+  users,
 } from '@shared/schema';
 import { eq, desc, and, gte, lte, sql, count, avg, or } from 'drizzle-orm';
 
@@ -37,7 +37,10 @@ if (process.env.ENABLE_RUNBOOKS === 'true') {
   try {
     runbooksService = AutomatedRunbooksService.getInstance();
   } catch (error) {
-    console.error('❌ Failed to initialize AutomatedRunbooksService:', error.message);
+    console.error(
+      '❌ Failed to initialize AutomatedRunbooksService:',
+      error.message
+    );
   }
 }
 
@@ -51,12 +54,12 @@ if (process.env.ENABLE_RUNBOOKS === 'true') {
 router.get('/runbooks', async (req, res) => {
   // Feature gate check
   if (!runbooksService) {
-    return res.status(503).json({ 
+    return res.status(503).json({
       error: 'Automated runbooks service is not available',
-      reason: 'Service disabled or schema missing'
+      reason: 'Service disabled or schema missing',
     });
   }
-  
+
   try {
     const {
       category,
@@ -64,7 +67,7 @@ router.get('/runbooks', async (req, res) => {
       autoTrigger,
       search,
       limit = '50',
-      offset = '0'
+      offset = '0',
     } = req.query;
 
     let query = db
@@ -74,16 +77,18 @@ router.get('/runbooks', async (req, res) => {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
-        }
+        },
       })
       .from(runbooks)
       .leftJoin(users, eq(runbooks.createdBy, users.id));
 
     const conditions = [];
     if (category) conditions.push(eq(runbooks.category, category as string));
-    if (isActive !== undefined) conditions.push(eq(runbooks.isActive, isActive === 'true'));
-    if (autoTrigger !== undefined) conditions.push(eq(runbooks.autoTrigger, autoTrigger === 'true'));
-    
+    if (isActive !== undefined)
+      conditions.push(eq(runbooks.isActive, isActive === 'true'));
+    if (autoTrigger !== undefined)
+      conditions.push(eq(runbooks.autoTrigger, autoTrigger === 'true'));
+
     if (search) {
       conditions.push(
         or(
@@ -117,9 +122,9 @@ router.get('/runbooks', async (req, res) => {
     });
   } catch (error) {
     console.error('Error listing runbooks:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to list runbooks',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -165,9 +170,9 @@ router.get('/runbooks/:runbookId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting runbook:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get runbook',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -193,15 +198,15 @@ router.post('/runbooks', async (req, res) => {
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       const validationError = fromZodError(error);
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
-        details: validationError.message 
+        details: validationError.message,
       });
     }
     console.error('Error creating runbook:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create runbook',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -232,15 +237,15 @@ router.put('/runbooks/:runbookId', async (req, res) => {
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       const validationError = fromZodError(error);
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
-        details: validationError.message 
+        details: validationError.message,
       });
     }
     console.error('Error updating runbook:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to update runbook',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -262,9 +267,9 @@ router.delete('/runbooks/:runbookId', async (req, res) => {
     res.json({ message: 'Runbook deleted successfully' });
   } catch (error) {
     console.error('Error deleting runbook:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to delete runbook',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -284,7 +289,7 @@ router.post('/runbooks/:runbookId/execute', async (req, res) => {
 
     const execution = await runbooksService.executeRunbook(runbookId, {
       variables,
-      environment: process.env.NODE_ENV as any || 'development',
+      environment: (process.env.NODE_ENV as any) || 'development',
       triggeredBy: userId,
       priority,
     });
@@ -292,9 +297,9 @@ router.post('/runbooks/:runbookId/execute', async (req, res) => {
     res.status(201).json(execution);
   } catch (error) {
     console.error('Error executing runbook:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to execute runbook',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -316,7 +321,7 @@ router.get('/executions/:executionId', async (req, res) => {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
-        }
+        },
       })
       .from(runbookExecutions)
       .leftJoin(runbooks, eq(runbookExecutions.runbookId, runbooks.id))
@@ -350,9 +355,9 @@ router.get('/executions/:executionId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting execution:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get execution',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -370,7 +375,7 @@ router.get('/executions', async (req, res) => {
       startDate,
       endDate,
       limit = '50',
-      offset = '0'
+      offset = '0',
     } = req.query;
 
     let query = db
@@ -385,19 +390,27 @@ router.get('/executions', async (req, res) => {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
-        }
+        },
       })
       .from(runbookExecutions)
       .leftJoin(runbooks, eq(runbookExecutions.runbookId, runbooks.id))
       .leftJoin(users, eq(runbookExecutions.triggeredBy, users.id));
 
     const conditions = [];
-    if (runbookId) conditions.push(eq(runbookExecutions.runbookId, runbookId as string));
+    if (runbookId)
+      conditions.push(eq(runbookExecutions.runbookId, runbookId as string));
     if (status) conditions.push(eq(runbookExecutions.status, status as string));
     if (result) conditions.push(eq(runbookExecutions.result, result as string));
-    if (triggeredBy) conditions.push(eq(runbookExecutions.triggeredBy, triggeredBy as string));
-    if (startDate) conditions.push(gte(runbookExecutions.startedAt, new Date(startDate as string)));
-    if (endDate) conditions.push(lte(runbookExecutions.startedAt, new Date(endDate as string)));
+    if (triggeredBy)
+      conditions.push(eq(runbookExecutions.triggeredBy, triggeredBy as string));
+    if (startDate)
+      conditions.push(
+        gte(runbookExecutions.startedAt, new Date(startDate as string))
+      );
+    if (endDate)
+      conditions.push(
+        lte(runbookExecutions.startedAt, new Date(endDate as string))
+      );
 
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
@@ -423,9 +436,9 @@ router.get('/executions', async (req, res) => {
     });
   } catch (error) {
     console.error('Error listing executions:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to list executions',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -454,15 +467,15 @@ router.post('/executions/:executionId/cancel', async (req, res) => {
       return res.status(404).json({ error: 'Execution not found' });
     }
 
-    res.json({ 
+    res.json({
       message: 'Execution cancelled successfully',
       execution,
     });
   } catch (error) {
     console.error('Error cancelling execution:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to cancel execution',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -485,14 +498,16 @@ router.get('/triggers', async (req, res) => {
           id: runbooks.id,
           name: runbooks.name,
           category: runbooks.category,
-        }
+        },
       })
       .from(runbookTriggers)
       .leftJoin(runbooks, eq(runbookTriggers.runbookId, runbooks.id));
 
     const conditions = [];
-    if (runbookId) conditions.push(eq(runbookTriggers.runbookId, runbookId as string));
-    if (isActive !== undefined) conditions.push(eq(runbookTriggers.isActive, isActive === 'true'));
+    if (runbookId)
+      conditions.push(eq(runbookTriggers.runbookId, runbookId as string));
+    if (isActive !== undefined)
+      conditions.push(eq(runbookTriggers.isActive, isActive === 'true'));
 
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
@@ -503,9 +518,9 @@ router.get('/triggers', async (req, res) => {
     res.json(triggers);
   } catch (error) {
     console.error('Error listing triggers:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to list triggers',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -530,15 +545,15 @@ router.post('/triggers', async (req, res) => {
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       const validationError = fromZodError(error);
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
-        details: validationError.message 
+        details: validationError.message,
       });
     }
     console.error('Error creating trigger:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create trigger',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -549,10 +564,11 @@ router.post('/triggers', async (req, res) => {
 router.post('/triggers/:triggerId/test', async (req, res) => {
   try {
     const { alertData } = req.body;
-    
+
     // Test if the alert would trigger this runbook
-    const matchingRunbooks = await runbooksService.checkTriggerConditions(alertData);
-    
+    const matchingRunbooks =
+      await runbooksService.checkTriggerConditions(alertData);
+
     res.json({
       wouldTrigger: matchingRunbooks.length > 0,
       matchingRunbooks,
@@ -560,9 +576,9 @@ router.post('/triggers/:triggerId/test', async (req, res) => {
     });
   } catch (error) {
     console.error('Error testing trigger:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to test trigger',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -585,28 +601,34 @@ router.get('/templates', async (req, res) => {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
-        }
+        },
       })
       .from(runbookTemplates)
       .leftJoin(users, eq(runbookTemplates.createdBy, users.id));
 
     const conditions = [];
-    if (category) conditions.push(eq(runbookTemplates.category, category as string));
-    if (difficulty) conditions.push(eq(runbookTemplates.difficulty, difficulty as string));
-    if (isPublic !== undefined) conditions.push(eq(runbookTemplates.isPublic, isPublic === 'true'));
+    if (category)
+      conditions.push(eq(runbookTemplates.category, category as string));
+    if (difficulty)
+      conditions.push(eq(runbookTemplates.difficulty, difficulty as string));
+    if (isPublic !== undefined)
+      conditions.push(eq(runbookTemplates.isPublic, isPublic === 'true'));
 
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
 
-    const templates = await query.orderBy(desc(runbookTemplates.rating), desc(runbookTemplates.downloadCount));
+    const templates = await query.orderBy(
+      desc(runbookTemplates.rating),
+      desc(runbookTemplates.downloadCount)
+    );
 
     res.json(templates);
   } catch (error) {
     console.error('Error listing templates:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to list templates',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -633,17 +655,15 @@ router.post('/templates/:templateId/create-runbook', async (req, res) => {
     const templateData = template.templateData as any;
     const runbookData = {
       ...templateData,
-      name: name || `${template.name} - ${new Date().toISOString().split('T')[0]}`,
+      name:
+        name || `${template.name} - ${new Date().toISOString().split('T')[0]}`,
       ...customizations,
       isTemplate: false,
       createdBy: userId,
       updatedBy: userId,
     };
 
-    const [runbook] = await db
-      .insert(runbooks)
-      .values(runbookData)
-      .returning();
+    const [runbook] = await db.insert(runbooks).values(runbookData).returning();
 
     // Update template download count
     await db
@@ -656,9 +676,9 @@ router.post('/templates/:templateId/create-runbook', async (req, res) => {
     res.status(201).json(runbook);
   } catch (error) {
     console.error('Error creating runbook from template:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create runbook from template',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -675,12 +695,12 @@ router.get('/analytics', async (req, res) => {
     const {
       startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       endDate = new Date().toISOString(),
-      runbookId
+      runbookId,
     } = req.query;
 
     const conditions = [
       gte(runbookExecutions.startedAt, new Date(startDate as string)),
-      lte(runbookExecutions.startedAt, new Date(endDate as string))
+      lte(runbookExecutions.startedAt, new Date(endDate as string)),
     ];
 
     if (runbookId) {
@@ -691,10 +711,16 @@ router.get('/analytics', async (req, res) => {
     const [overallStats] = await db
       .select({
         totalExecutions: count(),
-        successfulExecutions: count(sql`CASE WHEN ${runbookExecutions.result} = 'success' THEN 1 END`),
-        failedExecutions: count(sql`CASE WHEN ${runbookExecutions.result} = 'failure' THEN 1 END`),
+        successfulExecutions: count(
+          sql`CASE WHEN ${runbookExecutions.result} = 'success' THEN 1 END`
+        ),
+        failedExecutions: count(
+          sql`CASE WHEN ${runbookExecutions.result} = 'failure' THEN 1 END`
+        ),
         avgDuration: avg(runbookExecutions.actualDuration),
-        autoTriggered: count(sql`CASE WHEN ${runbookExecutions.triggerType} = 'automatic' THEN 1 END`),
+        autoTriggered: count(
+          sql`CASE WHEN ${runbookExecutions.triggerType} = 'automatic' THEN 1 END`
+        ),
       })
       .from(runbookExecutions)
       .where(and(...conditions));
@@ -741,9 +767,9 @@ router.get('/analytics', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting runbook analytics:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get runbook analytics',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -754,7 +780,7 @@ router.get('/analytics', async (req, res) => {
 router.get('/health', async (req, res) => {
   try {
     const last10Minutes = new Date(Date.now() - 10 * 60 * 1000);
-    
+
     const activeExecutions = await db
       .select({ count: count() })
       .from(runbookExecutions)
@@ -785,7 +811,7 @@ router.get('/health', async (req, res) => {
     res.json(health);
   } catch (error) {
     console.error('Error checking runbooks health:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       status: 'error',
       error: 'Failed to check runbooks health',
       details: error instanceof Error ? error.message : 'Unknown error',

@@ -2,11 +2,10 @@
  * Re-Issue Algorithm API - "Re-Issue as SCT Instant now" functionality
  */
 
-import type { Express } from "express";
-import { ReissueAlgorithm } from "../services/reissueAlgorithm";
+import type { Express } from 'express';
+import { ReissueAlgorithm } from '../services/reissueAlgorithm';
 
 export function reissueAlgorithmRoutes(app: Express) {
-
   // =============================================================================
   // ELIGIBILITY CHECKING
   // =============================================================================
@@ -19,7 +18,8 @@ export function reissueAlgorithmRoutes(app: Express) {
     try {
       const { batch_id } = req.params;
 
-      const eligibilityResult = await ReissueAlgorithm.selectEligibleLines(batch_id);
+      const eligibilityResult =
+        await ReissueAlgorithm.selectEligibleLines(batch_id);
 
       res.json({
         batch_id,
@@ -29,9 +29,14 @@ export function reissueAlgorithmRoutes(app: Express) {
           total_lines: eligibilityResult.totalLines,
           eligible_count: eligibilityResult.eligibleLines.length,
           ineligible_count: eligibilityResult.ineligibleLines.length,
-          eligibility_rate: eligibilityResult.totalLines > 0 
-            ? ((eligibilityResult.eligibleLines.length / eligibilityResult.totalLines) * 100).toFixed(1) + '%'
-            : '0%',
+          eligibility_rate:
+            eligibilityResult.totalLines > 0
+              ? (
+                  (eligibilityResult.eligibleLines.length /
+                    eligibilityResult.totalLines) *
+                  100
+                ).toFixed(1) + '%'
+              : '0%',
         },
         selection_criteria: [
           'Status in [submitted, accepted, rejected] but not settled',
@@ -41,15 +46,19 @@ export function reissueAlgorithmRoutes(app: Express) {
           'Line not already superseded',
           'No debit posted for that line',
         ],
-        cockpit_action: eligibilityResult.eligibleLines.length > 0 
-          ? 'SHOW_REISSUE_BUTTON' 
-          : 'NO_REISSUE_AVAILABLE',
+        cockpit_action:
+          eligibilityResult.eligibleLines.length > 0
+            ? 'SHOW_REISSUE_BUTTON'
+            : 'NO_REISSUE_AVAILABLE',
       });
     } catch (error) {
       console.error('Eligible lines selection error:', error);
       res.status(500).json({
         error: 'ELIGIBLE_LINES_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to select eligible lines for re-issue'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to select eligible lines for re-issue',
       });
     }
   });
@@ -62,7 +71,8 @@ export function reissueAlgorithmRoutes(app: Express) {
     try {
       const { line_id } = req.params;
 
-      const eligibilityCheck = await ReissueAlgorithm.checkLineEligibility(line_id);
+      const eligibilityCheck =
+        await ReissueAlgorithm.checkLineEligibility(line_id);
 
       res.json({
         line_id,
@@ -74,22 +84,37 @@ export function reissueAlgorithmRoutes(app: Express) {
           },
           risk_indicator: {
             level: eligibilityCheck.riskAssessment,
-            color: eligibilityCheck.riskAssessment === 'LOW' ? 'green' : 
-                   eligibilityCheck.riskAssessment === 'MEDIUM' ? 'yellow' : 'red',
+            color:
+              eligibilityCheck.riskAssessment === 'LOW'
+                ? 'green'
+                : eligibilityCheck.riskAssessment === 'MEDIUM'
+                  ? 'yellow'
+                  : 'red',
           },
           blocking_factors: eligibilityCheck.blockingFactors,
           estimated_settlement: eligibilityCheck.estimatedSettlement,
         },
         criteria_checklist: eligibilityCheck.eligibilityCriteria,
-        next_steps: eligibilityCheck.eligible 
-          ? ['Include in re-issue selection', 'Confirm operator approval', 'Execute re-issue']
-          : ['Review blocking factors', 'Resolve eligibility issues', 'Re-check eligibility'],
+        next_steps: eligibilityCheck.eligible
+          ? [
+              'Include in re-issue selection',
+              'Confirm operator approval',
+              'Execute re-issue',
+            ]
+          : [
+              'Review blocking factors',
+              'Resolve eligibility issues',
+              'Re-check eligibility',
+            ],
       });
     } catch (error) {
       console.error('Line eligibility check error:', error);
       res.status(500).json({
         error: 'LINE_ELIGIBILITY_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to check line eligibility'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to check line eligibility',
       });
     }
   });
@@ -104,21 +129,22 @@ export function reissueAlgorithmRoutes(app: Express) {
    */
   app.post('/v1/reissue/execute-instant', async (req, res) => {
     try {
-      const { 
-        original_batch_id, 
-        line_ids, 
-        operator_id, 
-        reason, 
+      const {
+        original_batch_id,
+        line_ids,
+        operator_id,
+        reason,
         incident_id,
         force_reissue = false,
-        confirmation = false
+        confirmation = false,
       } = req.body;
 
       if (!original_batch_id || !line_ids || !operator_id || !reason) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
-          detail: 'original_batch_id, line_ids, operator_id, and reason are required',
-          hint: 'Provide complete re-issue request parameters'
+          detail:
+            'original_batch_id, line_ids, operator_id, and reason are required',
+          hint: 'Provide complete re-issue request parameters',
         });
       }
 
@@ -126,7 +152,7 @@ export function reissueAlgorithmRoutes(app: Express) {
         return res.status(400).json({
           error: 'INVALID_LINE_IDS',
           detail: 'line_ids must be a non-empty array',
-          hint: 'Select at least one payment line for re-issue'
+          hint: 'Select at least one payment line for re-issue',
         });
       }
 
@@ -176,7 +202,7 @@ export function reissueAlgorithmRoutes(app: Express) {
         business_impact: {
           reissued_payments: result.reissuedLines,
           estimated_settlement: result.estimatedSettlementTime,
-          fee_implication: `~€${(result.reissuedLines * 0.20).toFixed(2)} SCT Instant fees`,
+          fee_implication: `~€${(result.reissuedLines * 0.2).toFixed(2)} SCT Instant fees`,
           processing_method: 'SCT_INST',
         },
         next_steps: [
@@ -190,7 +216,10 @@ export function reissueAlgorithmRoutes(app: Express) {
       console.error('Reissue execution error:', error);
       res.status(500).json({
         error: 'REISSUE_EXECUTION_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to execute SCT Instant re-issue'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to execute SCT Instant re-issue',
       });
     }
   });
@@ -207,7 +236,8 @@ export function reissueAlgorithmRoutes(app: Express) {
     try {
       const { batch_id } = req.params;
 
-      const reissueStatus = await ReissueAlgorithm.getBatchReissueStatus(batch_id);
+      const reissueStatus =
+        await ReissueAlgorithm.getBatchReissueStatus(batch_id);
 
       res.json({
         batch_id,
@@ -215,22 +245,30 @@ export function reissueAlgorithmRoutes(app: Express) {
         cockpit_indicators: {
           has_reissues_badge: {
             show: reissueStatus.hasReissues,
-            text: reissueStatus.hasReissues ? `${reissueStatus.reissueBatches.length} Re-issues` : 'No Re-issues',
+            text: reissueStatus.hasReissues
+              ? `${reissueStatus.reissueBatches.length} Re-issues`
+              : 'No Re-issues',
             variant: reissueStatus.hasReissues ? 'secondary' : 'outline',
           },
           superseded_lines_count: reissueStatus.supersededLines,
-          reissue_timeline: reissueStatus.reissueBatches.map((reissue: any) => ({
-            timestamp: reissue.reissueTimestamp,
-            operator: reissue.operatorId,
-            reason: reissue.reissueReason,
-            batch_id: reissue.reissueBatchId,
-            status: reissue.status,
-          })),
+          reissue_timeline: reissueStatus.reissueBatches.map(
+            (reissue: any) => ({
+              timestamp: reissue.reissueTimestamp,
+              operator: reissue.operatorId,
+              reason: reissue.reissueReason,
+              batch_id: reissue.reissueBatchId,
+              status: reissue.status,
+            })
+          ),
         },
         audit_compliance: {
           operator_tracking: 'COMPLETE',
           reason_documentation: 'COMPLETE',
-          incident_linking: reissueStatus.reissueBatches.some((r: any) => r.operatorId) ? 'AVAILABLE' : 'N/A',
+          incident_linking: reissueStatus.reissueBatches.some(
+            (r: any) => r.operatorId
+          )
+            ? 'AVAILABLE'
+            : 'N/A',
           superseding_trail: 'COMPLETE',
         },
       });
@@ -238,7 +276,10 @@ export function reissueAlgorithmRoutes(app: Express) {
       console.error('Batch reissue status error:', error);
       res.status(500).json({
         error: 'BATCH_REISSUE_STATUS_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to retrieve batch re-issue status'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve batch re-issue status',
       });
     }
   });
@@ -251,21 +292,24 @@ export function reissueAlgorithmRoutes(app: Express) {
     try {
       const { batch_id } = req.params;
 
-      const recommendations = await ReissueAlgorithm.getReissueRecommendations(batch_id);
+      const recommendations =
+        await ReissueAlgorithm.getReissueRecommendations(batch_id);
 
       res.json({
         batch_id,
         reissue_recommendations: recommendations,
         cockpit_guidance: {
           show_reissue_button: recommendations.eligibleLines > 0,
-          button_text: recommendations.eligibleLines > 0 
-            ? `Re-issue ${recommendations.eligibleLines} as SCT Instant` 
-            : 'No Eligible Lines',
-          risk_warning: recommendations.riskAssessment === 'HIGH' 
-            ? 'High-risk re-issue - review carefully'
-            : recommendations.riskAssessment === 'MEDIUM'
-            ? 'Medium-risk re-issue - confirm details'
-            : 'Low-risk re-issue',
+          button_text:
+            recommendations.eligibleLines > 0
+              ? `Re-issue ${recommendations.eligibleLines} as SCT Instant`
+              : 'No Eligible Lines',
+          risk_warning:
+            recommendations.riskAssessment === 'HIGH'
+              ? 'High-risk re-issue - review carefully'
+              : recommendations.riskAssessment === 'MEDIUM'
+                ? 'Medium-risk re-issue - confirm details'
+                : 'Low-risk re-issue',
         },
         cost_benefit_analysis: {
           time_savings: recommendations.estimatedSavings.timeSaved,
@@ -284,7 +328,10 @@ export function reissueAlgorithmRoutes(app: Express) {
       console.error('Reissue recommendations error:', error);
       res.status(500).json({
         error: 'REISSUE_RECOMMENDATIONS_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to generate re-issue recommendations'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to generate re-issue recommendations',
       });
     }
   });
@@ -305,7 +352,7 @@ export function reissueAlgorithmRoutes(app: Express) {
         return res.status(400).json({
           error: 'INVALID_BIC_ENTRIES',
           detail: 'bic_entries array is required',
-          hint: 'Provide BIC directory entries for caching'
+          hint: 'Provide BIC directory entries for caching',
         });
       }
 
@@ -316,13 +363,17 @@ export function reissueAlgorithmRoutes(app: Express) {
         entries_processed: bic_entries.length,
         cache_status: 'UPDATED',
         iban_reachability: 'ENHANCED',
-        next_update: 'Schedule regular BIC directory updates for optimal IBAN reachability checking',
+        next_update:
+          'Schedule regular BIC directory updates for optimal IBAN reachability checking',
       });
     } catch (error) {
       console.error('BIC directory update error:', error);
       res.status(500).json({
         error: 'BIC_DIRECTORY_UPDATE_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to update BIC directory cache'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to update BIC directory cache',
       });
     }
   });
@@ -385,7 +436,10 @@ export function reissueAlgorithmRoutes(app: Express) {
       console.error('Safety checklist error:', error);
       res.status(500).json({
         error: 'SAFETY_CHECKLIST_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to retrieve safety checklist'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve safety checklist',
       });
     }
   });

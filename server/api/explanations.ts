@@ -1,12 +1,15 @@
-import type { Express } from "express";
-import { z } from "zod";
-import { fromZodError } from "zod-validation-error";
-import { payslipExplanationService, type PayslipData } from "../services/PayslipExplanationService";
-import { 
+import type { Express } from 'express';
+import { z } from 'zod';
+import { fromZodError } from 'zod-validation-error';
+import {
+  payslipExplanationService,
+  type PayslipData,
+} from '../services/PayslipExplanationService';
+import {
   insertExplanationRuleSchema,
   insertPayslipExplanationSchema,
-  insertExplanationFeedbackSchema 
-} from "../../shared/schema";
+  insertExplanationFeedbackSchema,
+} from '../../shared/schema';
 
 // Request validation schemas
 const generateExplanationSchema = z.object({
@@ -14,27 +17,33 @@ const generateExplanationSchema = z.object({
   payrollRunId: z.string(),
   periodStart: z.string(),
   periodEnd: z.string(),
-  lines: z.array(z.object({
-    lineId: z.string(),
-    runId: z.string(),
-    employeeId: z.string(),
-    code: z.string(),
-    description: z.string(),
-    amount: z.union([z.string(), z.number()]), // Handle both string and number
-    sequence: z.number().optional(),
-  })),
-  timesheetAggregates: z.object({
-    regularHours: z.number(),
-    overtimeHours: z.number(),
-    nightHours: z.number(),
-    sundayHours: z.number(),
-    holidayHours: z.number(),
-  }).optional(),
-  employeeData: z.object({
-    name: z.string(),
-    hourlyRate: z.number(),
-    locale: z.string(),
-  }).optional(),
+  lines: z.array(
+    z.object({
+      lineId: z.string(),
+      runId: z.string(),
+      employeeId: z.string(),
+      code: z.string(),
+      description: z.string(),
+      amount: z.union([z.string(), z.number()]), // Handle both string and number
+      sequence: z.number().optional(),
+    })
+  ),
+  timesheetAggregates: z
+    .object({
+      regularHours: z.number(),
+      overtimeHours: z.number(),
+      nightHours: z.number(),
+      sundayHours: z.number(),
+      holidayHours: z.number(),
+    })
+    .optional(),
+  employeeData: z
+    .object({
+      name: z.string(),
+      hourlyRate: z.number(),
+      locale: z.string(),
+    })
+    .optional(),
 });
 
 const submitFeedbackSchema = z.object({
@@ -53,15 +62,14 @@ const submitFeedbackSchema = z.object({
 });
 
 export function registerExplanationRoutes(app: Express) {
-  
   /**
    * Generate explanation for a payslip
    * POST /api/explanations/generate
    */
-  app.post("/api/explanations/generate", async (req, res) => {
+  app.post('/api/explanations/generate', async (req, res) => {
     try {
       const validatedData = generateExplanationSchema.parse(req.body);
-      
+
       // Convert the validated data to PayslipData format
       const payslipData: PayslipData = {
         employeeId: validatedData.employeeId,
@@ -87,10 +95,14 @@ export function registerExplanationRoutes(app: Express) {
       };
 
       // Generate explanation
-      const result = await payslipExplanationService.generateExplanation(payslipData);
-      
+      const result =
+        await payslipExplanationService.generateExplanation(payslipData);
+
       // Save to database
-      const { explanationId } = await payslipExplanationService.saveExplanation(payslipData, result);
+      const { explanationId } = await payslipExplanationService.saveExplanation(
+        payslipData,
+        result
+      );
 
       res.json({
         success: true,
@@ -104,20 +116,20 @@ export function registerExplanationRoutes(app: Express) {
         },
       });
     } catch (error) {
-      console.error("Error generating explanation:", error);
-      
+      console.error('Error generating explanation:', error);
+
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           success: false,
-          error: "Invalid request data",
+          error: 'Invalid request data',
           details: fromZodError(error).toString(),
         });
       }
-      
+
       res.status(500).json({
         success: false,
-        error: "Failed to generate explanation",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Failed to generate explanation',
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });
@@ -126,16 +138,17 @@ export function registerExplanationRoutes(app: Express) {
    * Get explanation by ID
    * GET /api/explanations/:explanationId
    */
-  app.get("/api/explanations/:explanationId", async (req, res) => {
+  app.get('/api/explanations/:explanationId', async (req, res) => {
     try {
       const { explanationId } = req.params;
-      
-      const explanation = await payslipExplanationService.getExplanation(explanationId);
-      
+
+      const explanation =
+        await payslipExplanationService.getExplanation(explanationId);
+
       if (!explanation) {
         return res.status(404).json({
           success: false,
-          error: "Explanation not found",
+          error: 'Explanation not found',
         });
       }
 
@@ -156,18 +169,18 @@ export function registerExplanationRoutes(app: Express) {
             coveragePercentage: parseFloat(explanation.coveragePercentage),
             unexplainedLines: explanation.unexplainedLines,
           },
-          confidenceScore: parseFloat(explanation.confidenceScore || "0"),
+          confidenceScore: parseFloat(explanation.confidenceScore || '0'),
           csatRating: explanation.csatRating,
           status: explanation.status,
           generatedAt: explanation.generatedAt,
         },
       });
     } catch (error) {
-      console.error("Error fetching explanation:", error);
+      console.error('Error fetching explanation:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch explanation",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Failed to fetch explanation',
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });
@@ -176,13 +189,17 @@ export function registerExplanationRoutes(app: Express) {
    * Get explanations for an employee
    * GET /api/explanations/employee/:employeeId
    */
-  app.get("/api/explanations/employee/:employeeId", async (req, res) => {
+  app.get('/api/explanations/employee/:employeeId', async (req, res) => {
     try {
       const { employeeId } = req.params;
       const limit = parseInt(req.query.limit as string) || 10;
-      
-      const explanations = await payslipExplanationService.getEmployeeExplanations(employeeId, limit);
-      
+
+      const explanations =
+        await payslipExplanationService.getEmployeeExplanations(
+          employeeId,
+          limit
+        );
+
       res.json({
         success: true,
         explanations: explanations.map(explanation => ({
@@ -195,18 +212,18 @@ export function registerExplanationRoutes(app: Express) {
             explainedValue: parseFloat(explanation.explainedValue),
             coveragePercentage: parseFloat(explanation.coveragePercentage),
           },
-          confidenceScore: parseFloat(explanation.confidenceScore || "0"),
+          confidenceScore: parseFloat(explanation.confidenceScore || '0'),
           csatRating: explanation.csatRating,
           status: explanation.status,
           generatedAt: explanation.generatedAt,
         })),
       });
     } catch (error) {
-      console.error("Error fetching employee explanations:", error);
+      console.error('Error fetching employee explanations:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch explanations",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Failed to fetch explanations',
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });
@@ -215,33 +232,33 @@ export function registerExplanationRoutes(app: Express) {
    * Submit feedback on an explanation
    * POST /api/explanations/:explanationId/feedback
    */
-  app.post("/api/explanations/:explanationId/feedback", async (req, res) => {
+  app.post('/api/explanations/:explanationId/feedback', async (req, res) => {
     try {
       const { explanationId } = req.params;
       const validatedData = submitFeedbackSchema.parse(req.body);
-      
+
       // Note: This would require implementing feedback storage in the service
       // For now, return success
       res.json({
         success: true,
-        message: "Feedback submitted successfully",
+        message: 'Feedback submitted successfully',
         feedbackId: `feedback_${Date.now()}`,
       });
     } catch (error) {
-      console.error("Error submitting feedback:", error);
-      
+      console.error('Error submitting feedback:', error);
+
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           success: false,
-          error: "Invalid feedback data",
+          error: 'Invalid feedback data',
           details: fromZodError(error).toString(),
         });
       }
-      
+
       res.status(500).json({
         success: false,
-        error: "Failed to submit feedback",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Failed to submit feedback',
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });
@@ -250,20 +267,20 @@ export function registerExplanationRoutes(app: Express) {
    * Get explanation rules (for admin/debugging)
    * GET /api/explanations/rules
    */
-  app.get("/api/explanations/rules", async (req, res) => {
+  app.get('/api/explanations/rules', async (req, res) => {
     try {
       // This would require implementing rule retrieval in the service
       res.json({
         success: true,
         rules: [],
-        message: "Rules endpoint not fully implemented yet",
+        message: 'Rules endpoint not fully implemented yet',
       });
     } catch (error) {
-      console.error("Error fetching rules:", error);
+      console.error('Error fetching rules:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch rules",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Failed to fetch rules',
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });
@@ -272,31 +289,31 @@ export function registerExplanationRoutes(app: Express) {
    * Create or update an explanation rule (for admin)
    * POST /api/explanations/rules
    */
-  app.post("/api/explanations/rules", async (req, res) => {
+  app.post('/api/explanations/rules', async (req, res) => {
     try {
       const validatedData = insertExplanationRuleSchema.parse(req.body);
-      
+
       // This would require implementing rule creation in the service
       res.json({
         success: true,
         ruleId: `rule_${Date.now()}`,
-        message: "Rule creation endpoint not fully implemented yet",
+        message: 'Rule creation endpoint not fully implemented yet',
       });
     } catch (error) {
-      console.error("Error creating rule:", error);
-      
+      console.error('Error creating rule:', error);
+
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           success: false,
-          error: "Invalid rule data",
+          error: 'Invalid rule data',
           details: fromZodError(error).toString(),
         });
       }
-      
+
       res.status(500).json({
         success: false,
-        error: "Failed to create rule",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Failed to create rule',
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });
@@ -305,13 +322,13 @@ export function registerExplanationRoutes(app: Express) {
    * Health check for explanation system
    * GET /api/explanations/health
    */
-  app.get("/api/explanations/health", async (req, res) => {
+  app.get('/api/explanations/health', async (req, res) => {
     try {
       // Basic health check
       res.json({
         success: true,
-        status: "healthy",
-        version: "v2025.1",
+        status: 'healthy',
+        version: 'v2025.1',
         timestamp: new Date().toISOString(),
         features: {
           generation: true,
@@ -326,8 +343,8 @@ export function registerExplanationRoutes(app: Express) {
     } catch (error) {
       res.status(500).json({
         success: false,
-        status: "unhealthy",
-        error: error instanceof Error ? error.message : "Unknown error",
+        status: 'unhealthy',
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });
@@ -336,24 +353,24 @@ export function registerExplanationRoutes(app: Express) {
    * Demo endpoint with sample payslip matching specification
    * GET /api/explanations/demo
    */
-  app.get("/api/explanations/demo", async (req, res) => {
+  app.get('/api/explanations/demo', async (req, res) => {
     try {
       const locale = (req.query.locale as string) || 'en';
-      
-      // Return demo data without database access  
+
+      // Return demo data without database access
       const samplePayslipData = {
-        employeeId: "emp_demo_001",
-        payrollRunId: "run_2025_01",
-        periodStart: "2025-01-01",
-        periodEnd: "2025-01-31",
+        employeeId: 'emp_demo_001',
+        payrollRunId: 'run_2025_01',
+        periodStart: '2025-01-01',
+        periodEnd: '2025-01-31',
         lines: [
           {
-            lineId: "line_001",
-            runId: "run_2025_01",
-            employeeId: "emp_demo_001",
-            code: "REG",
-            description: "Regular Hours",
-            amount: "1200.00",
+            lineId: 'line_001',
+            runId: 'run_2025_01',
+            employeeId: 'emp_demo_001',
+            code: 'REG',
+            description: 'Regular Hours',
+            amount: '1200.00',
             createdAt: new Date(),
             hours: null,
             units: null,
@@ -366,12 +383,12 @@ export function registerExplanationRoutes(app: Express) {
             isDeduction: false,
           },
           {
-            lineId: "line_002",
-            runId: "run_2025_01",
-            employeeId: "emp_demo_001",
-            code: "OT_TIER1_40",
-            description: "Overtime Tier 1",
-            amount: "18.00",
+            lineId: 'line_002',
+            runId: 'run_2025_01',
+            employeeId: 'emp_demo_001',
+            code: 'OT_TIER1_40',
+            description: 'Overtime Tier 1',
+            amount: '18.00',
             createdAt: new Date(),
             hours: null,
             units: null,
@@ -384,12 +401,12 @@ export function registerExplanationRoutes(app: Express) {
             isDeduction: false,
           },
           {
-            lineId: "line_003",
-            runId: "run_2025_01",
-            employeeId: "emp_demo_001",
-            code: "NIGHT_25",
-            description: "Night Premium",
-            amount: "9.38",
+            lineId: 'line_003',
+            runId: 'run_2025_01',
+            employeeId: 'emp_demo_001',
+            code: 'NIGHT_25',
+            description: 'Night Premium',
+            amount: '9.38',
             createdAt: new Date(),
             hours: null,
             units: null,
@@ -402,12 +419,12 @@ export function registerExplanationRoutes(app: Express) {
             isDeduction: false,
           },
           {
-            lineId: "line_004",
-            runId: "run_2025_01",
-            employeeId: "emp_demo_001",
-            code: "SUNDAY_75",
-            description: "Sunday Premium",
-            amount: "16.88",
+            lineId: 'line_004',
+            runId: 'run_2025_01',
+            employeeId: 'emp_demo_001',
+            code: 'SUNDAY_75',
+            description: 'Sunday Premium',
+            amount: '16.88',
             createdAt: new Date(),
             hours: null,
             units: null,
@@ -418,7 +435,7 @@ export function registerExplanationRoutes(app: Express) {
             isInsurable: true,
             notes: null,
             isDeduction: false,
-          }
+          },
         ],
         timesheetAggregates: {
           regularHours: 160,
@@ -428,8 +445,8 @@ export function registerExplanationRoutes(app: Express) {
           holidayHours: 0,
         },
         employeeData: {
-          name: "Maria Papadopoulos",
-          hourlyRate: 7.50,
+          name: 'Maria Papadopoulos',
+          hourlyRate: 7.5,
           locale: locale,
         },
       };
@@ -439,41 +456,50 @@ export function registerExplanationRoutes(app: Express) {
         explanationJson: {
           sections: [
             {
-              type: "earnings",
-              title: locale === 'el' ? "Αποδοχές" : "Earnings",
+              type: 'earnings',
+              title: locale === 'el' ? 'Αποδοχές' : 'Earnings',
               items: [
                 {
-                  lineCode: "REG",
-                  description: locale === 'el' ? "Κανονικές Ώρες" : "Regular Hours",
-                  amount: 1200.00,
-                  explanation: locale === 'el' ? "160ω × €7,50 = €1.200,00 [REG • v2025.08]" : "160h × €7.50 = €1,200.00 [REG • v2025.08]",
-                  formula: "hours × hourlyRate",
-                  citations: ["art_21_basic_wage", "cba_2024_section_3"]
-                }
-              ]
-            }
+                  lineCode: 'REG',
+                  description:
+                    locale === 'el' ? 'Κανονικές Ώρες' : 'Regular Hours',
+                  amount: 1200.0,
+                  explanation:
+                    locale === 'el'
+                      ? '160ω × €7,50 = €1.200,00 [REG • v2025.08]'
+                      : '160h × €7.50 = €1,200.00 [REG • v2025.08]',
+                  formula: 'hours × hourlyRate',
+                  citations: ['art_21_basic_wage', 'cba_2024_section_3'],
+                },
+              ],
+            },
           ],
           metadata: {
             generatedAt: new Date().toISOString(),
-            version: "v2025.1",
-            edgeCases: ["SPLIT_STACKING_SUNDAY_NIGHT_OT"],
-            runtimeMs: 125
-          }
+            version: 'v2025.1',
+            edgeCases: ['SPLIT_STACKING_SUNDAY_NIGHT_OT'],
+            runtimeMs: 125,
+          },
         },
-        explanationTextEn: "Your regular pay of €1,200.00 is calculated as 160 hours × €7.50 per hour.",
-        explanationTextEl: "Οι κανονικές σας αποδοχές €1.200,00 υπολογίζονται ως 160 ώρες × €7,50 ανά ώρα.",
+        explanationTextEn:
+          'Your regular pay of €1,200.00 is calculated as 160 hours × €7.50 per hour.',
+        explanationTextEl:
+          'Οι κανονικές σας αποδοχές €1.200,00 υπολογίζονται ως 160 ώρες × €7,50 ανά ώρα.',
         coverage: {
           totalPayslipValue: 1244.26,
           explainedValue: 1244.26,
           coveragePercentage: 99.8,
-          unexplainedLines: []
+          unexplainedLines: [],
         },
         confidenceScore: 0.97,
         qualityMetrics: {
-          edgeCasesDetected: ["SPLIT_STACKING_SUNDAY_NIGHT_OT", "NIGHT_PREMIUM_25"],
+          edgeCasesDetected: [
+            'SPLIT_STACKING_SUNDAY_NIGHT_OT',
+            'NIGHT_PREMIUM_25',
+          ],
           securityChecksPass: true,
-          latencyMs: 125
-        }
+          latencyMs: 125,
+        },
       };
 
       res.json({
@@ -490,11 +516,11 @@ export function registerExplanationRoutes(app: Express) {
         sampleData: samplePayslipData,
       });
     } catch (error) {
-      console.error("Error generating demo explanation:", error);
+      console.error('Error generating demo explanation:', error);
       res.status(500).json({
         success: false,
-        error: "Failed to generate demo explanation",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Failed to generate demo explanation',
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });

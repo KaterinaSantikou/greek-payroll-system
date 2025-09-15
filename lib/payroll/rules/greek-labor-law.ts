@@ -1,6 +1,6 @@
 /**
  * Greek Labor Law Domain Rules - Configurable Version
- * 
+ *
  * This module provides access to Greek tax and social security law constants
  * through a configurable system. All values are externalized and can be
  * updated when labor laws change without code modifications.
@@ -99,7 +99,7 @@ export const GREEK_TAX_BRACKETS = [
   { min: 10000, max: 20000, rate: 0.22 },
   { min: 20000, max: 30000, rate: 0.28 },
   { min: 30000, max: 40000, rate: 0.36 },
-  { min: 40000, max: Infinity, rate: 0.44 }
+  { min: 40000, max: Infinity, rate: 0.44 },
 ] as const;
 
 /** @deprecated Use getEfkaRates() instead */
@@ -107,15 +107,15 @@ export const EFKA_RATES = {
   employee: {
     main: 0.1067,
     auxiliary: 0.0333,
-    unemployment: 0.0213
+    unemployment: 0.0213,
   },
   employer: {
     main: 0.1542,
     auxiliary: 0.0333,
     unemployment: 0.0503,
     sickness: 0.0287,
-    workAccident: 0.0067
-  }
+    workAccident: 0.0067,
+  },
 } as const;
 
 /** @deprecated Use getSolidarityTaxBrackets() instead */
@@ -125,14 +125,14 @@ export const SOLIDARITY_TAX_BRACKETS = [
   { min: 20000, max: 30000, rate: 0.05 },
   { min: 30000, max: 40000, rate: 0.065 },
   { min: 40000, max: 65000, rate: 0.075 },
-  { min: 65000, max: Infinity, rate: 0.09 }
+  { min: 65000, max: Infinity, rate: 0.09 },
 ] as const;
 
 /** @deprecated Use getMinimumWage() instead */
 export const MINIMUM_WAGE = {
   monthly: 830,
   daily: 27.65,
-  hourly: 3.45
+  hourly: 3.45,
 } as const;
 
 /** @deprecated Use getWorkingTimeLimits() instead */
@@ -142,21 +142,21 @@ export const WORKING_TIME_LIMITS = {
   maxWeeklyHours: 40,
   maxOvertimeDaily: 2,
   maxOvertimeWeekly: 5,
-  maxAnnualOvertime: 150
+  maxAnnualOvertime: 150,
 } as const;
 
 /** @deprecated Use getTaxFreeLimits() instead */
 export const TAX_FREE_LIMITS = {
   mealVouchers: 11,
   transportAllowance: 150,
-  educationAllowance: 200
+  educationAllowance: 200,
 } as const;
 
 /** @deprecated Use getTipsRules() instead */
 export const TIPS_TAX_RULES = {
   flatTaxRate: 0.15,
-  minimumDeclaredPercentage: 0.08
+  minimumDeclaredPercentage: 0.08,
 } as const;
 
-export type TaxBracket = typeof GREEK_TAX_BRACKETS[number];
-export type SolidarityTaxBracket = typeof SOLIDARITY_TAX_BRACKETS[number];
+export type TaxBracket = (typeof GREEK_TAX_BRACKETS)[number];
+export type SolidarityTaxBracket = (typeof SOLIDARITY_TAX_BRACKETS)[number];

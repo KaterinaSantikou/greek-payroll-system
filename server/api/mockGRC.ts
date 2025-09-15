@@ -246,10 +246,17 @@ export function registerMockGRCRoutes(app: Express): void {
   app.get('/api/grc/soa', (req: Request, res: Response) => {
     const summary = {
       total: mockControls.length,
-      applicable: mockControls.filter(c => c.soa?.status === 'Applicable').length,
-      implemented: mockControls.filter(c => c.soa?.implementationStatus === 'Implemented').length,
-      inProgress: mockControls.filter(c => c.soa?.implementationStatus === 'InProgress').length,
-      notStarted: mockControls.filter(c => c.soa?.implementationStatus === 'NotStarted').length,
+      applicable: mockControls.filter(c => c.soa?.status === 'Applicable')
+        .length,
+      implemented: mockControls.filter(
+        c => c.soa?.implementationStatus === 'Implemented'
+      ).length,
+      inProgress: mockControls.filter(
+        c => c.soa?.implementationStatus === 'InProgress'
+      ).length,
+      notStarted: mockControls.filter(
+        c => c.soa?.implementationStatus === 'NotStarted'
+      ).length,
     };
 
     res.json({
@@ -288,7 +295,7 @@ export function registerMockGRCRoutes(app: Express): void {
         lastUpdated: '2024-11-20T15:30:00Z',
       },
     ];
-    
+
     res.json(mockEvidence);
   });
 }

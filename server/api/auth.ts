@@ -1,6 +1,6 @@
-import { Router } from "express";
-import { isAuthenticated } from "../replitAuth";
-import { z } from "zod";
+import { Router } from 'express';
+import { isAuthenticated } from '../replitAuth';
+import { z } from 'zod';
 
 const router = Router();
 
@@ -8,7 +8,7 @@ const router = Router();
 // This file provides additional auth utilities and user management
 
 // Get current authenticated user
-router.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
+router.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
   try {
     const userId = req.user.claims.sub;
     const user = {
@@ -18,18 +18,18 @@ router.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
       lastName: req.user.claims.last_name,
       profileImageUrl: req.user.claims.profile_image_url,
       scopes: [
-        "payroll:read",
-        "payroll:write",
-        "employees:read",
-        "employees:write",
-        "filings:write",
+        'payroll:read',
+        'payroll:write',
+        'employees:read',
+        'employees:write',
+        'filings:write',
       ],
     };
 
     res.json(user);
   } catch (error) {
-    console.error("Error fetching user:", error);
-    res.status(500).json({ message: "Failed to fetch user" });
+    console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Failed to fetch user' });
   }
 });
 
@@ -44,25 +44,25 @@ const SCIMUserSchema = z.object({
     z.object({
       value: z.string().email(),
       primary: z.boolean().optional(),
-    }),
+    })
   ),
   active: z.boolean().default(true),
 });
 
-router.post("/api/scim/v2/Users", isAuthenticated, async (req, res) => {
+router.post('/api/scim/v2/Users', isAuthenticated, async (req, res) => {
   try {
     const userData = SCIMUserSchema.parse(req.body);
 
     // In production, this would create/provision user in your user management system
     const provisionedUser = {
-      schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
+      schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
       id: `user-${Date.now()}`,
       userName: userData.userName,
       name: userData.name,
       emails: userData.emails,
       active: userData.active,
       meta: {
-        resourceType: "User",
+        resourceType: 'User',
         created: new Date().toISOString(),
         lastModified: new Date().toISOString(),
       },
@@ -70,27 +70,27 @@ router.post("/api/scim/v2/Users", isAuthenticated, async (req, res) => {
 
     res.status(201).json(provisionedUser);
   } catch (error) {
-    console.error("Error provisioning user:", error);
+    console.error('Error provisioning user:', error);
     res.status(400).json({
-      schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
-      detail: "Invalid user data",
-      status: "400",
+      schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'],
+      detail: 'Invalid user data',
+      status: '400',
     });
   }
 });
 
 // Get SCIM user
-router.get("/api/scim/v2/Users/:id", isAuthenticated, async (req, res) => {
+router.get('/api/scim/v2/Users/:id', isAuthenticated, async (req, res) => {
   try {
     // In production, fetch from user management system
     const user = {
-      schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
+      schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
       id: req.params.id,
       userName: `user-${req.params.id}`,
       active: true,
       meta: {
-        resourceType: "User",
-        created: "2025-01-01T00:00:00Z",
+        resourceType: 'User',
+        created: '2025-01-01T00:00:00Z',
         lastModified: new Date().toISOString(),
       },
     };
@@ -98,9 +98,9 @@ router.get("/api/scim/v2/Users/:id", isAuthenticated, async (req, res) => {
     res.json(user);
   } catch (error) {
     res.status(404).json({
-      schemas: ["urn:ietf:params:scim:api:messages:2.0:Error"],
-      detail: "User not found",
-      status: "404",
+      schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'],
+      detail: 'User not found',
+      status: '404',
     });
   }
 });

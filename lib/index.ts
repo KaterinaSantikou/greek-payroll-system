@@ -1,6 +1,6 @@
 /**
  * PayrollSync Core Library
- * 
+ *
  * Centralized library for all payroll-related functionality
  */
 
@@ -17,11 +17,11 @@ export {
   GREEK_BONUSES,
   MINIMUM_WAGE,
   WORKING_TIME_LIMITS,
-  
+
   // Calculators
   payrollCalculator,
   payrollValidator,
-  
+
   // Services
-  payrollService
+  payrollService,
 } from './payroll';

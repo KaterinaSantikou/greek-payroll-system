@@ -5,7 +5,10 @@
 
 import { Router } from 'express';
 import { StatusPageService } from '../services/StatusPageService';
-import type { CommunicationTemplateType, IncidentSeverity } from '../services/IncidentCommunicationTemplates';
+import type {
+  CommunicationTemplateType,
+  IncidentSeverity,
+} from '../services/IncidentCommunicationTemplates';
 import { isAuthenticated } from '../replitAuth';
 
 const router = Router();
@@ -19,13 +22,13 @@ router.get('/templates', isAuthenticated, async (req, res) => {
     const templates = statusPageService.getAvailableTemplates();
     res.json({
       success: true,
-      templates
+      templates,
     });
   } catch (error) {
     console.error('Error getting templates:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get templates'
+      error: 'Failed to get templates',
     });
   }
 });
@@ -37,21 +40,21 @@ router.get('/templates/:type/variables', isAuthenticated, async (req, res) => {
   try {
     const { type } = req.params;
     const { severity } = req.query;
-    
+
     const variables = statusPageService.getTemplateVariables(
       type as CommunicationTemplateType,
       severity as IncidentSeverity
     );
-    
+
     res.json({
       success: true,
-      variables
+      variables,
     });
   } catch (error) {
     console.error('Error getting template variables:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get template variables'
+      error: 'Failed to get template variables',
     });
   }
 });
@@ -62,11 +65,11 @@ router.get('/templates/:type/variables', isAuthenticated, async (req, res) => {
 router.post('/generate', isAuthenticated, async (req, res) => {
   try {
     const { templateType, variables, severity } = req.body;
-    
+
     if (!templateType || !variables) {
       return res.status(400).json({
         success: false,
-        error: 'templateType and variables are required'
+        error: 'templateType and variables are required',
       });
     }
 
@@ -75,23 +78,23 @@ router.post('/generate', isAuthenticated, async (req, res) => {
       variables,
       severity
     );
-    
+
     if (!communication) {
       return res.status(400).json({
         success: false,
-        error: 'Failed to generate communication'
+        error: 'Failed to generate communication',
       });
     }
 
     res.json({
       success: true,
-      communication
+      communication,
     });
   } catch (error) {
     console.error('Error generating communication:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to generate communication'
+      error: 'Failed to generate communication',
     });
   }
 });
@@ -102,11 +105,11 @@ router.post('/generate', isAuthenticated, async (req, res) => {
 router.post('/validate', isAuthenticated, async (req, res) => {
   try {
     const { templateType, variables, severity } = req.body;
-    
+
     if (!templateType || !variables) {
       return res.status(400).json({
         success: false,
-        error: 'templateType and variables are required'
+        error: 'templateType and variables are required',
       });
     }
 
@@ -115,16 +118,16 @@ router.post('/validate', isAuthenticated, async (req, res) => {
       variables,
       severity
     );
-    
+
     res.json({
       success: true,
-      validation
+      validation,
     });
   } catch (error) {
     console.error('Error validating template variables:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to validate template variables'
+      error: 'Failed to validate template variables',
     });
   }
 });
@@ -135,11 +138,11 @@ router.post('/validate', isAuthenticated, async (req, res) => {
 router.get('/suggestions', isAuthenticated, async (req, res) => {
   try {
     const { severity, componentName, status } = req.query;
-    
+
     if (!severity || !componentName || !status) {
       return res.status(400).json({
         success: false,
-        error: 'severity, componentName, and status are required'
+        error: 'severity, componentName, and status are required',
       });
     }
 
@@ -148,16 +151,16 @@ router.get('/suggestions', isAuthenticated, async (req, res) => {
       componentName as string,
       status as any
     );
-    
+
     res.json({
       success: true,
-      suggestions
+      suggestions,
     });
   } catch (error) {
     console.error('Error getting template suggestions:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get template suggestions'
+      error: 'Failed to get template suggestions',
     });
   }
 });
@@ -168,11 +171,11 @@ router.get('/suggestions', isAuthenticated, async (req, res) => {
 router.post('/incidents/create', isAuthenticated, async (req, res) => {
   try {
     const { componentId, severity, templateVariables, channels } = req.body;
-    
+
     if (!componentId || !severity || !templateVariables) {
       return res.status(400).json({
         success: false,
-        error: 'componentId, severity, and templateVariables are required'
+        error: 'componentId, severity, and templateVariables are required',
       });
     }
 
@@ -182,16 +185,16 @@ router.post('/incidents/create', isAuthenticated, async (req, res) => {
       templateVariables,
       channels
     );
-    
+
     res.json({
       success: true,
-      ...result
+      ...result,
     });
   } catch (error) {
     console.error('Error creating incident with template:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create incident with template'
+      error: 'Failed to create incident with template',
     });
   }
 });
@@ -199,48 +202,54 @@ router.post('/incidents/create', isAuthenticated, async (req, res) => {
 /**
  * Update incident with template
  */
-router.put('/incidents/:incidentId/update', isAuthenticated, async (req, res) => {
-  try {
-    const { incidentId } = req.params;
-    const { status, templateVariables } = req.body;
-    
-    if (!status || !templateVariables) {
-      return res.status(400).json({
+router.put(
+  '/incidents/:incidentId/update',
+  isAuthenticated,
+  async (req, res) => {
+    try {
+      const { incidentId } = req.params;
+      const { status, templateVariables } = req.body;
+
+      if (!status || !templateVariables) {
+        return res.status(400).json({
+          success: false,
+          error: 'status and templateVariables are required',
+        });
+      }
+
+      const result = await statusPageService.updateIncidentWithTemplate(
+        incidentId,
+        status,
+        templateVariables
+      );
+
+      res.json({
+        success: true,
+        ...result,
+      });
+    } catch (error) {
+      console.error('Error updating incident with template:', error);
+      res.status(500).json({
         success: false,
-        error: 'status and templateVariables are required'
+        error: 'Failed to update incident with template',
       });
     }
-
-    const result = await statusPageService.updateIncidentWithTemplate(
-      incidentId,
-      status,
-      templateVariables
-    );
-    
-    res.json({
-      success: true,
-      ...result
-    });
-  } catch (error) {
-    console.error('Error updating incident with template:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to update incident with template'
-    });
   }
-});
+);
 
 /**
  * Schedule maintenance with template
  */
 router.post('/maintenance/schedule', isAuthenticated, async (req, res) => {
   try {
-    const { componentIds, templateVariables, startTime, endTime, channels } = req.body;
-    
+    const { componentIds, templateVariables, startTime, endTime, channels } =
+      req.body;
+
     if (!componentIds || !templateVariables || !startTime || !endTime) {
       return res.status(400).json({
         success: false,
-        error: 'componentIds, templateVariables, startTime, and endTime are required'
+        error:
+          'componentIds, templateVariables, startTime, and endTime are required',
       });
     }
 
@@ -251,16 +260,16 @@ router.post('/maintenance/schedule', isAuthenticated, async (req, res) => {
       new Date(endTime),
       channels
     );
-    
+
     res.json({
       success: true,
-      ...result
+      ...result,
     });
   } catch (error) {
     console.error('Error scheduling maintenance with template:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to schedule maintenance with template'
+      error: 'Failed to schedule maintenance with template',
     });
   }
 });

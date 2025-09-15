@@ -6,12 +6,25 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
-import { Calculator, FileText, Users, AlertTriangle, CheckCircle, Clock, Plus, Eye, Search, Filter } from 'lucide-react';
+import {
+  Calculator,
+  FileText,
+  Users,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Plus,
+  Eye,
+  Search,
+  Filter,
+} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 
 export function SeverancePage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('');
-  const [view, setView] = useState<'dashboard' | 'calculator' | 'wizard'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'calculator' | 'wizard'>(
+    'dashboard'
+  );
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch recent severance calculations
@@ -34,8 +47,8 @@ export function SeverancePage() {
     return (
       <div className="p-6">
         <div className="mb-4">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => {
               setView('dashboard');
               setSelectedEmployeeId('');
@@ -44,7 +57,7 @@ export function SeverancePage() {
             ← Back to Dashboard
           </Button>
         </div>
-        <SeveranceCalculator 
+        <SeveranceCalculator
           employeeId={selectedEmployeeId}
           onComplete={() => {
             setView('dashboard');
@@ -59,8 +72,8 @@ export function SeverancePage() {
     return (
       <div className="p-6">
         <div className="mb-4">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => {
               setView('dashboard');
               setSelectedEmployeeId('');
@@ -69,7 +82,7 @@ export function SeverancePage() {
             ← Back to Dashboard
           </Button>
         </div>
-        <SeveranceWizard 
+        <SeveranceWizard
           employeeId={selectedEmployeeId}
           onComplete={() => {
             setView('dashboard');
@@ -85,16 +98,17 @@ export function SeverancePage() {
   }
 
   // Main dashboard view
-  const filteredEmployees = eligibleEmployees?.filter((employee: any) =>
-    employee.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.employeeId?.includes(searchTerm)
-  ) || [];
+  const filteredEmployees =
+    eligibleEmployees?.filter(
+      (employee: any) =>
+        employee.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        employee.employeeId?.includes(searchTerm)
+    ) || [];
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -124,8 +138,12 @@ export function SeverancePage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Pending Approval</p>
-                  <p className="text-2xl font-bold">{pendingApprovals?.length || 0}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Pending Approval
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {pendingApprovals?.length || 0}
+                  </p>
                   <p className="text-xs text-orange-600">Requires review</p>
                 </div>
                 <Clock className="h-8 w-8 text-orange-500" />
@@ -150,9 +168,15 @@ export function SeverancePage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Active Employees</p>
-                  <p className="text-2xl font-bold">{eligibleEmployees?.length || 0}</p>
-                  <p className="text-xs text-muted-foreground">Eligible for severance</p>
+                  <p className="text-sm text-muted-foreground">
+                    Active Employees
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {eligibleEmployees?.length || 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Eligible for severance
+                  </p>
                 </div>
                 <Users className="h-8 w-8 text-muted-foreground" />
               </div>
@@ -172,13 +196,19 @@ export function SeverancePage() {
             <CardContent>
               <div className="space-y-3">
                 {pendingApprovals.slice(0, 3).map((approval: any) => (
-                  <div key={approval.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div
+                    key={approval.id}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-orange-500"></div>
                       <div>
-                        <div className="font-medium">{approval.employeeName}</div>
+                        <div className="font-medium">
+                          {approval.employeeName}
+                        </div>
                         <div className="text-sm text-muted-foreground">
-                          €{approval.netTotal?.toFixed(2)} • {approval.terminationType}
+                          €{approval.netTotal?.toFixed(2)} •{' '}
+                          {approval.terminationType}
                         </div>
                       </div>
                     </div>
@@ -205,18 +235,25 @@ export function SeverancePage() {
             {recentCalculations && recentCalculations.length > 0 ? (
               <div className="space-y-3">
                 {recentCalculations.slice(0, 5).map((calc: any) => (
-                  <div key={calc.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div
+                    key={calc.id}
+                    className="flex items-center justify-between p-3 border rounded-lg"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-2 h-2 rounded-full bg-green-500"></div>
                       <div>
                         <div className="font-medium">{calc.employeeName}</div>
                         <div className="text-sm text-muted-foreground">
-                          {new Date(calc.createdAt).toLocaleDateString()} • €{calc.netTotal?.toFixed(2)}
+                          {new Date(calc.createdAt).toLocaleDateString()} • €
+                          {calc.netTotal?.toFixed(2)}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="bg-green-50 text-green-700">
+                      <Badge
+                        variant="secondary"
+                        className="bg-green-50 text-green-700"
+                      >
                         {calc.status}
                       </Badge>
                       <Button variant="outline" size="sm">
@@ -246,7 +283,7 @@ export function SeverancePage() {
                 <Input
                   placeholder="Search employees..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -260,16 +297,24 @@ export function SeverancePage() {
             {eligibleEmployees && eligibleEmployees.length > 0 ? (
               <div className="grid gap-4">
                 {filteredEmployees.slice(0, 10).map((employee: any) => (
-                  <div key={employee.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
+                  <div
+                    key={employee.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                         <Users className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <div className="font-medium">{employee.name || 'Unknown'}</div>
+                        <div className="font-medium">
+                          {employee.name || 'Unknown'}
+                        </div>
                         <div className="text-sm text-muted-foreground">
-                          {employee.employeeId} • {employee.position || 'N/A'} • 
-                          Hired: {employee.hireDate ? new Date(employee.hireDate).toLocaleDateString() : 'N/A'}
+                          {employee.employeeId} • {employee.position || 'N/A'} •
+                          Hired:{' '}
+                          {employee.hireDate
+                            ? new Date(employee.hireDate).toLocaleDateString()
+                            : 'N/A'}
                         </div>
                       </div>
                     </div>

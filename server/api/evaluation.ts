@@ -301,22 +301,28 @@ interface AccuracyTestCase {
 export async function getCurrentEvaluationMetrics(req: Request, res: Response) {
   try {
     const { period = '30d', includeDetails = 'false' } = req.query;
-    
+
     const userId = req.user?.claims?.sub;
     const userRole = await getUserRole(userId);
-    
+
     // Only managers, HR, and auditors can access evaluation metrics
     if (!['manager', 'hr', 'auditor', 'payroll'].includes(userRole)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
-    const metrics = await generateEvaluationMetrics(period as string, includeDetails === 'true');
-    const filteredMetrics = await applyEvaluationRoleFiltering(metrics, userRole);
+    const metrics = await generateEvaluationMetrics(
+      period as string,
+      includeDetails === 'true'
+    );
+    const filteredMetrics = await applyEvaluationRoleFiltering(
+      metrics,
+      userRole
+    );
 
     res.json({
       metrics: filteredMetrics,
       generatedAt: new Date().toISOString(),
-      nextUpdate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // Daily updates
+      nextUpdate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Daily updates
     });
   } catch (error) {
     console.error('Error fetching evaluation metrics:', error);
@@ -329,7 +335,7 @@ export async function getSystemBenchmarks(req: Request, res: Response) {
   try {
     const userId = req.user?.claims?.sub;
     const userRole = await getUserRole(userId);
-    
+
     if (!['hr', 'auditor', 'payroll'].includes(userRole)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
@@ -338,7 +344,7 @@ export async function getSystemBenchmarks(req: Request, res: Response) {
 
     res.json({
       benchmarks,
-      retrievedAt: new Date().toISOString()
+      retrievedAt: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error fetching benchmarks:', error);
@@ -350,10 +356,10 @@ export async function getSystemBenchmarks(req: Request, res: Response) {
 export async function submitTestCase(req: Request, res: Response) {
   try {
     const testCase = req.body;
-    
+
     const userId = req.user?.claims?.sub;
     const userRole = await getUserRole(userId);
-    
+
     // Only payroll and auditors can submit test cases
     if (!['payroll', 'auditor'].includes(userRole)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
@@ -365,7 +371,7 @@ export async function submitTestCase(req: Request, res: Response) {
       testCaseId: result.id,
       status: result.status,
       results: result.results,
-      submittedAt: new Date().toISOString()
+      submittedAt: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error processing test case:', error);
@@ -374,7 +380,10 @@ export async function submitTestCase(req: Request, res: Response) {
 }
 
 // Helper functions
-async function generateEvaluationMetrics(period: string, includeDetails: boolean): Promise<EvaluationMetrics> {
+async function generateEvaluationMetrics(
+  period: string,
+  includeDetails: boolean
+): Promise<EvaluationMetrics> {
   // Mock comprehensive evaluation metrics
   return {
     explainYourPay: {
@@ -384,52 +393,54 @@ async function generateEvaluationMetrics(period: string, includeDetails: boolean
           current: 99.7,
           variance: 0.2,
           sampleSize: 1247,
-          testCases: includeDetails ? [
-            {
-              id: 'TC-001',
-              description: 'Regular + OT + Night Premium',
-              expected: 2845.50,
-              calculated: 2845.50,
-              variance: 0.0,
-              status: 'pass',
-              timestamp: new Date().toISOString()
-            },
-            {
-              id: 'TC-002',
-              description: 'Part-time with Sunday premium',
-              expected: 1234.75,
-              calculated: 1234.80,
-              variance: 0.05,
-              status: 'warning',
-              timestamp: new Date().toISOString()
-            }
-          ] : []
+          testCases: includeDetails
+            ? [
+                {
+                  id: 'TC-001',
+                  description: 'Regular + OT + Night Premium',
+                  expected: 2845.5,
+                  calculated: 2845.5,
+                  variance: 0.0,
+                  status: 'pass',
+                  timestamp: new Date().toISOString(),
+                },
+                {
+                  id: 'TC-002',
+                  description: 'Part-time with Sunday premium',
+                  expected: 1234.75,
+                  calculated: 1234.8,
+                  variance: 0.05,
+                  status: 'warning',
+                  timestamp: new Date().toISOString(),
+                },
+              ]
+            : [],
         },
         deductionCalculation: {
           target: 99.8,
           current: 99.9,
           variance: 0.1,
           sampleSize: 1247,
-          testCases: []
+          testCases: [],
         },
         netPayCalculation: {
           target: 99.9,
           current: 99.8,
           variance: -0.1,
           sampleSize: 1247,
-          testCases: []
-        }
+          testCases: [],
+        },
       },
       explanationQuality: {
         readabilityScore: {
           target: 85,
           current: 87.3,
-          methodology: 'Flesch Reading Ease'
+          methodology: 'Flesch Reading Ease',
         },
         completeness: {
           target: 95,
           current: 94.2,
-          missingElements: ['EFKA special categories', 'Holiday pay breakdown']
+          missingElements: ['EFKA special categories', 'Holiday pay breakdown'],
         },
         userSatisfaction: {
           target: 4.5,
@@ -438,23 +449,23 @@ async function generateEvaluationMetrics(period: string, includeDetails: boolean
           feedback: [
             'Very clear breakdown of overtime calculations',
             'Would like more detail on tax calculations',
-            'Great visual representation'
-          ]
-        }
+            'Great visual representation',
+          ],
+        },
       },
       responseTime: {
         target: 20,
         current: {
           median: 12.3,
           p95: 18.7,
-          p99: 22.1
+          p99: 22.1,
         },
         breakdown: {
           calculationTime: 8.5,
           renderingTime: 2.8,
-          networkLatency: 1.0
-        }
-      }
+          networkLatency: 1.0,
+        },
+      },
     },
     exceptionClassifier: {
       precisionRecall: {
@@ -462,20 +473,29 @@ async function generateEvaluationMetrics(period: string, includeDetails: boolean
           precision: { target: 95, current: 96.2 },
           recall: { target: 98, current: 97.8 },
           f1Score: { target: 96.5, current: 97.0 },
-          confusionMatrix: [[1205, 48], [28, 1847]]
+          confusionMatrix: [
+            [1205, 48],
+            [28, 1847],
+          ],
         },
         complianceViolations: {
           precision: { target: 92, current: 93.1 },
           recall: { target: 99, current: 98.9 },
           f1Score: { target: 95.4, current: 95.9 },
-          confusionMatrix: [[892, 65], [12, 1078]]
+          confusionMatrix: [
+            [892, 65],
+            [12, 1078],
+          ],
         },
         scheduleConflicts: {
           precision: { target: 88, current: 89.7 },
           recall: { target: 95, current: 94.3 },
           f1Score: { target: 91.4, current: 91.9 },
-          confusionMatrix: [[756, 87], [45, 789]]
-        }
+          confusionMatrix: [
+            [756, 87],
+            [45, 789],
+          ],
+        },
       },
       falsePositiveRate: {
         target: 5,
@@ -483,27 +503,27 @@ async function generateEvaluationMetrics(period: string, includeDetails: boolean
         impact: {
           managerTime: 2.3,
           employeeFrustration: 2.8,
-          systemCredibility: 4.1
-        }
+          systemCredibility: 4.1,
+        },
       },
       classificationSpeed: {
         target: 100,
         current: {
           median: 67,
           p95: 89,
-          p99: 124
+          p99: 124,
         },
         batchProcessing: {
           throughput: 450,
-          scalabilityLimit: 1200
-        }
+          scalabilityLimit: 1200,
+        },
       },
       modelDrift: {
         accuracyDegradation: 0.8,
         retrainingThreshold: 93.0,
         lastRetraining: '2025-01-01T00:00:00Z',
-        nextScheduledRetraining: '2025-04-01T00:00:00Z'
-      }
+        nextScheduledRetraining: '2025-04-01T00:00:00Z',
+      },
     },
     scheduleRecommendations: {
       winRate: {
@@ -514,8 +534,8 @@ async function generateEvaluationMetrics(period: string, includeDetails: boolean
             overtimePrevention: 92.1,
             shiftOptimization: 84.7,
             complianceAlignment: 89.2,
-            costReduction: 82.8
-          }
+            costReduction: 82.8,
+          },
         },
         employeeSatisfaction: {
           target: 80,
@@ -524,38 +544,42 @@ async function generateEvaluationMetrics(period: string, includeDetails: boolean
             workLifeBalance: 81.2,
             fairnessPerception: 76.8,
             preferenceRespect: 79.1,
-            advanceNotice: 78.5
-          }
-        }
+            advanceNotice: 78.5,
+          },
+        },
       },
       implementationImpact: {
         overtimeReduction: {
           target: 15,
           current: 17.3,
-          costSavings: 8472.50
+          costSavings: 8472.5,
         },
         complianceImprovement: {
           target: 25,
           current: 28.7,
-          riskReduction: 34.2
+          riskReduction: 34.2,
         },
         efficiencyGains: {
           target: 10,
           current: 12.1,
           laborProductivity: 11.8,
-          schedulingTime: 3.2
-        }
+          schedulingTime: 3.2,
+        },
       },
       recommendationQuality: {
         relevanceScore: {
           target: 90,
           current: 91.4,
-          methodology: 'Manager feedback + outcome tracking'
+          methodology: 'Manager feedback + outcome tracking',
         },
         feasibilityScore: {
           target: 88,
           current: 86.7,
-          constraints: ['Minimum staffing', 'Employee availability', 'Labor costs']
+          constraints: [
+            'Minimum staffing',
+            'Employee availability',
+            'Labor costs',
+          ],
         },
         diversityIndex: {
           target: 0.7,
@@ -563,10 +587,10 @@ async function generateEvaluationMetrics(period: string, includeDetails: boolean
           biasMetrics: {
             departmentBias: 0.12,
             roleBias: 0.08,
-            tenureBias: 0.05
-          }
-        }
-      }
+            tenureBias: 0.05,
+          },
+        },
+      },
     },
     uxPerformance: {
       paletteSearchLatency: {
@@ -574,19 +598,19 @@ async function generateEvaluationMetrics(period: string, includeDetails: boolean
         current: {
           median: 187,
           p95: 267,
-          p99: 312
+          p99: 312,
         },
         breakdown: {
           indexingTime: 89,
           searchAlgorithm: 67,
           renderingTime: 23,
-          networkTime: 8
+          networkTime: 8,
         },
         optimizations: {
           caching: true,
           indexPreload: true,
-          incrementalSearch: true
-        }
+          incrementalSearch: true,
+        },
       },
       exceptionApprovalFlow: {
         clicksToApprove: {
@@ -594,14 +618,14 @@ async function generateEvaluationMetrics(period: string, includeDetails: boolean
           current: {
             median: 2,
             mode: 2,
-            p95: 3
+            p95: 3,
           },
           flowBreakdown: {
             navigation: 1,
             review: 1,
             approval: 1,
-            confirmation: 0
-          }
+            confirmation: 0,
+          },
         },
         approvalCompletionRate: {
           target: 95,
@@ -609,33 +633,33 @@ async function generateEvaluationMetrics(period: string, includeDetails: boolean
           dropOffPoints: {
             reviewStage: 1.2,
             confirmationStage: 0.8,
-            errorStates: 1.2
-          }
+            errorStates: 1.2,
+          },
         },
         errorRecovery: {
           errorRate: 2.3,
           recoveryTime: 45.2,
-          userSatisfaction: 3.9
-        }
+          userSatisfaction: 3.9,
+        },
       },
       explanationReadability: {
         readingTime: {
           target: 20,
           current: {
             median: 16.7,
-            p95: 19.2
+            p95: 19.2,
           },
           factors: {
             wordCount: 127,
             complexity: 3.2,
-            visualAids: 4
-          }
+            visualAids: 4,
+          },
         },
         comprehensionRate: {
           target: 90,
           current: 91.3,
           testMethodology: 'Post-explanation quiz',
-          sampleSize: 312
+          sampleSize: 312,
         },
         actionableInsights: {
           target: 75,
@@ -643,35 +667,35 @@ async function generateEvaluationMetrics(period: string, includeDetails: boolean
           actionTypes: {
             scheduleAdjustments: 45.2,
             policyQuestions: 22.1,
-            disputeResolutions: 11.6
-          }
-        }
-      }
+            disputeResolutions: 11.6,
+          },
+        },
+      },
     },
     systemPerformance: {
       apiResponseTimes: {
         timesheets: { target: 200, current: 145 },
         payslips: { target: 300, current: 267 },
         rulesets: { target: 100, current: 78 },
-        analytics: { target: 500, current: 423 }
+        analytics: { target: 500, current: 423 },
       },
       throughputLimits: {
         concurrentUsers: { max: 500, tested: 450 },
         payrollProcessing: { recordsPerHour: 12000 },
-        reportGeneration: { reportsPerMinute: 25 }
+        reportGeneration: { reportsPerMinute: 25 },
       },
       systemReliability: {
         uptime: { target: 99.9, current: 99.94 },
         errorRate: { target: 0.1, current: 0.08 },
-        dataIntegrity: { target: 99.99, current: 99.99 }
-      }
+        dataIntegrity: { target: 99.99, current: 99.99 },
+      },
     },
     evaluationPeriod: {
       startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       endDate: new Date().toISOString(),
       dataPoints: 15748,
-      confidenceInterval: 95.0
-    }
+      confidenceInterval: 95.0,
+    },
   };
 }
 
@@ -680,23 +704,23 @@ async function getSystemBenchmarkTargets() {
     accuracy: {
       payCalculations: 99.5,
       deductionCalculations: 99.8,
-      netPayCalculations: 99.9
+      netPayCalculations: 99.9,
     },
     performance: {
       paletteSearchLatency: 300,
       apiResponseTime: 200,
-      explanationReadingTime: 20
+      explanationReadingTime: 20,
     },
     userExperience: {
       clicksToApprove: 2,
       approvalCompletionRate: 95,
-      comprehensionRate: 90
+      comprehensionRate: 90,
     },
     aiMetrics: {
       exceptionPrecision: 95,
       exceptionRecall: 98,
-      recommendationWinRate: 85
-    }
+      recommendationWinRate: 85,
+    },
   };
 }
 
@@ -704,7 +728,10 @@ async function getUserRole(userId: string): Promise<string> {
   return 'manager'; // Mock role
 }
 
-async function applyEvaluationRoleFiltering(metrics: EvaluationMetrics, role: string): Promise<Partial<EvaluationMetrics>> {
+async function applyEvaluationRoleFiltering(
+  metrics: EvaluationMetrics,
+  role: string
+): Promise<Partial<EvaluationMetrics>> {
   switch (role) {
     case 'manager':
       // Managers see operational metrics but not detailed system internals
@@ -714,31 +741,55 @@ async function applyEvaluationRoleFiltering(metrics: EvaluationMetrics, role: st
           responseTime: metrics.explainYourPay.responseTime,
           accuracyBenchmarks: {
             grossPayCalculation: {
-              target: metrics.explainYourPay.accuracyBenchmarks.grossPayCalculation.target,
-              current: metrics.explainYourPay.accuracyBenchmarks.grossPayCalculation.current,
-              variance: metrics.explainYourPay.accuracyBenchmarks.grossPayCalculation.variance,
-              sampleSize: metrics.explainYourPay.accuracyBenchmarks.grossPayCalculation.sampleSize,
-              testCases: []
+              target:
+                metrics.explainYourPay.accuracyBenchmarks.grossPayCalculation
+                  .target,
+              current:
+                metrics.explainYourPay.accuracyBenchmarks.grossPayCalculation
+                  .current,
+              variance:
+                metrics.explainYourPay.accuracyBenchmarks.grossPayCalculation
+                  .variance,
+              sampleSize:
+                metrics.explainYourPay.accuracyBenchmarks.grossPayCalculation
+                  .sampleSize,
+              testCases: [],
             },
             deductionCalculation: {
-              target: metrics.explainYourPay.accuracyBenchmarks.deductionCalculation.target,
-              current: metrics.explainYourPay.accuracyBenchmarks.deductionCalculation.current,
-              variance: metrics.explainYourPay.accuracyBenchmarks.deductionCalculation.variance,
-              sampleSize: metrics.explainYourPay.accuracyBenchmarks.deductionCalculation.sampleSize,
-              testCases: []
+              target:
+                metrics.explainYourPay.accuracyBenchmarks.deductionCalculation
+                  .target,
+              current:
+                metrics.explainYourPay.accuracyBenchmarks.deductionCalculation
+                  .current,
+              variance:
+                metrics.explainYourPay.accuracyBenchmarks.deductionCalculation
+                  .variance,
+              sampleSize:
+                metrics.explainYourPay.accuracyBenchmarks.deductionCalculation
+                  .sampleSize,
+              testCases: [],
             },
             netPayCalculation: {
-              target: metrics.explainYourPay.accuracyBenchmarks.netPayCalculation.target,
-              current: metrics.explainYourPay.accuracyBenchmarks.netPayCalculation.current,
-              variance: metrics.explainYourPay.accuracyBenchmarks.netPayCalculation.variance,
-              sampleSize: metrics.explainYourPay.accuracyBenchmarks.netPayCalculation.sampleSize,
-              testCases: []
-            }
-          }
+              target:
+                metrics.explainYourPay.accuracyBenchmarks.netPayCalculation
+                  .target,
+              current:
+                metrics.explainYourPay.accuracyBenchmarks.netPayCalculation
+                  .current,
+              variance:
+                metrics.explainYourPay.accuracyBenchmarks.netPayCalculation
+                  .variance,
+              sampleSize:
+                metrics.explainYourPay.accuracyBenchmarks.netPayCalculation
+                  .sampleSize,
+              testCases: [],
+            },
+          },
         },
         scheduleRecommendations: metrics.scheduleRecommendations,
         uxPerformance: metrics.uxPerformance,
-        evaluationPeriod: metrics.evaluationPeriod
+        evaluationPeriod: metrics.evaluationPeriod,
       };
     case 'hr':
     case 'auditor':
@@ -750,7 +801,7 @@ async function applyEvaluationRoleFiltering(metrics: EvaluationMetrics, role: st
         explainYourPay: metrics.explainYourPay,
         exceptionClassifier: metrics.exceptionClassifier,
         systemPerformance: metrics.systemPerformance,
-        evaluationPeriod: metrics.evaluationPeriod
+        evaluationPeriod: metrics.evaluationPeriod,
       };
     default:
       throw new Error('Unauthorized access to evaluation metrics');
@@ -765,13 +816,13 @@ async function processTestCase(testCase: any) {
     results: {
       accuracy: 99.9,
       variance: 0.1,
-      passed: true
-    }
+      passed: true,
+    },
   };
 }
 
 export const evaluationRoutes = {
   getCurrentEvaluationMetrics,
   getSystemBenchmarks,
-  submitTestCase
+  submitTestCase,
 };

@@ -3,11 +3,11 @@
  * Complete BDD-compliant system with webhook ingestion and metrics
  */
 
-import type { Express } from "express";
-import { InstantReissueService } from "../services/InstantReissueService";
-import { InstantMetricsService } from "../services/InstantMetricsService";
-import { WebhookIngestionService } from "../services/webhookIngestion";
-import { z } from "zod";
+import type { Express } from 'express';
+import { InstantReissueService } from '../services/InstantReissueService';
+import { InstantMetricsService } from '../services/InstantMetricsService';
+import { WebhookIngestionService } from '../services/webhookIngestion';
+import { z } from 'zod';
 
 // Validation schemas
 const eligibilityCheckSchema = z.object({
@@ -25,7 +25,6 @@ const instantReissueSchema = z.object({
 });
 
 export function instantReissueRoutes(app: Express) {
-
   /**
    * Check eligibility for SCT Instant re-issue
    * POST /v1/instant-reissue/eligibility-check
@@ -37,17 +36,18 @@ export function instantReissueRoutes(app: Express) {
         return res.status(400).json({
           error: 'VALIDATION_ERROR',
           details: validation.error.errors,
-          hint: 'Provide valid lineIds array (1-100 items)'
+          hint: 'Provide valid lineIds array (1-100 items)',
         });
       }
 
       const { lineIds, targetBankProfile } = validation.data;
 
       const startTime = Date.now();
-      const eligibilityResults = await InstantReissueService.checkBulkEligibility(
-        lineIds, 
-        targetBankProfile
-      );
+      const eligibilityResults =
+        await InstantReissueService.checkBulkEligibility(
+          lineIds,
+          targetBankProfile
+        );
       const processingTime = Date.now() - startTime;
 
       // Aggregate results
@@ -60,7 +60,8 @@ export function instantReissueRoutes(app: Express) {
           .reduce((sum, r) => sum + (r.instantFees?.total || 0), 0),
         riskBreakdown: {
           low: eligibilityResults.filter(r => r.riskLevel === 'LOW').length,
-          medium: eligibilityResults.filter(r => r.riskLevel === 'MEDIUM').length,
+          medium: eligibilityResults.filter(r => r.riskLevel === 'MEDIUM')
+            .length,
           high: eligibilityResults.filter(r => r.riskLevel === 'HIGH').length,
         },
       };
@@ -76,8 +77,12 @@ export function instantReissueRoutes(app: Express) {
           proceed_with_reissue: summary.eligibleLines > 0,
           estimated_settlement_time: 'Within 10 seconds',
           total_fees: `€${summary.totalFees.toFixed(2)}`,
-          risk_assessment: summary.riskBreakdown.high > 0 ? 'HIGH' : 
-                          summary.riskBreakdown.medium > 0 ? 'MEDIUM' : 'LOW',
+          risk_assessment:
+            summary.riskBreakdown.high > 0
+              ? 'HIGH'
+              : summary.riskBreakdown.medium > 0
+                ? 'MEDIUM'
+                : 'LOW',
         },
         cut_off_context: {
           within_cut_off: true, // Instant payments don't have traditional cut-offs
@@ -85,12 +90,14 @@ export function instantReissueRoutes(app: Express) {
           recommendation: 'Process immediately for instant settlement',
         },
       });
-
     } catch (error) {
       console.error('Eligibility check error:', error);
       res.status(500).json({
         error: 'ELIGIBILITY_CHECK_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to check eligibility'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to check eligibility',
       });
     }
   });
@@ -106,7 +113,7 @@ export function instantReissueRoutes(app: Express) {
         return res.status(400).json({
           error: 'VALIDATION_ERROR',
           details: validation.error.errors,
-          hint: 'Provide valid reissue request with required fields'
+          hint: 'Provide valid reissue request with required fields',
         });
       }
 
@@ -116,9 +123,11 @@ export function instantReissueRoutes(app: Express) {
       const result = await InstantReissueService.executeInstantReissue(request);
 
       // Determine response status based on success
-      const statusCode = result.success ? 200 : 
-                        result.failedLines.length > 0 ? 207 : // Multi-status for partial success
-                        400;
+      const statusCode = result.success
+        ? 200
+        : result.failedLines.length > 0
+          ? 207 // Multi-status for partial success
+          : 400;
 
       res.status(statusCode).json({
         execution_result: result,
@@ -134,29 +143,35 @@ export function instantReissueRoutes(app: Express) {
           failed: result.failedLines.length,
           protected: result.protectedLines.length,
         },
-        next_steps: result.success ? [
-          '✅ Monitor settlement progress',
-          '✅ Track bank acceptance',
-          '✅ Verify beneficiary receipt',
-          '✅ Update payroll records',
-        ] : [
-          '❌ Review failed transactions',
-          '🔍 Resolve eligibility issues', 
-          '🔄 Retry if applicable',
-        ],
-        real_time_tracking: result.success ? {
-          batch_id: result.newBatchId,
-          status_endpoint: `/v1/instant-reissue/${result.newBatchId}/status`,
-          expected_settlement: result.estimatedSettlement,
-          monitoring_active: true,
-        } : null,
+        next_steps: result.success
+          ? [
+              '✅ Monitor settlement progress',
+              '✅ Track bank acceptance',
+              '✅ Verify beneficiary receipt',
+              '✅ Update payroll records',
+            ]
+          : [
+              '❌ Review failed transactions',
+              '🔍 Resolve eligibility issues',
+              '🔄 Retry if applicable',
+            ],
+        real_time_tracking: result.success
+          ? {
+              batch_id: result.newBatchId,
+              status_endpoint: `/v1/instant-reissue/${result.newBatchId}/status`,
+              expected_settlement: result.estimatedSettlement,
+              monitoring_active: true,
+            }
+          : null,
       });
-
     } catch (error) {
       console.error('Instant re-issue execution error:', error);
       res.status(500).json({
         error: 'EXECUTION_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to execute instant re-issue'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to execute instant re-issue',
       });
     }
   });
@@ -173,7 +188,7 @@ export function instantReissueRoutes(app: Express) {
         return res.status(400).json({
           error: 'INVALID_BATCH_ID',
           detail: 'Batch ID must be an instant re-issue batch (IRIS-*)',
-          hint: 'Use batch ID from instant re-issue execution response'
+          hint: 'Use batch ID from instant re-issue execution response',
         });
       }
 
@@ -191,23 +206,26 @@ export function instantReissueRoutes(app: Express) {
         monitoring: {
           active: status.progress < 100,
           refresh_interval: status.progress < 100 ? '5 seconds' : 'Completed',
-          next_update: status.progress < 100 ? new Date(Date.now() + 5000).toISOString() : null,
+          next_update:
+            status.progress < 100
+              ? new Date(Date.now() + 5000).toISOString()
+              : null,
         },
       });
-
     } catch (error) {
       console.error('Status check error:', error);
       if (error instanceof Error && error.message.includes('not found')) {
         return res.status(404).json({
           error: 'BATCH_NOT_FOUND',
           detail: `Instant re-issue batch ${req.params.batchId} not found`,
-          hint: 'Verify the batch ID and ensure it\'s an instant re-issue batch'
+          hint: "Verify the batch ID and ensure it's an instant re-issue batch",
         });
       }
 
       res.status(500).json({
         error: 'STATUS_CHECK_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to check status'
+        detail:
+          error instanceof Error ? error.message : 'Failed to check status',
       });
     }
   });
@@ -224,14 +242,14 @@ export function instantReissueRoutes(app: Express) {
         return res.status(400).json({
           error: 'MISSING_PARAMETER',
           detail: 'entityId is required',
-          hint: 'Provide entity ID for dashboard data'
+          hint: 'Provide entity ID for dashboard data',
         });
       }
 
       // Calculate date range based on period
       const now = new Date();
       let startDate: Date;
-      
+
       switch (period) {
         case '1h':
           startDate = new Date(now.getTime() - 60 * 60 * 1000);
@@ -296,12 +314,12 @@ export function instantReissueRoutes(app: Express) {
         last_updated: now.toISOString(),
         real_time: true,
       });
-
     } catch (error) {
       console.error('Dashboard error:', error);
       res.status(500).json({
         error: 'DASHBOARD_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to load dashboard'
+        detail:
+          error instanceof Error ? error.message : 'Failed to load dashboard',
       });
     }
   });
@@ -319,7 +337,7 @@ export function instantReissueRoutes(app: Express) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'reason and operatorId are required for cancellation',
-          hint: 'Provide cancellation reason and operator ID'
+          hint: 'Provide cancellation reason and operator ID',
         });
       }
 
@@ -330,7 +348,8 @@ export function instantReissueRoutes(app: Express) {
         cancellation_result: {
           success: false,
           reason: 'INSTANT_PAYMENT_NON_CANCELLABLE',
-          message: 'SCT Instant payments cannot be cancelled once submitted to TIPS',
+          message:
+            'SCT Instant payments cannot be cancelled once submitted to TIPS',
           alternative_actions: [
             'Wait for settlement completion',
             'Request beneficiary to return funds (separate process)',
@@ -343,12 +362,14 @@ export function instantReissueRoutes(app: Express) {
           estimated_completion: 'Within 10 seconds',
         },
       });
-
     } catch (error) {
       console.error('Cancellation error:', error);
       res.status(500).json({
         error: 'CANCELLATION_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to process cancellation request'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to process cancellation request',
       });
     }
   });
@@ -360,11 +381,11 @@ export function instantReissueRoutes(app: Express) {
   app.post('/v1/webhooks/pain002', async (req, res) => {
     try {
       const { messageId, bankProfile, ...statusReport } = req.body;
-      
+
       if (!messageId || !bankProfile) {
         return res.status(400).json({
           error: 'INVALID_WEBHOOK_DATA',
-          detail: 'messageId and bankProfile are required'
+          detail: 'messageId and bankProfile are required',
         });
       }
 
@@ -377,14 +398,14 @@ export function instantReissueRoutes(app: Express) {
         webhook_processed: true,
         message_id: messageId,
         affected_transactions: result.affectedTransactions.length,
-        processing_result: result
+        processing_result: result,
       });
-
     } catch (error) {
       console.error('Pain.002 webhook error:', error);
       res.status(500).json({
         error: 'WEBHOOK_PROCESSING_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to process pain.002'
+        detail:
+          error instanceof Error ? error.message : 'Failed to process pain.002',
       });
     }
   });
@@ -396,11 +417,11 @@ export function instantReissueRoutes(app: Express) {
   app.post('/v1/webhooks/camt054', async (req, res) => {
     try {
       const { messageId, bankProfile, ...notification } = req.body;
-      
+
       if (!messageId || !bankProfile) {
         return res.status(400).json({
           error: 'INVALID_WEBHOOK_DATA',
-          detail: 'messageId and bankProfile are required'
+          detail: 'messageId and bankProfile are required',
         });
       }
 
@@ -413,14 +434,14 @@ export function instantReissueRoutes(app: Express) {
         webhook_processed: true,
         message_id: messageId,
         settled_transactions: result.settledTransactions.length,
-        processing_result: result
+        processing_result: result,
       });
-
     } catch (error) {
       console.error('Camt.054 webhook error:', error);
       res.status(500).json({
         error: 'WEBHOOK_PROCESSING_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to process camt.054'
+        detail:
+          error instanceof Error ? error.message : 'Failed to process camt.054',
       });
     }
   });
@@ -432,11 +453,11 @@ export function instantReissueRoutes(app: Express) {
   app.get('/v1/instant-reissue/metrics', async (req, res) => {
     try {
       const { period = '24h' } = req.query;
-      
+
       // Calculate date range
       const now = new Date();
       let dateFrom: Date;
-      
+
       switch (period) {
         case '1h':
           dateFrom = new Date(now.getTime() - 60 * 60 * 1000);
@@ -452,14 +473,14 @@ export function instantReissueRoutes(app: Express) {
 
       const [snapshot, dashboardMetrics] = await Promise.all([
         InstantMetricsService.getMetricsSnapshot(dateFrom, now),
-        InstantMetricsService.getDashboardMetrics()
+        InstantMetricsService.getDashboardMetrics(),
       ]);
 
       res.json({
         period: period as string,
         date_range: {
           from: dateFrom.toISOString(),
-          to: now.toISOString()
+          to: now.toISOString(),
         },
         comprehensive_metrics: snapshot,
         real_time_dashboard: dashboardMetrics,
@@ -469,15 +490,15 @@ export function instantReissueRoutes(app: Express) {
           sla_compliance: `${snapshot.slaCompliance}%`,
           target_achieved: snapshot.medianSettlementTime <= 30000,
           success_rate: `${snapshot.successRate}%`,
-          double_pay_protection: `${snapshot.doublePayBlocks} incidents blocked`
-        }
+          double_pay_protection: `${snapshot.doublePayBlocks} incidents blocked`,
+        },
       });
-
     } catch (error) {
       console.error('Metrics API error:', error);
       res.status(500).json({
         error: 'METRICS_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to retrieve metrics'
+        detail:
+          error instanceof Error ? error.message : 'Failed to retrieve metrics',
       });
     }
   });
@@ -489,13 +510,15 @@ export function instantReissueRoutes(app: Express) {
   app.get('/v1/instant-reissue/webhook-traces', async (req, res) => {
     try {
       const { messageId, type, bankProfile, hours = '24' } = req.query;
-      
+
       const filters = {
         messageId: messageId as string,
         type: type as string,
         bankProfile: bankProfile as string,
-        dateFrom: new Date(Date.now() - parseInt(hours as string) * 60 * 60 * 1000),
-        dateTo: new Date()
+        dateFrom: new Date(
+          Date.now() - parseInt(hours as string) * 60 * 60 * 1000
+        ),
+        dateTo: new Date(),
       };
 
       const traces = await WebhookIngestionService.getEventTraces(filters);
@@ -504,14 +527,16 @@ export function instantReissueRoutes(app: Express) {
         webhook_traces: traces,
         filters: filters,
         total_events: traces.length,
-        bdd_requirement: 'Event/webhook traces visible - ✅ SATISFIED'
+        bdd_requirement: 'Event/webhook traces visible - ✅ SATISFIED',
       });
-
     } catch (error) {
       console.error('Webhook traces error:', error);
       res.status(500).json({
         error: 'TRACES_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to retrieve webhook traces'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve webhook traces',
       });
     }
   });
@@ -532,42 +557,44 @@ export function instantReissueRoutes(app: Express) {
           execution_time: '12.3s',
           settlement_achieved: true,
           supersede_successful: true,
-          double_pay_guard_satisfied: true
+          double_pay_guard_satisfied: true,
         },
         'double-pay-protection': {
           scenario: 'Guard against double-pay',
           status: 'PASS',
           blocked_attempts: 1,
-          error_message: 'Already settled'
+          error_message: 'Already settled',
         },
         'instant-limit-exceeded': {
           scenario: 'Instant limit exceeded',
           status: 'PASS',
           blocked_amount: '€120,000',
-          suggestion: 'Use standard SCT'
+          suggestion: 'Use standard SCT',
         },
         'beneficiary-unreachable': {
           scenario: 'Beneficiary unreachable',
           status: 'PASS',
           blocked_reason: 'Beneficiary not reachable',
-          fallback_suggested: true
+          fallback_suggested: true,
         },
-        'idempotency': {
+        idempotency: {
           scenario: 'Idempotency guarantee',
           status: 'PASS',
           duplicate_prevented: true,
-          same_batch_id_returned: true
+          same_batch_id_returned: true,
         },
         'timeout-fallback': {
           scenario: 'Timeout fallback handling',
           status: 'PASS',
           no_supersede_reversal: true,
-          status_awaiting_confirmation: true
-        }
+          status_awaiting_confirmation: true,
+        },
       };
 
       res.json({
-        bdd_test_results: scenario ? { [scenario]: bddResults[scenario] } : bddResults,
+        bdd_test_results: scenario
+          ? { [scenario]: bddResults[scenario] }
+          : bddResults,
         definition_of_done: {
           reissue_flow_available: '✅ Cockpit + API ready',
           median_settle_under_30s: '✅ Algorithm implemented',
@@ -575,16 +602,16 @@ export function instantReissueRoutes(app: Express) {
           eligibility_logic_with_errors: '✅ Clear error messages',
           all_bdd_tests_pass: '✅ Test suite complete',
           webhook_traces_visible: '✅ Event ingestion active',
-          metrics_tracking: '✅ Success rate, time-to-settle, fallback usage'
+          metrics_tracking: '✅ Success rate, time-to-settle, fallback usage',
         },
-        system_ready: true
+        system_ready: true,
       });
-
     } catch (error) {
       console.error('BDD test error:', error);
       res.status(500).json({
         error: 'BDD_TEST_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to run BDD tests'
+        detail:
+          error instanceof Error ? error.message : 'Failed to run BDD tests',
       });
     }
   });

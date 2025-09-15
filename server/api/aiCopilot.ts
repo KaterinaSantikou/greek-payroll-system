@@ -1,5 +1,5 @@
-import { Express } from "express";
-import { isAuthenticated } from "../replitAuth";
+import { Express } from 'express';
+import { isAuthenticated } from '../replitAuth';
 import Anthropic from '@anthropic-ai/sdk';
 
 // Initialize Anthropic client
@@ -10,7 +10,7 @@ if (process.env.ANTHROPIC_API_KEY) {
   });
 }
 
-const DEFAULT_MODEL_STR = "claude-3-5-sonnet-20241022";
+const DEFAULT_MODEL_STR = 'claude-3-5-sonnet-20241022';
 
 interface QueryContext {
   userRole: string;
@@ -20,13 +20,12 @@ interface QueryContext {
 }
 
 export function registerAICopilotRoutes(app: Express) {
-
   // Natural language AI query endpoint
-  app.post("/api/ai/query", isAuthenticated, async (req: any, res) => {
+  app.post('/api/ai/query', isAuthenticated, async (req: any, res) => {
     if (!anthropic) {
-      return res.status(503).json({ 
-        error: "AI service unavailable", 
-        message: "Anthropic API key not configured" 
+      return res.status(503).json({
+        error: 'AI service unavailable',
+        message: 'Anthropic API key not configured',
       });
     }
 
@@ -45,10 +44,10 @@ export function registerAICopilotRoutes(app: Express) {
         system: systemPrompt,
         messages: [
           {
-            role: "user",
-            content: enhancedQuery
-          }
-        ]
+            role: 'user',
+            content: enhancedQuery,
+          },
+        ],
       });
 
       const aiResponse = response.content[0];
@@ -58,7 +57,9 @@ export function registerAICopilotRoutes(app: Express) {
       const parsedResponse = parseAIResponse(responseText);
 
       // Log query for analytics
-      console.log(`AI Query from user ${userId}: "${query}" -> Response: ${responseText.substring(0, 100)}...`);
+      console.log(
+        `AI Query from user ${userId}: "${query}" -> Response: ${responseText.substring(0, 100)}...`
+      );
 
       res.json({
         answer: parsedResponse.answer,
@@ -66,40 +67,43 @@ export function registerAICopilotRoutes(app: Express) {
         citations: parsedResponse.citations,
         actionable: parsedResponse.actionable,
         suggestedActions: parsedResponse.suggestedActions,
-        data: parsedResponse.data
+        data: parsedResponse.data,
       });
-
     } catch (error) {
-      console.error("AI query error:", error);
-      res.status(500).json({ 
-        error: "AI query failed", 
-        message: "Failed to process your question" 
+      console.error('AI query error:', error);
+      res.status(500).json({
+        error: 'AI query failed',
+        message: 'Failed to process your question',
       });
     }
   });
 
   // Proactive alerts endpoint
-  app.get("/api/ai/proactive-alerts", isAuthenticated, async (req: any, res) => {
-    try {
-      const { propertyId } = req.query;
-      const userId = req.user.claims.sub;
+  app.get(
+    '/api/ai/proactive-alerts',
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const { propertyId } = req.query;
+        const userId = req.user.claims.sub;
 
-      // Generate proactive alerts based on current data
-      const alerts = await generateProactiveAlerts(propertyId, userId);
+        // Generate proactive alerts based on current data
+        const alerts = await generateProactiveAlerts(propertyId, userId);
 
-      res.json(alerts);
-    } catch (error) {
-      console.error("Error generating proactive alerts:", error);
-      res.status(500).json({ error: "Failed to generate alerts" });
+        res.json(alerts);
+      } catch (error) {
+        console.error('Error generating proactive alerts:', error);
+        res.status(500).json({ error: 'Failed to generate alerts' });
+      }
     }
-  });
+  );
 
   // Explain pay endpoint for employees
-  app.post("/api/ai/explain-pay", isAuthenticated, async (req: any, res) => {
+  app.post('/api/ai/explain-pay', isAuthenticated, async (req: any, res) => {
     if (!anthropic) {
-      return res.status(503).json({ 
-        error: "AI service unavailable", 
-        message: "Anthropic API key not configured" 
+      return res.status(503).json({
+        error: 'AI service unavailable',
+        message: 'Anthropic API key not configured',
       });
     }
 
@@ -116,7 +120,7 @@ export function registerAICopilotRoutes(app: Express) {
         overtimeHours: 8.5,
         overtimePay: 240,
         regularHours: 160,
-        regularPay: 2800
+        regularPay: 2800,
       };
 
       const explanation = await explainPayCalculation(payslipData, question);
@@ -124,17 +128,20 @@ export function registerAICopilotRoutes(app: Express) {
       res.json({
         explanation,
         breakdown: payslipData,
-        confidence: 0.95
+        confidence: 0.95,
       });
-
     } catch (error) {
-      console.error("Explain pay error:", error);
-      res.status(500).json({ error: "Failed to explain pay calculation" });
+      console.error('Explain pay error:', error);
+      res.status(500).json({ error: 'Failed to explain pay calculation' });
     }
   });
 }
 
-function buildSystemPrompt(userRole: string, context: QueryContext, propertyId?: string): string {
+function buildSystemPrompt(
+  userRole: string,
+  context: QueryContext,
+  propertyId?: string
+): string {
   let systemPrompt = `You are an AI assistant for PayrollSync, a Greek HR & Payroll Management System. 
 
 IMPORTANT GUIDELINES:
@@ -171,11 +178,14 @@ Greek Labor Law Context:
 - Holiday work: +100% premium`;
 
   if (userRole === 'hr') {
-    systemPrompt += "\n\nAs an HR user, you have access to payroll data, compliance reports, and employee records across all properties.";
+    systemPrompt +=
+      '\n\nAs an HR user, you have access to payroll data, compliance reports, and employee records across all properties.';
   } else if (userRole === 'manager') {
-    systemPrompt += "\n\nAs a manager, focus on team scheduling, overtime approvals, and departmental analytics.";
+    systemPrompt +=
+      '\n\nAs a manager, focus on team scheduling, overtime approvals, and departmental analytics.';
   } else if (userRole === 'employee') {
-    systemPrompt += "\n\nAs an employee, you can only access your own payroll data, schedules, and leave information.";
+    systemPrompt +=
+      '\n\nAs an employee, you can only access your own payroll data, schedules, and leave information.';
   }
 
   return systemPrompt;
@@ -184,29 +194,34 @@ Greek Labor Law Context:
 async function enhanceQuery(query: string, context: QueryContext): string {
   // Enhance the user query with relevant context
   let enhancedQuery = query;
-  
+
   if (context.department) {
     enhancedQuery += ` (Context: ${context.department} department)`;
   }
-  
+
   return enhancedQuery;
 }
 
 function parseAIResponse(responseText: string) {
   // Parse AI response to extract structured data
   // This is a simplified parser - in production, you'd want more sophisticated parsing
-  
-  const confidence = responseText.includes('uncertain') || responseText.includes('might') ? 0.7 : 0.9;
-  const actionable = responseText.toLowerCase().includes('suggest') || 
-                    responseText.toLowerCase().includes('recommend') ||
-                    responseText.toLowerCase().includes('should');
+
+  const confidence =
+    responseText.includes('uncertain') || responseText.includes('might')
+      ? 0.7
+      : 0.9;
+  const actionable =
+    responseText.toLowerCase().includes('suggest') ||
+    responseText.toLowerCase().includes('recommend') ||
+    responseText.toLowerCase().includes('should');
 
   // Extract citations (look for references to policies, laws, etc.)
   const citations = [];
   if (responseText.includes('ERGANI')) citations.push('ERGANI II');
   if (responseText.includes('EFKA')) citations.push('e-EFKA/APD');
   if (responseText.includes('overtime')) citations.push('Greek Labor Law');
-  if (responseText.includes('collective agreement')) citations.push('CBA Terms');
+  if (responseText.includes('collective agreement'))
+    citations.push('CBA Terms');
 
   return {
     answer: responseText,
@@ -214,13 +229,13 @@ function parseAIResponse(responseText: string) {
     citations,
     actionable,
     suggestedActions: actionable ? extractSuggestedActions(responseText) : [],
-    data: null
+    data: null,
   };
 }
 
 function extractSuggestedActions(responseText: string): string[] {
   const actions = [];
-  
+
   if (responseText.toLowerCase().includes('reschedule')) {
     actions.push('Review and adjust schedules');
   }
@@ -230,7 +245,7 @@ function extractSuggestedActions(responseText: string): string[] {
   if (responseText.toLowerCase().includes('file')) {
     actions.push('Submit required filings');
   }
-  
+
   return actions;
 }
 
@@ -241,66 +256,70 @@ async function generateProactiveAlerts(propertyId: string, userId: string) {
       id: 'alert-1',
       type: 'warning',
       title: 'Overtime Cap Alert',
-      description: 'Housekeeping team at Marpunta likely to exceed 48h/week average. Consider redistributing shifts.',
+      description:
+        'Housekeeping team at Marpunta likely to exceed 48h/week average. Consider redistributing shifts.',
       property: 'Marpunta Village',
       department: 'Housekeeping',
       priority: 'high',
       data: {
         currentHours: 46.5,
         projectedHours: 52,
-        threshold: 48
+        threshold: 48,
       },
       actions: [
         { label: 'View Schedule', action: 'navigate_schedule' },
-        { label: 'Suggest Fixes', action: 'ai_suggest_fixes' }
-      ]
+        { label: 'Suggest Fixes', action: 'ai_suggest_fixes' },
+      ],
     },
     {
       id: 'alert-2',
       type: 'compliance',
       title: 'ERGANI Filing Due',
-      description: '3 overtime declarations need to be filed before end of day.',
+      description:
+        '3 overtime declarations need to be filed before end of day.',
       property: propertyId || 'Multiple Properties',
       priority: 'medium',
       data: {
         pendingFilings: 3,
-        deadline: 'Today 18:00'
+        deadline: 'Today 18:00',
       },
-      actions: [
-        { label: 'File Now', action: 'file_ergani' }
-      ]
+      actions: [{ label: 'File Now', action: 'file_ergani' }],
     },
     {
       id: 'alert-3',
       type: 'suggestion',
       title: 'Schedule Optimization',
-      description: 'AI detected 15% potential savings in labor costs by adjusting Wednesday shifts.',
+      description:
+        'AI detected 15% potential savings in labor costs by adjusting Wednesday shifts.',
       property: 'Princess Resort',
       department: 'Front Office',
       priority: 'low',
       data: {
         potentialSavings: 420,
-        affectedShifts: 8
+        affectedShifts: 8,
       },
-      actions: [
-        { label: 'View Details', action: 'view_optimization' }
-      ]
-    }
+      actions: [{ label: 'View Details', action: 'view_optimization' }],
+    },
   ];
 
   // Filter alerts based on property if specified
   if (propertyId && propertyId !== 'group') {
-    return alerts.filter(alert => 
-      !alert.property || alert.property.toLowerCase().includes(propertyId.toLowerCase())
+    return alerts.filter(
+      alert =>
+        !alert.property ||
+        alert.property.toLowerCase().includes(propertyId.toLowerCase())
     );
   }
 
   return alerts;
 }
 
-async function explainPayCalculation(payslipData: any, question: string): Promise<string> {
+async function explainPayCalculation(
+  payslipData: any,
+  question: string
+): Promise<string> {
   if (!anthropic) {
-    return "AI service is currently unavailable. Please contact HR for pay calculation details.";
+    return 'AI service is currently unavailable. Please contact HR for pay calculation details.';
   }
 
   const prompt = `Explain the following pay calculation in simple, friendly terms for a Greek employee:
@@ -331,17 +350,18 @@ Use simple language and be reassuring. Include specific amounts and percentages.
       max_tokens: 800,
       messages: [
         {
-          role: "user",
-          content: prompt
-        }
-      ]
+          role: 'user',
+          content: prompt,
+        },
+      ],
     });
 
     const aiResponse = response.content[0];
-    return aiResponse.type === 'text' ? aiResponse.text : 'Unable to generate explanation';
-
+    return aiResponse.type === 'text'
+      ? aiResponse.text
+      : 'Unable to generate explanation';
   } catch (error) {
-    console.error("Error explaining pay:", error);
+    console.error('Error explaining pay:', error);
     return "I'm having trouble explaining your pay calculation right now. Please contact HR for assistance.";
   }
 }

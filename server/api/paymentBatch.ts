@@ -2,11 +2,10 @@
  * Payment Batch API - Complete payroll-to-bank data flow
  */
 
-import type { Express } from "express";
-import { PaymentBatchService } from "../services/paymentBatchService";
+import type { Express } from 'express';
+import { PaymentBatchService } from '../services/paymentBatchService';
 
 export function paymentBatchRoutes(app: Express) {
-
   // =============================================================================
   // PAYROLL TO PAYMENT BATCH WORKFLOW
   // =============================================================================
@@ -17,24 +16,24 @@ export function paymentBatchRoutes(app: Express) {
    */
   app.post('/v1/payment-batch/build-from-payroll', async (req, res) => {
     try {
-      const { 
-        run_id, 
-        entity_id, 
+      const {
+        run_id,
+        entity_id,
         bank_profile = 'alpha',
         requested_execution_date,
-        payment_method = 'AUTO' // SCT, SCT_INST, or AUTO
+        payment_method = 'AUTO', // SCT, SCT_INST, or AUTO
       } = req.body;
 
       if (!run_id || !entity_id) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'run_id and entity_id are required',
-          hint: 'Provide finalized payroll run ID and entity for payment batch creation'
+          hint: 'Provide finalized payroll run ID and entity for payment batch creation',
         });
       }
 
-      const executionDate = requested_execution_date 
-        ? new Date(requested_execution_date) 
+      const executionDate = requested_execution_date
+        ? new Date(requested_execution_date)
         : new Date();
 
       const batchRequest = {
@@ -45,7 +44,8 @@ export function paymentBatchRoutes(app: Express) {
         paymentMethod: payment_method as 'SCT' | 'SCT_INST' | 'AUTO',
       };
 
-      const result = await PaymentBatchService.buildPaymentBatchFromPayroll(batchRequest);
+      const result =
+        await PaymentBatchService.buildPaymentBatchFromPayroll(batchRequest);
 
       res.json({
         payroll_run_id: run_id,
@@ -66,7 +66,10 @@ export function paymentBatchRoutes(app: Express) {
       console.error('Payment batch creation error:', error);
       res.status(500).json({
         error: 'BATCH_CREATION_FAILED',
-        detail: error instanceof Error ? error.message : 'Failed to create payment batch from payroll',
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to create payment batch from payroll',
         data_flow_step: 'BATCH_CREATION_ERROR',
       });
     }
@@ -79,17 +82,17 @@ export function paymentBatchRoutes(app: Express) {
   app.post('/v1/payment-batch/:batch_id/submit', async (req, res) => {
     try {
       const { batch_id } = req.params;
-      const { 
+      const {
         submission_method = 'SFTP',
         bank_endpoint,
-        credentials 
+        credentials,
       } = req.body;
 
       if (!bank_endpoint) {
         return res.status(400).json({
           error: 'MISSING_PARAMETER',
           detail: 'bank_endpoint is required',
-          hint: 'Provide SFTP server, Host-to-Host URL, or API endpoint'
+          hint: 'Provide SFTP server, Host-to-Host URL, or API endpoint',
         });
       }
 
@@ -97,7 +100,7 @@ export function paymentBatchRoutes(app: Express) {
         return res.status(400).json({
           error: 'INVALID_SUBMISSION_METHOD',
           detail: `Submission method ${submission_method} not supported`,
-          hint: 'Supported methods: SFTP, HOST_TO_HOST, API'
+          hint: 'Supported methods: SFTP, HOST_TO_HOST, API',
         });
       }
 
@@ -108,7 +111,8 @@ export function paymentBatchRoutes(app: Express) {
         credentials,
       };
 
-      const result = await PaymentBatchService.submitPaymentBatch(submissionRequest);
+      const result =
+        await PaymentBatchService.submitPaymentBatch(submissionRequest);
 
       res.json({
         batch_id,
@@ -124,7 +128,10 @@ export function paymentBatchRoutes(app: Express) {
       console.error('Bank submission error:', error);
       res.status(500).json({
         error: 'SUBMISSION_FAILED',
-        detail: error instanceof Error ? error.message : 'Failed to submit payment batch to bank',
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to submit payment batch to bank',
         data_flow_step: 'BANK_SUBMISSION_ERROR',
       });
     }
@@ -141,7 +148,7 @@ export function paymentBatchRoutes(app: Express) {
 
       // This would typically fetch from database with the PaymentBatchService
       // For now, we'll return a mock response showing the structure
-      
+
       res.json({
         batch_id,
         batch_details: {
@@ -165,17 +172,25 @@ export function paymentBatchRoutes(app: Express) {
         },
         data_flow_status: {
           current_step: 'BATCH_CREATED',
-          completed_steps: ['PAYROLL_FINALIZED', 'BATCH_BUILT', 'PAIN001_GENERATED'],
+          completed_steps: [
+            'PAYROLL_FINALIZED',
+            'BATCH_BUILT',
+            'PAIN001_GENERATED',
+          ],
           next_steps: ['SUBMIT_TO_BANK', 'RECEIVE_PAIN002', 'RECEIVE_CAMT054'],
         },
-        pain001_xml: include_xml === 'true' ? 'XML content would be here...' : null,
+        pain001_xml:
+          include_xml === 'true' ? 'XML content would be here...' : null,
         submission_ready: true,
       });
     } catch (error) {
       console.error('Batch details error:', error);
       res.status(500).json({
         error: 'BATCH_DETAILS_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to retrieve batch details'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve batch details',
       });
     }
   });
@@ -186,18 +201,18 @@ export function paymentBatchRoutes(app: Express) {
    */
   app.post('/v1/payment-batch/reconciliation/pain002', async (req, res) => {
     try {
-      const { 
-        original_message_id, 
-        batch_status, 
+      const {
+        original_message_id,
+        batch_status,
         transaction_statuses = [],
-        bank_reference 
+        bank_reference,
       } = req.body;
 
       if (!original_message_id || !batch_status) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'original_message_id and batch_status are required',
-          hint: 'Provide pain.002 message details for reconciliation'
+          hint: 'Provide pain.002 message details for reconciliation',
         });
       }
 
@@ -207,7 +222,9 @@ export function paymentBatchRoutes(app: Express) {
         originalMessageId: original_message_id,
         status: batch_status, // ACCP (Accepted) or RJCT (Rejected)
         bankReference: bank_reference,
-        rejectedTransactions: transaction_statuses.filter((t: any) => t.status === 'RJCT'),
+        rejectedTransactions: transaction_statuses.filter(
+          (t: any) => t.status === 'RJCT'
+        ),
       };
 
       // This would use PaymentsOpsService.processReconciliationMessage
@@ -223,18 +240,28 @@ export function paymentBatchRoutes(app: Express) {
         },
         data_flow_step: 'PAIN002_PROCESSED',
         business_impact: {
-          accepted_transactions: transaction_statuses.filter((t: any) => t.status === 'ACCP').length,
-          rejected_transactions: transaction_statuses.filter((t: any) => t.status === 'RJCT').length,
-          reissue_candidates: transaction_statuses.filter((t: any) => t.status === 'RJCT' && t.reissue_eligible).length,
+          accepted_transactions: transaction_statuses.filter(
+            (t: any) => t.status === 'ACCP'
+          ).length,
+          rejected_transactions: transaction_statuses.filter(
+            (t: any) => t.status === 'RJCT'
+          ).length,
+          reissue_candidates: transaction_statuses.filter(
+            (t: any) => t.status === 'RJCT' && t.reissue_eligible
+          ).length,
         },
         next_step: 'Monitor for camt.054 settlement confirmation',
-        cockpit_update: 'Batch status and transaction details updated in real-time',
+        cockpit_update:
+          'Batch status and transaction details updated in real-time',
       });
     } catch (error) {
       console.error('pain.002 processing error:', error);
       res.status(500).json({
         error: 'PAIN002_PROCESSING_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to process pain.002 status report'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to process pain.002 status report',
       });
     }
   });
@@ -245,23 +272,25 @@ export function paymentBatchRoutes(app: Express) {
    */
   app.post('/v1/payment-batch/reconciliation/camt054', async (req, res) => {
     try {
-      const { 
+      const {
         original_message_id,
         settlement_data,
         instant_confirmations = [],
-        booking_confirmations = []
+        booking_confirmations = [],
       } = req.body;
 
       if (!original_message_id) {
         return res.status(400).json({
           error: 'MISSING_PARAMETER',
-          detail: 'original_message_id is required'
+          detail: 'original_message_id is required',
         });
       }
 
       const totalSettled = [...instant_confirmations, ...booking_confirmations];
-      const settledAmount = totalSettled.reduce((sum: number, settlement: any) => 
-        sum + parseFloat(settlement.amount || '0'), 0
+      const settledAmount = totalSettled.reduce(
+        (sum: number, settlement: any) =>
+          sum + parseFloat(settlement.amount || '0'),
+        0
       );
 
       res.json({
@@ -286,7 +315,10 @@ export function paymentBatchRoutes(app: Express) {
       console.error('camt.054 processing error:', error);
       res.status(500).json({
         error: 'CAMT054_PROCESSING_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to process camt.054 bank notification'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to process camt.054 bank notification',
       });
     }
   });
@@ -297,18 +329,23 @@ export function paymentBatchRoutes(app: Express) {
    */
   app.post('/v1/payment-batch/reissue-mini-batch', async (req, res) => {
     try {
-      const { 
+      const {
         original_batch_id,
         failed_transaction_ids,
         reissue_reason = 'Failed transaction re-issue as SCT Instant',
-        urgency = 'URGP' // Ultra Rapid Payment
+        urgency = 'URGP', // Ultra Rapid Payment
       } = req.body;
 
-      if (!original_batch_id || !failed_transaction_ids || !Array.isArray(failed_transaction_ids)) {
+      if (
+        !original_batch_id ||
+        !failed_transaction_ids ||
+        !Array.isArray(failed_transaction_ids)
+      ) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
-          detail: 'original_batch_id and failed_transaction_ids array are required',
-          hint: 'Select failed/pending transactions for SCT Instant re-issue'
+          detail:
+            'original_batch_id and failed_transaction_ids array are required',
+          hint: 'Select failed/pending transactions for SCT Instant re-issue',
         });
       }
 
@@ -338,14 +375,18 @@ export function paymentBatchRoutes(app: Express) {
           '3. Monitor instant settlement',
           '4. Update cockpit status',
         ],
-        cockpit_update: 'Original transactions marked as superseded, mini-batch created',
+        cockpit_update:
+          'Original transactions marked as superseded, mini-batch created',
         audit_trail: 'Hash-chained audit log updated with re-issue event',
       });
     } catch (error) {
       console.error('Mini-batch reissue error:', error);
       res.status(500).json({
         error: 'MINI_BATCH_REISSUE_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to create SCT Instant mini-batch'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to create SCT Instant mini-batch',
       });
     }
   });
@@ -364,13 +405,41 @@ export function paymentBatchRoutes(app: Express) {
           current_step: 'CAMT054_PROCESSED',
           completion_percentage: 100,
           timeline: [
-            { step: 'PAYROLL_FINALIZED', completed: true, timestamp: '2025-08-19T20:30:00Z' },
-            { step: 'BATCH_CREATED', completed: true, timestamp: '2025-08-19T20:32:00Z' },
-            { step: 'PAIN001_GENERATED', completed: true, timestamp: '2025-08-19T20:32:15Z' },
-            { step: 'BANK_SUBMITTED', completed: true, timestamp: '2025-08-19T20:35:00Z' },
-            { step: 'BANK_ACK_RECEIVED', completed: true, timestamp: '2025-08-19T20:35:30Z' },
-            { step: 'PAIN002_PROCESSED', completed: true, timestamp: '2025-08-19T20:45:00Z' },
-            { step: 'CAMT054_PROCESSED', completed: true, timestamp: '2025-08-19T21:15:00Z' },
+            {
+              step: 'PAYROLL_FINALIZED',
+              completed: true,
+              timestamp: '2025-08-19T20:30:00Z',
+            },
+            {
+              step: 'BATCH_CREATED',
+              completed: true,
+              timestamp: '2025-08-19T20:32:00Z',
+            },
+            {
+              step: 'PAIN001_GENERATED',
+              completed: true,
+              timestamp: '2025-08-19T20:32:15Z',
+            },
+            {
+              step: 'BANK_SUBMITTED',
+              completed: true,
+              timestamp: '2025-08-19T20:35:00Z',
+            },
+            {
+              step: 'BANK_ACK_RECEIVED',
+              completed: true,
+              timestamp: '2025-08-19T20:35:30Z',
+            },
+            {
+              step: 'PAIN002_PROCESSED',
+              completed: true,
+              timestamp: '2025-08-19T20:45:00Z',
+            },
+            {
+              step: 'CAMT054_PROCESSED',
+              completed: true,
+              timestamp: '2025-08-19T21:15:00Z',
+            },
           ],
         },
         reconciliation_status: {
@@ -397,7 +466,10 @@ export function paymentBatchRoutes(app: Express) {
       console.error('Data flow status error:', error);
       res.status(500).json({
         error: 'DATA_FLOW_STATUS_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to retrieve data flow status'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve data flow status',
       });
     }
   });
@@ -430,7 +502,10 @@ export function paymentBatchRoutes(app: Express) {
       console.error('Audit verification error:', error);
       res.status(500).json({
         error: 'AUDIT_VERIFICATION_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to verify audit chain'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to verify audit chain',
       });
     }
   });

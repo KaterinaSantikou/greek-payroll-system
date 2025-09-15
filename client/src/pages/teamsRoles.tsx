@@ -1,103 +1,164 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { 
-  Building2, 
-  Users, 
-  Shield, 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Building2,
+  Users,
+  Shield,
   Plus,
   Settings,
   Crown,
   UserCheck,
   Target,
-  BarChart3
-} from "lucide-react";
+  BarChart3,
+} from 'lucide-react';
 
 export default function TeamsRoles() {
   const departments = [
     {
       id: 1,
-      name: "Front Office",
-      manager: "Maria Kostas",
+      name: 'Front Office',
+      manager: 'Maria Kostas',
       employees: 24,
-      roles: ["Front Desk Agent", "Concierge", "Guest Relations", "Night Auditor"],
-      approvers: ["Maria Kostas", "Deputy Manager"],
-      avgUtilization: 87
+      roles: [
+        'Front Desk Agent',
+        'Concierge',
+        'Guest Relations',
+        'Night Auditor',
+      ],
+      approvers: ['Maria Kostas', 'Deputy Manager'],
+      avgUtilization: 87,
     },
     {
       id: 2,
-      name: "Housekeeping",
-      manager: "Dimitris Panos", 
+      name: 'Housekeeping',
+      manager: 'Dimitris Panos',
       employees: 31,
-      roles: ["Room Attendant", "Housekeeping Supervisor", "Laundry Attendant", "Public Area Cleaner"],
-      approvers: ["Dimitris Panos"],
-      avgUtilization: 92
+      roles: [
+        'Room Attendant',
+        'Housekeeping Supervisor',
+        'Laundry Attendant',
+        'Public Area Cleaner',
+      ],
+      approvers: ['Dimitris Panos'],
+      avgUtilization: 92,
     },
     {
       id: 3,
-      name: "Food & Beverage",
-      manager: "Sofia Nikolaou",
+      name: 'Food & Beverage',
+      manager: 'Sofia Nikolaou',
       employees: 45,
-      roles: ["Server", "Bartender", "Kitchen Assistant", "Sommelier", "Head Chef"],
-      approvers: ["Sofia Nikolaou", "Head Chef", "Bar Manager"],
-      avgUtilization: 78
+      roles: [
+        'Server',
+        'Bartender',
+        'Kitchen Assistant',
+        'Sommelier',
+        'Head Chef',
+      ],
+      approvers: ['Sofia Nikolaou', 'Head Chef', 'Bar Manager'],
+      avgUtilization: 78,
     },
     {
       id: 4,
-      name: "Maintenance",
-      manager: "Kostas Dimitriou",
+      name: 'Maintenance',
+      manager: 'Kostas Dimitriou',
       employees: 8,
-      roles: ["Maintenance Technician", "Electrician", "Plumber", "Groundskeeper"],
-      approvers: ["Kostas Dimitriou"],
-      avgUtilization: 85
-    }
+      roles: [
+        'Maintenance Technician',
+        'Electrician',
+        'Plumber',
+        'Groundskeeper',
+      ],
+      approvers: ['Kostas Dimitriou'],
+      avgUtilization: 85,
+    },
   ];
 
   const roleHierarchy = [
     {
-      level: "Executive",
+      level: 'Executive',
       roles: [
-        { name: "General Manager", count: 1, permissions: ["all_access", "final_approvals"] },
-        { name: "Assistant Manager", count: 2, permissions: ["department_oversight", "staff_scheduling"] }
-      ]
+        {
+          name: 'General Manager',
+          count: 1,
+          permissions: ['all_access', 'final_approvals'],
+        },
+        {
+          name: 'Assistant Manager',
+          count: 2,
+          permissions: ['department_oversight', 'staff_scheduling'],
+        },
+      ],
     },
     {
-      level: "Department Heads",
+      level: 'Department Heads',
       roles: [
-        { name: "Front Office Manager", count: 1, permissions: ["department_management", "staff_approvals"] },
-        { name: "Housekeeping Manager", count: 1, permissions: ["department_management", "quality_control"] },
-        { name: "F&B Manager", count: 1, permissions: ["department_management", "inventory_control"] }
-      ]
+        {
+          name: 'Front Office Manager',
+          count: 1,
+          permissions: ['department_management', 'staff_approvals'],
+        },
+        {
+          name: 'Housekeeping Manager',
+          count: 1,
+          permissions: ['department_management', 'quality_control'],
+        },
+        {
+          name: 'F&B Manager',
+          count: 1,
+          permissions: ['department_management', 'inventory_control'],
+        },
+      ],
     },
     {
-      level: "Supervisors",
+      level: 'Supervisors',
       roles: [
-        { name: "Shift Supervisor", count: 6, permissions: ["shift_management", "basic_approvals"] },
-        { name: "Team Leader", count: 4, permissions: ["team_coordination", "time_tracking"] }
-      ]
+        {
+          name: 'Shift Supervisor',
+          count: 6,
+          permissions: ['shift_management', 'basic_approvals'],
+        },
+        {
+          name: 'Team Leader',
+          count: 4,
+          permissions: ['team_coordination', 'time_tracking'],
+        },
+      ],
     },
     {
-      level: "Associates", 
+      level: 'Associates',
       roles: [
-        { name: "Senior Associate", count: 28, permissions: ["advanced_operations", "training_others"] },
-        { name: "Associate", count: 89, permissions: ["basic_operations", "self_service"] }
-      ]
-    }
+        {
+          name: 'Senior Associate',
+          count: 28,
+          permissions: ['advanced_operations', 'training_others'],
+        },
+        {
+          name: 'Associate',
+          count: 89,
+          permissions: ['basic_operations', 'self_service'],
+        },
+      ],
+    },
   ];
 
   const getUtilizationColor = (utilization: number) => {
-    if (utilization >= 90) return "text-red-600 dark:text-red-400";
-    if (utilization >= 80) return "text-orange-600 dark:text-orange-400";
-    return "text-green-600 dark:text-green-400";
+    if (utilization >= 90) return 'text-red-600 dark:text-red-400';
+    if (utilization >= 80) return 'text-orange-600 dark:text-orange-400';
+    return 'text-green-600 dark:text-green-400';
   };
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Teams & Roles</h1>
-          <p className="text-gray-600 dark:text-gray-400">Organization, departments, approvers</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Teams & Roles
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Organization, departments, approvers
+          </p>
         </div>
         <div className="flex gap-2">
           <Button>
@@ -113,7 +174,7 @@ export default function TeamsRoles() {
 
       {/* Departments Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {departments.map((dept) => (
+        {departments.map(dept => (
           <Card key={dept.id}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -158,7 +219,9 @@ export default function TeamsRoles() {
 
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Utilization</span>
-                <span className={`text-sm font-bold ${getUtilizationColor(dept.avgUtilization)}`}>
+                <span
+                  className={`text-sm font-bold ${getUtilizationColor(dept.avgUtilization)}`}
+                >
                   {dept.avgUtilization}%
                 </span>
               </div>
@@ -195,16 +258,25 @@ export default function TeamsRoles() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {level.roles.map((role, roleIndex) => (
-                    <div key={roleIndex} className="p-4 border rounded-lg space-y-2">
+                    <div
+                      key={roleIndex}
+                      className="p-4 border rounded-lg space-y-2"
+                    >
                       <div className="flex items-center justify-between">
                         <span className="font-medium">{role.name}</span>
                         <Badge>{role.count} people</Badge>
                       </div>
                       <div className="space-y-1">
-                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">PERMISSIONS</span>
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                          PERMISSIONS
+                        </span>
                         <div className="flex flex-wrap gap-1">
                           {role.permissions.map((permission, permIndex) => (
-                            <Badge key={permIndex} variant="outline" className="text-xs">
+                            <Badge
+                              key={permIndex}
+                              variant="outline"
+                              className="text-xs"
+                            >
                               {permission.replace('_', ' ')}
                             </Badge>
                           ))}

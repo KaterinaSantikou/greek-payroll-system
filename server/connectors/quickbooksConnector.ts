@@ -25,7 +25,8 @@ export interface QBOJournalLine {
 }
 
 export class QuickBooksConnector {
-  private static readonly QBO_API_BASE = 'https://sandbox-quickbooks.api.intuit.com'; // Use production URL for live
+  private static readonly QBO_API_BASE =
+    'https://sandbox-quickbooks.api.intuit.com'; // Use production URL for live
   private static readonly CLIENT_ID = process.env.QBO_CLIENT_ID;
   private static readonly CLIENT_SECRET = process.env.QBO_CLIENT_SECRET;
 
@@ -58,21 +59,26 @@ export class QuickBooksConnector {
     expires_in: number;
     realmId: string;
   }> {
-    const response = await fetch('https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${Buffer.from(`${this.CLIENT_ID}:${this.CLIENT_SECRET}`).toString('base64')}`,
-      },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: redirectUri,
-      }),
-    });
+    const response = await fetch(
+      'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${Buffer.from(`${this.CLIENT_ID}:${this.CLIENT_SECRET}`).toString('base64')}`,
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: redirectUri,
+        }),
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`QuickBooks token exchange failed: ${response.statusText}`);
+      throw new Error(
+        `QuickBooks token exchange failed: ${response.statusText}`
+      );
     }
 
     const tokens = await response.json();
@@ -90,20 +96,25 @@ export class QuickBooksConnector {
     refresh_token: string;
     expires_in: number;
   }> {
-    const response = await fetch('https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${Buffer.from(`${this.CLIENT_ID}:${this.CLIENT_SECRET}`).toString('base64')}`,
-      },
-      body: new URLSearchParams({
-        grant_type: 'refresh_token',
-        refresh_token: refreshToken,
-      }),
-    });
+    const response = await fetch(
+      'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${Buffer.from(`${this.CLIENT_ID}:${this.CLIENT_SECRET}`).toString('base64')}`,
+        },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: refreshToken,
+        }),
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`QuickBooks token refresh failed: ${response.statusText}`);
+      throw new Error(
+        `QuickBooks token refresh failed: ${response.statusText}`
+      );
     }
 
     return await response.json();
@@ -149,9 +160,9 @@ export class QuickBooksConnector {
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${connection.accessToken}`,
+          Authorization: `Bearer ${connection.accessToken}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify(qboPayload),
       }
@@ -159,7 +170,9 @@ export class QuickBooksConnector {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(`QuickBooks journal creation failed: ${JSON.stringify(errorData)}`);
+      throw new Error(
+        `QuickBooks journal creation failed: ${JSON.stringify(errorData)}`
+      );
     }
 
     const result = await response.json();
@@ -171,33 +184,39 @@ export class QuickBooksConnector {
   /**
    * Get chart of accounts from QuickBooks Online
    */
-  static async getChartOfAccounts(connection: QBOConnection): Promise<Array<{
-    accountId: string;
-    accountCode: string;
-    accountName: string;
-    accountType: string;
-  }>> {
+  static async getChartOfAccounts(connection: QBOConnection): Promise<
+    Array<{
+      accountId: string;
+      accountCode: string;
+      accountName: string;
+      accountType: string;
+    }>
+  > {
     const response = await fetch(
       `${this.QBO_API_BASE}/v3/company/${connection.realmId}/query?query=SELECT * FROM Account`,
       {
         headers: {
-          'Authorization': `Bearer ${connection.accessToken}`,
-          'Accept': 'application/json',
+          Authorization: `Bearer ${connection.accessToken}`,
+          Accept: 'application/json',
         },
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to get QuickBooks accounts: ${response.statusText}`);
+      throw new Error(
+        `Failed to get QuickBooks accounts: ${response.statusText}`
+      );
     }
 
     const result = await response.json();
-    return result.QueryResponse?.Account?.map((account: any) => ({
-      accountId: account.Id,
-      accountCode: account.AcctNum || account.Id,
-      accountName: account.Name,
-      accountType: account.AccountType,
-    })) || [];
+    return (
+      result.QueryResponse?.Account?.map((account: any) => ({
+        accountId: account.Id,
+        accountCode: account.AcctNum || account.Id,
+        accountName: account.Name,
+        accountType: account.AccountType,
+      })) || []
+    );
   }
 
   /**
@@ -212,19 +231,21 @@ export class QuickBooksConnector {
       `${this.QBO_API_BASE}/v3/company/${connection.realmId}/companyinfo/${connection.realmId}`,
       {
         headers: {
-          'Authorization': `Bearer ${connection.accessToken}`,
-          'Accept': 'application/json',
+          Authorization: `Bearer ${connection.accessToken}`,
+          Accept: 'application/json',
         },
       }
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to get QuickBooks company info: ${response.statusText}`);
+      throw new Error(
+        `Failed to get QuickBooks company info: ${response.statusText}`
+      );
     }
 
     const result = await response.json();
     const companyInfo = result.QueryResponse?.CompanyInfo[0];
-    
+
     return {
       companyName: companyInfo?.CompanyName || 'Unknown',
       country: companyInfo?.Country || 'Unknown',
@@ -263,8 +284,8 @@ export class QuickBooksConnector {
         `${this.QBO_API_BASE}/v3/company/${connection.realmId}/query?query=SELECT COUNT(*) FROM Account`,
         {
           headers: {
-            'Authorization': `Bearer ${connection.accessToken}`,
-            'Accept': 'application/json',
+            Authorization: `Bearer ${connection.accessToken}`,
+            Accept: 'application/json',
           },
         }
       );

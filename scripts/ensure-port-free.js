@@ -1,10 +1,12 @@
 // scripts/ensure-port-free.js
-import { execSync } from "node:child_process";
+import { execSync } from 'node:child_process';
 
 const PORT = process.env.PORT || 5000;
 
 function tryKill(cmd) {
-  try { execSync(cmd, { stdio: "ignore" }); } catch {}
+  try {
+    execSync(cmd, { stdio: 'ignore' });
+  } catch {}
 }
 
 console.log(`[PORT] Ensuring port ${PORT} is free...`);

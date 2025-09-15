@@ -29,13 +29,17 @@ export function updatePageMeta(config: PageMetaConfig): void {
     locale = 'el_GR',
     keywords = ['payroll', 'HR', 'Greece', 'ERGANI', 'compliance'],
     author = 'PayrollSync Team',
-    noIndex = false
+    noIndex = false,
   } = config;
 
   // Environment detection - add warning for non-production
   const isDev = import.meta.env.MODE !== 'production';
-  const envTitle = isDev ? `[${import.meta.env.MODE?.toUpperCase()}] ${title}` : title;
-  const envDescription = isDev ? `⚠️ ${import.meta.env.MODE?.toUpperCase()} ENVIRONMENT - ${description}` : description;
+  const envTitle = isDev
+    ? `[${import.meta.env.MODE?.toUpperCase()}] ${title}`
+    : title;
+  const envDescription = isDev
+    ? `⚠️ ${import.meta.env.MODE?.toUpperCase()} ENVIRONMENT - ${description}`
+    : description;
 
   // Update document title
   document.title = envTitle;
@@ -61,9 +65,10 @@ export function updatePageMeta(config: PageMetaConfig): void {
   updateMetaTag('meta[name="description"]', envDescription);
   updateMetaTag('meta[name="keywords"]', keywords.join(', '));
   updateMetaTag('meta[name="author"]', author);
-  
+
   // Environment-based indexing control
-  const robotsContent = (isDev || noIndex) ? 'noindex,nofollow,noarchive,nosnippet' : 'index,follow';
+  const robotsContent =
+    isDev || noIndex ? 'noindex,nofollow,noarchive,nosnippet' : 'index,follow';
   updateMetaTag('meta[name="robots"]', robotsContent);
   updateMetaTag('meta[name="googlebot"]', robotsContent);
 
@@ -85,19 +90,26 @@ export function updatePageMeta(config: PageMetaConfig): void {
 
   // Environment indicator
   if (isDev) {
-    updateMetaTag('meta[name="environment"]', import.meta.env.MODE || 'development');
+    updateMetaTag(
+      'meta[name="environment"]',
+      import.meta.env.MODE || 'development'
+    );
     // Additional meta tag to prevent indexing
     updateMetaTag('meta[http-equiv="X-Robots-Tag"]', 'noindex');
   } else {
     // Remove environment meta in production
     const envMeta = document.querySelector('meta[name="environment"]');
     if (envMeta) envMeta.remove();
-    const robotsMeta = document.querySelector('meta[http-equiv="X-Robots-Tag"]');
+    const robotsMeta = document.querySelector(
+      'meta[http-equiv="X-Robots-Tag"]'
+    );
     if (robotsMeta) robotsMeta.remove();
   }
 
   // Canonical URL (prevent duplicate content)
-  let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+  let canonicalLink = document.querySelector(
+    'link[rel="canonical"]'
+  ) as HTMLLinkElement;
   if (!canonicalLink) {
     canonicalLink = document.createElement('link');
     canonicalLink.setAttribute('rel', 'canonical');
@@ -112,7 +124,7 @@ export function updatePageMeta(config: PageMetaConfig): void {
 export function usePageMeta(config: PageMetaConfig): void {
   React.useEffect(() => {
     updatePageMeta(config);
-    
+
     // Store original title to restore on unmount
     const originalTitle = document.title;
     return () => {
@@ -127,10 +139,11 @@ export function usePageMeta(config: PageMetaConfig): void {
  * Get current environment-aware sharing URL
  */
 export function getCurrentSharingUrl(path: string = ''): string {
-  const baseUrl = import.meta.env.MODE === 'production' 
-    ? 'https://payrollsync.com' 
-    : window.location.origin;
-  
+  const baseUrl =
+    import.meta.env.MODE === 'production'
+      ? 'https://payrollsync.com'
+      : window.location.origin;
+
   return `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
@@ -146,18 +159,18 @@ export function generateStructuredData(config: {
   author?: string;
 }): string {
   const structuredData = {
-    "@context": "https://schema.org",
-    "@type": config.type,
-    "name": config.name,
-    "description": config.description,
-    "url": config.url,
-    "applicationCategory": "BusinessApplication",
-    "operatingSystem": "Web Browser",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "EUR"
-    }
+    '@context': 'https://schema.org',
+    '@type': config.type,
+    name: config.name,
+    description: config.description,
+    url: config.url,
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Web Browser',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'EUR',
+    },
   };
 
   if (config.logo) {
@@ -166,8 +179,8 @@ export function generateStructuredData(config: {
 
   if (config.author) {
     (structuredData as any).author = {
-      "@type": "Organization",
-      "name": config.author
+      '@type': 'Organization',
+      name: config.author,
     };
   }
 

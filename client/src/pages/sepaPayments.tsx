@@ -1,25 +1,31 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  FileText, 
-  Download, 
-  CheckCircle, 
-  Clock, 
-  AlertTriangle, 
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import {
+  FileText,
+  Download,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
   Euro,
   Building2,
   Calendar,
-  Shield
-} from "lucide-react";
+  Shield,
+} from 'lucide-react';
 
 export default function SepaPayments() {
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedBank, setSelectedBank] = useState("alpha");
+  const [selectedBank, setSelectedBank] = useState('alpha');
 
   const handleGenerateSEPA = async () => {
     setIsGenerating(true);
@@ -27,14 +33,15 @@ export default function SepaPayments() {
       // Simulate SEPA file generation
       await new Promise(resolve => setTimeout(resolve, 2000));
       toast({
-        title: "SEPA File Generated",
-        description: "Payroll SEPA file created successfully with ISO 20022 compliance",
+        title: 'SEPA File Generated',
+        description:
+          'Payroll SEPA file created successfully with ISO 20022 compliance',
       });
     } catch (error) {
       toast({
-        title: "Generation Failed",
-        description: "Error creating SEPA file",
-        variant: "destructive",
+        title: 'Generation Failed',
+        description: 'Error creating SEPA file',
+        variant: 'destructive',
       });
     } finally {
       setIsGenerating(false);
@@ -43,91 +50,135 @@ export default function SepaPayments() {
 
   const sepaSpecifications = [
     {
-      category: "Message Format",
+      category: 'Message Format',
       items: [
-        { label: "Standard", value: "ISO 20022 pain.001.001.03", icon: <FileText className="w-4 h-4" /> },
-        { label: "Encoding", value: "UTF-8", icon: <Shield className="w-4 h-4" /> },
-        { label: "CategoryPurpose", value: "SALA (Salary)", icon: <Euro className="w-4 h-4" /> }
-      ]
+        {
+          label: 'Standard',
+          value: 'ISO 20022 pain.001.001.03',
+          icon: <FileText className="w-4 h-4" />,
+        },
+        {
+          label: 'Encoding',
+          value: 'UTF-8',
+          icon: <Shield className="w-4 h-4" />,
+        },
+        {
+          label: 'CategoryPurpose',
+          value: 'SALA (Salary)',
+          icon: <Euro className="w-4 h-4" />,
+        },
+      ],
     },
     {
-      category: "Banking Requirements",
+      category: 'Banking Requirements',
       items: [
-        { label: "Currency", value: "EUR only", icon: <Euro className="w-4 h-4" /> },
-        { label: "IBAN", value: "Mandatory", icon: <CheckCircle className="w-4 h-4" /> },
-        { label: "BIC", value: "Optional (domestic SCT)", icon: <Building2 className="w-4 h-4" /> }
-      ]
+        {
+          label: 'Currency',
+          value: 'EUR only',
+          icon: <Euro className="w-4 h-4" />,
+        },
+        {
+          label: 'IBAN',
+          value: 'Mandatory',
+          icon: <CheckCircle className="w-4 h-4" />,
+        },
+        {
+          label: 'BIC',
+          value: 'Optional (domestic SCT)',
+          icon: <Building2 className="w-4 h-4" />,
+        },
+      ],
     },
     {
-      category: "Processing Rules",
+      category: 'Processing Rules',
       items: [
-        { label: "Remittance Info", value: "Up to 140 characters", icon: <FileText className="w-4 h-4" /> },
-        { label: "Booking", value: "Separate debits per employee", icon: <CheckCircle className="w-4 h-4" /> },
-        { label: "Cut-offs", value: "Per-bank early afternoon", icon: <Clock className="w-4 h-4" /> }
-      ]
-    }
+        {
+          label: 'Remittance Info',
+          value: 'Up to 140 characters',
+          icon: <FileText className="w-4 h-4" />,
+        },
+        {
+          label: 'Booking',
+          value: 'Separate debits per employee',
+          icon: <CheckCircle className="w-4 h-4" />,
+        },
+        {
+          label: 'Cut-offs',
+          value: 'Per-bank early afternoon',
+          icon: <Clock className="w-4 h-4" />,
+        },
+      ],
+    },
   ];
 
   const bankProfiles = [
-    { 
-      name: "Alpha Bank", 
-      key: "alpha",
-      bic: "AGEAGRAA", 
-      cutoff: "14:00", 
-      painVersions: ["pain.001.001.03", "pain.001.001.09"],
-      statusReporting: ["pain.002.001.03", "pain.002.001.10"],
-      reconciliation: ["camt.054"],
-      features: ["IBAN only", "Separate debit entries", "140 char remittance"],
-      status: "recommended"
+    {
+      name: 'Alpha Bank',
+      key: 'alpha',
+      bic: 'AGEAGRAA',
+      cutoff: '14:00',
+      painVersions: ['pain.001.001.03', 'pain.001.001.09'],
+      statusReporting: ['pain.002.001.03', 'pain.002.001.10'],
+      reconciliation: ['camt.054'],
+      features: ['IBAN only', 'Separate debit entries', '140 char remittance'],
+      status: 'recommended',
     },
-    { 
-      name: "National Bank of Greece", 
-      key: "nbg",
-      bic: "ETHNGRAA", 
-      cutoff: "14:00", 
-      painVersions: ["pain.001.001.03", "pain.001.001.09"],
-      statusReporting: ["pain.002.001.03"],
-      reconciliation: ["camt.054"],
-      features: ["Bulk file management", "SEPA Instant (SCT Inst)", "Off-cycle support"],
-      status: "recommended"
+    {
+      name: 'National Bank of Greece',
+      key: 'nbg',
+      bic: 'ETHNGRAA',
+      cutoff: '14:00',
+      painVersions: ['pain.001.001.03', 'pain.001.001.09'],
+      statusReporting: ['pain.002.001.03'],
+      reconciliation: ['camt.054'],
+      features: [
+        'Bulk file management',
+        'SEPA Instant (SCT Inst)',
+        'Off-cycle support',
+      ],
+      status: 'recommended',
     },
-    { 
-      name: "Piraeus Bank", 
-      key: "piraeus",
-      bic: "PIRBGRAA", 
-      cutoff: "13:30", 
-      painVersions: ["pain.001.001.03"],
-      statusReporting: ["pain.002.001.03 (e-PPS)"],
-      reconciliation: ["camt.054"],
-      features: ["e-PPS Mass Payments", "Host-to-host encryption", "Early cut-off"],
-      status: "enhanced"
+    {
+      name: 'Piraeus Bank',
+      key: 'piraeus',
+      bic: 'PIRBGRAA',
+      cutoff: '13:30',
+      painVersions: ['pain.001.001.03'],
+      statusReporting: ['pain.002.001.03 (e-PPS)'],
+      reconciliation: ['camt.054'],
+      features: [
+        'e-PPS Mass Payments',
+        'Host-to-host encryption',
+        'Early cut-off',
+      ],
+      status: 'enhanced',
     },
-    { 
-      name: "Eurobank", 
-      key: "eurobank",
-      bic: "ERBKGRAA", 
-      cutoff: "15:00", 
-      painVersions: ["pain.001.001.03"],
-      statusReporting: ["pain.002.001.03"],
-      reconciliation: ["camt.054"],
-      features: ["Corporate XML Guide", "Bulk payroll SCT", "Bulk SCT support"],
-      status: "active"
-    }
+    {
+      name: 'Eurobank',
+      key: 'eurobank',
+      bic: 'ERBKGRAA',
+      cutoff: '15:00',
+      painVersions: ['pain.001.001.03'],
+      statusReporting: ['pain.002.001.03'],
+      reconciliation: ['camt.054'],
+      features: ['Corporate XML Guide', 'Bulk payroll SCT', 'Bulk SCT support'],
+      status: 'active',
+    },
   ];
 
   const reconciliationFeatures = [
     {
-      type: "pain.002",
-      description: "Customer Payment Status Report",
-      purpose: "Track payment status updates (ACCP, ACSC, ACSP, RJCT)",
-      icon: <CheckCircle className="w-4 h-4 text-green-600" />
+      type: 'pain.002',
+      description: 'Customer Payment Status Report',
+      purpose: 'Track payment status updates (ACCP, ACSC, ACSP, RJCT)',
+      icon: <CheckCircle className="w-4 h-4 text-green-600" />,
     },
     {
-      type: "camt.054",
-      description: "Bank-to-Customer Debit Credit Notification",
-      purpose: "Payment confirmation and reconciliation records",
-      icon: <Building2 className="w-4 h-4 text-blue-600" />
-    }
+      type: 'camt.054',
+      description: 'Bank-to-Customer Debit Credit Notification',
+      purpose: 'Payment confirmation and reconciliation records',
+      icon: <Building2 className="w-4 h-4 text-blue-600" />,
+    },
   ];
 
   return (
@@ -139,7 +190,8 @@ export default function SepaPayments() {
             SEPA Payments
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Greek Payroll SEPA File Generation with Addendum B Bank Format Compliance
+            Greek Payroll SEPA File Generation with Addendum B Bank Format
+            Compliance
           </p>
         </div>
 
@@ -151,19 +203,22 @@ export default function SepaPayments() {
               Generate SEPA Payroll File
             </CardTitle>
             <CardDescription>
-              Create ISO 20022 pain.001 Customer Credit Transfer files for salary payments
+              Create ISO 20022 pain.001 Customer Credit Transfer files for
+              salary payments
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="font-medium">Ready to generate payroll SEPA file</p>
+                  <p className="font-medium">
+                    Ready to generate payroll SEPA file
+                  </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Includes all active employees with valid IBANs
                   </p>
                 </div>
-                <Button 
+                <Button
                   onClick={handleGenerateSEPA}
                   disabled={isGenerating}
                   className="flex items-center gap-2"
@@ -181,12 +236,14 @@ export default function SepaPayments() {
                   )}
                 </Button>
               </div>
-              
+
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-gray-600 dark:text-gray-400">Bank Profile:</span>
-                <select 
+                <span className="text-gray-600 dark:text-gray-400">
+                  Bank Profile:
+                </span>
+                <select
                   value={selectedBank}
-                  onChange={(e) => setSelectedBank(e.target.value)}
+                  onChange={e => setSelectedBank(e.target.value)}
                   className="border rounded px-2 py-1 text-sm bg-white dark:bg-gray-800"
                 >
                   <option value="alpha">Alpha Bank (Recommended)</option>
@@ -211,7 +268,10 @@ export default function SepaPayments() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {spec.items.map((item, itemIndex) => (
-                  <div key={itemIndex} className="flex items-center justify-between">
+                  <div
+                    key={itemIndex}
+                    className="flex items-center justify-between"
+                  >
                     <div className="flex items-center gap-2">
                       {item.icon}
                       <span className="text-sm font-medium">{item.label}</span>
@@ -243,26 +303,37 @@ export default function SepaPayments() {
                 <div key={index} className="border rounded-lg p-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium">{bank.name}</h4>
-                    <Badge 
-                      variant={bank.status === "recommended" ? "default" : 
-                              bank.status === "enhanced" ? "default" : "secondary"}
+                    <Badge
+                      variant={
+                        bank.status === 'recommended'
+                          ? 'default'
+                          : bank.status === 'enhanced'
+                            ? 'default'
+                            : 'secondary'
+                      }
                       className="text-xs"
                     >
                       {bank.status}
                     </Badge>
                   </div>
-                  
+
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">BIC:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        BIC:
+                      </span>
                       <span className="font-mono">{bank.bic}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Cut-off:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Cut-off:
+                      </span>
                       <span className="font-medium">{bank.cutoff}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-gray-600 dark:text-gray-400">Profile Key:</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Profile Key:
+                      </span>
                       <span className="font-mono text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                         {bank.key}
                       </span>
@@ -278,7 +349,11 @@ export default function SepaPayments() {
                       </h5>
                       <div className="flex flex-wrap gap-1">
                         {bank.painVersions.map((version, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
+                          <Badge
+                            key={idx}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {version}
                           </Badge>
                         ))}
@@ -291,7 +366,11 @@ export default function SepaPayments() {
                       </h5>
                       <div className="flex flex-wrap gap-1">
                         {bank.statusReporting.map((status, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
+                          <Badge
+                            key={idx}
+                            variant="outline"
+                            className="text-xs"
+                          >
                             {status}
                           </Badge>
                         ))}
@@ -337,7 +416,9 @@ export default function SepaPayments() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-medium">{feature.type}</h4>
-                      <Badge variant="outline" className="text-xs">ISO 20022</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        ISO 20022
+                      </Badge>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                       {feature.description}
@@ -347,7 +428,9 @@ export default function SepaPayments() {
                     </p>
                   </div>
                 </div>
-                {index < reconciliationFeatures.length - 1 && <Separator className="mt-4" />}
+                {index < reconciliationFeatures.length - 1 && (
+                  <Separator className="mt-4" />
+                )}
               </div>
             ))}
           </CardContent>
@@ -426,15 +509,21 @@ export default function SepaPayments() {
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">pain.002.001.03 status reporting</span>
+                      <span className="text-sm">
+                        pain.002.001.03 status reporting
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">Batch credit transfer mode</span>
+                      <span className="text-sm">
+                        Batch credit transfer mode
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">13:30 cut-off for same-day processing</span>
+                      <span className="text-sm">
+                        13:30 cut-off for same-day processing
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -445,15 +534,21 @@ export default function SepaPayments() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-purple-600" />
-                      <span className="text-sm">Optional host-to-host encryption</span>
+                      <span className="text-sm">
+                        Optional host-to-host encryption
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-purple-600" />
-                      <span className="text-sm">AES-256-GCM encryption standard</span>
+                      <span className="text-sm">
+                        AES-256-GCM encryption standard
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Shield className="w-4 h-4 text-purple-600" />
-                      <span className="text-sm">Secure key exchange protocol</span>
+                      <span className="text-sm">
+                        Secure key exchange protocol
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-blue-600" />
@@ -463,16 +558,18 @@ export default function SepaPayments() {
                 </div>
               </div>
             </div>
-            
+
             <Separator className="my-4" />
-            
+
             <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg">
               <h5 className="font-medium mb-2">Integration Notes</h5>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Piraeus Bank's e-PPS Mass Payments system provides enhanced processing capabilities 
-                for high-volume payroll operations. The optional host-to-host encryption ensures 
-                maximum security for sensitive payroll data transmission. Sample schemas and 
-                integration guides are available through Piraeus Bank's developer portal.
+                Piraeus Bank's e-PPS Mass Payments system provides enhanced
+                processing capabilities for high-volume payroll operations. The
+                optional host-to-host encryption ensures maximum security for
+                sensitive payroll data transmission. Sample schemas and
+                integration guides are available through Piraeus Bank's
+                developer portal.
               </p>
             </div>
           </CardContent>
@@ -486,30 +583,41 @@ export default function SepaPayments() {
               Eurobank Corporate XML Guide
             </CardTitle>
             <CardDescription>
-              Comprehensive support for pain.001.001.03 payroll and bulk SCT with corporate XML specifications
+              Comprehensive support for pain.001.001.03 payroll and bulk SCT
+              with corporate XML specifications
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium mb-2">Bulk Payroll SCT Features</h4>
+                  <h4 className="font-medium mb-2">
+                    Bulk Payroll SCT Features
+                  </h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">Corporate XML Guide v2.1 compliance</span>
+                      <span className="text-sm">
+                        Corporate XML Guide v2.1 compliance
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">pain.001.001.03 for bulk payroll</span>
+                      <span className="text-sm">
+                        pain.001.001.03 for bulk payroll
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">pain.002.001.03 status reporting</span>
+                      <span className="text-sm">
+                        pain.002.001.03 status reporting
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">15:00 cut-off for same-day processing</span>
+                      <span className="text-sm">
+                        15:00 cut-off for same-day processing
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -528,25 +636,31 @@ export default function SepaPayments() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm">Corporate XML specifications</span>
+                      <span className="text-sm">
+                        Corporate XML specifications
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm">Extended processing window</span>
+                      <span className="text-sm">
+                        Extended processing window
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <Separator className="my-4" />
-            
+
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
               <h5 className="font-medium mb-2">Corporate XML Guide</h5>
               <p className="text-sm text-blue-700 dark:text-blue-300">
-                Eurobank's Corporate XML Guide provides comprehensive specifications for payroll and bulk SCT 
-                processing. The extended 15:00 cut-off time allows for flexible payroll processing schedules, 
-                while maintaining full compliance with ISO 20022 standards and Greek banking regulations.
+                Eurobank's Corporate XML Guide provides comprehensive
+                specifications for payroll and bulk SCT processing. The extended
+                15:00 cut-off time allows for flexible payroll processing
+                schedules, while maintaining full compliance with ISO 20022
+                standards and Greek banking regulations.
               </p>
             </div>
           </CardContent>
@@ -560,7 +674,8 @@ export default function SepaPayments() {
               NBG Bulk File Management & SEPA Instant
             </CardTitle>
             <CardDescription>
-              Advanced bulk file management over ISO 20022 with SEPA Instant support for urgent off-cycle corrections
+              Advanced bulk file management over ISO 20022 with SEPA Instant
+              support for urgent off-cycle corrections
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -575,11 +690,15 @@ export default function SepaPayments() {
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">pain.001.001.03/.09 support</span>
+                      <span className="text-sm">
+                        pain.001.001.03/.09 support
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">pain.002.001.03 status reporting</span>
+                      <span className="text-sm">
+                        pain.002.001.03 status reporting
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
@@ -594,7 +713,9 @@ export default function SepaPayments() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-orange-600" />
-                      <span className="text-sm">Off-cycle urgent corrections</span>
+                      <span className="text-sm">
+                        Off-cycle urgent corrections
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-orange-600" />
@@ -606,21 +727,25 @@ export default function SepaPayments() {
                     </div>
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-orange-600" />
-                      <span className="text-sm">Recommended for corrections</span>
+                      <span className="text-sm">
+                        Recommended for corrections
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <Separator className="my-4" />
-            
+
             <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
               <h5 className="font-medium mb-2">Off-Cycle Processing</h5>
               <p className="text-sm text-purple-700 dark:text-purple-300">
-                NBG's SEPA Instant (SCT Inst) capability is particularly recommended for urgent payroll corrections 
-                and off-cycle payments. This real-time processing ensures immediate credit to employee accounts, 
-                perfect for handling urgent salary adjustments or bonus payments outside regular payroll cycles.
+                NBG's SEPA Instant (SCT Inst) capability is particularly
+                recommended for urgent payroll corrections and off-cycle
+                payments. This real-time processing ensures immediate credit to
+                employee accounts, perfect for handling urgent salary
+                adjustments or bonus payments outside regular payroll cycles.
               </p>
             </div>
           </CardContent>

@@ -1,6 +1,6 @@
 /**
  * PayrollSync Core Payroll Library
- * 
+ *
  * Centralized Greek payroll rules, calculations, and services
  * following Greek labor law and EFKA compliance requirements.
  */
@@ -24,11 +24,11 @@ export type {
   EfkaContribution,
   BonusCalculation,
   OvertimeCalculation,
-  PayrollResult
+  PayrollResult,
 } from './calculators/payroll-calculator';
 
 export type {
   ValidationResult,
   ComplianceCheck,
-  EligibilityCheck
+  EligibilityCheck,
 } from './calculators/payroll-validator';

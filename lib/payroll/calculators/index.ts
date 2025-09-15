@@ -1,6 +1,6 @@
 /**
  * Payroll Calculators Module
- * 
+ *
  * Core calculation and validation logic for Greek payroll
  */
 

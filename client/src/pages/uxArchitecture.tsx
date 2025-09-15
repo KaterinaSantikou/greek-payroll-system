@@ -1,33 +1,45 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Zap, 
-  Target, 
-  Sparkles, 
-  Smartphone, 
-  Shield, 
-  Clock, 
-  Eye, 
-  Palette, 
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Zap,
+  Target,
+  Sparkles,
+  Smartphone,
+  Shield,
+  Clock,
+  Eye,
+  Palette,
   Navigation,
   CheckCircle,
   ArrowRight,
   Users,
   Gauge,
-  Heart
-} from "lucide-react";
+  Heart,
+} from 'lucide-react';
 
 interface RoadmapItem {
   id: string;
   title: string;
   description: string;
   priority: 'critical' | 'high' | 'medium';
-  timeline: '2025 Q1' | '2025 Q2' | '2025 Q3' | '2025 Q4' | '2026 Q1' | '2026 Q2';
+  timeline:
+    | '2025 Q1'
+    | '2025 Q2'
+    | '2025 Q3'
+    | '2025 Q4'
+    | '2026 Q1'
+    | '2026 Q2';
   status: 'planning' | 'in-progress' | 'completed';
   category: 'speed' | 'guidance' | 'design' | 'mobile' | 'compliance';
   impact: string;
@@ -36,34 +48,39 @@ interface RoadmapItem {
 const guidingPrinciples = [
   {
     icon: <Zap className="w-6 h-6 text-yellow-500" />,
-    title: "90-second payroll run",
-    description: "No clutter, no hidden steps",
-    details: "Streamlined workflow that completes full payroll processing in under 90 seconds with zero cognitive overhead"
+    title: '90-second payroll run',
+    description: 'No clutter, no hidden steps',
+    details:
+      'Streamlined workflow that completes full payroll processing in under 90 seconds with zero cognitive overhead',
   },
   {
     icon: <Target className="w-6 h-6 text-blue-500" />,
-    title: "Contextual guidance",
+    title: 'Contextual guidance',
     description: "Users never wonder 'what do I click next?'",
-    details: "Intelligent UI that anticipates user needs and provides clear next steps at every interaction point"
+    details:
+      'Intelligent UI that anticipates user needs and provides clear next steps at every interaction point',
   },
   {
     icon: <Sparkles className="w-6 h-6 text-purple-500" />,
-    title: "Beautiful by default",
-    description: "Modern typography, whitespace, iconography",
-    details: "Aesthetic excellence that matches global design standards while maintaining functional clarity"
+    title: 'Beautiful by default',
+    description: 'Modern typography, whitespace, iconography',
+    details:
+      'Aesthetic excellence that matches global design standards while maintaining functional clarity',
   },
   {
     icon: <Gauge className="w-6 h-6 text-green-500" />,
-    title: "Speed",
-    description: "Snappy transitions, instant search, mobile parity",
-    details: "Sub-100ms interactions with seamless cross-platform performance optimization"
+    title: 'Speed',
+    description: 'Snappy transitions, instant search, mobile parity',
+    details:
+      'Sub-100ms interactions with seamless cross-platform performance optimization',
   },
   {
     icon: <Shield className="w-6 h-6 text-red-500" />,
-    title: "Trust through transparency",
-    description: "Compliance warnings are clear, visual, not buried",
-    details: "Critical compliance information surfaced prominently with actionable guidance and visual hierarchy"
-  }
+    title: 'Trust through transparency',
+    description: 'Compliance warnings are clear, visual, not buried',
+    details:
+      'Critical compliance information surfaced prominently with actionable guidance and visual hierarchy',
+  },
 ];
 
 const roadmapItems: RoadmapItem[] = [
@@ -71,12 +88,14 @@ const roadmapItems: RoadmapItem[] = [
   {
     id: 'speed-core',
     title: 'Lightning Payroll Engine',
-    description: 'Sub-90-second full payroll processing with real-time feedback',
+    description:
+      'Sub-90-second full payroll processing with real-time feedback',
     priority: 'critical',
     timeline: '2025 Q1',
     status: 'in-progress',
     category: 'speed',
-    impact: 'Reduces payroll processing time from 30+ minutes to under 90 seconds'
+    impact:
+      'Reduces payroll processing time from 30+ minutes to under 90 seconds',
   },
   {
     id: 'guidance-contextual',
@@ -86,17 +105,18 @@ const roadmapItems: RoadmapItem[] = [
     timeline: '2025 Q1',
     status: 'planning',
     category: 'guidance',
-    impact: 'Eliminates user confusion and reduces training time by 75%'
+    impact: 'Eliminates user confusion and reduces training time by 75%',
   },
   {
     id: 'design-foundation',
     title: 'Design System 2.0',
-    description: 'Comprehensive design language with Greek compliance aesthetics',
+    description:
+      'Comprehensive design language with Greek compliance aesthetics',
     priority: 'high',
     timeline: '2025 Q1',
     status: 'planning',
     category: 'design',
-    impact: 'Establishes visual consistency and premium feel across platform'
+    impact: 'Establishes visual consistency and premium feel across platform',
   },
 
   // 2025 Q2 - Mobile & Interaction Excellence
@@ -108,7 +128,7 @@ const roadmapItems: RoadmapItem[] = [
     timeline: '2025 Q2',
     status: 'planning',
     category: 'mobile',
-    impact: 'Enables on-the-go payroll management for hotel managers'
+    impact: 'Enables on-the-go payroll management for hotel managers',
   },
   {
     id: 'speed-search',
@@ -118,7 +138,7 @@ const roadmapItems: RoadmapItem[] = [
     timeline: '2025 Q2',
     status: 'planning',
     category: 'speed',
-    impact: 'Reduces information discovery time from minutes to seconds'
+    impact: 'Reduces information discovery time from minutes to seconds',
   },
   {
     id: 'compliance-visual',
@@ -128,7 +148,7 @@ const roadmapItems: RoadmapItem[] = [
     timeline: '2025 Q2',
     status: 'planning',
     category: 'compliance',
-    impact: 'Prevents compliance violations through proactive visual alerts'
+    impact: 'Prevents compliance violations through proactive visual alerts',
   },
 
   // 2025 Q3 - Advanced UX & Automation
@@ -140,7 +160,7 @@ const roadmapItems: RoadmapItem[] = [
     timeline: '2025 Q3',
     status: 'planning',
     category: 'guidance',
-    impact: 'Personalizes experience and reduces clicks by 40%'
+    impact: 'Personalizes experience and reduces clicks by 40%',
   },
   {
     id: 'design-animations',
@@ -150,7 +170,7 @@ const roadmapItems: RoadmapItem[] = [
     timeline: '2025 Q3',
     status: 'planning',
     category: 'design',
-    impact: 'Enhances perceived performance and user satisfaction'
+    impact: 'Enhances perceived performance and user satisfaction',
   },
   {
     id: 'speed-caching',
@@ -160,7 +180,7 @@ const roadmapItems: RoadmapItem[] = [
     timeline: '2025 Q3',
     status: 'planning',
     category: 'speed',
-    impact: 'Achieves instant page loads and zero-latency interactions'
+    impact: 'Achieves instant page loads and zero-latency interactions',
   },
 
   // 2025 Q4 - AI & Predictive UX
@@ -172,7 +192,7 @@ const roadmapItems: RoadmapItem[] = [
     timeline: '2025 Q4',
     status: 'planning',
     category: 'guidance',
-    impact: 'Enables natural conversation-based payroll management'
+    impact: 'Enables natural conversation-based payroll management',
   },
   {
     id: 'compliance-predictive',
@@ -182,7 +202,7 @@ const roadmapItems: RoadmapItem[] = [
     timeline: '2025 Q4',
     status: 'planning',
     category: 'compliance',
-    impact: 'Prevents compliance issues before they occur'
+    impact: 'Prevents compliance issues before they occur',
   },
 
   // 2026 Q1-Q2 - Next-Gen Experience
@@ -194,7 +214,7 @@ const roadmapItems: RoadmapItem[] = [
     timeline: '2026 Q1',
     status: 'planning',
     category: 'design',
-    impact: 'Ensures platform accessibility for all users'
+    impact: 'Ensures platform accessibility for all users',
   },
   {
     id: 'mobile-ar',
@@ -204,8 +224,8 @@ const roadmapItems: RoadmapItem[] = [
     timeline: '2026 Q2',
     status: 'planning',
     category: 'mobile',
-    impact: 'Revolutionary shift management experience for hospitality'
-  }
+    impact: 'Revolutionary shift management experience for hospitality',
+  },
 ];
 
 export default function UXArchitecture() {
@@ -218,7 +238,11 @@ export default function UXArchitecture() {
     { key: 'guidance', name: 'Guidance', icon: <Target className="w-4 h-4" /> },
     { key: 'design', name: 'Design', icon: <Palette className="w-4 h-4" /> },
     { key: 'mobile', name: 'Mobile', icon: <Smartphone className="w-4 h-4" /> },
-    { key: 'compliance', name: 'Compliance', icon: <Shield className="w-4 h-4" /> }
+    {
+      key: 'compliance',
+      name: 'Compliance',
+      icon: <Shield className="w-4 h-4" />,
+    },
   ];
 
   const timelines = [
@@ -228,42 +252,57 @@ export default function UXArchitecture() {
     { key: '2025 Q3', name: '2025 Q3' },
     { key: '2025 Q4', name: '2025 Q4' },
     { key: '2026 Q1', name: '2026 Q1' },
-    { key: '2026 Q2', name: '2026 Q2' }
+    { key: '2026 Q2', name: '2026 Q2' },
   ];
 
-  const filteredItems = roadmapItems.filter(item => 
-    (selectedCategory === 'all' || item.category === selectedCategory) &&
-    (selectedTimeline === 'all' || item.timeline === selectedTimeline)
+  const filteredItems = roadmapItems.filter(
+    item =>
+      (selectedCategory === 'all' || item.category === selectedCategory) &&
+      (selectedTimeline === 'all' || item.timeline === selectedTimeline)
   );
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
-      case 'in-progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
+      case 'completed':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
+      case 'in-progress':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'critical': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100';
-      case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100';
-      default: return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100';
+      case 'critical':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100';
+      case 'high':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100';
+      default:
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100';
     }
   };
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'speed': return <Zap className="w-4 h-4" />;
-      case 'guidance': return <Target className="w-4 h-4" />;
-      case 'design': return <Palette className="w-4 h-4" />;
-      case 'mobile': return <Smartphone className="w-4 h-4" />;
-      case 'compliance': return <Shield className="w-4 h-4" />;
-      default: return <Eye className="w-4 h-4" />;
+      case 'speed':
+        return <Zap className="w-4 h-4" />;
+      case 'guidance':
+        return <Target className="w-4 h-4" />;
+      case 'design':
+        return <Palette className="w-4 h-4" />;
+      case 'mobile':
+        return <Smartphone className="w-4 h-4" />;
+      case 'compliance':
+        return <Shield className="w-4 h-4" />;
+      default:
+        return <Eye className="w-4 h-4" />;
     }
   };
 
-  const completedItems = roadmapItems.filter(item => item.status === 'completed').length;
+  const completedItems = roadmapItems.filter(
+    item => item.status === 'completed'
+  ).length;
   const progressPercentage = (completedItems / roadmapItems.length) * 100;
 
   return (
@@ -272,7 +311,9 @@ export default function UXArchitecture() {
         <Navigation className="w-8 h-8 text-indigo-600" />
         <div>
           <h1 className="text-4xl font-bold">Payroll System UI/UX Roadmap</h1>
-          <p className="text-xl text-muted-foreground">2025–2026 Strategic Design Evolution</p>
+          <p className="text-xl text-muted-foreground">
+            2025–2026 Strategic Design Evolution
+          </p>
         </div>
       </div>
 
@@ -290,15 +331,20 @@ export default function UXArchitecture() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {guidingPrinciples.map((principle, index) => (
-              <div key={index} className="p-6 border rounded-lg hover:shadow-lg transition-shadow">
+              <div
+                key={index}
+                className="p-6 border rounded-lg hover:shadow-lg transition-shadow"
+              >
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    {principle.icon}
-                  </div>
+                  <div className="flex-shrink-0">{principle.icon}</div>
                   <div className="space-y-2">
                     <h3 className="font-semibold text-lg">{principle.title}</h3>
-                    <p className="text-sm text-muted-foreground font-medium">{principle.description}</p>
-                    <p className="text-xs text-muted-foreground">{principle.details}</p>
+                    <p className="text-sm text-muted-foreground font-medium">
+                      {principle.description}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {principle.details}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -341,17 +387,23 @@ export default function UXArchitecture() {
           <Card>
             <CardHeader>
               <CardTitle>Filter Roadmap</CardTitle>
-              <CardDescription>Focus on specific categories and timelines</CardDescription>
+              <CardDescription>
+                Focus on specific categories and timelines
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <label className="text-sm font-medium">Category</label>
                   <div className="flex flex-wrap gap-2">
-                    {categories.map((category) => (
+                    {categories.map(category => (
                       <Button
                         key={category.key}
-                        variant={selectedCategory === category.key ? "default" : "outline"}
+                        variant={
+                          selectedCategory === category.key
+                            ? 'default'
+                            : 'outline'
+                        }
                         size="sm"
                         onClick={() => setSelectedCategory(category.key)}
                         className="flex items-center gap-1"
@@ -365,10 +417,14 @@ export default function UXArchitecture() {
                 <div className="space-y-3">
                   <label className="text-sm font-medium">Timeline</label>
                   <div className="flex flex-wrap gap-2">
-                    {timelines.map((timeline) => (
+                    {timelines.map(timeline => (
                       <Button
                         key={timeline.key}
-                        variant={selectedTimeline === timeline.key ? "default" : "outline"}
+                        variant={
+                          selectedTimeline === timeline.key
+                            ? 'default'
+                            : 'outline'
+                        }
                         size="sm"
                         onClick={() => setSelectedTimeline(timeline.key)}
                       >
@@ -383,7 +439,7 @@ export default function UXArchitecture() {
 
           {/* Roadmap Items */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredItems.map((item) => (
+            {filteredItems.map(item => (
               <Card key={item.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
@@ -391,7 +447,9 @@ export default function UXArchitecture() {
                       {getCategoryIcon(item.category)}
                       <div>
                         <CardTitle className="text-lg">{item.title}</CardTitle>
-                        <CardDescription className="mt-1">{item.description}</CardDescription>
+                        <CardDescription className="mt-1">
+                          {item.description}
+                        </CardDescription>
                       </div>
                     </div>
                     <div className="flex flex-col gap-2">
@@ -412,7 +470,9 @@ export default function UXArchitecture() {
                     </div>
                     <div className="space-y-2">
                       <span className="text-sm font-medium">Impact</span>
-                      <p className="text-sm text-muted-foreground">{item.impact}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {item.impact}
+                      </p>
                     </div>
                     {item.status === 'completed' && (
                       <div className="flex items-center gap-2 text-green-600">
@@ -431,25 +491,31 @@ export default function UXArchitecture() {
           <Card>
             <CardHeader>
               <CardTitle>Development Timeline</CardTitle>
-              <CardDescription>Chronological view of UX evolution</CardDescription>
+              <CardDescription>
+                Chronological view of UX evolution
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-8">
-                {timelines.slice(1).map((timeline) => {
-                  const timelineItems = roadmapItems.filter(item => item.timeline === timeline.key);
+                {timelines.slice(1).map(timeline => {
+                  const timelineItems = roadmapItems.filter(
+                    item => item.timeline === timeline.key
+                  );
                   if (timelineItems.length === 0) return null;
 
                   return (
                     <div key={timeline.key} className="space-y-4">
                       <div className="flex items-center gap-3">
                         <Clock className="w-5 h-5 text-blue-600" />
-                        <h3 className="text-xl font-semibold">{timeline.name}</h3>
+                        <h3 className="text-xl font-semibold">
+                          {timeline.name}
+                        </h3>
                         <Badge variant="outline">
                           {timelineItems.length} items
                         </Badge>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-8">
-                        {timelineItems.map((item) => (
+                        {timelineItems.map(item => (
                           <div key={item.id} className="p-4 border rounded-lg">
                             <div className="flex items-center gap-2 mb-2">
                               {getCategoryIcon(item.category)}
@@ -458,7 +524,9 @@ export default function UXArchitecture() {
                                 {item.status}
                               </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground">{item.description}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {item.description}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -481,9 +549,12 @@ export default function UXArchitecture() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-3xl font-bold">90s</div>
-                <div className="text-sm text-muted-foreground">Target payroll completion time</div>
+                <div className="text-sm text-muted-foreground">
+                  Target payroll completion time
+                </div>
                 <div className="text-sm">
-                  <strong>Current:</strong> 8-12 minutes<br />
+                  <strong>Current:</strong> 8-12 minutes
+                  <br />
                   <strong>Improvement:</strong> 95% reduction
                 </div>
               </CardContent>
@@ -498,9 +569,12 @@ export default function UXArchitecture() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-3xl font-bold">75%</div>
-                <div className="text-sm text-muted-foreground">Training time reduction</div>
+                <div className="text-sm text-muted-foreground">
+                  Training time reduction
+                </div>
                 <div className="text-sm">
-                  <strong>Target:</strong> Zero cognitive overhead<br />
+                  <strong>Target:</strong> Zero cognitive overhead
+                  <br />
                   <strong>Method:</strong> Contextual guidance
                 </div>
               </CardContent>
@@ -515,9 +589,12 @@ export default function UXArchitecture() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-3xl font-bold">100%</div>
-                <div className="text-sm text-muted-foreground">Proactive compliance coverage</div>
+                <div className="text-sm text-muted-foreground">
+                  Proactive compliance coverage
+                </div>
                 <div className="text-sm">
-                  <strong>Target:</strong> Zero compliance surprises<br />
+                  <strong>Target:</strong> Zero compliance surprises
+                  <br />
                   <strong>Method:</strong> Visual transparency
                 </div>
               </CardContent>
@@ -527,8 +604,9 @@ export default function UXArchitecture() {
           <Alert>
             <Target className="h-4 w-4" />
             <AlertDescription>
-              <strong>Success Definition:</strong> When hotel managers can complete full payroll processing 
-              in under 90 seconds without consulting documentation, training materials, or asking for help.
+              <strong>Success Definition:</strong> When hotel managers can
+              complete full payroll processing in under 90 seconds without
+              consulting documentation, training materials, or asking for help.
             </AlertDescription>
           </Alert>
         </TabsContent>

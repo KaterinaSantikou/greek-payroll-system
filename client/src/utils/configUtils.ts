@@ -1,6 +1,6 @@
 /**
  * Client Configuration Utilities
- * 
+ *
  * Safely fetches server configuration that's appropriate for client use.
  * No sensitive server-only data is ever exposed to the client.
  */
@@ -34,39 +34,38 @@ const CONFIG_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
  */
 export async function fetchClientConfig(): Promise<ClientConfig> {
   const now = Date.now();
-  
+
   // Return cached config if still valid
-  if (cachedConfig && (now - configFetchTime) < CONFIG_CACHE_TTL) {
+  if (cachedConfig && now - configFetchTime < CONFIG_CACHE_TTL) {
     return cachedConfig;
   }
-  
+
   try {
     const response = await fetch('/api/config', {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     const data: ConfigResponse = await response.json();
-    
+
     if (!data.success) {
       throw new Error(data.message || 'Failed to fetch configuration');
     }
-    
+
     // Cache the successful response
     cachedConfig = data.config;
     configFetchTime = now;
-    
+
     return data.config;
-    
   } catch (error) {
     console.error('Failed to fetch client config:', error);
-    
+
     // Return fallback configuration if server request fails
     const fallbackConfig: ClientConfig = {
       NODE_ENV: 'development',
@@ -78,7 +77,7 @@ export async function fetchClientConfig(): Promise<ClientConfig> {
       IS_DEVELOPMENT: true,
       HAS_OBJECT_STORAGE: false,
     };
-    
+
     return fallbackConfig;
   }
 }
@@ -94,7 +93,10 @@ export async function getConfigValue<K extends keyof ClientConfig>(
     const config = await fetchClientConfig();
     return config[key] ?? fallback;
   } catch (error) {
-    console.warn(`Failed to get config value '${key}', using fallback:`, fallback);
+    console.warn(
+      `Failed to get config value '${key}', using fallback:`,
+      fallback
+    );
     return fallback;
   }
 }
@@ -105,7 +107,7 @@ export async function getConfigValue<K extends keyof ClientConfig>(
 export async function isFeatureEnabled(feature: string): Promise<boolean> {
   try {
     const config = await fetchClientConfig();
-    
+
     switch (feature.toLowerCase()) {
       case 'oncall':
         return config.ENABLE_ONCALL === true;
@@ -158,18 +160,18 @@ export function useClientConfig() {
   const [config, setConfig] = React.useState<ClientConfig | null>(cachedConfig);
   const [loading, setLoading] = React.useState(!cachedConfig);
   const [error, setError] = React.useState<string | null>(null);
-  
+
   React.useEffect(() => {
     let mounted = true;
-    
+
     fetchClientConfig()
-      .then((fetchedConfig) => {
+      .then(fetchedConfig => {
         if (mounted) {
           setConfig(fetchedConfig);
           setError(null);
         }
       })
-      .catch((err) => {
+      .catch(err => {
         if (mounted) {
           setError(err instanceof Error ? err.message : 'Unknown error');
         }
@@ -179,12 +181,12 @@ export function useClientConfig() {
           setLoading(false);
         }
       });
-    
+
     return () => {
       mounted = false;
     };
   }, []);
-  
+
   return { config, loading, error };
 }
 

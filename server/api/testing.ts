@@ -10,15 +10,16 @@ import { SecurityService } from '../services/SecurityService';
 import { WatermarkingService } from '../services/WatermarkingService';
 
 export function registerTestingRoutes(app: Express) {
-  
   // Test APD preparation & approval workflow
   app.post('/api/test/apd-flow', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
       const { clientTenantId, partnerFirmId } = req.body;
-      
+
       if (!clientTenantId || !partnerFirmId) {
-        return res.status(400).json({ error: 'Missing clientTenantId or partnerFirmId' });
+        return res
+          .status(400)
+          .json({ error: 'Missing clientTenantId or partnerFirmId' });
       }
 
       // Step 1: Create APD preparation request
@@ -72,9 +73,11 @@ export function registerTestingRoutes(app: Express) {
     try {
       const userId = req.user?.claims?.sub;
       const { clientTenantId, partnerFirmId, dateRange } = req.body;
-      
+
       if (!clientTenantId || !partnerFirmId) {
-        return res.status(400).json({ error: 'Missing clientTenantId or partnerFirmId' });
+        return res
+          .status(400)
+          .json({ error: 'Missing clientTenantId or partnerFirmId' });
       }
 
       // Generate watermark for test pack
@@ -98,9 +101,9 @@ export function registerTestingRoutes(app: Express) {
         ],
         watermark,
         tenantId: clientTenantId,
-        dateRange: dateRange || { 
-          startDate: '2024-01-01', 
-          endDate: '2024-12-31' 
+        dateRange: dateRange || {
+          startDate: '2024-01-01',
+          endDate: '2024-12-31',
         },
       });
 
@@ -144,58 +147,71 @@ export function registerTestingRoutes(app: Express) {
   });
 
   // Test maker-checker identity validation
-  app.post('/api/test/maker-checker-validation', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      const { makerId, checkerId } = req.body;
+  app.post(
+    '/api/test/maker-checker-validation',
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const userId = req.user?.claims?.sub;
+        const { makerId, checkerId } = req.body;
 
-      const validation = {
-        valid: (makerId || userId) !== (checkerId || userId),
-        violation: (makerId || userId) === (checkerId || userId) ? 'Same identity cannot be both maker and checker' : undefined,
-      };
+        const validation = {
+          valid: (makerId || userId) !== (checkerId || userId),
+          violation:
+            (makerId || userId) === (checkerId || userId)
+              ? 'Same identity cannot be both maker and checker'
+              : undefined,
+        };
 
-      res.json({
-        success: true,
-        validation,
-        testScenarios: [
-          { makerId: 'user-1', checkerId: 'user-1', expected: 'FAIL' },
-          { makerId: 'user-1', checkerId: 'user-2', expected: 'PASS' },
-        ],
-      });
-    } catch (error) {
-      console.error('Error testing maker-checker validation:', error);
-      res.status(500).json({ error: 'Failed to test maker-checker validation' });
+        res.json({
+          success: true,
+          validation,
+          testScenarios: [
+            { makerId: 'user-1', checkerId: 'user-1', expected: 'FAIL' },
+            { makerId: 'user-1', checkerId: 'user-2', expected: 'PASS' },
+          ],
+        });
+      } catch (error) {
+        console.error('Error testing maker-checker validation:', error);
+        res
+          .status(500)
+          .json({ error: 'Failed to test maker-checker validation' });
+      }
     }
-  });
+  );
 
   // Test consent revocation (instant token invalidation)
-  app.post('/api/test/consent-revocation', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      const { clientTenantId, partnerFirmId } = req.body;
-      
-      // Simulate consent revocation (in real scenario, client would call this)
-      const revocationResult = {
-        success: true,
-        revokedTokens: 3, // Mock data
-        instantRevocation: true,
-      };
+  app.post(
+    '/api/test/consent-revocation',
+    isAuthenticated,
+    async (req: any, res) => {
+      try {
+        const userId = req.user?.claims?.sub;
+        const { clientTenantId, partnerFirmId } = req.body;
 
-      console.log('Consent revocation test:', {
-        partnerFirmId,
-        clientTenantId,
-        userId,
-        revokedTokens: revocationResult.revokedTokens,
-      });
+        // Simulate consent revocation (in real scenario, client would call this)
+        const revocationResult = {
+          success: true,
+          revokedTokens: 3, // Mock data
+          instantRevocation: true,
+        };
 
-      res.json({
-        success: true,
-        message: 'Consent revocation test completed',
-        testData: revocationResult,
-      });
-    } catch (error) {
-      console.error('Error testing consent revocation:', error);
-      res.status(500).json({ error: 'Failed to test consent revocation' });
+        console.log('Consent revocation test:', {
+          partnerFirmId,
+          clientTenantId,
+          userId,
+          revokedTokens: revocationResult.revokedTokens,
+        });
+
+        res.json({
+          success: true,
+          message: 'Consent revocation test completed',
+          testData: revocationResult,
+        });
+      } catch (error) {
+        console.error('Error testing consent revocation:', error);
+        res.status(500).json({ error: 'Failed to test consent revocation' });
+      }
     }
-  });
+  );
 }

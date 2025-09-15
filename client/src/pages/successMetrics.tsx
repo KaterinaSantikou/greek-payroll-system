@@ -1,20 +1,30 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Target, 
-  TrendingUp, 
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Target,
+  TrendingUp,
   TrendingDown,
-  AlertTriangle, 
-  CheckCircle, 
-  Clock, 
+  AlertTriangle,
+  CheckCircle,
+  Clock,
   Shield,
   Calendar as CalendarIcon,
   Download,
@@ -23,14 +33,14 @@ import {
   Users,
   FileCheck,
   Zap,
-  Activity
-} from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { useAuth } from "@/hooks/useAuth";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
-import { cn } from "@/lib/utils";
+  Activity,
+} from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { isUnauthorizedError } from '@/lib/authUtils';
+import { useAuth } from '@/hooks/useAuth';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface SuccessMetric {
   id: string;
@@ -81,28 +91,44 @@ export default function SuccessMetricsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isAuthenticated, isLoading } = useAuth();
-  const [selectedProperty, setSelectedProperty] = useState<string>("all");
+  const [selectedProperty, setSelectedProperty] = useState<string>('all');
   const [dateRange, setDateRange] = useState({
     from: subDays(new Date(), 30),
     to: new Date(),
   });
 
   // Success Metrics Summary Query
-  const { data: metricsSummary, isLoading: summaryLoading } = useQuery<MetricsSummary>({
-    queryKey: ["/api/success-metrics/summary", selectedProperty === "all" ? undefined : selectedProperty],
-    enabled: isAuthenticated,
-    refetchInterval: 300000, // Refresh every 5 minutes
-  });
+  const { data: metricsSummary, isLoading: summaryLoading } =
+    useQuery<MetricsSummary>({
+      queryKey: [
+        '/api/success-metrics/summary',
+        selectedProperty === 'all' ? undefined : selectedProperty,
+      ],
+      enabled: isAuthenticated,
+      refetchInterval: 300000, // Refresh every 5 minutes
+    });
 
   // Success Metrics Query
-  const { data: metricsData, isLoading: metricsLoading } = useQuery<SuccessMetric[]>({
-    queryKey: ["/api/success-metrics", selectedProperty, dateRange.from?.toISOString(), dateRange.to?.toISOString()],
+  const { data: metricsData, isLoading: metricsLoading } = useQuery<
+    SuccessMetric[]
+  >({
+    queryKey: [
+      '/api/success-metrics',
+      selectedProperty,
+      dateRange.from?.toISOString(),
+      dateRange.to?.toISOString(),
+    ],
     enabled: isAuthenticated && !!dateRange.from && !!dateRange.to,
   });
 
   // Alerts Query
-  const { data: alertsData, isLoading: alertsLoading } = useQuery<SuccessMetricAlert[]>({
-    queryKey: ["/api/success-metrics/alerts", selectedProperty === "all" ? undefined : selectedProperty],
+  const { data: alertsData, isLoading: alertsLoading } = useQuery<
+    SuccessMetricAlert[]
+  >({
+    queryKey: [
+      '/api/success-metrics/alerts',
+      selectedProperty === 'all' ? undefined : selectedProperty,
+    ],
     enabled: isAuthenticated,
     refetchInterval: 60000, // Refresh every minute for alerts
   });
@@ -110,18 +136,19 @@ export default function SuccessMetricsPage() {
   // Generate Demo Data Mutation
   const generateDemoMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("/api/success-metrics/generate-demo", {
-        method: "POST",
+      await apiRequest('/api/success-metrics/generate-demo', {
+        method: 'POST',
       });
     },
     onSuccess: () => {
       toast({
-        title: "Demo Data Generated",
-        description: "Success metrics demo data has been generated successfully.",
+        title: 'Demo Data Generated',
+        description:
+          'Success metrics demo data has been generated successfully.',
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/success-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/success-metrics'] });
     },
-    onError: (error) => {
+    onError: error => {
       // if (isUnauthorizedError(error)) {
       //   toast({
       //     title: "Unauthorized",
@@ -134,9 +161,9 @@ export default function SuccessMetricsPage() {
       //   return;
       // }
       toast({
-        title: "Error",
-        description: "Failed to generate demo data. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to generate demo data. Please try again.',
+        variant: 'destructive',
       });
     },
   });
@@ -145,17 +172,17 @@ export default function SuccessMetricsPage() {
   const resolveAlertMutation = useMutation({
     mutationFn: async (alertId: string) => {
       await apiRequest(`/api/success-metrics/alerts/${alertId}/resolve`, {
-        method: "PATCH",
+        method: 'PATCH',
       });
     },
     onSuccess: () => {
       toast({
-        title: "Alert Resolved",
-        description: "The alert has been marked as resolved.",
+        title: 'Alert Resolved',
+        description: 'The alert has been marked as resolved.',
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/success-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/success-metrics'] });
     },
-    onError: (error) => {
+    onError: error => {
       // if (isUnauthorizedError(error)) {
       //   toast({
       //     title: "Unauthorized",
@@ -168,9 +195,9 @@ export default function SuccessMetricsPage() {
       //   return;
       // }
       toast({
-        title: "Error",
-        description: "Failed to resolve alert. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to resolve alert. Please try again.',
+        variant: 'destructive',
       });
     },
   });
@@ -198,17 +225,25 @@ export default function SuccessMetricsPage() {
     );
   }
 
-  const getMetricStatus = (value: number, threshold: number, reverse = false) => {
+  const getMetricStatus = (
+    value: number,
+    threshold: number,
+    reverse = false
+  ) => {
     const isGood = reverse ? value <= threshold : value >= threshold;
     return {
       status: isGood ? 'good' : 'warning',
       color: isGood ? 'text-green-600' : 'text-red-600',
-      bgColor: isGood ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+      bgColor: isGood
+        ? 'bg-green-50 border-green-200'
+        : 'bg-red-50 border-red-200',
     };
   };
 
   const getAlertLevelColor = (level: string) => {
-    return level === 'critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800';
+    return level === 'critical'
+      ? 'bg-red-100 text-red-800'
+      : 'bg-yellow-100 text-yellow-800';
   };
 
   const getComplianceScoreColor = (score: number) => {
@@ -227,7 +262,8 @@ export default function SuccessMetricsPage() {
               Success Metrics Dashboard
             </h1>
             <p className="text-muted-foreground mt-2">
-              Monitor key performance indicators: ERGANI ≥99%, exceptions &lt;1%, geo-verification ≥95%, audit packs &lt;5min
+              Monitor key performance indicators: ERGANI ≥99%, exceptions
+              &lt;1%, geo-verification ≥95%, audit packs &lt;5min
             </p>
           </div>
           <div className="flex gap-2">
@@ -244,7 +280,11 @@ export default function SuccessMetricsPage() {
               Generate Demo Data
             </Button>
             <Button
-              onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/success-metrics"] })}
+              onClick={() =>
+                queryClient.invalidateQueries({
+                  queryKey: ['/api/success-metrics'],
+                })
+              }
               variant="outline"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
@@ -261,19 +301,26 @@ export default function SuccessMetricsPage() {
           <CardContent className="flex gap-4">
             <div>
               <label className="text-sm font-medium">Property</label>
-              <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+              <Select
+                value={selectedProperty}
+                onValueChange={setSelectedProperty}
+              >
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Select property" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Properties</SelectItem>
-                  <SelectItem value="PRINCESS-FO">Princess Front Office</SelectItem>
-                  <SelectItem value="PRINCESS-HOUSE">Princess Housekeeping</SelectItem>
+                  <SelectItem value="PRINCESS-FO">
+                    Princess Front Office
+                  </SelectItem>
+                  <SelectItem value="PRINCESS-HOUSE">
+                    Princess Housekeeping
+                  </SelectItem>
                   <SelectItem value="PRINCESS-FB">Princess F&B</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">Date Range</label>
               <Popover>
@@ -283,11 +330,11 @@ export default function SuccessMetricsPage() {
                     {dateRange.from ? (
                       dateRange.to ? (
                         <>
-                          {format(dateRange.from, "LLL dd, y")} -{" "}
-                          {format(dateRange.to, "LLL dd, y")}
+                          {format(dateRange.from, 'LLL dd, y')} -{' '}
+                          {format(dateRange.to, 'LLL dd, y')}
                         </>
                       ) : (
-                        format(dateRange.from, "LLL dd, y")
+                        format(dateRange.from, 'LLL dd, y')
                       )
                     ) : (
                       <span>Pick a date range</span>
@@ -299,7 +346,9 @@ export default function SuccessMetricsPage() {
                     mode="range"
                     defaultMonth={dateRange.from}
                     selected={dateRange}
-                    onSelect={(range: any) => setDateRange(range || { from: undefined, to: undefined })}
+                    onSelect={(range: any) =>
+                      setDateRange(range || { from: undefined, to: undefined })
+                    }
                     numberOfMonths={2}
                   />
                 </PopoverContent>
@@ -318,28 +367,47 @@ export default function SuccessMetricsPage() {
           <TabsContent value="overview" className="space-y-6">
             {/* Key Performance Indicators */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className={cn("border-2", 
-                metricsSummary ? getMetricStatus(metricsSummary.avgErganiSubmissionRate, 99).bgColor : ""
-              )}>
+              <Card
+                className={cn(
+                  'border-2',
+                  metricsSummary
+                    ? getMetricStatus(
+                        metricsSummary.avgErganiSubmissionRate,
+                        99
+                      ).bgColor
+                    : ''
+                )}
+              >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">ERGANI Submission</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    ERGANI Submission
+                  </CardTitle>
                   <Shield className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className={cn("text-2xl font-bold", 
-                    metricsSummary ? getMetricStatus(metricsSummary.avgErganiSubmissionRate, 99).color : ""
-                  )}>
+                  <div
+                    className={cn(
+                      'text-2xl font-bold',
+                      metricsSummary
+                        ? getMetricStatus(
+                            metricsSummary.avgErganiSubmissionRate,
+                            99
+                          ).color
+                        : ''
+                    )}
+                  >
                     {summaryLoading ? (
                       <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
                     ) : metricsSummary ? (
                       `${metricsSummary.avgErganiSubmissionRate.toFixed(1)}%`
                     ) : (
-                      "N/A"
+                      'N/A'
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Target: ≥ 99% <br />
-                    {metricsSummary && metricsSummary.avgErganiSubmissionRate >= 99 ? (
+                    {metricsSummary &&
+                    metricsSummary.avgErganiSubmissionRate >= 99 ? (
                       <span className="text-green-600">✓ Target met</span>
                     ) : (
                       <span className="text-red-600">⚠ Below target</span>
@@ -348,28 +416,49 @@ export default function SuccessMetricsPage() {
                 </CardContent>
               </Card>
 
-              <Card className={cn("border-2", 
-                metricsSummary ? getMetricStatus(metricsSummary.avgUnresolvedExceptionRate, 1, true).bgColor : ""
-              )}>
+              <Card
+                className={cn(
+                  'border-2',
+                  metricsSummary
+                    ? getMetricStatus(
+                        metricsSummary.avgUnresolvedExceptionRate,
+                        1,
+                        true
+                      ).bgColor
+                    : ''
+                )}
+              >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Unresolved Exceptions</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Unresolved Exceptions
+                  </CardTitle>
                   <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className={cn("text-2xl font-bold", 
-                    metricsSummary ? getMetricStatus(metricsSummary.avgUnresolvedExceptionRate, 1, true).color : ""
-                  )}>
+                  <div
+                    className={cn(
+                      'text-2xl font-bold',
+                      metricsSummary
+                        ? getMetricStatus(
+                            metricsSummary.avgUnresolvedExceptionRate,
+                            1,
+                            true
+                          ).color
+                        : ''
+                    )}
+                  >
                     {summaryLoading ? (
                       <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
                     ) : metricsSummary ? (
                       `${metricsSummary.avgUnresolvedExceptionRate.toFixed(1)}%`
                     ) : (
-                      "N/A"
+                      'N/A'
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Target: &lt; 1% <br />
-                    {metricsSummary && metricsSummary.avgUnresolvedExceptionRate < 1 ? (
+                    {metricsSummary &&
+                    metricsSummary.avgUnresolvedExceptionRate < 1 ? (
                       <span className="text-green-600">✓ Target met</span>
                     ) : (
                       <span className="text-red-600">⚠ Above target</span>
@@ -378,28 +467,45 @@ export default function SuccessMetricsPage() {
                 </CardContent>
               </Card>
 
-              <Card className={cn("border-2", 
-                metricsSummary ? getMetricStatus(metricsSummary.avgGeoVerificationRate, 95).bgColor : ""
-              )}>
+              <Card
+                className={cn(
+                  'border-2',
+                  metricsSummary
+                    ? getMetricStatus(metricsSummary.avgGeoVerificationRate, 95)
+                        .bgColor
+                    : ''
+                )}
+              >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Geo-Verified Punches</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Geo-Verified Punches
+                  </CardTitle>
                   <MapPin className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className={cn("text-2xl font-bold", 
-                    metricsSummary ? getMetricStatus(metricsSummary.avgGeoVerificationRate, 95).color : ""
-                  )}>
+                  <div
+                    className={cn(
+                      'text-2xl font-bold',
+                      metricsSummary
+                        ? getMetricStatus(
+                            metricsSummary.avgGeoVerificationRate,
+                            95
+                          ).color
+                        : ''
+                    )}
+                  >
                     {summaryLoading ? (
                       <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
                     ) : metricsSummary ? (
                       `${metricsSummary.avgGeoVerificationRate.toFixed(1)}%`
                     ) : (
-                      "N/A"
+                      'N/A'
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Target: ≥ 95% <br />
-                    {metricsSummary && metricsSummary.avgGeoVerificationRate >= 95 ? (
+                    {metricsSummary &&
+                    metricsSummary.avgGeoVerificationRate >= 95 ? (
                       <span className="text-green-600">✓ Target met</span>
                     ) : (
                       <span className="text-red-600">⚠ Below target</span>
@@ -408,28 +514,49 @@ export default function SuccessMetricsPage() {
                 </CardContent>
               </Card>
 
-              <Card className={cn("border-2", 
-                metricsSummary ? getMetricStatus(metricsSummary.avgAuditPackTime, 300, true).bgColor : ""
-              )}>
+              <Card
+                className={cn(
+                  'border-2',
+                  metricsSummary
+                    ? getMetricStatus(
+                        metricsSummary.avgAuditPackTime,
+                        300,
+                        true
+                      ).bgColor
+                    : ''
+                )}
+              >
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Audit Pack Time</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Audit Pack Time
+                  </CardTitle>
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className={cn("text-2xl font-bold", 
-                    metricsSummary ? getMetricStatus(metricsSummary.avgAuditPackTime, 300, true).color : ""
-                  )}>
+                  <div
+                    className={cn(
+                      'text-2xl font-bold',
+                      metricsSummary
+                        ? getMetricStatus(
+                            metricsSummary.avgAuditPackTime,
+                            300,
+                            true
+                          ).color
+                        : ''
+                    )}
+                  >
                     {summaryLoading ? (
                       <div className="animate-pulse bg-gray-200 h-8 w-16 rounded"></div>
                     ) : metricsSummary ? (
                       `${Math.round(metricsSummary.avgAuditPackTime)}s`
                     ) : (
-                      "N/A"
+                      'N/A'
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Target: &lt; 5 minutes <br />
-                    {metricsSummary && metricsSummary.avgAuditPackTime <= 300 ? (
+                    {metricsSummary &&
+                    metricsSummary.avgAuditPackTime <= 300 ? (
                       <span className="text-green-600">✓ Target met</span>
                     ) : (
                       <span className="text-red-600">⚠ Above target</span>
@@ -452,14 +579,23 @@ export default function SuccessMetricsPage() {
                   <div className="flex-1">
                     <div className="flex justify-between text-sm mb-2">
                       <span>Compliance Score</span>
-                      <span className={cn("font-bold", 
-                        metricsSummary ? getComplianceScoreColor(metricsSummary.avgOverallScore) : ""
-                      )}>
-                        {metricsSummary ? `${metricsSummary.avgOverallScore.toFixed(1)}%` : "N/A"}
+                      <span
+                        className={cn(
+                          'font-bold',
+                          metricsSummary
+                            ? getComplianceScoreColor(
+                                metricsSummary.avgOverallScore
+                              )
+                            : ''
+                        )}
+                      >
+                        {metricsSummary
+                          ? `${metricsSummary.avgOverallScore.toFixed(1)}%`
+                          : 'N/A'}
                       </span>
                     </div>
-                    <Progress 
-                      value={metricsSummary?.avgOverallScore || 0} 
+                    <Progress
+                      value={metricsSummary?.avgOverallScore || 0}
                       className="h-3"
                     />
                     <div className="flex justify-between text-xs text-muted-foreground mt-1">
@@ -468,9 +604,11 @@ export default function SuccessMetricsPage() {
                       <span>100%</span>
                     </div>
                   </div>
-                  
+
                   <div className="text-center">
-                    <div className="text-sm text-muted-foreground">Active Alerts</div>
+                    <div className="text-sm text-muted-foreground">
+                      Active Alerts
+                    </div>
                     <div className="text-2xl font-bold text-red-600">
                       {metricsSummary?.totalActiveAlerts || 0}
                     </div>
@@ -508,51 +646,100 @@ export default function SuccessMetricsPage() {
                   </div>
                 ) : metricsData && metricsData.length > 0 ? (
                   <div className="space-y-4">
-                    {metricsData.map((metric) => (
+                    {metricsData.map(metric => (
                       <Card key={metric.id} className="p-4">
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                           <div>
                             <div className="text-sm font-medium">Property</div>
-                            <div className="text-sm text-muted-foreground">{metric.propertyId}</div>
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium">ERGANI Rate</div>
-                            <div className={cn("text-sm font-bold", 
-                              parseFloat(metric.erganiSubmissionRate) >= 99 ? "text-green-600" : "text-red-600"
-                            )}>
-                              {parseFloat(metric.erganiSubmissionRate).toFixed(1)}%
+                            <div className="text-sm text-muted-foreground">
+                              {metric.propertyId}
                             </div>
                           </div>
                           <div>
-                            <div className="text-sm font-medium">Exception Rate</div>
-                            <div className={cn("text-sm font-bold", 
-                              parseFloat(metric.unresolvedExceptionRate) <= 1 ? "text-green-600" : "text-red-600"
-                            )}>
-                              {parseFloat(metric.unresolvedExceptionRate).toFixed(1)}%
+                            <div className="text-sm font-medium">
+                              ERGANI Rate
+                            </div>
+                            <div
+                              className={cn(
+                                'text-sm font-bold',
+                                parseFloat(metric.erganiSubmissionRate) >= 99
+                                  ? 'text-green-600'
+                                  : 'text-red-600'
+                              )}
+                            >
+                              {parseFloat(metric.erganiSubmissionRate).toFixed(
+                                1
+                              )}
+                              %
                             </div>
                           </div>
                           <div>
-                            <div className="text-sm font-medium">Geo-Verification</div>
-                            <div className={cn("text-sm font-bold", 
-                              parseFloat(metric.geoVerificationRate) >= 95 ? "text-green-600" : "text-red-600"
-                            )}>
-                              {parseFloat(metric.geoVerificationRate).toFixed(1)}%
+                            <div className="text-sm font-medium">
+                              Exception Rate
+                            </div>
+                            <div
+                              className={cn(
+                                'text-sm font-bold',
+                                parseFloat(metric.unresolvedExceptionRate) <= 1
+                                  ? 'text-green-600'
+                                  : 'text-red-600'
+                              )}
+                            >
+                              {parseFloat(
+                                metric.unresolvedExceptionRate
+                              ).toFixed(1)}
+                              %
                             </div>
                           </div>
                           <div>
-                            <div className="text-sm font-medium">Audit Time</div>
-                            <div className={cn("text-sm font-bold", 
-                              metric.auditPackGenerationTime <= 300 ? "text-green-600" : "text-red-600"
-                            )}>
+                            <div className="text-sm font-medium">
+                              Geo-Verification
+                            </div>
+                            <div
+                              className={cn(
+                                'text-sm font-bold',
+                                parseFloat(metric.geoVerificationRate) >= 95
+                                  ? 'text-green-600'
+                                  : 'text-red-600'
+                              )}
+                            >
+                              {parseFloat(metric.geoVerificationRate).toFixed(
+                                1
+                              )}
+                              %
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium">
+                              Audit Time
+                            </div>
+                            <div
+                              className={cn(
+                                'text-sm font-bold',
+                                metric.auditPackGenerationTime <= 300
+                                  ? 'text-green-600'
+                                  : 'text-red-600'
+                              )}
+                            >
                               {metric.auditPackGenerationTime}s
                             </div>
                           </div>
                           <div>
-                            <div className="text-sm font-medium">Overall Score</div>
-                            <div className={cn("text-sm font-bold", 
-                              getComplianceScoreColor(parseFloat(metric.overallComplianceScore))
-                            )}>
-                              {parseFloat(metric.overallComplianceScore).toFixed(1)}%
+                            <div className="text-sm font-medium">
+                              Overall Score
+                            </div>
+                            <div
+                              className={cn(
+                                'text-sm font-bold',
+                                getComplianceScoreColor(
+                                  parseFloat(metric.overallComplianceScore)
+                                )
+                              )}
+                            >
+                              {parseFloat(
+                                metric.overallComplianceScore
+                              ).toFixed(1)}
+                              %
                             </div>
                           </div>
                         </div>
@@ -562,8 +749,12 @@ export default function SuccessMetricsPage() {
                 ) : (
                   <div className="text-center py-8">
                     <Target className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Metrics Data</h3>
-                    <p className="text-muted-foreground mb-4">Generate demo data to see success metrics</p>
+                    <h3 className="text-lg font-semibold mb-2">
+                      No Metrics Data
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Generate demo data to see success metrics
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -585,41 +776,69 @@ export default function SuccessMetricsPage() {
                   </div>
                 ) : alertsData && alertsData.length > 0 ? (
                   <div className="space-y-4">
-                    {alertsData.filter(alert => !alert.isResolved).map((alert) => (
-                      <Card key={alert.id} className="p-4 border-l-4 border-red-500">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Badge className={getAlertLevelColor(alert.alertLevel)}>
-                                {alert.alertLevel.toUpperCase()}
-                              </Badge>
-                              <Badge variant="outline">{alert.metricType.replace('_', ' ')}</Badge>
-                              <span className="text-sm text-muted-foreground">{alert.propertyId}</span>
+                    {alertsData
+                      .filter(alert => !alert.isResolved)
+                      .map(alert => (
+                        <Card
+                          key={alert.id}
+                          className="p-4 border-l-4 border-red-500"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge
+                                  className={getAlertLevelColor(
+                                    alert.alertLevel
+                                  )}
+                                >
+                                  {alert.alertLevel.toUpperCase()}
+                                </Badge>
+                                <Badge variant="outline">
+                                  {alert.metricType.replace('_', ' ')}
+                                </Badge>
+                                <span className="text-sm text-muted-foreground">
+                                  {alert.propertyId}
+                                </span>
+                              </div>
+                              <p className="text-sm">{alert.message}</p>
+                              <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                                <span>Threshold: {alert.threshold}</span>
+                                <span>
+                                  Actual:{' '}
+                                  {parseFloat(alert.actualValue).toFixed(1)}
+                                </span>
+                                <span>
+                                  Created:{' '}
+                                  {format(
+                                    new Date(alert.createdAt),
+                                    'MMM dd, HH:mm'
+                                  )}
+                                </span>
+                              </div>
                             </div>
-                            <p className="text-sm">{alert.message}</p>
-                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                              <span>Threshold: {alert.threshold}</span>
-                              <span>Actual: {parseFloat(alert.actualValue).toFixed(1)}</span>
-                              <span>Created: {format(new Date(alert.createdAt), "MMM dd, HH:mm")}</span>
-                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() =>
+                                resolveAlertMutation.mutate(alert.id)
+                              }
+                              disabled={resolveAlertMutation.isPending}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Resolve
+                            </Button>
                           </div>
-                          <Button
-                            size="sm"
-                            onClick={() => resolveAlertMutation.mutate(alert.id)}
-                            disabled={resolveAlertMutation.isPending}
-                          >
-                            <CheckCircle className="h-4 w-4 mr-1" />
-                            Resolve
-                          </Button>
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      ))}
                   </div>
                 ) : (
                   <div className="text-center py-8">
                     <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Active Alerts</h3>
-                    <p className="text-muted-foreground">All success metrics are within target thresholds</p>
+                    <h3 className="text-lg font-semibold mb-2">
+                      No Active Alerts
+                    </h3>
+                    <p className="text-muted-foreground">
+                      All success metrics are within target thresholds
+                    </p>
                   </div>
                 )}
               </CardContent>

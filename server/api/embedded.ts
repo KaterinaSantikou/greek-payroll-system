@@ -1,7 +1,7 @@
-import type { Express } from "express";
-import { db } from "../db";
-import { eq, and, desc, sql } from "drizzle-orm";
-import { 
+import type { Express } from 'express';
+import { db } from '../db';
+import { eq, and, desc, sql } from 'drizzle-orm';
+import {
   partners,
   accessTokens,
   glConnections,
@@ -21,10 +21,15 @@ import {
   insertPartnerSchema,
   insertGLConnectionSchema,
   insertGLMappingSchema,
-} from "@shared/schema";
-import { OAuth2Service, requireAuth, requireEmbedAuth, requireIdempotency } from "../auth/oauth2";
-import { GLExportService } from "../services/glExportService";
-import crypto from "crypto";
+} from '@shared/schema';
+import {
+  OAuth2Service,
+  requireAuth,
+  requireEmbedAuth,
+  requireIdempotency,
+} from '../auth/oauth2';
+import { GLExportService } from '../services/glExportService';
+import crypto from 'crypto';
 
 /**
  * Embedded Payroll + GL API Routes
@@ -44,16 +49,16 @@ export function embeddedPayrollRoutes(app: Express) {
       const { grant_type, client_id, client_secret, scope } = req.body;
 
       if (grant_type !== 'client_credentials') {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: 'unsupported_grant_type',
-          error_description: 'Only client_credentials grant type is supported'
+          error_description: 'Only client_credentials grant type is supported',
         });
       }
 
       if (!client_id || !client_secret) {
         return res.status(400).json({
           error: 'invalid_request',
-          error_description: 'client_id and client_secret are required'
+          error_description: 'client_id and client_secret are required',
         });
       }
 
@@ -69,7 +74,8 @@ export function embeddedPayrollRoutes(app: Express) {
       console.error('OAuth token error:', error);
       res.status(401).json({
         error: 'invalid_client',
-        error_description: error instanceof Error ? error.message : 'Authentication failed'
+        error_description:
+          error instanceof Error ? error.message : 'Authentication failed',
       });
     }
   });
@@ -80,14 +86,19 @@ export function embeddedPayrollRoutes(app: Express) {
    */
   app.post('/api/embedded/embed-token', requireAuth(), async (req, res) => {
     try {
-      const { employeeId, allowedRoutes, originDomain, expiresInMinutes = 10 } = req.body;
+      const {
+        employeeId,
+        allowedRoutes,
+        originDomain,
+        expiresInMinutes = 10,
+      } = req.body;
       const auth = (req as any).auth;
 
       // Validate partner has embed scope
       if (!OAuth2Service.hasScope(auth.scopes, 'embed.sessions:create')) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           error: 'insufficient_scope',
-          error_description: 'embed.sessions:create scope required'
+          error_description: 'embed.sessions:create scope required',
         });
       }
 
@@ -107,9 +118,9 @@ export function embeddedPayrollRoutes(app: Express) {
       });
     } catch (error) {
       console.error('Embed token error:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: 'server_error',
-        error_description: 'Failed to generate embed token'
+        error_description: 'Failed to generate embed token',
       });
     }
   });
@@ -122,115 +133,130 @@ export function embeddedPayrollRoutes(app: Express) {
    * Get Payroll Runs (for embedded payroll surface)
    * GET /api/embedded/payroll/runs
    */
-  app.get('/api/embedded/payroll/runs', requireAuth('payroll.runs:read'), async (req, res) => {
-    try {
-      const { limit = 50, offset = 0, status } = req.query;
-      const auth = (req as any).auth;
+  app.get(
+    '/api/embedded/payroll/runs',
+    requireAuth('payroll.runs:read'),
+    async (req, res) => {
+      try {
+        const { limit = 50, offset = 0, status } = req.query;
+        const auth = (req as any).auth;
 
-      let query = db
-        .select({
-          id: payrollRuns.id,
-          runNumber: payrollRuns.runNumber,
-          payPeriodStart: payrollRuns.payPeriodStart,
-          payPeriodEnd: payrollRuns.payPeriodEnd,
-          payDate: payrollRuns.payDate,
-          status: payrollRuns.status,
-          totalGross: payrollRuns.totalGross,
-          totalNet: payrollRuns.totalNet,
-          totalTax: payrollRuns.totalTax,
-          employeeCount: payrollRuns.employeeCount,
-          createdAt: payrollRuns.createdAt,
-        })
-        .from(payrollRuns)
-        .limit(parseInt(limit as string))
-        .offset(parseInt(offset as string))
-        .orderBy(desc(payrollRuns.createdAt));
+        let query = db
+          .select({
+            id: payrollRuns.id,
+            runNumber: payrollRuns.runNumber,
+            payPeriodStart: payrollRuns.payPeriodStart,
+            payPeriodEnd: payrollRuns.payPeriodEnd,
+            payDate: payrollRuns.payDate,
+            status: payrollRuns.status,
+            totalGross: payrollRuns.totalGross,
+            totalNet: payrollRuns.totalNet,
+            totalTax: payrollRuns.totalTax,
+            employeeCount: payrollRuns.employeeCount,
+            createdAt: payrollRuns.createdAt,
+          })
+          .from(payrollRuns)
+          .limit(parseInt(limit as string))
+          .offset(parseInt(offset as string))
+          .orderBy(desc(payrollRuns.createdAt));
 
-      if (status) {
-        query = query.where(eq(payrollRuns.status, status as string));
+        if (status) {
+          query = query.where(eq(payrollRuns.status, status as string));
+        }
+
+        const runs = await query;
+
+        res.json({
+          data: runs,
+          pagination: {
+            limit: parseInt(limit as string),
+            offset: parseInt(offset as string),
+            total: runs.length,
+          },
+        });
+      } catch (error) {
+        console.error('Get payroll runs error:', error);
+        res.status(500).json({ error: 'Failed to fetch payroll runs' });
       }
-
-      const runs = await query;
-
-      res.json({
-        data: runs,
-        pagination: {
-          limit: parseInt(limit as string),
-          offset: parseInt(offset as string),
-          total: runs.length,
-        },
-      });
-    } catch (error) {
-      console.error('Get payroll runs error:', error);
-      res.status(500).json({ error: 'Failed to fetch payroll runs' });
     }
-  });
+  );
 
   /**
    * Get Payroll Run Details
    * GET /api/embedded/payroll/runs/:runId
    */
-  app.get('/api/embedded/payroll/runs/:runId', requireAuth('payroll.runs:read'), async (req, res) => {
-    try {
-      const { runId } = req.params;
+  app.get(
+    '/api/embedded/payroll/runs/:runId',
+    requireAuth('payroll.runs:read'),
+    async (req, res) => {
+      try {
+        const { runId } = req.params;
 
-      // Get run details
-      const [run] = await db
-        .select()
-        .from(payrollRuns)
-        .where(eq(payrollRuns.id, runId));
+        // Get run details
+        const [run] = await db
+          .select()
+          .from(payrollRuns)
+          .where(eq(payrollRuns.id, runId));
 
-      if (!run) {
-        return res.status(404).json({ error: 'Payroll run not found' });
+        if (!run) {
+          return res.status(404).json({ error: 'Payroll run not found' });
+        }
+
+        // Get payroll lines for this run
+        const lines = await db
+          .select({
+            id: payrollLines.lineId,
+            employeeId: payrollLines.employeeId,
+            code: payrollLines.code,
+            description: payrollLines.description,
+            amount: payrollLines.amount,
+            hours: payrollLines.hours,
+            rate: payrollLines.rate,
+            isDeduction: payrollLines.isDeduction,
+            employeeName: employees.name,
+            employeeNumber: employees.employeeNumber,
+          })
+          .from(payrollLines)
+          .innerJoin(
+            employees,
+            eq(payrollLines.employeeId, employees.employeeId)
+          )
+          .where(eq(payrollLines.runId, runId))
+          .orderBy(employees.employeeNumber, payrollLines.code);
+
+        res.json({
+          run,
+          lines,
+          summary: {
+            totalLines: lines.length,
+            uniqueEmployees: new Set(lines.map(l => l.employeeId)).size,
+            components: Object.fromEntries(
+              Object.entries(
+                lines.reduce(
+                  (acc, line) => {
+                    const type = line.isDeduction ? 'deduction' : 'earning';
+                    acc[type] = (acc[type] || 0) + parseFloat(line.amount);
+                    return acc;
+                  },
+                  {} as Record<string, number>
+                )
+              ).map(([k, v]) => [k, v.toFixed(2)])
+            ),
+          },
+        });
+      } catch (error) {
+        console.error('Get payroll run error:', error);
+        res.status(500).json({ error: 'Failed to fetch payroll run details' });
       }
-
-      // Get payroll lines for this run
-      const lines = await db
-        .select({
-          id: payrollLines.lineId,
-          employeeId: payrollLines.employeeId,
-          code: payrollLines.code,
-          description: payrollLines.description,
-          amount: payrollLines.amount,
-          hours: payrollLines.hours,
-          rate: payrollLines.rate,
-          isDeduction: payrollLines.isDeduction,
-          employeeName: employees.name,
-          employeeNumber: employees.employeeNumber,
-        })
-        .from(payrollLines)
-        .innerJoin(employees, eq(payrollLines.employeeId, employees.employeeId))
-        .where(eq(payrollLines.runId, runId))
-        .orderBy(employees.employeeNumber, payrollLines.code);
-
-      res.json({
-        run,
-        lines,
-        summary: {
-          totalLines: lines.length,
-          uniqueEmployees: new Set(lines.map(l => l.employeeId)).size,
-          components: Object.fromEntries(
-            Object.entries(
-              lines.reduce((acc, line) => {
-                const type = line.isDeduction ? 'deduction' : 'earning';
-                acc[type] = (acc[type] || 0) + parseFloat(line.amount);
-                return acc;
-              }, {} as Record<string, number>)
-            ).map(([k, v]) => [k, v.toFixed(2)])
-          ),
-        },
-      });
-    } catch (error) {
-      console.error('Get payroll run error:', error);
-      res.status(500).json({ error: 'Failed to fetch payroll run details' });
     }
-  });
+  );
 
   /**
    * Finalize Payroll Run (requires idempotency)
    * POST /api/embedded/payroll/runs/:runId/finalize
    */
-  app.post('/api/embedded/payroll/runs/:runId/finalize', 
+  app.post(
+    '/api/embedded/payroll/runs/:runId/finalize',
     requireAuth('payroll.runs:finalize'),
     requireIdempotency(),
     async (req, res) => {
@@ -270,9 +296,9 @@ export function embeddedPayrollRoutes(app: Express) {
         }
 
         if (run.status !== 'approved') {
-          return res.status(400).json({ 
+          return res.status(400).json({
             error: 'Invalid status',
-            message: 'Payroll run must be approved before finalizing'
+            message: 'Payroll run must be approved before finalizing',
           });
         }
 
@@ -330,35 +356,40 @@ export function embeddedPayrollRoutes(app: Express) {
    * Get GL Connections
    * GET /api/embedded/gl/connections
    */
-  app.get('/api/embedded/gl/connections', requireAuth('gl.connectors:read'), async (req, res) => {
-    try {
-      const auth = (req as any).auth;
+  app.get(
+    '/api/embedded/gl/connections',
+    requireAuth('gl.connectors:read'),
+    async (req, res) => {
+      try {
+        const auth = (req as any).auth;
 
-      const connections = await db
-        .select({
-          id: glConnections.id,
-          glProvider: glConnections.glProvider,
-          connectionName: glConnections.connectionName,
-          status: glConnections.status,
-          lastSyncAt: glConnections.lastSyncAt,
-          createdAt: glConnections.createdAt,
-        })
-        .from(glConnections)
-        .where(eq(glConnections.partnerId, auth.partnerId))
-        .orderBy(desc(glConnections.createdAt));
+        const connections = await db
+          .select({
+            id: glConnections.id,
+            glProvider: glConnections.glProvider,
+            connectionName: glConnections.connectionName,
+            status: glConnections.status,
+            lastSyncAt: glConnections.lastSyncAt,
+            createdAt: glConnections.createdAt,
+          })
+          .from(glConnections)
+          .where(eq(glConnections.partnerId, auth.partnerId))
+          .orderBy(desc(glConnections.createdAt));
 
-      res.json({ data: connections });
-    } catch (error) {
-      console.error('Get GL connections error:', error);
-      res.status(500).json({ error: 'Failed to fetch GL connections' });
+        res.json({ data: connections });
+      } catch (error) {
+        console.error('Get GL connections error:', error);
+        res.status(500).json({ error: 'Failed to fetch GL connections' });
+      }
     }
-  });
+  );
 
   /**
    * Create GL Connection
    * POST /api/embedded/gl/connections
    */
-  app.post('/api/embedded/gl/connections', 
+  app.post(
+    '/api/embedded/gl/connections',
     requireAuth('gl.connectors:manage'),
     requireIdempotency(),
     async (req, res) => {
@@ -396,8 +427,9 @@ export function embeddedPayrollRoutes(app: Express) {
    * Get GL Account Mappings
    * GET /api/embedded/gl/connections/:connectionId/mappings
    */
-  app.get('/api/embedded/gl/connections/:connectionId/mappings', 
-    requireAuth('gl.mappings:read'), 
+  app.get(
+    '/api/embedded/gl/connections/:connectionId/mappings',
+    requireAuth('gl.mappings:read'),
     async (req, res) => {
       try {
         const { connectionId } = req.params;
@@ -407,10 +439,12 @@ export function embeddedPayrollRoutes(app: Express) {
         const [connection] = await db
           .select()
           .from(glConnections)
-          .where(and(
-            eq(glConnections.id, connectionId),
-            eq(glConnections.partnerId, auth.partnerId)
-          ));
+          .where(
+            and(
+              eq(glConnections.id, connectionId),
+              eq(glConnections.partnerId, auth.partnerId)
+            )
+          );
 
         if (!connection) {
           return res.status(404).json({ error: 'GL connection not found' });
@@ -429,13 +463,21 @@ export function embeddedPayrollRoutes(app: Express) {
    * Create/Update GL Account Mapping
    * PUT /api/embedded/gl/connections/:connectionId/mappings
    */
-  app.put('/api/embedded/gl/connections/:connectionId/mappings',
+  app.put(
+    '/api/embedded/gl/connections/:connectionId/mappings',
     requireAuth('gl.mappings:write'),
     requireIdempotency(),
     async (req, res) => {
       try {
         const { connectionId } = req.params;
-        const { payrollComponent, componentType, glAccountCode, glAccountName, debitAccount, creditAccount } = req.body;
+        const {
+          payrollComponent,
+          componentType,
+          glAccountCode,
+          glAccountName,
+          debitAccount,
+          creditAccount,
+        } = req.body;
         const auth = (req as any).auth;
         const idempotency = (req as any).idempotency;
 
@@ -443,10 +485,12 @@ export function embeddedPayrollRoutes(app: Express) {
         const [connection] = await db
           .select()
           .from(glConnections)
-          .where(and(
-            eq(glConnections.id, connectionId),
-            eq(glConnections.partnerId, auth.partnerId)
-          ));
+          .where(
+            and(
+              eq(glConnections.id, connectionId),
+              eq(glConnections.partnerId, auth.partnerId)
+            )
+          );
 
         if (!connection) {
           return res.status(404).json({ error: 'GL connection not found' });
@@ -481,19 +525,21 @@ export function embeddedPayrollRoutes(app: Express) {
    * Generate GL Journal for Payroll Run
    * POST /api/embedded/gl/journals
    */
-  app.post('/api/embedded/gl/journals',
+  app.post(
+    '/api/embedded/gl/journals',
     requireAuth('gl.journals:write'),
     requireIdempotency(),
     async (req, res) => {
       try {
-        const { connectionId, payrollRunId, journalDate, description } = req.body;
+        const { connectionId, payrollRunId, journalDate, description } =
+          req.body;
         const auth = (req as any).auth;
         const idempotency = (req as any).idempotency;
 
         if (!connectionId || !payrollRunId || !journalDate) {
-          return res.status(400).json({ 
+          return res.status(400).json({
             error: 'Missing required fields',
-            message: 'connectionId, payrollRunId, and journalDate are required'
+            message: 'connectionId, payrollRunId, and journalDate are required',
           });
         }
 
@@ -501,10 +547,12 @@ export function embeddedPayrollRoutes(app: Express) {
         const [connection] = await db
           .select()
           .from(glConnections)
-          .where(and(
-            eq(glConnections.id, connectionId),
-            eq(glConnections.partnerId, auth.partnerId)
-          ));
+          .where(
+            and(
+              eq(glConnections.id, connectionId),
+              eq(glConnections.partnerId, auth.partnerId)
+            )
+          );
 
         if (!connection) {
           return res.status(404).json({ error: 'GL connection not found' });
@@ -529,7 +577,7 @@ export function embeddedPayrollRoutes(app: Express) {
           partnerId: auth.partnerId,
           eventType: 'gl.journal.generated',
           resourceId: journal.id,
-          payload: JSON.stringify({ 
+          payload: JSON.stringify({
             journalId: journal.id,
             payrollRunId,
             connectionId,
@@ -539,9 +587,9 @@ export function embeddedPayrollRoutes(app: Express) {
         res.status(201).json(journal);
       } catch (error) {
         console.error('Generate GL journal error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
           error: 'Failed to generate GL journal',
-          message: error instanceof Error ? error.message : 'Unknown error'
+          message: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }
@@ -551,7 +599,8 @@ export function embeddedPayrollRoutes(app: Express) {
    * Post GL Journal
    * POST /api/embedded/gl/journals/:journalId/post
    */
-  app.post('/api/embedded/gl/journals/:journalId/post',
+  app.post(
+    '/api/embedded/gl/journals/:journalId/post',
     requireAuth('gl.journals:write'),
     requireIdempotency(),
     async (req, res) => {
@@ -564,11 +613,16 @@ export function embeddedPayrollRoutes(app: Express) {
         const [journal] = await db
           .select()
           .from(glJournals)
-          .innerJoin(glConnections, eq(glJournals.connectionId, glConnections.id))
-          .where(and(
-            eq(glJournals.id, journalId),
-            eq(glConnections.partnerId, auth.partnerId)
-          ));
+          .innerJoin(
+            glConnections,
+            eq(glJournals.connectionId, glConnections.id)
+          )
+          .where(
+            and(
+              eq(glJournals.id, journalId),
+              eq(glConnections.partnerId, auth.partnerId)
+            )
+          );
 
         if (!journal) {
           return res.status(404).json({ error: 'GL journal not found' });
@@ -588,7 +642,7 @@ export function embeddedPayrollRoutes(app: Express) {
           partnerId: auth.partnerId,
           eventType: 'gl.journal.posted',
           resourceId: journalId,
-          payload: JSON.stringify({ 
+          payload: JSON.stringify({
             journalId: postedJournal.id,
             status: postedJournal.status,
             externalId: postedJournal.externalId,
@@ -598,9 +652,9 @@ export function embeddedPayrollRoutes(app: Express) {
         res.json(postedJournal);
       } catch (error) {
         console.error('Post GL journal error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
           error: 'Failed to post GL journal',
-          message: error instanceof Error ? error.message : 'Unknown error'
+          message: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     }

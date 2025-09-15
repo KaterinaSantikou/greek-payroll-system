@@ -1,9 +1,9 @@
-import express from "express";
-import type { Request, Response } from "express";
-import { z } from "zod";
-import { CalcProvenanceService } from "../services/CalcProvenanceService";
-import { MakerCheckerService } from "../services/MakerCheckerService";
-import { DocumentTrailService } from "../services/DocumentTrailService";
+import express from 'express';
+import type { Request, Response } from 'express';
+import { z } from 'zod';
+import { CalcProvenanceService } from '../services/CalcProvenanceService';
+import { MakerCheckerService } from '../services/MakerCheckerService';
+import { DocumentTrailService } from '../services/DocumentTrailService';
 
 const router = express.Router();
 
@@ -15,7 +15,7 @@ const router = express.Router();
  * POST /generate-provenance
  * Generate immutable provenance record for a payroll calculation
  */
-router.post("/generate-provenance", async (req, res) => {
+router.post('/generate-provenance', async (req, res) => {
   try {
     const schema = z.object({
       payslipId: z.string(),
@@ -23,42 +23,50 @@ router.post("/generate-provenance", async (req, res) => {
         employeeId: z.string(),
         packId: z.string(),
         packVersion: z.string(),
-        hoursWorked: z.array(z.object({
-          date: z.string().transform(str => new Date(str)),
-          startTime: z.string(),
-          endTime: z.string(),
-          hours: z.number(),
-          shiftType: z.string().optional()
-        })),
+        hoursWorked: z.array(
+          z.object({
+            date: z.string().transform(str => new Date(str)),
+            startTime: z.string(),
+            endTime: z.string(),
+            hours: z.number(),
+            shiftType: z.string().optional(),
+          })
+        ),
         baseWage: z.number(),
         allowances: z.record(z.any()),
         premiums: z.record(z.any()),
         deductions: z.record(z.any()),
-        calculationParams: z.record(z.any())
+        calculationParams: z.record(z.any()),
       }),
       outputs: z.object({
         basePay: z.number(),
-        allowances: z.array(z.object({
-          code: z.string(),
-          amount: z.number(),
-          description: z.string()
-        })),
-        premiums: z.array(z.object({
-          code: z.string(),
-          hours: z.number().optional(),
-          rate: z.number().optional(),
-          amount: z.number(),
-          description: z.string()
-        })),
-        deductions: z.array(z.object({
-          code: z.string(),
-          amount: z.number(),
-          description: z.string()
-        })),
+        allowances: z.array(
+          z.object({
+            code: z.string(),
+            amount: z.number(),
+            description: z.string(),
+          })
+        ),
+        premiums: z.array(
+          z.object({
+            code: z.string(),
+            hours: z.number().optional(),
+            rate: z.number().optional(),
+            amount: z.number(),
+            description: z.string(),
+          })
+        ),
+        deductions: z.array(
+          z.object({
+            code: z.string(),
+            amount: z.number(),
+            description: z.string(),
+          })
+        ),
         totalGrossPay: z.number(),
         netPay: z.number(),
-        auditTrail: z.array(z.string())
-      })
+        auditTrail: z.array(z.string()),
+      }),
     });
 
     const { payslipId, inputs, outputs } = schema.parse(req.body);
@@ -73,15 +81,14 @@ router.post("/generate-provenance", async (req, res) => {
       success: true,
       data: {
         provenanceId,
-        message: "Calculation provenance generated successfully"
-      }
+        message: 'Calculation provenance generated successfully',
+      },
     });
-
   } catch (error: any) {
-    console.error("Error generating provenance:", error);
+    console.error('Error generating provenance:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to generate calculation provenance"
+      error: error.message || 'Failed to generate calculation provenance',
     });
   }
 });
@@ -90,22 +97,22 @@ router.post("/generate-provenance", async (req, res) => {
  * GET /verify-provenance/:provenanceId
  * Verify integrity of a calculation record
  */
-router.get("/verify-provenance/:provenanceId", async (req, res) => {
+router.get('/verify-provenance/:provenanceId', async (req, res) => {
   try {
     const { provenanceId } = req.params;
 
-    const verification = await CalcProvenanceService.verifyProvenance(provenanceId);
+    const verification =
+      await CalcProvenanceService.verifyProvenance(provenanceId);
 
     res.json({
       success: true,
-      data: verification
+      data: verification,
     });
-
   } catch (error: any) {
-    console.error("Error verifying provenance:", error);
+    console.error('Error verifying provenance:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to verify calculation provenance"
+      error: error.message || 'Failed to verify calculation provenance',
     });
   }
 });
@@ -114,7 +121,7 @@ router.get("/verify-provenance/:provenanceId", async (req, res) => {
  * GET /employee-calculation-history/:employeeId
  * Get calculation history for an employee
  */
-router.get("/employee-calculation-history/:employeeId", async (req, res) => {
+router.get('/employee-calculation-history/:employeeId', async (req, res) => {
   try {
     const { employeeId } = req.params;
     const limit = parseInt(req.query.limit as string) || 50;
@@ -129,15 +136,14 @@ router.get("/employee-calculation-history/:employeeId", async (req, res) => {
       data: {
         employeeId,
         calculations: history,
-        totalRecords: history.length
-      }
+        totalRecords: history.length,
+      },
     });
-
   } catch (error: any) {
-    console.error("Error getting calculation history:", error);
+    console.error('Error getting calculation history:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to retrieve calculation history"
+      error: error.message || 'Failed to retrieve calculation history',
     });
   }
 });
@@ -150,37 +156,40 @@ router.get("/employee-calculation-history/:employeeId", async (req, res) => {
  * POST /create-approval-request
  * Create a new maker-checker approval request
  */
-router.post("/create-approval-request", async (req, res) => {
+router.post('/create-approval-request', async (req, res) => {
   try {
     const schema = z.object({
-      requestType: z.enum(['pack_change', 'version_publish', 'rollout_execute']),
+      requestType: z.enum([
+        'pack_change',
+        'version_publish',
+        'rollout_execute',
+      ]),
       requestId: z.string(),
       requestData: z.any(),
       makerUserId: z.string(),
       makerRole: z.enum(['payroll_admin', 'hr_manager', 'legal']),
-      requiredApprovers: z.array(z.enum(['legal', 'payroll_admin']))
+      requiredApprovers: z.array(z.enum(['legal', 'payroll_admin'])),
     });
 
     const parsedRequest = schema.parse(req.body);
 
     const approvalId = await MakerCheckerService.createApprovalRequest({
       ...parsedRequest,
-      requestData: parsedRequest.requestData || {}
+      requestData: parsedRequest.requestData || {},
     });
 
     res.json({
       success: true,
       data: {
         approvalId,
-        message: "Approval request created - awaiting approvals"
-      }
+        message: 'Approval request created - awaiting approvals',
+      },
     });
-
   } catch (error: any) {
-    console.error("Error creating approval request:", error);
+    console.error('Error creating approval request:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to create approval request"
+      error: error.message || 'Failed to create approval request',
     });
   }
 });
@@ -189,31 +198,33 @@ router.post("/create-approval-request", async (req, res) => {
  * POST /process-approval/:approvalId
  * Process an approval or rejection
  */
-router.post("/process-approval/:approvalId", async (req, res) => {
+router.post('/process-approval/:approvalId', async (req, res) => {
   try {
     const { approvalId } = req.params;
-    
+
     const schema = z.object({
       checkerUserId: z.string(),
       checkerRole: z.enum(['legal', 'payroll_admin']),
       action: z.enum(['approve', 'reject']),
-      reason: z.string()
+      reason: z.string(),
     });
 
     const action = schema.parse(req.body);
 
-    const result = await MakerCheckerService.processApproval(approvalId, action);
+    const result = await MakerCheckerService.processApproval(
+      approvalId,
+      action
+    );
 
     res.json({
       success: true,
-      data: result
+      data: result,
     });
-
   } catch (error: any) {
-    console.error("Error processing approval:", error);
+    console.error('Error processing approval:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to process approval"
+      error: error.message || 'Failed to process approval',
     });
   }
 });
@@ -222,33 +233,33 @@ router.post("/process-approval/:approvalId", async (req, res) => {
  * GET /pending-approvals/:userRole
  * Get pending approvals for a user role
  */
-router.get("/pending-approvals/:userRole", async (req, res) => {
+router.get('/pending-approvals/:userRole', async (req, res) => {
   try {
     const userRole = req.params.userRole as 'legal' | 'payroll_admin';
-    
+
     if (!['legal', 'payroll_admin'].includes(userRole)) {
       return res.status(400).json({
         success: false,
-        error: "Invalid user role. Must be 'legal' or 'payroll_admin'"
+        error: "Invalid user role. Must be 'legal' or 'payroll_admin'",
       });
     }
 
-    const pendingApprovals = await MakerCheckerService.getPendingApprovals(userRole);
+    const pendingApprovals =
+      await MakerCheckerService.getPendingApprovals(userRole);
 
     res.json({
       success: true,
       data: {
         userRole,
         pendingApprovals,
-        count: pendingApprovals.length
-      }
+        count: pendingApprovals.length,
+      },
     });
-
   } catch (error: any) {
-    console.error("Error getting pending approvals:", error);
+    console.error('Error getting pending approvals:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to retrieve pending approvals"
+      error: error.message || 'Failed to retrieve pending approvals',
     });
   }
 });
@@ -257,28 +268,35 @@ router.get("/pending-approvals/:userRole", async (req, res) => {
  * GET /approval-history
  * Get approval history for audit purposes
  */
-router.get("/approval-history", async (req, res) => {
+router.get('/approval-history', async (req, res) => {
   try {
     const requestId = req.query.requestId as string;
-    const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined;
-    const dateTo = req.query.dateTo ? new Date(req.query.dateTo as string) : undefined;
+    const dateFrom = req.query.dateFrom
+      ? new Date(req.query.dateFrom as string)
+      : undefined;
+    const dateTo = req.query.dateTo
+      ? new Date(req.query.dateTo as string)
+      : undefined;
 
-    const history = await MakerCheckerService.getApprovalHistory(requestId, dateFrom, dateTo);
+    const history = await MakerCheckerService.getApprovalHistory(
+      requestId,
+      dateFrom,
+      dateTo
+    );
 
     res.json({
       success: true,
       data: {
         history,
         filters: { requestId, dateFrom, dateTo },
-        totalRecords: history.length
-      }
+        totalRecords: history.length,
+      },
     });
-
   } catch (error: any) {
-    console.error("Error getting approval history:", error);
+    console.error('Error getting approval history:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to retrieve approval history"
+      error: error.message || 'Failed to retrieve approval history',
     });
   }
 });
@@ -287,7 +305,7 @@ router.get("/approval-history", async (req, res) => {
  * GET /request-status/:requestId
  * Check if a request has been approved
  */
-router.get("/request-status/:requestId", async (req, res) => {
+router.get('/request-status/:requestId', async (req, res) => {
   try {
     const { requestId } = req.params;
 
@@ -295,14 +313,13 @@ router.get("/request-status/:requestId", async (req, res) => {
 
     res.json({
       success: true,
-      data: status
+      data: status,
     });
-
   } catch (error: any) {
-    console.error("Error checking request status:", error);
+    console.error('Error checking request status:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to check request status"
+      error: error.message || 'Failed to check request status',
     });
   }
 });
@@ -315,20 +332,25 @@ router.get("/request-status/:requestId", async (req, res) => {
  * POST /upload-document
  * Upload and store a document with cryptographic verification
  */
-router.post("/upload-document", async (req, res) => {
+router.post('/upload-document', async (req, res) => {
   try {
     // In production, would use multer or similar for file uploads
     // For now, expecting base64 encoded file in request body
-    
+
     const schema = z.object({
       packId: z.string(),
       packVersion: z.string(),
-      documentType: z.enum(['cba_pdf', 'encoding_diff', 'impact_report', 'legal_opinion']),
+      documentType: z.enum([
+        'cba_pdf',
+        'encoding_diff',
+        'impact_report',
+        'legal_opinion',
+      ]),
       fileName: z.string(),
       fileData: z.string(), // base64 encoded
       mimeType: z.string(),
       uploadedBy: z.string(),
-      metadata: z.any().optional()
+      metadata: z.any().optional(),
     });
 
     const upload = schema.parse(req.body);
@@ -338,22 +360,21 @@ router.post("/upload-document", async (req, res) => {
 
     const documentId = await DocumentTrailService.uploadDocument({
       ...upload,
-      fileBuffer
+      fileBuffer,
     });
 
     res.json({
       success: true,
       data: {
         documentId,
-        message: "Document uploaded and secured successfully"
-      }
+        message: 'Document uploaded and secured successfully',
+      },
     });
-
   } catch (error: any) {
-    console.error("Error uploading document:", error);
+    console.error('Error uploading document:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to upload document"
+      error: error.message || 'Failed to upload document',
     });
   }
 });
@@ -362,27 +383,29 @@ router.post("/upload-document", async (req, res) => {
  * POST /generate-encoding-diff
  * Generate and store encoding diff between CBA pack versions
  */
-router.post("/generate-encoding-diff", async (req, res) => {
+router.post('/generate-encoding-diff', async (req, res) => {
   try {
     const schema = z.object({
       packId: z.string(),
       fromVersion: z.string(),
       toVersion: z.string(),
-      changes: z.array(z.object({
-        changeType: z.enum(['add', 'modify', 'delete']),
-        section: z.string(),
-        field: z.string(),
-        oldValue: z.any().optional(),
-        newValue: z.any().optional(),
-        reason: z.string()
-      })),
+      changes: z.array(
+        z.object({
+          changeType: z.enum(['add', 'modify', 'delete']),
+          section: z.string(),
+          field: z.string(),
+          oldValue: z.any().optional(),
+          newValue: z.any().optional(),
+          reason: z.string(),
+        })
+      ),
       impactAnalysis: z.object({
         affectedEmployees: z.number(),
         costDelta: z.number(),
         effectiveDate: z.string().transform(str => new Date(str)),
-        riskLevel: z.enum(['low', 'medium', 'high'])
+        riskLevel: z.enum(['low', 'medium', 'high']),
       }),
-      generatedBy: z.string()
+      generatedBy: z.string(),
     });
 
     const diff = schema.parse(req.body);
@@ -393,15 +416,14 @@ router.post("/generate-encoding-diff", async (req, res) => {
       success: true,
       data: {
         documentId,
-        message: "Encoding diff generated and stored successfully"
-      }
+        message: 'Encoding diff generated and stored successfully',
+      },
     });
-
   } catch (error: any) {
-    console.error("Error generating encoding diff:", error);
+    console.error('Error generating encoding diff:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to generate encoding diff"
+      error: error.message || 'Failed to generate encoding diff',
     });
   }
 });
@@ -410,7 +432,7 @@ router.post("/generate-encoding-diff", async (req, res) => {
  * GET /verify-document/:documentId
  * Verify document integrity
  */
-router.get("/verify-document/:documentId", async (req, res) => {
+router.get('/verify-document/:documentId', async (req, res) => {
   try {
     const { documentId } = req.params;
 
@@ -418,14 +440,13 @@ router.get("/verify-document/:documentId", async (req, res) => {
 
     res.json({
       success: true,
-      data: verification
+      data: verification,
     });
-
   } catch (error: any) {
-    console.error("Error verifying document:", error);
+    console.error('Error verifying document:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to verify document"
+      error: error.message || 'Failed to verify document',
     });
   }
 });
@@ -434,12 +455,15 @@ router.get("/verify-document/:documentId", async (req, res) => {
  * GET /pack-documents/:packId
  * Get document history for a CBA pack
  */
-router.get("/pack-documents/:packId", async (req, res) => {
+router.get('/pack-documents/:packId', async (req, res) => {
   try {
     const { packId } = req.params;
     const documentType = req.query.type as string;
 
-    const history = await DocumentTrailService.getPackDocumentHistory(packId, documentType);
+    const history = await DocumentTrailService.getPackDocumentHistory(
+      packId,
+      documentType
+    );
 
     res.json({
       success: true,
@@ -447,15 +471,14 @@ router.get("/pack-documents/:packId", async (req, res) => {
         packId,
         documentType: documentType || 'all',
         documents: history,
-        totalDocuments: history.length
-      }
+        totalDocuments: history.length,
+      },
     });
-
   } catch (error: any) {
-    console.error("Error getting pack documents:", error);
+    console.error('Error getting pack documents:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to retrieve pack documents"
+      error: error.message || 'Failed to retrieve pack documents',
     });
   }
 });
@@ -464,49 +487,54 @@ router.get("/pack-documents/:packId", async (req, res) => {
  * GET /encoding-diff/:packId/:fromVersion/:toVersion
  * Get encoding diff between two versions
  */
-router.get("/encoding-diff/:packId/:fromVersion/:toVersion", async (req, res) => {
-  try {
-    const { packId, fromVersion, toVersion } = req.params;
+router.get(
+  '/encoding-diff/:packId/:fromVersion/:toVersion',
+  async (req, res) => {
+    try {
+      const { packId, fromVersion, toVersion } = req.params;
 
-    const diff = await DocumentTrailService.getEncodingDiff(packId, fromVersion, toVersion);
-
-    res.json({
-      success: true,
-      data: {
+      const diff = await DocumentTrailService.getEncodingDiff(
         packId,
         fromVersion,
-        toVersion,
-        ...diff
-      }
-    });
+        toVersion
+      );
 
-  } catch (error: any) {
-    console.error("Error getting encoding diff:", error);
-    res.status(400).json({
-      success: false,
-      error: error.message || "Failed to retrieve encoding diff"
-    });
+      res.json({
+        success: true,
+        data: {
+          packId,
+          fromVersion,
+          toVersion,
+          ...diff,
+        },
+      });
+    } catch (error: any) {
+      console.error('Error getting encoding diff:', error);
+      res.status(400).json({
+        success: false,
+        error: error.message || 'Failed to retrieve encoding diff',
+      });
+    }
   }
-});
+);
 
 /**
  * GET /compliance-summary
  * Get compliance summary for audit reporting
  */
-router.get("/compliance-summary", async (req, res) => {
+router.get('/compliance-summary', async (req, res) => {
   try {
     const summary = await DocumentTrailService.getComplianceSummary();
 
     res.json({
       success: true,
-      data: summary
+      data: summary,
     });
-
   } catch (error: any) {
-    console.error("Error getting compliance summary:", error);
+    console.error('Error getting compliance summary:', error);
     res.status(400).json({
       success: false,
-      error: error.message || "Failed to generate compliance summary"
+      error: error.message || 'Failed to generate compliance summary',
     });
   }
 });

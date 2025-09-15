@@ -32,7 +32,8 @@ export class XeroConnector {
    * Initialize OAuth2 flow for Xero connection
    */
   static getAuthorizationUrl(redirectUri: string, state: string): string {
-    const scopes = 'accounting.transactions accounting.contacts accounting.settings';
+    const scopes =
+      'accounting.transactions accounting.contacts accounting.settings';
     const params = new URLSearchParams({
       response_type: 'code',
       client_id: this.CLIENT_ID!,
@@ -59,7 +60,7 @@ export class XeroConnector {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${Buffer.from(`${this.CLIENT_ID}:${this.CLIENT_SECRET}`).toString('base64')}`,
+        Authorization: `Basic ${Buffer.from(`${this.CLIENT_ID}:${this.CLIENT_SECRET}`).toString('base64')}`,
       },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
@@ -88,7 +89,7 @@ export class XeroConnector {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': `Basic ${Buffer.from(`${this.CLIENT_ID}:${this.CLIENT_SECRET}`).toString('base64')}`,
+        Authorization: `Basic ${Buffer.from(`${this.CLIENT_ID}:${this.CLIENT_SECRET}`).toString('base64')}`,
       },
       body: new URLSearchParams({
         grant_type: 'refresh_token',
@@ -106,14 +107,16 @@ export class XeroConnector {
   /**
    * Get Xero tenants for authenticated user
    */
-  static async getTenants(accessToken: string): Promise<Array<{
-    tenantId: string;
-    tenantName: string;
-    tenantType: string;
-  }>> {
+  static async getTenants(accessToken: string): Promise<
+    Array<{
+      tenantId: string;
+      tenantName: string;
+      tenantType: string;
+    }>
+  > {
     const response = await fetch('https://api.xero.com/connections', {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
     });
 
@@ -140,23 +143,25 @@ export class XeroConnector {
     }
 
     const xeroPayload = {
-      ManualJournals: [{
-        Narration: journalEntry.description,
-        Reference: journalEntry.reference,
-        Date: journalEntry.date,
-        JournalLines: journalEntry.lines.map(line => ({
-          AccountCode: line.accountCode,
-          Description: line.description,
-          LineAmount: Math.abs(line.grossAmount),
-          AccountType: line.grossAmount >= 0 ? 'DEBIT' : 'CREDIT',
-        })),
-      }],
+      ManualJournals: [
+        {
+          Narration: journalEntry.description,
+          Reference: journalEntry.reference,
+          Date: journalEntry.date,
+          JournalLines: journalEntry.lines.map(line => ({
+            AccountCode: line.accountCode,
+            Description: line.description,
+            LineAmount: Math.abs(line.grossAmount),
+            AccountType: line.grossAmount >= 0 ? 'DEBIT' : 'CREDIT',
+          })),
+        },
+      ],
     };
 
     const response = await fetch(`${this.XERO_API_BASE}/ManualJournals`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${connection.accessToken}`,
+        Authorization: `Bearer ${connection.accessToken}`,
         'Xero-tenant-id': connection.tenantId,
         'Content-Type': 'application/json',
       },
@@ -165,7 +170,9 @@ export class XeroConnector {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(`Xero journal creation failed: ${JSON.stringify(errorData)}`);
+      throw new Error(
+        `Xero journal creation failed: ${JSON.stringify(errorData)}`
+      );
     }
 
     const result = await response.json();
@@ -177,14 +184,16 @@ export class XeroConnector {
   /**
    * Get chart of accounts from Xero
    */
-  static async getChartOfAccounts(connection: XeroConnection): Promise<Array<{
-    accountCode: string;
-    accountName: string;
-    accountType: string;
-  }>> {
+  static async getChartOfAccounts(connection: XeroConnection): Promise<
+    Array<{
+      accountCode: string;
+      accountName: string;
+      accountType: string;
+    }>
+  > {
     const response = await fetch(`${this.XERO_API_BASE}/Accounts`, {
       headers: {
-        'Authorization': `Bearer ${connection.accessToken}`,
+        Authorization: `Bearer ${connection.accessToken}`,
         'Xero-tenant-id': connection.tenantId,
       },
     });
@@ -212,7 +221,7 @@ export class XeroConnector {
     try {
       const response = await fetch(`${this.XERO_API_BASE}/Organisation`, {
         headers: {
-          'Authorization': `Bearer ${connection.accessToken}`,
+          Authorization: `Bearer ${connection.accessToken}`,
           'Xero-tenant-id': connection.tenantId,
         },
       });

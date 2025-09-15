@@ -23,13 +23,13 @@ router.post('/roles', isAuthenticated, async (req, res) => {
       requiredCertifications,
       escalationLevel,
       maxConcurrentIncidents,
-      responseTimeMinutes
+      responseTimeMinutes,
     } = req.body;
 
     if (!roleName) {
       return res.status(400).json({
         success: false,
-        error: 'roleName is required'
+        error: 'roleName is required',
       });
     }
 
@@ -41,18 +41,18 @@ router.post('/roles', isAuthenticated, async (req, res) => {
       requiredCertifications: requiredCertifications || [],
       escalationLevel: escalationLevel || 1,
       maxConcurrentIncidents: maxConcurrentIncidents || 3,
-      responseTimeMinutes: responseTimeMinutes || 15
+      responseTimeMinutes: responseTimeMinutes || 15,
     });
 
     res.json({
       success: true,
-      role
+      role,
     });
   } catch (error) {
     console.error('Error creating role:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create incident response role'
+      error: 'Failed to create incident response role',
     });
   }
 });
@@ -68,13 +68,13 @@ router.post('/teams', isAuthenticated, async (req, res) => {
       teamType,
       teamLead,
       escalationTargets,
-      oncallSettings
+      oncallSettings,
     } = req.body;
 
     if (!teamName || !teamType) {
       return res.status(400).json({
         success: false,
-        error: 'teamName and teamType are required'
+        error: 'teamName and teamType are required',
       });
     }
 
@@ -84,18 +84,18 @@ router.post('/teams', isAuthenticated, async (req, res) => {
       teamType,
       teamLead,
       escalationTargets: escalationTargets || [],
-      oncallSettings
+      oncallSettings,
     });
 
     res.json({
       success: true,
-      team
+      team,
     });
   } catch (error) {
     console.error('Error creating team:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create incident response team'
+      error: 'Failed to create incident response team',
     });
   }
 });
@@ -113,13 +113,14 @@ router.post('/assignments', isAuthenticated, async (req, res) => {
       personEmail,
       personPhone,
       isPrimary,
-      isOncall
+      isOncall,
     } = req.body;
 
     if (!teamId || !roleId || !personId || !personName || !personEmail) {
       return res.status(400).json({
         success: false,
-        error: 'teamId, roleId, personId, personName, and personEmail are required'
+        error:
+          'teamId, roleId, personId, personName, and personEmail are required',
       });
     }
 
@@ -131,18 +132,18 @@ router.post('/assignments', isAuthenticated, async (req, res) => {
       personEmail,
       personPhone,
       isPrimary: isPrimary || false,
-      isOncall: isOncall || false
+      isOncall: isOncall || false,
     });
 
     res.json({
       success: true,
-      assignment
+      assignment,
     });
   } catch (error) {
     console.error('Error creating role assignment:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to assign role to team'
+      error: 'Failed to assign role to team',
     });
   }
 });
@@ -152,17 +153,13 @@ router.post('/assignments', isAuthenticated, async (req, res) => {
  */
 router.post('/escalation-matrix', isAuthenticated, async (req, res) => {
   try {
-    const {
-      incidentType,
-      severity,
-      initialResponse,
-      escalationLevels
-    } = req.body;
+    const { incidentType, severity, initialResponse, escalationLevels } =
+      req.body;
 
     if (!incidentType || !severity || !initialResponse) {
       return res.status(400).json({
         success: false,
-        error: 'incidentType, severity, and initialResponse are required'
+        error: 'incidentType, severity, and initialResponse are required',
       });
     }
 
@@ -170,18 +167,18 @@ router.post('/escalation-matrix', isAuthenticated, async (req, res) => {
       incidentType,
       severity,
       initialResponse,
-      escalationLevels: escalationLevels || []
+      escalationLevels: escalationLevels || [],
     });
 
     res.json({
       success: true,
-      matrix
+      matrix,
     });
   } catch (error) {
     console.error('Error creating escalation matrix:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create escalation matrix'
+      error: 'Failed to create escalation matrix',
     });
   }
 });
@@ -191,20 +188,15 @@ router.post('/escalation-matrix', isAuthenticated, async (req, res) => {
  */
 router.post('/assignment-request', isAuthenticated, async (req, res) => {
   try {
-    const {
-      incidentId,
-      severity,
-      category,
-      requiredRoles,
-      assignmentReason
-    } = req.body;
-    
+    const { incidentId, severity, category, requiredRoles, assignmentReason } =
+      req.body;
+
     const assignedBy = (req.user as any)?.claims?.sub || 'system';
 
     if (!incidentId || !severity || !category) {
       return res.status(400).json({
         success: false,
-        error: 'incidentId, severity, and category are required'
+        error: 'incidentId, severity, and category are required',
       });
     }
 
@@ -214,18 +206,18 @@ router.post('/assignment-request', isAuthenticated, async (req, res) => {
       category,
       requiredRoles: requiredRoles || [],
       assignmentReason: assignmentReason || 'standard_assignment',
-      assignedBy
+      assignedBy,
     });
 
     res.json({
       success: true,
-      assignment
+      assignment,
     });
   } catch (error) {
     console.error('Error getting incident assignment:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get incident response assignment'
+      error: 'Failed to get incident response assignment',
     });
   }
 });
@@ -236,16 +228,16 @@ router.post('/assignment-request', isAuthenticated, async (req, res) => {
 router.get('/roles', isAuthenticated, async (req, res) => {
   try {
     const roles = await ownershipService.getAllRoles();
-    
+
     res.json({
       success: true,
-      roles
+      roles,
     });
   } catch (error) {
     console.error('Error getting roles:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get incident response roles'
+      error: 'Failed to get incident response roles',
     });
   }
 });
@@ -256,16 +248,16 @@ router.get('/roles', isAuthenticated, async (req, res) => {
 router.get('/teams', isAuthenticated, async (req, res) => {
   try {
     const teams = await ownershipService.getAllTeams();
-    
+
     res.json({
       success: true,
-      teams
+      teams,
     });
   } catch (error) {
     console.error('Error getting teams:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get incident response teams'
+      error: 'Failed to get incident response teams',
     });
   }
 });
@@ -276,18 +268,18 @@ router.get('/teams', isAuthenticated, async (req, res) => {
 router.get('/teams/:teamId/assignments', isAuthenticated, async (req, res) => {
   try {
     const { teamId } = req.params;
-    
+
     const assignments = await ownershipService.getTeamAssignments(teamId);
-    
+
     res.json({
       success: true,
-      ...assignments
+      ...assignments,
     });
   } catch (error) {
     console.error('Error getting team assignments:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get team assignments'
+      error: 'Failed to get team assignments',
     });
   }
 });
@@ -298,34 +290,30 @@ router.get('/teams/:teamId/assignments', isAuthenticated, async (req, res) => {
 router.put('/teams/:teamId/oncall', isAuthenticated, async (req, res) => {
   try {
     const { teamId } = req.params;
-    const {
-      currentOncall,
-      backupOncall,
-      rotationDate
-    } = req.body;
+    const { currentOncall, backupOncall, rotationDate } = req.body;
 
     if (!currentOncall || !backupOncall) {
       return res.status(400).json({
         success: false,
-        error: 'currentOncall and backupOncall are required'
+        error: 'currentOncall and backupOncall are required',
       });
     }
 
     await ownershipService.updateOncallRotation(teamId, {
       currentOncall,
       backupOncall,
-      rotationDate: rotationDate ? new Date(rotationDate) : new Date()
+      rotationDate: rotationDate ? new Date(rotationDate) : new Date(),
     });
 
     res.json({
       success: true,
-      message: 'On-call rotation updated successfully'
+      message: 'On-call rotation updated successfully',
     });
   } catch (error) {
     console.error('Error updating on-call rotation:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to update on-call rotation'
+      error: 'Failed to update on-call rotation',
     });
   }
 });
@@ -336,16 +324,16 @@ router.put('/teams/:teamId/oncall', isAuthenticated, async (req, res) => {
 router.get('/statistics', isAuthenticated, async (req, res) => {
   try {
     const statistics = await ownershipService.getResponseStatistics();
-    
+
     res.json({
       success: true,
-      statistics
+      statistics,
     });
   } catch (error) {
     console.error('Error getting response statistics:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to get response statistics'
+      error: 'Failed to get response statistics',
     });
   }
 });
@@ -356,16 +344,16 @@ router.get('/statistics', isAuthenticated, async (req, res) => {
 router.post('/initialize-defaults', isAuthenticated, async (req, res) => {
   try {
     await ownershipService.createDefaultResponseStructure();
-    
+
     res.json({
       success: true,
-      message: 'Default incident response structure created'
+      message: 'Default incident response structure created',
     });
   } catch (error) {
     console.error('Error creating default structure:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create default response structure'
+      error: 'Failed to create default response structure',
     });
   }
 });

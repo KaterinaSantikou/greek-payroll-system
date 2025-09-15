@@ -6,20 +6,20 @@
 import { Router } from 'express';
 import { isAuthenticated } from '../replitAuth';
 import { GovernmentSystemMonitoringService } from '../services/GovernmentSystemMonitoringService';
-import { 
-  insertGovernmentSystemSchema, 
+import {
+  insertGovernmentSystemSchema,
   insertSystemAlertSubscriptionSchema,
-  insertSystemOutageSchema 
+  insertSystemOutageSchema,
 } from '@shared/schema';
 import { fromZodError } from 'zod-validation-error';
 import { db } from '../db';
-import { 
-  governmentSystems, 
-  systemStatusChecks, 
-  systemOutages, 
+import {
+  governmentSystems,
+  systemStatusChecks,
+  systemOutages,
   systemAlertSubscriptions,
   systemAvailabilityMetrics,
-  systemIntegrations 
+  systemIntegrations,
 } from '@shared/schema';
 import { eq, desc, and, gte, lte, sql, count } from 'drizzle-orm';
 
@@ -43,9 +43,9 @@ router.get('/dashboard', async (req, res) => {
     res.json(dashboard);
   } catch (error) {
     console.error('Error getting system status dashboard:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get system status dashboard',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -69,7 +69,7 @@ router.get('/systems/status', async (req, res) => {
 
     // Get latest status for each system
     const systemsWithStatus = await Promise.all(
-      systems.map(async (system) => {
+      systems.map(async system => {
         const [latestCheck] = await db
           .select()
           .from(systemStatusChecks)
@@ -90,9 +90,9 @@ router.get('/systems/status', async (req, res) => {
     res.json(systemsWithStatus);
   } catch (error) {
     console.error('Error getting system status:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get system status',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -103,7 +103,7 @@ router.get('/systems/status', async (req, res) => {
 router.get('/systems/:systemId/status', async (req, res) => {
   try {
     const { systemId } = req.params;
-    
+
     const [system] = await db
       .select()
       .from(governmentSystems)
@@ -156,9 +156,9 @@ router.get('/systems/:systemId/status', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting system detailed status:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get system detailed status',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -169,18 +169,18 @@ router.get('/systems/:systemId/status', async (req, res) => {
 router.post('/systems/:systemId/check', async (req, res) => {
   try {
     const { systemId } = req.params;
-    
+
     const healthCheck = await monitoringService.performHealthCheck(systemId);
-    
+
     res.json({
       message: 'Health check completed',
       result: healthCheck,
     });
   } catch (error) {
     console.error('Error performing manual health check:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to perform health check',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -201,17 +201,23 @@ router.get('/outages', async (req, res) => {
       dateFrom,
       dateTo,
       limit = '50',
-      offset = '0'
+      offset = '0',
     } = req.query;
 
     let query = db.select().from(systemOutages);
 
     const conditions = [];
-    if (systemId) conditions.push(eq(systemOutages.systemId, systemId as string));
+    if (systemId)
+      conditions.push(eq(systemOutages.systemId, systemId as string));
     if (status) conditions.push(eq(systemOutages.status, status as string));
-    if (severity) conditions.push(eq(systemOutages.severity, severity as string));
-    if (dateFrom) conditions.push(gte(systemOutages.startTime, new Date(dateFrom as string)));
-    if (dateTo) conditions.push(lte(systemOutages.startTime, new Date(dateTo as string)));
+    if (severity)
+      conditions.push(eq(systemOutages.severity, severity as string));
+    if (dateFrom)
+      conditions.push(
+        gte(systemOutages.startTime, new Date(dateFrom as string))
+      );
+    if (dateTo)
+      conditions.push(lte(systemOutages.startTime, new Date(dateTo as string)));
 
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
@@ -237,9 +243,9 @@ router.get('/outages', async (req, res) => {
     });
   } catch (error) {
     console.error('Error listing outages:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to list outages',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -272,9 +278,9 @@ router.get('/outages/:outageId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting outage:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get outage',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -300,15 +306,15 @@ router.post('/outages', async (req, res) => {
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       const validationError = fromZodError(error);
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
-        details: validationError.message 
+        details: validationError.message,
       });
     }
     console.error('Error creating outage:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create outage',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -323,7 +329,8 @@ router.patch('/outages/:outageId', async (req, res) => {
 
     if (status) updateData.status = status;
     if (resolution) updateData.resolution = resolution;
-    if (estimatedResolution) updateData.estimatedResolution = new Date(estimatedResolution);
+    if (estimatedResolution)
+      updateData.estimatedResolution = new Date(estimatedResolution);
 
     if (status === 'resolved') {
       updateData.endTime = new Date();
@@ -345,9 +352,9 @@ router.patch('/outages/:outageId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating outage:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to update outage',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -362,7 +369,7 @@ router.patch('/outages/:outageId', async (req, res) => {
 router.get('/subscriptions', async (req, res) => {
   try {
     const userId = req.user?.claims?.sub;
-    
+
     const subscriptions = await db
       .select()
       .from(systemAlertSubscriptions)
@@ -372,9 +379,9 @@ router.get('/subscriptions', async (req, res) => {
     res.json(subscriptions);
   } catch (error) {
     console.error('Error getting alert subscriptions:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get alert subscriptions',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -399,15 +406,15 @@ router.post('/subscriptions', async (req, res) => {
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       const validationError = fromZodError(error);
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
-        details: validationError.message 
+        details: validationError.message,
       });
     }
     console.error('Error creating alert subscription:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create alert subscription',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -418,7 +425,7 @@ router.post('/subscriptions', async (req, res) => {
 router.patch('/subscriptions/:subscriptionId', async (req, res) => {
   try {
     const userId = req.user?.claims?.sub;
-    
+
     const [subscription] = await db
       .update(systemAlertSubscriptions)
       .set({ ...req.body, updatedAt: new Date() })
@@ -431,7 +438,9 @@ router.patch('/subscriptions/:subscriptionId', async (req, res) => {
       .returning();
 
     if (!subscription) {
-      return res.status(404).json({ error: 'Subscription not found or not authorized' });
+      return res
+        .status(404)
+        .json({ error: 'Subscription not found or not authorized' });
     }
 
     res.json({
@@ -440,9 +449,9 @@ router.patch('/subscriptions/:subscriptionId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating alert subscription:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to update alert subscription',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -453,7 +462,7 @@ router.patch('/subscriptions/:subscriptionId', async (req, res) => {
 router.delete('/subscriptions/:subscriptionId', async (req, res) => {
   try {
     const userId = req.user?.claims?.sub;
-    
+
     const [subscription] = await db
       .delete(systemAlertSubscriptions)
       .where(
@@ -465,15 +474,17 @@ router.delete('/subscriptions/:subscriptionId', async (req, res) => {
       .returning();
 
     if (!subscription) {
-      return res.status(404).json({ error: 'Subscription not found or not authorized' });
+      return res
+        .status(404)
+        .json({ error: 'Subscription not found or not authorized' });
     }
 
     res.json({ message: 'Subscription deleted successfully' });
   } catch (error) {
     console.error('Error deleting alert subscription:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to delete alert subscription',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -492,16 +503,28 @@ router.get('/metrics/availability', async (req, res) => {
       periodType = 'daily',
       dateFrom,
       dateTo,
-      limit = '30'
+      limit = '30',
     } = req.query;
 
     let query = db.select().from(systemAvailabilityMetrics);
 
     const conditions = [];
-    if (systemId) conditions.push(eq(systemAvailabilityMetrics.systemId, systemId as string));
-    if (periodType) conditions.push(eq(systemAvailabilityMetrics.periodType, periodType as string));
-    if (dateFrom) conditions.push(gte(systemAvailabilityMetrics.metricDate, new Date(dateFrom as string)));
-    if (dateTo) conditions.push(lte(systemAvailabilityMetrics.metricDate, new Date(dateTo as string)));
+    if (systemId)
+      conditions.push(
+        eq(systemAvailabilityMetrics.systemId, systemId as string)
+      );
+    if (periodType)
+      conditions.push(
+        eq(systemAvailabilityMetrics.periodType, periodType as string)
+      );
+    if (dateFrom)
+      conditions.push(
+        gte(systemAvailabilityMetrics.metricDate, new Date(dateFrom as string))
+      );
+    if (dateTo)
+      conditions.push(
+        lte(systemAvailabilityMetrics.metricDate, new Date(dateTo as string))
+      );
 
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
@@ -514,9 +537,9 @@ router.get('/metrics/availability', async (req, res) => {
     res.json(metrics);
   } catch (error) {
     console.error('Error getting availability metrics:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get availability metrics',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -528,7 +551,7 @@ router.get('/reports/uptime', async (req, res) => {
   try {
     const {
       dateFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      dateTo = new Date().toISOString()
+      dateTo = new Date().toISOString(),
     } = req.query;
 
     const systems = await db
@@ -537,7 +560,7 @@ router.get('/reports/uptime', async (req, res) => {
       .where(eq(governmentSystems.isActive, true));
 
     const uptimeReport = await Promise.all(
-      systems.map(async (system) => {
+      systems.map(async system => {
         // Get metrics for the period
         const metrics = await db
           .select()
@@ -545,21 +568,35 @@ router.get('/reports/uptime', async (req, res) => {
           .where(
             and(
               eq(systemAvailabilityMetrics.systemId, system.id),
-              gte(systemAvailabilityMetrics.metricDate, new Date(dateFrom as string)),
-              lte(systemAvailabilityMetrics.metricDate, new Date(dateTo as string))
+              gte(
+                systemAvailabilityMetrics.metricDate,
+                new Date(dateFrom as string)
+              ),
+              lte(
+                systemAvailabilityMetrics.metricDate,
+                new Date(dateTo as string)
+              )
             )
           );
 
         // Calculate average uptime
-        const avgUptime = metrics.length > 0 
-          ? metrics.reduce((sum, m) => sum + (m.uptime || 0), 0) / metrics.length
-          : 0;
+        const avgUptime =
+          metrics.length > 0
+            ? metrics.reduce((sum, m) => sum + (m.uptime || 0), 0) /
+              metrics.length
+            : 0;
 
         // Get total outage time
-        const totalOutageMinutes = metrics.reduce((sum, m) => sum + (m.totalOutageMinutes || 0), 0);
+        const totalOutageMinutes = metrics.reduce(
+          (sum, m) => sum + (m.totalOutageMinutes || 0),
+          0
+        );
 
         // Get outage count
-        const outageCount = metrics.reduce((sum, m) => sum + (m.outageCount || 0), 0);
+        const outageCount = metrics.reduce(
+          (sum, m) => sum + (m.outageCount || 0),
+          0
+        );
 
         return {
           system: {
@@ -572,7 +609,12 @@ router.get('/reports/uptime', async (req, res) => {
           uptime: Number(avgUptime.toFixed(2)),
           totalOutageMinutes,
           outageCount,
-          slaStatus: avgUptime >= 99.9 ? 'met' : avgUptime >= 99.5 ? 'at_risk' : 'missed',
+          slaStatus:
+            avgUptime >= 99.9
+              ? 'met'
+              : avgUptime >= 99.5
+                ? 'at_risk'
+                : 'missed',
         };
       })
     );
@@ -584,16 +626,19 @@ router.get('/reports/uptime', async (req, res) => {
       },
       systems: uptimeReport,
       overall: {
-        avgUptime: uptimeReport.reduce((sum, s) => sum + s.uptime, 0) / uptimeReport.length,
+        avgUptime:
+          uptimeReport.reduce((sum, s) => sum + s.uptime, 0) /
+          uptimeReport.length,
         totalOutages: uptimeReport.reduce((sum, s) => sum + s.outageCount, 0),
-        systemsMeetingSLA: uptimeReport.filter(s => s.slaStatus === 'met').length,
+        systemsMeetingSLA: uptimeReport.filter(s => s.slaStatus === 'met')
+          .length,
       },
     });
   } catch (error) {
     console.error('Error generating uptime report:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to generate uptime report',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -615,9 +660,9 @@ router.get('/systems', async (req, res) => {
     res.json(systems);
   } catch (error) {
     console.error('Error listing government systems:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to list government systems',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -628,7 +673,7 @@ router.get('/systems', async (req, res) => {
 router.post('/systems', async (req, res) => {
   try {
     const validatedData = insertGovernmentSystemSchema.parse(req.body);
-    
+
     const [system] = await db
       .insert(governmentSystems)
       .values(validatedData)
@@ -638,15 +683,15 @@ router.post('/systems', async (req, res) => {
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       const validationError = fromZodError(error);
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
-        details: validationError.message 
+        details: validationError.message,
       });
     }
     console.error('Error creating government system:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create government system',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -672,9 +717,9 @@ router.patch('/systems/:systemId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating government system:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to update government system',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -685,7 +730,7 @@ router.patch('/systems/:systemId', async (req, res) => {
 router.get('/health', async (req, res) => {
   try {
     const last5Minutes = new Date(Date.now() - 5 * 60 * 1000);
-    
+
     const recentChecks = await db
       .select({ count: count() })
       .from(systemStatusChecks)
@@ -716,7 +761,7 @@ router.get('/health', async (req, res) => {
     res.json(health);
   } catch (error) {
     console.error('Error checking monitoring health:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       status: 'error',
       error: 'Failed to check monitoring health',
       details: error instanceof Error ? error.message : 'Unknown error',

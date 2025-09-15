@@ -24,10 +24,10 @@ export default function SimpleIbanTest() {
           employeeId: 'TEST001',
           iban,
           accountHolderName: accountHolder,
-          language: 'en'
+          language: 'en',
         }),
       });
-      
+
       const data = await response.json();
       setResult(data);
     } catch (error) {
@@ -41,41 +41,45 @@ export default function SimpleIbanTest() {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">IBAN Validation Test</h1>
-      
+
       <div className="grid gap-4 mb-6">
         <div>
           <label className="block text-sm font-medium mb-2">IBAN</label>
           <input
             type="text"
             value={iban}
-            onChange={(e) => setIban(e.target.value)}
+            onChange={e => setIban(e.target.value)}
             placeholder="GR1601400000000012345678901"
             className="w-full p-2 border rounded"
           />
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium mb-2">Employee Name</label>
+          <label className="block text-sm font-medium mb-2">
+            Employee Name
+          </label>
           <input
             type="text"
             value={employeeName}
-            onChange={(e) => setEmployeeName(e.target.value)}
+            onChange={e => setEmployeeName(e.target.value)}
             placeholder="ΜΑΡΙΑ ΠΑΠΑΔΟΠΟΥΛΟΥ"
             className="w-full p-2 border rounded"
           />
         </div>
-        
+
         <div>
-          <label className="block text-sm font-medium mb-2">Account Holder Name</label>
+          <label className="block text-sm font-medium mb-2">
+            Account Holder Name
+          </label>
           <input
             type="text"
             value={accountHolder}
-            onChange={(e) => setAccountHolder(e.target.value)}
+            onChange={e => setAccountHolder(e.target.value)}
             placeholder="MARIA PAPADOPOULOU"
             className="w-full p-2 border rounded"
           />
         </div>
-        
+
         <button
           onClick={handleTest}
           disabled={loading || !iban || !accountHolder}
@@ -84,7 +88,7 @@ export default function SimpleIbanTest() {
           {loading ? 'Testing...' : 'Test IBAN Validation'}
         </button>
       </div>
-      
+
       {result && (
         <div className="bg-gray-50 p-4 rounded">
           <h3 className="font-bold mb-2">Result:</h3>

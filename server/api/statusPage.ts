@@ -25,7 +25,7 @@ router.get('/public/status', async (req, res) => {
 router.post('/public/subscribe', async (req, res) => {
   try {
     const { email, components } = req.body;
-    
+
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
     }
@@ -73,10 +73,16 @@ router.put('/components/:componentId/status', async (req, res) => {
 // Create incident
 router.post('/incidents', async (req, res) => {
   try {
-    const { title, description, severity, affectedComponents, status } = req.body;
+    const { title, description, severity, affectedComponents, status } =
+      req.body;
 
     if (!title || !description || !severity || !affectedComponents) {
-      return res.status(400).json({ error: 'Title, description, severity, and affected components are required' });
+      return res
+        .status(400)
+        .json({
+          error:
+            'Title, description, severity, and affected components are required',
+        });
     }
 
     const incident = await statusPageService.createIncident({
@@ -116,9 +122,21 @@ router.put('/incidents/:incidentId', async (req, res) => {
 // Schedule maintenance
 router.post('/maintenance', async (req, res) => {
   try {
-    const { title, description, scheduledStart, scheduledEnd, affectedComponents } = req.body;
+    const {
+      title,
+      description,
+      scheduledStart,
+      scheduledEnd,
+      affectedComponents,
+    } = req.body;
 
-    if (!title || !description || !scheduledStart || !scheduledEnd || !affectedComponents) {
+    if (
+      !title ||
+      !description ||
+      !scheduledStart ||
+      !scheduledEnd ||
+      !affectedComponents
+    ) {
       return res.status(400).json({ error: 'All fields are required' });
     }
 

@@ -3,10 +3,10 @@
  * Implements flexible mapping rules and journal operations
  */
 
-import type { Express } from "express";
-import { db } from "../db";
-import { eq, and, desc, sql } from "drizzle-orm";
-import { 
+import type { Express } from 'express';
+import { db } from '../db';
+import { eq, and, desc, sql } from 'drizzle-orm';
+import {
   glJournalHeaders,
   glJournalLinesCanonical,
   glMappingRules,
@@ -21,11 +21,14 @@ import {
   type MappingRuleSet,
   mappingRuleSetSchema,
   partners,
-} from "@shared/schema";
-import { GLExportCanonical } from "../services/glExportCanonical";
-import { WebhookService } from "../services/webhookService";
-import { RoundingService, type RoundingConfig } from '../services/roundingService';
-import { z } from "zod";
+} from '@shared/schema';
+import { GLExportCanonical } from '../services/glExportCanonical';
+import { WebhookService } from '../services/webhookService';
+import {
+  RoundingService,
+  type RoundingConfig,
+} from '../services/roundingService';
+import { z } from 'zod';
 import { nanoid } from 'nanoid';
 
 // Helper function to format journal lines for API response
@@ -55,7 +58,6 @@ function bankerRound(value: number): number {
 }
 
 export function glGenericRoutes(app: Express) {
-  
   // =============================================================================
   // WEBHOOK SUBSCRIPTION ENDPOINTS
   // =============================================================================
@@ -72,7 +74,7 @@ export function glGenericRoutes(app: Express) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'partner_id, webhook_url, and webhook_secret are required',
-          hint: 'Provide all required webhook configuration parameters'
+          hint: 'Provide all required webhook configuration parameters',
         });
       }
 
@@ -83,7 +85,7 @@ export function glGenericRoutes(app: Express) {
         return res.status(400).json({
           error: 'INVALID_URL',
           detail: 'webhook_url must be a valid HTTPS URL',
-          hint: 'Ensure webhook_url starts with https:// and is properly formatted'
+          hint: 'Ensure webhook_url starts with https:// and is properly formatted',
         });
       }
 
@@ -102,7 +104,7 @@ export function glGenericRoutes(app: Express) {
         return res.status(404).json({
           error: 'PARTNER_NOT_FOUND',
           detail: `Partner with ID ${partner_id} not found`,
-          hint: 'Verify the partner_id is correct and the partner exists'
+          hint: 'Verify the partner_id is correct and the partner exists',
         });
       }
 
@@ -115,7 +117,7 @@ export function glGenericRoutes(app: Express) {
           'gl.journal.draft.created',
           'gl.journal.posted',
           'gl.journal.reversed',
-          'connector.token.refreshed'
+          'connector.token.refreshed',
         ],
         created_at: updatedPartner.updatedAt,
       });
@@ -124,7 +126,7 @@ export function glGenericRoutes(app: Express) {
       res.status(500).json({
         error: 'INTERNAL_ERROR',
         detail: 'Failed to subscribe to webhooks',
-        hint: 'Contact system administrator if the problem persists'
+        hint: 'Contact system administrator if the problem persists',
       });
     }
   });
@@ -153,7 +155,7 @@ export function glGenericRoutes(app: Express) {
         return res.status(404).json({
           error: 'PARTNER_NOT_FOUND',
           detail: `Partner with ID ${partner_id} not found`,
-          hint: 'Verify the partner_id is correct'
+          hint: 'Verify the partner_id is correct',
         });
       }
 
@@ -167,7 +169,7 @@ export function glGenericRoutes(app: Express) {
           'gl.journal.draft.created',
           'gl.journal.posted',
           'gl.journal.reversed',
-          'connector.token.refreshed'
+          'connector.token.refreshed',
         ],
         created_at: partner.createdAt,
         updated_at: partner.updatedAt,
@@ -177,7 +179,7 @@ export function glGenericRoutes(app: Express) {
       res.status(500).json({
         error: 'INTERNAL_ERROR',
         detail: 'Failed to fetch webhook subscription',
-        hint: 'Contact system administrator if the problem persists'
+        hint: 'Contact system administrator if the problem persists',
       });
     }
   });
@@ -204,7 +206,7 @@ export function glGenericRoutes(app: Express) {
         return res.status(404).json({
           error: 'PARTNER_NOT_FOUND',
           detail: `Partner with ID ${partner_id} not found`,
-          hint: 'Verify the partner_id is correct'
+          hint: 'Verify the partner_id is correct',
         });
       }
 
@@ -218,7 +220,7 @@ export function glGenericRoutes(app: Express) {
       res.status(500).json({
         error: 'INTERNAL_ERROR',
         detail: 'Failed to unsubscribe from webhooks',
-        hint: 'Contact system administrator if the problem persists'
+        hint: 'Contact system administrator if the problem persists',
       });
     }
   });
@@ -277,7 +279,7 @@ export function glGenericRoutes(app: Express) {
       res.status(500).json({
         error: 'INTERNAL_ERROR',
         detail: 'Failed to fetch webhook events',
-        hint: 'Contact system administrator if the problem persists'
+        hint: 'Contact system administrator if the problem persists',
       });
     }
   });
@@ -298,9 +300,9 @@ export function glGenericRoutes(app: Express) {
       // Deactivate existing rule sets for this entity
       await db
         .update(glMappingRuleSets)
-        .set({ 
+        .set({
           isActive: false,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(glMappingRuleSets.entityId, entity_id));
 
@@ -308,7 +310,7 @@ export function glGenericRoutes(app: Express) {
       const ruleSetData: InsertGLMappingRuleSet = {
         entityId: entity_id,
         name: name || `Mapping Rules - ${entity_id}`,
-        version: version || "1.0",
+        version: version || '1.0',
         isActive: true,
         rules: rules as any,
       };
@@ -319,17 +321,19 @@ export function glGenericRoutes(app: Express) {
         .returning();
 
       // Also store individual rules for easier querying
-      const individualRules: InsertGLMappingRule[] = rules.map((rule, index) => ({
-        entityId: entity_id,
-        type: rule.type,
-        code: rule.code || null,
-        name: rule.name || null,
-        account: rule.account,
-        dimension: rule.dimension || null,
-        description: rule.description || null,
-        priority: rule.priority || 100 + index,
-        isActive: true,
-      }));
+      const individualRules: InsertGLMappingRule[] = rules.map(
+        (rule, index) => ({
+          entityId: entity_id,
+          type: rule.type,
+          code: rule.code || null,
+          name: rule.name || null,
+          account: rule.account,
+          dimension: rule.dimension || null,
+          description: rule.description || null,
+          priority: rule.priority || 100 + index,
+          isActive: true,
+        })
+      );
 
       // Remove existing individual rules for this entity
       await db
@@ -354,7 +358,7 @@ export function glGenericRoutes(app: Express) {
       });
     } catch (error) {
       console.error('GL mapping rules creation error:', error);
-      
+
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           success: false,
@@ -391,10 +395,12 @@ export function glGenericRoutes(app: Express) {
       const [ruleSet] = await db
         .select()
         .from(glMappingRuleSets)
-        .where(and(
-          eq(glMappingRuleSets.entityId, entity_id as string),
-          eq(glMappingRuleSets.isActive, true)
-        ))
+        .where(
+          and(
+            eq(glMappingRuleSets.entityId, entity_id as string),
+            eq(glMappingRuleSets.isActive, true)
+          )
+        )
         .orderBy(desc(glMappingRuleSets.createdAt))
         .limit(1);
 
@@ -438,14 +444,21 @@ export function glGenericRoutes(app: Express) {
    */
   app.post('/v1/gl/journals/build', async (req, res) => {
     try {
-      const { run_id, entity_id, description, split_by, rounding, collapse_zero_lines } = req.body;
+      const {
+        run_id,
+        entity_id,
+        description,
+        split_by,
+        rounding,
+        collapse_zero_lines,
+      } = req.body;
       const idempotencyKey = req.headers['idempotency-key'] as string;
 
       if (!run_id || !entity_id) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'run_id and entity_id are required',
-          hint: 'Provide both run_id and entity_id in request body'
+          hint: 'Provide both run_id and entity_id in request body',
         });
       }
 
@@ -454,12 +467,14 @@ export function glGenericRoutes(app: Express) {
         const existingJournal = await db
           .select()
           .from(glJournalHeaders)
-          .where(and(
-            eq(glJournalHeaders.entityId, entity_id),
-            sql`external_refs @> ${JSON.stringify([{idempotency_key: idempotencyKey}])}`
-          ))
+          .where(
+            and(
+              eq(glJournalHeaders.entityId, entity_id),
+              sql`external_refs @> ${JSON.stringify([{ idempotency_key: idempotencyKey }])}`
+            )
+          )
           .limit(1);
-        
+
         if (existingJournal.length > 0) {
           const journal = existingJournal[0];
           const lines = await db
@@ -475,7 +490,7 @@ export function glGenericRoutes(app: Express) {
             status: journal.status,
             lines: lines.map(formatJournalLine),
             source: { type: 'payroll', run_id: journal.runId },
-            idempotent: true
+            idempotent: true,
           });
         }
       }
@@ -484,31 +499,38 @@ export function glGenericRoutes(app: Express) {
       const [ruleSet] = await db
         .select()
         .from(glMappingRuleSets)
-        .where(and(
-          eq(glMappingRuleSets.entityId, entity_id),
-          eq(glMappingRuleSets.isActive, true)
-        ))
+        .where(
+          and(
+            eq(glMappingRuleSets.entityId, entity_id),
+            eq(glMappingRuleSets.isActive, true)
+          )
+        )
         .limit(1);
 
       if (!ruleSet) {
         return res.status(400).json({
           error: 'MAPPING_MISSING',
           detail: `No mapping rules configured for entity: ${entity_id}`,
-          hint: 'Create mapping rules using POST /v1/gl/mappings'
+          hint: 'Create mapping rules using POST /v1/gl/mappings',
         });
       }
 
       // GUARDRAIL: Validate mapping completeness
-      const requiredMappings = ['REG', 'EFKA_EMPLOYEE', 'AADE_FMY', 'NET_PAY_CLEARING'];
-      const missingMappings = requiredMappings.filter(code => 
-        !ruleSet.rules.some((rule: any) => rule.code === code)
+      const requiredMappings = [
+        'REG',
+        'EFKA_EMPLOYEE',
+        'AADE_FMY',
+        'NET_PAY_CLEARING',
+      ];
+      const missingMappings = requiredMappings.filter(
+        code => !ruleSet.rules.some((rule: any) => rule.code === code)
       );
-      
+
       if (missingMappings.length > 0) {
         return res.status(400).json({
           error: 'INCOMPLETE_MAPPINGS',
           detail: `Missing required account mappings: ${missingMappings.join(', ')}`,
-          hint: 'Complete the guided setup to configure all required account mappings'
+          hint: 'Complete the guided setup to configure all required account mappings',
         });
       }
 
@@ -557,7 +579,7 @@ export function glGenericRoutes(app: Express) {
             department: 'RESTAURANT',
             propertyId: 'prop-princess',
           },
-        ]
+        ],
       };
 
       const glJournalRequest = {
@@ -566,7 +588,8 @@ export function glGenericRoutes(app: Express) {
         period: mockPayrollRun.payDate.substring(0, 7), // YYYY-MM
         payrollRun: mockPayrollRun,
         currency: 'EUR',
-        description: description || `Payroll Journal - ${mockPayrollRun.runNumber}`,
+        description:
+          description || `Payroll Journal - ${mockPayrollRun.runNumber}`,
         mappingRules: ruleSet.rules as MappingRule[],
         splitBy: split_by || [],
         rounding: rounding || 'standard',
@@ -575,10 +598,13 @@ export function glGenericRoutes(app: Express) {
       };
 
       // Build journal using custom mapping rules with advanced options
-      const journal = await GLExportCanonical.generateJournalWithMappings(glJournalRequest);
+      const journal =
+        await GLExportCanonical.generateJournalWithMappings(glJournalRequest);
 
       // Get the created journal with lines for response
-      const createdJournal = await GLExportCanonical.getJournal(journal.journalId);
+      const createdJournal = await GLExportCanonical.getJournal(
+        journal.journalId
+      );
       if (!createdJournal) {
         throw new Error('Failed to retrieve created journal');
       }
@@ -589,10 +615,9 @@ export function glGenericRoutes(app: Express) {
         const activePartners = await db
           .select({ id: partners.id })
           .from(partners)
-          .where(and(
-            eq(partners.status, 'active'),
-            sql`webhook_url IS NOT NULL`
-          ));
+          .where(
+            and(eq(partners.status, 'active'), sql`webhook_url IS NOT NULL`)
+          );
 
         for (const partner of activePartners) {
           await WebhookService.sendJournalDraftCreatedEvent(partner.id, {
@@ -617,23 +642,27 @@ export function glGenericRoutes(app: Express) {
         source: { type: 'payroll', run_id: run_id },
         total_debit: journal.totalDebit,
         total_credit: journal.totalCredit,
-        line_count: journal.lineCount
+        line_count: journal.lineCount,
       });
     } catch (error) {
       console.error('GL journal build error:', error);
-      
-      if (error instanceof Error && error.message.includes('No mapping found')) {
+
+      if (
+        error instanceof Error &&
+        error.message.includes('No mapping found')
+      ) {
         return res.status(400).json({
           error: 'MAPPING_MISSING',
           detail: error.message,
-          hint: 'Create mapping in /v1/gl/mappings'
+          hint: 'Create mapping in /v1/gl/mappings',
         });
       }
-      
+
       res.status(500).json({
         error: 'INTERNAL_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to build journal',
-        hint: 'Contact system administrator if the problem persists'
+        detail:
+          error instanceof Error ? error.message : 'Failed to build journal',
+        hint: 'Contact system administrator if the problem persists',
       });
     }
   });
@@ -661,7 +690,7 @@ export function glGenericRoutes(app: Express) {
         return res.status(400).json({
           error: 'ALREADY_POSTED',
           detail: 'Journal is already posted and locked',
-          hint: 'Posted journals cannot be modified. Create a reversal if corrections are needed'
+          hint: 'Posted journals cannot be modified. Create a reversal if corrections are needed',
         });
       }
 
@@ -669,7 +698,7 @@ export function glGenericRoutes(app: Express) {
         return res.status(400).json({
           error: 'REVERSED_JOURNAL',
           detail: 'Cannot post a reversed journal',
-          hint: 'Reversed journals cannot be posted'
+          hint: 'Reversed journals cannot be posted',
         });
       }
 
@@ -684,8 +713,12 @@ export function glGenericRoutes(app: Express) {
           journal_id: journalId,
           entity_id: journal.header.entityId,
           run_id: journal.header.runId,
-          total_debit: journal.lines.reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0).toFixed(2),
-          total_credit: journal.lines.reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0).toFixed(2),
+          total_debit: journal.lines
+            .reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0)
+            .toFixed(2),
+          total_credit: journal.lines
+            .reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0)
+            .toFixed(2),
           posted_by: posted_by || 'system',
           notes: notes || null,
         },
@@ -709,7 +742,8 @@ export function glGenericRoutes(app: Express) {
       res.status(500).json({
         success: false,
         error: 'internal_error',
-        message: error instanceof Error ? error.message : 'Failed to post journal',
+        message:
+          error instanceof Error ? error.message : 'Failed to post journal',
       });
     }
   });
@@ -745,13 +779,13 @@ export function glGenericRoutes(app: Express) {
         return res.status(400).json({
           error: 'ALREADY_REVERSED',
           detail: 'Journal is already reversed',
-          hint: 'Cannot reverse a journal that has already been reversed'
+          hint: 'Cannot reverse a journal that has already been reversed',
         });
       }
 
       // Reverse the journal
       const reversalJournalId = await GLExportCanonical.reverseJournal(
-        journalId, 
+        journalId,
         reason || 'Manual reversal'
       );
 
@@ -789,7 +823,8 @@ export function glGenericRoutes(app: Express) {
       res.status(500).json({
         success: false,
         error: 'internal_error',
-        message: error instanceof Error ? error.message : 'Failed to reverse journal',
+        message:
+          error instanceof Error ? error.message : 'Failed to reverse journal',
       });
     }
   });
@@ -811,8 +846,12 @@ export function glGenericRoutes(app: Express) {
         });
       }
 
-      const totalDebit = journal.lines.reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0).toFixed(2);
-      const totalCredit = journal.lines.reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0).toFixed(2);
+      const totalDebit = journal.lines
+        .reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0)
+        .toFixed(2);
+      const totalCredit = journal.lines
+        .reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0)
+        .toFixed(2);
 
       res.json({
         success: true,
@@ -863,7 +902,14 @@ export function glGenericRoutes(app: Express) {
    */
   app.get('/v1/gl/journals', async (req, res) => {
     try {
-      const { period, entity_id, status, run_id, limit = '50', offset = '0' } = req.query;
+      const {
+        period,
+        entity_id,
+        status,
+        run_id,
+        limit = '50',
+        offset = '0',
+      } = req.query;
 
       if (!period && !entity_id) {
         return res.status(400).json({
@@ -888,7 +934,8 @@ export function glGenericRoutes(app: Express) {
         conditions.push(eq(glJournalHeaders.runId, run_id as string));
       }
 
-      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const whereClause =
+        conditions.length > 0 ? and(...conditions) : undefined;
 
       // Query journals
       const journals = await db
@@ -919,8 +966,12 @@ export function glGenericRoutes(app: Express) {
           .from(glJournalLinesCanonical)
           .where(eq(glJournalLinesCanonical.journalId, journal.journal_id));
 
-        const totalDebit = lines.reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0).toFixed(2);
-        const totalCredit = lines.reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0).toFixed(2);
+        const totalDebit = lines
+          .reduce((sum, line) => sum + parseFloat(line.debit || '0'), 0)
+          .toFixed(2);
+        const totalCredit = lines
+          .reduce((sum, line) => sum + parseFloat(line.credit || '0'), 0)
+          .toFixed(2);
 
         enrichedJournals.push({
           ...journal,
@@ -973,7 +1024,7 @@ export function glGenericRoutes(app: Express) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'tenant_id, entity_id, run_id, and period are required',
-          hint: 'Provide all required payroll run parameters'
+          hint: 'Provide all required payroll run parameters',
         });
       }
 
@@ -981,7 +1032,7 @@ export function glGenericRoutes(app: Express) {
       const mockTotals = {
         gross: '125750.50',
         net: '89525.35',
-        employee_count: 147
+        employee_count: 147,
       };
 
       // Send webhook to all active partners
@@ -989,10 +1040,9 @@ export function glGenericRoutes(app: Express) {
         const activePartners = await db
           .select({ id: partners.id })
           .from(partners)
-          .where(and(
-            eq(partners.status, 'active'),
-            sql`webhook_url IS NOT NULL`
-          ));
+          .where(
+            and(eq(partners.status, 'active'), sql`webhook_url IS NOT NULL`)
+          );
 
         const webhookPromises = activePartners.map(partner =>
           WebhookService.sendPayrollRunFinalizedEvent(partner.id, {
@@ -1000,7 +1050,7 @@ export function glGenericRoutes(app: Express) {
             entity_id,
             run_id,
             period,
-            totals: mockTotals
+            totals: mockTotals,
           })
         );
 
@@ -1014,14 +1064,14 @@ export function glGenericRoutes(app: Express) {
           totals: mockTotals,
           webhook_events_queued: eventIds.length,
           event_ids: eventIds,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (webhookError) {
         console.error('Webhook event failed:', webhookError);
         res.status(500).json({
           error: 'WEBHOOK_ERROR',
           detail: 'Failed to queue webhook events',
-          hint: 'Check webhook configuration and try again'
+          hint: 'Check webhook configuration and try again',
         });
       }
     } catch (error) {
@@ -1029,7 +1079,7 @@ export function glGenericRoutes(app: Express) {
       res.status(500).json({
         error: 'INTERNAL_ERROR',
         detail: 'Failed to simulate payroll finalization',
-        hint: 'Contact system administrator if the problem persists'
+        hint: 'Contact system administrator if the problem persists',
       });
     }
   });
@@ -1046,7 +1096,7 @@ export function glGenericRoutes(app: Express) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'connector and entity_id are required',
-          hint: 'Specify the connector type (xero, quickbooks, sage, etc.) and entity_id'
+          hint: 'Specify the connector type (xero, quickbooks, sage, etc.) and entity_id',
         });
       }
 
@@ -1055,15 +1105,14 @@ export function glGenericRoutes(app: Express) {
         const activePartners = await db
           .select({ id: partners.id })
           .from(partners)
-          .where(and(
-            eq(partners.status, 'active'),
-            sql`webhook_url IS NOT NULL`
-          ));
+          .where(
+            and(eq(partners.status, 'active'), sql`webhook_url IS NOT NULL`)
+          );
 
         const webhookPromises = activePartners.map(partner =>
           WebhookService.sendConnectorTokenRefreshedEvent(partner.id, {
             connector,
-            entity_id
+            entity_id,
           })
         );
 
@@ -1075,14 +1124,14 @@ export function glGenericRoutes(app: Express) {
           entity_id,
           webhook_events_queued: eventIds.length,
           event_ids: eventIds,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (webhookError) {
         console.error('Webhook event failed:', webhookError);
         res.status(500).json({
           error: 'WEBHOOK_ERROR',
           detail: 'Failed to queue webhook events',
-          hint: 'Check webhook configuration and try again'
+          hint: 'Check webhook configuration and try again',
         });
       }
     } catch (error) {
@@ -1090,7 +1139,7 @@ export function glGenericRoutes(app: Express) {
       res.status(500).json({
         error: 'INTERNAL_ERROR',
         detail: 'Failed to simulate token refresh',
-        hint: 'Contact system administrator if the problem persists'
+        hint: 'Contact system administrator if the problem persists',
       });
     }
   });

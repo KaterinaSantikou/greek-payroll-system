@@ -1,61 +1,65 @@
-import type { Express } from "express";
-import { GarnishmentService } from "../services/GarnishmentService";
-import { isAuthenticated } from "../replitAuth";
-import { 
+import type { Express } from 'express';
+import { GarnishmentService } from '../services/GarnishmentService';
+import { isAuthenticated } from '../replitAuth';
+import {
   garnishmentCalculationInputsSchema,
   type InsertGarnishmentOrder,
-  type GarnishmentCalculationInputs 
-} from "../../shared/schema";
-import { z } from "zod";
-import { GarnishmentRBACService } from "../services/GarnishmentRBACService";
-import { PayrollGarnishmentIntegration } from "../services/PayrollGarnishmentIntegration";
-import { PayslipGarnishmentRenderer } from "../services/PayslipGarnishmentRenderer";
+  type GarnishmentCalculationInputs,
+} from '../../shared/schema';
+import { z } from 'zod';
+import { GarnishmentRBACService } from '../services/GarnishmentRBACService';
+import { PayrollGarnishmentIntegration } from '../services/PayrollGarnishmentIntegration';
+import { PayslipGarnishmentRenderer } from '../services/PayslipGarnishmentRenderer';
 
 // Calc hook input schema
 const calcHookInputSchema = z.object({
   employeeId: z.string(),
   runContext: z.object({
     period: z.string(),
-    runType: z.string()
+    runType: z.string(),
   }),
   preTax: z.number(),
   taxes: z.number(),
   contribs: z.number(),
   netBeforeGarnishments: z.number(),
-  activeGarnishments: z.array(z.any()).optional()
+  activeGarnishments: z.array(z.any()).optional(),
 });
 
 /**
  * Garnishment & Court Orders API Endpoints
- * 
+ *
  * Handles CRUD operations for garnishment orders and integration
  * with payroll calculation engine for automatic deductions.
  */
 
 export function registerGarnishmentRoutes(app: Express) {
-  
   /**
    * GET /api/garnishments/:employeeId
    * Get all garnishment orders for an employee
    */
-  app.get('/api/garnishments/:employeeId', isAuthenticated, async (req, res) => {
-    try {
-      const { employeeId } = req.params;
-      const garnishments = await GarnishmentService.getActiveGarnishments(employeeId);
-      
-      res.json({
-        success: true,
-        data: garnishments
-      });
-    } catch (error) {
-      console.error('Error fetching garnishments:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch garnishments'
-      });
+  app.get(
+    '/api/garnishments/:employeeId',
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const { employeeId } = req.params;
+        const garnishments =
+          await GarnishmentService.getActiveGarnishments(employeeId);
+
+        res.json({
+          success: true,
+          data: garnishments,
+        });
+      } catch (error) {
+        console.error('Error fetching garnishments:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to fetch garnishments',
+        });
+      }
     }
-  });
-  
+  );
+
   /**
    * POST /api/garnishments
    * Create a new garnishment order (RBAC protected)
@@ -63,36 +67,37 @@ export function registerGarnishmentRoutes(app: Express) {
   app.post('/api/garnishments', isAuthenticated, async (req, res) => {
     try {
       const orderData: InsertGarnishmentOrder = req.body;
-      
+
       // Add creator information
       orderData.createdBy = (req.user as any)?.claims?.sub || 'system';
-      
+
       // Validate the order data
       const validation = GarnishmentService.validateGarnishmentOrder(orderData);
       if (!validation.valid) {
         return res.status(400).json({
           success: false,
           error: 'Validation failed',
-          details: validation.errors
+          details: validation.errors,
         });
       }
-      
-      const garnishmentOrder = await GarnishmentService.createGarnishmentOrder(orderData);
-      
+
+      const garnishmentOrder =
+        await GarnishmentService.createGarnishmentOrder(orderData);
+
       res.json({
         success: true,
         data: garnishmentOrder,
-        message: 'Garnishment order created successfully'
+        message: 'Garnishment order created successfully',
       });
     } catch (error) {
       console.error('Error creating garnishment order:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to create garnishment order'
+        error: 'Failed to create garnishment order',
       });
     }
   });
-  
+
   /**
    * PUT /api/garnishments/:id
    * Update a garnishment order (RBAC protected)
@@ -101,123 +106,154 @@ export function registerGarnishmentRoutes(app: Express) {
     try {
       const { id } = req.params;
       const updates: Partial<InsertGarnishmentOrder> = req.body;
-      
-      const updatedOrder = await GarnishmentService.updateGarnishmentOrder(id, updates);
-      
+
+      const updatedOrder = await GarnishmentService.updateGarnishmentOrder(
+        id,
+        updates
+      );
+
       if (!updatedOrder) {
         return res.status(404).json({
           success: false,
-          error: 'Garnishment order not found'
+          error: 'Garnishment order not found',
         });
       }
-      
+
       res.json({
         success: true,
         data: updatedOrder,
-        message: 'Garnishment order updated successfully'
+        message: 'Garnishment order updated successfully',
       });
     } catch (error) {
       console.error('Error updating garnishment order:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to update garnishment order'
+        error: 'Failed to update garnishment order',
       });
     }
   });
-  
+
   /**
    * GET /api/garnishments/:employeeId/transactions
    * Get garnishment transaction history for an employee
    */
-  app.get('/api/garnishments/:employeeId/transactions', isAuthenticated, async (req, res) => {
-    try {
-      const { employeeId } = req.params;
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      
-      const transactions = await GarnishmentService.getGarnishmentTransactions(employeeId, limit);
-      
-      res.json({
-        success: true,
-        data: transactions
-      });
-    } catch (error) {
-      console.error('Error fetching garnishment transactions:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to fetch garnishment transactions'
-      });
+  app.get(
+    '/api/garnishments/:employeeId/transactions',
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const { employeeId } = req.params;
+        const limit = req.query.limit
+          ? parseInt(req.query.limit as string)
+          : 50;
+
+        const transactions =
+          await GarnishmentService.getGarnishmentTransactions(
+            employeeId,
+            limit
+          );
+
+        res.json({
+          success: true,
+          data: transactions,
+        });
+      } catch (error) {
+        console.error('Error fetching garnishment transactions:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to fetch garnishment transactions',
+        });
+      }
     }
-  });
-  
+  );
+
   /**
    * POST /api/garnishments/calc-hook
    * Calc Hook (Engine Internal) - Main payroll integration endpoint
-   * 
+   *
    * Input: employee_id, run_context (period, run_type), pre_tax, taxes, contribs, net_before_garnishments.
    * Output: garnishment_lines[], net_after_garnishments.
    */
   app.post('/api/garnishments/calc-hook', isAuthenticated, async (req, res) => {
     try {
       const input = calcHookInputSchema.parse(req.body);
-      
+
       const result = await GarnishmentService.calculateGarnishments(input);
-      
+
       res.json({
         success: true,
         data: result,
-        message: 'Garnishment calculation completed'
+        message: 'Garnishment calculation completed',
       });
-      
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           success: false,
           error: 'Invalid input',
-          details: error.errors
+          details: error.errors,
         });
       }
-      
+
       console.error('Garnishment calc hook error:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: 'Failed to calculate garnishments' 
+      res.status(500).json({
+        success: false,
+        error: 'Failed to calculate garnishments',
       });
     }
   });
-  
+
   /**
    * POST /api/garnishments/calculate
    * Legacy calculate endpoint (for backward compatibility)
    */
   app.post('/api/garnishments/calculate', isAuthenticated, async (req, res) => {
     try {
-      const { employeeId, grossPay, disposableIncome, netPayBeforeGarnishments, payPeriodStart, payPeriodEnd } = req.body;
-      
-      if (!employeeId || grossPay === undefined || disposableIncome === undefined || netPayBeforeGarnishments === undefined) {
-        return res.status(400).json({ 
+      const {
+        employeeId,
+        grossPay,
+        disposableIncome,
+        netPayBeforeGarnishments,
+        payPeriodStart,
+        payPeriodEnd,
+      } = req.body;
+
+      if (
+        !employeeId ||
+        grossPay === undefined ||
+        disposableIncome === undefined ||
+        netPayBeforeGarnishments === undefined
+      ) {
+        return res.status(400).json({
           success: false,
-          error: 'Missing required fields: employeeId, grossPay, disposableIncome, netPayBeforeGarnishments' 
+          error:
+            'Missing required fields: employeeId, grossPay, disposableIncome, netPayBeforeGarnishments',
         });
       }
-      
+
       // Convert legacy format to new calc hook format
       const calcInput = {
         employeeId,
         runContext: {
-          period: payPeriodStart && payPeriodEnd ? `${payPeriodStart} to ${payPeriodEnd}` : 'current',
-          runType: 'regular'
+          period:
+            payPeriodStart && payPeriodEnd
+              ? `${payPeriodStart} to ${payPeriodEnd}`
+              : 'current',
+          runType: 'regular',
         },
         preTax: Number(grossPay),
         taxes: Number(grossPay) - Number(disposableIncome), // Approximate
         contribs: 0, // Not provided in legacy format
-        netBeforeGarnishments: Number(netPayBeforeGarnishments)
+        netBeforeGarnishments: Number(netPayBeforeGarnishments),
       };
-      
+
       const result = await GarnishmentService.calculateGarnishments(calcInput);
-      
+
       // Convert new format back to legacy format
-      const totalGarnishmentAmount = result.garnishmentLines.reduce((sum, line) => sum + line.amount, 0);
-      
+      const totalGarnishmentAmount = result.garnishmentLines.reduce(
+        (sum, line) => sum + line.amount,
+        0
+      );
+
       res.json({
         success: true,
         data: {
@@ -232,83 +268,88 @@ export function registerGarnishmentRoutes(app: Express) {
             carriedForwardAmount: 0,
             protectedAmount: 0,
             calculationMethod: line.description,
-            glAccount: line.glAccount
+            glAccount: line.glAccount,
           })),
           protectionSummary: {
             totalProtectedAmount: 0,
             netPayFloorApplied: false,
-            carriedForwardTotal: 0
+            carriedForwardTotal: 0,
           },
-          calculationLog: result.calculationLog
+          calculationLog: result.calculationLog,
         },
-        message: 'Garnishment calculation completed'
+        message: 'Garnishment calculation completed',
       });
-      
     } catch (error) {
       console.error('Legacy garnishment calculation error:', error);
-      res.status(500).json({ 
+      res.status(500).json({
         success: false,
-        error: 'Failed to calculate garnishments' 
+        error: 'Failed to calculate garnishments',
       });
     }
   });
-  
+
   /**
    * POST /api/garnishments/process-payroll
    * Process garnishments for a payroll run and create transactions
    */
-  app.post('/api/garnishments/process-payroll', isAuthenticated, async (req, res) => {
-    try {
-      const {
-        employeeId,
-        payrollRunId,
-        calculationResult,
-        payPeriodStart,
-        payPeriodEnd,
-        grossPay,
-        disposableIncome,
-        netPayBefore
-      } = req.body;
-      
-      // Validate required fields
-      if (!employeeId || !payrollRunId || !calculationResult) {
-        return res.status(400).json({
+  app.post(
+    '/api/garnishments/process-payroll',
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const {
+          employeeId,
+          payrollRunId,
+          calculationResult,
+          payPeriodStart,
+          payPeriodEnd,
+          grossPay,
+          disposableIncome,
+          netPayBefore,
+        } = req.body;
+
+        // Validate required fields
+        if (!employeeId || !payrollRunId || !calculationResult) {
+          return res.status(400).json({
+            success: false,
+            error:
+              'Missing required fields: employeeId, payrollRunId, calculationResult',
+          });
+        }
+
+        const transactions =
+          await GarnishmentService.processGarnishmentTransactions(
+            employeeId,
+            payrollRunId,
+            calculationResult,
+            payPeriodStart,
+            payPeriodEnd,
+            grossPay,
+            disposableIncome,
+            netPayBefore
+          );
+
+        // Generate GL entries for the transactions
+        const glEntries = GarnishmentService.generateGLEntries(transactions);
+
+        res.json({
+          success: true,
+          data: {
+            transactions,
+            glEntries,
+          },
+          message: `Processed ${transactions.length} garnishment transactions`,
+        });
+      } catch (error) {
+        console.error('Error processing garnishment payroll:', error);
+        res.status(500).json({
           success: false,
-          error: 'Missing required fields: employeeId, payrollRunId, calculationResult'
+          error: 'Failed to process garnishment payroll',
         });
       }
-      
-      const transactions = await GarnishmentService.processGarnishmentTransactions(
-        employeeId,
-        payrollRunId,
-        calculationResult,
-        payPeriodStart,
-        payPeriodEnd,
-        grossPay,
-        disposableIncome,
-        netPayBefore
-      );
-      
-      // Generate GL entries for the transactions
-      const glEntries = GarnishmentService.generateGLEntries(transactions);
-      
-      res.json({
-        success: true,
-        data: {
-          transactions,
-          glEntries
-        },
-        message: `Processed ${transactions.length} garnishment transactions`
-      });
-    } catch (error) {
-      console.error('Error processing garnishment payroll:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to process garnishment payroll'
-      });
     }
-  });
-  
+  );
+
   /**
    * GET /api/garnishments/order/:id
    * Get a specific garnishment order by ID
@@ -317,27 +358,27 @@ export function registerGarnishmentRoutes(app: Express) {
     try {
       const { id } = req.params;
       const garnishmentOrder = await GarnishmentService.getGarnishmentOrder(id);
-      
+
       if (!garnishmentOrder) {
         return res.status(404).json({
           success: false,
-          error: 'Garnishment order not found'
+          error: 'Garnishment order not found',
         });
       }
-      
+
       res.json({
         success: true,
-        data: garnishmentOrder
+        data: garnishmentOrder,
       });
     } catch (error) {
       console.error('Error fetching garnishment order:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to fetch garnishment order'
+        error: 'Failed to fetch garnishment order',
       });
     }
   });
-  
+
   /**
    * POST /api/garnishments/validate
    * Validate garnishment order data without saving
@@ -346,153 +387,173 @@ export function registerGarnishmentRoutes(app: Express) {
     try {
       const orderData: InsertGarnishmentOrder = req.body;
       const validation = GarnishmentService.validateGarnishmentOrder(orderData);
-      
+
       res.json({
         success: true,
-        data: validation
+        data: validation,
       });
     } catch (error) {
       console.error('Error validating garnishment order:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to validate garnishment order'
+        error: 'Failed to validate garnishment order',
       });
     }
   });
-  
+
   /**
    * POST /api/garnishments/:id/suspend
    * Suspend a garnishment order (RBAC protected)
    */
-  app.post('/api/garnishments/:id/suspend', isAuthenticated, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { reason } = req.body;
-      
-      const updatedOrder = await GarnishmentService.updateGarnishmentOrder(id, {
-        status: 'suspended',
-        notes: reason ? `Suspended: ${reason}` : 'Suspended'
-      });
-      
-      if (!updatedOrder) {
-        return res.status(404).json({
+  app.post(
+    '/api/garnishments/:id/suspend',
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        const updatedOrder = await GarnishmentService.updateGarnishmentOrder(
+          id,
+          {
+            status: 'suspended',
+            notes: reason ? `Suspended: ${reason}` : 'Suspended',
+          }
+        );
+
+        if (!updatedOrder) {
+          return res.status(404).json({
+            success: false,
+            error: 'Garnishment order not found',
+          });
+        }
+
+        res.json({
+          success: true,
+          data: updatedOrder,
+          message: 'Garnishment order suspended',
+        });
+      } catch (error) {
+        console.error('Error suspending garnishment order:', error);
+        res.status(500).json({
           success: false,
-          error: 'Garnishment order not found'
+          error: 'Failed to suspend garnishment order',
         });
       }
-      
-      res.json({
-        success: true,
-        data: updatedOrder,
-        message: 'Garnishment order suspended'
-      });
-    } catch (error) {
-      console.error('Error suspending garnishment order:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to suspend garnishment order'
-      });
     }
-  });
-  
+  );
+
   /**
    * POST /api/garnishments/:id/reactivate
    * Reactivate a suspended garnishment order (RBAC protected)
    */
-  app.post('/api/garnishments/:id/reactivate', isAuthenticated, async (req, res) => {
-    try {
-      const { id } = req.params;
-      
-      const updatedOrder = await GarnishmentService.updateGarnishmentOrder(id, {
-        status: 'active'
-      });
-      
-      if (!updatedOrder) {
-        return res.status(404).json({
+  app.post(
+    '/api/garnishments/:id/reactivate',
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        const updatedOrder = await GarnishmentService.updateGarnishmentOrder(
+          id,
+          {
+            status: 'active',
+          }
+        );
+
+        if (!updatedOrder) {
+          return res.status(404).json({
+            success: false,
+            error: 'Garnishment order not found',
+          });
+        }
+
+        res.json({
+          success: true,
+          data: updatedOrder,
+          message: 'Garnishment order reactivated',
+        });
+      } catch (error) {
+        console.error('Error reactivating garnishment order:', error);
+        res.status(500).json({
           success: false,
-          error: 'Garnishment order not found'
+          error: 'Failed to reactivate garnishment order',
         });
       }
-      
-      res.json({
-        success: true,
-        data: updatedOrder,
-        message: 'Garnishment order reactivated'
-      });
-    } catch (error) {
-      console.error('Error reactivating garnishment order:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to reactivate garnishment order'
-      });
     }
-  });
-  
+  );
+
   /**
    * POST /api/garnishments/gl-entries
    * Generate GL journal entries for garnishment lines
    */
-  app.post('/api/garnishments/gl-entries', isAuthenticated, async (req, res) => {
-    try {
-      const { garnishmentLines, employeeId, property, department } = req.body;
-      
-      if (!garnishmentLines || !employeeId) {
-        return res.status(400).json({
+  app.post(
+    '/api/garnishments/gl-entries',
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const { garnishmentLines, employeeId, property, department } = req.body;
+
+        if (!garnishmentLines || !employeeId) {
+          return res.status(400).json({
+            success: false,
+            error: 'Missing required fields: garnishmentLines, employeeId',
+          });
+        }
+
+        const glEntries = GarnishmentService.generateGLEntries(
+          garnishmentLines,
+          employeeId,
+          property,
+          department
+        );
+
+        res.json({
+          success: true,
+          data: { glEntries },
+          message: 'GL entries generated successfully',
+        });
+      } catch (error) {
+        console.error('GL entries generation error:', error);
+        res.status(500).json({
           success: false,
-          error: 'Missing required fields: garnishmentLines, employeeId'
+          error: 'Failed to generate GL entries',
         });
       }
-      
-      const glEntries = GarnishmentService.generateGLEntries(
-        garnishmentLines,
-        employeeId,
-        property,
-        department
-      );
-      
-      res.json({ 
-        success: true,
-        data: { glEntries },
-        message: 'GL entries generated successfully'
-      });
-      
-    } catch (error) {
-      console.error('GL entries generation error:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Failed to generate GL entries' 
-      });
     }
-  });
-  
+  );
+
   /**
    * POST /api/garnishments/reverse/:payrollRunId/:employeeId
    * Handle payroll run reversal - restore collected_ytd and reopen balance
    */
-  app.post('/api/garnishments/reverse/:payrollRunId/:employeeId', isAuthenticated, async (req, res) => {
-    try {
-      const { payrollRunId, employeeId } = req.params;
-      
-      await GarnishmentService.reversePayrollRun(payrollRunId, employeeId);
-      
-      res.json({ 
-        success: true,
-        data: {
-          message: 'Payroll run reversed successfully',
-          payrollRunId,
-          employeeId
-        }
-      });
-      
-    } catch (error) {
-      console.error('Payroll reversal error:', error);
-      res.status(500).json({ 
-        success: false,
-        error: 'Failed to reverse payroll run' 
-      });
+  app.post(
+    '/api/garnishments/reverse/:payrollRunId/:employeeId',
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const { payrollRunId, employeeId } = req.params;
+
+        await GarnishmentService.reversePayrollRun(payrollRunId, employeeId);
+
+        res.json({
+          success: true,
+          data: {
+            message: 'Payroll run reversed successfully',
+            payrollRunId,
+            employeeId,
+          },
+        });
+      } catch (error) {
+        console.error('Payroll reversal error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to reverse payroll run',
+        });
+      }
     }
-  });
-  
+  );
+
   /**
    * GET /api/garnishments/demo
    * Demo endpoint showcasing the calculation engine with sample data
@@ -504,12 +565,12 @@ export function registerGarnishmentRoutes(app: Express) {
         employeeId: 'EMP-DEMO',
         runContext: {
           period: '2025-01-15 to 2025-01-31',
-          runType: 'regular'
+          runType: 'regular',
         },
-        preTax: 3500.00,
-        taxes: 650.00,
-        contribs: 525.00,
-        netBeforeGarnishments: 2325.00,
+        preTax: 3500.0,
+        taxes: 650.0,
+        contribs: 525.0,
+        netBeforeGarnishments: 2325.0,
         activeGarnishments: [
           {
             id: 'demo-001',
@@ -523,7 +584,7 @@ export function registerGarnishmentRoutes(app: Express) {
             maxPercentCap: '50',
             protectedNetFloor: 600,
             totalBalance: 5000,
-            createdAt: new Date('2025-01-15T10:00:00Z')
+            createdAt: new Date('2025-01-15T10:00:00Z'),
           },
           {
             id: 'demo-002',
@@ -536,14 +597,14 @@ export function registerGarnishmentRoutes(app: Express) {
             amount: '400',
             protectedNetFloor: 600,
             totalBalance: 8000,
-            createdAt: new Date('2025-01-16T14:30:00Z')
-          }
-        ]
+            createdAt: new Date('2025-01-16T14:30:00Z'),
+          },
+        ],
       };
-      
+
       // Run calculation
       const result = await GarnishmentService.calculateGarnishments(demoInput);
-      
+
       // Generate GL entries
       const glEntries = GarnishmentService.generateGLEntries(
         result.garnishmentLines,
@@ -551,7 +612,7 @@ export function registerGarnishmentRoutes(app: Express) {
         'HOTEL-PRINCESS',
         'FRONT-DESK'
       );
-      
+
       res.json({
         success: true,
         demo: {
@@ -559,7 +620,10 @@ export function registerGarnishmentRoutes(app: Express) {
           input: demoInput,
           result: {
             ...result,
-            totalDeducted: result.garnishmentLines.reduce((sum, line) => sum + line.amount, 0)
+            totalDeducted: result.garnishmentLines.reduce(
+              (sum, line) => sum + line.amount,
+              0
+            ),
           },
           glEntries,
           summary: {
@@ -567,126 +631,137 @@ export function registerGarnishmentRoutes(app: Express) {
             taxes: demoInput.taxes,
             contributions: demoInput.contribs,
             disposableNet: demoInput.netBeforeGarnishments,
-            totalGarnishments: result.garnishmentLines.reduce((sum, line) => sum + line.amount, 0),
+            totalGarnishments: result.garnishmentLines.reduce(
+              (sum, line) => sum + line.amount,
+              0
+            ),
             netAfterGarnishments: result.netAfterGarnishments,
             payslipLines: result.garnishmentLines.length,
-            glEntries: glEntries.length
-          }
-        }
+            glEntries: glEntries.length,
+          },
+        },
       });
-      
     } catch (error) {
       console.error('Demo calculation error:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to run demo calculation'
+        error: 'Failed to run demo calculation',
       });
     }
   });
-  
+
   /**
    * POST /api/garnishments/bdd-tests
    * Run BDD acceptance tests for garnishment calculation engine
    */
   app.post('/api/garnishments/bdd-tests', async (req, res) => {
     try {
-      const { runGarnishmentBDDTests } = await import('../test/garnishment-bdd-tests');
+      const { runGarnishmentBDDTests } = await import(
+        '../test/garnishment-bdd-tests'
+      );
       const results = await runGarnishmentBDDTests();
-      
+
       res.json({
         success: true,
         data: {
           ...results,
           summary: `${results.passed}/${results.totalTests} tests passed`,
-          allPassed: results.failed === 0
-        }
+          allPassed: results.failed === 0,
+        },
       });
-      
     } catch (error: any) {
       console.error('BDD test execution error:', error);
       res.status(500).json({
         success: false,
         error: 'Failed to run BDD tests',
-        details: error?.message || String(error)
+        details: error?.message || String(error),
       });
     }
   });
-  
+
   /**
    * GET /api/garnishments/audit/:employeeId
    * Get audit trail for employee garnishment calculations
    */
-  app.get('/api/garnishments/audit/:employeeId', isAuthenticated, async (req, res) => {
-    try {
-      const { employeeId } = req.params;
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      
-      // For now, return mock audit data since we need to implement the actual query
-      const mockAuditTrail = [
-        {
-          id: 'audit-001',
-          timestamp: new Date().toISOString(),
-          eventType: 'calculate',
-          actor: (req.user as any)?.claims?.sub || 'system',
-          disposableNetBefore: '2325.00',
-          disposableNetAfter: '1744.25',
-          requestedAmount: '580.75',
-          appliedAmount: '580.75',
-          capReason: null,
-          wasSkipped: false,
-          wasCapped: false,
-          runType: 'regular',
-          eventReason: 'Garnishment calculation completed successfully'
-        }
-      ];
-      
-      res.json({
-        success: true,
-        data: {
-          auditTrail: mockAuditTrail,
-          employeeId,
-          totalEntries: mockAuditTrail.length
-        }
-      });
-      
-    } catch (error: any) {
-      console.error('Audit trail retrieval error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve audit trail'
-      });
+  app.get(
+    '/api/garnishments/audit/:employeeId',
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const { employeeId } = req.params;
+        const limit = req.query.limit
+          ? parseInt(req.query.limit as string)
+          : 50;
+
+        // For now, return mock audit data since we need to implement the actual query
+        const mockAuditTrail = [
+          {
+            id: 'audit-001',
+            timestamp: new Date().toISOString(),
+            eventType: 'calculate',
+            actor: (req.user as any)?.claims?.sub || 'system',
+            disposableNetBefore: '2325.00',
+            disposableNetAfter: '1744.25',
+            requestedAmount: '580.75',
+            appliedAmount: '580.75',
+            capReason: null,
+            wasSkipped: false,
+            wasCapped: false,
+            runType: 'regular',
+            eventReason: 'Garnishment calculation completed successfully',
+          },
+        ];
+
+        res.json({
+          success: true,
+          data: {
+            auditTrail: mockAuditTrail,
+            employeeId,
+            totalEntries: mockAuditTrail.length,
+          },
+        });
+      } catch (error: any) {
+        console.error('Audit trail retrieval error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to retrieve audit trail',
+        });
+      }
     }
-  });
-  
+  );
+
   /**
    * GET /api/garnishments/warnings/:employeeId
    * Get calculation warnings for UI display
    */
-  app.get('/api/garnishments/warnings/:employeeId', isAuthenticated, async (req, res) => {
-    try {
-      const { employeeId } = req.params;
-      const { payrollRunId } = req.query;
-      
-      const warnings = await GarnishmentService.getCalculationWarnings(
-        employeeId, 
-        payrollRunId as string
-      );
-      
-      res.json({
-        success: true,
-        data: {
-          warnings,
-          count: warnings.length,
-          hasWarnings: warnings.length > 0
-        }
-      });
-      
-    } catch (error: any) {
-      console.error('Warning retrieval error:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to retrieve warnings'
-      });
+  app.get(
+    '/api/garnishments/warnings/:employeeId',
+    isAuthenticated,
+    async (req, res) => {
+      try {
+        const { employeeId } = req.params;
+        const { payrollRunId } = req.query;
+
+        const warnings = await GarnishmentService.getCalculationWarnings(
+          employeeId,
+          payrollRunId as string
+        );
+
+        res.json({
+          success: true,
+          data: {
+            warnings,
+            count: warnings.length,
+            hasWarnings: warnings.length > 0,
+          },
+        });
+      } catch (error: any) {
+        console.error('Warning retrieval error:', error);
+        res.status(500).json({
+          success: false,
+          error: 'Failed to retrieve warnings',
+        });
+      }
     }
-  });
+  );
 }

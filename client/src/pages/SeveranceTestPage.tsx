@@ -24,17 +24,17 @@ export default function SeveranceTestPage() {
     try {
       const response = await fetch('/api/severance/test-golden', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         setTestResults(data.testResults);
         toast({
-          title: "Test Suite Complete",
+          title: 'Test Suite Complete',
           description: `${data.summary.passed}/${data.summary.total} tests passed`,
-          variant: data.summary.failed > 0 ? "destructive" : "default"
+          variant: data.summary.failed > 0 ? 'destructive' : 'default',
         });
       } else {
         throw new Error(data.error);
@@ -42,9 +42,9 @@ export default function SeveranceTestPage() {
     } catch (error) {
       console.error('Error running tests:', error);
       toast({
-        title: "Test Failed", 
-        description: "Failed to run golden test suite",
-        variant: "destructive"
+        title: 'Test Failed',
+        description: 'Failed to run golden test suite',
+        variant: 'destructive',
       });
     } finally {
       setIsRunning(false);
@@ -57,14 +57,11 @@ export default function SeveranceTestPage() {
         <div>
           <h1 className="text-3xl font-bold">Severance Golden Test Suite</h1>
           <p className="text-muted-foreground mt-2">
-            Validation tests for Greek severance calculations with deterministic results
+            Validation tests for Greek severance calculations with deterministic
+            results
           </p>
         </div>
-        <Button 
-          onClick={runGoldenTests}
-          disabled={isRunning}
-          size="lg"
-        >
+        <Button onClick={runGoldenTests} disabled={isRunning} size="lg">
           {isRunning ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -109,7 +106,10 @@ export default function SeveranceTestPage() {
 
       <div className="space-y-4">
         {testResults.map((test, index) => (
-          <Card key={index} className={test.passed ? "border-green-200" : "border-red-200"}>
+          <Card
+            key={index}
+            className={test.passed ? 'border-green-200' : 'border-red-200'}
+          >
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center space-x-2">
@@ -120,8 +120,8 @@ export default function SeveranceTestPage() {
                   )}
                   <span>{test.name}</span>
                 </CardTitle>
-                <Badge variant={test.passed ? "default" : "destructive"}>
-                  {test.passed ? "PASSED" : "FAILED"}
+                <Badge variant={test.passed ? 'default' : 'destructive'}>
+                  {test.passed ? 'PASSED' : 'FAILED'}
                 </Badge>
               </div>
             </CardHeader>
@@ -131,29 +131,43 @@ export default function SeveranceTestPage() {
                 <h4 className="font-semibold text-sm mb-2">Test Inputs:</h4>
                 <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded text-sm font-mono">
                   <div>Contract: {test.inputs.contractType}</div>
-                  <div>Hire: {test.inputs.hireDate} → Terminate: {test.inputs.terminationDate}</div>
+                  <div>
+                    Hire: {test.inputs.hireDate} → Terminate:{' '}
+                    {test.inputs.terminationDate}
+                  </div>
                   <div>Type: {test.inputs.terminationType}</div>
                   <div>Base: €{test.inputs.lastMonthlyWage}</div>
                   <div>Leave: {test.inputs.unusedLeaveDays} days</div>
-                  {test.inputs.christmasPaid && <div>Christmas: Already paid</div>}
+                  {test.inputs.christmasPaid && (
+                    <div>Christmas: Already paid</div>
+                  )}
                 </div>
               </div>
 
               {/* Expected Results */}
               <div>
-                <h4 className="font-semibold text-sm mb-2">Expected Results:</h4>
+                <h4 className="font-semibold text-sm mb-2">
+                  Expected Results:
+                </h4>
                 <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded text-sm">
                   {test.expected.severanceAmount !== undefined && (
                     <div>Severance: €{test.expected.severanceAmount}</div>
                   )}
                   {test.expected.christmasProRata && (
-                    <div>Christmas Pro-rata: €{test.expected.christmasProRata}</div>
+                    <div>
+                      Christmas Pro-rata: €{test.expected.christmasProRata}
+                    </div>
                   )}
                   {test.expected.earlyTerminationCompensation && (
-                    <div>Early Termination: €{test.expected.earlyTerminationCompensation}</div>
+                    <div>
+                      Early Termination: €
+                      {test.expected.earlyTerminationCompensation}
+                    </div>
                   )}
                   {test.expected.holidayAllowanceAmount !== undefined && (
-                    <div>Holiday Allowance: €{test.expected.holidayAllowanceAmount}</div>
+                    <div>
+                      Holiday Allowance: €{test.expected.holidayAllowanceAmount}
+                    </div>
                   )}
                 </div>
               </div>
@@ -161,7 +175,9 @@ export default function SeveranceTestPage() {
               {/* Actual Results */}
               {test.actualResult && (
                 <div>
-                  <h4 className="font-semibold text-sm mb-2">Actual Results:</h4>
+                  <h4 className="font-semibold text-sm mb-2">
+                    Actual Results:
+                  </h4>
                   <div className="bg-green-50 dark:bg-green-950 p-3 rounded text-sm">
                     <div>{test.actualResult.message}</div>
                     {test.actualResult.deterministic && (
@@ -181,7 +197,9 @@ export default function SeveranceTestPage() {
               {/* Error Messages */}
               {test.error && (
                 <div>
-                  <h4 className="font-semibold text-sm mb-2 text-red-600">Error:</h4>
+                  <h4 className="font-semibold text-sm mb-2 text-red-600">
+                    Error:
+                  </h4>
                   <div className="bg-red-50 dark:bg-red-950 p-3 rounded text-sm text-red-700 dark:text-red-300">
                     {test.error}
                   </div>
@@ -198,7 +216,8 @@ export default function SeveranceTestPage() {
             <PlayCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No Tests Run</h3>
             <p className="text-muted-foreground">
-              Click "Run Golden Tests" to execute the comprehensive test suite for severance calculations
+              Click "Run Golden Tests" to execute the comprehensive test suite
+              for severance calculations
             </p>
           </CardContent>
         </Card>
@@ -210,12 +229,30 @@ export default function SeveranceTestPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2 text-sm">
-            <div><strong>Test 1:</strong> Dismissal without notice (4 years service) - Expected severance: 3 months</div>
-            <div><strong>Test 2:</strong> Dismissal with notice - 50% reduction in severance</div>
-            <div><strong>Test 3:</strong> Employee resignation - No severance, only wages/leave</div>
-            <div><strong>Test 4:</strong> Fixed-term early termination - Compensation for remaining time</div>
-            <div><strong>Test 5:</strong> Holiday allowance already paid - Zero additional allowance</div>
-            <div><strong>Test 6:</strong> Rounding determinism - Identical results on re-run</div>
+            <div>
+              <strong>Test 1:</strong> Dismissal without notice (4 years
+              service) - Expected severance: 3 months
+            </div>
+            <div>
+              <strong>Test 2:</strong> Dismissal with notice - 50% reduction in
+              severance
+            </div>
+            <div>
+              <strong>Test 3:</strong> Employee resignation - No severance, only
+              wages/leave
+            </div>
+            <div>
+              <strong>Test 4:</strong> Fixed-term early termination -
+              Compensation for remaining time
+            </div>
+            <div>
+              <strong>Test 5:</strong> Holiday allowance already paid - Zero
+              additional allowance
+            </div>
+            <div>
+              <strong>Test 6:</strong> Rounding determinism - Identical results
+              on re-run
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomUUID } from 'crypto';
 
 export interface DigitalWorkCard {
   employeeId: string;
@@ -14,7 +14,14 @@ export interface DigitalWorkCard {
 
 export interface ERGANIEvent {
   eventId: string;
-  type: 'hire' | 'schedule_declaration' | 'schedule_change' | 'overtime' | 'leave' | 'contract_change' | 'termination';
+  type:
+    | 'hire'
+    | 'schedule_declaration'
+    | 'schedule_change'
+    | 'overtime'
+    | 'leave'
+    | 'contract_change'
+    | 'termination';
   employeeId: string;
   timestamp: string;
   status: 'submitted' | 'pending' | 'failed' | 'acknowledged';
@@ -72,7 +79,15 @@ export interface GreekSpecialPay {
 
 export interface ComplianceRule {
   ruleId: string;
-  category: 'digital_work_card' | 'minimum_wage' | 'overtime' | 'leave' | 'special_pays' | 'ergani' | 'efka' | 'aade';
+  category:
+    | 'digital_work_card'
+    | 'minimum_wage'
+    | 'overtime'
+    | 'leave'
+    | 'special_pays'
+    | 'ergani'
+    | 'efka'
+    | 'aade';
   title: string;
   description: string;
   lawReference: string;
@@ -110,41 +125,41 @@ export class ComplianceConnector {
   private initializeMinimumWageRules(): void {
     const rules: MinimumWageRule[] = [
       {
-        ruleId: "MW-GEN-2025",
-        effectiveDate: "2025-04-01",
-        amount: 880.00,
-        category: "general",
+        ruleId: 'MW-GEN-2025',
+        effectiveDate: '2025-04-01',
+        amount: 880.0,
+        category: 'general',
         isActive: true,
-        version: "2025.1",
-        source: "government"
+        version: '2025.1',
+        source: 'government',
       },
       {
-        ruleId: "MW-U25-2025",
-        effectiveDate: "2025-04-01",
-        amount: 748.00,
-        category: "under_25",
+        ruleId: 'MW-U25-2025',
+        effectiveDate: '2025-04-01',
+        amount: 748.0,
+        category: 'under_25',
         isActive: true,
-        version: "2025.1",
-        source: "government"
+        version: '2025.1',
+        source: 'government',
       },
       {
-        ruleId: "MW-APP-2025",
-        effectiveDate: "2025-04-01",
-        amount: 660.00,
-        category: "apprentice",
+        ruleId: 'MW-APP-2025',
+        effectiveDate: '2025-04-01',
+        amount: 660.0,
+        category: 'apprentice',
         isActive: true,
-        version: "2025.1",
-        source: "government"
+        version: '2025.1',
+        source: 'government',
       },
       {
-        ruleId: "MW-TRA-2025",
-        effectiveDate: "2025-04-01",
-        amount: 616.00,
-        category: "trainee",
+        ruleId: 'MW-TRA-2025',
+        effectiveDate: '2025-04-01',
+        amount: 616.0,
+        category: 'trainee',
         isActive: true,
-        version: "2025.1",
-        source: "government"
-      }
+        version: '2025.1',
+        source: 'government',
+      },
     ];
 
     rules.forEach(rule => {
@@ -155,50 +170,50 @@ export class ComplianceConnector {
   private initializeGovernmentFlows(): void {
     const flows: GovernmentFlow[] = [
       {
-        flowId: "ERGANI-RT",
-        name: "ERGANI II Real-time Events",
-        type: "ergani",
-        frequency: "real-time",
+        flowId: 'ERGANI-RT',
+        name: 'ERGANI II Real-time Events',
+        type: 'ergani',
+        frequency: 'real-time',
         lastSubmission: new Date(Date.now() - 3600000).toISOString(),
         nextDue: new Date(Date.now() + 3600000).toISOString(),
-        status: "up_to_date",
+        status: 'up_to_date',
         filings: 1247,
         autoSubmit: true,
         credentials: {
-          endpoint: "https://ergani.gov.gr/api/v2",
-          apiKey: "ERGANI_API_KEY_2025"
-        }
+          endpoint: 'https://ergani.gov.gr/api/v2',
+          apiKey: 'ERGANI_API_KEY_2025',
+        },
       },
       {
-        flowId: "EFKA-MONTHLY",
-        name: "e-EFKA Monthly Social Security",
-        type: "efka",
-        frequency: "monthly",
-        lastSubmission: new Date("2024-12-31").toISOString(),
-        nextDue: new Date("2025-01-31").toISOString(),
-        status: "pending",
+        flowId: 'EFKA-MONTHLY',
+        name: 'e-EFKA Monthly Social Security',
+        type: 'efka',
+        frequency: 'monthly',
+        lastSubmission: new Date('2024-12-31').toISOString(),
+        nextDue: new Date('2025-01-31').toISOString(),
+        status: 'pending',
         filings: 24,
         autoSubmit: true,
         credentials: {
-          endpoint: "https://e-efka.gov.gr/api/apdfile",
-          apiKey: "EFKA_API_KEY_2025"
-        }
+          endpoint: 'https://e-efka.gov.gr/api/apdfile',
+          apiKey: 'EFKA_API_KEY_2025',
+        },
       },
       {
-        flowId: "AADE-TAX",
-        name: "AADE ΦΜΥ Monthly Tax Filing",
-        type: "aade",
-        frequency: "monthly",
-        lastSubmission: new Date("2024-12-31").toISOString(),
-        nextDue: new Date("2025-01-31").toISOString(),
-        status: "pending",
+        flowId: 'AADE-TAX',
+        name: 'AADE ΦΜΥ Monthly Tax Filing',
+        type: 'aade',
+        frequency: 'monthly',
+        lastSubmission: new Date('2024-12-31').toISOString(),
+        nextDue: new Date('2025-01-31').toISOString(),
+        status: 'pending',
         filings: 24,
         autoSubmit: true,
         credentials: {
-          endpoint: "https://www1.aade.gr/gsisapps/tfmu",
-          apiKey: "AADE_API_KEY_2025"
-        }
-      }
+          endpoint: 'https://www1.aade.gr/gsisapps/tfmu',
+          apiKey: 'AADE_API_KEY_2025',
+        },
+      },
     ];
 
     flows.forEach(flow => {
@@ -209,56 +224,56 @@ export class ComplianceConnector {
   private initializeGreekSpecialPays(): void {
     const specialPays: GreekSpecialPay[] = [
       {
-        payId: "CHRISTMAS-BONUS",
-        type: "christmas_bonus",
-        name: "Christmas Bonus",
-        nameGreek: "Δώρο Χριστουγέννων",
-        calculationRule: "25 days of basic salary for full year service",
+        payId: 'CHRISTMAS-BONUS',
+        type: 'christmas_bonus',
+        name: 'Christmas Bonus',
+        nameGreek: 'Δώρο Χριστουγέννων',
+        calculationRule: '25 days of basic salary for full year service',
         eligibilityRules: [
-          "Employed on December 31st",
-          "Minimum 28 days service in December",
-          "Pro-rated for partial year service"
+          'Employed on December 31st',
+          'Minimum 28 days service in December',
+          'Pro-rated for partial year service',
         ],
         taxable: true,
         efkaSubject: true,
         minimumServiceMonths: 0,
         proRatedCalculation: true,
-        paymentDeadline: "December 24th"
+        paymentDeadline: 'December 24th',
       },
       {
-        payId: "EASTER-BONUS",
-        type: "easter_bonus",
-        name: "Easter Bonus",
-        nameGreek: "Δώρο Πάσχα",
-        calculationRule: "15 days of basic salary for full year service",
+        payId: 'EASTER-BONUS',
+        type: 'easter_bonus',
+        name: 'Easter Bonus',
+        nameGreek: 'Δώρο Πάσχα',
+        calculationRule: '15 days of basic salary for full year service',
         eligibilityRules: [
-          "Employed during Easter period",
-          "Minimum 40 days service in the 6 months before Easter",
-          "Pro-rated for partial service"
+          'Employed during Easter period',
+          'Minimum 40 days service in the 6 months before Easter',
+          'Pro-rated for partial service',
         ],
         taxable: true,
         efkaSubject: true,
         minimumServiceMonths: 0,
         proRatedCalculation: true,
-        paymentDeadline: "Easter Friday"
+        paymentDeadline: 'Easter Friday',
       },
       {
-        payId: "VACATION-ALLOWANCE",
-        type: "vacation_allowance",
-        name: "Vacation Allowance",
-        nameGreek: "Επίδομα Άδειας",
-        calculationRule: "50% of monthly salary for vacation days taken",
+        payId: 'VACATION-ALLOWANCE',
+        type: 'vacation_allowance',
+        name: 'Vacation Allowance',
+        nameGreek: 'Επίδομα Άδειας',
+        calculationRule: '50% of monthly salary for vacation days taken',
         eligibilityRules: [
-          "Entitled to annual leave",
-          "Paid when taking vacation",
-          "Calculated on basic salary + regular allowances"
+          'Entitled to annual leave',
+          'Paid when taking vacation',
+          'Calculated on basic salary + regular allowances',
         ],
         taxable: true,
         efkaSubject: true,
         minimumServiceMonths: 12,
         proRatedCalculation: true,
-        paymentDeadline: "With vacation pay"
-      }
+        paymentDeadline: 'With vacation pay',
+      },
     ];
 
     specialPays.forEach(pay => {
@@ -269,55 +284,58 @@ export class ComplianceConnector {
   private initializeComplianceRules(): void {
     const rules: ComplianceRule[] = [
       {
-        ruleId: "DWC-REALTIME-2025",
-        category: "digital_work_card",
-        title: "Digital Work Card Real-time Attendance",
-        description: "All clock-in/clock-out events must be synchronized with ERGANI II in real-time",
-        lawReference: "Law 4808/2021, Article 3",
-        effectiveDate: "2025-01-01",
-        version: "2025.1",
+        ruleId: 'DWC-REALTIME-2025',
+        category: 'digital_work_card',
+        title: 'Digital Work Card Real-time Attendance',
+        description:
+          'All clock-in/clock-out events must be synchronized with ERGANI II in real-time',
+        lawReference: 'Law 4808/2021, Article 3',
+        effectiveDate: '2025-01-01',
+        version: '2025.1',
         isActive: true,
         conditions: {
-          applicableTo: "all_employees",
+          applicableTo: 'all_employees',
           minimumSyncInterval: 300, // 5 minutes
-          biometricRequired: false
+          biometricRequired: false,
         },
         actions: {
           syncToERGANI: true,
           generateAlerts: true,
-          logEvents: true
+          logEvents: true,
         },
         penalties: {
-          description: "Fine for non-compliance with digital work card requirements",
+          description:
+            'Fine for non-compliance with digital work card requirements',
           fineAmount: 1000,
-          severity: "high"
-        }
+          severity: 'high',
+        },
       },
       {
-        ruleId: "MW-COMPLIANCE-2025",
-        category: "minimum_wage",
-        title: "Minimum Wage Compliance Check",
-        description: "All employee salaries must meet or exceed applicable minimum wage rates",
-        lawReference: "Law 4172/2013, Article 103",
-        effectiveDate: "2025-04-01",
-        version: "2025.1",
+        ruleId: 'MW-COMPLIANCE-2025',
+        category: 'minimum_wage',
+        title: 'Minimum Wage Compliance Check',
+        description:
+          'All employee salaries must meet or exceed applicable minimum wage rates',
+        lawReference: 'Law 4172/2013, Article 103',
+        effectiveDate: '2025-04-01',
+        version: '2025.1',
         isActive: true,
         conditions: {
-          checkFrequency: "monthly",
+          checkFrequency: 'monthly',
           includeAllowances: false,
-          proRatePartTime: true
+          proRatePartTime: true,
         },
         actions: {
           generateAlerts: true,
           blockPayroll: true,
-          notifyHR: true
+          notifyHR: true,
         },
         penalties: {
-          description: "Penalties for underpaying employees below minimum wage",
+          description: 'Penalties for underpaying employees below minimum wage',
           fineAmount: 5000,
-          severity: "critical"
-        }
-      }
+          severity: 'critical',
+        },
+      },
     ];
 
     rules.forEach(rule => {
@@ -336,11 +354,13 @@ export class ComplianceConnector {
       erganiSyncStatus: 'synced',
       biometricEnabled: false,
       qrCode: `QR-${randomUUID().substr(0, 12).toUpperCase()}`,
-      nfcEnabled: true
+      nfcEnabled: true,
     };
 
     this.digitalWorkCards.set(card.cardId, card);
-    console.log(`[COMPLIANCE] Created digital work card ${card.cardId} for employee ${employeeId}`);
+    console.log(
+      `[COMPLIANCE] Created digital work card ${card.cardId} for employee ${employeeId}`
+    );
     return card;
   }
 
@@ -355,7 +375,7 @@ export class ComplianceConnector {
     // Simulate ERGANI sync
     card.lastSync = new Date().toISOString();
     card.erganiSyncStatus = Math.random() > 0.1 ? 'synced' : 'failed';
-    
+
     return card.erganiSyncStatus === 'synced';
   }
 
@@ -373,7 +393,8 @@ export class ComplianceConnector {
       status: 'pending',
       payload,
       retryCount: 0,
-      priority: type === 'hire' || type === 'termination' ? 'critical' : 'medium'
+      priority:
+        type === 'hire' || type === 'termination' ? 'critical' : 'medium',
     };
 
     // Store event by period (YYYY-MM)
@@ -384,7 +405,7 @@ export class ComplianceConnector {
 
     // Simulate submission
     setTimeout(() => this.processERGANIEvent(event), 1000);
-    
+
     return event;
   }
 
@@ -392,12 +413,12 @@ export class ComplianceConnector {
     try {
       // Simulate ERGANI II API call
       const success = Math.random() > 0.05; // 95% success rate
-      
+
       if (success) {
         event.status = 'submitted';
         event.submissionId = `SUB-${randomUUID().substr(0, 12).toUpperCase()}`;
         console.log(`[ERGANI] Event ${event.eventId} submitted successfully`);
-        
+
         // Simulate acknowledgment
         setTimeout(() => {
           event.status = 'acknowledged';
@@ -406,11 +427,14 @@ export class ComplianceConnector {
         event.status = 'failed';
         event.errorMessage = 'ERGANI II service temporarily unavailable';
         event.retryCount++;
-        console.log(`[ERGANI] Event ${event.eventId} failed, retry count: ${event.retryCount}`);
+        console.log(
+          `[ERGANI] Event ${event.eventId} failed, retry count: ${event.retryCount}`
+        );
       }
     } catch (error) {
       event.status = 'failed';
-      event.errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      event.errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       console.error(`[ERGANI] Error processing event ${event.eventId}:`, error);
     }
   }
@@ -424,18 +448,30 @@ export class ComplianceConnector {
   getMinimumWageRules(): MinimumWageRule[] {
     return Array.from(this.minimumWageRules.values())
       .filter(rule => rule.isActive)
-      .sort((a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.effectiveDate).getTime() -
+          new Date(a.effectiveDate).getTime()
+      );
   }
 
-  getMinimumWageForCategory(category: string, date: Date = new Date()): number | null {
+  getMinimumWageForCategory(
+    category: string,
+    date: Date = new Date()
+  ): number | null {
     const applicableRules = Array.from(this.minimumWageRules.values())
-      .filter(rule => 
-        rule.category === category && 
-        rule.isActive && 
-        new Date(rule.effectiveDate) <= date &&
-        (!rule.endDate || new Date(rule.endDate) > date)
+      .filter(
+        rule =>
+          rule.category === category &&
+          rule.isActive &&
+          new Date(rule.effectiveDate) <= date &&
+          (!rule.endDate || new Date(rule.endDate) > date)
       )
-      .sort((a, b) => new Date(b.effectiveDate).getTime() - new Date(a.effectiveDate).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.effectiveDate).getTime() -
+          new Date(a.effectiveDate).getTime()
+      );
 
     return applicableRules.length > 0 ? applicableRules[0].amount : null;
   }
@@ -452,12 +488,12 @@ export class ComplianceConnector {
     try {
       // Simulate government API submission
       const success = Math.random() > 0.02; // 98% success rate
-      
+
       if (success) {
         flow.lastSubmission = new Date().toISOString();
         flow.status = 'up_to_date';
         flow.filings++;
-        
+
         // Calculate next due date
         const nextDue = new Date();
         switch (flow.frequency) {
@@ -472,7 +508,7 @@ export class ComplianceConnector {
             break;
         }
         flow.nextDue = nextDue.toISOString();
-        
+
         console.log(`[GOVERNMENT] ${flow.name} submitted successfully`);
         return true;
       } else {
@@ -497,9 +533,10 @@ export class ComplianceConnector {
     basicSalary: number,
     serviceMonths: number
   ): number {
-    const specialPay = Array.from(this.greekSpecialPays.values())
-      .find(pay => pay.type === payType);
-    
+    const specialPay = Array.from(this.greekSpecialPays.values()).find(
+      pay => pay.type === payType
+    );
+
     if (!specialPay) return 0;
 
     let amount = 0;
@@ -525,8 +562,9 @@ export class ComplianceConnector {
 
   // Compliance Methods
   getComplianceRules(): ComplianceRule[] {
-    return Array.from(this.complianceRules.values())
-      .filter(rule => rule.isActive);
+    return Array.from(this.complianceRules.values()).filter(
+      rule => rule.isActive
+    );
   }
 
   async checkCompliance(category?: string): Promise<{
@@ -534,7 +572,7 @@ export class ComplianceConnector {
     violations: any[];
     score: number;
   }> {
-    const rules = category 
+    const rules = category
       ? this.getComplianceRules().filter(rule => rule.category === category)
       : this.getComplianceRules();
 
@@ -550,17 +588,18 @@ export class ComplianceConnector {
           ruleId: rule.ruleId,
           title: rule.title,
           severity: rule.penalties?.severity || 'medium',
-          description: rule.description
+          description: rule.description,
         });
       }
     }
 
-    const score = rules.length > 0 ? (compliantRules / rules.length) * 100 : 100;
+    const score =
+      rules.length > 0 ? (compliantRules / rules.length) * 100 : 100;
 
     return {
       compliant: violations.length === 0,
       violations,
-      score: Math.round(score * 10) / 10
+      score: Math.round(score * 10) / 10,
     };
   }
 
@@ -579,17 +618,28 @@ export class ComplianceConnector {
     }
 
     // Generate demo ERGANI events
-    const eventTypes: ERGANIEvent['type'][] = ['hire', 'schedule_declaration', 'overtime', 'leave'];
+    const eventTypes: ERGANIEvent['type'][] = [
+      'hire',
+      'schedule_declaration',
+      'overtime',
+      'leave',
+    ];
     for (let i = 0; i < 20; i++) {
-      const employeeId = demoEmployees[Math.floor(Math.random() * demoEmployees.length)];
-      const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
+      const employeeId =
+        demoEmployees[Math.floor(Math.random() * demoEmployees.length)];
+      const eventType =
+        eventTypes[Math.floor(Math.random() * eventTypes.length)];
       await this.createERGANIEvent(eventType, employeeId, {
-        timestamp: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        details: `Demo ${eventType} event for ${employeeId}`
+        timestamp: new Date(
+          Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        details: `Demo ${eventType} event for ${employeeId}`,
       });
     }
 
-    console.log('[COMPLIANCE] Demo data generated for Greece compliance system');
+    console.log(
+      '[COMPLIANCE] Demo data generated for Greece compliance system'
+    );
   }
 }
 

@@ -116,7 +116,11 @@ interface MealVoucherPolicy {
 interface TipPoolingPolicy {
   enabled: boolean;
   participationBasis: 'mandatory' | 'voluntary';
-  distributionMethod: 'equal' | 'hours_based' | 'performance_based' | 'role_based';
+  distributionMethod:
+    | 'equal'
+    | 'hours_based'
+    | 'performance_based'
+    | 'role_based';
   eligibleRoles: string[];
   ineligibleRoles: string[];
   poolingPeriod: 'daily' | 'weekly' | 'biweekly' | 'monthly';
@@ -251,14 +255,14 @@ export async function getCurrentPolicies(req: Request, res: Response) {
   try {
     const userId = req.user?.claims?.sub;
     const userRole = await getUserRole(userId);
-    
+
     const policies = await getActivePolicies();
     const filteredPolicies = await applyPolicyRoleFiltering(policies, userRole);
 
     res.json({
       policies: filteredPolicies,
       retrievedAt: new Date().toISOString(),
-      cacheExpiry: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 min cache
+      cacheExpiry: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 min cache
     });
   } catch (error) {
     console.error('Error fetching policies:', error);
@@ -271,17 +275,17 @@ export async function getRoleMatrix(req: Request, res: Response) {
   try {
     const userId = req.user?.claims?.sub;
     const userRole = await getUserRole(userId);
-    
+
     // Only HR and auditors can see full role matrix
     if (!['hr', 'auditor'].includes(userRole)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
     const policies = await getActivePolicies();
-    
+
     res.json({
       roleMatrix: policies.roleMatrix,
-      retrievedAt: new Date().toISOString()
+      retrievedAt: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error fetching role matrix:', error);
@@ -293,23 +297,27 @@ export async function getRoleMatrix(req: Request, res: Response) {
 export async function validatePolicy(req: Request, res: Response) {
   try {
     const { policyType, employeeId, proposedValue } = req.body;
-    
+
     const userId = req.user?.claims?.sub;
     const userRole = await getUserRole(userId);
-    
+
     // Only managers and HR can validate policies
     if (!['manager', 'hr', 'payroll'].includes(userRole)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
-    const validation = await performPolicyValidation(policyType, employeeId, proposedValue);
-    
+    const validation = await performPolicyValidation(
+      policyType,
+      employeeId,
+      proposedValue
+    );
+
     res.json({
       valid: validation.isValid,
       violations: validation.violations,
       warnings: validation.warnings,
       suggestedCorrections: validation.corrections,
-      validatedAt: new Date().toISOString()
+      validatedAt: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error validating policy:', error);
@@ -329,22 +337,22 @@ async function getActivePolicies(): Promise<PayrollPolicies> {
         dailyCap: {
           hours: 3.0,
           hardLimit: false, // Warning only, not enforced
-          alertThreshold: 2.5
+          alertThreshold: 2.5,
         },
         weeklyCap: {
           hours: 8.0,
           hardLimit: true, // System prevents scheduling beyond 8h/week
-          alertThreshold: 6.0
+          alertThreshold: 6.0,
         },
         monthlyCap: {
           hours: 32.0,
           hardLimit: true,
-          alertThreshold: 28.0
+          alertThreshold: 28.0,
         },
         consecutiveDays: {
           maxDays: 6,
           mandatoryRestPeriod: 11, // 11 hours rest between shifts
-          exemptions: ['management', 'security', 'maintenance']
+          exemptions: ['management', 'security', 'maintenance'],
         },
         approvalRequired: {
           dailyThreshold: 2.0, // Requires approval for >2h daily OT
@@ -353,29 +361,37 @@ async function getActivePolicies(): Promise<PayrollPolicies> {
           escalationMatrix: [
             { hours: 4.0, role: 'manager' },
             { hours: 8.0, role: 'hr' },
-            { hours: 12.0, role: 'general_manager' }
-          ]
-        }
+            { hours: 12.0, role: 'general_manager' },
+          ],
+        },
       },
       nightBand: {
         timeRange: {
           startTime: '22:00',
           endTime: '06:00',
-          timezone: 'Europe/Athens'
+          timezone: 'Europe/Athens',
         },
         premiumRate: 1.25,
         minimumHours: 3.0,
-        applicableDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        applicableDays: [
+          'monday',
+          'tuesday',
+          'wednesday',
+          'thursday',
+          'friday',
+          'saturday',
+          'sunday',
+        ],
         exemptions: {
           roles: ['security'],
           employeeCategories: ['part-time-under-20h'],
-          departments: ['management']
+          departments: ['management'],
         },
         healthAndSafety: {
           maxConsecutiveNights: 5,
           mandatoryBreaks: 30, // 30-minute break per night shift
-          medicalCheckRequired: true
-        }
+          medicalCheckRequired: true,
+        },
       },
       sundaySchedule: {
         premiumRate: 1.2,
@@ -386,34 +402,41 @@ async function getActivePolicies(): Promise<PayrollPolicies> {
         exemptions: {
           essentialServices: ['reception', 'security', 'kitchen'],
           managementExempt: true,
-          seasonalOverride: true // Different rules May-September
+          seasonalOverride: true, // Different rules May-September
         },
         approvalWorkflow: {
           managerApproval: true,
           employeeConsent: true,
-          advanceNotice: 7 // 7 days advance notice
-        }
+          advanceNotice: 7, // 7 days advance notice
+        },
       },
       mealVoucherCap: {
-        dailyAmount: 11.00,
+        dailyAmount: 11.0,
         eligibility: {
           minimumHours: 6.0,
-          workingDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-          excludedShifts: ['split-shift-under-4h']
+          workingDays: [
+            'monday',
+            'tuesday',
+            'wednesday',
+            'thursday',
+            'friday',
+            'saturday',
+          ],
+          excludedShifts: ['split-shift-under-4h'],
         },
-        monthlyCapAmount: 220.00, // 20 working days × €11
-        taxExemptLimit: 11.00,
+        monthlyCapAmount: 220.0, // 20 working days × €11
+        taxExemptLimit: 11.0,
         distributionMethod: 'electronic',
         restrictions: {
           transferable: false,
           cashEquivalent: false,
           expiryPeriod: 12, // 12 months
-          approvedVendors: ['supermarkets', 'restaurants', 'cafeterias']
+          approvedVendors: ['supermarkets', 'restaurants', 'cafeterias'],
         },
         partTimePolicy: {
           proRatedBasis: true,
-          minimumHoursQualification: 4.0
-        }
+          minimumHoursQualification: 4.0,
+        },
       },
       tipRules: {
         enabled: true,
@@ -428,75 +451,81 @@ async function getActivePolicies(): Promise<PayrollPolicies> {
           bartenderWeight: 1.2,
           hostessWeight: 0.8,
           busserWeight: 0.6,
-          kitchenWeight: 0.0
+          kitchenWeight: 0.0,
         },
         managerParticipation: false,
         recordKeeping: {
           detailedLogging: true,
           employeeVisibility: true,
-          auditTrailRequired: true
+          auditTrailRequired: true,
         },
         taxImplications: {
           reportAsWages: true,
           withholding: true,
-          socialInsuranceSubject: true
-        }
+          socialInsuranceSubject: true,
+        },
       },
       leaveAccrual: {
         annualLeave: {
           accrualRate: 2.0, // 2 days per month = 24 days annually
           carryOverLimit: 5, // Max 5 days carry-over
           cashOutAllowed: false,
-          minimumTakeConsecutive: 10 // Must take at least 10 consecutive days
+          minimumTakeConsecutive: 10, // Must take at least 10 consecutive days
         },
         sickLeave: {
           accrualRate: 1.0, // 1 day per month
           carryOverLimit: 0, // Use or lose
           medicalCertificateRequired: 3, // Required after 3 consecutive days
-          familyCareAllowed: true
+          familyCareAllowed: true,
         },
         personalLeave: {
           daysPerYear: 3,
           advanceNoticeRequired: 48, // 48 hours advance notice
-          managerApprovalRequired: true
+          managerApprovalRequired: true,
         },
         specialLeave: {
           maternityCoverage: 17, // 17 weeks maternity leave
           paternityLeave: 14, // 14 days paternity leave
           bereavementLeave: 5, // 5 days bereavement
-          marriageLeave: 6 // 6 days marriage leave
-        }
+          marriageLeave: 6, // 6 days marriage leave
+        },
       },
       complianceMonitoring: {
         automaticChecks: {
           overtimeViolations: true,
           restPeriodCompliance: true,
           workingTimeDirective: true,
-          erganiValidation: true
+          erganiValidation: true,
         },
         alertThresholds: {
           dailyHoursWarning: 10.0,
           weeklyHoursWarning: 48.0,
           consecutiveDaysWarning: 6,
-          restPeriodMinimum: 11.0
+          restPeriodMinimum: 11.0,
         },
         escalationMatrix: {
           level1: { threshold: 1, recipients: ['direct_manager'] },
-          level2: { threshold: 3, recipients: ['hr_manager', 'department_head'] },
-          level3: { threshold: 5, recipients: ['general_manager', 'compliance_officer'] }
+          level2: {
+            threshold: 3,
+            recipients: ['hr_manager', 'department_head'],
+          },
+          level3: {
+            threshold: 5,
+            recipients: ['general_manager', 'compliance_officer'],
+          },
         },
         reportingFrequency: {
           dailyChecks: true,
           weeklyReports: true,
           monthlyAudits: true,
-          quarterlyReview: true
+          quarterlyReview: true,
         },
         exceptionHandling: {
           autoCorrection: false,
           manualReviewRequired: true,
-          approvalWorkflow: true
-        }
-      }
+          approvalWorkflow: true,
+        },
+      },
     },
     roleMatrix: {
       employee: {
@@ -505,7 +534,7 @@ async function getActivePolicies(): Promise<PayrollPolicies> {
         schedules: ['read_own'],
         leave: ['request', 'view_own'],
         overtime: ['request_approval'],
-        personal: ['edit_profile', 'view_profile']
+        personal: ['edit_profile', 'view_profile'],
       },
       manager: {
         payslips: ['read_department', 'review'],
@@ -514,7 +543,7 @@ async function getActivePolicies(): Promise<PayrollPolicies> {
         leave: ['approve_department', 'view_department'],
         overtime: ['approve_department', 'view_reports'],
         reports: ['department_analytics', 'compliance_dashboard'],
-        employees: ['view_department', 'performance_review']
+        employees: ['view_department', 'performance_review'],
       },
       hr: {
         payslips: ['read_all', 'review', 'approve'],
@@ -525,7 +554,7 @@ async function getActivePolicies(): Promise<PayrollPolicies> {
         reports: ['all_analytics', 'compliance_reports', 'audit_trails'],
         employees: ['create', 'edit_all', 'terminate', 'rehire'],
         policies: ['create', 'edit', 'approve'],
-        system: ['user_management', 'role_assignment']
+        system: ['user_management', 'role_assignment'],
       },
       payroll: {
         payslips: ['create', 'calculate', 'approve', 'distribute'],
@@ -534,7 +563,7 @@ async function getActivePolicies(): Promise<PayrollPolicies> {
         reports: ['payroll_reports', 'tax_reports', 'compliance_exports'],
         corrections: ['payroll_adjustments', 'retroactive_changes'],
         compliance: ['ergani_submit', 'efka_report', 'aade_filing'],
-        system: ['payroll_configuration', 'rule_management']
+        system: ['payroll_configuration', 'rule_management'],
       },
       auditor: {
         payslips: ['read_all', 'audit_trail'],
@@ -542,15 +571,15 @@ async function getActivePolicies(): Promise<PayrollPolicies> {
         reports: ['all_analytics', 'compliance_reports', 'audit_reports'],
         system: ['audit_logs', 'security_reports', 'data_integrity'],
         compliance: ['compliance_review', 'violation_reports'],
-        readonly: true
-      }
+        readonly: true,
+      },
     },
     metadata: {
       lastUpdated: new Date().toISOString(),
       updatedBy: 'hr-admin',
       approvalRequired: true,
-      nextReviewDate: '2025-06-01T00:00:00Z'
-    }
+      nextReviewDate: '2025-06-01T00:00:00Z',
+    },
   };
 }
 
@@ -558,7 +587,10 @@ async function getUserRole(userId: string): Promise<string> {
   return 'manager'; // Mock role
 }
 
-async function applyPolicyRoleFiltering(policies: PayrollPolicies, role: string): Promise<Partial<PayrollPolicies>> {
+async function applyPolicyRoleFiltering(
+  policies: PayrollPolicies,
+  role: string
+): Promise<Partial<PayrollPolicies>> {
   switch (role) {
     case 'employee':
       // Employees see only policies that directly affect them
@@ -573,13 +605,18 @@ async function applyPolicyRoleFiltering(policies: PayrollPolicies, role: string)
           tipRules: policies.policies.tipRules,
           leaveAccrual: policies.policies.leaveAccrual,
           complianceMonitoring: {
-            alertThresholds: policies.policies.complianceMonitoring.alertThresholds,
-            automaticChecks: policies.policies.complianceMonitoring.automaticChecks,
-            reportingFrequency: policies.policies.complianceMonitoring.reportingFrequency,
-            escalationMatrix: policies.policies.complianceMonitoring.escalationMatrix,
-            exceptionHandling: policies.policies.complianceMonitoring.exceptionHandling
-          }
-        }
+            alertThresholds:
+              policies.policies.complianceMonitoring.alertThresholds,
+            automaticChecks:
+              policies.policies.complianceMonitoring.automaticChecks,
+            reportingFrequency:
+              policies.policies.complianceMonitoring.reportingFrequency,
+            escalationMatrix:
+              policies.policies.complianceMonitoring.escalationMatrix,
+            exceptionHandling:
+              policies.policies.complianceMonitoring.exceptionHandling,
+          },
+        },
       };
     case 'manager':
       // Managers see operational policies and limited role matrix
@@ -587,8 +624,8 @@ async function applyPolicyRoleFiltering(policies: PayrollPolicies, role: string)
         ...policies,
         roleMatrix: {
           employee: policies.roleMatrix.employee,
-          manager: policies.roleMatrix.manager
-        }
+          manager: policies.roleMatrix.manager,
+        },
       };
     case 'hr':
     case 'payroll':
@@ -600,7 +637,11 @@ async function applyPolicyRoleFiltering(policies: PayrollPolicies, role: string)
   }
 }
 
-async function performPolicyValidation(policyType: string, employeeId: string, proposedValue: any) {
+async function performPolicyValidation(
+  policyType: string,
+  employeeId: string,
+  proposedValue: any
+) {
   // Mock policy validation logic
   const violations: string[] = [];
   const warnings: string[] = [];
@@ -612,7 +653,9 @@ async function performPolicyValidation(policyType: string, employeeId: string, p
         violations.push('Weekly overtime exceeds maximum limit of 8 hours');
       }
       if (proposedValue.hours > 6.0) {
-        warnings.push('Overtime approaching weekly threshold, manager approval required');
+        warnings.push(
+          'Overtime approaching weekly threshold, manager approval required'
+        );
       }
       break;
     case 'schedule':
@@ -627,12 +670,12 @@ async function performPolicyValidation(policyType: string, employeeId: string, p
     isValid: violations.length === 0,
     violations,
     warnings,
-    corrections
+    corrections,
   };
 }
 
 export const policyRoutes = {
   getCurrentPolicies,
   getRoleMatrix,
-  validatePolicy
+  validatePolicy,
 };

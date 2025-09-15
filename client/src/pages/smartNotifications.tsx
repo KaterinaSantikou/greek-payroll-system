@@ -1,23 +1,29 @@
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { 
-  Bell, 
-  AlertTriangle, 
-  CheckCircle, 
-  XCircle, 
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import {
+  Bell,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
   Clock,
   MessageSquare,
   Users,
   DollarSign,
   TrendingUp,
-  Zap
-} from "lucide-react";
+  Zap,
+} from 'lucide-react';
 
 export default function SmartNotifications() {
   const { toast } = useToast();
@@ -28,23 +34,23 @@ export default function SmartNotifications() {
       const response = await fetch('/api/demo/send-failure-alert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to send alert');
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
-        title: "Failure Alert Sent",
-        description: "ERGANI integration failure alert sent to Slack and Teams",
+        title: 'Failure Alert Sent',
+        description: 'ERGANI integration failure alert sent to Slack and Teams',
       });
       setLastResponse(data);
     },
-    onError: (error) => {
+    onError: error => {
       toast({
-        title: "Error",
-        description: "Failed to send failure alert",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to send failure alert',
+        variant: 'destructive',
       });
     },
   });
@@ -54,23 +60,23 @@ export default function SmartNotifications() {
       const response = await fetch('/api/demo/send-approval-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to send request');
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
-        title: "Approval Request Sent",
+        title: 'Approval Request Sent',
         description: `Overtime approval request sent (ID: ${data.approvalId})`,
       });
       setLastResponse(data);
     },
-    onError: (error) => {
+    onError: error => {
       toast({
-        title: "Error",
-        description: "Failed to send approval request",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to send approval request',
+        variant: 'destructive',
       });
     },
   });
@@ -80,23 +86,23 @@ export default function SmartNotifications() {
       const response = await fetch('/api/demo/send-payroll-ready', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to send notification');
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       toast({
-        title: "Payroll Ready Notification Sent",
-        description: "Weekly payroll readiness notification sent to managers",
+        title: 'Payroll Ready Notification Sent',
+        description: 'Weekly payroll readiness notification sent to managers',
       });
       setLastResponse(data);
     },
-    onError: (error) => {
+    onError: error => {
       toast({
-        title: "Error",
-        description: "Failed to send payroll notification",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to send payroll notification',
+        variant: 'destructive',
       });
     },
   });
@@ -116,8 +122,9 @@ export default function SmartNotifications() {
               Smart Notifications & Approvals
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Intelligent notification system with Slack/Teams integration for push failure alerts, 
-              real-time approval workflows, and automated compliance monitoring.
+              Intelligent notification system with Slack/Teams integration for
+              push failure alerts, real-time approval workflows, and automated
+              compliance monitoring.
             </p>
           </div>
 
@@ -132,13 +139,19 @@ export default function SmartNotifications() {
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-sm">
-                  Instant push notifications for ERGANI/APD/ΦΜΥ integration failures with 
-                  automatic retry logic and escalation paths.
+                  Instant push notifications for ERGANI/APD/ΦΜΥ integration
+                  failures with automatic retry logic and escalation paths.
                 </CardDescription>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  <Badge variant="outline" className="text-xs">Real-time</Badge>
-                  <Badge variant="outline" className="text-xs">Auto-retry</Badge>
-                  <Badge variant="outline" className="text-xs">Escalation</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Real-time
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Auto-retry
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Escalation
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
@@ -152,13 +165,19 @@ export default function SmartNotifications() {
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-sm">
-                  Context-aware approval requests with approve/reject buttons directly 
-                  in Slack/Teams without context switching.
+                  Context-aware approval requests with approve/reject buttons
+                  directly in Slack/Teams without context switching.
                 </CardDescription>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  <Badge variant="outline" className="text-xs">One-click</Badge>
-                  <Badge variant="outline" className="text-xs">Context-rich</Badge>
-                  <Badge variant="outline" className="text-xs">Audit trail</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    One-click
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Context-rich
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Audit trail
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
@@ -172,13 +191,19 @@ export default function SmartNotifications() {
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-sm">
-                  Weekly payroll readiness notifications with summary totals, 
+                  Weekly payroll readiness notifications with summary totals,
                   compliance status, and direct links to processing workflows.
                 </CardDescription>
                 <div className="flex flex-wrap gap-2 mt-3">
-                  <Badge variant="outline" className="text-xs">Weekly</Badge>
-                  <Badge variant="outline" className="text-xs">Summary</Badge>
-                  <Badge variant="outline" className="text-xs">Compliance</Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Weekly
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Summary
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    Compliance
+                  </Badge>
                 </div>
               </CardContent>
             </Card>
@@ -192,8 +217,10 @@ export default function SmartNotifications() {
                 Live Demo - Smart Notification Testing
               </CardTitle>
               <CardDescription>
-                Test the smart notification system by sending sample alerts to configured Slack and Teams channels.
-                These demonstrations show real notification formats with context-aware content and action buttons.
+                Test the smart notification system by sending sample alerts to
+                configured Slack and Teams channels. These demonstrations show
+                real notification formats with context-aware content and action
+                buttons.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -205,18 +232,25 @@ export default function SmartNotifications() {
                       ERGANI Integration Failure Alert
                     </h3>
                     <p className="text-red-700 dark:text-red-300 text-sm mb-4">
-                      Sends a critical failure alert for ERGANI timeout with 3 affected employees, 
-                      including retry options and direct links to view error details.
+                      Sends a critical failure alert for ERGANI timeout with 3
+                      affected employees, including retry options and direct
+                      links to view error details.
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="destructive" className="text-xs">High Priority</Badge>
-                      <Badge variant="outline" className="text-xs">3 Employees</Badge>
-                      <Badge variant="outline" className="text-xs">Retry Available</Badge>
+                      <Badge variant="destructive" className="text-xs">
+                        High Priority
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        3 Employees
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        Retry Available
+                      </Badge>
                     </div>
                   </div>
                 </div>
-                <Button 
-                  onClick={() => sendFailureAlert.mutate()} 
+                <Button
+                  onClick={() => sendFailureAlert.mutate()}
                   disabled={sendFailureAlert.isPending}
                   variant="destructive"
                   className="w-full sm:w-auto"
@@ -245,18 +279,25 @@ export default function SmartNotifications() {
                       Overtime Approval Request
                     </h3>
                     <p className="text-orange-700 dark:text-orange-300 text-sm mb-4">
-                      Sends an approval request for Maria's 4.5 hours overtime on Saturday night shift, 
-                      including cost breakdown and one-click approve/reject buttons.
+                      Sends an approval request for Maria's 4.5 hours overtime
+                      on Saturday night shift, including cost breakdown and
+                      one-click approve/reject buttons.
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="secondary" className="text-xs">€67.50</Badge>
-                      <Badge variant="outline" className="text-xs">Housekeeping</Badge>
-                      <Badge variant="outline" className="text-xs">24h Expiry</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        €67.50
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        Housekeeping
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        24h Expiry
+                      </Badge>
                     </div>
                   </div>
                 </div>
-                <Button 
-                  onClick={() => sendApprovalRequest.mutate()} 
+                <Button
+                  onClick={() => sendApprovalRequest.mutate()}
                   disabled={sendApprovalRequest.isPending}
                   className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700"
                 >
@@ -284,18 +325,25 @@ export default function SmartNotifications() {
                       Weekly Payroll Ready Notification
                     </h3>
                     <p className="text-green-700 dark:text-green-300 text-sm mb-4">
-                      Sends weekly payroll readiness summary for 47 employees with total costs, 
-                      compliance status, and direct processing links.
+                      Sends weekly payroll readiness summary for 47 employees
+                      with total costs, compliance status, and direct processing
+                      links.
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="secondary" className="text-xs">47 Employees</Badge>
-                      <Badge variant="outline" className="text-xs">€125,840 Gross</Badge>
-                      <Badge variant="outline" className="text-xs">2 Issues</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        47 Employees
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        €125,840 Gross
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        2 Issues
+                      </Badge>
                     </div>
                   </div>
                 </div>
-                <Button 
-                  onClick={() => sendPayrollReady.mutate()} 
+                <Button
+                  onClick={() => sendPayrollReady.mutate()}
                   disabled={sendPayrollReady.isPending}
                   className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
                 >
@@ -326,7 +374,9 @@ export default function SmartNotifications() {
             <CardContent>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200">Slack Integration</h4>
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+                    Slack Integration
+                  </h4>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">
                       <CheckCircle className="h-3 w-3 mr-1" />
@@ -334,12 +384,15 @@ export default function SmartNotifications() {
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Adaptive cards with action buttons for immediate approval/rejection without leaving Slack.
+                    Adaptive cards with action buttons for immediate
+                    approval/rejection without leaving Slack.
                   </p>
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-800 dark:text-gray-200">Teams Integration</h4>
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+                    Teams Integration
+                  </h4>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">
                       <Clock className="h-3 w-3 mr-1" />
@@ -347,14 +400,17 @@ export default function SmartNotifications() {
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Teams Bot Framework integration with adaptive cards and webhook responses.
+                    Teams Bot Framework integration with adaptive cards and
+                    webhook responses.
                   </p>
                 </div>
               </div>
 
               {lastResponse && (
                 <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
-                  <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-2">Last Response:</h5>
+                  <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
+                    Last Response:
+                  </h5>
                   <pre className="text-xs text-gray-600 dark:text-gray-400 overflow-x-auto">
                     {JSON.stringify(lastResponse, null, 2)}
                   </pre>
@@ -367,7 +423,8 @@ export default function SmartNotifications() {
           <div className="mt-12 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900 rounded-full text-blue-800 dark:text-blue-200 text-sm">
               <Users className="h-4 w-4" />
-              Smart Notifications System - Real-time approval workflows with audit trails
+              Smart Notifications System - Real-time approval workflows with
+              audit trails
             </div>
           </div>
         </div>

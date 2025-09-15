@@ -1,6 +1,6 @@
 /**
  * Greek Payroll Rules Module
- * 
+ *
  * Pure domain rules for Greek labor law compliance
  */
 

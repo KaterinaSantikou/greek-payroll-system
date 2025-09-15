@@ -1,12 +1,20 @@
 /**
  * Payroll Service - High-level Business Operations
- * 
+ *
  * Orchestrates payroll processing using calculator and validator.
  * No database access - delegates to infrastructure layer.
  */
 
-import { payrollCalculator, type PayrollCalculationInput, type PayrollCalculationResult } from '../calculators/payroll-calculator';
-import { payrollValidator, type ScopeValidation, type ValidationError } from '../calculators/payroll-validator';
+import {
+  payrollCalculator,
+  type PayrollCalculationInput,
+  type PayrollCalculationResult,
+} from '../calculators/payroll-calculator';
+import {
+  payrollValidator,
+  type ScopeValidation,
+  type ValidationError,
+} from '../calculators/payroll-validator';
 
 export interface PayrollScope {
   scopeId: string;
@@ -84,7 +92,6 @@ export interface EmployeePayrollData {
 }
 
 export class PayrollService {
-
   /**
    * Validate payroll scope before processing
    */
@@ -102,7 +109,7 @@ export class PayrollService {
       salary: emp.salary,
       isFullTime: emp.isFullTime,
       approvedHours: emp.approvedHours,
-      unapprovedHours: emp.unapprovedHours
+      unapprovedHours: emp.unapprovedHours,
     }));
 
     return payrollValidator.validatePayrollScope(
@@ -110,7 +117,7 @@ export class PayrollService {
       period,
       {
         requireApprovedTimesheets: options.requireApprovedTimesheets,
-        hasExistingFinalizedRun: false // This would be checked by infrastructure layer
+        hasExistingFinalizedRun: false, // This would be checked by infrastructure layer
       }
     );
   }
@@ -129,8 +136,12 @@ export class PayrollService {
     const warnings: ValidationError[] = [];
 
     // Validate scope first
-    const validation = this.validatePayrollScope(employees, scope.period, options);
-    
+    const validation = this.validatePayrollScope(
+      employees,
+      scope.period,
+      options
+    );
+
     if (!validation.canCreateScope) {
       const criticalErrors = validation.overallErrors.filter(e => e.isCritical);
       return {
@@ -146,8 +157,8 @@ export class PayrollService {
         warnings: validation.overallErrors.filter(e => !e.isCritical),
         metadata: {
           processingTime: Date.now() - startTime,
-          calculationHash: ''
-        }
+          calculationHash: '',
+        },
       };
     }
 
@@ -166,26 +177,31 @@ export class PayrollService {
           sundayHours: employee.sundayHours,
           holidayHours: employee.holidayHours,
           leaveHours: employee.leaveHours,
-          allowances: options.includeAllowances ? employee.allowances : undefined,
+          allowances: options.includeAllowances
+            ? employee.allowances
+            : undefined,
           tips: employee.tips,
           benefitsInKind: employee.benefitsInKind,
-          contractType: employee.contractType as 'indefinite' | 'fixed-term' | 'seasonal',
+          contractType: employee.contractType as
+            | 'indefinite'
+            | 'fixed-term'
+            | 'seasonal',
           isFullTime: employee.isFullTime,
           employmentStartDate: employee.hireDate,
           periodStartDate: this.getPeriodStartDate(scope.period),
-          periodEndDate: this.getPeriodEndDate(scope.period)
+          periodEndDate: this.getPeriodEndDate(scope.period),
         };
 
         // Calculate payroll
-        const calculation = payrollCalculator.calculatePayroll(calculationInput);
+        const calculation =
+          payrollCalculator.calculatePayroll(calculationInput);
         calculations.push(calculation);
-
       } catch (error) {
         errors.push({
           field: `employee_${employee.employeeId}`,
           category: 'CALCULATION_ERROR',
           message: `Failed to calculate payroll for employee ${employee.employeeId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-          isCritical: false
+          isCritical: false,
         });
       }
     }
@@ -209,8 +225,8 @@ export class PayrollService {
       warnings,
       metadata: {
         processingTime: Date.now() - startTime,
-        calculationHash
-      }
+        calculationHash,
+      },
     };
   }
 
@@ -236,16 +252,22 @@ export class PayrollService {
         allowances: employee.allowances,
         tips: employee.tips,
         benefitsInKind: employee.benefitsInKind,
-        contractType: employee.contractType as 'indefinite' | 'fixed-term' | 'seasonal',
+        contractType: employee.contractType as
+          | 'indefinite'
+          | 'fixed-term'
+          | 'seasonal',
         isFullTime: employee.isFullTime,
         employmentStartDate: employee.hireDate,
         periodStartDate: this.getPeriodStartDate(period),
-        periodEndDate: this.getPeriodEndDate(period)
+        periodEndDate: this.getPeriodEndDate(period),
       };
 
       return payrollCalculator.calculatePayroll(calculationInput);
     } catch (error) {
-      console.error(`Failed to calculate payroll for employee ${employee.employeeId}:`, error);
+      console.error(
+        `Failed to calculate payroll for employee ${employee.employeeId}:`,
+        error
+      );
       return null;
     }
   }
@@ -262,7 +284,7 @@ export class PayrollService {
         field: 'employeeId',
         category: 'FIELD_REQUIRED',
         message: 'Employee ID is required',
-        isCritical: true
+        isCritical: true,
       });
     }
 
@@ -271,7 +293,7 @@ export class PayrollService {
         field: 'salary',
         category: 'FIELD_REQUIRED',
         message: 'Valid salary is required',
-        isCritical: true
+        isCritical: true,
       });
     }
 
@@ -280,7 +302,7 @@ export class PayrollService {
         field: 'contractType',
         category: 'FIELD_REQUIRED',
         message: 'Contract type is required',
-        isCritical: true
+        isCritical: true,
       });
     }
 
@@ -290,7 +312,7 @@ export class PayrollService {
       age: employee.age,
       contractType: employee.contractType,
       hireDate: employee.hireDate,
-      terminationDate: employee.terminationDate
+      terminationDate: employee.terminationDate,
     });
 
     errors.push(...eligibility.violations);
@@ -321,7 +343,11 @@ export class PayrollService {
         grossPay: totals.grossPay + calc.grossPay,
         netPay: totals.netPay + calc.netPay,
         totalTax: totals.totalTax + calc.incomeTax + calc.solidarityTax,
-        totalInsurance: totals.totalInsurance + calc.employeeEfkaMain + calc.employeeEfkaAux + calc.employeeUnemployment
+        totalInsurance:
+          totals.totalInsurance +
+          calc.employeeEfkaMain +
+          calc.employeeEfkaAux +
+          calc.employeeUnemployment,
       }),
       { grossPay: 0, netPay: 0, totalTax: 0, totalInsurance: 0 }
     );
@@ -330,12 +356,14 @@ export class PayrollService {
   /**
    * Generate hash for calculation verification
    */
-  private generateCalculationHash(calculations: PayrollCalculationResult[]): string {
+  private generateCalculationHash(
+    calculations: PayrollCalculationResult[]
+  ): string {
     const hashData = calculations.map(calc => ({
       employeeId: calc.employeeId,
       grossPay: calc.grossPay,
       netPay: calc.netPay,
-      totalDeductions: calc.totalDeductions
+      totalDeductions: calc.totalDeductions,
     }));
 
     // Simple hash generation (in production, use crypto)

@@ -2,11 +2,10 @@
  * Reconciliation API - pain.002 and camt.054/053 ingestion
  */
 
-import type { Express } from "express";
-import { ReconciliationEngine } from "../services/reconciliationEngine";
+import type { Express } from 'express';
+import { ReconciliationEngine } from '../services/reconciliationEngine';
 
 export function reconciliationEngineRoutes(app: Express) {
-
   // =============================================================================
   // PAIN.002 INGESTION
   // =============================================================================
@@ -19,11 +18,15 @@ export function reconciliationEngineRoutes(app: Express) {
     try {
       const pain002Data = req.body;
 
-      if (!pain002Data.fileId || !pain002Data.messageId || !pain002Data.transactions) {
+      if (
+        !pain002Data.fileId ||
+        !pain002Data.messageId ||
+        !pain002Data.transactions
+      ) {
         return res.status(400).json({
           error: 'INVALID_PAIN002_DATA',
           detail: 'fileId, messageId, and transactions are required',
-          hint: 'Provide complete pain.002 message structure'
+          hint: 'Provide complete pain.002 message structure',
         });
       }
 
@@ -43,21 +46,25 @@ export function reconciliationEngineRoutes(app: Express) {
         reason_codes_processed: pain002Data.transactions
           .filter((t: any) => t.reasonCode)
           .map((t: any) => t.reasonCode),
-        next_step: result.unmatched > 0 
-          ? 'Review unmatched transactions for manual reconciliation'
-          : 'pain.002 reconciliation complete',
+        next_step:
+          result.unmatched > 0
+            ? 'Review unmatched transactions for manual reconciliation'
+            : 'pain.002 reconciliation complete',
       });
     } catch (error) {
       console.error('pain.002 ingestion error:', error);
       res.status(500).json({
         error: 'PAIN002_INGESTION_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to ingest pain.002 message'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to ingest pain.002 message',
       });
     }
   });
 
   // =============================================================================
-  // CAMT.054/053 INGESTION  
+  // CAMT.054/053 INGESTION
   // =============================================================================
 
   /**
@@ -72,7 +79,7 @@ export function reconciliationEngineRoutes(app: Express) {
         return res.status(400).json({
           error: 'INVALID_CAMT054_DATA',
           detail: 'fileId, messageId, and settlements are required',
-          hint: 'Provide complete camt.054 message structure'
+          hint: 'Provide complete camt.054 message structure',
         });
       }
 
@@ -92,15 +99,19 @@ export function reconciliationEngineRoutes(app: Express) {
         settlement_methods: camtData.settlements
           .map((s: any) => s.settlementMethod)
           .filter((m: any) => m),
-        next_step: result.unmatched > 0 
-          ? 'Review unmatched settlements for manual reconciliation'
-          : 'camt.054 settlement reconciliation complete',
+        next_step:
+          result.unmatched > 0
+            ? 'Review unmatched settlements for manual reconciliation'
+            : 'camt.054 settlement reconciliation complete',
       });
     } catch (error) {
       console.error('camt.054 ingestion error:', error);
       res.status(500).json({
         error: 'CAMT054_INGESTION_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to ingest camt.054 message'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to ingest camt.054 message',
       });
     }
   });
@@ -117,7 +128,7 @@ export function reconciliationEngineRoutes(app: Express) {
         return res.status(400).json({
           error: 'INVALID_CAMT053_DATA',
           detail: 'fileId, messageId, and settlements are required',
-          hint: 'Provide complete camt.053 message structure'
+          hint: 'Provide complete camt.053 message structure',
         });
       }
 
@@ -142,7 +153,10 @@ export function reconciliationEngineRoutes(app: Express) {
       console.error('camt.053 ingestion error:', error);
       res.status(500).json({
         error: 'CAMT053_INGESTION_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to ingest camt.053 message'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to ingest camt.053 message',
       });
     }
   });
@@ -162,24 +176,34 @@ export function reconciliationEngineRoutes(app: Express) {
       if (!entity_id) {
         return res.status(400).json({
           error: 'MISSING_PARAMETER',
-          detail: 'entity_id is required'
+          detail: 'entity_id is required',
         });
       }
 
-      const dateRange = start_date && end_date ? {
-        start: new Date(start_date as string),
-        end: new Date(end_date as string),
-      } : undefined;
+      const dateRange =
+        start_date && end_date
+          ? {
+              start: new Date(start_date as string),
+              end: new Date(end_date as string),
+            }
+          : undefined;
 
-      const stats = await ReconciliationEngine.getReconciliationStats(entity_id as string, dateRange);
+      const stats = await ReconciliationEngine.getReconciliationStats(
+        entity_id as string,
+        dateRange
+      );
 
       res.json({
         entity_id,
         date_range: dateRange,
         reconciliation_statistics: stats,
         reconciliation_health: {
-          status: stats.reconciliationRate >= 95 ? 'HEALTHY' : 
-                  stats.reconciliationRate >= 90 ? 'WARNING' : 'CRITICAL',
+          status:
+            stats.reconciliationRate >= 95
+              ? 'HEALTHY'
+              : stats.reconciliationRate >= 90
+                ? 'WARNING'
+                : 'CRITICAL',
           rate: `${stats.reconciliationRate}%`,
           pending_manual_review: stats.manualReviewRequired,
         },
@@ -193,7 +217,10 @@ export function reconciliationEngineRoutes(app: Express) {
       console.error('Reconciliation stats error:', error);
       res.status(500).json({
         error: 'RECONCILIATION_STATS_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to retrieve reconciliation statistics'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve reconciliation statistics',
       });
     }
   });
@@ -209,14 +236,15 @@ export function reconciliationEngineRoutes(app: Express) {
       if (!entity_id) {
         return res.status(400).json({
           error: 'MISSING_PARAMETER',
-          detail: 'entity_id is required'
+          detail: 'entity_id is required',
         });
       }
 
-      const unmatchedTransactions = await ReconciliationEngine.getUnmatchedTransactions(
-        entity_id as string, 
-        parseInt(limit as string)
-      );
+      const unmatchedTransactions =
+        await ReconciliationEngine.getUnmatchedTransactions(
+          entity_id as string,
+          parseInt(limit as string)
+        );
 
       res.json({
         entity_id,
@@ -238,7 +266,10 @@ export function reconciliationEngineRoutes(app: Express) {
       console.error('Unmatched transactions error:', error);
       res.status(500).json({
         error: 'UNMATCHED_TRANSACTIONS_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to retrieve unmatched transactions'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to retrieve unmatched transactions',
       });
     }
   });
@@ -255,7 +286,7 @@ export function reconciliationEngineRoutes(app: Express) {
         return res.status(400).json({
           error: 'CONFIRMATION_REQUIRED',
           detail: 'Set confirm=true to clear ingestion cache',
-          hint: 'This will allow re-processing of previously ingested messages'
+          hint: 'This will allow re-processing of previously ingested messages',
         });
       }
 
@@ -271,7 +302,10 @@ export function reconciliationEngineRoutes(app: Express) {
       console.error('Cache clear error:', error);
       res.status(500).json({
         error: 'CACHE_CLEAR_ERROR',
-        detail: error instanceof Error ? error.message : 'Failed to clear ingestion cache'
+        detail:
+          error instanceof Error
+            ? error.message
+            : 'Failed to clear ingestion cache',
       });
     }
   });

@@ -3,7 +3,12 @@ import multer from 'multer';
 import * as XLSX from 'xlsx';
 import { z } from 'zod';
 import { db } from '../db';
-import { employees, contracts, wageComponents, secureIbanVault } from '@shared/schema';
+import {
+  employees,
+  contracts,
+  wageComponents,
+  secureIbanVault,
+} from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { validateAFM, validateAMKA } from '../services/greekValidation';
 import { IbanValidationService } from '../services/IbanValidationService';
@@ -11,27 +16,31 @@ import { nanoid } from 'nanoid';
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
       'text/csv',
       'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
       cb(new Error('Only CSV and Excel files are allowed'));
     }
-  }
+  },
 });
 
 export const uploadMiddleware = upload.single('file');
 
 // Data type definitions
-export type ImportDataType = 'employees' | 'contracts' | 'bank_details' | 'wage_components';
+export type ImportDataType =
+  | 'employees'
+  | 'contracts'
+  | 'bank_details'
+  | 'wage_components';
 
 export interface ColumnMapping {
   sourceColumn: string;
@@ -108,31 +117,75 @@ const FIELD_DEFINITIONS: Record<ImportDataType, Record<string, any>> = {
     name: { required: true, type: 'string', maxLength: 200 },
     afm: { required: false, type: 'string', length: 9, validator: 'afm' },
     amka: { required: false, type: 'string', length: 11, validator: 'amka' },
-    bankIban: { required: false, type: 'string', maxLength: 34, validator: 'iban' },
+    bankIban: {
+      required: false,
+      type: 'string',
+      maxLength: 34,
+      validator: 'iban',
+    },
     dateOfBirth: { required: false, type: 'date' },
     birthYear: { required: false, type: 'number', min: 1920, max: 2010 },
-    gender: { required: false, type: 'string', options: ['M', 'F', 'Non-binary', 'Not disclosed'] },
-    employmentType: { required: true, type: 'string', options: ['indefinite', 'fixed-term', 'seasonal'] },
+    gender: {
+      required: false,
+      type: 'string',
+      options: ['M', 'F', 'Non-binary', 'Not disclosed'],
+    },
+    employmentType: {
+      required: true,
+      type: 'string',
+      options: ['indefinite', 'fixed-term', 'seasonal'],
+    },
     contractType: { required: true, type: 'string' },
-    ftePct: { required: false, type: 'decimal', min: 0, max: 100, default: 100 },
+    ftePct: {
+      required: false,
+      type: 'decimal',
+      min: 0,
+      max: 100,
+      default: 100,
+    },
     hireDate: { required: true, type: 'date' },
-    maritalStatus: { required: false, type: 'string', options: ['single', 'married', 'divorced', 'widowed'] },
-    dependents: { required: false, type: 'number', min: 0, max: 20, default: 0 }
+    maritalStatus: {
+      required: false,
+      type: 'string',
+      options: ['single', 'married', 'divorced', 'widowed'],
+    },
+    dependents: {
+      required: false,
+      type: 'number',
+      min: 0,
+      max: 20,
+      default: 0,
+    },
   },
   contracts: {
     employeeId: { required: true, type: 'string' },
-    type: { required: true, type: 'string', options: ['indefinite', 'fixed_term', 'seasonal', 'trial'] },
+    type: {
+      required: true,
+      type: 'string',
+      options: ['indefinite', 'fixed_term', 'seasonal', 'trial'],
+    },
     grade: { required: false, type: 'string', maxLength: 50 },
     basePay: { required: true, type: 'decimal', min: 0 },
-    ftePct: { required: false, type: 'decimal', min: 0, max: 100, default: 100 },
+    ftePct: {
+      required: false,
+      type: 'decimal',
+      min: 0,
+      max: 100,
+      default: 100,
+    },
     effectiveFrom: { required: true, type: 'date' },
-    effectiveTo: { required: false, type: 'date' }
+    effectiveTo: { required: false, type: 'date' },
   },
   bank_details: {
     employeeId: { required: true, type: 'string' },
-    fullIban: { required: true, type: 'string', maxLength: 34, validator: 'iban' },
+    fullIban: {
+      required: true,
+      type: 'string',
+      maxLength: 34,
+      validator: 'iban',
+    },
     accountHolderName: { required: true, type: 'string', maxLength: 140 },
-    bankName: { required: false, type: 'string', maxLength: 100 }
+    bankName: { required: false, type: 'string', maxLength: 100 },
   },
   wage_components: {
     employeeId: { required: true, type: 'string' },
@@ -140,10 +193,15 @@ const FIELD_DEFINITIONS: Record<ImportDataType, Record<string, any>> = {
     hourlyRate: { required: false, type: 'decimal', min: 0 },
     foodAllowance: { required: false, type: 'decimal', min: 0, default: 0 },
     housingAllowance: { required: false, type: 'decimal', min: 0, default: 0 },
-    transportAllowance: { required: false, type: 'decimal', min: 0, default: 0 },
+    transportAllowance: {
+      required: false,
+      type: 'decimal',
+      min: 0,
+      default: 0,
+    },
     overtimeEligible: { required: false, type: 'boolean', default: true },
-    effectiveFrom: { required: true, type: 'date' }
-  }
+    effectiveFrom: { required: true, type: 'date' },
+  },
 };
 
 /**
@@ -156,11 +214,11 @@ export async function uploadDataFile(req: Request, res: Response) {
     }
 
     const { dataType } = req.body;
-    
+
     if (!dataType || !Object.keys(FIELD_DEFINITIONS).includes(dataType)) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Invalid data type',
-        validTypes: Object.keys(FIELD_DEFINITIONS)
+        validTypes: Object.keys(FIELD_DEFINITIONS),
       });
     }
 
@@ -176,11 +234,13 @@ export async function uploadDataFile(req: Request, res: Response) {
         if (lines.length === 0) {
           return res.status(400).json({ error: 'Empty file' });
         }
-        
+
         headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-        
+
         for (let i = 1; i < lines.length; i++) {
-          const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+          const values = lines[i]
+            .split(',')
+            .map(v => v.trim().replace(/"/g, ''));
           const row: any = {};
           headers.forEach((header, index) => {
             row[header] = values[index] || '';
@@ -193,26 +253,30 @@ export async function uploadDataFile(req: Request, res: Response) {
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        
+
         if (jsonData.length === 0) {
           return res.status(400).json({ error: 'Empty worksheet' });
         }
-        
+
         headers = (jsonData[0] as any[]).map(h => String(h || '').trim());
-        
+
         for (let i = 1; i < jsonData.length; i++) {
           const values = jsonData[i] as any[];
           const row: any = {};
           headers.forEach((header, index) => {
-            row[header] = values[index] !== undefined ? String(values[index]) : '';
+            row[header] =
+              values[index] !== undefined ? String(values[index]) : '';
           });
           parsedData.push(row);
         }
       }
     } catch (parseError) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Failed to parse file',
-        details: parseError instanceof Error ? parseError.message : 'Unknown parsing error' 
+        details:
+          parseError instanceof Error
+            ? parseError.message
+            : 'Unknown parsing error',
       });
     }
 
@@ -227,7 +291,7 @@ export async function uploadDataFile(req: Request, res: Response) {
       parsedData,
       validationResults: [],
       createdAt: new Date(),
-      status: 'uploaded'
+      status: 'uploaded',
     };
 
     importSessions.set(sessionId, session);
@@ -238,14 +302,15 @@ export async function uploadDataFile(req: Request, res: Response) {
       totalRows: parsedData.length,
       headers,
       sampleData: parsedData.slice(0, 5), // First 5 rows for preview
-      availableFields: Object.keys(FIELD_DEFINITIONS[dataType as ImportDataType])
+      availableFields: Object.keys(
+        FIELD_DEFINITIONS[dataType as ImportDataType]
+      ),
     });
-
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to process file',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 }
@@ -269,11 +334,11 @@ export async function setColumnMapping(req: Request, res: Response) {
 
     for (const mapping of mappings) {
       const { sourceColumn, targetField } = mapping;
-      
+
       if (!fieldDefs[targetField]) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           error: `Invalid target field: ${targetField}`,
-          availableFields: Object.keys(fieldDefs)
+          availableFields: Object.keys(fieldDefs),
         });
       }
 
@@ -289,8 +354,8 @@ export async function setColumnMapping(req: Request, res: Response) {
           min: fieldDef.min,
           max: fieldDef.max,
           pattern: fieldDef.pattern,
-          customValidator: fieldDef.validator
-        }
+          customValidator: fieldDef.validator,
+        },
       });
     }
 
@@ -300,9 +365,8 @@ export async function setColumnMapping(req: Request, res: Response) {
     res.json({
       sessionId,
       mappedColumns: columnMappings,
-      status: session.status
+      status: session.status,
     });
-
   } catch (error) {
     console.error('Mapping error:', error);
     res.status(500).json({ error: 'Failed to set column mapping' });
@@ -316,17 +380,19 @@ export async function validateData(req: Request, res: Response) {
   try {
     const { sessionId } = req.params;
     const session = importSessions.get(sessionId);
-    
+
     if (!session) {
       return res.status(404).json({ error: 'Import session not found' });
     }
 
     if (session.status !== 'mapped') {
-      return res.status(400).json({ error: 'Session not ready for validation' });
+      return res
+        .status(400)
+        .json({ error: 'Session not ready for validation' });
     }
 
     const validationResults: ValidationResult[] = [];
-    
+
     for (let rowIndex = 0; rowIndex < session.parsedData.length; rowIndex++) {
       const row = session.parsedData[rowIndex];
       const errors: ValidationError[] = [];
@@ -335,14 +401,14 @@ export async function validateData(req: Request, res: Response) {
       // Validate each mapped field
       for (const mapping of session.mappedColumns) {
         const value = row[mapping.sourceColumn];
-        
+
         // Check required fields
         if (mapping.required && (!value || value.toString().trim() === '')) {
           errors.push({
             field: mapping.targetField,
             message: `${mapping.targetField} is required but missing`,
             code: 'REQUIRED_FIELD_MISSING',
-            value
+            value,
           });
           continue;
         }
@@ -354,15 +420,15 @@ export async function validateData(req: Request, res: Response) {
 
         // Data type validation
         const validationResult = await validateFieldValue(
-          value, 
-          mapping.targetField, 
+          value,
+          mapping.targetField,
           mapping.validation
         );
 
         if (!validationResult.isValid) {
           errors.push(...validationResult.errors);
         }
-        
+
         if (validationResult.warnings.length > 0) {
           warnings.push(...validationResult.warnings);
         }
@@ -372,7 +438,7 @@ export async function validateData(req: Request, res: Response) {
         rowIndex,
         errors,
         warnings,
-        isValid: errors.length === 0
+        isValid: errors.length === 0,
       });
     }
 
@@ -388,9 +454,8 @@ export async function validateData(req: Request, res: Response) {
       validRows: validRowCount,
       errorRows: errorRowCount,
       validationResults: validationResults,
-      status: session.status
+      status: session.status,
     });
-
   } catch (error) {
     console.error('Validation error:', error);
     res.status(500).json({ error: 'Failed to validate data' });
@@ -404,13 +469,15 @@ export async function dryRunImport(req: Request, res: Response) {
   try {
     const { sessionId } = req.params;
     const session = importSessions.get(sessionId);
-    
+
     if (!session) {
       return res.status(404).json({ error: 'Import session not found' });
     }
 
     if (session.status !== 'validated') {
-      return res.status(400).json({ error: 'Data must be validated before dry run' });
+      return res
+        .status(400)
+        .json({ error: 'Data must be validated before dry run' });
     }
 
     const validRows = session.validationResults
@@ -422,13 +489,13 @@ export async function dryRunImport(req: Request, res: Response) {
     for (const rowIndex of validRows) {
       const row = session.parsedData[rowIndex];
       const mappedData = mapRowToData(row, session.mappedColumns);
-      
+
       const dryRunResult = await generateDryRunResult(
         session.dataType,
         mappedData,
         rowIndex
       );
-      
+
       dryRunResults.push(dryRunResult);
     }
 
@@ -445,12 +512,11 @@ export async function dryRunImport(req: Request, res: Response) {
         totalRows: dryRunResults.length,
         inserts: insertCount,
         updates: updateCount,
-        skips: skipCount
+        skips: skipCount,
       },
       dryRunResults,
-      status: session.status
+      status: session.status,
     });
-
   } catch (error) {
     console.error('Dry run error:', error);
     res.status(500).json({ error: 'Failed to perform dry run' });
@@ -464,13 +530,13 @@ export async function executeImport(req: Request, res: Response) {
   try {
     const { sessionId } = req.params;
     const { confirmImport } = req.body;
-    
+
     if (!confirmImport) {
       return res.status(400).json({ error: 'Import confirmation required' });
     }
 
     const session = importSessions.get(sessionId);
-    
+
     if (!session) {
       return res.status(404).json({ error: 'Import session not found' });
     }
@@ -485,21 +551,20 @@ export async function executeImport(req: Request, res: Response) {
     const importErrors: any[] = [];
 
     // Execute imports in database transaction
-    await db.transaction(async (tx) => {
+    await db.transaction(async tx => {
       for (const dryRunResult of session.dryRunResults || []) {
         if (dryRunResult.action === 'skip') continue;
 
         try {
           await executeRowImport(tx, session.dataType, dryRunResult);
-          
+
           if (dryRunResult.action === 'insert') insertedCount++;
           else if (dryRunResult.action === 'update') updatedCount++;
-          
         } catch (error) {
           errorCount++;
           importErrors.push({
             rowIndex: dryRunResult.rowIndex,
-            error: error.message
+            error: error.message,
           });
         }
       }
@@ -513,11 +578,10 @@ export async function executeImport(req: Request, res: Response) {
       summary: {
         inserted: insertedCount,
         updated: updatedCount,
-        errors: errorCount
+        errors: errorCount,
       },
-      errors: importErrors
+      errors: importErrors,
     });
-
   } catch (error) {
     console.error('Import execution error:', error);
     res.status(500).json({ error: 'Failed to execute import' });
@@ -531,13 +595,12 @@ export async function getImportSession(req: Request, res: Response) {
   try {
     const { sessionId } = req.params;
     const session = importSessions.get(sessionId);
-    
+
     if (!session) {
       return res.status(404).json({ error: 'Import session not found' });
     }
 
     res.json(session);
-
   } catch (error) {
     console.error('Session retrieval error:', error);
     res.status(500).json({ error: 'Failed to get session' });
@@ -547,10 +610,14 @@ export async function getImportSession(req: Request, res: Response) {
 // Helper functions
 
 async function validateFieldValue(
-  value: any, 
-  fieldName: string, 
+  value: any,
+  fieldName: string,
   validation?: ColumnMapping['validation']
-): Promise<{ isValid: boolean; errors: ValidationError[]; warnings: ValidationWarning[] }> {
+): Promise<{
+  isValid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationWarning[];
+}> {
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
@@ -566,7 +633,7 @@ async function validateFieldValue(
       field: fieldName,
       message: `${fieldName} must be at least ${validation.minLength} characters`,
       code: 'MIN_LENGTH_VIOLATION',
-      value
+      value,
     });
   }
 
@@ -574,8 +641,8 @@ async function validateFieldValue(
     errors.push({
       field: fieldName,
       message: `${fieldName} must not exceed ${validation.maxLength} characters`,
-      code: 'MAX_LENGTH_VIOLATION', 
-      value
+      code: 'MAX_LENGTH_VIOLATION',
+      value,
     });
   }
 
@@ -589,7 +656,7 @@ async function validateFieldValue(
               field: fieldName,
               message: 'Invalid Greek Tax ID (AFM) format',
               code: 'INVALID_AFM',
-              value
+              value,
             });
           }
           break;
@@ -599,7 +666,7 @@ async function validateFieldValue(
               field: fieldName,
               message: 'Invalid Greek Social Security Number (AMKA) format',
               code: 'INVALID_AMKA',
-              value
+              value,
             });
           }
           break;
@@ -607,19 +674,20 @@ async function validateFieldValue(
           const ibanValidationRequest = {
             employeeId: '',
             iban: strValue,
-            accountHolderName: ''
+            accountHolderName: '',
           };
-          const ibanValidation = await IbanValidationService.validateEmployeeIban(
-            ibanValidationRequest,
-            'import-validation'
-          );
+          const ibanValidation =
+            await IbanValidationService.validateEmployeeIban(
+              ibanValidationRequest,
+              'import-validation'
+            );
           const isValid = ibanValidation.validation.isValid;
           if (!isValid) {
             errors.push({
               field: fieldName,
               message: 'Invalid IBAN format',
               code: 'INVALID_IBAN',
-              value
+              value,
             });
           }
           break;
@@ -629,7 +697,7 @@ async function validateFieldValue(
         field: fieldName,
         message: `Could not validate ${fieldName}: ${validationError instanceof Error ? validationError.message : 'Unknown error'}`,
         code: 'VALIDATION_WARNING',
-        value
+        value,
       });
     }
   }
@@ -639,10 +707,10 @@ async function validateFieldValue(
 
 function mapRowToData(row: any, mappings: ColumnMapping[]): any {
   const mappedData: any = {};
-  
+
   for (const mapping of mappings) {
     let value = row[mapping.sourceColumn];
-    
+
     // Convert data types
     if (value !== null && value !== undefined && value !== '') {
       switch (mapping.dataType) {
@@ -653,17 +721,19 @@ function mapRowToData(row: any, mappings: ColumnMapping[]): any {
           value = parseFloat(value);
           break;
         case 'boolean':
-          value = ['true', '1', 'yes', 'y'].includes(String(value).toLowerCase());
+          value = ['true', '1', 'yes', 'y'].includes(
+            String(value).toLowerCase()
+          );
           break;
         case 'date':
           value = new Date(value).toISOString().split('T')[0];
           break;
       }
     }
-    
+
     mappedData[mapping.targetField] = value;
   }
-  
+
   return mappedData;
 }
 
@@ -687,11 +757,11 @@ async function generateDryRunResult(
             .from(employees)
             .where(eq(employees.employeeNumber, mappedData.employeeNumber))
             .limit(1);
-          
+
           if (existing.length > 0) {
             existingData = existing[0];
             action = 'update';
-            
+
             // Generate field changes
             Object.keys(mappedData).forEach(field => {
               if (existingData[field] !== mappedData[field]) {
@@ -699,7 +769,7 @@ async function generateDryRunResult(
                   field,
                   oldValue: existingData[field],
                   newValue: mappedData[field],
-                  type: 'modified'
+                  type: 'modified',
                 });
               }
             });
@@ -719,7 +789,7 @@ async function generateDryRunResult(
               )
             )
             .limit(1);
-            
+
           if (existing.length > 0) {
             existingData = existing[0];
             action = 'update';
@@ -734,7 +804,7 @@ async function generateDryRunResult(
             .from(secureIbanVault)
             .where(eq(secureIbanVault.employeeId, mappedData.employeeId))
             .limit(1);
-            
+
           if (existing.length > 0) {
             existingData = existing[0];
             action = 'update';
@@ -754,7 +824,7 @@ async function generateDryRunResult(
               )
             )
             .limit(1);
-            
+
           if (existing.length > 0) {
             existingData = existing[0];
             action = 'update';
@@ -763,7 +833,9 @@ async function generateDryRunResult(
         break;
     }
   } catch (error) {
-    conflicts.push(`Error checking existing data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    conflicts.push(
+      `Error checking existing data: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
 
   return {
@@ -772,13 +844,17 @@ async function generateDryRunResult(
     existingData,
     newData: mappedData,
     changes,
-    conflicts
+    conflicts,
   };
 }
 
-async function executeRowImport(tx: any, dataType: ImportDataType, dryRunResult: DryRunResult) {
+async function executeRowImport(
+  tx: any,
+  dataType: ImportDataType,
+  dryRunResult: DryRunResult
+) {
   const { action, newData, existingData } = dryRunResult;
-  
+
   switch (dataType) {
     case 'employees':
       if (action === 'insert') {

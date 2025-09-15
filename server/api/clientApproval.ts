@@ -4,10 +4,10 @@
 
 import type { Express } from 'express';
 import { db } from '../db';
-import { 
+import {
   clientAccessInvitations,
   partnerFirms,
-  type ClientAccessInvitation
+  type ClientAccessInvitation,
 } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { ClientAccessService } from '../services/ClientAccessService';
@@ -16,7 +16,9 @@ import { z } from 'zod';
 const approvalDecisionSchema = z.object({
   approved: z.boolean(),
   selectedScopes: z.array(z.string()).optional(),
-  selectedMakerCheckerMode: z.enum(['client_checker', 'partner_checker', 'dual']).optional(),
+  selectedMakerCheckerMode: z
+    .enum(['client_checker', 'partner_checker', 'dual'])
+    .optional(),
   clientUserId: z.string().min(1), // Will be provided by client app's auth
 });
 
@@ -27,19 +29,22 @@ export function registerClientApprovalRoutes(app: Express) {
   app.get('/api/client-approval/invitation/:token', async (req, res) => {
     try {
       const { token } = req.params;
-      
+
       if (!token) {
         return res.status(400).json({ error: 'Invitation token required' });
       }
 
       const invitation = await clientAccessService.getInvitationByToken(token);
-      
+
       if (!invitation) {
-        return res.status(404).json({ error: 'Invitation not found or expired' });
+        return res
+          .status(404)
+          .json({ error: 'Invitation not found or expired' });
       }
 
       // Get partner firm details
-      const [partnerFirm] = await db.select()
+      const [partnerFirm] = await db
+        .select()
         .from(partnerFirms)
         .where(eq(partnerFirms.id, invitation.partnerFirmId))
         .limit(1);
@@ -63,7 +68,7 @@ export function registerClientApprovalRoutes(app: Express) {
           name: partnerFirm?.name,
           displayName: partnerFirm?.displayName,
           website: partnerFirm?.website,
-        }
+        },
       });
     } catch (error) {
       console.error('Error fetching invitation:', error);
@@ -76,16 +81,18 @@ export function registerClientApprovalRoutes(app: Express) {
     try {
       const { token } = req.params;
       const validatedData = approvalDecisionSchema.parse(req.body);
-      
+
       if (!token) {
         return res.status(400).json({ error: 'Invitation token required' });
       }
 
       // Get invitation by token
       const invitation = await clientAccessService.getInvitationByToken(token);
-      
+
       if (!invitation) {
-        return res.status(404).json({ error: 'Invitation not found or expired' });
+        return res
+          .status(404)
+          .json({ error: 'Invitation not found or expired' });
       }
 
       // Process the decision
@@ -106,7 +113,7 @@ export function registerClientApprovalRoutes(app: Express) {
             grantedScopes: grant.grantedScopes,
             makerCheckerMode: grant.makerCheckerMode,
             validFrom: grant.validFrom,
-          }
+          },
         });
       } else {
         res.json({
@@ -123,59 +130,64 @@ export function registerClientApprovalRoutes(app: Express) {
   // Get available permission scopes and descriptions (public endpoint)
   app.get('/api/client-approval/permission-scopes', async (req, res) => {
     try {
-      const { PermissionScopes } = await import('../services/ClientAccessService');
-      
+      const { PermissionScopes } = await import(
+        '../services/ClientAccessService'
+      );
+
       res.json({
         scopes: PermissionScopes,
         categories: {
-          'filings': {
+          filings: {
             name: 'Tax & Compliance Filings',
             description: 'Manage APD and ΦΜΥ government filings',
-            scopes: ['filings:prepare', 'filings:submit', 'filings:view']
+            scopes: ['filings:prepare', 'filings:submit', 'filings:view'],
           },
-          'runs': {
+          runs: {
             name: 'Payroll Processing',
             description: 'View and manage payroll calculations',
-            scopes: ['runs:view', 'runs:prepare', 'runs:finalize']
+            scopes: ['runs:view', 'runs:prepare', 'runs:finalize'],
           },
-          'employees': {
+          employees: {
             name: 'Employee Data',
             description: 'Access employee information and records',
-            scopes: ['employees:read', 'employees:write', 'employees:create']
+            scopes: ['employees:read', 'employees:write', 'employees:create'],
           },
-          'audit': {
+          audit: {
             name: 'Audit & Compliance',
             description: 'Download reports and view compliance status',
-            scopes: ['audit:download', 'audit:view']
+            scopes: ['audit:download', 'audit:view'],
           },
-          'payments': {
+          payments: {
             name: 'Payments & Banking',
             description: 'Manage payment batches and bank transfers',
-            scopes: ['payments:view', 'payments:create', 'payments:approve']
+            scopes: ['payments:view', 'payments:create', 'payments:approve'],
           },
-          'admin': {
+          admin: {
             name: 'Administrative',
             description: 'System settings and user management',
-            scopes: ['admin:settings', 'admin:users']
-          }
+            scopes: ['admin:settings', 'admin:users'],
+          },
         },
         makerCheckerModes: {
-          'client_checker': {
+          client_checker: {
             name: 'Client Approval Required',
-            description: 'Partner prepares actions, client approves and submits.',
-            workflow: 'Partner → Client Approval → Submit'
+            description:
+              'Partner prepares actions, client approves and submits.',
+            workflow: 'Partner → Client Approval → Submit',
           },
-          'partner_checker': {
+          partner_checker: {
             name: 'Partner Internal Approval',
-            description: 'Partner staff prepares, partner reviewer approves and submits.',
-            workflow: 'Partner Staff → Partner Reviewer → Submit'
+            description:
+              'Partner staff prepares, partner reviewer approves and submits.',
+            workflow: 'Partner Staff → Partner Reviewer → Submit',
           },
-          'dual': {
+          dual: {
             name: 'Dual Approval Required',
-            description: 'Both partner and client approval required for sensitive actions.',
-            workflow: 'Partner → Client Approval → Partner Submit'
-          }
-        }
+            description:
+              'Both partner and client approval required for sensitive actions.',
+            workflow: 'Partner → Client Approval → Partner Submit',
+          },
+        },
       });
     } catch (error) {
       console.error('Error fetching permission scopes:', error);
@@ -187,13 +199,13 @@ export function registerClientApprovalRoutes(app: Express) {
   app.get('/api/client-approval/validate/:token', async (req, res) => {
     try {
       const { token } = req.params;
-      
+
       if (!token) {
         return res.status(400).json({ error: 'Invitation token required' });
       }
 
       const invitation = await clientAccessService.getInvitationByToken(token);
-      
+
       res.json({
         valid: !!invitation,
         expired: !invitation,

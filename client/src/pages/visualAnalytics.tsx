@@ -1,17 +1,29 @@
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { useQuery } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  AlertTriangle, 
-  Download, 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { useQuery } from '@tanstack/react-query';
+import { useToast } from '@/hooks/use-toast';
+import {
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  Download,
   Search,
   Clock,
   Users,
@@ -19,8 +31,8 @@ import {
   BarChart3,
   Eye,
   Calendar,
-  RefreshCw
-} from "lucide-react";
+  RefreshCw,
+} from 'lucide-react';
 
 // Types for analytics data
 interface OvertimeHeatmapData {
@@ -77,14 +89,21 @@ interface AnalyticsKPIs {
 
 export default function VisualAnalytics() {
   const { toast } = useToast();
-  const [selectedProperty, setSelectedProperty] = useState<string>("prop-princess");
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("");
-  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
-  const [dateRange, setDateRange] = useState<string>("last-7-days");
-  const [drillDownLevel, setDrillDownLevel] = useState<'property' | 'department' | 'employee'>('property');
+  const [selectedProperty, setSelectedProperty] =
+    useState<string>('prop-princess');
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('');
+  const [selectedEmployee, setSelectedEmployee] = useState<string>('');
+  const [dateRange, setDateRange] = useState<string>('last-7-days');
+  const [drillDownLevel, setDrillDownLevel] = useState<
+    'property' | 'department' | 'employee'
+  >('property');
 
   // Fetch analytics data
-  const { data: overtimeData, isLoading: isLoadingOvertime, refetch: refetchOvertime } = useQuery({
+  const {
+    data: overtimeData,
+    isLoading: isLoadingOvertime,
+    refetch: refetchOvertime,
+  } = useQuery({
     queryKey: ['/api/analytics/overtime-heatmap', selectedProperty, dateRange],
     refetchInterval: 300000, // 5-minute cache window
   });
@@ -104,84 +123,96 @@ export default function VisualAnalytics() {
   });
 
   // Mock data for demonstration (would be replaced by real API calls)
-  const mockOvertimeData: OvertimeHeatmapData = useMemo(() => ({
-    propertyId: selectedProperty,
-    propertyName: "Princess Aegina Resort",
-    lastUpdated: new Date().toISOString(),
-    dataType: 'final',
-    departments: [
-      {
-        departmentId: 'housekeeping',
-        departmentName: 'Housekeeping',
-        totalOvertimeHours: 127.5,
-        overtimeCost: 1912.50,
-        anomalyScore: 8.2,
-        employees: [
-          {
-            employeeId: 'emp-001',
-            employeeName: 'Maria Papadopoulos',
-            overtimeHours: 18.5,
-            overtimeCost: 277.50,
-            anomalyFlags: ['consecutive-weekends', 'excessive-hours'],
-            weeklyPattern: [0, 2.5, 0, 4, 6, 6, 0]
-          },
-          {
-            employeeId: 'emp-002',
-            employeeName: 'Dimitris Konstantinos',
-            overtimeHours: 12.0,
-            overtimeCost: 180.00,
-            anomalyFlags: [],
-            weeklyPattern: [0, 0, 3, 3, 3, 3, 0]
-          }
-        ]
+  const mockOvertimeData: OvertimeHeatmapData = useMemo(
+    () => ({
+      propertyId: selectedProperty,
+      propertyName: 'Princess Aegina Resort',
+      lastUpdated: new Date().toISOString(),
+      dataType: 'final',
+      departments: [
+        {
+          departmentId: 'housekeeping',
+          departmentName: 'Housekeeping',
+          totalOvertimeHours: 127.5,
+          overtimeCost: 1912.5,
+          anomalyScore: 8.2,
+          employees: [
+            {
+              employeeId: 'emp-001',
+              employeeName: 'Maria Papadopoulos',
+              overtimeHours: 18.5,
+              overtimeCost: 277.5,
+              anomalyFlags: ['consecutive-weekends', 'excessive-hours'],
+              weeklyPattern: [0, 2.5, 0, 4, 6, 6, 0],
+            },
+            {
+              employeeId: 'emp-002',
+              employeeName: 'Dimitris Konstantinos',
+              overtimeHours: 12.0,
+              overtimeCost: 180.0,
+              anomalyFlags: [],
+              weeklyPattern: [0, 0, 3, 3, 3, 3, 0],
+            },
+          ],
+        },
+        {
+          departmentId: 'kitchen',
+          departmentName: 'Kitchen',
+          totalOvertimeHours: 89.0,
+          overtimeCost: 1335.0,
+          anomalyScore: 3.1,
+          employees: [
+            {
+              employeeId: 'emp-003',
+              employeeName: 'Kostas Dimitriou',
+              overtimeHours: 15.5,
+              overtimeCost: 232.5,
+              anomalyFlags: ['late-night-shifts'],
+              weeklyPattern: [2, 2, 2, 2, 2, 3, 2.5],
+            },
+          ],
+        },
+      ],
+    }),
+    [selectedProperty]
+  );
+
+  const mockLaborData: LaborVsOccupancyData = useMemo(
+    () => ({
+      propertyId: selectedProperty,
+      period: 'Last 7 Days',
+      occupancyRate: 82.4,
+      coversServed: 1247,
+      laborHours: 1680,
+      laborCost: 25200.0,
+      efficiency: 94.2,
+      benchmark: 90.0,
+      variance: 4.2,
+      lastUpdated: new Date().toISOString(),
+    }),
+    [selectedProperty]
+  );
+
+  const mockKPIData: AnalyticsKPIs = useMemo(
+    () => ({
+      overtimeAsPercentOfTotal: 12.8,
+      laborCostPerOccupiedRoom: 156.25,
+      laborEfficiencyRatio: 94.2,
+      anomaliesDetected: 3,
+      budgetVariance: -2.1,
+      thresholds: {
+        overtimeThreshold: 15.0,
+        efficiencyThreshold: 85.0,
+        anomalyThreshold: 5.0,
       },
-      {
-        departmentId: 'kitchen',
-        departmentName: 'Kitchen',
-        totalOvertimeHours: 89.0,
-        overtimeCost: 1335.00,
-        anomalyScore: 3.1,
-        employees: [
-          {
-            employeeId: 'emp-003',
-            employeeName: 'Kostas Dimitriou',
-            overtimeHours: 15.5,
-            overtimeCost: 232.50,
-            anomalyFlags: ['late-night-shifts'],
-            weeklyPattern: [2, 2, 2, 2, 2, 3, 2.5]
-          }
-        ]
-      }
-    ]
-  }), [selectedProperty]);
+    }),
+    []
+  );
 
-  const mockLaborData: LaborVsOccupancyData = useMemo(() => ({
-    propertyId: selectedProperty,
-    period: "Last 7 Days",
-    occupancyRate: 82.4,
-    coversServed: 1247,
-    laborHours: 1680,
-    laborCost: 25200.00,
-    efficiency: 94.2,
-    benchmark: 90.0,
-    variance: 4.2,
-    lastUpdated: new Date().toISOString()
-  }), [selectedProperty]);
-
-  const mockKPIData: AnalyticsKPIs = useMemo(() => ({
-    overtimeAsPercentOfTotal: 12.8,
-    laborCostPerOccupiedRoom: 156.25,
-    laborEfficiencyRatio: 94.2,
-    anomaliesDetected: 3,
-    budgetVariance: -2.1,
-    thresholds: {
-      overtimeThreshold: 15.0,
-      efficiencyThreshold: 85.0,
-      anomalyThreshold: 5.0
-    }
-  }), []);
-
-  const handleDrillDown = (level: 'property' | 'department' | 'employee', id?: string) => {
+  const handleDrillDown = (
+    level: 'property' | 'department' | 'employee',
+    id?: string
+  ) => {
     setDrillDownLevel(level);
     if (level === 'department' && id) {
       setSelectedDepartment(id);
@@ -192,7 +223,7 @@ export default function VisualAnalytics() {
 
   const handleInvestigate = (type: string, id: string) => {
     toast({
-      title: "Investigation Started",
+      title: 'Investigation Started',
       description: `Opening detailed analysis for ${type}: ${id}`,
     });
     // In real implementation, this would navigate to detailed investigation page
@@ -202,9 +233,9 @@ export default function VisualAnalytics() {
     // Generate CSV data based on current view
     const csvData = generateCSVData(dataType);
     downloadCSV(csvData, `${dataType}_${selectedProperty}_${dateRange}.csv`);
-    
+
     toast({
-      title: "Export Complete",
+      title: 'Export Complete',
       description: `${dataType} data exported successfully`,
     });
   };
@@ -212,11 +243,12 @@ export default function VisualAnalytics() {
   const generateCSVData = (dataType: string): string => {
     // Mock CSV generation - would use real data in production
     const headers = {
-      'overtime': 'Property,Department,Employee,Date,Hours,Cost,Anomaly_Flags',
-      'labor': 'Property,Date,Occupancy_Rate,Covers_Served,Labor_Hours,Labor_Cost,Efficiency',
-      'kpis': 'Property,Date,Overtime_Percent,Cost_Per_Room,Efficiency_Ratio,Anomalies,Budget_Variance'
+      overtime: 'Property,Department,Employee,Date,Hours,Cost,Anomaly_Flags',
+      labor:
+        'Property,Date,Occupancy_Rate,Covers_Served,Labor_Hours,Labor_Cost,Efficiency',
+      kpis: 'Property,Date,Overtime_Percent,Cost_Per_Room,Efficiency_Ratio,Anomalies,Budget_Variance',
     };
-    
+
     return headers[dataType as keyof typeof headers] || 'No data available';
   };
 
@@ -235,7 +267,8 @@ export default function VisualAnalytics() {
   };
 
   const getAnomalyColor = (score: number): string => {
-    if (score >= mockKPIData.thresholds.anomalyThreshold) return 'text-red-600 bg-red-50';
+    if (score >= mockKPIData.thresholds.anomalyThreshold)
+      return 'text-red-600 bg-red-50';
     if (score >= 3) return 'text-orange-600 bg-orange-50';
     return 'text-green-600 bg-green-50';
   };
@@ -256,16 +289,22 @@ export default function VisualAnalytics() {
                 Visual Analytics Dashboard
               </h1>
               <p className="text-gray-600 dark:text-gray-300">
-                Overtime heatmaps, labor efficiency analysis, and anomaly detection with drill-down capabilities
+                Overtime heatmaps, labor efficiency analysis, and anomaly
+                detection with drill-down capabilities
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+              <Select
+                value={selectedProperty}
+                onValueChange={setSelectedProperty}
+              >
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Select Property" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="prop-princess">Princess Aegina Resort</SelectItem>
+                  <SelectItem value="prop-princess">
+                    Princess Aegina Resort
+                  </SelectItem>
                   <SelectItem value="prop-royal">Royal Athens Hotel</SelectItem>
                 </SelectContent>
               </Select>
@@ -279,7 +318,11 @@ export default function VisualAnalytics() {
                   <SelectItem value="last-90-days">Last 90 Days</SelectItem>
                 </SelectContent>
               </Select>
-              <Button onClick={() => refetchOvertime()} variant="outline" size="sm">
+              <Button
+                onClick={() => refetchOvertime()}
+                variant="outline"
+                size="sm"
+              >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
@@ -292,13 +335,19 @@ export default function VisualAnalytics() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Overtime %</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Overtime %
+                    </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       {mockKPIData.overtimeAsPercentOfTotal}%
                     </p>
                   </div>
-                  <div className={`p-3 rounded-full ${mockKPIData.overtimeAsPercentOfTotal > mockKPIData.thresholds.overtimeThreshold ? 'bg-red-100' : 'bg-green-100'}`}>
-                    <Clock className={`h-5 w-5 ${mockKPIData.overtimeAsPercentOfTotal > mockKPIData.thresholds.overtimeThreshold ? 'text-red-600' : 'text-green-600'}`} />
+                  <div
+                    className={`p-3 rounded-full ${mockKPIData.overtimeAsPercentOfTotal > mockKPIData.thresholds.overtimeThreshold ? 'bg-red-100' : 'bg-green-100'}`}
+                  >
+                    <Clock
+                      className={`h-5 w-5 ${mockKPIData.overtimeAsPercentOfTotal > mockKPIData.thresholds.overtimeThreshold ? 'text-red-600' : 'text-green-600'}`}
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -308,7 +357,9 @@ export default function VisualAnalytics() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Cost/Room</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Cost/Room
+                    </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       €{mockKPIData.laborCostPerOccupiedRoom}
                     </p>
@@ -324,13 +375,19 @@ export default function VisualAnalytics() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Efficiency</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Efficiency
+                    </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       {mockKPIData.laborEfficiencyRatio}%
                     </p>
                   </div>
-                  <div className={`p-3 rounded-full ${mockKPIData.laborEfficiencyRatio >= mockKPIData.thresholds.efficiencyThreshold ? 'bg-green-100' : 'bg-orange-100'}`}>
-                    <TrendingUp className={`h-5 w-5 ${mockKPIData.laborEfficiencyRatio >= mockKPIData.thresholds.efficiencyThreshold ? 'text-green-600' : 'text-orange-600'}`} />
+                  <div
+                    className={`p-3 rounded-full ${mockKPIData.laborEfficiencyRatio >= mockKPIData.thresholds.efficiencyThreshold ? 'bg-green-100' : 'bg-orange-100'}`}
+                  >
+                    <TrendingUp
+                      className={`h-5 w-5 ${mockKPIData.laborEfficiencyRatio >= mockKPIData.thresholds.efficiencyThreshold ? 'text-green-600' : 'text-orange-600'}`}
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -340,13 +397,19 @@ export default function VisualAnalytics() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Anomalies</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Anomalies
+                    </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
                       {mockKPIData.anomaliesDetected}
                     </p>
                   </div>
-                  <div className={`p-3 rounded-full ${mockKPIData.anomaliesDetected >= mockKPIData.thresholds.anomalyThreshold ? 'bg-red-100' : 'bg-green-100'}`}>
-                    <AlertTriangle className={`h-5 w-5 ${mockKPIData.anomaliesDetected >= mockKPIData.thresholds.anomalyThreshold ? 'text-red-600' : 'text-green-600'}`} />
+                  <div
+                    className={`p-3 rounded-full ${mockKPIData.anomaliesDetected >= mockKPIData.thresholds.anomalyThreshold ? 'bg-red-100' : 'bg-green-100'}`}
+                  >
+                    <AlertTriangle
+                      className={`h-5 w-5 ${mockKPIData.anomaliesDetected >= mockKPIData.thresholds.anomalyThreshold ? 'text-red-600' : 'text-green-600'}`}
+                    />
                   </div>
                 </div>
               </CardContent>
@@ -356,16 +419,22 @@ export default function VisualAnalytics() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Budget Var.</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Budget Var.
+                    </p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {mockKPIData.budgetVariance > 0 ? '+' : ''}{mockKPIData.budgetVariance}%
+                      {mockKPIData.budgetVariance > 0 ? '+' : ''}
+                      {mockKPIData.budgetVariance}%
                     </p>
                   </div>
-                  <div className={`p-3 rounded-full ${mockKPIData.budgetVariance > 0 ? 'bg-red-100' : 'bg-green-100'}`}>
-                    {mockKPIData.budgetVariance > 0 ? 
-                      <TrendingUp className="h-5 w-5 text-red-600" /> :
+                  <div
+                    className={`p-3 rounded-full ${mockKPIData.budgetVariance > 0 ? 'bg-red-100' : 'bg-green-100'}`}
+                  >
+                    {mockKPIData.budgetVariance > 0 ? (
+                      <TrendingUp className="h-5 w-5 text-red-600" />
+                    ) : (
                       <TrendingDown className="h-5 w-5 text-green-600" />
-                    }
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -374,9 +443,15 @@ export default function VisualAnalytics() {
 
           <Tabs defaultValue="overtime-heatmap" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="overtime-heatmap">Overtime Heatmap</TabsTrigger>
-              <TabsTrigger value="labor-occupancy">Labor vs. Occupancy</TabsTrigger>
-              <TabsTrigger value="anomaly-detection">Anomaly Detection</TabsTrigger>
+              <TabsTrigger value="overtime-heatmap">
+                Overtime Heatmap
+              </TabsTrigger>
+              <TabsTrigger value="labor-occupancy">
+                Labor vs. Occupancy
+              </TabsTrigger>
+              <TabsTrigger value="anomaly-detection">
+                Anomaly Detection
+              </TabsTrigger>
             </TabsList>
 
             {/* Overtime Heatmap Tab */}
@@ -390,14 +465,27 @@ export default function VisualAnalytics() {
                         Overtime Heatmap Analysis
                       </CardTitle>
                       <CardDescription>
-                        {formatLastUpdated(mockOvertimeData.lastUpdated)} • 
-                        <Badge variant={mockOvertimeData.dataType === 'final' ? 'default' : 'secondary'} className="ml-2">
-                          {mockOvertimeData.dataType === 'final' ? 'Final Data' : 'Draft Data'}
+                        {formatLastUpdated(mockOvertimeData.lastUpdated)} •
+                        <Badge
+                          variant={
+                            mockOvertimeData.dataType === 'final'
+                              ? 'default'
+                              : 'secondary'
+                          }
+                          className="ml-2"
+                        >
+                          {mockOvertimeData.dataType === 'final'
+                            ? 'Final Data'
+                            : 'Draft Data'}
                         </Badge>
                       </CardDescription>
                     </div>
                     <div className="flex gap-2">
-                      <Button onClick={() => handleExportCSV('overtime')} variant="outline" size="sm">
+                      <Button
+                        onClick={() => handleExportCSV('overtime')}
+                        variant="outline"
+                        size="sm"
+                      >
                         <Download className="h-4 w-4 mr-2" />
                         Export CSV
                       </Button>
@@ -407,8 +495,11 @@ export default function VisualAnalytics() {
                 <CardContent>
                   {/* Department-level heatmap */}
                   <div className="grid gap-4">
-                    {mockOvertimeData.departments.map((dept) => (
-                      <Card key={dept.departmentId} className="border-l-4 border-l-blue-500">
+                    {mockOvertimeData.departments.map(dept => (
+                      <Card
+                        key={dept.departmentId}
+                        className="border-l-4 border-l-blue-500"
+                      >
                         <CardContent className="p-6">
                           <div className="flex items-center justify-between mb-4">
                             <div>
@@ -422,23 +513,35 @@ export default function VisualAnalytics() {
                                 <span className="text-sm text-gray-600 dark:text-gray-400">
                                   €{dept.overtimeCost.toLocaleString()}
                                 </span>
-                                <Badge className={getAnomalyColor(dept.anomalyScore)}>
+                                <Badge
+                                  className={getAnomalyColor(dept.anomalyScore)}
+                                >
                                   Anomaly Score: {dept.anomalyScore}
                                 </Badge>
                               </div>
                             </div>
                             <div className="flex gap-2">
-                              <Button 
-                                onClick={() => handleDrillDown('department', dept.departmentId)} 
-                                variant="outline" 
+                              <Button
+                                onClick={() =>
+                                  handleDrillDown(
+                                    'department',
+                                    dept.departmentId
+                                  )
+                                }
+                                variant="outline"
                                 size="sm"
                               >
                                 <Eye className="h-4 w-4 mr-1" />
                                 Drill Down
                               </Button>
-                              <Button 
-                                onClick={() => handleInvestigate('department', dept.departmentId)} 
-                                variant="secondary" 
+                              <Button
+                                onClick={() =>
+                                  handleInvestigate(
+                                    'department',
+                                    dept.departmentId
+                                  )
+                                }
+                                variant="secondary"
                                 size="sm"
                               >
                                 <Search className="h-4 w-4 mr-1" />
@@ -449,8 +552,11 @@ export default function VisualAnalytics() {
 
                           {/* Employee breakdown */}
                           <div className="grid gap-3">
-                            {dept.employees.map((emp) => (
-                              <div key={emp.employeeId} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            {dept.employees.map(emp => (
+                              <div
+                                key={emp.employeeId}
+                                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                              >
                                 <div>
                                   <p className="font-medium text-gray-900 dark:text-white">
                                     {emp.employeeName}
@@ -461,8 +567,12 @@ export default function VisualAnalytics() {
                                     </span>
                                     {emp.anomalyFlags.length > 0 && (
                                       <div className="flex gap-1">
-                                        {emp.anomalyFlags.map((flag) => (
-                                          <Badge key={flag} variant="destructive" className="text-xs">
+                                        {emp.anomalyFlags.map(flag => (
+                                          <Badge
+                                            key={flag}
+                                            variant="destructive"
+                                            className="text-xs"
+                                          >
                                             {flag.replace('-', ' ')}
                                           </Badge>
                                         ))}
@@ -471,9 +581,14 @@ export default function VisualAnalytics() {
                                   </div>
                                 </div>
                                 <div className="flex gap-2">
-                                  <Button 
-                                    onClick={() => handleDrillDown('employee', emp.employeeId)} 
-                                    variant="outline" 
+                                  <Button
+                                    onClick={() =>
+                                      handleDrillDown(
+                                        'employee',
+                                        emp.employeeId
+                                      )
+                                    }
+                                    variant="outline"
                                     size="sm"
                                   >
                                     <Eye className="h-4 w-4 mr-1" />
@@ -502,10 +617,15 @@ export default function VisualAnalytics() {
                         Labor vs. Occupancy Analysis
                       </CardTitle>
                       <CardDescription>
-                        {formatLastUpdated(mockLaborData.lastUpdated)} • Final Data
+                        {formatLastUpdated(mockLaborData.lastUpdated)} • Final
+                        Data
                       </CardDescription>
                     </div>
-                    <Button onClick={() => handleExportCSV('labor')} variant="outline" size="sm">
+                    <Button
+                      onClick={() => handleExportCSV('labor')}
+                      variant="outline"
+                      size="sm"
+                    >
                       <Download className="h-4 w-4 mr-2" />
                       Export CSV
                     </Button>
@@ -520,12 +640,20 @@ export default function VisualAnalytics() {
                       </h3>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                          <span className="text-gray-700 dark:text-gray-300">Occupancy Rate</span>
-                          <span className="font-semibold text-blue-600">{mockLaborData.occupancyRate}%</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Occupancy Rate
+                          </span>
+                          <span className="font-semibold text-blue-600">
+                            {mockLaborData.occupancyRate}%
+                          </span>
                         </div>
                         <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                          <span className="text-gray-700 dark:text-gray-300">Covers Served</span>
-                          <span className="font-semibold text-green-600">{mockLaborData.coversServed.toLocaleString()}</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Covers Served
+                          </span>
+                          <span className="font-semibold text-green-600">
+                            {mockLaborData.coversServed.toLocaleString()}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -537,12 +665,20 @@ export default function VisualAnalytics() {
                       </h3>
                       <div className="space-y-3">
                         <div className="flex justify-between items-center p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
-                          <span className="text-gray-700 dark:text-gray-300">Labor Hours</span>
-                          <span className="font-semibold text-purple-600">{mockLaborData.laborHours.toLocaleString()}h</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Labor Hours
+                          </span>
+                          <span className="font-semibold text-purple-600">
+                            {mockLaborData.laborHours.toLocaleString()}h
+                          </span>
                         </div>
                         <div className="flex justify-between items-center p-3 bg-orange-50 dark:bg-orange-950/20 rounded-lg">
-                          <span className="text-gray-700 dark:text-gray-300">Labor Cost</span>
-                          <span className="font-semibold text-orange-600">€{mockLaborData.laborCost.toLocaleString()}</span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            Labor Cost
+                          </span>
+                          <span className="font-semibold text-orange-600">
+                            €{mockLaborData.laborCost.toLocaleString()}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -558,39 +694,67 @@ export default function VisualAnalytics() {
                     <div className="grid md:grid-cols-3 gap-4">
                       <div className="p-4 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">Current Efficiency</span>
-                          <Badge variant={mockLaborData.efficiency >= mockLaborData.benchmark ? 'default' : 'secondary'}>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            Current Efficiency
+                          </span>
+                          <Badge
+                            variant={
+                              mockLaborData.efficiency >=
+                              mockLaborData.benchmark
+                                ? 'default'
+                                : 'secondary'
+                            }
+                          >
                             {mockLaborData.efficiency}%
                           </Badge>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-blue-600 h-2 rounded-full" 
-                            style={{ width: `${Math.min(mockLaborData.efficiency, 100)}%` }}
+                          <div
+                            className="bg-blue-600 h-2 rounded-full"
+                            style={{
+                              width: `${Math.min(mockLaborData.efficiency, 100)}%`,
+                            }}
                           ></div>
                         </div>
                       </div>
                       <div className="p-4 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">Benchmark</span>
-                          <span className="font-semibold">{mockLaborData.benchmark}%</span>
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            Benchmark
+                          </span>
+                          <span className="font-semibold">
+                            {mockLaborData.benchmark}%
+                          </span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-green-600 h-2 rounded-full" 
+                          <div
+                            className="bg-green-600 h-2 rounded-full"
                             style={{ width: `${mockLaborData.benchmark}%` }}
                           ></div>
                         </div>
                       </div>
                       <div className="p-4 border rounded-lg">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-gray-600 dark:text-gray-400">Variance</span>
-                          <Badge variant={mockLaborData.variance > 0 ? 'default' : 'secondary'}>
-                            {mockLaborData.variance > 0 ? '+' : ''}{mockLaborData.variance}%
+                          <span className="text-sm text-gray-600 dark:text-gray-400">
+                            Variance
+                          </span>
+                          <Badge
+                            variant={
+                              mockLaborData.variance > 0
+                                ? 'default'
+                                : 'secondary'
+                            }
+                          >
+                            {mockLaborData.variance > 0 ? '+' : ''}
+                            {mockLaborData.variance}%
                           </Badge>
                         </div>
-                        <div className={`text-sm ${mockLaborData.variance > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {mockLaborData.variance > 0 ? 'Above benchmark' : 'Below benchmark'}
+                        <div
+                          className={`text-sm ${mockLaborData.variance > 0 ? 'text-green-600' : 'text-red-600'}`}
+                        >
+                          {mockLaborData.variance > 0
+                            ? 'Above benchmark'
+                            : 'Below benchmark'}
                         </div>
                       </div>
                     </div>
@@ -610,10 +774,15 @@ export default function VisualAnalytics() {
                         Anomaly Detection & Alerts
                       </CardTitle>
                       <CardDescription>
-                        Real-time anomaly monitoring with configurable thresholds
+                        Real-time anomaly monitoring with configurable
+                        thresholds
                       </CardDescription>
                     </div>
-                    <Button onClick={() => handleExportCSV('kpis')} variant="outline" size="sm">
+                    <Button
+                      onClick={() => handleExportCSV('kpis')}
+                      variant="outline"
+                      size="sm"
+                    >
                       <Download className="h-4 w-4 mr-2" />
                       Export Report
                     </Button>
@@ -631,8 +800,18 @@ export default function VisualAnalytics() {
                           <span className="text-2xl font-bold text-orange-600">
                             {mockKPIData.thresholds.overtimeThreshold}%
                           </span>
-                          <Badge variant={mockKPIData.overtimeAsPercentOfTotal > mockKPIData.thresholds.overtimeThreshold ? 'destructive' : 'default'}>
-                            {mockKPIData.overtimeAsPercentOfTotal > mockKPIData.thresholds.overtimeThreshold ? 'Exceeded' : 'Within Limit'}
+                          <Badge
+                            variant={
+                              mockKPIData.overtimeAsPercentOfTotal >
+                              mockKPIData.thresholds.overtimeThreshold
+                                ? 'destructive'
+                                : 'default'
+                            }
+                          >
+                            {mockKPIData.overtimeAsPercentOfTotal >
+                            mockKPIData.thresholds.overtimeThreshold
+                              ? 'Exceeded'
+                              : 'Within Limit'}
                           </Badge>
                         </div>
                       </div>
@@ -644,8 +823,18 @@ export default function VisualAnalytics() {
                           <span className="text-2xl font-bold text-blue-600">
                             {mockKPIData.thresholds.efficiencyThreshold}%
                           </span>
-                          <Badge variant={mockKPIData.laborEfficiencyRatio >= mockKPIData.thresholds.efficiencyThreshold ? 'default' : 'destructive'}>
-                            {mockKPIData.laborEfficiencyRatio >= mockKPIData.thresholds.efficiencyThreshold ? 'Met' : 'Below Target'}
+                          <Badge
+                            variant={
+                              mockKPIData.laborEfficiencyRatio >=
+                              mockKPIData.thresholds.efficiencyThreshold
+                                ? 'default'
+                                : 'destructive'
+                            }
+                          >
+                            {mockKPIData.laborEfficiencyRatio >=
+                            mockKPIData.thresholds.efficiencyThreshold
+                              ? 'Met'
+                              : 'Below Target'}
                           </Badge>
                         </div>
                       </div>
@@ -657,8 +846,18 @@ export default function VisualAnalytics() {
                           <span className="text-2xl font-bold text-red-600">
                             {mockKPIData.thresholds.anomalyThreshold}
                           </span>
-                          <Badge variant={mockKPIData.anomaliesDetected >= mockKPIData.thresholds.anomalyThreshold ? 'destructive' : 'default'}>
-                            {mockKPIData.anomaliesDetected >= mockKPIData.thresholds.anomalyThreshold ? 'Alert Level' : 'Normal'}
+                          <Badge
+                            variant={
+                              mockKPIData.anomaliesDetected >=
+                              mockKPIData.thresholds.anomalyThreshold
+                                ? 'destructive'
+                                : 'default'
+                            }
+                          >
+                            {mockKPIData.anomaliesDetected >=
+                            mockKPIData.thresholds.anomalyThreshold
+                              ? 'Alert Level'
+                              : 'Normal'}
                           </Badge>
                         </div>
                       </div>
@@ -679,10 +878,17 @@ export default function VisualAnalytics() {
                                 Excessive Overtime Pattern - Maria Papadopoulos
                               </h4>
                               <p className="text-red-700 dark:text-red-300 text-sm mt-1">
-                                18.5 hours overtime this week, working consecutive weekends
+                                18.5 hours overtime this week, working
+                                consecutive weekends
                               </p>
                             </div>
-                            <Button onClick={() => handleInvestigate('employee', 'emp-001')} variant="destructive" size="sm">
+                            <Button
+                              onClick={() =>
+                                handleInvestigate('employee', 'emp-001')
+                              }
+                              variant="destructive"
+                              size="sm"
+                            >
                               Investigate
                             </Button>
                           </div>
@@ -694,10 +900,17 @@ export default function VisualAnalytics() {
                                 Housekeeping Department - High Anomaly Score
                               </h4>
                               <p className="text-orange-700 dark:text-orange-300 text-sm mt-1">
-                                Anomaly score of 8.2, exceeding threshold of {mockKPIData.thresholds.anomalyThreshold}
+                                Anomaly score of 8.2, exceeding threshold of{' '}
+                                {mockKPIData.thresholds.anomalyThreshold}
                               </p>
                             </div>
-                            <Button onClick={() => handleInvestigate('department', 'housekeeping')} variant="outline" size="sm">
+                            <Button
+                              onClick={() =>
+                                handleInvestigate('department', 'housekeeping')
+                              }
+                              variant="outline"
+                              size="sm"
+                            >
                               Investigate
                             </Button>
                           </div>
@@ -709,10 +922,17 @@ export default function VisualAnalytics() {
                                 Late Night Shift Pattern - Kostas Dimitriou
                               </h4>
                               <p className="text-yellow-700 dark:text-yellow-300 text-sm mt-1">
-                                Unusual pattern of late-night shifts in kitchen department
+                                Unusual pattern of late-night shifts in kitchen
+                                department
                               </p>
                             </div>
-                            <Button onClick={() => handleInvestigate('employee', 'emp-003')} variant="outline" size="sm">
+                            <Button
+                              onClick={() =>
+                                handleInvestigate('employee', 'emp-003')
+                              }
+                              variant="outline"
+                              size="sm"
+                            >
                               Investigate
                             </Button>
                           </div>
@@ -731,7 +951,9 @@ export default function VisualAnalytics() {
               <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>Data refreshed every 5 minutes • Cache window: 300s</span>
+                  <span>
+                    Data refreshed every 5 minutes • Cache window: 300s
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="default">Final Data Only</Badge>

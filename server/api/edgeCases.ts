@@ -2,12 +2,11 @@
  * Edge Cases API - Complex payroll scenario handling
  */
 
-import type { Express } from "express";
-import { EdgeCaseHandler } from "../services/edgeCaseHandler";
-import { z } from "zod";
+import type { Express } from 'express';
+import { EdgeCaseHandler } from '../services/edgeCaseHandler';
+import { z } from 'zod';
 
 export function edgeCaseRoutes(app: Express) {
-
   // =============================================================================
   // MULTI-ENTITY MAPPING
   // =============================================================================
@@ -24,7 +23,7 @@ export function edgeCaseRoutes(app: Express) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'entity_id, earnings_code, and mappings are required',
-          hint: 'Provide entity mapping hierarchy for resolution'
+          hint: 'Provide entity mapping hierarchy for resolution',
         });
       }
 
@@ -39,7 +38,7 @@ export function edgeCaseRoutes(app: Express) {
         return res.status(404).json({
           error: 'MAPPING_NOT_FOUND',
           detail: `No account mapping found for ${earnings_code} in entity ${entity_id}`,
-          hint: 'Configure entity-level or property-specific mappings'
+          hint: 'Configure entity-level or property-specific mappings',
         });
       }
 
@@ -54,7 +53,7 @@ export function edgeCaseRoutes(app: Express) {
       console.error('Mapping resolution error:', error);
       res.status(500).json({
         error: 'INTERNAL_ERROR',
-        detail: 'Failed to resolve account mapping'
+        detail: 'Failed to resolve account mapping',
       });
     }
   });
@@ -69,13 +68,19 @@ export function edgeCaseRoutes(app: Express) {
    */
   app.post('/v1/edge-cases/tips/generate-lines', async (req, res) => {
     try {
-      const { tip_amount, employee_id, property_id, handling_rule, description = 'Tips' } = req.body;
+      const {
+        tip_amount,
+        employee_id,
+        property_id,
+        handling_rule,
+        description = 'Tips',
+      } = req.body;
 
       if (!tip_amount || !employee_id || !handling_rule) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'tip_amount, employee_id, and handling_rule are required',
-          hint: 'Specify tip handling type: expense_liability or pass_through'
+          hint: 'Specify tip handling type: expense_liability or pass_through',
         });
       }
 
@@ -83,7 +88,7 @@ export function edgeCaseRoutes(app: Express) {
         return res.status(400).json({
           error: 'INVALID_AMOUNT',
           detail: 'tip_amount must be greater than 0',
-          hint: 'Provide a positive tip amount'
+          hint: 'Provide a positive tip amount',
         });
       }
 
@@ -95,8 +100,14 @@ export function edgeCaseRoutes(app: Express) {
         description
       );
 
-      const totalDebits = lines.reduce((sum, line) => sum + parseFloat(line.debit), 0);
-      const totalCredits = lines.reduce((sum, line) => sum + parseFloat(line.credit), 0);
+      const totalDebits = lines.reduce(
+        (sum, line) => sum + parseFloat(line.debit),
+        0
+      );
+      const totalCredits = lines.reduce(
+        (sum, line) => sum + parseFloat(line.credit),
+        0
+      );
 
       res.json({
         tip_amount: parseFloat(tip_amount),
@@ -115,7 +126,7 @@ export function edgeCaseRoutes(app: Express) {
       console.error('Tip lines generation error:', error);
       res.status(500).json({
         error: 'INTERNAL_ERROR',
-        detail: 'Failed to generate tip journal lines'
+        detail: 'Failed to generate tip journal lines',
       });
     }
   });
@@ -127,7 +138,7 @@ export function edgeCaseRoutes(app: Express) {
   app.get('/v1/edge-cases/tips/rules', async (req, res) => {
     try {
       const { industry = 'default' } = req.query;
-      
+
       const rules = EdgeCaseHandler.getTipHandlingRules();
       const rule = rules[industry as string] || rules['default'];
 
@@ -136,7 +147,8 @@ export function edgeCaseRoutes(app: Express) {
         rule,
         available_industries: Object.keys(rules),
         description: {
-          expense_liability: 'Employer holds tips, creates expense and liability accounts',
+          expense_liability:
+            'Employer holds tips, creates expense and liability accounts',
           pass_through: 'Tips pass directly from customer to employee',
         }[rule.type],
       });
@@ -144,7 +156,7 @@ export function edgeCaseRoutes(app: Express) {
       console.error('Tip rules fetch error:', error);
       res.status(500).json({
         error: 'INTERNAL_ERROR',
-        detail: 'Failed to get tip handling rules'
+        detail: 'Failed to get tip handling rules',
       });
     }
   });
@@ -159,19 +171,19 @@ export function edgeCaseRoutes(app: Express) {
    */
   app.post('/v1/edge-cases/bonuses/generate-lines', async (req, res) => {
     try {
-      const { 
-        bonus_amount, 
-        employee_id, 
-        bonus_type, 
-        tax_withholding = 0, 
-        dimensions = {} 
+      const {
+        bonus_amount,
+        employee_id,
+        bonus_type,
+        tax_withholding = 0,
+        dimensions = {},
       } = req.body;
 
       if (!bonus_amount || !employee_id || !bonus_type) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'bonus_amount, employee_id, and bonus_type are required',
-          hint: 'Specify bonus type: XMAS_BONUS, EASTER_BONUS, etc.'
+          hint: 'Specify bonus type: XMAS_BONUS, EASTER_BONUS, etc.',
         });
       }
 
@@ -200,8 +212,14 @@ export function edgeCaseRoutes(app: Express) {
         dimensions
       );
 
-      const totalDebits = lines.reduce((sum, line) => sum + parseFloat(line.debit), 0);
-      const totalCredits = lines.reduce((sum, line) => sum + parseFloat(line.credit), 0);
+      const totalDebits = lines.reduce(
+        (sum, line) => sum + parseFloat(line.debit),
+        0
+      );
+      const totalCredits = lines.reduce(
+        (sum, line) => sum + parseFloat(line.credit),
+        0
+      );
 
       res.json({
         bonus_type: bonusMapping.code,
@@ -225,7 +243,7 @@ export function edgeCaseRoutes(app: Express) {
       console.error('Bonus lines generation error:', error);
       res.status(500).json({
         error: 'INTERNAL_ERROR',
-        detail: 'Failed to generate bonus journal lines'
+        detail: 'Failed to generate bonus journal lines',
       });
     }
   });
@@ -242,16 +260,20 @@ export function edgeCaseRoutes(app: Express) {
         bonus_mappings: mappings,
         total_count: mappings.length,
         categories: {
-          seasonal: mappings.filter(b => ['XMAS_BONUS', 'EASTER_BONUS'].includes(b.code)),
+          seasonal: mappings.filter(b =>
+            ['XMAS_BONUS', 'EASTER_BONUS'].includes(b.code)
+          ),
           allowances: mappings.filter(b => b.code.includes('ALLOWANCE')),
-          performance: mappings.filter(b => b.code.includes('PERFORMANCE') || b.code.includes('SENIORITY')),
+          performance: mappings.filter(
+            b => b.code.includes('PERFORMANCE') || b.code.includes('SENIORITY')
+          ),
         },
       });
     } catch (error) {
       console.error('Bonus mappings fetch error:', error);
       res.status(500).json({
         error: 'INTERNAL_ERROR',
-        detail: 'Failed to get bonus mappings'
+        detail: 'Failed to get bonus mappings',
       });
     }
   });
@@ -266,17 +288,17 @@ export function edgeCaseRoutes(app: Express) {
    */
   app.post('/v1/edge-cases/backdated-adjustment', async (req, res) => {
     try {
-      const { 
-        original_journal_id, 
-        adjustment_data, 
-        policy = EdgeCaseHandler.getDefaultBackdatedPolicy() 
+      const {
+        original_journal_id,
+        adjustment_data,
+        policy = EdgeCaseHandler.getDefaultBackdatedPolicy(),
       } = req.body;
 
       if (!original_journal_id || !adjustment_data) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'original_journal_id and adjustment_data are required',
-          hint: 'Provide original journal reference and adjustment details'
+          hint: 'Provide original journal reference and adjustment details',
         });
       }
 
@@ -293,15 +315,15 @@ export function edgeCaseRoutes(app: Express) {
         current_period_reference: result.currentPeriodReference,
         requires_approval: result.requiresApproval,
         policy_applied: policy,
-        message: result.isBackPosted 
-          ? 'Adjustment posted to original period' 
+        message: result.isBackPosted
+          ? 'Adjustment posted to original period'
           : 'Adjustment posted to current period with reference',
       });
     } catch (error) {
       console.error('Back-dated adjustment error:', error);
       res.status(500).json({
         error: 'INTERNAL_ERROR',
-        detail: 'Failed to create back-dated adjustment'
+        detail: 'Failed to create back-dated adjustment',
       });
     }
   });
@@ -322,7 +344,7 @@ export function edgeCaseRoutes(app: Express) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'entity_id and period are required',
-          hint: 'Provide entity ID and period (YYYY-MM) for validation'
+          hint: 'Provide entity ID and period (YYYY-MM) for validation',
         });
       }
 
@@ -338,15 +360,15 @@ export function edgeCaseRoutes(app: Express) {
         lock_status: validation.lockStatus,
         should_create_draft: validation.shouldCreateDraft,
         message: validation.message,
-        recommended_action: validation.canPost 
-          ? 'Proceed with posting' 
+        recommended_action: validation.canPost
+          ? 'Proceed with posting'
           : 'Create as draft and notify administrator',
       });
     } catch (error) {
       console.error('Posting window validation error:', error);
       res.status(500).json({
         error: 'INTERNAL_ERROR',
-        detail: 'Failed to validate posting window'
+        detail: 'Failed to validate posting window',
       });
     }
   });
@@ -367,7 +389,7 @@ export function edgeCaseRoutes(app: Express) {
         return res.status(400).json({
           error: 'MISSING_PARAMETERS',
           detail: 'entity_id, run_id, and period are required',
-          hint: 'Provide entity, run ID and period for re-run handling'
+          hint: 'Provide entity, run ID and period for re-run handling',
         });
       }
 
@@ -385,22 +407,19 @@ export function edgeCaseRoutes(app: Express) {
         reversal_journal_id: result.reversalJournalId,
         new_journal_id: result.newJournalId,
         message: result.message,
-        next_steps: result.reversalRequired 
+        next_steps: result.reversalRequired
           ? [
               '1. Review and post reversal journal',
               '2. Process new payroll run',
               '3. Post new journal',
             ]
-          : [
-              '1. Process payroll run',
-              '2. Post journal',
-            ],
+          : ['1. Process payroll run', '2. Post journal'],
       });
     } catch (error) {
       console.error('Payroll re-run handling error:', error);
       res.status(500).json({
         error: 'INTERNAL_ERROR',
-        detail: 'Failed to handle payroll re-run'
+        detail: 'Failed to handle payroll re-run',
       });
     }
   });
@@ -443,7 +462,7 @@ export function edgeCaseRoutes(app: Express) {
       console.error('Policy configuration error:', error);
       res.status(500).json({
         error: 'INTERNAL_ERROR',
-        detail: 'Failed to get policy configuration'
+        detail: 'Failed to get policy configuration',
       });
     }
   });

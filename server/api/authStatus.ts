@@ -16,15 +16,15 @@ const router = Router();
 router.get('/health', async (req, res) => {
   try {
     const startTime = Date.now();
-    
+
     // Test database connectivity
     let dbStatus = 'unknown';
     let activeSessionsCount = 0;
-    
+
     try {
       // Simple DB health check
       await db.execute(sql`SELECT 1`);
-      
+
       // Count active sessions (optional - graceful degradation)
       try {
         const result = await db
@@ -40,46 +40,45 @@ router.get('/health', async (req, res) => {
     } catch (dbError) {
       dbStatus = 'error';
     }
-    
+
     const responseTime = Date.now() - startTime;
-    
+
     const status = {
       status: 'ok',
       timestamp: new Date().toISOString(),
       auth_system: {
         database: dbStatus,
         active_sessions: dbStatus === 'error' ? null : activeSessionsCount,
-        response_time_ms: responseTime
+        response_time_ms: responseTime,
       },
       environment: {
         node_env: process.env.NODE_ENV || 'development',
         repl_id: process.env.REPL_ID ? 'configured' : 'missing',
-        replit_domains: process.env.REPLIT_DOMAINS ? 'configured' : 'missing'
+        replit_domains: process.env.REPLIT_DOMAINS ? 'configured' : 'missing',
       },
       endpoints: {
         login: '/api/login',
-        logout: '/api/logout', 
+        logout: '/api/logout',
         user: '/api/auth/user',
-        oauth_callback: '/oauth2callback'
+        oauth_callback: '/oauth2callback',
       },
       rate_limiting: {
         auth_endpoints: '5 requests per minute per IP',
-        global: 'none'
-      }
+        global: 'none',
+      },
     };
-    
+
     // Set appropriate status code based on health
     const httpStatus = dbStatus === 'error' ? 503 : 200;
-    
+
     res.status(httpStatus).json(status);
-    
   } catch (error) {
     console.error('[AUTH_STATUS] Error generating status:', error);
     res.status(500).json({
       status: 'error',
       timestamp: new Date().toISOString(),
       error: 'Failed to generate auth status',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -99,20 +98,20 @@ router.get('/metrics', async (req, res) => {
         login_attempts_24h: 0,
         successful_logins_24h: 0,
         failed_logins_24h: 0,
-        active_sessions: 0
+        active_sessions: 0,
       },
       rate_limit_events: {
         blocked_requests_1h: 0,
-        peak_requests_per_minute: 0
-      }
+        peak_requests_per_minute: 0,
+      },
     };
-    
+
     res.json(metrics);
   } catch (error) {
     console.error('[AUTH_METRICS] Error generating metrics:', error);
     res.status(500).json({
       error: 'Failed to generate auth metrics',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });

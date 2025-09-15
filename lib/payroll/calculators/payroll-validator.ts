@@ -1,6 +1,6 @@
 /**
  * Payroll Validator - Business Logic
- * 
+ *
  * Contains business validation rules and eligibility checks.
  * No database access - validation logic only.
  */
@@ -14,17 +14,14 @@ import {
   ERROR_HANDLING_RULES,
   type PaymentMethod,
   type ErrorCategory,
-  type CriticalError
+  type CriticalError,
 } from '../domain/compliance-rules';
 
-import {
-  WORKING_TIME_LIMITS,
-  MINIMUM_WAGE
-} from '../domain/greek-labor-law';
+import { WORKING_TIME_LIMITS, MINIMUM_WAGE } from '../domain/greek-labor-law';
 
 import {
   CONTRACT_TYPE_RULES,
-  LEAVE_ENTITLEMENTS
+  LEAVE_ENTITLEMENTS,
 } from '../domain/payroll-rules';
 
 export interface ValidationError {
@@ -67,7 +64,6 @@ export interface ScopeValidation {
 }
 
 export class PayrollValidator {
-
   /**
    * Validate employee eligibility for payroll processing
    */
@@ -87,16 +83,16 @@ export class PayrollValidator {
           field: 'age',
           category: 'BUSINESS_RULE_VIOLATION',
           message: `Employee age ${employee.age} is below minimum working age of ${EMPLOYEE_ELIGIBILITY_RULES.minAge}`,
-          isCritical: true
+          isCritical: true,
         });
       }
-      
+
       if (employee.age > EMPLOYEE_ELIGIBILITY_RULES.maxAge) {
         violations.push({
           field: 'age',
           category: 'BUSINESS_RULE_VIOLATION',
           message: `Employee age ${employee.age} is above retirement age of ${EMPLOYEE_ELIGIBILITY_RULES.maxAge}`,
-          isCritical: false
+          isCritical: false,
         });
       }
     }
@@ -108,7 +104,7 @@ export class PayrollValidator {
         field: 'contractType',
         category: 'FIELD_INVALID_FORMAT',
         message: `Invalid contract type: ${employee.contractType}. Must be one of: ${validContractTypes.join(', ')}`,
-        isCritical: true
+        isCritical: true,
       });
     }
 
@@ -118,15 +114,16 @@ export class PayrollValidator {
       violations.push({
         field: 'terminationDate',
         category: 'BUSINESS_RULE_VIOLATION',
-        message: 'Employee is terminated and cannot be processed in regular payroll',
-        isCritical: true
+        message:
+          'Employee is terminated and cannot be processed in regular payroll',
+        isCritical: true,
       });
     }
 
     return {
       employeeId: employee.employeeId,
       isEligible: violations.filter(v => v.isCritical).length === 0,
-      violations
+      violations,
     };
   }
 
@@ -148,7 +145,7 @@ export class PayrollValidator {
         field: 'dailyHours',
         category: 'COMPLIANCE_VIOLATION',
         message: `Average daily hours ${avgDailyHours.toFixed(2)} exceeds maximum of ${EMPLOYEE_ELIGIBILITY_RULES.maxWorkingHoursPerDay}`,
-        isCritical: false
+        isCritical: false,
       });
     }
 
@@ -159,17 +156,20 @@ export class PayrollValidator {
         field: 'weeklyHours',
         category: 'COMPLIANCE_VIOLATION',
         message: `Average weekly hours ${avgWeeklyHours.toFixed(2)} exceeds maximum of ${EMPLOYEE_ELIGIBILITY_RULES.maxWorkingHoursPerWeek}`,
-        isCritical: false
+        isCritical: false,
       });
     }
 
     // Monthly overtime validation
-    if (overtimeHours > EMPLOYEE_ELIGIBILITY_RULES.maxAnnualOvertimeHours / 12) {
+    if (
+      overtimeHours >
+      EMPLOYEE_ELIGIBILITY_RULES.maxAnnualOvertimeHours / 12
+    ) {
       violations.push({
         field: 'monthlyOvertime',
         category: 'COMPLIANCE_VIOLATION',
         message: `Monthly overtime hours ${overtimeHours} exceeds annual limit average of ${(EMPLOYEE_ELIGIBILITY_RULES.maxAnnualOvertimeHours / 12).toFixed(2)}`,
-        isCritical: false
+        isCritical: false,
       });
     }
 
@@ -179,7 +179,7 @@ export class PayrollValidator {
         field: 'regularHours',
         category: 'FIELD_OUT_OF_RANGE',
         message: `Regular hours ${regularHours} exceeds standard monthly hours of ${WORKING_TIME_LIMITS.standardMonthlyHours}`,
-        isCritical: false
+        isCritical: false,
       });
     }
 
@@ -197,14 +197,16 @@ export class PayrollValidator {
   ): ValidationError[] {
     const violations: ValidationError[] = [];
 
-    const minimumRequired = isFullTime ? MINIMUM_WAGE.monthly : MINIMUM_WAGE.daily * 22;
+    const minimumRequired = isFullTime
+      ? MINIMUM_WAGE.monthly
+      : MINIMUM_WAGE.daily * 22;
 
     if (salary < minimumRequired) {
       violations.push({
         field: 'salary',
         category: 'COMPLIANCE_VIOLATION',
         message: `Salary ${salary} is below minimum wage requirement of ${minimumRequired} for ${isFullTime ? 'full-time' : 'part-time'} employee`,
-        isCritical: true
+        isCritical: true,
       });
     }
 
@@ -229,7 +231,7 @@ export class PayrollValidator {
         field: 'unapprovedHours',
         category: 'BUSINESS_RULE_VIOLATION',
         message: `Employee has ${unapprovedHours} unapproved hours but approval is required`,
-        isCritical: true
+        isCritical: true,
       });
     }
 
@@ -239,7 +241,7 @@ export class PayrollValidator {
         field: 'totalHours',
         category: 'FIELD_OUT_OF_RANGE',
         message: `Total hours ${totalHours} seems excessive (150% over standard)`,
-        isCritical: false
+        isCritical: false,
       });
     }
 
@@ -253,7 +255,7 @@ export class PayrollValidator {
       unapprovedHours,
       totalHours,
       effectiveHours,
-      warnings
+      warnings,
     };
   }
 
@@ -275,7 +277,7 @@ export class PayrollValidator {
         field: 'period',
         category: 'FIELD_INVALID_FORMAT',
         message: 'Period must be in YYYY-MM format',
-        isCritical: true
+        isCritical: true,
       });
     }
 
@@ -285,7 +287,7 @@ export class PayrollValidator {
         field: 'period',
         category: 'BUSINESS_RULE_VIOLATION',
         message: 'Finalized payroll run already exists for this period',
-        isCritical: true
+        isCritical: true,
       });
     }
 
@@ -293,24 +295,28 @@ export class PayrollValidator {
     const payDateObj = new Date(payDate);
     const now = new Date();
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    
+
     if (payDateObj > monthEnd) {
       warnings.push({
         field: 'payDate',
         category: 'BUSINESS_RULE_VIOLATION',
         message: 'Pay date is after month end - may cause compliance issues',
-        isCritical: false
+        isCritical: false,
       });
     }
 
     // Check if processing close to deadline
-    const deadline = new Date(now.getFullYear(), now.getMonth() + 1, PAYROLL_PERIOD_RULES.payrollCutoffDay);
+    const deadline = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      PAYROLL_PERIOD_RULES.payrollCutoffDay
+    );
     if (now > deadline) {
       warnings.push({
         field: 'processingDate',
         category: 'COMPLIANCE_VIOLATION',
         message: `Processing after cutoff date (${PAYROLL_PERIOD_RULES.payrollCutoffDay}th)`,
-        isCritical: false
+        isCritical: false,
       });
     }
 
@@ -319,7 +325,7 @@ export class PayrollValidator {
       isValid: criticalErrors.length === 0,
       canProcess: criticalErrors.length === 0,
       warnings,
-      criticalErrors
+      criticalErrors,
     };
   }
 
@@ -338,22 +344,29 @@ export class PayrollValidator {
     const violations: ValidationError[] = [];
 
     // Check if payment method is allowed
-    if (!PAYMENT_METHOD_RULES.allowedMethods.includes(paymentMethod as PaymentMethod)) {
+    if (
+      !PAYMENT_METHOD_RULES.allowedMethods.includes(
+        paymentMethod as PaymentMethod
+      )
+    ) {
       violations.push({
         field: 'paymentMethod',
         category: 'FIELD_INVALID_FORMAT',
         message: `Invalid payment method: ${paymentMethod}. Must be one of: ${PAYMENT_METHOD_RULES.allowedMethods.join(', ')}`,
-        isCritical: true
+        isCritical: true,
       });
     }
 
     // Cash payment validation
-    if (paymentMethod === 'cash' && paymentAmount > PAYMENT_METHOD_RULES.maxCashPayment) {
+    if (
+      paymentMethod === 'cash' &&
+      paymentAmount > PAYMENT_METHOD_RULES.maxCashPayment
+    ) {
       violations.push({
         field: 'paymentAmount',
         category: 'COMPLIANCE_VIOLATION',
         message: `Cash payment ${paymentAmount} exceeds maximum allowed ${PAYMENT_METHOD_RULES.maxCashPayment}`,
-        isCritical: true
+        isCritical: true,
       });
     }
 
@@ -364,7 +377,7 @@ export class PayrollValidator {
           field: 'iban',
           category: 'FIELD_REQUIRED',
           message: 'IBAN is required for bank transfer payments',
-          isCritical: true
+          isCritical: true,
         });
       }
 
@@ -373,7 +386,7 @@ export class PayrollValidator {
           field: 'bankName',
           category: 'FIELD_REQUIRED',
           message: 'Bank name is required for bank transfer payments',
-          isCritical: true
+          isCritical: true,
         });
       }
 
@@ -382,7 +395,7 @@ export class PayrollValidator {
           field: 'accountHolder',
           category: 'FIELD_REQUIRED',
           message: 'Account holder name is required for bank transfer payments',
-          isCritical: true
+          isCritical: true,
         });
       }
     }
@@ -422,15 +435,31 @@ export class PayrollValidator {
       eligibilityResults.push(eligibility);
 
       // Salary validation
-      const salaryErrors = this.validateSalary(emp.employeeId, emp.salary, emp.contractType, emp.isFullTime);
+      const salaryErrors = this.validateSalary(
+        emp.employeeId,
+        emp.salary,
+        emp.contractType,
+        emp.isFullTime
+      );
       eligibility.violations.push(...salaryErrors);
 
       // Working hours validation
       const totalHours = emp.approvedHours + emp.unapprovedHours;
-      const regularHours = Math.min(totalHours, WORKING_TIME_LIMITS.standardMonthlyHours);
-      const overtimeHours = Math.max(0, totalHours - WORKING_TIME_LIMITS.standardMonthlyHours);
-      
-      const hoursErrors = this.validateWorkingHours(emp.employeeId, regularHours, overtimeHours, totalHours);
+      const regularHours = Math.min(
+        totalHours,
+        WORKING_TIME_LIMITS.standardMonthlyHours
+      );
+      const overtimeHours = Math.max(
+        0,
+        totalHours - WORKING_TIME_LIMITS.standardMonthlyHours
+      );
+
+      const hoursErrors = this.validateWorkingHours(
+        emp.employeeId,
+        regularHours,
+        overtimeHours,
+        totalHours
+      );
       overallErrors.push(...hoursErrors);
 
       // Timesheet validation
@@ -455,7 +484,7 @@ export class PayrollValidator {
       ...eligibilityResults.flatMap(e => e.violations),
       ...timesheetValidations.flatMap(t => t.warnings),
       ...periodValidation.criticalErrors,
-      ...overallErrors
+      ...overallErrors,
     ].some(error => error.isCritical);
 
     return {
@@ -463,7 +492,7 @@ export class PayrollValidator {
       eligibilityResults,
       timesheetValidations,
       periodValidation,
-      overallErrors
+      overallErrors,
     };
   }
 
@@ -490,7 +519,7 @@ export class PayrollValidator {
           field,
           category: 'FIELD_REQUIRED',
           message: `${field} is required for ERGANI compliance`,
-          isCritical: true
+          isCritical: true,
         });
       }
     }

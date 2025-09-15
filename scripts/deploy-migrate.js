@@ -15,14 +15,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const migrationsDir = join(__dirname, '../migrations');
 
 // Database URL masking utility
-const maskUrl = (url) => url?.replace(/:\/\/.*@/, '://***@') || '';
+const maskUrl = url => url?.replace(/:\/\/.*@/, '://***@') || '';
 
 // Log database configuration (masked for security)
 console.log('🔍 Database Configuration:');
 console.log({
   DATABASE_URL: maskUrl(process.env.DATABASE_URL),
   SHADOW_DATABASE_URL: maskUrl(process.env.SHADOW_DATABASE_URL),
-  MIGRATION_DATABASE_URL: maskUrl(process.env.MIGRATION_DATABASE_URL)
+  MIGRATION_DATABASE_URL: maskUrl(process.env.MIGRATION_DATABASE_URL),
 });
 
 // Diagnostic: Prove what the migrator sees
@@ -32,20 +32,22 @@ try {
   const url = process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL;
   const client = new pg.default.Client({ connectionString: url });
   await client.connect();
-  
+
   const result = await client.query(`
     select current_database() db, current_schema() schema, current_setting('search_path',true) sp,
            to_regclass('public.oncall_teams') as oncall,
            to_regclass('public.partners') as partners;
   `);
-  
+
   console.log('[MIGRATOR PROBE]', result.rows[0]);
   await client.end();
-  
+
   // Validate expected tables exist
   const probe = result.rows[0];
   if (!probe.oncall) {
-    console.log('⚠️  WARNING: oncall_teams table not found - may be wrong database or need initial migration');
+    console.log(
+      '⚠️  WARNING: oncall_teams table not found - may be wrong database or need initial migration'
+    );
   } else {
     console.log('✅ oncall_teams table detected');
   }
@@ -59,9 +61,9 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Initialize database connection
-const sql = postgres(process.env.DATABASE_URL, { 
+const sql = postgres(process.env.DATABASE_URL, {
   max: 1,
-  ssl: process.env.NODE_ENV === 'production' ? 'require' : false
+  ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
 });
 const db = drizzle(sql);
 
@@ -74,7 +76,7 @@ function getMigrationFiles() {
       .filter(file => file.endsWith('.sql'))
       .filter(file => !file.includes('template'))
       .sort();
-    
+
     console.log(`📁 Found ${files.length} migration files:`, files);
     return files;
   } catch (error) {
@@ -107,7 +109,8 @@ async function ensureMigrationsTable() {
  */
 async function getAppliedMigrations() {
   try {
-    const result = await sql`SELECT filename FROM drizzle_migrations ORDER BY id`;
+    const result =
+      await sql`SELECT filename FROM drizzle_migrations ORDER BY id`;
     return new Set(result.map(row => row.filename));
   } catch (error) {
     console.error('❌ Failed to get applied migrations:', error.message);
@@ -120,10 +123,10 @@ async function getAppliedMigrations() {
  */
 async function applyMigration(filename) {
   const filePath = join(migrationsDir, filename);
-  
+
   try {
     const migrationSql = readFileSync(filePath, 'utf8');
-    
+
     // Skip empty files
     if (!migrationSql.trim()) {
       console.log(`⏭️  Skipping empty migration: ${filename}`);
@@ -131,19 +134,19 @@ async function applyMigration(filename) {
     }
 
     console.log(`🔄 Applying migration: ${filename}`);
-    
+
     // Execute the migration in a transaction
-    await sql.begin(async (tx) => {
+    await sql.begin(async tx => {
       // Execute the migration SQL
       await tx.unsafe(migrationSql);
-      
+
       // Mark as applied
       await tx`
         INSERT INTO drizzle_migrations (filename) 
         VALUES (${filename})
       `;
     });
-    
+
     console.log(`✅ Applied migration: ${filename}`);
   } catch (error) {
     console.error(`❌ Failed to apply migration ${filename}:`, error.message);
@@ -157,33 +160,35 @@ async function applyMigration(filename) {
 async function runMigrations() {
   try {
     console.log('🚀 Starting production migrations...');
-    
+
     // Ensure migrations tracking table exists
     await ensureMigrationsTable();
-    
+
     // Get migration files and applied migrations
     const migrationFiles = getMigrationFiles();
     const appliedMigrations = await getAppliedMigrations();
-    
+
     // Filter to only pending migrations
     const pendingMigrations = migrationFiles.filter(
       file => !appliedMigrations.has(file)
     );
-    
+
     if (pendingMigrations.length === 0) {
       console.log('✅ No pending migrations to apply');
       return;
     }
-    
-    console.log(`📋 Applying ${pendingMigrations.length} pending migrations:`, pendingMigrations);
-    
+
+    console.log(
+      `📋 Applying ${pendingMigrations.length} pending migrations:`,
+      pendingMigrations
+    );
+
     // Apply each pending migration
     for (const migration of pendingMigrations) {
       await applyMigration(migration);
     }
-    
+
     console.log('🎉 All migrations applied successfully');
-    
   } catch (error) {
     console.error('💥 Migration failed:', error.message);
     process.exit(1);

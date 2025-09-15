@@ -97,16 +97,19 @@ interface DeductionRules {
 export async function getCurrentRuleset(req: Request, res: Response) {
   try {
     const currentRuleset = await getActiveRuleset();
-    
+
     // Apply role-based field filtering
     const userId = req.user?.claims?.sub;
     const userRole = await getUserRole(userId);
-    const filteredRuleset = await applyRulesetRoleFiltering(currentRuleset, userRole);
+    const filteredRuleset = await applyRulesetRoleFiltering(
+      currentRuleset,
+      userRole
+    );
 
     res.json({
       ruleset: filteredRuleset,
       retrievedAt: new Date().toISOString(),
-      cacheExpiry: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 min cache
+      cacheExpiry: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 min cache
     });
   } catch (error) {
     console.error('Error fetching current ruleset:', error);
@@ -119,15 +122,17 @@ export async function getRulesetByDate(req: Request, res: Response) {
   try {
     const { date } = req.params;
     const effectiveDate = new Date(date);
-    
+
     if (isNaN(effectiveDate.getTime())) {
       return res.status(400).json({ error: 'Invalid date format' });
     }
 
     const ruleset = await getRulesetForDate(effectiveDate);
-    
+
     if (!ruleset) {
-      return res.status(404).json({ error: 'No ruleset found for specified date' });
+      return res
+        .status(404)
+        .json({ error: 'No ruleset found for specified date' });
     }
 
     const userId = req.user?.claims?.sub;
@@ -137,7 +142,7 @@ export async function getRulesetByDate(req: Request, res: Response) {
     res.json({
       requestedDate: date,
       ruleset: filteredRuleset,
-      retrievedAt: new Date().toISOString()
+      retrievedAt: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error fetching ruleset by date:', error);
@@ -149,25 +154,28 @@ export async function getRulesetByDate(req: Request, res: Response) {
 export async function getRulesetHistory(req: Request, res: Response) {
   try {
     const { limit = 10, offset = 0 } = req.query;
-    
+
     const userId = req.user?.claims?.sub;
     const userRole = await getUserRole(userId);
-    
+
     // Only HR and Auditors can see full history
     if (!['hr', 'auditor', 'payroll'].includes(userRole)) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
 
-    const history = await getRulesetChangeHistory(parseInt(limit as string), parseInt(offset as string));
-    
+    const history = await getRulesetChangeHistory(
+      parseInt(limit as string),
+      parseInt(offset as string)
+    );
+
     res.json({
       history,
       pagination: {
         limit: parseInt(limit as string),
         offset: parseInt(offset as string),
-        total: history.length
+        total: history.length,
       },
-      retrievedAt: new Date().toISOString()
+      retrievedAt: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error fetching ruleset history:', error);
@@ -190,33 +198,41 @@ async function getActiveRuleset(): Promise<PayrollRuleset> {
         maxWeeklyOT: 8.0, // Max 8 hours OT per week
         consecutiveDayLimit: 6,
         weekendMultiplier: 1.75, // Weekend OT gets additional premium
-        holidayMultiplier: 2.0
+        holidayMultiplier: 2.0,
       },
       nightPremium: {
         startTime: '22:00',
         endTime: '06:00',
         multiplier: 1.25,
         minimumHours: 3.0,
-        applicableDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        applicableDays: [
+          'monday',
+          'tuesday',
+          'wednesday',
+          'thursday',
+          'friday',
+          'saturday',
+          'sunday',
+        ],
       },
       sundayPremium: {
         multiplier: 1.2,
         applicableEmployeeTypes: ['full-time', 'part-time'],
         exemptCategories: ['management'],
-        minimumHours: 4.0
+        minimumHours: 4.0,
       },
       minimumWage: {
-        baseRate: 760.00, // Monthly minimum wage in Greece (2025)
+        baseRate: 760.0, // Monthly minimum wage in Greece (2025)
         youthmultiplier: 0.87, // Under 18 rate (87% of minimum)
         apprenticeMultiplier: 0.75, // Apprentice rate
         effectiveRegions: ['GR'],
-        annualIncreaseDate: '2025-01-01'
+        annualIncreaseDate: '2025-01-01',
       },
       mealVouchers: {
-        dailyAmount: 11.00, // €11 per day
+        dailyAmount: 11.0, // €11 per day
         eligibilityMinHours: 6.0,
-        maxPerMonth: 220.00, // 20 working days × €11
-        taxExemptAmount: 11.00 // Fully tax-exempt up to €11/day
+        maxPerMonth: 220.0, // 20 working days × €11
+        taxExemptAmount: 11.0, // Fully tax-exempt up to €11/day
       },
       tipPooling: {
         enabled: true,
@@ -224,7 +240,7 @@ async function getActiveRuleset(): Promise<PayrollRuleset> {
         eligibleRoles: ['server', 'bartender', 'housekeeping'],
         managerParticipation: false,
         minimumShiftHours: 4.0,
-        distributionFrequency: 'weekly'
+        distributionFrequency: 'weekly',
       },
       deductions: {
         incomeTax: {
@@ -233,50 +249,56 @@ async function getActiveRuleset(): Promise<PayrollRuleset> {
             { min: 10000, max: 20000, rate: 0.22 },
             { min: 20000, max: 30000, rate: 0.28 },
             { min: 30000, max: 40000, rate: 0.36 },
-            { min: 40000, max: Number.MAX_VALUE, rate: 0.44 }
+            { min: 40000, max: Number.MAX_VALUE, rate: 0.44 },
           ],
           personalAllowance: 3500, // €3,500 annual personal allowance
-          solidarityTax: { threshold: 12000, rate: 0.0225 } // 2.25% on income > €12k
+          solidarityTax: { threshold: 12000, rate: 0.0225 }, // 2.25% on income > €12k
         },
         socialInsurance: {
           employeeRate: 0.1597, // 15.97% employee EFKA contribution
-          employerRate: 0.2437, // 24.37% employer EFKA contribution  
+          employerRate: 0.2437, // 24.37% employer EFKA contribution
           maxEarnings: 72600, // Annual ceiling for 2025
           categories: {
-            'main': 0.1597,
+            main: 0.1597,
             'heavy-hazardous': 0.1697, // +1% for heavy/hazardous work
-            'media': 0.1497 // -1% for media workers
-          }
+            media: 0.1497, // -1% for media workers
+          },
         },
         other: {
-          unionDues: 15.00, // Monthly union dues if applicable
-          parkingFee: 25.00, // Monthly parking if applicable
-          advancePayments: true // Allow advance deductions
-        }
-      }
+          unionDues: 15.0, // Monthly union dues if applicable
+          parkingFee: 25.0, // Monthly parking if applicable
+          advancePayments: true, // Allow advance deductions
+        },
+      },
     },
     metadata: {
       createdBy: 'system',
       createdAt: '2024-12-01T00:00:00Z',
       approvalStatus: 'active',
-      complianceFramework: ['Greek-Labor-Law-2025', 'EFKA-Regulations', 'AADE-Tax-Code'],
-      lastAuditDate: '2025-01-15T00:00:00Z'
-    }
+      complianceFramework: [
+        'Greek-Labor-Law-2025',
+        'EFKA-Regulations',
+        'AADE-Tax-Code',
+      ],
+      lastAuditDate: '2025-01-15T00:00:00Z',
+    },
   };
 }
 
 async function getRulesetForDate(date: Date): Promise<PayrollRuleset | null> {
   // In production, would query historical rulesets
   const activeRuleset = await getActiveRuleset();
-  
+
   // Check if date falls within active ruleset period
   const effectiveDate = new Date(activeRuleset.effectiveDate);
-  const expiryDate = activeRuleset.expiryDate ? new Date(activeRuleset.expiryDate) : new Date('2025-12-31');
-  
+  const expiryDate = activeRuleset.expiryDate
+    ? new Date(activeRuleset.expiryDate)
+    : new Date('2025-12-31');
+
   if (date >= effectiveDate && date <= expiryDate) {
     return activeRuleset;
   }
-  
+
   return null; // No ruleset found for date
 }
 
@@ -286,10 +308,14 @@ async function getRulesetChangeHistory(limit: number, offset: number) {
     {
       version: '2025.1',
       effectiveDate: '2025-01-01T00:00:00Z',
-      changes: ['Updated minimum wage to €760', 'Adjusted EFKA rates', 'New solidarity tax threshold'],
+      changes: [
+        'Updated minimum wage to €760',
+        'Adjusted EFKA rates',
+        'New solidarity tax threshold',
+      ],
       changedBy: 'hr-admin',
       approvedBy: 'payroll-manager',
-      status: 'active'
+      status: 'active',
     },
     {
       version: '2024.4',
@@ -298,8 +324,8 @@ async function getRulesetChangeHistory(limit: number, offset: number) {
       changes: ['Year-end tax adjustments', 'Holiday overtime rates'],
       changedBy: 'hr-admin',
       approvedBy: 'payroll-manager',
-      status: 'expired'
-    }
+      status: 'expired',
+    },
   ].slice(offset, offset + limit);
 }
 
@@ -308,7 +334,10 @@ async function getUserRole(userId: string): Promise<string> {
   return 'manager';
 }
 
-async function applyRulesetRoleFiltering(ruleset: PayrollRuleset, role: string): Promise<Partial<PayrollRuleset>> {
+async function applyRulesetRoleFiltering(
+  ruleset: PayrollRuleset,
+  role: string
+): Promise<Partial<PayrollRuleset>> {
   switch (role) {
     case 'employee':
       // Employees get limited view - only basic rates and thresholds
@@ -324,7 +353,7 @@ async function applyRulesetRoleFiltering(ruleset: PayrollRuleset, role: string):
             maxWeeklyOT: ruleset.rules.overtime.maxWeeklyOT,
             consecutiveDayLimit: ruleset.rules.overtime.consecutiveDayLimit,
             weekendMultiplier: ruleset.rules.overtime.weekendMultiplier,
-            holidayMultiplier: ruleset.rules.overtime.holidayMultiplier
+            holidayMultiplier: ruleset.rules.overtime.holidayMultiplier,
           },
           nightPremium: ruleset.rules.nightPremium,
           sundayPremium: ruleset.rules.sundayPremium,
@@ -333,12 +362,13 @@ async function applyRulesetRoleFiltering(ruleset: PayrollRuleset, role: string):
             effectiveRegions: ruleset.rules.minimumWage.effectiveRegions,
             annualIncreaseDate: ruleset.rules.minimumWage.annualIncreaseDate,
             youthmultiplier: ruleset.rules.minimumWage.youthmultiplier,
-            apprenticeMultiplier: ruleset.rules.minimumWage.apprenticeMultiplier
+            apprenticeMultiplier:
+              ruleset.rules.minimumWage.apprenticeMultiplier,
           },
           mealVouchers: ruleset.rules.mealVouchers,
           tipPooling: ruleset.rules.tipPooling,
-          deductions: ruleset.rules.deductions
-        }
+          deductions: ruleset.rules.deductions,
+        },
       };
     case 'manager':
       // Managers get full operational rules but not system metadata
@@ -346,7 +376,7 @@ async function applyRulesetRoleFiltering(ruleset: PayrollRuleset, role: string):
         version: ruleset.version,
         effectiveDate: ruleset.effectiveDate,
         expiryDate: ruleset.expiryDate,
-        rules: ruleset.rules
+        rules: ruleset.rules,
       };
     case 'hr':
     case 'payroll':
@@ -361,5 +391,5 @@ async function applyRulesetRoleFiltering(ruleset: PayrollRuleset, role: string):
 export const rulesetRoutes = {
   getCurrentRuleset,
   getRulesetByDate,
-  getRulesetHistory
+  getRulesetHistory,
 };

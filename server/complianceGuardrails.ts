@@ -1,6 +1,6 @@
 /**
  * Greek Compliance Guardrails System
- * 
+ *
  * Features:
  * - Real-time ERGANI II event push with receipts
  * - Configurable max hours & rest periods with alerts
@@ -9,11 +9,16 @@
  * - Immutable audit logging with hash chaining
  */
 
-import { db } from "./db";
-import { erganiConnector } from "./erganiConnector";
-import { punchEvents, employees, timesheets, type PunchEvent } from "@shared/schema";
-import { eq, and, gte, lte, desc } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { db } from './db';
+import { erganiConnector } from './erganiConnector';
+import {
+  punchEvents,
+  employees,
+  timesheets,
+  type PunchEvent,
+} from '@shared/schema';
+import { eq, and, gte, lte, desc } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
 
 // Compliance Configuration
 export interface ComplianceConfig {
@@ -64,7 +69,12 @@ export const GREEK_COMPLIANCE_CONFIG: ComplianceConfig = {
 // Compliance Alert Types
 export interface ComplianceAlert {
   alertId: string;
-  type: 'MAX_HOURS_APPROACHING' | 'REST_PERIOD_VIOLATION' | 'CONTINUOUS_WORK_VIOLATION' | 'ERGANI_SUBMISSION_FAILED' | 'POLICY_VIOLATION';
+  type:
+    | 'MAX_HOURS_APPROACHING'
+    | 'REST_PERIOD_VIOLATION'
+    | 'CONTINUOUS_WORK_VIOLATION'
+    | 'ERGANI_SUBMISSION_FAILED'
+    | 'POLICY_VIOLATION';
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   employeeId: string;
   propertyId?: string;
@@ -130,7 +140,8 @@ export class ComplianceGuardrailsSystem {
 
     try {
       // 1. Check working time compliance
-      const workingTimeViolations = await this.checkWorkingTimeCompliance(event);
+      const workingTimeViolations =
+        await this.checkWorkingTimeCompliance(event);
       violations.push(...workingTimeViolations);
 
       // 2. Check rest period compliance
@@ -146,8 +157,9 @@ export class ComplianceGuardrailsSystem {
         try {
           const erganiEvent = await this.convertToErganiEvent(event);
           const result = await erganiConnector.submitEvent(erganiEvent);
-          erganiSubmitted = result.status === 'SUCCESS' || result.status === 'PENDING';
-          
+          erganiSubmitted =
+            result.status === 'SUCCESS' || result.status === 'PENDING';
+
           if (!erganiSubmitted) {
             alerts.push({
               alertId: nanoid(),
@@ -211,7 +223,9 @@ export class ComplianceGuardrailsSystem {
   /**
    * Check working time compliance (max daily/weekly hours)
    */
-  private async checkWorkingTimeCompliance(event: PunchEvent): Promise<string[]> {
+  private async checkWorkingTimeCompliance(
+    event: PunchEvent
+  ): Promise<string[]> {
     const violations: string[] = [];
 
     if (event.type === 'out') {
@@ -236,7 +250,9 @@ export class ComplianceGuardrailsSystem {
       const dailyHours = this.calculateDailyHours(todayEvents);
 
       if (dailyHours > this.config.maxDailyHours) {
-        violations.push(`DAILY_HOURS_EXCEEDED: ${dailyHours} hours (max: ${this.config.maxDailyHours})`);
+        violations.push(
+          `DAILY_HOURS_EXCEEDED: ${dailyHours} hours (max: ${this.config.maxDailyHours})`
+        );
       }
 
       // Check weekly hours
@@ -260,7 +276,9 @@ export class ComplianceGuardrailsSystem {
       const weeklyHours = this.calculateWeeklyHours(weekEvents);
 
       if (weeklyHours > this.config.maxWeeklyHours) {
-        violations.push(`WEEKLY_HOURS_EXCEEDED: ${weeklyHours} hours (max: ${this.config.maxWeeklyHours})`);
+        violations.push(
+          `WEEKLY_HOURS_EXCEEDED: ${weeklyHours} hours (max: ${this.config.maxWeeklyHours})`
+        );
       }
     }
 
@@ -270,7 +288,9 @@ export class ComplianceGuardrailsSystem {
   /**
    * Check rest period compliance (minimum rest between shifts)
    */
-  private async checkRestPeriodCompliance(event: PunchEvent): Promise<string[]> {
+  private async checkRestPeriodCompliance(
+    event: PunchEvent
+  ): Promise<string[]> {
     const violations: string[] = [];
 
     if (event.type === 'in') {
@@ -290,12 +310,13 @@ export class ComplianceGuardrailsSystem {
       if (lastOutEvent.length > 0) {
         const lastOut = new Date(lastOutEvent[0].timestamp);
         const currentIn = new Date(event.timestamp);
-        const restMinutes = (currentIn.getTime() - lastOut.getTime()) / (1000 * 60);
+        const restMinutes =
+          (currentIn.getTime() - lastOut.getTime()) / (1000 * 60);
 
         if (restMinutes < this.config.minRestBetweenShifts) {
           violations.push(
             `REST_PERIOD_VIOLATION: ${Math.round(restMinutes)} minutes rest ` +
-            `(minimum: ${this.config.minRestBetweenShifts} minutes)`
+              `(minimum: ${this.config.minRestBetweenShifts} minutes)`
           );
         }
       }
@@ -307,7 +328,9 @@ export class ComplianceGuardrailsSystem {
   /**
    * Check for approaching limits and generate alerts
    */
-  private async checkApproachingLimits(event: PunchEvent): Promise<ComplianceAlert[]> {
+  private async checkApproachingLimits(
+    event: PunchEvent
+  ): Promise<ComplianceAlert[]> {
     const alerts: ComplianceAlert[] = [];
 
     if (event.type === 'in' || event.type === 'out') {
@@ -330,7 +353,9 @@ export class ComplianceGuardrailsSystem {
         .orderBy(punchEvents.timestamp);
 
       const dailyHours = this.calculateDailyHours(todayEvents);
-      const threshold = this.config.maxDailyHours * this.config.alertThresholds.approachingMaxHours;
+      const threshold =
+        this.config.maxDailyHours *
+        this.config.alertThresholds.approachingMaxHours;
 
       if (dailyHours >= threshold && dailyHours < this.config.maxDailyHours) {
         alerts.push({
@@ -340,7 +365,11 @@ export class ComplianceGuardrailsSystem {
           employeeId: event.employeeId,
           propertyId: event.propertyId,
           message: `Daily hours approaching limit: ${dailyHours.toFixed(1)}/${this.config.maxDailyHours} hours`,
-          details: { dailyHours, threshold, maxDailyHours: this.config.maxDailyHours },
+          details: {
+            dailyHours,
+            threshold,
+            maxDailyHours: this.config.maxDailyHours,
+          },
           createdAt: new Date(),
         });
       }
@@ -356,7 +385,10 @@ export class ComplianceGuardrailsSystem {
             employeeId: event.employeeId,
             propertyId: event.propertyId,
             message: `Continuous work without break: ${Math.round(continuousMinutes / 60)} hours`,
-            details: { continuousMinutes, maxContinuousWork: this.config.maxContinuousWork },
+            details: {
+              continuousMinutes,
+              maxContinuousWork: this.config.maxContinuousWork,
+            },
             createdAt: new Date(),
           });
         }
@@ -382,10 +414,13 @@ export class ComplianceGuardrailsSystem {
       propertyCode: event.propertyId,
       timestamp: event.timestamp.toISOString(),
       eventType: this.mapPunchTypeToErgani(event.type),
-      location: event.latitude && event.longitude ? {
-        latitude: parseFloat(event.latitude),
-        longitude: parseFloat(event.longitude),
-      } : undefined,
+      location:
+        event.latitude && event.longitude
+          ? {
+              latitude: parseFloat(event.latitude),
+              longitude: parseFloat(event.longitude),
+            }
+          : undefined,
       deviceId: event.sourceDeviceId,
     };
   }
@@ -395,10 +430,10 @@ export class ComplianceGuardrailsSystem {
    */
   private mapPunchTypeToErgani(type: string): string {
     const mapping: Record<string, string> = {
-      'in': 'CLOCK_IN',
-      'out': 'CLOCK_OUT',
-      'break_in': 'BREAK_START',
-      'break_out': 'BREAK_END',
+      in: 'CLOCK_IN',
+      out: 'CLOCK_OUT',
+      break_in: 'BREAK_START',
+      break_out: 'BREAK_END',
     };
     return mapping[type] || 'CLOCK_IN';
   }
@@ -412,11 +447,12 @@ export class ComplianceGuardrailsSystem {
 
     for (const event of events) {
       const eventTime = new Date(event.timestamp);
-      
+
       if (event.type === 'in') {
         lastInTime = eventTime;
       } else if (event.type === 'out' && lastInTime) {
-        const minutes = (eventTime.getTime() - lastInTime.getTime()) / (1000 * 60);
+        const minutes =
+          (eventTime.getTime() - lastInTime.getTime()) / (1000 * 60);
         totalMinutes += minutes;
         lastInTime = null;
       }
@@ -432,15 +468,16 @@ export class ComplianceGuardrailsSystem {
     const dailyHours: Record<string, number> = {};
 
     let lastInTime: Date | null = null;
-    
+
     for (const event of events) {
       const eventTime = new Date(event.timestamp);
       const dayKey = eventTime.toISOString().split('T')[0];
-      
+
       if (event.type === 'in') {
         lastInTime = eventTime;
       } else if (event.type === 'out' && lastInTime) {
-        const minutes = (eventTime.getTime() - lastInTime.getTime()) / (1000 * 60);
+        const minutes =
+          (eventTime.getTime() - lastInTime.getTime()) / (1000 * 60);
         dailyHours[dayKey] = (dailyHours[dayKey] || 0) + minutes / 60;
         lastInTime = null;
       }
@@ -459,11 +496,12 @@ export class ComplianceGuardrailsSystem {
 
     for (const event of events) {
       const eventTime = new Date(event.timestamp);
-      
+
       if (event.type === 'in') {
         lastInTime = eventTime;
       } else if (event.type === 'out' && lastInTime) {
-        const minutes = (eventTime.getTime() - lastInTime.getTime()) / (1000 * 60);
+        const minutes =
+          (eventTime.getTime() - lastInTime.getTime()) / (1000 * 60);
         currentContinuous += minutes;
         maxContinuous = Math.max(maxContinuous, currentContinuous);
       } else if (event.type === 'break_in') {
@@ -485,7 +523,9 @@ export class ComplianceGuardrailsSystem {
   /**
    * Create immutable audit log entry with hash chaining
    */
-  async createAuditLogEntry(entry: Partial<AuditLogEntry>): Promise<AuditLogEntry> {
+  async createAuditLogEntry(
+    entry: Partial<AuditLogEntry>
+  ): Promise<AuditLogEntry> {
     const logEntry: AuditLogEntry = {
       logId: nanoid(),
       timestamp: new Date(),
@@ -513,7 +553,7 @@ export class ComplianceGuardrailsSystem {
 
     // Simple hash for demonstration (use proper crypto in production)
     logEntry.signature = this.generateHash(dataToSign);
-    
+
     // Add to chain
     this.auditLogChain.push(logEntry.signature);
 
@@ -531,7 +571,7 @@ export class ComplianceGuardrailsSystem {
     let hash = 0;
     for (let i = 0; i < data.length; i++) {
       const char = data.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return 'HASH_' + Math.abs(hash).toString(16) + '_' + Date.now();
@@ -540,7 +580,10 @@ export class ComplianceGuardrailsSystem {
   /**
    * Enforce digital work card policy
    */
-  enforceDigitalCardPolicy(employeeId: string, issueType: string): {
+  enforceDigitalCardPolicy(
+    employeeId: string,
+    issueType: string
+  ): {
     allowed: boolean;
     reason: string;
     alternatives: string[];
@@ -558,7 +601,8 @@ export class ComplianceGuardrailsSystem {
       case 'PAYROLL_DEDUCTION_REQUEST':
         return {
           allowed: !policy.noPayrollDeductions,
-          reason: 'Greek law prohibits payroll deductions due to digital card issues',
+          reason:
+            'Greek law prohibits payroll deductions due to digital card issues',
           alternatives: ['Training', 'Process improvement', 'System upgrade'],
         };
 
@@ -566,7 +610,11 @@ export class ComplianceGuardrailsSystem {
         return {
           allowed: !policy.reasonablePunchRequirements,
           reason: 'Requirements must be reasonable and technically feasible',
-          alternatives: ['Simplify process', 'Provide training', 'Technical support'],
+          alternatives: [
+            'Simplify process',
+            'Provide training',
+            'Technical support',
+          ],
         };
 
       default:
@@ -589,7 +637,7 @@ export class ComplianceGuardrailsSystem {
     dataRetention: any;
   }> {
     const erganiHealth = erganiConnector.getHealthMetrics();
-    
+
     return {
       realTimeStatus: {
         enabled: this.config.erganiConfig.realTimeSubmission,
@@ -621,12 +669,16 @@ export class ComplianceGuardrailsSystem {
   /**
    * Resolve compliance alert
    */
-  resolveAlert(alertId: string, resolvedBy: string, resolution: string): boolean {
+  resolveAlert(
+    alertId: string,
+    resolvedBy: string,
+    resolution: string
+  ): boolean {
     const alert = this.alerts.find(a => a.alertId === alertId);
     if (alert && !alert.resolvedAt) {
       alert.resolvedAt = new Date();
       alert.resolvedBy = resolvedBy;
-      
+
       // Create audit entry
       this.createAuditLogEntry({
         eventType: 'ALERT_RESOLVED',
@@ -654,12 +706,16 @@ export class ComplianceGuardrailsSystem {
 
     // Check if retention periods are properly configured
     if (this.config.dataRetention.punchEvents < 20) {
-      issues.push('Punch event retention period below Greek legal minimum (20 years)');
+      issues.push(
+        'Punch event retention period below Greek legal minimum (20 years)'
+      );
       recommendations.push('Increase punch event retention to 20 years');
     }
 
     if (this.config.dataRetention.timesheets < 50) {
-      issues.push('Timesheet retention period below Greek legal minimum (50 years)');
+      issues.push(
+        'Timesheet retention period below Greek legal minimum (50 years)'
+      );
       recommendations.push('Increase timesheet retention to 50 years');
     }
 

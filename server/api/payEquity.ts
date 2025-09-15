@@ -1,7 +1,7 @@
-import { Router } from "express";
-import { PayEquityService } from "../payEquityService";
-import { db } from "../db";
-import { 
+import { Router } from 'express';
+import { PayEquityService } from '../payEquityService';
+import { db } from '../db';
+import {
   payEquityAnalysis,
   payEquityCompliance,
   jobPostingSalaryRanges,
@@ -9,101 +9,124 @@ import {
   payDecisionExplanations,
   InsertJobPostingSalaryRange,
   InsertPayDecisionExplanation,
-} from "@shared/schema";
-import { eq, desc, and, gte } from "drizzle-orm";
-import { z } from "zod";
+} from '@shared/schema';
+import { eq, desc, and, gte } from 'drizzle-orm';
+import { z } from 'zod';
 
 const payEquityService = new PayEquityService();
 
 export function registerPayEquityRoutes(app: Router) {
-  
   // Get EU 2023/970 compliance dashboard data
-  app.get('/api/pay-equity/compliance-dashboard/:propertyId', async (req, res) => {
-    try {
-      const { propertyId } = req.params;
-      
-      // Calculate compliance readiness
-      const readinessData = await payEquityService.calculateComplianceReadiness(propertyId);
-      
-      // Get recent pay gap analyses
-      const recentAnalyses = await db
-        .select()
-        .from(payEquityAnalysis)
-        .where(eq(payEquityAnalysis.propertyId, propertyId))
-        .orderBy(desc(payEquityAnalysis.analysisDate))
-        .limit(5);
-      
-      // Get pending transparency requests
-      const pendingRequests = await db
-        .select()
-        .from(payTransparencyRequests)
-        .where(
-          and(
-            eq(payTransparencyRequests.status, 'pending'),
-            gte(payTransparencyRequests.responseDeadline, new Date())
-          )
-        )
-        .orderBy(payTransparencyRequests.responseDeadline)
-        .limit(10);
+  app.get(
+    '/api/pay-equity/compliance-dashboard/:propertyId',
+    async (req, res) => {
+      try {
+        const { propertyId } = req.params;
 
-      // Get salary ranges status
-      const salaryRangesCount = await db
-        .select({ count: db.$count() })
-        .from(jobPostingSalaryRanges)
-        .where(
-          and(
-            eq(jobPostingSalaryRanges.propertyId, propertyId),
-            eq(jobPostingSalaryRanges.isActive, true)
+        // Calculate compliance readiness
+        const readinessData =
+          await payEquityService.calculateComplianceReadiness(propertyId);
+
+        // Get recent pay gap analyses
+        const recentAnalyses = await db
+          .select()
+          .from(payEquityAnalysis)
+          .where(eq(payEquityAnalysis.propertyId, propertyId))
+          .orderBy(desc(payEquityAnalysis.analysisDate))
+          .limit(5);
+
+        // Get pending transparency requests
+        const pendingRequests = await db
+          .select()
+          .from(payTransparencyRequests)
+          .where(
+            and(
+              eq(payTransparencyRequests.status, 'pending'),
+              gte(payTransparencyRequests.responseDeadline, new Date())
+            )
           )
+          .orderBy(payTransparencyRequests.responseDeadline)
+          .limit(10);
+
+        // Get salary ranges status
+        const salaryRangesCount = await db
+          .select({ count: db.$count() })
+          .from(jobPostingSalaryRanges)
+          .where(
+            and(
+              eq(jobPostingSalaryRanges.propertyId, propertyId),
+              eq(jobPostingSalaryRanges.isActive, true)
+            )
+          );
+
+        // Calculate days until EU deadline
+        const deadlineDate = new Date('2026-06-07');
+        const currentDate = new Date();
+        const daysUntilDeadline = Math.ceil(
+          (deadlineDate.getTime() - currentDate.getTime()) /
+            (1000 * 60 * 60 * 24)
         );
 
-      // Calculate days until EU deadline
-      const deadlineDate = new Date('2026-06-07');
-      const currentDate = new Date();
-      const daysUntilDeadline = Math.ceil((deadlineDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+        const dashboardData = {
+          compliance: readinessData,
+          deadline: {
+            date: '2026-06-07',
+            daysRemaining: daysUntilDeadline,
+            status:
+              daysUntilDeadline > 365
+                ? 'planning'
+                : daysUntilDeadline > 90
+                  ? 'preparation'
+                  : 'urgent',
+          },
+          recentAnalyses,
+          pendingRequests: pendingRequests.length,
+          salaryRangesPublished: salaryRangesCount[0]?.count || 0,
+          lastUpdated: new Date().toISOString(),
+        };
 
-      const dashboardData = {
-        compliance: readinessData,
-        deadline: {
-          date: '2026-06-07',
-          daysRemaining: daysUntilDeadline,
-          status: daysUntilDeadline > 365 ? 'planning' : daysUntilDeadline > 90 ? 'preparation' : 'urgent'
-        },
-        recentAnalyses,
-        pendingRequests: pendingRequests.length,
-        salaryRangesPublished: salaryRangesCount[0]?.count || 0,
-        lastUpdated: new Date().toISOString()
-      };
-
-      res.json({ success: true, data: dashboardData });
-    } catch (error) {
-      console.error('Error fetching compliance dashboard:', error);
-      res.status(500).json({ success: false, error: 'Failed to fetch compliance dashboard' });
+        res.json({ success: true, data: dashboardData });
+      } catch (error) {
+        console.error('Error fetching compliance dashboard:', error);
+        res
+          .status(500)
+          .json({
+            success: false,
+            error: 'Failed to fetch compliance dashboard',
+          });
+      }
     }
-  });
+  );
 
   // Calculate gender pay gap analysis
   app.post('/api/pay-equity/analyze-pay-gap', async (req, res) => {
     try {
       const { propertyId, departmentId } = req.body;
-      
+
       if (!propertyId) {
-        return res.status(400).json({ success: false, error: 'Property ID is required' });
+        return res
+          .status(400)
+          .json({ success: false, error: 'Property ID is required' });
       }
 
-      const result = await payEquityService.calculateGenderPayGap(propertyId, departmentId);
-      
-      res.json({ 
-        success: true, 
+      const result = await payEquityService.calculateGenderPayGap(
+        propertyId,
+        departmentId
+      );
+
+      res.json({
+        success: true,
         data: {
           analysis: result.analysis,
           recommendations: result.recommendations,
-          generatedAt: new Date().toISOString()
-        }
+          generatedAt: new Date().toISOString(),
+        },
       });
     } catch (error) {
       console.error('Error analyzing pay gap:', error);
-      res.status(500).json({ success: false, error: 'Failed to analyze pay gap' });
+      res
+        .status(500)
+        .json({ success: false, error: 'Failed to analyze pay gap' });
     }
   });
 
@@ -116,12 +139,12 @@ export function registerPayEquityRoutes(app: Router) {
         departmentId: z.string().optional(),
         createdBy: z.string(),
       });
-      
+
       const validatedData = schema.parse(req.body);
-      
+
       const rangeData = await payEquityService.generateSalaryRanges(
-        validatedData.propertyId, 
-        validatedData.jobTitle, 
+        validatedData.propertyId,
+        validatedData.jobTitle,
         validatedData.departmentId
       );
 
@@ -147,12 +170,14 @@ export function registerPayEquityRoutes(app: Router) {
         data: {
           salaryRange: savedRange,
           marketData: rangeData.marketData,
-          factors: rangeData.factors
-        }
+          factors: rangeData.factors,
+        },
       });
     } catch (error) {
       console.error('Error generating salary range:', error);
-      res.status(500).json({ success: false, error: 'Failed to generate salary range' });
+      res
+        .status(500)
+        .json({ success: false, error: 'Failed to generate salary range' });
     }
   });
 
@@ -164,9 +189,9 @@ export function registerPayEquityRoutes(app: Router) {
         requestType: z.enum(['pay_criteria', 'pay_levels', 'progression']),
         requestDetails: z.string(),
       });
-      
+
       const validatedData = schema.parse(req.body);
-      
+
       const result = await payEquityService.processTransparencyRequest(
         validatedData.employeeId,
         validatedData.requestType,
@@ -179,12 +204,18 @@ export function registerPayEquityRoutes(app: Router) {
           requestId: result.requestId,
           responseDeadline: result.responseDeadline,
           autoResponse: result.autoResponse,
-          message: 'Your request has been submitted. You will receive a response within 2 months as required by EU law.'
-        }
+          message:
+            'Your request has been submitted. You will receive a response within 2 months as required by EU law.',
+        },
       });
     } catch (error) {
       console.error('Error processing transparency request:', error);
-      res.status(500).json({ success: false, error: 'Failed to process transparency request' });
+      res
+        .status(500)
+        .json({
+          success: false,
+          error: 'Failed to process transparency request',
+        });
     }
   });
 
@@ -192,7 +223,7 @@ export function registerPayEquityRoutes(app: Router) {
   app.get('/api/pay-equity/salary-ranges/:propertyId', async (req, res) => {
     try {
       const { propertyId } = req.params;
-      
+
       const ranges = await database
         .select()
         .from(jobPostingSalaryRanges)
@@ -207,7 +238,9 @@ export function registerPayEquityRoutes(app: Router) {
       res.json({ success: true, data: ranges });
     } catch (error) {
       console.error('Error fetching salary ranges:', error);
-      res.status(500).json({ success: false, error: 'Failed to fetch salary ranges' });
+      res
+        .status(500)
+        .json({ success: false, error: 'Failed to fetch salary ranges' });
     }
   });
 
@@ -215,7 +248,7 @@ export function registerPayEquityRoutes(app: Router) {
   app.get('/api/pay-equity/pay-gap-history/:propertyId', async (req, res) => {
     try {
       const { propertyId } = req.params;
-      
+
       const analyses = await database
         .select()
         .from(payEquityAnalysis)
@@ -224,23 +257,28 @@ export function registerPayEquityRoutes(app: Router) {
         .limit(12); // Last 12 analyses
 
       // Calculate trend
-      const trend = analyses.length >= 2 
-        ? parseFloat(analyses[0].genderPayGapPercent || '0') - parseFloat(analyses[1].genderPayGapPercent || '0')
-        : 0;
+      const trend =
+        analyses.length >= 2
+          ? parseFloat(analyses[0].genderPayGapPercent || '0') -
+            parseFloat(analyses[1].genderPayGapPercent || '0')
+          : 0;
 
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         data: {
           analyses,
           trend: {
-            direction: trend > 0 ? 'increasing' : trend < 0 ? 'decreasing' : 'stable',
-            change: Math.abs(trend).toFixed(2)
-          }
-        }
+            direction:
+              trend > 0 ? 'increasing' : trend < 0 ? 'decreasing' : 'stable',
+            change: Math.abs(trend).toFixed(2),
+          },
+        },
       });
     } catch (error) {
       console.error('Error fetching pay gap history:', error);
-      res.status(500).json({ success: false, error: 'Failed to fetch pay gap history' });
+      res
+        .status(500)
+        .json({ success: false, error: 'Failed to fetch pay gap history' });
     }
   });
 
@@ -257,16 +295,16 @@ export function registerPayEquityRoutes(app: Router) {
         contributingFactors: z.array(z.string()).optional(),
         approvedBy: z.string(),
       });
-      
+
       const validatedData = schema.parse(req.body);
-      
+
       const decisionData: InsertPayDecisionExplanation = {
         employeeId: validatedData.employeeId,
         decisionType: validatedData.decisionType,
         decisionDate: validatedData.decisionDate,
         oldSalary: validatedData.oldSalary?.toString(),
         newSalary: validatedData.newSalary.toString(),
-        salaryChange: validatedData.oldSalary 
+        salaryChange: validatedData.oldSalary
           ? (validatedData.newSalary - validatedData.oldSalary).toString()
           : null,
         explanation: validatedData.explanation,
@@ -282,11 +320,13 @@ export function registerPayEquityRoutes(app: Router) {
       res.json({
         success: true,
         data: savedDecision,
-        message: 'Pay decision explanation saved for compliance tracking'
+        message: 'Pay decision explanation saved for compliance tracking',
       });
     } catch (error) {
       console.error('Error saving pay decision:', error);
-      res.status(500).json({ success: false, error: 'Failed to save pay decision' });
+      res
+        .status(500)
+        .json({ success: false, error: 'Failed to save pay decision' });
     }
   });
 
@@ -294,7 +334,7 @@ export function registerPayEquityRoutes(app: Router) {
   app.get('/api/pay-equity/pending-requests/:propertyId', async (req, res) => {
     try {
       const { propertyId } = req.params;
-      
+
       const requests = await database
         .select({
           id: payTransparencyRequests.id,
@@ -312,7 +352,9 @@ export function registerPayEquityRoutes(app: Router) {
       res.json({ success: true, data: requests });
     } catch (error) {
       console.error('Error fetching pending requests:', error);
-      res.status(500).json({ success: false, error: 'Failed to fetch pending requests' });
+      res
+        .status(500)
+        .json({ success: false, error: 'Failed to fetch pending requests' });
     }
   });
 
@@ -323,16 +365,16 @@ export function registerPayEquityRoutes(app: Router) {
         propertyId: z.string(),
         component: z.enum([
           'salary_ranges_published',
-          'gender_pay_gap_reported', 
+          'gender_pay_gap_reported',
           'pay_transparency_policy_active',
           'right_to_info_process_active',
-          'pay_decisions_criteria_published'
+          'pay_decisions_criteria_published',
         ]),
         status: z.boolean(),
       });
-      
+
       const validatedData = schema.parse(req.body);
-      
+
       const updateData: any = {
         [validatedData.component]: validatedData.status,
         updatedAt: new Date(),
@@ -344,16 +386,20 @@ export function registerPayEquityRoutes(app: Router) {
         .where(eq(payEquityCompliance.propertyId, validatedData.propertyId));
 
       // Recalculate readiness score
-      const readinessData = await payEquityService.calculateComplianceReadiness(validatedData.propertyId);
+      const readinessData = await payEquityService.calculateComplianceReadiness(
+        validatedData.propertyId
+      );
 
       res.json({
         success: true,
         data: readinessData,
-        message: `Compliance component updated: ${validatedData.component}`
+        message: `Compliance component updated: ${validatedData.component}`,
       });
     } catch (error) {
       console.error('Error updating compliance:', error);
-      res.status(500).json({ success: false, error: 'Failed to update compliance' });
+      res
+        .status(500)
+        .json({ success: false, error: 'Failed to update compliance' });
     }
   });
 }

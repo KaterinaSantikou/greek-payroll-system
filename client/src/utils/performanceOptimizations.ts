@@ -6,7 +6,7 @@
 // Critical CSS for instant first paint
 export const injectCriticalCSS = () => {
   if (typeof document === 'undefined') return;
-  
+
   const style = document.createElement('style');
   style.id = 'critical-css';
   style.textContent = `
@@ -35,7 +35,7 @@ export const injectCriticalCSS = () => {
       .sidebar.open { transform: translateX(0); }
     }
   `;
-  
+
   if (!document.head.querySelector('#critical-css')) {
     document.head.appendChild(style);
   }
@@ -44,11 +44,15 @@ export const injectCriticalCSS = () => {
 // Resource hints for Greek CDNs
 export const addResourceHints = () => {
   if (typeof document === 'undefined') return;
-  
+
   const hints = [
     { rel: 'dns-prefetch', href: '//fonts.googleapis.com' },
     { rel: 'dns-prefetch', href: '//cdnjs.cloudflare.com' },
-    { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
+    {
+      rel: 'preconnect',
+      href: 'https://fonts.gstatic.com',
+      crossOrigin: 'anonymous',
+    },
   ];
 
   hints.forEach(hint => {
@@ -76,14 +80,15 @@ export const detectGreekConnection = () => {
   if (typeof navigator === 'undefined' || !('connection' in navigator)) {
     return { isSlowConnection: false, effectiveType: 'unknown' };
   }
-  
+
   const connection = (navigator as any).connection;
   const effectiveType = connection?.effectiveType || 'unknown';
   const downlink = connection?.downlink || 0;
-  
+
   // Greek rural areas often have 2G/slow-2G
-  const isSlowConnection = effectiveType === '2g' || effectiveType === 'slow-2g' || downlink < 1.5;
-  
+  const isSlowConnection =
+    effectiveType === '2g' || effectiveType === 'slow-2g' || downlink < 1.5;
+
   return { isSlowConnection, effectiveType, downlink };
 };
 
@@ -92,7 +97,7 @@ export const initGreekPerformanceOptimizations = () => {
   // Run immediately for critical path
   injectCriticalCSS();
   addResourceHints();
-  
+
   // Schedule non-critical optimizations with Safari compatibility
   const scheduleNonCritical = (callback: () => void) => {
     if (typeof requestIdleCallback !== 'undefined') {
@@ -106,10 +111,12 @@ export const initGreekPerformanceOptimizations = () => {
 
   scheduleNonCritical(() => {
     registerGreekServiceWorker();
-    
+
     const { isSlowConnection } = detectGreekConnection();
     if (isSlowConnection) {
-      console.log('Greek slow connection detected - using optimized loading strategy');
+      console.log(
+        'Greek slow connection detected - using optimized loading strategy'
+      );
     }
   });
 };
@@ -118,7 +125,10 @@ export const initGreekPerformanceOptimizations = () => {
 if (typeof window !== 'undefined') {
   // Initialize immediately for critical path performance
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initGreekPerformanceOptimizations);
+    document.addEventListener(
+      'DOMContentLoaded',
+      initGreekPerformanceOptimizations
+    );
   } else {
     initGreekPerformanceOptimizations();
   }

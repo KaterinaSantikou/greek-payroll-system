@@ -6,17 +6,17 @@
 import { Router } from 'express';
 import { isAuthenticated } from '../replitAuth';
 import { OnCallRotaService } from '../services/OnCallRotaService';
-import { 
-  insertOnCallTeamSchema, 
+import {
+  insertOnCallTeamSchema,
   insertOnCallScheduleSchema,
   insertOnCallIncidentSchema,
   insertOnCallAvailabilitySchema,
-  insertEscalationPolicySchema
+  insertEscalationPolicySchema,
 } from '@shared/schema';
 import { fromZodError } from 'zod-validation-error';
 import { db } from '../db';
-import { 
-  onCallTeams, 
+import {
+  onCallTeams,
   onCallTeamMembers,
   onCallSchedules,
   onCallAssignments,
@@ -25,7 +25,7 @@ import {
   escalationPolicies,
   onCallAvailability,
   onCallMetrics,
-  users
+  users,
 } from '@shared/schema';
 import { eq, desc, and, gte, lte, sql, count, avg, or } from 'drizzle-orm';
 
@@ -46,7 +46,7 @@ const onCallService = OnCallRotaService.getInstance();
 router.get('/dashboard', async (req, res) => {
   try {
     const currentStatus = await onCallService.getCurrentOnCallStatus();
-    
+
     // Get recent incidents
     const recentIncidents = await db
       .select()
@@ -58,7 +58,9 @@ router.get('/dashboard', async (req, res) => {
     const activeIncidents = await db
       .select()
       .from(onCallIncidents)
-      .where(sql`${onCallIncidents.status} IN ('triggered', 'acknowledged', 'escalated')`)
+      .where(
+        sql`${onCallIncidents.status} IN ('triggered', 'acknowledged', 'escalated')`
+      )
       .orderBy(desc(onCallIncidents.triggeredAt));
 
     // Get today's metrics
@@ -70,9 +72,13 @@ router.get('/dashboard', async (req, res) => {
     const [todayStats] = await db
       .select({
         totalIncidents: count(),
-        criticalIncidents: count(sql`CASE WHEN ${onCallIncidents.severity} = 'critical' THEN 1 END`),
+        criticalIncidents: count(
+          sql`CASE WHEN ${onCallIncidents.severity} = 'critical' THEN 1 END`
+        ),
         avgResponseTime: avg(onCallIncidents.totalResponseTime),
-        resolvedToday: count(sql`CASE WHEN ${onCallIncidents.status} = 'resolved' THEN 1 END`),
+        resolvedToday: count(
+          sql`CASE WHEN ${onCallIncidents.status} = 'resolved' THEN 1 END`
+        ),
       })
       .from(onCallIncidents)
       .where(
@@ -90,9 +96,9 @@ router.get('/dashboard', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting on-call dashboard:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get on-call dashboard',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -106,9 +112,9 @@ router.get('/current', async (req, res) => {
     res.json(currentStatus);
   } catch (error) {
     console.error('Error getting current on-call status:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get current on-call status',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -134,11 +140,14 @@ router.get('/teams/:teamId/current', async (req, res) => {
           id: onCallTeams.id,
           name: onCallTeams.name,
           notificationChannels: onCallTeams.notificationChannels,
-        }
+        },
       })
       .from(onCallAssignments)
       .leftJoin(users, eq(onCallAssignments.userId, users.id))
-      .leftJoin(onCallSchedules, eq(onCallAssignments.scheduleId, onCallSchedules.id))
+      .leftJoin(
+        onCallSchedules,
+        eq(onCallAssignments.scheduleId, onCallSchedules.id)
+      )
       .leftJoin(onCallTeams, eq(onCallSchedules.teamId, onCallTeams.id))
       .where(
         and(
@@ -151,15 +160,17 @@ router.get('/teams/:teamId/current', async (req, res) => {
       .limit(1);
 
     if (currentAssignment.length === 0) {
-      return res.status(404).json({ error: 'No current assignment for this team' });
+      return res
+        .status(404)
+        .json({ error: 'No current assignment for this team' });
     }
 
     res.json(currentAssignment[0]);
   } catch (error) {
     console.error('Error getting team current assignment:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get team current assignment',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -180,7 +191,7 @@ router.get('/incidents', async (req, res) => {
       dateFrom,
       dateTo,
       limit = '50',
-      offset = '0'
+      offset = '0',
     } = req.query;
 
     let query = db
@@ -194,7 +205,7 @@ router.get('/incidents', async (req, res) => {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
-        }
+        },
       })
       .from(onCallIncidents)
       .leftJoin(onCallTeams, eq(onCallIncidents.assignedTeamId, onCallTeams.id))
@@ -202,10 +213,20 @@ router.get('/incidents', async (req, res) => {
 
     const conditions = [];
     if (status) conditions.push(eq(onCallIncidents.status, status as string));
-    if (severity) conditions.push(eq(onCallIncidents.severity, severity as string));
-    if (assignedTeamId) conditions.push(eq(onCallIncidents.assignedTeamId, assignedTeamId as string));
-    if (dateFrom) conditions.push(gte(onCallIncidents.triggeredAt, new Date(dateFrom as string)));
-    if (dateTo) conditions.push(lte(onCallIncidents.triggeredAt, new Date(dateTo as string)));
+    if (severity)
+      conditions.push(eq(onCallIncidents.severity, severity as string));
+    if (assignedTeamId)
+      conditions.push(
+        eq(onCallIncidents.assignedTeamId, assignedTeamId as string)
+      );
+    if (dateFrom)
+      conditions.push(
+        gte(onCallIncidents.triggeredAt, new Date(dateFrom as string))
+      );
+    if (dateTo)
+      conditions.push(
+        lte(onCallIncidents.triggeredAt, new Date(dateTo as string))
+      );
 
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
@@ -231,9 +252,9 @@ router.get('/incidents', async (req, res) => {
     });
   } catch (error) {
     console.error('Error listing incidents:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to list incidents',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -268,7 +289,7 @@ router.get('/incidents/:incidentId', async (req, res) => {
           firstName: users.firstName,
           lastName: users.lastName,
           email: users.email,
-        }
+        },
       })
       .from(incidentResponses)
       .leftJoin(users, eq(incidentResponses.responderId, users.id))
@@ -281,9 +302,9 @@ router.get('/incidents/:incidentId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting incident:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get incident',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -294,22 +315,22 @@ router.get('/incidents/:incidentId', async (req, res) => {
 router.post('/incidents', async (req, res) => {
   try {
     const validatedData = insertOnCallIncidentSchema.parse(req.body);
-    
+
     const incident = await onCallService.triggerIncident(validatedData);
-    
+
     res.status(201).json(incident);
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       const validationError = fromZodError(error);
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
-        details: validationError.message 
+        details: validationError.message,
       });
     }
     console.error('Error creating incident:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create incident',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -323,18 +344,23 @@ router.post('/incidents/:incidentId/acknowledge', async (req, res) => {
     const { message, responseMethod = 'web' } = req.body;
     const userId = req.user?.claims?.sub || 'unknown';
 
-    await onCallService.acknowledgeIncident(incidentId, userId, message, responseMethod);
-    
-    res.json({ 
+    await onCallService.acknowledgeIncident(
+      incidentId,
+      userId,
+      message,
+      responseMethod
+    );
+
+    res.json({
       message: 'Incident acknowledged successfully',
       acknowledgedBy: userId,
       acknowledgedAt: new Date(),
     });
   } catch (error) {
     console.error('Error acknowledging incident:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to acknowledge incident',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -348,16 +374,16 @@ router.post('/incidents/:incidentId/escalate', async (req, res) => {
     const { reason } = req.body;
 
     const escalation = await onCallService.escalateIncident(incidentId, reason);
-    
+
     res.json({
       message: 'Incident escalated successfully',
       escalation,
     });
   } catch (error) {
     console.error('Error escalating incident:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to escalate incident',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -371,18 +397,23 @@ router.post('/incidents/:incidentId/resolve', async (req, res) => {
     const { resolution, falseAlarm = false } = req.body;
     const userId = req.user?.claims?.sub || 'unknown';
 
-    await onCallService.resolveIncident(incidentId, userId, resolution, falseAlarm);
-    
-    res.json({ 
+    await onCallService.resolveIncident(
+      incidentId,
+      userId,
+      resolution,
+      falseAlarm
+    );
+
+    res.json({
       message: 'Incident resolved successfully',
       resolvedBy: userId,
       resolvedAt: new Date(),
     });
   } catch (error) {
     console.error('Error resolving incident:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to resolve incident',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -409,9 +440,9 @@ router.get('/teams', async (req, res) => {
     res.json(teams);
   } catch (error) {
     console.error('Error listing teams:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to list teams',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -440,7 +471,7 @@ router.get('/teams/:teamId', async (req, res) => {
           firstName: users.firstName,
           lastName: users.lastName,
           email: users.email,
-        }
+        },
       })
       .from(onCallTeamMembers)
       .leftJoin(users, eq(onCallTeamMembers.userId, users.id))
@@ -461,9 +492,9 @@ router.get('/teams/:teamId', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting team:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get team',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -488,15 +519,15 @@ router.post('/teams', async (req, res) => {
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       const validationError = fromZodError(error);
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
-        details: validationError.message 
+        details: validationError.message,
       });
     }
     console.error('Error creating team:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create team',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -511,9 +542,9 @@ router.post('/teams', async (req, res) => {
 router.get('/teams/:teamId/schedules', async (req, res) => {
   try {
     const { teamId } = req.params;
-    const { 
+    const {
       startDate = new Date().toISOString(),
-      endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+      endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
     } = req.query;
 
     const schedules = await db
@@ -536,11 +567,14 @@ router.get('/teams/:teamId/schedules', async (req, res) => {
           firstName: users.firstName,
           lastName: users.lastName,
           email: users.email,
-        }
+        },
       })
       .from(onCallAssignments)
       .leftJoin(users, eq(onCallAssignments.userId, users.id))
-      .leftJoin(onCallSchedules, eq(onCallAssignments.scheduleId, onCallSchedules.id))
+      .leftJoin(
+        onCallSchedules,
+        eq(onCallAssignments.scheduleId, onCallSchedules.id)
+      )
       .where(
         and(
           eq(onCallSchedules.teamId, teamId),
@@ -560,9 +594,9 @@ router.get('/teams/:teamId/schedules', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting team schedules:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get team schedules',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -575,7 +609,7 @@ router.post('/schedules/:scheduleId/generate', async (req, res) => {
     const { scheduleId } = req.params;
     const {
       startDate = new Date().toISOString(),
-      endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     } = req.body;
 
     const schedule = await onCallService.generateRotationSchedule(
@@ -587,9 +621,9 @@ router.post('/schedules/:scheduleId/generate', async (req, res) => {
     res.json(schedule);
   } catch (error) {
     console.error('Error generating rotation schedule:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to generate rotation schedule',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -611,7 +645,7 @@ router.get('/escalation-policies', async (req, res) => {
         team: {
           id: onCallTeams.id,
           name: onCallTeams.name,
-        }
+        },
       })
       .from(escalationPolicies)
       .leftJoin(onCallTeams, eq(escalationPolicies.teamId, onCallTeams.id));
@@ -625,9 +659,9 @@ router.get('/escalation-policies', async (req, res) => {
     res.json(policies);
   } catch (error) {
     console.error('Error listing escalation policies:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to list escalation policies',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -652,15 +686,15 @@ router.post('/escalation-policies', async (req, res) => {
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       const validationError = fromZodError(error);
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
-        details: validationError.message 
+        details: validationError.message,
       });
     }
     console.error('Error creating escalation policy:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create escalation policy',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -675,9 +709,9 @@ router.post('/escalation-policies', async (req, res) => {
 router.get('/availability', async (req, res) => {
   try {
     const userId = req.user?.claims?.sub;
-    const { 
+    const {
       startDate = new Date().toISOString(),
-      endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     } = req.query;
 
     const availability = await db
@@ -695,9 +729,9 @@ router.get('/availability', async (req, res) => {
     res.json(availability);
   } catch (error) {
     console.error('Error getting availability:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get availability',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -722,15 +756,15 @@ router.post('/availability', async (req, res) => {
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
       const validationError = fromZodError(error);
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
-        details: validationError.message 
+        details: validationError.message,
       });
     }
     console.error('Error creating availability request:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to create availability request',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -749,7 +783,7 @@ router.get('/metrics', async (req, res) => {
       teamId,
       startDate,
       endDate,
-      period = 'monthly'
+      period = 'monthly',
     } = req.query;
 
     const metrics = await onCallService.getOnCallMetrics(
@@ -762,9 +796,9 @@ router.get('/metrics', async (req, res) => {
     res.json(metrics);
   } catch (error) {
     console.error('Error getting on-call metrics:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get on-call metrics',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -776,17 +810,23 @@ router.get('/reports/response-stats', async (req, res) => {
   try {
     const {
       startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      endDate = new Date().toISOString()
+      endDate = new Date().toISOString(),
     } = req.query;
 
     const stats = await db
       .select({
         totalIncidents: count(),
-        criticalIncidents: count(sql`CASE WHEN ${onCallIncidents.severity} = 'critical' THEN 1 END`),
+        criticalIncidents: count(
+          sql`CASE WHEN ${onCallIncidents.severity} = 'critical' THEN 1 END`
+        ),
         avgResponseTime: avg(onCallIncidents.totalResponseTime),
         avgResolutionTime: avg(onCallIncidents.resolutionTime),
-        escalationRate: count(sql`CASE WHEN ${onCallIncidents.currentEscalationLevel} > 0 THEN 1 END`),
-        falseAlarms: count(sql`CASE WHEN ${onCallIncidents.falseAlarm} = true THEN 1 END`),
+        escalationRate: count(
+          sql`CASE WHEN ${onCallIncidents.currentEscalationLevel} > 0 THEN 1 END`
+        ),
+        falseAlarms: count(
+          sql`CASE WHEN ${onCallIncidents.falseAlarm} = true THEN 1 END`
+        ),
       })
       .from(onCallIncidents)
       .where(
@@ -821,9 +861,9 @@ router.get('/reports/response-stats', async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting response stats:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get response stats',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -834,11 +874,13 @@ router.get('/reports/response-stats', async (req, res) => {
 router.get('/health', async (req, res) => {
   try {
     const last5Minutes = new Date(Date.now() - 5 * 60 * 1000);
-    
+
     const activeIncidents = await db
       .select({ count: count() })
       .from(onCallIncidents)
-      .where(sql`${onCallIncidents.status} IN ('triggered', 'acknowledged', 'escalated')`);
+      .where(
+        sql`${onCallIncidents.status} IN ('triggered', 'acknowledged', 'escalated')`
+      );
 
     const recentIncidents = await db
       .select({ count: count() })
@@ -865,7 +907,7 @@ router.get('/health', async (req, res) => {
     res.json(health);
   } catch (error) {
     console.error('Error checking on-call health:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       status: 'error',
       error: 'Failed to check on-call health',
       details: error instanceof Error ? error.message : 'Unknown error',
