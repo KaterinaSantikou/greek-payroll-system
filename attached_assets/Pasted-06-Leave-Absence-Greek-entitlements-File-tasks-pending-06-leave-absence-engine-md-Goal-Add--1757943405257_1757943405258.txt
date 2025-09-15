@@ -1,0 +1,117 @@
+06 — Leave & Absence (Greek entitlements)
+
+File: tasks/pending/06-leave-absence-engine.md
+
+Goal
+Add leave balances and payroll impact for Greek statutory leave types (annual leave, sickness, parental, maternity/paternity, special leaves).
+
+Acceptance Criteria
+
+ Create server/core/greekRules/leave.ts with accrual and deduction formulas per law versions.
+
+ Add LeaveService to manage balances, requests, approvals.
+
+ Payroll engine reads approved leave and adjusts pay (paid vs unpaid, EFKA handling where applicable).
+
+ Tests for accrual correctness and payroll impact.
+
+ Add min examples to baseline suite.
+
+Files
+
+Create: server/core/greekRules/leave.ts, server/services/LeaveService.ts
+
+Update: engine; tests
+
+Dependencies
+01, 03
+
+Non-Goals
+UI approval flows (later), no ERGANI yet.
+
+07 — Allowances Engine (Christmas, Easter, Leave)
+
+File: tasks/pending/07-allowances-engine.md
+
+Goal
+Implement precise Greek allowances logic with proration.
+
+Acceptance Criteria
+
+ Implement server/core/greekRules/allowances.ts:
+
+Christmas bonus, Easter bonus, leave allowance with proration by service period/absences per law version.
+
+ Wire into engine with guardrails.
+
+ Add tests for: new hires mid-period, unpaid leave effect, termination before entitlement date.
+
+Files
+
+Create: server/core/greekRules/allowances.ts
+
+Update: engine; tests
+
+Dependencies
+01, 03, 06
+
+Non-Goals
+No UI changes.
+
+08 — Overtime & Premiums Engine (daily/weekly + 5/6-day)
+
+File: tasks/pending/08-overtime-premiums-engine.md
+
+Goal
+Implement robust daily and weekly overtime logic with 5-day/6-day compliance and Sunday/night premiums (where legally required).
+
+Acceptance Criteria
+
+ server/core/greekRules/overtime.ts with:
+
+daily overtime (>8h), weekly (>40h/48h), legal overtime rates (e.g., +20%, +40% tiers) mapped via LAW versions
+
+Sunday/night premiums hooks (configurable)
+
+ Integrate with TimeAttendance normalized hours.
+
+ Tests: daily vs weekly precedence, caps, mixed schedules.
+
+Files
+
+Create: server/core/greekRules/overtime.ts
+
+Update: engine; tests
+
+Dependencies
+01, 03, 05
+
+Non-Goals
+No industry-specific exceptions beyond generic law for now.
+
+09 — Severance & Termination Scenarios
+
+File: tasks/pending/09-severance-termination.md
+
+Goal
+Accurate severance calculation based on tenure, contract type, and legal multipliers; proration and guardrails.
+
+Acceptance Criteria
+
+ server/core/greekRules/severance.ts using LAW multipliers by tenure brackets.
+
+ Engine handles terminations mid-month (pays partial salary, bonuses as required).
+
+ Tests cover: tenure boundaries, seasonal workers, rehiring gaps.
+
+Files
+
+Create: server/core/greekRules/severance.ts
+
+Update: engine; tests
+
+Dependencies
+01, 03
+
+Non-Goals
+No legal document generation yet.
