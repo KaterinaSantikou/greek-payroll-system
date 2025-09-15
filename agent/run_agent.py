@@ -2475,6 +2475,48 @@ def main():
     if not OPENAI_API_KEY:
         print("❌ OPENAI_API_KEY missing in Replit Secrets.")
         return
+    
+    print("\n" + "=" * 80)
+    print("🤖 Starting Continuous Greek Payroll Agent with Comprehensive Validation")
+    print("🔒 Features: Tool abstractions, static analysis, coverage tracking, human approval, law validation, explainability, PR rollback, cold start resume")
+    print(f"📁 Repository: {ROOT}")
+    print("=" * 80)
+    
+    # ===== COLD START RESUME =====
+    print("\n🔄 Loading agent state for cold start resume...")
+    try:
+        from agent.state_manager import load_agent_state, get_state_manager, get_resume_data
+        
+        load_result = load_agent_state()
+        if load_result.success:
+            print(f"✅ {load_result.message}")
+            print(f"   📊 {load_result.data}")
+            
+            # Get resume information
+            resume_data = get_resume_data()
+            if resume_data.get('total_completed', 0) > 0:
+                print(f"   🔄 Resuming from: backlog index {resume_data['backlog_index']}")
+                print(f"   📋 Last completed: {resume_data.get('last_completed_task', 'None')}")
+                print(f"   ⏳ Pending tasks: {len(resume_data.get('pending_tasks', []))}")
+                print(f"   ✅ Total completed: {resume_data['total_completed']}")
+                print(f"   🔁 Iteration: {resume_data['current_iteration']}")
+            else:
+                print("   🆕 Starting fresh session - no previous progress")
+        else:
+            print(f"⚠️ State load failed: {load_result.error}")
+            print("   🆕 Continuing with new session")
+            
+    except ImportError:
+        try:
+            from state_manager import load_agent_state, get_state_manager, get_resume_data
+            load_result = load_agent_state()
+            if load_result.success:
+                print(f"✅ {load_result.message}")
+        except ImportError:
+            print("⚠️ State manager not available - running without persistence")
+    except Exception as e:
+        print(f"⚠️ Error loading state: {e}")
+        print("   🆕 Continuing with new session")
 
     # Acquire concurrent execution slot (limit to 1 active task)
     rate_limiter.acquire_concurrent_slot()
