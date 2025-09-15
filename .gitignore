@@ -4,3 +4,14 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
+
+# Environment files (secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Replit secrets (auto-managed by Replit)
+.replit
+.upm
