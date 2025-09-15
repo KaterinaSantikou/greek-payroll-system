@@ -106,7 +106,7 @@ class ExplainabilityEngine:
             diff_content = diff_result.data if diff_result.success else ""
             
             for file_path in changed_files:
-                explanation = self._analyze_file_change(file_path, diff_content)
+                explanation = self._analyze_file_change(file_path, diff_content or "")
                 if explanation:
                     explanations.append(explanation)
         
