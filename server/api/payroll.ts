@@ -4,9 +4,9 @@ import { z } from "zod";
 import { nanoid } from "nanoid";
 
 // Business layer imports
-import { payrollService } from "../business/payroll-service";
-import { payrollValidator } from "../business/payroll-validator";
-import { payrollCalculator } from "../business/payroll-calculator";
+import { payrollService } from "../../lib/payroll/services/payroll-service";
+import { payrollValidator } from "../../lib/payroll/calculators/payroll-validator";
+import { payrollCalculator } from "../../lib/payroll/calculators/payroll-calculator";
 
 // Infrastructure layer imports
 import { payrollRepository } from "../infrastructure/payroll-repository";
