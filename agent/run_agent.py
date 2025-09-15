@@ -14,6 +14,9 @@ try:
         OutputValidator, ValidationConfig, validate_and_handle_task,
         validate_task_output, should_reject_patch, move_task_back_to_pending
     )
+    from agent.evaluation_loop import (
+        performance_tracker, agent_critic, collect_task_metrics, TaskMetrics
+    )
 except ImportError:
     from tools import (
         GitTool, BuildTool, TestTool, DatabaseTool, CodebaseTool,
@@ -22,6 +25,9 @@ except ImportError:
     from output_validator import (
         OutputValidator, ValidationConfig, validate_and_handle_task,
         validate_task_output, should_reject_patch, move_task_back_to_pending
+    )
+    from evaluation_loop import (
+        performance_tracker, agent_critic, collect_task_metrics, TaskMetrics
     )
 
 # ---- CONFIG ----
