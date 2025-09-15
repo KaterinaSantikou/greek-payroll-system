@@ -840,10 +840,16 @@ def is_task_relevant(task_content):
     if has_blocked_content:
         return False, f"Task appears to be unrelated to payroll system (contains blocked keywords)"
     
-    if has_payroll_keywords or has_technical_keywords:
+    # Primary acceptance: Must have payroll-related keywords
+    if has_payroll_keywords:
         return True, "Task is relevant to Greek payroll system"
     
-    return False, "Task does not appear to be related to Greek payroll system or technical improvements"
+    # Secondary acceptance: System maintenance tasks with explicit metadata
+    if has_system_keywords and has_system_metadata:
+        return True, "Task is system maintenance with explicit categorization"
+    
+    # Reject everything else
+    return False, "Task must contain Greek payroll keywords OR be explicitly categorized system maintenance"
 
 def pick_next_task():
     """Pick the next task based on priority and dependencies"""
