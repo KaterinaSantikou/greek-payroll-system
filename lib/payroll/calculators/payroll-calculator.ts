@@ -1025,165 +1025,198 @@ export class PayrollCalculator {
       const effectiveHourlyRate =
         hourlyRate || baseSalary / WORKING_TIME_LIMITS.standardMonthlyHours;
 
-    // Calculate regular pay
-    const regularPay = regularHours * effectiveHourlyRate;
+      // Calculate regular pay
+      const regularPay = regularHours * effectiveHourlyRate;
 
-    // Calculate premiums
-    const premiums = this.calculateOvertimePremiums(
-      baseSalary,
-      regularHours,
-      overtimeHours,
-      nightHours,
-      sundayHours,
-      holidayHours
-    );
+      // Calculate premiums
+      const premiums = this.calculateOvertimePremiums(
+        baseSalary,
+        regularHours,
+        overtimeHours,
+        nightHours,
+        sundayHours,
+        holidayHours
+      );
 
-    // Calculate allowances
-    const allowancesBreakdown = {
-      food: allowances.food || 0,
-      transport: allowances.transport || 0,
-      housing: allowances.housing || 0,
-      marriage: allowances.marriage || 0,
-      family: allowances.family || 0,
-      education: allowances.education || 0,
-      experience: allowances.experience || 0,
-      position: allowances.position || 0,
-    };
-    const totalAllowances = Object.values(allowancesBreakdown).reduce(
-      (sum, val) => sum + val,
-      0
-    );
+      // Calculate allowances
+      const allowancesBreakdown = {
+        food: allowances.food || 0,
+        transport: allowances.transport || 0,
+        housing: allowances.housing || 0,
+        marriage: allowances.marriage || 0,
+        family: allowances.family || 0,
+        education: allowances.education || 0,
+        experience: allowances.experience || 0,
+        position: allowances.position || 0,
+      };
+      const totalAllowances = Object.values(allowancesBreakdown).reduce(
+        (sum, val) => sum + val,
+        0
+      );
 
-    // Calculate bonuses
-    const bonuses = this.calculateGreekBonuses(
-      baseSalary,
-      employmentStartDate,
-      periodEndDate,
-      isFullTime,
-      contractType
-    );
-    const totalBonuses = bonuses.christmas + bonuses.easter + bonuses.vacation;
+      // Calculate bonuses
+      const bonuses = this.calculateGreekBonuses(
+        baseSalary,
+        employmentStartDate,
+        periodEndDate,
+        isFullTime,
+        contractType
+      );
+      const totalBonuses = bonuses.christmas + bonuses.easter + bonuses.vacation;
 
-    // Calculate leave pay
-    const leavePay = this.calculateLeavePay(baseSalary, leaveHours);
-    const totalLeavePay =
-      leavePay.paidLeave +
-      leavePay.sickPay +
-      leavePay.maternityPay +
-      leavePay.paternityPay;
+      // Calculate leave pay
+      const leavePay = this.calculateLeavePay(baseSalary, leaveHours);
+      const totalLeavePay =
+        leavePay.paidLeave +
+        leavePay.sickPay +
+        leavePay.maternityPay +
+        leavePay.paternityPay;
 
-    // Calculate benefits
-    const benefits = this.calculateBenefitsInKind(benefitsInKind);
+      // Calculate benefits
+      const benefits = this.calculateBenefitsInKind(benefitsInKind);
 
-    // Calculate tips
-    const tipsCalculation = this.calculateTipsTax(tips);
+      // Calculate tips
+      const tipsCalculation = this.calculateTipsTax(tips);
 
-    // Calculate gross pay
-    const grossPay =
-      regularPay +
-      premiums.overtimeAmount +
-      premiums.nightPremium +
-      premiums.sundayPremium +
-      premiums.holidayPremium +
-      totalAllowances +
-      totalBonuses +
-      totalLeavePay +
-      benefits.taxFreeBenefits;
+      // Calculate gross pay
+      const grossPay =
+        regularPay +
+        premiums.overtimeAmount +
+        premiums.nightPremium +
+        premiums.sundayPremium +
+        premiums.holidayPremium +
+        totalAllowances +
+        totalBonuses +
+        totalLeavePay +
+        benefits.taxFreeBenefits;
 
-    // Calculate taxable income
-    const taxableIncome =
-      grossPay + benefits.imputedIncome + tipsCalculation.totalTips;
+      // Calculate taxable income
+      const taxableIncome =
+        grossPay + benefits.imputedIncome + tipsCalculation.totalTips;
 
-    // Calculate annual taxable income for tax brackets
-    const annualTaxableIncome = taxableIncome * 12;
+      // Calculate annual taxable income for tax brackets
+      const annualTaxableIncome = taxableIncome * 12;
 
-    // Calculate taxes
-    const monthlyIncomeTax = this.calculateIncomeTax(annualTaxableIncome) / 12;
-    const monthlySolidarityTax =
-      this.calculateSolidarityTax(annualTaxableIncome) / 12;
+      // Calculate taxes
+      const monthlyIncomeTax = this.calculateIncomeTax(annualTaxableIncome) / 12;
+      const monthlySolidarityTax =
+        this.calculateSolidarityTax(annualTaxableIncome) / 12;
 
-    // Calculate EFKA contributions
-    const efkaContributions = this.calculateEfkaContributions(grossPay);
+      // Calculate EFKA contributions
+      const efkaContributions = this.calculateEfkaContributions(grossPay);
 
-    // Calculate total deductions
-    const totalDeductions =
-      monthlyIncomeTax +
-      monthlySolidarityTax +
-      efkaContributions.employee.total +
-      tipsCalculation.tipsTax;
+      // Calculate total deductions
+      const totalDeductions =
+        monthlyIncomeTax +
+        monthlySolidarityTax +
+        efkaContributions.employee.total +
+        tipsCalculation.tipsTax;
 
-    // Calculate net pay
-    const netPay = grossPay - totalDeductions + tipsCalculation.netTips;
+      // Calculate net pay
+      const netPay = grossPay - totalDeductions + tipsCalculation.netTips;
 
-    // Calculate total employer cost
-    const totalEmployerCost = grossPay + efkaContributions.employer.total;
+      // Calculate total employer cost
+      const totalEmployerCost = grossPay + efkaContributions.employer.total;
 
-    return {
-      employeeId: input.employeeId,
-      periodId: input.periodId,
+      return {
+        employeeId,
+        periodId,
 
-      // Gross Pay Components
-      baseSalary,
-      regularPay,
-      overtimeAmount: premiums.overtimeAmount,
-      nightPremium: premiums.nightPremium,
-      sundayPremium: premiums.sundayPremium,
-      holidayPremium: premiums.holidayPremium,
+        // Gross Pay Components
+        baseSalary,
+        regularPay,
+        overtimeAmount: premiums.overtimeAmount,
+        nightPremium: premiums.nightPremium,
+        sundayPremium: premiums.sundayPremium,
+        holidayPremium: premiums.holidayPremium,
 
-      // Allowances
-      totalAllowances,
-      allowancesBreakdown,
+        // Allowances
+        totalAllowances,
+        allowancesBreakdown,
 
-      // Greek Bonuses
-      christmasBonus: bonuses.christmas,
-      easterBonus: bonuses.easter,
-      vacationBonus: bonuses.vacation,
-      totalBonuses,
+        // Greek Bonuses
+        christmasBonus: bonuses.christmas,
+        easterBonus: bonuses.easter,
+        vacationBonus: bonuses.vacation,
+        totalBonuses,
 
-      // Leave Pay
-      paidLeave: leavePay.paidLeave,
-      sickPay: leavePay.sickPay,
-      maternityPay: leavePay.maternityPay,
-      paternityPay: leavePay.paternityPay,
-      totalLeavePay,
+        // Leave Pay
+        paidLeave: leavePay.paidLeave,
+        sickPay: leavePay.sickPay,
+        maternityPay: leavePay.maternityPay,
+        paternityPay: leavePay.paternityPay,
+        totalLeavePay,
 
-      // Benefits
-      taxFreeBenefits: benefits.taxFreeBenefits,
-      taxableBenefits: benefits.taxableBenefits,
-      imputedIncome: benefits.imputedIncome,
+        // Benefits
+        taxFreeBenefits: benefits.taxFreeBenefits,
+        taxableBenefits: benefits.taxableBenefits,
+        imputedIncome: benefits.imputedIncome,
 
-      // Tips
-      totalTips: tipsCalculation.totalTips,
-      tipsTax: tipsCalculation.tipsTax,
-      netTips: tipsCalculation.netTips,
+        // Tips
+        totalTips: tipsCalculation.totalTips,
+        tipsTax: tipsCalculation.tipsTax,
+        netTips: tipsCalculation.netTips,
 
-      // Totals
-      grossPay,
-      taxableIncome,
+        // Totals
+        grossPay,
+        taxableIncome,
 
-      // Deductions
-      incomeTax: monthlyIncomeTax,
-      solidarityTax: monthlySolidarityTax,
-      employeeEfkaMain: efkaContributions.employee.main,
-      employeeEfkaAux: efkaContributions.employee.auxiliary,
-      employeeUnemployment: efkaContributions.employee.unemployment,
-      totalDeductions,
+        // Deductions
+        incomeTax: monthlyIncomeTax,
+        solidarityTax: monthlySolidarityTax,
+        employeeEfkaMain: efkaContributions.employee.main,
+        employeeEfkaAux: efkaContributions.employee.auxiliary,
+        employeeUnemployment: efkaContributions.employee.unemployment,
+        totalDeductions,
 
-      // Employer Costs
-      employerEfkaMain: efkaContributions.employer.main,
-      employerEfkaAux: efkaContributions.employer.auxiliary,
-      employerUnemployment: efkaContributions.employer.unemployment,
-      employerSickness: efkaContributions.employer.sickness,
-      employerWorkAccident: efkaContributions.employer.workAccident,
-      totalEmployerCost,
+        // Employer Costs
+        employerEfkaMain: efkaContributions.employer.main,
+        employerEfkaAux: efkaContributions.employer.auxiliary,
+        employerUnemployment: efkaContributions.employer.unemployment,
+        employerSickness: efkaContributions.employer.sickness,
+        employerWorkAccident: efkaContributions.employer.workAccident,
+        totalEmployerCost,
 
-      // Final Amount
-      netPay,
+        // Final Amount
+        netPay,
 
-      // Metadata
-      calculationDate: new Date(),
-      calculationVersion: '2025.1',
-    };
+        // Metadata
+        calculationDate: new Date(),
+        calculationVersion: '2025.1',
+      };
+
+    } catch (error) {
+      // Handle PayrollCalculationError instances with context preservation
+      if (error instanceof PayrollCalculationError) {
+        // Re-throw with additional context
+        throw new PayrollCalculationError(
+          error.code,
+          error.field,
+          error.category,
+          `Payroll calculation failed for ${input?.employeeId || 'unknown employee'}: ${error.message}`,
+          `Η υπολογισμός μισθοδοσίας απέτυχε για ${input?.employeeId || 'άγνωστο εργαζόμενο'}: ${error.messageGr}`,
+          {
+            originalError: error.context,
+            inputData: input,
+            calculationStep: 'input_validation'
+          }
+        );
+      }
+
+      // Handle unexpected errors
+      throw new PayrollCalculationError(
+        'CALCULATION_ERROR',
+        'unknown',
+        'INVALID_INPUT',
+        `Unexpected error during payroll calculation: ${error instanceof Error ? error.message : String(error)}`,
+        `Απροσδόκητο σφάλμα κατά τον υπολογισμό μισθοδοσίας: ${error instanceof Error ? error.message : String(error)}`,
+        {
+          inputData: input,
+          originalError: error,
+          calculationStep: 'main_calculation'
+        }
+      );
+    }
   }
 
   /**
