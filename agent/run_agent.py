@@ -2382,41 +2382,41 @@ def main():
                     """).strip()
                 }
 
-            user = {
-                "role":"user",
-                "content": textwrap.dedent(f"""
-                TASK SPEC:
-                ---
-                {task_text}
+                user = {
+                    "role":"user",
+                    "content": textwrap.dedent(f"""
+                    TASK SPEC:
+                    ---
+                    {task_text}
 
-                CURRENT SYSTEM KNOWLEDGE:
-                ---
-                {knowledge}
+                    CURRENT SYSTEM KNOWLEDGE:
+                    ---
+                    {knowledge}
 
-                ARCHITECTURE & DEVELOPMENT RULES:
-                ---
-                {architecture_guide}
+                    ARCHITECTURE & DEVELOPMENT RULES:
+                    ---
+                    {architecture_guide}
 
-                DEPENDENCY ARCHITECTURE:
-                ---
-                {dependency_summary}
+                    DEPENDENCY ARCHITECTURE:
+                    ---
+                    {dependency_summary}
 
-                REPO TREE (truncated):
-                ---
-                {tree}
-                """).strip()
-            }
+                    REPO TREE (truncated):
+                    ---
+                    {tree}
+                    """).strip()
+                }
 
-            print("🤖 Thinking…")
-            # Try structured output first for more reliable parsing
-            try:
-                print("📋 Attempting structured output for reliability...")
-                resp = call_with_retry(lambda: call_openai([system, user], use_structured_output=True))
-                structured_output = True
-            except Exception as e:
-                print(f"⚠️ Structured output failed ({e}), falling back to traditional format...")
-                resp = call_with_retry(lambda: call_openai([system, user]))
-                structured_output = False
+                print("🤖 Thinking…")
+                # Try structured output first for more reliable parsing
+                try:
+                    print("📋 Attempting structured output for reliability...")
+                    resp = call_with_retry(lambda: call_openai([system, user], use_structured_output=True))
+                    structured_output = True
+                except Exception as e:
+                    print(f"⚠️ Structured output failed ({e}), falling back to traditional format...")
+                    resp = call_with_retry(lambda: call_openai([system, user]))
+                    structured_output = False
         elif implementation_plan == "TASK_SPLIT_INTO_SUBTASKS":
             print("📦 Task was split into subtasks. Current task completed.")
             print("✅ Subtasks created successfully. Run the agent again to process them.")
