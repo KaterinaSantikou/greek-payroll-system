@@ -2296,21 +2296,21 @@ def main():
         try:
             # Read task and context information
             task_text = read_file(task_file)
-        tree = repo_tree()
-        knowledge = read_knowledge()
-        architecture_guide = read_architecture_guide()
-        
-        # Get dependency graph for architectural context
-        dependency_graph = read_dependency_graph()
-        dependency_summary = format_dependency_summary(dependency_graph)
-        
-        # Load evolved guidelines from skill growth
-        evolved_guidelines = load_evolved_guidelines()
+            tree = repo_tree()
+            knowledge = read_knowledge()
+            architecture_guide = read_architecture_guide()
+            
+            # Get dependency graph for architectural context
+            dependency_graph = read_dependency_graph()
+            dependency_summary = format_dependency_summary(dependency_graph)
+            
+            # Load evolved guidelines from skill growth
+            evolved_guidelines = load_evolved_guidelines()
 
-        # Run initial dependency analysis to understand current state
-        print("🔍 PHASE 0: Analyzing current dependency structure...")
-        initial_analysis = run_change_impact_analysis()
-        impact_context = format_impact_analysis_for_prompt(initial_analysis)
+            # Run initial dependency analysis to understand current state
+            print("🔍 PHASE 0: Analyzing current dependency structure...")
+            initial_analysis = run_change_impact_analysis()
+            impact_context = format_impact_analysis_for_prompt(initial_analysis)
 
         # PHASE 1: PLANNING
         print("🎯 PHASE 1: Creating detailed implementation plan...")
