@@ -7,12 +7,13 @@ validation, including diff summary and test results.
 """
 
 import os
+import sys
 import json
 import subprocess
 import requests
 import logging
 from datetime import datetime
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 from pathlib import Path
 
 # Configure logging
