@@ -2005,11 +2005,6 @@ def main():
         
         if not implementation_plan:
             print("❌ Planning phase failed, falling back to direct implementation")
-        elif implementation_plan == "TASK_SPLIT_INTO_SUBTASKS":
-            print("📦 Task was split into subtasks. Current task completed.")
-            print("✅ Subtasks created successfully. Run the agent again to process them.")
-            return
-        else:
             # Fallback to old direct implementation
             system = {
                 "role":"system",
@@ -2088,6 +2083,10 @@ def main():
 
             print("🤖 Thinking…")
             resp = call_with_retry(lambda: call_openai([system, user]))
+        elif implementation_plan == "TASK_SPLIT_INTO_SUBTASKS":
+            print("📦 Task was split into subtasks. Current task completed.")
+            print("✅ Subtasks created successfully. Run the agent again to process them.")
+            return
         else:
             # PHASE 2: IMPLEMENTATION with final impact analysis
             planned_files = get_planned_files_from_response(implementation_plan)
