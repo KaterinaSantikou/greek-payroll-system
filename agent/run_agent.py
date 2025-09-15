@@ -50,6 +50,61 @@ if "⚠️ Missing" in ARCHITECTURE_TEXT + SCHEMA_TEXT + PAYROLL_ENGINE_TEXT:
     print(f"   Schema: {'✅' if SCHEMA_PATH.exists() else '❌'} {SCHEMA_PATH}")
     print(f"   Payroll Engine: {'✅' if PAYROLL_ENGINE_PATH.exists() else '❌'} {PAYROLL_ENGINE_PATH}")
 
+# ---- RATE LIMITING ----
+class RateLimiter:
+    """Rate limiter to prevent API quota exhaustion"""
+    
+    def __init__(self, max_calls_per_minute=2, max_concurrent=1):
+        self.max_calls_per_minute = max_calls_per_minute
+        self.max_concurrent = max_concurrent
+        self.calls_log = deque()  # Track call timestamps
+        self.concurrent_semaphore = threading.Semaphore(max_concurrent)
+        self.lock = threading.Lock()
+        
+    def can_make_call(self):
+        """Check if we can make a call based on rate limits"""
+        with self.lock:
+            now = datetime.now()
+            # Remove calls older than 1 minute
+            while self.calls_log and now - self.calls_log[0] > timedelta(minutes=1):
+                self.calls_log.popleft()
+            
+            # Check if we're under the rate limit
+            return len(self.calls_log) < self.max_calls_per_minute
+    
+    def wait_for_rate_limit(self):
+        """Wait until we can make a call"""
+        while not self.can_make_call():
+            with self.lock:
+                if self.calls_log:
+                    # Wait until the oldest call is more than 1 minute old
+                    oldest_call = self.calls_log[0]
+                    wait_time = 60 - (datetime.now() - oldest_call).total_seconds()
+                    if wait_time > 0:
+                        print(f"⏱️ Rate limit reached. Waiting {wait_time:.1f}s before next API call...")
+                        time.sleep(wait_time + 1)  # Add 1 second buffer
+                else:
+                    break
+    
+    def log_call(self):
+        """Log that a call was made"""
+        with self.lock:
+            self.calls_log.append(datetime.now())
+    
+    def acquire_concurrent_slot(self):
+        """Acquire a concurrent execution slot"""
+        print("🎯 Acquiring execution slot...")
+        self.concurrent_semaphore.acquire()
+        print("✅ Execution slot acquired")
+    
+    def release_concurrent_slot(self):
+        """Release a concurrent execution slot"""
+        self.concurrent_semaphore.release()
+        print("🔄 Execution slot released")
+
+# Global rate limiter instance
+rate_limiter = RateLimiter(max_calls_per_minute=2, max_concurrent=1)
+
 def safe_run(cmd):
     """Run git command safely, masking tokens from error output"""
     try:
