@@ -2165,22 +2165,22 @@ def main():
             finally:
                 globals()['ROOT'] = original_root
     
-    if not validation_failed:
-        print("🗄️ Running schema migration validation in sandbox...")
-        # Note: Schema validation uses DATABASE_URL so it affects the real DB
-        # This is acceptable since it's testing the schema, not modifying data
-        schema_valid = validate_schema_migrations(changed)
-        if not schema_valid:
-            print("❌ Schema migration validation failed.")
-            validation_failed = True
+        if not validation_failed:
+            print("🗄️ Running schema migration validation in sandbox...")
+            # Note: Schema validation uses DATABASE_URL so it affects the real DB
+            # This is acceptable since it's testing the schema, not modifying data
+            schema_valid = validate_schema_migrations(changed)
+            if not schema_valid:
+                print("❌ Schema migration validation failed.")
+                validation_failed = True
     
-    if validation_failed:
-        print("❌ Validation failed in sandbox environment.")
-        print("🗑️ Discarding sandbox changes (main repository unchanged).")
-        print("❌ Task validation failed. Task will remain in pending.")
-        print(f"Summary saved → {summary_path}")
-        print("Fix validation errors and run again.")
-        return
+        if validation_failed:
+            print("❌ Validation failed in sandbox environment.")
+            print("🗑️ Discarding sandbox changes (main repository unchanged).")
+            print("❌ Task validation failed. Task will remain in pending.")
+            print(f"Summary saved → {summary_path}")
+            print("Fix validation errors and run again.")
+            return
     
     print("✅ All validation checks passed in sandbox!")
     
