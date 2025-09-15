@@ -775,56 +775,20 @@ def read_architecture_guide():
     return ARCHITECTURE_FILE.read_text(encoding="utf-8")
 
 def generate_dependency_graph():
-    """Generate dependency graph using madge and save to JSON"""
-    try:
-        CONTEXT_DIR.mkdir(exist_ok=True)
-        
-        # Run madge to generate dependency graph
-        result = subprocess.run([
-            "npx", "madge", 
-            "--json", 
-            "--extensions", "ts,tsx,js,jsx",
-            "--exclude", "node_modules|dist|build",
-            "."
-        ], cwd=ROOT, capture_output=True, text=True, timeout=30)
-        
-        if result.returncode == 0:
-            dependency_data = json.loads(result.stdout)
-            
-            # Also get circular dependencies
-            circular_result = subprocess.run([
-                "npx", "madge", 
-                "--circular",
-                "--json",
-                "--extensions", "ts,tsx,js,jsx", 
-                "--exclude", "node_modules|dist|build",
-                "."
-            ], cwd=ROOT, capture_output=True, text=True, timeout=30)
-            
-            circular_deps = []
-            if circular_result.returncode == 0 and circular_result.stdout.strip():
-                try:
-                    circular_deps = json.loads(circular_result.stdout)
-                except:
-                    pass
-            
-            # Combine data
-            graph_data = {
-                "dependencies": dependency_data,
-                "circular_dependencies": circular_deps,
-                "generated_at": datetime.now().isoformat(),
-                "total_files": len(dependency_data),
-                "files_with_deps": len([f for f, deps in dependency_data.items() if deps])
-            }
-            
-            DEPENDENCY_FILE.write_text(json.dumps(graph_data, indent=2), encoding="utf-8")
-            print(f"📊 Dependency graph generated: {len(dependency_data)} files analyzed")
-            return graph_data
-        else:
-            print(f"⚠️ Failed to generate dependency graph: {result.stderr}")
-            return None
-    except Exception as e:
-        print(f"⚠️ Error generating dependency graph: {e}")
+    """Generate dependency graph using tool abstraction"""
+    CONTEXT_DIR.mkdir(exist_ok=True)
+    
+    result = CodebaseTool.analyze_dependencies()
+    
+    if result.success:
+        # Save to dependency file
+        DEPENDENCY_FILE.write_text(json.dumps(result.data, indent=2), encoding="utf-8")
+        print(result.message)
+        return result.data
+    else:
+        print(f"⚠️ {result.message}")
+        if result.error:
+            print(f"   Error: {result.error}")
         return None
 
 def read_dependency_graph():
