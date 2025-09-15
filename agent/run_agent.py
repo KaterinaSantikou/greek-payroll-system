@@ -2838,6 +2838,35 @@ def main():
             except Exception as e:
                 print(f"⚠️ Error generating explanation: {e}")
             
+            # ===== PR ROLLBACK CHECK =====
+            print("\n🔄 Checking for PR rejections...")
+            try:
+                from agent.pr_rollback_handler import check_pr_rejections
+                
+                rollback_result = check_pr_rejections()
+                
+                if rollback_result.success:
+                    if "No PR rejections found" in rollback_result.message:
+                        print(f"✅ {rollback_result.message}")
+                    else:
+                        print(f"🚨 {rollback_result.message}")
+                        print(f"   📋 {rollback_result.data}")
+                else:
+                    print(f"⚠️ PR rollback check failed: {rollback_result.error}")
+                    
+            except ImportError:
+                try:
+                    from pr_rollback_handler import check_pr_rejections
+                    rollback_result = check_pr_rejections()
+                    if rollback_result.success:
+                        print(f"✅ {rollback_result.message}")
+                    else:
+                        print(f"⚠️ {rollback_result.error}")
+                except ImportError:
+                    print("⚠️ PR rollback handler not available")
+            except Exception as e:
+                print(f"⚠️ Error checking PR rejections: {e}")
+            
             # ===== OUTPUT VALIDATION BEFORE COMPLETION =====
             print("\n🔍 Running comprehensive output validation before task completion...")
             task_file_path = pathlib.Path(task_file)
