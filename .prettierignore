@@ -1,13 +1,57 @@
-dist/
+# Dependencies
 node_modules/
-*.lock
-*.md
-*.json
-public/
-.git/
-.vscode/
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
 coverage/
-*.log
+.next/
+out/
+
+# Generated files
+*.min.js
+*.min.css
+migrations/
+drizzle/
+
+# Configuration files that shouldn't be formatted
+.env*
 *.config.js
 *.config.ts
+components.json
 drizzle.config.ts
+tailwind.config.ts
+postcss.config.js
+vite.config.ts
+vitest.config.ts
+
+# Documentation and logs
+*.log
+*.md
+CHANGELOG.md
+LICENSE
+
+# Test artifacts
+test-results/
+playwright-report/
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Legal documents (maintain exact formatting)
+legal-docs/
+
+# Public assets
+public/
+
+# IDE files
+.git/
+.vscode/
+.idea/
+
+# Package files
+*.json
