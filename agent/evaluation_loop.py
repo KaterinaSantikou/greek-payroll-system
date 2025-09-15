@@ -243,7 +243,7 @@ class AgentCritic:
 - **Lines Added:** {metrics.lines_added}
 - **Lines Removed:** {metrics.lines_removed}
 - **Test Count:** {metrics.test_count}
-- **Coverage:** {metrics.coverage_percentage:.1f}% if metrics.coverage_percentage else 'N/A'}
+- **Coverage:** {f"{metrics.coverage_percentage:.1f}%" if metrics.coverage_percentage else "N/A"}
 
 ### Files Modified
 {chr(10).join(f"- `{file}`" for file in changed_files) if changed_files else "- No files changed"}
