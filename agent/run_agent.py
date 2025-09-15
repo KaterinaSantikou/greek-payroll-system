@@ -900,6 +900,7 @@ def run_quality_critic(task_file, changed_files, task_summary):
                 "Here is the existing core payroll calculation logic you must improve and not break:\n\n"
                 f"{PAYROLL_ENGINE_TEXT}\n\n"
                 "Your job is to evaluate completed tasks and provide constructive feedback."
+            ) + textwrap.dedent("""
             
             EVALUATION CRITERIA:
             - Does the implementation match the task requirements?
@@ -1730,7 +1731,8 @@ def execute_planning_phase(task_text, tree, knowledge, architecture_guide, depen
                 f"{SCHEMA_TEXT}\n\n"
                 "Here is the existing core payroll calculation logic you must improve and not break:\n\n"
                 f"{PAYROLL_ENGINE_TEXT}\n\n"
-                "Your job is to create a comprehensive implementation plan BEFORE any coding begins.\n\n"
+                "Your job is to create a comprehensive implementation plan BEFORE any coding begins."
+            ) + textwrap.dedent(f"""
             
             PLANNING INSTRUCTIONS:
             1. Analyze the task requirements thoroughly
@@ -1956,7 +1958,8 @@ def execute_implementation_phase(task_text, tree, knowledge, architecture_guide,
                 "Here is the database schema you MUST respect:\n\n"
                 f"{SCHEMA_TEXT}\n\n"
                 "Here is the existing core payroll calculation logic you must improve and not break:\n\n"
-                f"{PAYROLL_ENGINE_TEXT}\n\n"
+                f"{PAYROLL_ENGINE_TEXT}"
+            ) + textwrap.dedent(f"""
             
             IMPLEMENTATION INSTRUCTIONS:
             1. Follow the implementation plan EXACTLY as specified
