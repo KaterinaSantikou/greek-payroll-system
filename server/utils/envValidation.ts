@@ -165,6 +165,7 @@ export function validateEnvironmentVariables(): EnvConfig {
     console.log('3. Restart the application');
     console.log('\nFor help generating values:');
     console.log('• SESSION_SECRET: openssl rand -hex 64');
+    console.log('• DATA_ENCRYPTION_KEY: openssl rand -hex 32');
     console.log('• Check .env.example for all configuration options');
     
     process.exit(1);
