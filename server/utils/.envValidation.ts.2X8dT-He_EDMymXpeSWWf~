@@ -36,6 +36,7 @@ interface EnvConfig {
   
   // Security & service roles
   SERVICE_ROLE_KEY?: string;
+  DATA_ENCRYPTION_KEY?: string;
   AUTH_ALLOWED_IPS?: string;
   
   // Feature flags
