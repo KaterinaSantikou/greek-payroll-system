@@ -2267,27 +2267,31 @@ def main():
         print("❌ OPENAI_API_KEY missing in Replit Secrets.")
         return
 
-    # Periodically perform skill growth (every 5th task or if no evolution file exists)
-    critic_files = list(AGENT_DIR.glob("critic_report_*.md"))
-    should_evolve = (
-        not PROMPT_EVOLUTION_FILE.exists() or 
-        len(critic_files) % 5 == 0 and len(critic_files) > 0
-    )
+    # Acquire concurrent execution slot (limit to 1 active task)
+    rate_limiter.acquire_concurrent_slot()
     
-    if should_evolve:
-        print("🧠 Triggering skill growth and prompt evolution...")
-        perform_skill_growth_cycle()
+    try:
+        # Periodically perform skill growth (every 5th task or if no evolution file exists)
+        critic_files = list(AGENT_DIR.glob("critic_report_*.md"))
+        should_evolve = (
+            not PROMPT_EVOLUTION_FILE.exists() or 
+            len(critic_files) % 5 == 0 and len(critic_files) > 0
+        )
+        
+        if should_evolve:
+            print("🧠 Triggering skill growth and prompt evolution...")
+            perform_skill_growth_cycle()
 
-    task_file = pick_next_task()
-    if not task_file:
-        print("No tasks found in tasks/pending. Add a .md task and run again.")
-        return
+        task_file = pick_next_task()
+        if not task_file:
+            print("No tasks found in tasks/pending. Add a .md task and run again.")
+            return
 
-    # Create sandbox environment for safe development
-    sandbox_created = create_sandbox_environment()
-    if not sandbox_created:
-        print("❌ Failed to create sandbox environment, aborting task")
-        return
+        # Create sandbox environment for safe development
+        sandbox_created = create_sandbox_environment()
+        if not sandbox_created:
+            print("❌ Failed to create sandbox environment, aborting task")
+            return
     
     try:
         # Read task and context information
@@ -2561,6 +2565,10 @@ def main():
     finally:
         # Always clean up sandbox environment
         cleanup_sandbox()
+        
+    finally:
+        # Always release the concurrent execution slot
+        rate_limiter.release_concurrent_slot()
 
 if __name__ == "__main__":
     main()
