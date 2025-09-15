@@ -1,0 +1,301 @@
+19 — Compliance Hub (Deadlines, Alerts, ΣΣΕ checks)
+
+File: tasks/pending/19-compliance-hub.md
+
+Goal
+Back-end service to track EFKA/ERGANI/AADE deadlines, min-wage enforcement checks, ΣΣΕ variances.
+
+Acceptance Criteria
+
+ ComplianceService with rules registry; run after payroll finalize.
+
+ Alerts queue (compliance_alerts table) with severity.
+
+ Tests for rule triggers.
+
+Files
+
+Create: server/services/ComplianceService.ts, migrations
+
+Update: tests
+
+Dependencies
+01, 02, engine finalize hook.
+
+Non-Goals
+UI; notifications later.
+
+20 — GL Export: QuickBooks/Xero helpers
+
+File: tasks/pending/20-gl-export-qb-xero.md
+
+Goal
+Helpers to format the GL export to QuickBooks/Xero expectations.
+
+Acceptance Criteria
+
+ Map to QB CSV columns & Xero Journal JSON.
+
+ Tests: schema validation against sample fixtures.
+
+Files
+
+Update: GLMappingService + formatters; tests
+
+Dependencies
+12
+
+Non-Goals
+OAuth apps; just file formats.
+
+21 — Reporting Endpoints (Front-end ready)
+
+File: tasks/pending/21-reporting-endpoints-fe-ready.md
+
+Goal
+Stabilize reporting APIs and add pagination, filters, and CSV export.
+
+Acceptance Criteria
+
+ /reports/kpi, /reports/ot, /reports/absences: paging, filters (site, dept, date).
+
+ CSV export endpoints.
+
+ Tests for paging accuracy and CSV output.
+
+Files
+
+Update: reporting service/routes; tests
+
+Dependencies
+13
+
+Non-Goals
+FE charts (later).
+
+22 — Mobile-friendly ESS (Phase 1: payslip & profile)
+
+File: tasks/pending/22-ess-mobile-payslip-profile.md
+
+Goal
+Responsive ESS for payslip list/download and profile/bank details.
+
+Acceptance Criteria
+
+ client/src/pages/ess/Payslips.tsx, Profile.tsx responsive (Tailwind).
+
+ Download payslip with access control.
+
+ Tests: smoke + accessibility.
+
+Files
+
+Update/Create: client pages; tests
+
+Dependencies
+14
+
+Non-Goals
+Native app.
+
+23 — ERGANI Export (Phase 2: UI & validation)
+
+File: tasks/pending/23-ergani-export-phase2.md
+
+Goal
+UI to generate and review ERGANI payloads before submission.
+
+Acceptance Criteria
+
+ FE page: pending hires/terms, “Generate ERGANI file” button.
+
+ Show validation warnings and download payload.
+
+ Tests: render + payload preview.
+
+Files
+
+FE page + use API; tests
+
+Dependencies
+10
+
+Non-Goals
+API submission to ERGANI.
+
+24 — AADE/EFKA Remittance Review UI
+
+File: tasks/pending/24-remittance-review-ui.md
+
+Goal
+UI to generate EFKA/AADE remittance files from a finalized payroll run and review totals.
+
+Acceptance Criteria
+
+ FE page: pick payroll run → preview totals → download files.
+
+ Guardrail alerts if totals mismatch engine outputs (show reasons).
+
+ Tests: render + file download.
+
+Files
+
+FE page + API calls; tests
+
+Dependencies
+11
+
+Non-Goals
+Direct submission.
+
+25 — PR Mode & Manual Approval (Agent governance)
+
+File: tasks/pending/25-agent-pr-mode.md
+
+Goal
+Make the agent open a PR from a feature branch → dev instead of direct commits for high-risk modules.
+
+Acceptance Criteria
+
+ agent/config.json { "require_manual_approval": true } respected.
+
+ Agent creates agent/task-<slug> branch, pushes, opens PR with summary, tests, and artifacts (WHY.md).
+
+ No push to dev if manual approval required.
+
+Files
+
+Update: agent/continuous_agent.py, agent/run_agent.py (PR creation via GitHub API), agent/config.json
+
+Dependencies
+None (governance).
+
+Non-Goals
+Auto-merge.
+
+26 — Knowledge & Explainability Artifacts
+
+File: tasks/pending/26-knowledge-explainability.md
+
+Goal
+Ensure every task updates knowledge and WHY artifacts.
+
+Acceptance Criteria
+
+ After each successful task:
+
+append to context/knowledge.md (what changed, entrypoints)
+
+write/append agent/WHY.md (rationale, law references)
+
+add row in agent/history.csv (task, duration, files, tests, commit)
+
+ Tests (Python) for file updates in a dry run.
+
+Files
+
+Update: run_agent.py post-commit hooks
+
+Dependencies
+None.
+
+Non-Goals
+Fancy UI.
+
+27 — Scheduling → T&A Variance Report
+
+File: tasks/pending/27-schedule-vs-actual-variance.md
+
+Goal
+Report planned vs actual hours; flag overtime/sunday/night deviations.
+
+Acceptance Criteria
+
+ Backend endpoint: /reports/schedule-variance?period=...
+
+ Variance per employee and per site.
+
+ Tests for variance math.
+
+Files
+
+Reporting service/routes; tests
+
+Dependencies
+05, 18
+
+Non-Goals
+FE charts.
+
+28 — Data Privacy & Masked Logs (GDPR)
+
+File: tasks/pending/28-gdpr-masked-logs.md
+
+Goal
+Ensure no PII leaks to logs.
+
+Acceptance Criteria
+
+ logger.ts middleware to mask names/IBANs/SSNs in any error/log.
+
+ Unit tests confirm masking rules.
+
+Files
+
+Create/Update: server/middleware/logger.ts, hooks in services; tests
+
+Dependencies
+None.
+
+Non-Goals
+DPIA templates (future).
+
+29 — Risk Scoring & Approval Gate
+
+File: tasks/pending/29-risk-scoring-approval.md
+
+Goal
+Prevent high-risk automated changes without human review.
+
+Acceptance Criteria
+
+ Before commit, agent scores change risk (touches law-constants, auth, schema, or >3 files).
+
+ If high risk and require_manual_approval=true, open PR and halt.
+
+ Tests for risk function with synthetic diffs.
+
+Files
+
+Update: run_agent.py
+
+Dependencies
+25
+
+Non-Goals
+Granular per-module allowlists beyond current guardrails.
+
+30 — Front-end Reporting (KPI dashboards)
+
+File: tasks/pending/30-fe-reporting-kpis.md
+
+Goal
+React dashboards for KPIs: payroll cost, OT hours, absenteeism; CSV export buttons.
+
+Acceptance Criteria
+
+ Pages under client/src/pages/reports/* with filters, tables, CSV export.
+
+ Call /reports/* endpoints; handle loading/empty/error states.
+
+ Tests for render and CSV button.
+
+Files
+
+FE pages; tests
+
+Dependencies
+13, 21
+
+Non-Goals
+Drill-down graphs (can add later).
