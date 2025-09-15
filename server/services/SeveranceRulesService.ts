@@ -386,8 +386,29 @@ export class SeveranceRulesService {
    * - Dismissal cases: Employer must prove "serious cause" to deny severance
    * - Resignation cases: Employee must prove employer violation to claim severance
    * - Documentation crucial: Written warnings, incident reports, witness statements
+   * 
+   * INPUT VALIDATION:
+   * Validates termination type and cause for proper legal determination
    */
   static isSeveranceEligible(terminationType: string, terminationCause?: string): boolean {
+    // VALIDATE TERMINATION TYPE INPUT
+    if (!terminationType || typeof terminationType !== 'string') {
+      throw new Error('Termination type is required and must be a valid string / Ο τύπος λήξης είναι απαραίτητος και πρέπει να είναι έγκυρο κείμενο');
+    }
+
+    const trimmedType = terminationType.trim().toLowerCase();
+    const validTerminationTypes = ['dismissal', 'resignation', 'expiry', 'mutual_agreement'];
+    
+    if (!validTerminationTypes.includes(trimmedType)) {
+      throw new Error(`Invalid termination type: ${terminationType}. Must be one of: ${validTerminationTypes.join(', ')} / Μη έγκυρος τύπος λήξης: ${terminationType}. Πρέπει να είναι ένας από: ${validTerminationTypes.join(', ')}`);
+    }
+
+    // VALIDATE TERMINATION CAUSE IF PROVIDED
+    if (terminationCause !== undefined && terminationCause !== null) {
+      if (typeof terminationCause !== 'string' || terminationCause.trim() === '') {
+        throw new Error('Termination cause must be a non-empty string if provided / Η αιτία λήξης πρέπει να είναι μη κενό κείμενο εάν παρέχεται');
+      }
+    }
     
     // EMPLOYER-INITIATED DISMISSAL ANALYSIS
     if (terminationType === 'dismissal') {
