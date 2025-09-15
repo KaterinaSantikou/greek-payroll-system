@@ -470,11 +470,21 @@ class TestTool:
     
     @staticmethod
     def run_tests(test_pattern: Optional[str] = None, cwd: Optional[pathlib.Path] = None) -> ToolResult:
-        """Run test suite"""
-        print("🧪 Running tests...")
-        command = ["npm", "test"]
+        """Run Jest test suite"""
+        print("🧪 Running Jest tests...")
+        command = ["npx", "jest", "--passWithNoTests"]
         if test_pattern:
-            command.extend(["--", "--grep", test_pattern])
+            command.extend(["--testNamePattern", test_pattern])
+        
+        return BuildTool.run_npm_command(command, timeout=300, cwd=cwd)
+    
+    @staticmethod
+    def run_tests_with_coverage(test_pattern: Optional[str] = None, cwd: Optional[pathlib.Path] = None) -> ToolResult:
+        """Run Jest tests with coverage collection"""
+        print("🧪 Running Jest tests with coverage...")
+        command = ["npx", "jest", "--coverage", "--passWithNoTests"]
+        if test_pattern:
+            command.extend(["--testNamePattern", test_pattern])
         
         return BuildTool.run_npm_command(command, timeout=300, cwd=cwd)
 
