@@ -116,15 +116,20 @@ def safe_run(cmd):
         raise
 
 def call_with_retry(func, max_tries=5):
-    """Call function with exponential backoff retry logic"""
+    """Call function with exponential backoff retry logic and rate limiting"""
     delay = 5
     for attempt in range(max_tries):
         try:
-            return func()
+            # Apply rate limiting before making the call
+            rate_limiter.wait_for_rate_limit()
+            rate_limiter.log_call()
+            
+            result = func()
+            return result
         except Exception as e:
             # Special handling for rate limit errors
             if "rate limit" in str(e).lower() or "429" in str(e):
-                print("⏳ Rate limited. Waiting 60s...")
+                print("⏳ Rate limited by API. Waiting 60s...")
                 time.sleep(60)
                 continue  # Skip normal delay and retry immediately
             
