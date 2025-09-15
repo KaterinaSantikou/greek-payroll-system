@@ -113,15 +113,46 @@ def mask_secrets(text):
     # Mask GitHub tokens in URLs
     masked = re.sub(r"https://[^@]+@", "https://***@", text)
     
-    # Mask API keys (common patterns)
-    masked = re.sub(r"sk-[a-zA-Z0-9]{48}", "sk-***MASKED***", masked)  # OpenAI API keys
+    # Mask API keys (comprehensive patterns)
+    masked = re.sub(r"sk-[a-zA-Z0-9]{48,}", "sk-***MASKED***", masked)  # OpenAI API keys
     masked = re.sub(r"ghp_[a-zA-Z0-9]{36}", "ghp_***MASKED***", masked)  # GitHub personal access tokens
     masked = re.sub(r"Bearer [a-zA-Z0-9_\-\.]{20,}", "Bearer ***MASKED***", masked)  # Bearer tokens
     
-    # Mask environment variable values in logs
-    masked = re.sub(r"(OPENAI_API_KEY|GITHUB_TOKEN|DATABASE_URL|API_KEY)=([^\s]+)", r"\1=***MASKED***", masked)
+    # Mask specific provider API keys
+    masked = re.sub(r"sk_live_[a-zA-Z0-9]{24,}", "sk_live_***MASKED***", masked)  # Stripe live keys
+    masked = re.sub(r"sk_test_[a-zA-Z0-9]{24,}", "sk_test_***MASKED***", masked)  # Stripe test keys
+    masked = re.sub(r"SG\.[a-zA-Z0-9_\-\.]{22,}", "SG.***MASKED***", masked)  # SendGrid API keys
+    masked = re.sub(r"xoxb-[a-zA-Z0-9\-]{50,}", "xoxb-***MASKED***", masked)  # Slack bot tokens
+    masked = re.sub(r"xoxp-[a-zA-Z0-9\-]{50,}", "xoxp-***MASKED***", masked)  # Slack user tokens
+    masked = re.sub(r"sk-ant-[a-zA-Z0-9_\-]{48,}", "sk-ant-***MASKED***", masked)  # Anthropic API keys
+    masked = re.sub(r"AIza[a-zA-Z0-9_\-]{35}", "AIza***MASKED***", masked)  # Google API keys
+    
+    # Mask generic long tokens/secrets (32-64 characters of base64/hex)
+    masked = re.sub(r"[a-zA-Z0-9+/]{32,64}={0,2}", "***MASKED_TOKEN***", masked)
+    
+    # Mask environment variable values in logs (expanded list)
+    env_vars = [
+        "OPENAI_API_KEY", "GITHUB_TOKEN", "DATABASE_URL", "API_KEY",
+        "STRIPE_SECRET_KEY", "STRIPE_PUBLISHABLE_KEY", "SENDGRID_API_KEY",
+        "SLACK_BOT_TOKEN", "SLACK_APP_TOKEN", "ANTHROPIC_API_KEY",
+        "GOOGLE_API_KEY", "REPLIT_TOKEN", "JWT_SECRET", "SESSION_SECRET"
+    ]
+    for var in env_vars:
+        masked = re.sub(rf"({var})=([^\s]+)", r"\1=***MASKED***", masked)
     
     return masked
+
+def safe_log_subprocess_output(result, command_desc="command"):
+    """Safely log subprocess output with secret masking"""
+    if result.stdout:
+        stdout_clean = mask_secrets(result.stdout)
+        print(f"📋 {command_desc} output: {stdout_clean}")
+    
+    if result.stderr:
+        stderr_clean = mask_secrets(result.stderr)
+        print(f"⚠️ {command_desc} errors: {stderr_clean}")
+    
+    return result.returncode == 0
 
 def safe_run(cmd):
     """Run git command safely, masking tokens from error output"""
