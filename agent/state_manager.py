@@ -134,7 +134,7 @@ class StateManager:
                 duration=duration
             )
             
-        except json.JSONDecodeError as e:
+        except json.JSONDecodeError:
             duration = time.time() - start_time
             print(f"⚠️ Corrupted state file, creating new state")
             self.current_state = self.create_initial_state()
