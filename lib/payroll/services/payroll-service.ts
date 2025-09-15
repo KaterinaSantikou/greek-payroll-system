@@ -5,8 +5,8 @@
  * No database access - delegates to infrastructure layer.
  */
 
-import { payrollCalculator, type PayrollCalculationInput, type PayrollCalculationResult } from './payroll-calculator';
-import { payrollValidator, type ScopeValidation, type ValidationError } from './payroll-validator';
+import { payrollCalculator, type PayrollCalculationInput, type PayrollCalculationResult } from '../calculators/payroll-calculator';
+import { payrollValidator, type ScopeValidation, type ValidationError } from '../calculators/payroll-validator';
 
 export interface PayrollScope {
   scopeId: string;
