@@ -125,6 +125,13 @@ def main():
     summary_path = f"agent/last_run_summary_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
     pathlib.Path(summary_path).write_text(resp, encoding="utf-8")
 
+    # Only move task to done if actual file changes were made
+    if not changed:
+        print("⚠️ No file changes detected. Task will remain in pending.")
+        print(f"Summary saved → {summary_path}")
+        print("Review the summary to understand why no changes were made.")
+        return
+    
     # Move task to done
     done_path = task_file.replace(str(ROOT / "tasks/pending"), str(ROOT / "tasks/done"))
     pathlib.Path(done_path).parent.mkdir(parents=True, exist_ok=True)
