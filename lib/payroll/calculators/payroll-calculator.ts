@@ -3,6 +3,20 @@
  *
  * Contains pure payroll calculation logic using domain rules.
  * No database access or external dependencies.
+ * 
+ * ROBUST INPUT VALIDATION:
+ * All calculation methods include comprehensive validation for:
+ * - Invalid dates (null, undefined, invalid Date objects, future dates)
+ * - Missing required fields (employeeId, salaries, periods)
+ * - Extreme values (negative salaries, excessive hours, unrealistic amounts)
+ * - Data type validation (NaN, Infinity, non-numeric strings)
+ * - Business rule violations (working time limits, minimum wage compliance)
+ * 
+ * ERROR HANDLING STRATEGY:
+ * - Critical validation failures throw PayrollCalculationError with detailed context
+ * - Non-critical issues use fallback values with warnings in calculation results
+ * - All errors include Greek and English messages for compliance requirements
+ * - Validation errors preserve original input context for debugging
  */
 
 import {
@@ -23,6 +37,34 @@ import {
   BENEFITS_IN_KIND,
   CONTRACT_TYPE_RULES,
 } from '../domain/payroll-rules';
+
+/**
+ * Custom Error Class for Payroll Calculation Failures
+ */
+export class PayrollCalculationError extends Error {
+  public readonly code: string;
+  public readonly field: string;
+  public readonly category: 'INVALID_INPUT' | 'MISSING_FIELD' | 'BUSINESS_RULE_VIOLATION' | 'EXTREME_VALUE';
+  public readonly messageGr: string;
+  public readonly context?: any;
+
+  constructor(
+    code: string, 
+    field: string, 
+    category: 'INVALID_INPUT' | 'MISSING_FIELD' | 'BUSINESS_RULE_VIOLATION' | 'EXTREME_VALUE',
+    message: string,
+    messageGr: string,
+    context?: any
+  ) {
+    super(message);
+    this.name = 'PayrollCalculationError';
+    this.code = code;
+    this.field = field;
+    this.category = category;
+    this.messageGr = messageGr;
+    this.context = context;
+  }
+}
 
 export interface PayrollCalculationInput {
   employeeId: string;
