@@ -1545,83 +1545,98 @@ def main():
         # Load evolved guidelines from skill growth
         evolved_guidelines = load_evolved_guidelines()
 
-        system = {
-        "role":"system",
-        "content": textwrap.dedent(f"""
-        You are a senior full-stack engineer working on a Greek Payroll SaaS for hospitality (EFKA, ΣΣΕ, Digital Work Card).
+        # PHASE 1: PLANNING
+        print("🎯 PHASE 1: Creating detailed implementation plan...")
+        implementation_plan = execute_planning_phase(
+            task_text, tree, knowledge, dependency_summary, evolved_guidelines
+        )
         
-        ARCHITECTURE RULES:
-        - Use Express/Node back-end with TypeScript
-        - Respect db/schema.sql for database structure - never modify core schema without migration
-        - Do not change existing routing conventions in server/routes.ts
-        - Follow existing payroll_engine.ts patterns for calculation logic
-        - Use Greek labor law logic from N. 4093/2012 and ΣΣΕ regulations
-        - Preserve EFKA contribution calculation patterns
-        - Maintain Digital Work Card validation structure
-        - Keep overtime calculation formulas (120%, 140% rates)
-        - Follow existing error handling and logging patterns
-        
-        OUTPUT REQUIREMENTS:
-        You must produce STRICTLY structured output:
-        1) A brief plan (bullet points).
-        2) A TEST PLAN describing how to verify locally.
-        3) One or more file blocks with FULL file contents using this exact format per file:
-           {FILE_BLOCK_START} relative/path/filename.ext
-           ...entire file content...
-           {FILE_BLOCK_END}
-        
-        SAFETY RULES:
-        - Minimal, safe changes. Preserve code style and architecture.
-        - If DB migrations are needed, include a migration file and instructions.
-        - If unsure about a Greek legal rule, add a TODO comment + assumption.
-        - Test all changes against existing payroll calculation logic.
-        
-        IMPORTANT: Review the CURRENT SYSTEM KNOWLEDGE section below to:
-        - Avoid re-implementing existing features
-        - Build upon previous work instead of replacing it
-        - Maintain consistency with established patterns
-        - Reference existing modules and formulas when applicable
-        
-        DEPENDENCY GUIDANCE: Use the DEPENDENCY ARCHITECTURE section to:
-        - Understand how files connect to each other
-        - Avoid creating orphan modules that nothing imports
-        - Prevent circular import dependencies
-        - Follow existing import patterns and file organization
-        
-        FILE RESTRICTIONS: You can only modify files in allowed paths:
-        - Application code: server/, client/, shared/
-        - Database: db/schema.sql, db/migrations/
-        - Tests: tests/
-        - Documentation: docs/, context/
-        - Tasks: tasks/
-        DO NOT attempt to modify package.json, config files, .env files, or the agent itself.
-        {evolved_guidelines}
-        """).strip()
-    }
+        if not implementation_plan:
+            print("❌ Planning phase failed, falling back to direct implementation")
+            # Fallback to old direct implementation
+            system = {
+                "role":"system",
+                "content": textwrap.dedent(f"""
+                You are a senior full-stack engineer working on a Greek Payroll SaaS for hospitality (EFKA, ΣΣΕ, Digital Work Card).
+                
+                ARCHITECTURE RULES:
+                - Use Express/Node back-end with TypeScript
+                - Respect db/schema.sql for database structure - never modify core schema without migration
+                - Do not change existing routing conventions in server/routes.ts
+                - Follow existing payroll_engine.ts patterns for calculation logic
+                - Use Greek labor law logic from N. 4093/2012 and ΣΣΕ regulations
+                - Preserve EFKA contribution calculation patterns
+                - Maintain Digital Work Card validation structure
+                - Keep overtime calculation formulas (120%, 140% rates)
+                - Follow existing error handling and logging patterns
+                
+                OUTPUT REQUIREMENTS:
+                You must produce STRICTLY structured output:
+                1) A brief plan (bullet points).
+                2) A TEST PLAN describing how to verify locally.
+                3) One or more file blocks with FULL file contents using this exact format per file:
+                   {FILE_BLOCK_START} relative/path/filename.ext
+                   ...entire file content...
+                   {FILE_BLOCK_END}
+                
+                SAFETY RULES:
+                - Minimal, safe changes. Preserve code style and architecture.
+                - If DB migrations are needed, include a migration file and instructions.
+                - If unsure about a Greek legal rule, add a TODO comment + assumption.
+                - Test all changes against existing payroll calculation logic.
+                
+                IMPORTANT: Review the CURRENT SYSTEM KNOWLEDGE section below to:
+                - Avoid re-implementing existing features
+                - Build upon previous work instead of replacing it
+                - Maintain consistency with established patterns
+                - Reference existing modules and formulas when applicable
+                
+                DEPENDENCY GUIDANCE: Use the DEPENDENCY ARCHITECTURE section to:
+                - Understand how files connect to each other
+                - Avoid creating orphan modules that nothing imports
+                - Prevent circular import dependencies
+                - Follow existing import patterns and file organization
+                
+                FILE RESTRICTIONS: You can only modify files in allowed paths:
+                - Application code: server/, client/, shared/
+                - Database: db/schema.sql, db/migrations/
+                - Tests: tests/
+                - Documentation: docs/, context/
+                - Tasks: tasks/
+                DO NOT attempt to modify package.json, config files, .env files, or the agent itself.
+                {evolved_guidelines}
+                """).strip()
+            }
 
-    user = {
-        "role":"user",
-        "content": textwrap.dedent(f"""
-        TASK SPEC:
-        ---
-        {task_text}
+            user = {
+                "role":"user",
+                "content": textwrap.dedent(f"""
+                TASK SPEC:
+                ---
+                {task_text}
 
-        CURRENT SYSTEM KNOWLEDGE:
-        ---
-        {knowledge}
+                CURRENT SYSTEM KNOWLEDGE:
+                ---
+                {knowledge}
 
-        DEPENDENCY ARCHITECTURE:
-        ---
-        {dependency_summary}
+                DEPENDENCY ARCHITECTURE:
+                ---
+                {dependency_summary}
 
-        REPO TREE (truncated):
-        ---
-        {tree}
-        """).strip()
-    }
+                REPO TREE (truncated):
+                ---
+                {tree}
+                """).strip()
+            }
 
-    print("🤖 Thinking…")
-    resp = call_with_retry(lambda: call_openai([system, user]))
+            print("🤖 Thinking…")
+            resp = call_with_retry(lambda: call_openai([system, user]))
+        else:
+            # PHASE 2: IMPLEMENTATION
+            print("🔨 PHASE 2: Implementing the approved plan...")
+            resp = execute_implementation_phase(
+                task_text, tree, knowledge, dependency_summary, evolved_guidelines, implementation_plan
+            )
     if not resp:
         print("❌ Failed to get response from OpenAI")
         return
