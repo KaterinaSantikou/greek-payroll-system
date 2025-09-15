@@ -1,5 +1,5 @@
-import time, pathlib, sys, subprocess, re
-from run_agent import main as run_once
+import time, pathlib, sys, subprocess, re, os
+from agent.run_agent import main as run_once
 
 ROOT = pathlib.Path(".")
 BACKLOG_DIR = ROOT / "tasks" / "backlog"
@@ -9,7 +9,12 @@ DONE = ROOT / "tasks" / "done"
 LOGIC_FILE = BACKLOG_DIR / "improvement_ideas.md"
 UI_FILE = BACKLOG_DIR / "ui_ux_improvement_ideas.md"
 
+GITHUB_REPO = "KaterinaSantikou/greek-payroll-system"  # Updated to your actual repo
+
+next_type = "logic"
+
 def pop_first_idea(file_path):
+    """Read the first idea from the backlog file, remove it, and return it"""
     if not file_path.exists():
         return None
     lines = [l.strip() for l in file_path.read_text(encoding="utf-8").splitlines() if l.strip() and not l.startswith("#")]
@@ -21,23 +26,22 @@ def pop_first_idea(file_path):
     return first
 
 def backlog_empty():
+    """Return True if both backlog files are empty or missing"""
     def has_ideas(fp):
         return fp.exists() and any(l.strip() and not l.startswith("#") for l in fp.read_text(encoding="utf-8").splitlines())
     return not has_ideas(LOGIC_FILE) and not has_ideas(UI_FILE)
 
 def get_last_done_task_title():
+    """Get the title from the most recently completed .md file in /done"""
     done_tasks = sorted(DONE.glob("*.md"), key=lambda p: p.stat().st_mtime, reverse=True)
     if not done_tasks:
         return "unknown task"
     content = done_tasks[0].read_text(encoding="utf-8")
-    # Look for a heading like "# Task: something"
     match = re.search(r"#\s*Task:?\s*(.+)", content, re.IGNORECASE)
     if match:
         return match.group(1).strip()
-    # fallback to filename
     return done_tasks[0].stem
 
-next_type = "logic"
 while True:
     if backlog_empty() and not any(PENDING.glob("*.md")):
         print("✅ All backlog tasks are complete. No tasks left to build. Exiting cleanly.")
@@ -72,7 +76,7 @@ while True:
             time.sleep(10)
             continue
 
-    # ---- Auto commit and push ----
+    # ---- Auto commit and push to GitHub ----
     try:
         task_title = get_last_done_task_title()
         print(f"💾 Committing and pushing changes to dev branch (task: {task_title})...")
@@ -81,7 +85,12 @@ while True:
         subprocess.run(["git", "checkout", "dev"], check=False)
         subprocess.run(["git", "add", "."], check=True)
         subprocess.run(["git", "commit", "-m", f"AI Agent: Completed task — {task_title}"], check=False)
-        subprocess.run(["git", "push", "https://$GITHUB_TOKEN@github.com/KaterinaSantikou/greek-payroll-system.git", "dev"], check=True)
+        subprocess.run([
+            "git",
+            "push",
+            f"https://{os.environ.get('GITHUB_TOKEN')}@github.com/{GITHUB_REPO}.git",
+            "dev"
+        ], check=True)
         print("✅ Pushed to dev branch.")
     except subprocess.CalledProcessError as e:
         print(f"⚠️ Git push failed: {e}")
