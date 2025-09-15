@@ -9,7 +9,7 @@
 
 import { readFileSync, existsSync, createHash } from 'fs';
 import { resolve } from 'path';
-import { legalDocumentTracker } from '../lib/payroll/config/legal-document-tracker.js';
+import { legalDocumentTracker, type LegalDocument, type DocumentRegistry } from '../lib/payroll/config/legal-document-tracker.js';
 
 interface ValidationResult {
   isValid: boolean;
