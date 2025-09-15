@@ -80,14 +80,57 @@ def read_file(path):
     except Exception:
         return ""
 
+def load_allowed_paths():
+    """Load file permission whitelist"""
+    try:
+        if not ALLOWED_PATHS_FILE.exists():
+            print("⚠️ No allowed_paths.json found, allowing all paths")
+            return None
+        
+        data = json.loads(ALLOWED_PATHS_FILE.read_text(encoding="utf-8"))
+        return data
+    except Exception as e:
+        print(f"⚠️ Error loading allowed paths: {e}")
+        return None
+
+def is_path_allowed(file_path, allowed_config):
+    """Check if a file path is allowed to be modified"""
+    if not allowed_config:
+        return True, "No restrictions configured"
+    
+    # Normalize path separators
+    normalized_path = file_path.replace('\\', '/')
+    
+    # Check forbidden patterns first (higher priority)
+    forbidden_patterns = allowed_config.get("forbidden_patterns", [])
+    for pattern in forbidden_patterns:
+        if fnmatch.fnmatch(normalized_path, pattern):
+            return False, f"Path matches forbidden pattern: {pattern}"
+    
+    # Check allowed patterns
+    allowed_patterns = allowed_config.get("allowed_patterns", [])
+    if not allowed_patterns:
+        return True, "No allowed patterns specified"
+    
+    for pattern in allowed_patterns:
+        if fnmatch.fnmatch(normalized_path, pattern):
+            return True, f"Path matches allowed pattern: {pattern}"
+    
+    return False, "Path not in allowed patterns"
+
 def apply_file_blocks(response_text):
     """Parses model output: blocks like
        <<<FILE: relative/path.ext
        ...new content...
        >>>END
     """
+    # Load file permission whitelist
+    allowed_config = load_allowed_paths()
+    
     changed = []
+    rejected = []
     text = response_text
+    
     while True:
         start = text.find(FILE_BLOCK_START)
         if start == -1: break
@@ -97,11 +140,29 @@ def apply_file_blocks(response_text):
         header = text[start:header_end]
         path = header.replace(FILE_BLOCK_START, "").strip().strip(":").strip()
         content = text[header_end+1:end]
-        target = ROOT / path
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content, encoding="utf-8")
-        changed.append(path)
+        
+        # Check if path is allowed
+        is_allowed, reason = is_path_allowed(path, allowed_config)
+        
+        if is_allowed:
+            target = ROOT / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(content, encoding="utf-8")
+            changed.append(path)
+            print(f"✅ Applied changes to: {path}")
+        else:
+            rejected.append({"path": path, "reason": reason})
+            print(f"🚫 Rejected file change: {path} - {reason}")
+        
         text = text[end+len(FILE_BLOCK_END):]
+    
+    # Report rejected files
+    if rejected:
+        print(f"\n⚠️ {len(rejected)} file changes were rejected for security:")
+        for r in rejected:
+            print(f"  - {r['path']}: {r['reason']}")
+        print("\nTo allow these changes, update agent/allowed_paths.json")
+    
     return changed
 
 def parse_task_metadata(task_file_path):
