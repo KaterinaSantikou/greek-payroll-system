@@ -16,7 +16,19 @@ export default [
       'drizzle.config.ts',
       'tailwind.config.ts',
       'postcss.config.js',
-      'components.json'
+      'vite.config.ts',
+      'vitest.config.ts',
+      'jest.config.js',
+      'components.json',
+      'coverage/',
+      'test-results/',
+      'playwright-report/',
+      'legal-docs/',
+      'public/',
+      'migrations/',
+      'drizzle/',
+      '*.min.js',
+      '*.min.css'
     ]
   },
   js.configs.recommended,
