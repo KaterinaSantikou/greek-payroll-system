@@ -130,6 +130,26 @@ export default [
       'no-script-url': 'error',
       'no-alert': 'error',
       
+      // ESLint Security Plugin Rules
+      'security/detect-buffer-noassert': 'error',
+      'security/detect-child-process': 'error',
+      'security/detect-disable-mustache-escape': 'error',
+      'security/detect-eval-with-expression': 'error',
+      'security/detect-no-csrf-before-method-override': 'error',
+      'security/detect-non-literal-fs-filename': 'warn',
+      'security/detect-non-literal-regexp': 'warn',
+      'security/detect-non-literal-require': 'error',
+      'security/detect-object-injection': 'warn',
+      'security/detect-possible-timing-attacks': 'error',
+      'security/detect-pseudoRandomBytes': 'error',
+      'security/detect-unsafe-regex': 'error',
+      
+      // Node.js Security Rules
+      'node/no-deprecated-api': 'error',
+      'node/no-extraneous-import': 'error',
+      'node/no-missing-import': 'off', // Handled by TypeScript
+      'node/no-unpublished-import': 'off', // Allow dev dependencies
+      
       // Complexity rules
       'complexity': ['warn', 10],
       'max-depth': ['warn', 4],
