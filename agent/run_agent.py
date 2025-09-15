@@ -1128,6 +1128,250 @@ def perform_skill_growth_cycle():
         print(f"❌ Error in skill growth cycle: {e}")
         return False
 
+def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolved_guidelines):
+    """Execute planning phase to create detailed implementation plan"""
+    try:
+        print("🎯 Starting planning phase...")
+        
+        planning_system = {
+            "role": "system",
+            "content": textwrap.dedent(f"""
+            You are a senior software architect specializing in Greek Payroll systems. Your job is to create a comprehensive implementation plan BEFORE any coding begins.
+            
+            PLANNING INSTRUCTIONS:
+            1. Analyze the task requirements thoroughly
+            2. Break down the work into logical steps
+            3. Identify all files that need to be created or modified
+            4. Consider architectural patterns and dependencies
+            5. Plan data flow and integration points
+            6. Anticipate edge cases and validation needs
+            
+            OUTPUT FORMAT:
+            Your response must follow this EXACT structure:
+            
+            ## TASK ANALYSIS
+            [Summarize what needs to be built and why]
+            
+            ## IMPLEMENTATION STEPS
+            1. [Step 1 description]
+            2. [Step 2 description]
+            3. [Continue with all steps...]
+            
+            ## FILES TO MODIFY/CREATE
+            - path/to/file1.ts: [Brief description of changes]
+            - path/to/file2.tsx: [Brief description of changes]
+            - [Continue with all files...]
+            
+            ## DATA FLOW
+            [Describe how data flows through the system]
+            
+            ## INTEGRATION POINTS
+            [List external systems, APIs, or services to integrate]
+            
+            ## VALIDATION & TESTING
+            [Describe validation logic and test scenarios]
+            
+            ## GREEK PAYROLL COMPLIANCE
+            [Specific Greek labor law considerations]
+            
+            ## POTENTIAL ISSUES
+            [Anticipate potential problems and solutions]
+            
+            DO NOT WRITE ANY CODE. This is PLANNING ONLY.
+            Focus on creating a complete, detailed plan that eliminates guesswork during implementation.
+            
+            CONTEXT ABOUT THE CODEBASE:
+            {dependency_summary}
+            
+            EVOLVED GUIDELINES FROM EXPERIENCE:
+            {evolved_guidelines}
+            """).strip()
+        }
+        
+        planning_user = {
+            "role": "user",
+            "content": textwrap.dedent(f"""
+            TASK TO PLAN:
+            {task_text}
+            
+            CURRENT CODEBASE STRUCTURE:
+            {tree}
+            
+            EXISTING KNOWLEDGE:
+            {knowledge}
+            
+            Please create a comprehensive implementation plan for this task.
+            Remember: NO CODE, just detailed planning.
+            """).strip()
+        }
+        
+        # Call OpenAI for planning
+        planning_messages = [planning_system, planning_user]
+        
+        print("🤖 Generating implementation plan...")
+        response = make_openai_request(planning_messages)
+        
+        if not response:
+            print("❌ Failed to generate planning response")
+            return None
+        
+        # Save the plan
+        PLANNING_OUTPUT_FILE.write_text(response, encoding="utf-8")
+        
+        print("✅ Implementation plan generated and saved")
+        print(f"📋 Plan saved to: {PLANNING_OUTPUT_FILE}")
+        
+        # Parse and validate the plan
+        parsed_plan = parse_implementation_plan(response)
+        if not parsed_plan:
+            print("⚠️ Plan parsing failed, but continuing with raw plan")
+        
+        return response
+        
+    except Exception as e:
+        print(f"❌ Error in planning phase: {e}")
+        return None
+
+def parse_implementation_plan(plan_text):
+    """Parse the implementation plan to extract structured information"""
+    try:
+        plan_data = {
+            "task_analysis": "",
+            "implementation_steps": [],
+            "files_to_modify": [],
+            "data_flow": "",
+            "integration_points": "",
+            "validation_testing": "",
+            "greek_compliance": "",
+            "potential_issues": ""
+        }
+        
+        lines = plan_text.split('\n')
+        current_section = None
+        
+        for line in lines:
+            line = line.strip()
+            
+            if line.startswith("## TASK ANALYSIS"):
+                current_section = "task_analysis"
+            elif line.startswith("## IMPLEMENTATION STEPS"):
+                current_section = "implementation_steps"
+            elif line.startswith("## FILES TO MODIFY/CREATE"):
+                current_section = "files_to_modify"
+            elif line.startswith("## DATA FLOW"):
+                current_section = "data_flow"
+            elif line.startswith("## INTEGRATION POINTS"):
+                current_section = "integration_points"
+            elif line.startswith("## VALIDATION & TESTING"):
+                current_section = "validation_testing"
+            elif line.startswith("## GREEK PAYROLL COMPLIANCE"):
+                current_section = "greek_compliance"
+            elif line.startswith("## POTENTIAL ISSUES"):
+                current_section = "potential_issues"
+            elif line.startswith("##"):
+                current_section = None
+            elif line and current_section:
+                if current_section == "implementation_steps" and (line.startswith(("1.", "2.", "3.", "4.", "5.", "6.", "7.", "8.", "9."))):
+                    plan_data[current_section].append(line)
+                elif current_section == "files_to_modify" and line.startswith("-"):
+                    plan_data[current_section].append(line[1:].strip())
+                elif current_section in ["task_analysis", "data_flow", "integration_points", "validation_testing", "greek_compliance", "potential_issues"]:
+                    if plan_data[current_section]:
+                        plan_data[current_section] += " " + line
+                    else:
+                        plan_data[current_section] = line
+        
+        print(f"📊 Plan parsed: {len(plan_data['implementation_steps'])} steps, {len(plan_data['files_to_modify'])} files")
+        return plan_data
+        
+    except Exception as e:
+        print(f"⚠️ Error parsing plan: {e}")
+        return None
+
+def execute_implementation_phase(task_text, tree, knowledge, dependency_summary, evolved_guidelines, implementation_plan):
+    """Execute implementation phase following the detailed plan"""
+    try:
+        print("🔨 Starting implementation phase...")
+        
+        implementation_system = {
+            "role": "system",
+            "content": textwrap.dedent(f"""
+            You are a senior full-stack engineer implementing a pre-approved plan for a Greek Payroll SaaS system.
+            
+            IMPLEMENTATION INSTRUCTIONS:
+            1. Follow the implementation plan EXACTLY as specified
+            2. Implement ALL steps from the plan in order
+            3. Create/modify ALL files listed in the plan
+            4. Maintain consistency with the planned architecture
+            5. Include all validation and testing as planned
+            6. Follow Greek payroll compliance requirements from the plan
+            
+            IMPORTANT RULES:
+            - You MUST implement the complete plan, not just parts of it
+            - Follow the exact file structure specified in the plan
+            - Include all error handling and edge cases mentioned in the plan
+            - Write production-ready code with proper TypeScript types
+            - Add comprehensive validation as planned
+            - Include unit tests for complex logic
+            
+            CONTEXT ABOUT THE CODEBASE:
+            {dependency_summary}
+            
+            EVOLVED GUIDELINES FROM EXPERIENCE:
+            {evolved_guidelines}
+            
+            FILE RESTRICTIONS: You can only modify files in allowed paths:
+            - Application code: server/, client/, shared/
+            - Database: db/schema.sql, db/migrations/
+            - Tests: tests/
+            - Documentation: docs/, context/
+            - Tasks: tasks/
+            DO NOT attempt to modify package.json, config files, .env files, or the agent itself.
+            """).strip()
+        }
+        
+        implementation_user = {
+            "role": "user",
+            "content": textwrap.dedent(f"""
+            ORIGINAL TASK:
+            {task_text}
+            
+            APPROVED IMPLEMENTATION PLAN:
+            {implementation_plan}
+            
+            CURRENT CODEBASE STRUCTURE:
+            {tree}
+            
+            EXISTING KNOWLEDGE:
+            {knowledge}
+            
+            Please implement the complete plan above. Make sure you:
+            1. Follow every step in the implementation plan
+            2. Create/modify all the files listed in the plan
+            3. Include all validation, testing, and compliance features from the plan
+            4. Write production-ready, well-structured code
+            
+            Use the <<<FILE: path >>> content >>>END format for all file changes.
+            """).strip()
+        }
+        
+        # Call OpenAI for implementation
+        implementation_messages = [implementation_system, implementation_user]
+        
+        print("🤖 Implementing the approved plan...")
+        response = make_openai_request(implementation_messages)
+        
+        if not response:
+            print("❌ Failed to generate implementation response")
+            return None
+        
+        print("✅ Implementation completed")
+        return response
+        
+    except Exception as e:
+        print(f"❌ Error in implementation phase: {e}")
+        return None
+
 def create_sandbox_environment():
     """Create isolated sandbox environment for safe development"""
     try:
