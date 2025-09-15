@@ -1,6 +1,16 @@
 import time, pathlib, sys, subprocess, re, os
 from agent.run_agent import main as run_once
 
+def safe_run(cmd):
+    """Run git command safely, masking tokens from error output"""
+    try:
+        out = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        return out
+    except subprocess.CalledProcessError as e:
+        clean = re.sub(r"https://[^@]+@", "https://***@", e.stderr or "")
+        print(f"⚠️ Git error: {clean}")
+        raise
+
 ROOT = pathlib.Path(".")
 BACKLOG_DIR = ROOT / "tasks" / "backlog"
 PENDING = ROOT / "tasks" / "pending"
