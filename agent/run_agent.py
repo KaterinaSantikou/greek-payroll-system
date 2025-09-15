@@ -13,6 +13,7 @@ if not (ROOT / "tasks").exists() or not (ROOT / "agent").exists():
 AGENT_DIR = ROOT / "agent"
 CONTEXT_DIR = ROOT / "context"
 KNOWLEDGE_FILE = CONTEXT_DIR / "knowledge.md"
+ARCHITECTURE_FILE = CONTEXT_DIR / "architecture.md"
 DEPENDENCY_FILE = CONTEXT_DIR / "dependency_graph.json"
 PAYROLL_SCENARIOS_FILE = ROOT / "tests" / "payroll_scenarios.json"
 ALLOWED_PATHS_FILE = AGENT_DIR / "allowed_paths.json"
@@ -488,6 +489,12 @@ def read_knowledge():
     if not KNOWLEDGE_FILE.exists():
         return "No previous knowledge available."
     return KNOWLEDGE_FILE.read_text(encoding="utf-8")
+
+def read_architecture_guide():
+    """Read the architecture guide that provides system boundaries and rules"""
+    if not ARCHITECTURE_FILE.exists():
+        return "No architecture guide available."
+    return ARCHITECTURE_FILE.read_text(encoding="utf-8")
 
 def generate_dependency_graph():
     """Generate dependency graph using madge and save to JSON"""
