@@ -32,6 +32,12 @@ def call_with_retry(func, max_tries=5):
         try:
             return func()
         except Exception as e:
+            # Special handling for rate limit errors
+            if "rate limit" in str(e).lower() or "429" in str(e):
+                print("⏳ Rate limited. Waiting 60s...")
+                time.sleep(60)
+                continue  # Skip normal delay and retry immediately
+            
             print(f"⚠️ Error: {e} (retrying in {delay}s)")
             if attempt < max_tries - 1:  # Don't sleep on last attempt
                 time.sleep(delay)
