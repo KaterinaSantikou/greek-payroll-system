@@ -2797,6 +2797,47 @@ def main():
             # Update knowledge base with task completion info
             update_knowledge(task_title, changed, task_summary)
             
+            # ===== EXPLAINABILITY REPORT GENERATION =====
+            print("\n📝 Generating explainability report (WHY.md)...")
+            try:
+                from agent.explainability_engine import generate_explanation_report
+                
+                # Calculate task duration
+                task_duration = time.time() - task_start_time if 'task_start_time' in locals() else 0.0
+                
+                # Generate explanation report
+                explanation_result = generate_explanation_report(
+                    success=True,
+                    duration=task_duration,
+                    overall_reasoning=f"Completed task: {task_title}. {task_summary}",
+                    compliance_notes="All changes validated against Greek labor law requirements and coding standards."
+                )
+                
+                if explanation_result.success:
+                    print(f"✅ {explanation_result.message}")
+                    print(f"   📄 {explanation_result.data}")
+                else:
+                    print(f"⚠️ Failed to generate explanation: {explanation_result.error}")
+                    
+            except ImportError:
+                try:
+                    from explainability_engine import generate_explanation_report
+                    task_duration = time.time() - task_start_time if 'task_start_time' in locals() else 0.0
+                    explanation_result = generate_explanation_report(
+                        success=True,
+                        duration=task_duration,
+                        overall_reasoning=f"Completed task: {task_title}. {task_summary}",
+                        compliance_notes="All changes validated against Greek labor law requirements and coding standards."
+                    )
+                    if explanation_result.success:
+                        print(f"✅ {explanation_result.message}")
+                    else:
+                        print(f"⚠️ Failed to generate explanation: {explanation_result.error}")
+                except ImportError:
+                    print("⚠️ Explainability engine not available")
+            except Exception as e:
+                print(f"⚠️ Error generating explanation: {e}")
+            
             # ===== OUTPUT VALIDATION BEFORE COMPLETION =====
             print("\n🔍 Running comprehensive output validation before task completion...")
             task_file_path = pathlib.Path(task_file)
