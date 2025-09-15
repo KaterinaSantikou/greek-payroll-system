@@ -1,6 +1,3 @@
-# Ideas for Future Payroll Improvements
-
-Add anomaly detection for salary spikes
 Improve payroll run performance (batching)
 Add UI for red/amber payroll errors
 Implement Easter, Christmas, and Leave allowance bonus calculations (in line with Greek labor law)
