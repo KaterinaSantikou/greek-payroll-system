@@ -1,73 +1,161 @@
 /**
- * Greek Labor Law Domain Rules - 2025
+ * Greek Labor Law Domain Rules - Configurable Version
  * 
- * This module contains pure domain rules for Greek tax and social security law.
- * No business logic, database access, or external dependencies should be in this file.
+ * This module provides access to Greek tax and social security law constants
+ * through a configurable system. All values are externalized and can be
+ * updated when labor laws change without code modifications.
  */
 
-// Greek Income Tax Brackets for 2025
+import { getGreekLawConfig } from '../config/greek-law-config.js';
+
+// =============================================================================
+// CONFIGURABLE CONSTANTS - LOADED FROM EXTERNAL CONFIGURATION
+// =============================================================================
+
+let configCache: any = null;
+let cacheExpiry: number = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Get current configuration with caching
+ */
+async function getCurrentConfig() {
+  const now = Date.now();
+  if (!configCache || now > cacheExpiry) {
+    configCache = await getGreekLawConfig();
+    cacheExpiry = now + CACHE_TTL;
+  }
+  return configCache;
+}
+
+/**
+ * Greek Income Tax Brackets - Configurable
+ * Updates automatically when GREEK_LAW_VERSION changes
+ */
+export async function getGreekTaxBrackets() {
+  const config = await getCurrentConfig();
+  return config.taxBrackets;
+}
+
+/**
+ * EFKA Social Security Rates - Configurable
+ * Updates automatically when EFKA_RATES_VERSION changes
+ */
+export async function getEfkaRates() {
+  const config = await getCurrentConfig();
+  return config.efkaRates;
+}
+
+/**
+ * Solidarity Tax Brackets - Configurable
+ */
+export async function getSolidarityTaxBrackets() {
+  const config = await getCurrentConfig();
+  return config.solidarityTaxBrackets;
+}
+
+/**
+ * Minimum Wage Regulations - Configurable
+ * Updates automatically when MINIMUM_WAGE_VERSION changes
+ */
+export async function getMinimumWage() {
+  const config = await getCurrentConfig();
+  return config.minimumWage;
+}
+
+/**
+ * Working Time Limits - Configurable
+ */
+export async function getWorkingTimeLimits() {
+  const config = await getCurrentConfig();
+  return config.workingTimeLimits;
+}
+
+/**
+ * Tax-Free Benefits Limits - Configurable
+ */
+export async function getTaxFreeLimits() {
+  const config = await getCurrentConfig();
+  return config.taxFreeLimits;
+}
+
+/**
+ * Tips Taxation Rules - Configurable
+ */
+export async function getTipsRules() {
+  const config = await getCurrentConfig();
+  return config.tipsRules;
+}
+
+// =============================================================================
+// BACKWARD COMPATIBILITY - DEPRECATED CONSTANTS
+// =============================================================================
+// These constants are kept for backward compatibility but should be replaced
+// with the async functions above in new code.
+
+/** @deprecated Use getGreekTaxBrackets() instead */
 export const GREEK_TAX_BRACKETS = [
-  { min: 0, max: 10000, rate: 0.09 }, // 9% up to €10,000
-  { min: 10000, max: 20000, rate: 0.22 }, // 22% from €10,000 to €20,000
-  { min: 20000, max: 30000, rate: 0.28 }, // 28% from €20,000 to €30,000
-  { min: 30000, max: 40000, rate: 0.36 }, // 36% from €30,000 to €40,000
-  { min: 40000, max: Infinity, rate: 0.44 } // 44% above €40,000
+  { min: 0, max: 10000, rate: 0.09 },
+  { min: 10000, max: 20000, rate: 0.22 },
+  { min: 20000, max: 30000, rate: 0.28 },
+  { min: 30000, max: 40000, rate: 0.36 },
+  { min: 40000, max: Infinity, rate: 0.44 }
 ] as const;
 
-// EFKA Social Security Rates for 2025
+/** @deprecated Use getEfkaRates() instead */
 export const EFKA_RATES = {
   employee: {
-    main: 0.1067, // 10.67% main pension
-    auxiliary: 0.0333, // 3.33% auxiliary pension
-    unemployment: 0.0213 // 2.13% unemployment fund
+    main: 0.1067,
+    auxiliary: 0.0333,
+    unemployment: 0.0213
   },
   employer: {
-    main: 0.1542, // 15.42% main pension
-    auxiliary: 0.0333, // 3.33% auxiliary pension
-    unemployment: 0.0503, // 5.03% unemployment fund
-    sickness: 0.0287, // 2.87% sickness benefits
-    workAccident: 0.0067 // 0.67% work accident insurance
+    main: 0.1542,
+    auxiliary: 0.0333,
+    unemployment: 0.0503,
+    sickness: 0.0287,
+    workAccident: 0.0067
   }
 } as const;
 
-// Special Solidarity Tax Brackets
+/** @deprecated Use getSolidarityTaxBrackets() instead */
 export const SOLIDARITY_TAX_BRACKETS = [
-  { min: 0, max: 12000, rate: 0 }, // No solidarity tax up to €12,000
-  { min: 12000, max: 20000, rate: 0.022 }, // 2.2% from €12,000 to €20,000
-  { min: 20000, max: 30000, rate: 0.05 }, // 5% from €20,000 to €30,000
-  { min: 30000, max: 40000, rate: 0.065 }, // 6.5% from €30,000 to €40,000
-  { min: 40000, max: 65000, rate: 0.075 }, // 7.5% from €40,000 to €65,000
-  { min: 65000, max: Infinity, rate: 0.09 } // 9% above €65,000
+  { min: 0, max: 12000, rate: 0 },
+  { min: 12000, max: 20000, rate: 0.022 },
+  { min: 20000, max: 30000, rate: 0.05 },
+  { min: 30000, max: 40000, rate: 0.065 },
+  { min: 40000, max: 65000, rate: 0.075 },
+  { min: 65000, max: Infinity, rate: 0.09 }
 ] as const;
 
-// Minimum Wage Regulations
+/** @deprecated Use getMinimumWage() instead */
 export const MINIMUM_WAGE = {
-  monthly: 830, // €830 per month for 2025
-  daily: 27.65, // €27.65 per day
-  hourly: 3.45 // €3.45 per hour (calculated from daily rate)
+  monthly: 830,
+  daily: 27.65,
+  hourly: 3.45
 } as const;
 
-// Working Time Limits
+/** @deprecated Use getWorkingTimeLimits() instead */
 export const WORKING_TIME_LIMITS = {
-  standardMonthlyHours: 173.33, // Standard monthly working hours in Greece
-  maxDailyHours: 8, // Maximum daily working hours
-  maxWeeklyHours: 40, // Maximum weekly working hours
-  maxOvertimeDaily: 2, // Maximum overtime hours per day (normal circumstances)
-  maxOvertimeWeekly: 5, // Maximum overtime hours per week
-  maxAnnualOvertime: 150 // Maximum annual overtime hours
+  standardMonthlyHours: 173.33,
+  maxDailyHours: 8,
+  maxWeeklyHours: 40,
+  maxOvertimeDaily: 2,
+  maxOvertimeWeekly: 5,
+  maxAnnualOvertime: 150
 } as const;
 
-// Tax-Free Benefits Limits
+/** @deprecated Use getTaxFreeLimits() instead */
 export const TAX_FREE_LIMITS = {
-  mealVouchers: 11, // €11 per day tax-free meal vouchers
-  transportAllowance: 150, // €150 per month tax-free transport allowance
-  educationAllowance: 200 // €200 per month tax-free education allowance
+  mealVouchers: 11,
+  transportAllowance: 150,
+  educationAllowance: 200
 } as const;
 
-// Tips Taxation Rules
+/** @deprecated Use getTipsRules() instead */
 export const TIPS_TAX_RULES = {
-  flatTaxRate: 0.15, // 15% flat tax rate on declared tips
-  minimumDeclaredPercentage: 0.08 // 8% of gross revenue must be declared as tips
+  flatTaxRate: 0.15,
+  minimumDeclaredPercentage: 0.08
 } as const;
 
 export type TaxBracket = typeof GREEK_TAX_BRACKETS[number];
