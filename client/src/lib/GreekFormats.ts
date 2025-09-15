@@ -103,23 +103,27 @@ export class ReactGreekFormatters {
 }
 
 /**
- * Greek Form Validation Messages
+ * Bilingual Form Validation Hook
  */
-export const GREEK_VALIDATION_MESSAGES = {
-  required: 'Αυτό το πεδίο είναι υποχρεωτικό',
-  invalidEmail: 'Παρακαλώ εισάγετε έγκυρη διεύθυνση email',
-  invalidPhone: 'Παρακαλώ εισάγετε έγκυρο τηλέφωνο',
-  invalidDate: 'Παρακαλώ εισάγετε έγκυρη ημερομηνία (DD/MM/YYYY)',
-  invalidNumber: 'Παρακαλώ εισάγετε έγκυρο αριθμό',
-  invalidCurrency: 'Παρακαλώ εισάγετε έγκυρο ποσό (π.χ. 1.234,56)',
-  invalidAFM: 'Παρακαλώ εισάγετε έγκυρο ΑΦΜ (9 ψηφία)',
-  invalidAMKA: 'Παρακαλώ εισάγετε έγκυρο ΑΜΚΑ (11 ψηφία)',
-  minValue: (min: number) => `Η ελάχιστη τιμή είναι ${GreekNumericFormatter.formatDecimal(min)}`,
-  maxValue: (max: number) => `Η μέγιστη τιμή είναι ${GreekNumericFormatter.formatDecimal(max)}`,
-  minLength: (min: number) => `Ελάχιστο μήκος: ${min} χαρακτήρες`,
-  maxLength: (max: number) => `Μέγιστο μήκος: ${max} χαρακτήρες`,
-  futureDate: 'Η ημερομηνία δεν μπορεί να είναι στο μέλλον',
-  pastDate: 'Η ημερομηνία δεν μπορεί να είναι στο παρελθόν'
+export const useBilingualValidation = () => {
+  const { t } = useTranslation();
+  
+  return {
+    required: () => t('validation.required'),
+    invalidEmail: () => t('validation.invalidEmail'),
+    invalidPhone: () => t('validation.invalidPhone'),
+    invalidDate: () => t('validation.invalidDate'),
+    invalidNumber: () => t('validation.invalidNumber'),
+    invalidCurrency: () => t('validation.invalidCurrency'),
+    invalidAFM: () => t('validation.invalidAFM'),
+    invalidAMKA: () => t('validation.invalidAMKA'),
+    minValue: (min: number) => `${t('validation.minValue')} ${GreekNumericFormatter.formatDecimal(min)}`,
+    maxValue: (max: number) => `${t('validation.maxValue')} ${GreekNumericFormatter.formatDecimal(max)}`,
+    minLength: (min: number) => `${t('validation.minLength')} ${min} ${t('validation.characters')}`,
+    maxLength: (max: number) => `${t('validation.maxLength')} ${max} ${t('validation.characters')}`,
+    futureDate: () => t('validation.futureDate'),
+    pastDate: () => t('validation.pastDate')
+  };
 };
 
 /**
