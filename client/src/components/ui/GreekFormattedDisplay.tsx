@@ -29,13 +29,29 @@ export function GreekFormattedDisplay({
     switch (type) {
       case 'currency':
         const currencyValue = typeof value === 'string' ? parseFloat(value) : value as number;
-        return showSymbol 
-          ? GreekNumericFormatter.formatCurrency(currencyValue)
-          : GreekNumericFormatter.formatCurrencyAmount(currencyValue);
+        if (isGreek) {
+          return showSymbol 
+            ? GreekNumericFormatter.formatCurrency(currencyValue)
+            : GreekNumericFormatter.formatCurrencyAmount(currencyValue);
+        } else {
+          // English formatting: 1,234.56 € or 1,234.56
+          const formatted = new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          }).format(currencyValue);
+          return showSymbol ? `${formatted} €` : formatted;
+        }
           
       case 'number':
         const numValue = typeof value === 'string' ? parseFloat(value) : value as number;
-        return GreekNumericFormatter.formatDecimal(numValue, decimals);
+        if (isGreek) {
+          return GreekNumericFormatter.formatDecimal(numValue, decimals);
+        } else {
+          return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+          }).format(numValue);
+        }
         
       case 'percentage':
         const pctValue = typeof value === 'string' ? parseFloat(value) : value as number;
