@@ -92,6 +92,34 @@ export interface EmployeePayrollData {
 }
 
 export class PayrollService {
+  
+  /**
+   * PERFORMANCE HELPER: Split array into chunks for batch processing
+   */
+  private chunkArray<T>(array: T[], chunkSize: number): T[][] {
+    const chunks: T[][] = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+      chunks.push(array.slice(i, i + chunkSize));
+    }
+    return chunks;
+  }
+
+  /**
+   * PERFORMANCE HELPER: Process promises with limited concurrency
+   */
+  private async processWithConcurrencyLimit<T>(
+    promises: Promise<T>[],
+    limit: number
+  ): Promise<T[]> {
+    const results: T[] = [];
+    for (let i = 0; i < promises.length; i += limit) {
+      const batch = promises.slice(i, i + limit);
+      const batchResults = await Promise.all(batch);
+      results.push(...batchResults);
+    }
+    return results;
+  }
+
   /**
    * Validate payroll scope before processing
    */
