@@ -1350,6 +1350,7 @@ def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolv
             
             EVOLVED GUIDELINES FROM EXPERIENCE:
             {evolved_guidelines}
+            {impact_context}
             """).strip()
         }
         
