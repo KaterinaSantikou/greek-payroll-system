@@ -108,6 +108,7 @@
     "jsonwebtoken": "^9.0.2",
     "jsrsasign": "^11.1.0",
     "lucide-react": "^0.453.0",
+    "madge": "^8.0.0",
     "memoizee": "^0.4.17",
     "memorystore": "^1.6.7",
     "multer": "^2.0.2",
