@@ -4,7 +4,7 @@ from datetime import datetime
 # ---- CONFIG ----
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 MODEL = "gpt-4o"   # works well for code; you can change later
-ROOT = pathlib.Path("..").resolve()  # Go up to project root
+ROOT = pathlib.Path(__file__).resolve().parents[1]
 AGENT_DIR = ROOT / "agent"
 CONFIG = json.loads(json.dumps({}))  # placeholder if you expand
 FILE_BLOCK_START = "<<<FILE:"
