@@ -103,12 +103,33 @@ export default [
       'jsx-a11y/click-events-have-key-events': 'warn',
       'jsx-a11y/no-static-element-interactions': 'warn',
       
-      // General code quality
-      'no-console': ['warn', { 'allow': ['warn', 'error'] }],
+      // General code quality - Enhanced for payroll system
+      'no-console': ['warn', { 'allow': ['warn', 'error', 'info'] }],
       'prefer-const': 'error',
       'no-var': 'error',
       'no-undef': 'error',
-      'no-unused-vars': 'off' // Use TypeScript version instead
+      'no-unused-vars': 'off', // Use TypeScript version instead
+      'eqeqeq': ['error', 'always'],
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-func': 'error',
+      'no-param-reassign': ['error', { 'props': true }],
+      'no-return-assign': 'error',
+      'no-throw-literal': 'error',
+      'radix': 'error',
+      'prefer-template': 'error',
+      'no-useless-concat': 'error',
+      'object-shorthand': 'error',
+      'prefer-arrow-callback': 'error',
+      
+      // Security rules for financial/payroll system
+      'no-script-url': 'error',
+      'no-alert': 'error',
+      
+      // Complexity rules
+      'complexity': ['warn', 10],
+      'max-depth': ['warn', 4],
+      'max-lines-per-function': ['warn', 50]
     },
     settings: {
       react: {
