@@ -150,5 +150,9 @@ try:
         except subprocess.CalledProcessError:
             print("⚠️ Git push failed (see error above)")  # Error already printed by safe_run
 
-    print("✅ Cycle complete — checking again immediately...\n")
-    time.sleep(5)
+        print("✅ Cycle complete — checking again immediately...\n")
+        time.sleep(5)
+
+finally:
+    print("🔓 Releasing agent lock...")
+    LOCKFILE.unlink(missing_ok=True)
