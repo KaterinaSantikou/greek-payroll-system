@@ -1,0 +1,26 @@
+# Legal Documents Directory
+
+This directory contains current versions of Greek labor law documents.
+
+## Document Storage Guidelines
+
+1. **File Naming**: Follow the convention `DocumentName_vX.Y_YYYY-MM-DD_STATUS.ext`
+2. **Version Control**: Each document version should be uniquely identifiable
+3. **Checksums**: Calculate SHA-256 hash for each document to ensure integrity
+4. **Access Control**: Restrict access to authorized personnel only
+
+## Document Types
+
+- **Laws**: Primary legislation (e.g., Law 4808/2021)
+- **Decrees**: Presidential and ministerial decrees
+- **Regulations**: Government regulatory frameworks
+- **Agreements**: Collective bargaining agreements
+- **Rulings**: Court decisions and administrative rulings
+
+## Compliance Requirements
+
+All documents in this directory must:
+- Be referenced in the legal document registry
+- Have valid checksums for integrity verification
+- Include proper metadata (version, effective date, etc.)
+- Be approved by the legal team before activation
