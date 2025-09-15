@@ -1757,6 +1757,8 @@ def execute_implementation_phase(task_text, tree, knowledge, dependency_summary,
             - Write production-ready code with proper TypeScript types
             - Add comprehensive validation as planned
             - Include unit tests for complex logic
+            - IMPORTANT: Do not exceed {MAX_FILES_PER_TASK} file changes in implementation
+            - If the plan includes more files, focus on the most critical ones
             
             CONTEXT ABOUT THE CODEBASE:
             {dependency_summary}
