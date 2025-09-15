@@ -36,16 +36,65 @@ interface InsertSeveranceRule {
 import { eq, desc, and, isNull } from "drizzle-orm";
 
 /**
- * SeveranceRulesService
+ * SeveranceRulesService - Greek Labor Law Severance Pay Implementation
  * 
- * Manages versioned severance rules according to Greek Labor Law
- * Ν. 4093/2012 and subsequent updates
+ * LEGAL BASIS: Law 4093/2012 (Ν. 4093/2012) - Individual Employment Relations
+ * Articles 1-3: Severance compensation rates for dismissal without cause
+ * 
+ * SEVERANCE PAY SYSTEM OVERVIEW:
+ * Greek labor law mandates severance compensation for employees dismissed without
+ * serious cause. The system uses a progressive scale based on years of service,
+ * designed to provide increasing protection for long-term employees.
+ * 
+ * LEGAL FRAMEWORK (Ν. 4093/2012):
+ * - Article 1: Calculation methodology and service period bands
+ * - Article 2: Exclusions for serious misconduct (σοβαρό παράπτωμα)
+ * - Article 3: Payment timing and procedural requirements
+ * - Article 4: Appeals and dispute resolution mechanisms
+ * 
+ * PROGRESSIVE SEVERANCE SCALE:
+ * The law establishes escalating compensation to reflect employment stability:
+ * - 0-12 months: No severance (probationary protection)
+ * - 12-24 months: 2 months salary (basic protection)
+ * - 24-60 months: 3 months salary (established employment)
+ * - 60-120 months: 4 months salary (medium-term service)
+ * - 120-180 months: 5 months salary (long-term dedication)
+ * - 180-240 months: 6 months salary (senior employee protection)
+ * - 240-300 months: 12 months salary (veteran employee security)
+ * - 300+ months: 17 months salary (maximum protection cap)
+ * 
+ * CALCULATION BASE:
+ * - Based on last monthly salary (not annual average)
+ * - Includes basic salary only (no bonuses or allowances)
+ * - Gross salary before tax and social security deductions
+ * - Fixed at termination date salary level
+ * 
+ * EXCLUSIONS FROM SEVERANCE (Article 2, Ν. 4093/2012):
+ * Employees dismissed for "serious cause" (σοβαρός λόγος) forfeit severance rights:
+ * - Criminal activity related to employment
+ * - Serious breach of trust or confidentiality
+ * - Willful damage to employer property or reputation
+ * - Repeated insubordination after warnings
+ * - Abandonment of position without notice
+ * - Falsification of credentials or work records
+ * - Competition with employer during employment
+ * - Serious violation of safety or operational procedures
+ * 
+ * CONSTRUCTIVE DISMISSAL RIGHTS:
+ * Employees can claim severance when resigning due to employer violations:
+ * - Non-payment of wages for 2+ months
+ * - Material unilateral changes to work conditions
+ * - Unsafe or illegal working conditions
+ * - Workplace harassment or discrimination
+ * - Breach of employment contract by employer
  * 
  * Key features:
- * - Versioned severance calculation rules
- * - Automatic rule versioning when laws change
- * - Historical rule tracking for audit compliance
- * - Legal reference documentation
+ * - Versioned severance calculation rules with legal audit trail
+ * - Automatic rule versioning when Greek labor laws change
+ * - Historical rule tracking for retroactive compliance
+ * - Bilingual legal reference documentation (Greek/English)
+ * - Integration with termination eligibility determination
+ * - Support for rule updates without system downtime
  */
 export class SeveranceRulesService {
   
