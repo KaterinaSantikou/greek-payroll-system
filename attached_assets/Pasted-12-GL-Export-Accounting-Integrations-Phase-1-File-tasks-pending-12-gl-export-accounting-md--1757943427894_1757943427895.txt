@@ -1,0 +1,107 @@
+12 — GL Export & Accounting Integrations (Phase 1)
+
+File: tasks/pending/12-gl-export-accounting.md
+
+Goal
+Map payroll items to chart of accounts and export a GL journal (CSV/JSON) for accounting systems (QuickBooks/Xero first).
+
+Acceptance Criteria
+
+ server/services/GLMappingService.ts: mapping table for earnings codes → GL accounts.
+
+ Export function exportGL(runId, format) producing balanced debits/credits.
+
+ Tests with sample chart and payroll run.
+
+Files
+
+Create: server/services/GLMappingService.ts
+
+Update: server/standardizedEarningsCodesService.ts if needed; tests
+
+Dependencies
+Engine outputs stable.
+
+Non-Goals
+Vendor SDKs; start with static CSV/JSON.
+
+13 — Reporting & Dashboards (Back-end + SQL views)
+
+File: tasks/pending/13-reporting-backend.md
+
+Goal
+Back-end reporting endpoints and SQL views for KPIs: headcount, payroll cost, overtime hours, absenteeism.
+
+Acceptance Criteria
+
+ SQL views/materialized views for KPIs; endpoints: /reports/kpi?period=...
+
+ Tests validate calculations match engine outputs.
+
+ Rate-limit + authorization on endpoints (RBAC).
+
+Files
+
+Create: server/services/ReportingService.ts, migration/views
+
+Update: tests
+
+Dependencies
+Stable schema; engine outputs.
+
+Non-Goals
+Front-end charts (later).
+
+14 — Employee Self-Service (API skeleton)
+
+File: tasks/pending/14-ess-api-skeleton.md
+
+Goal
+Back-end endpoints enabling ESS: download payslips, update bank details, view leave balances, request leave (pending approval).
+
+Acceptance Criteria
+
+ REST endpoints under /ess/* with RBAC (employee scope only).
+
+ Returns: payslip metadata, bank details CRUD, leave balances/requests.
+
+ Tests for RBAC and data access (GDPR compliance).
+
+Files
+
+Create: server/routes/ess.ts, services for payslip/leave
+
+Update: tests
+
+Dependencies
+06, existing auth in server.
+
+Non-Goals
+UI (later), payroll generation.
+
+15 — Manager Self-Service (Approvals API)
+
+File: tasks/pending/15-mss-approvals-api.md
+
+Goal
+Back-end approvals for leave requests and timesheet exceptions.
+
+Acceptance Criteria
+
+ /mss/approvals/* endpoints with manager role; approve/reject flows.
+
+ Audit trail fields (who/when).
+
+ Tests verify role checks and audit writes.
+
+Files
+
+Create: server/routes/mss.ts, update services
+
+Update: tests
+
+Dependencies
+14, 05, 06
+
+Non-Goals
+UI.
