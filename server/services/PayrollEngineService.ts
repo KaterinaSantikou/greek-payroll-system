@@ -39,6 +39,9 @@ import {
 } from "../../lib/payroll/rules/greek-labor-law";
 import { PREMIUM_RATES } from "../../lib/payroll/rules/payroll-rules";
 
+// Resource monitoring
+import { createPayrollResourceMonitor, ResourceMonitoringUtils } from '../monitoring/PayrollResourceMonitor.js';
+
 // Note: Greek rates are now imported from domain layer instead of being defined here
 
 export interface ScopeComputationResult {
