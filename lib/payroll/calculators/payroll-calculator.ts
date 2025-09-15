@@ -217,7 +217,45 @@ export class PayrollCalculator {
   }
 
   /**
-   * Calculate Greek bonuses with pro-ration
+   * Calculate Greek Holiday Bonuses (Δώρα) with pro-ration according to ΕΓΣΣΕ
+   * 
+   * LEGAL BASIS:
+   * - National General Collective Agreement (ΕΓΣΣΕ)
+   * - Law 2112/1920: Original holiday pay legislation
+   * - Labor Ministry Circulars: Annual bonus calculation guidance
+   * 
+   * TRADITIONAL GREEK BONUS SYSTEM (Δώρα):
+   * Three mandatory bonuses paid annually to all employees:
+   * 
+   * 1. CHRISTMAS BONUS (Δώρο Χριστουγέννων):
+   *    - Amount: 25/24 of monthly salary (1.0417 × monthly salary)
+   *    - Calculation: (Monthly Salary × 25) ÷ 24
+   *    - Historical basis: Extra month's pay divided into 24 parts for Christmas
+   *    - Payment: December salary period
+   * 
+   * 2. EASTER BONUS (Δώρο Πάσχα):
+   *    - Amount: 1/2 monthly salary (0.5 × monthly salary) 
+   *    - Calculation: Monthly Salary ÷ 2
+   *    - Religious significance: Celebration bonus for Greek Orthodox Easter
+   *    - Payment: April salary period (varies with Easter date)
+   * 
+   * 3. VACATION BONUS (Επίδομα Αδείας):
+   *    - Amount: 1/2 monthly salary (0.5 × monthly salary)
+   *    - Calculation: Monthly Salary ÷ 2  
+   *    - Purpose: Additional funds for annual vacation period
+   *    - Payment: Before summer vacation period (typically June/July)
+   * 
+   * PRORATION RULES:
+   * - Full bonus eligibility: 12 months continuous employment in calendar year
+   * - Partial employment: Proportional to months worked (monthsWorked/12)
+   * - Seasonal workers: 50% reduction for contracts under 8 months
+   * - Mid-year hires: Prorated from employment start date to year end
+   * - Mid-year terminations: Prorated for actual months worked
+   * 
+   * CONTRACT TYPE ADJUSTMENTS:
+   * - Indefinite contracts: Full bonus entitlement
+   * - Fixed-term contracts: Full bonus if meeting minimum periods
+   * - Seasonal contracts: 50% reduction (tourism/agriculture exception)
    */
   calculateGreekBonuses(
     baseSalary: number,
@@ -226,29 +264,48 @@ export class PayrollCalculator {
     isFullTime: boolean,
     contractType: 'indefinite' | 'fixed-term' | 'seasonal'
   ): { christmas: number; easter: number; vacation: number } {
+    // Calculate actual months worked during the relevant period
+    // Used for proration when employee doesn't work full calendar year
     const monthsWorked = this.calculateMonthsWorked(startDate, endDate);
+    
+    // Proration factor: Maximum 1.0 for full year (12 months)
+    // Example: 6 months worked = 6/12 = 0.5 proration factor  
     const proRationFactor = Math.min(monthsWorked / 12, 1);
 
-    // Apply contract type reduction for seasonal workers
+    // SEASONAL CONTRACT ADJUSTMENT (Tourism/Agriculture Exception)
+    // Greek law allows 50% bonus reduction for seasonal contracts under 8 months
+    // This reflects the temporary nature of seasonal employment
+    // Applies to tourism, agriculture, and other seasonal industries
     const contractFactor =
       contractType === 'seasonal'
-        ? CONTRACT_TYPE_RULES.seasonal.bonusReduction
-        : 1;
+        ? CONTRACT_TYPE_RULES.seasonal.bonusReduction  // 0.5 (50% reduction)
+        : 1; // Full bonus for indefinite and fixed-term contracts
 
     return {
+      // CHRISTMAS BONUS: 25/24 monthly salary × proration × contract adjustment
+      // Traditional calculation: (Monthly Salary × 25) ÷ 24
+      // Represents approximately 1.0417 months of additional compensation
       christmas:
         baseSalary *
-        GREEK_BONUSES.christmas.fullTimeMonthly *
+        GREEK_BONUSES.christmas.fullTimeMonthly *  // 1.0417
         proRationFactor *
         contractFactor,
+
+      // EASTER BONUS: 1/2 monthly salary × proration × contract adjustment
+      // Fixed at 50% of monthly salary regardless of salary level
+      // Reflects religious and cultural significance in Greek society
       easter:
         baseSalary *
-        GREEK_BONUSES.easter.fullTimeMonthly *
+        GREEK_BONUSES.easter.fullTimeMonthly *     // 0.5
         proRationFactor *
         contractFactor,
+
+      // VACATION BONUS: 1/2 monthly salary × proration × contract adjustment  
+      // Additional compensation to support annual vacation expenses
+      // Paid before summer vacation period to assist with travel costs
       vacation:
         baseSalary *
-        GREEK_BONUSES.vacation.fullTimeMonthly *
+        GREEK_BONUSES.vacation.fullTimeMonthly *   // 0.5
         proRationFactor *
         contractFactor,
     };
