@@ -522,6 +522,64 @@ def get_task_priority_score(priority):
     }
     return priority_map.get(priority, 50)  # Default to medium
 
+def is_task_relevant(task_content):
+    """Check if a task is relevant to Greek payroll system"""
+    # Convert to lowercase for case-insensitive matching
+    content_lower = task_content.lower()
+    
+    # Greek payroll and HR related keywords
+    payroll_keywords = [
+        "payroll", "efka", "sse", "σσε", "greek", "greece", "ελλάδα", "ελληνικ",
+        "salary", "wage", "μισθ", "overtime", "υπερωρίες", "holiday", "εργάσιμ",
+        "employee", "εργαζόμενος", "εργάτης", "employer", "εργοδότης",
+        "tax", "φόρος", "φορολογ", "contribution", "εισφορ", "insurance", "ασφάλ",
+        "digital work card", "ψηφιακή κάρτα εργασίας", "ergani", "εργάνη",
+        "time tracking", "timesheet", "χρονομέτρηση", "ωράριο",
+        "hr", "human resources", "ανθρώπινο δυναμικό", "προσωπικό",
+        "contract", "σύμβαση", "employment", "απασχόληση", "εργασία",
+        "leave", "άδεια", "vacation", "διακοπές", "sick leave", "αρρώστια",
+        "bonus", "bonus", "επίδομα", "allowance", "παροχή"
+    ]
+    
+    # Check if any payroll keywords are present
+    has_payroll_keywords = any(keyword in content_lower for keyword in payroll_keywords)
+    
+    # Technical keywords that should be allowed for payroll system development
+    technical_keywords = [
+        "database", "βάση δεδομένων", "api", "endpoint", "service", "υπηρεσία",
+        "calculation", "υπολογισμός", "validation", "επαλήθευση", "test", "δοκιμή",
+        "authentication", "πιστοποίηση", "authorization", "εξουσιοδότηση",
+        "frontend", "backend", "ui", "interface", "διεπαφή", "form", "φόρμα",
+        "component", "στοιχείο", "module", "μονάδα", "function", "λειτουργία",
+        "bug", "σφάλμα", "fix", "διόρθωση", "improvement", "βελτίωση",
+        "performance", "απόδοση", "security", "ασφάλεια", "migration", "μετανάστευση",
+        "rate", "limiting", "guardrails", "relevance", "classifier", "agent"
+    ]
+    
+    # Task must have either payroll keywords OR technical keywords (for system improvements)
+    has_technical_keywords = any(keyword in content_lower for keyword in technical_keywords)
+    
+    # Explicitly blocked non-business keywords that indicate unrelated tasks
+    blocked_keywords = [
+        "game", "παιχνίδι", "music", "μουσική", "video", "βίντεο", 
+        "social media", "κοινωνικά δίκτυα", "entertainment", "διασκέδαση",
+        "shopping", "αγορές", "e-commerce", "ηλεκτρονικό εμπόριο",
+        "blog", "ιστολόγιο", "news", "ειδήσεις", "weather", "καιρός",
+        "travel", "ταξίδι", "restaurant", "εστιατόριο", "food", "φαγητό",
+        "personal", "προσωπικό", "hobby", "χόμπι", "sports", "αθλητισμός"
+    ]
+    
+    # Check for blocked content
+    has_blocked_content = any(keyword in content_lower for keyword in blocked_keywords)
+    
+    if has_blocked_content:
+        return False, f"Task appears to be unrelated to payroll system (contains blocked keywords)"
+    
+    if has_payroll_keywords or has_technical_keywords:
+        return True, "Task is relevant to Greek payroll system"
+    
+    return False, "Task does not appear to be related to Greek payroll system or technical improvements"
+
 def pick_next_task():
     """Pick the next task based on priority and dependencies"""
     pending_files = list((ROOT / "tasks/pending").glob("*.md"))
@@ -530,7 +588,32 @@ def pick_next_task():
     
     print(f"📋 Evaluating {len(pending_files)} pending tasks...")
     
-    # Parse all tasks with metadata
+    # First, filter out irrelevant tasks using relevance classifier
+    relevant_tasks = []
+    for task_file in pending_files:
+        task_content = read_file(str(task_file))
+        is_relevant, reason = is_task_relevant(task_content)
+        
+        if not is_relevant:
+            print(f"🚫 Rejecting irrelevant task: {task_file.name}")
+            print(f"   Reason: {reason}")
+            
+            # Move irrelevant task to a rejected folder
+            rejected_dir = ROOT / "tasks/rejected"
+            rejected_dir.mkdir(exist_ok=True)
+            rejected_path = rejected_dir / task_file.name
+            task_file.rename(rejected_path)
+            continue
+        
+        print(f"✅ Task relevance check passed: {task_file.name}")
+        print(f"   Reason: {reason}")
+        relevant_tasks.append(task_file)
+    
+    if not relevant_tasks:
+        print("⚠️ No relevant tasks found in pending queue")
+        return None
+    
+    # Parse all relevant tasks with metadata
     task_candidates = []
     blocked_tasks = []
     
