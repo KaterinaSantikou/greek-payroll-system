@@ -2292,8 +2292,8 @@ def main():
         if not sandbox_created:
             print("❌ Failed to create sandbox environment, aborting task")
             return
-    
-    try:
+        
+        try:
         # Read task and context information
         task_text = read_file(task_file)
         tree = repo_tree()
