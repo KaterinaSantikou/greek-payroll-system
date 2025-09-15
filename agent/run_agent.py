@@ -2421,27 +2421,27 @@ def main():
                 print("📦 Task was split into subtasks. Current task completed.")
                 print("✅ Subtasks created successfully. Run the agent again to process them.")
                 return
-        else:
-            # PHASE 2: IMPLEMENTATION with final impact analysis
-            planned_files = get_planned_files_from_response(implementation_plan)
-            final_impact_context = ""
-            
-            if planned_files:
-                print(f"🔍 Final impact analysis on {len(planned_files)} files before implementation...")
-                final_analysis = run_change_impact_analysis(planned_files)
-                final_impact_context = format_impact_analysis_for_prompt(final_analysis)
-            
-            print("🔨 PHASE 2: Implementing the approved plan...")
-            resp = execute_implementation_phase(
-                task_text, tree, knowledge, architecture_guide, dependency_summary, evolved_guidelines, implementation_plan, final_impact_context
-            )
-            
-            # Extract structured output flag from response
-            if hasattr(resp, 'is_structured'):
-                structured_output = resp.is_structured
-                resp = str(resp)  # Convert to string for processing
             else:
-                structured_output = False
+                # PHASE 2: IMPLEMENTATION with final impact analysis
+                planned_files = get_planned_files_from_response(implementation_plan)
+                final_impact_context = ""
+                
+                if planned_files:
+                    print(f"🔍 Final impact analysis on {len(planned_files)} files before implementation...")
+                    final_analysis = run_change_impact_analysis(planned_files)
+                    final_impact_context = format_impact_analysis_for_prompt(final_analysis)
+                
+                print("🔨 PHASE 2: Implementing the approved plan...")
+                resp = execute_implementation_phase(
+                    task_text, tree, knowledge, architecture_guide, dependency_summary, evolved_guidelines, implementation_plan, final_impact_context
+                )
+                
+                # Extract structured output flag from response
+                if hasattr(resp, 'is_structured'):
+                    structured_output = resp.is_structured
+                    resp = str(resp)  # Convert to string for processing
+                else:
+                    structured_output = False
         
         if not resp:
             print("❌ Failed to get response from OpenAI")
