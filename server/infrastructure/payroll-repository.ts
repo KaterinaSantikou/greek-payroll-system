@@ -182,9 +182,18 @@ export class PayrollRepository {
   }
 
   /**
-   * Get timesheet data for employees in a period
+   * Get timesheet data for employees in a period  
+   * PERFORMANCE OPTIMIZED: Uses bulk operations for large employee sets
    */
   async getTimesheetData(employeeIds: string[], period: string): Promise<TimesheetData[]> {
+    // Use optimized bulk fetch for large datasets
+    if (employeeIds.length > 100) {
+      const { DatabaseOptimizations } = await import('./database-optimizations');
+      const timesheetMap = await DatabaseOptimizations.getBulkTimesheetData(employeeIds, period);
+      return Array.from(timesheetMap.values());
+    }
+    
+    // Fallback to original implementation for small datasets
     const timesheetRecords = await db
       .select()
       .from(timesheets)
