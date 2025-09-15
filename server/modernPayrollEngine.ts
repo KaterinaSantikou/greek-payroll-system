@@ -180,7 +180,7 @@ export class ModernPayrollEngine {
           isFullTime: true
         };
 
-        const calculation = greekPayrollCalculator.calculatePayroll(calculationInput);
+        const calculation = payrollCalculator.calculatePayroll(calculationInput);
         calculation.periodId = periodId;
         calculation.calculationId = randomUUID();
         
