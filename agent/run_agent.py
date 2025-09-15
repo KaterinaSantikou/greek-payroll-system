@@ -112,6 +112,112 @@ def read_knowledge():
         return "No previous knowledge available."
     return KNOWLEDGE_FILE.read_text(encoding="utf-8")
 
+def generate_dependency_graph():
+    """Generate dependency graph using madge and save to JSON"""
+    try:
+        CONTEXT_DIR.mkdir(exist_ok=True)
+        
+        # Run madge to generate dependency graph
+        result = subprocess.run([
+            "npx", "madge", 
+            "--json", 
+            "--extensions", "ts,tsx,js,jsx",
+            "--exclude", "node_modules|dist|build",
+            "."
+        ], cwd=ROOT, capture_output=True, text=True, timeout=30)
+        
+        if result.returncode == 0:
+            dependency_data = json.loads(result.stdout)
+            
+            # Also get circular dependencies
+            circular_result = subprocess.run([
+                "npx", "madge", 
+                "--circular",
+                "--json",
+                "--extensions", "ts,tsx,js,jsx", 
+                "--exclude", "node_modules|dist|build",
+                "."
+            ], cwd=ROOT, capture_output=True, text=True, timeout=30)
+            
+            circular_deps = []
+            if circular_result.returncode == 0 and circular_result.stdout.strip():
+                try:
+                    circular_deps = json.loads(circular_result.stdout)
+                except:
+                    pass
+            
+            # Combine data
+            graph_data = {
+                "dependencies": dependency_data,
+                "circular_dependencies": circular_deps,
+                "generated_at": datetime.now().isoformat(),
+                "total_files": len(dependency_data),
+                "files_with_deps": len([f for f, deps in dependency_data.items() if deps])
+            }
+            
+            DEPENDENCY_FILE.write_text(json.dumps(graph_data, indent=2), encoding="utf-8")
+            print(f"📊 Dependency graph generated: {len(dependency_data)} files analyzed")
+            return graph_data
+        else:
+            print(f"⚠️ Failed to generate dependency graph: {result.stderr}")
+            return None
+    except Exception as e:
+        print(f"⚠️ Error generating dependency graph: {e}")
+        return None
+
+def read_dependency_graph():
+    """Read the dependency graph, generating it if it doesn't exist or is stale"""
+    if not DEPENDENCY_FILE.exists():
+        print("📊 Generating initial dependency graph...")
+        generate_dependency_graph()
+    
+    if DEPENDENCY_FILE.exists():
+        try:
+            data = json.loads(DEPENDENCY_FILE.read_text(encoding="utf-8"))
+            
+            # Check if graph is older than 1 hour - regenerate if stale
+            generated_at = datetime.fromisoformat(data.get("generated_at", "2000-01-01T00:00:00"))
+            if (datetime.now() - generated_at).total_seconds() > 3600:
+                print("📊 Dependency graph is stale, regenerating...")
+                new_data = generate_dependency_graph()
+                return new_data if new_data else data
+            
+            return data
+        except Exception as e:
+            print(f"⚠️ Error reading dependency graph: {e}")
+            return None
+    
+    return None
+
+def format_dependency_summary(graph_data):
+    """Format dependency graph data for AI prompt"""
+    if not graph_data:
+        return "No dependency graph available."
+    
+    deps = graph_data.get("dependencies", {})
+    circular = graph_data.get("circular_dependencies", [])
+    
+    summary = f"""ARCHITECTURE OVERVIEW:
+- Total files: {graph_data.get('total_files', 0)}
+- Files with dependencies: {graph_data.get('files_with_deps', 0)}
+- Circular dependencies: {len(circular)} {"⚠️ ISSUES DETECTED" if circular else "✅ Clean"}
+
+KEY DEPENDENCIES:
+"""
+    
+    # Show main dependency patterns
+    for file, deps in sorted(deps.items())[:10]:  # Top 10 most connected files
+        if deps:
+            summary += f"- {file} → {', '.join(deps[:3])}{'...' if len(deps) > 3 else ''}\n"
+    
+    if circular:
+        summary += f"\n⚠️ CIRCULAR DEPENDENCIES TO AVOID:\n"
+        for cycle in circular[:3]:  # Show first 3 circular deps
+            if isinstance(cycle, list):
+                summary += f"- {' → '.join(cycle)}\n"
+    
+    return summary
+
 def update_knowledge(task_title, changed_files, task_summary):
     """Update the knowledge base with information from the completed task"""
     CONTEXT_DIR.mkdir(exist_ok=True)
@@ -157,6 +263,10 @@ def main():
     task_text = read_file(task_file)
     tree = repo_tree()
     knowledge = read_knowledge()
+    
+    # Get dependency graph for architectural context
+    dependency_graph = read_dependency_graph()
+    dependency_summary = format_dependency_summary(dependency_graph)
 
     system = {
         "role":"system",
