@@ -1129,6 +1129,170 @@ def perform_skill_growth_cycle():
         print(f"❌ Error in skill growth cycle: {e}")
         return False
 
+def run_change_impact_analysis(changed_files=None):
+    """Run dependency analysis using ts-morph to identify impact of changes"""
+    try:
+        print("🔍 Running change impact analysis...")
+        
+        # Prepare command
+        scanner_script = AGENT_DIR / "dependency_scanner.js"
+        cmd = ["node", str(scanner_script), str(ROOT)]
+        
+        # Add changed files if provided
+        if changed_files:
+            cmd.extend(changed_files)
+        
+        # Run the dependency scanner
+        result = subprocess.run(
+            cmd, 
+            cwd=ROOT, 
+            capture_output=True, 
+            text=True, 
+            timeout=120
+        )
+        
+        if result.returncode != 0:
+            print(f"⚠️ Dependency scanner failed: {result.stderr}")
+            return None
+        
+        # Load and return the impact analysis
+        if IMPACT_ANALYSIS_FILE.exists():
+            analysis_data = json.loads(IMPACT_ANALYSIS_FILE.read_text(encoding="utf-8"))
+            
+            if analysis_data.get('success'):
+                print(f"✅ Impact analysis complete: {analysis_data.get('totalFiles', 0)} files analyzed")
+                
+                if analysis_data.get('impactAnalysis'):
+                    impact = analysis_data['impactAnalysis']
+                    print(f"   📊 Impact: {impact['summary']}")
+                    print(f"   ⚠️ Risk level: {impact['riskLevel']}")
+                    
+                    if impact.get('potentialBreakingChanges'):
+                        print(f"   🚨 {len(impact['potentialBreakingChanges'])} potential breaking changes detected")
+                
+                return analysis_data
+            else:
+                print(f"❌ Analysis failed: {analysis_data.get('error', 'Unknown error')}")
+                return None
+        else:
+            print("⚠️ Impact analysis file not found")
+            return None
+            
+    except subprocess.TimeoutExpired:
+        print("⚠️ Dependency scanner timed out")
+        return None
+    except Exception as e:
+        print(f"⚠️ Error running impact analysis: {e}")
+        return None
+
+def format_impact_analysis_for_prompt(analysis_data):
+    """Format impact analysis results for inclusion in AI prompt"""
+    if not analysis_data or not analysis_data.get('success'):
+        return ""
+    
+    try:
+        impact = analysis_data.get('impactAnalysis')
+        dependency_graph = analysis_data.get('dependencyGraph', {})
+        
+        prompt_section = "\n        CHANGE IMPACT ANALYSIS:\n"
+        
+        # Overall project structure
+        prompt_section += f"        - Total files in project: {analysis_data.get('totalFiles', 0)}\n"
+        prompt_section += f"        - Dependency graph available for impact analysis\n"
+        
+        # If we have specific impact analysis
+        if impact:
+            prompt_section += f"        - Files being changed: {len(impact.get('directlyAffected', []))} directly affected\n"
+            prompt_section += f"        - Additional files impacted: {len(impact.get('indirectlyAffected', []))} indirectly affected\n"
+            prompt_section += f"        - Risk level: {impact.get('riskLevel', 'UNKNOWN')}\n"
+            
+            # List directly affected files
+            directly_affected = impact.get('directlyAffected', [])
+            if directly_affected:
+                prompt_section += f"        \n        DIRECTLY AFFECTED FILES (must be carefully reviewed):\n"
+                for affected_file in directly_affected[:10]:  # Limit to first 10
+                    prompt_section += f"        - {affected_file}\n"
+                if len(directly_affected) > 10:
+                    prompt_section += f"        - ... and {len(directly_affected) - 10} more files\n"
+            
+            # Potential breaking changes
+            breaking_changes = impact.get('potentialBreakingChanges', [])
+            if breaking_changes:
+                prompt_section += f"        \n        ⚠️ POTENTIAL BREAKING CHANGES:\n"
+                for change in breaking_changes[:5]:  # Limit to first 5
+                    prompt_section += f"        - {change['file']}: {change['reason']} (Risk: {change['severity']})\n"
+            
+            # Risk mitigation advice
+            risk_level = impact.get('riskLevel', 'LOW')
+            if risk_level == 'HIGH':
+                prompt_section += f"        \n        🚨 HIGH RISK CHANGES - Extra caution required:\n"
+                prompt_section += f"        - Consider breaking changes into smaller increments\n"
+                prompt_section += f"        - Add comprehensive tests for affected modules\n"
+                prompt_section += f"        - Verify all affected files still function correctly\n"
+            elif risk_level == 'MEDIUM':
+                prompt_section += f"        \n        ⚠️ MEDIUM RISK CHANGES - Review carefully:\n"
+                prompt_section += f"        - Test affected modules thoroughly\n"
+                prompt_section += f"        - Check for breaking changes in interfaces\n"
+        
+        # Key dependency insights
+        forward_deps = dependency_graph.get('forwardDeps', {})
+        reverse_deps = dependency_graph.get('reverseDeps', {})
+        
+        if forward_deps:
+            # Find files with many dependencies (potential complexity)
+            high_dep_files = [(f, len(deps)) for f, deps in forward_deps.items() if len(deps) > 5]
+            high_dep_files.sort(key=lambda x: x[1], reverse=True)
+            
+            if high_dep_files:
+                prompt_section += f"        \n        HIGH-DEPENDENCY FILES (handle with care):\n"
+                for file_path, dep_count in high_dep_files[:5]:
+                    prompt_section += f"        - {file_path} (imports {dep_count} modules)\n"
+        
+        if reverse_deps:
+            # Find files with many dependents (high impact)
+            high_impact_files = [(f, len(deps)) for f, deps in reverse_deps.items() if len(deps) > 3]
+            high_impact_files.sort(key=lambda x: x[1], reverse=True)
+            
+            if high_impact_files:
+                prompt_section += f"        \n        HIGH-IMPACT FILES (changes affect many modules):\n"
+                for file_path, dependent_count in high_impact_files[:5]:
+                    prompt_section += f"        - {file_path} (used by {dependent_count} modules)\n"
+        
+        return prompt_section
+        
+    except Exception as e:
+        print(f"⚠️ Error formatting impact analysis: {e}")
+        return ""
+
+def get_planned_files_from_response(plan_text):
+    """Extract planned file changes from the planning response"""
+    planned_files = []
+    
+    try:
+        lines = plan_text.split('\n')
+        in_files_section = False
+        
+        for line in lines:
+            line = line.strip()
+            
+            if line.startswith("## FILES TO MODIFY/CREATE"):
+                in_files_section = True
+                continue
+            elif line.startswith("##") and in_files_section:
+                break
+            elif in_files_section and line.startswith("-"):
+                # Extract file path from line like "- path/to/file.ts: description"
+                file_part = line[1:].strip()
+                if ':' in file_part:
+                    file_path = file_part.split(':')[0].strip()
+                    planned_files.append(file_path)
+        
+        return planned_files
+        
+    except Exception as e:
+        print(f"⚠️ Error extracting planned files: {e}")
+        return []
+
 def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolved_guidelines):
     """Execute planning phase to create detailed implementation plan"""
     try:
@@ -1546,10 +1710,15 @@ def main():
         # Load evolved guidelines from skill growth
         evolved_guidelines = load_evolved_guidelines()
 
+        # Run initial dependency analysis to understand current state
+        print("🔍 PHASE 0: Analyzing current dependency structure...")
+        initial_analysis = run_change_impact_analysis()
+        impact_context = format_impact_analysis_for_prompt(initial_analysis)
+
         # PHASE 1: PLANNING
         print("🎯 PHASE 1: Creating detailed implementation plan...")
         implementation_plan = execute_planning_phase(
-            task_text, tree, knowledge, dependency_summary, evolved_guidelines
+            task_text, tree, knowledge, dependency_summary, evolved_guidelines, impact_context
         )
         
         if not implementation_plan:
