@@ -110,7 +110,17 @@ while True:
             print(f"💾 Committing and pushing changes to dev branch (task: {task_title})...")
             safe_run(["git", "config", "--global", "user.name", "AI Dev Agent"])
             safe_run(["git", "config", "--global", "user.email", "agent@localhost"])
-            safe_run(["git", "checkout", "dev"])
+            
+            # Ensure dev branch exists and switch to it
+            safe_run(["git", "fetch"])
+            result = safe_run(["git", "branch", "--list", "dev"])
+            if "dev" not in result.stdout:
+                print("📝 Creating new dev branch...")
+                safe_run(["git", "checkout", "-b", "dev"])
+            else:
+                print("🔄 Switching to existing dev branch...")
+                safe_run(["git", "checkout", "dev"])
+            
             safe_run(["git", "add", "."])
             safe_run(["git", "commit", "-m", f"AI Agent: Completed task — {task_title}"])
             safe_run([
