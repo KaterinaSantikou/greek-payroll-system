@@ -2481,10 +2481,10 @@ def main():
             validation_failed = False
             
             print("🔍 Running TypeScript validation in sandbox...")
-        result = subprocess.run(["npm", "run", "tsc", "--", "--noEmit"], cwd=SANDBOX_DIR, capture_output=True)
-        if result.returncode != 0:
-            print("❌ TypeScript check failed in sandbox.")
-            validation_failed = True
+            result = subprocess.run(["npm", "run", "tsc", "--", "--noEmit"], cwd=SANDBOX_DIR, capture_output=True)
+            if result.returncode != 0:
+                print("❌ TypeScript check failed in sandbox.")
+                validation_failed = True
 
         if not validation_failed:
             print("🧪 Running tests in sandbox...")
