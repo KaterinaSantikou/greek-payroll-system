@@ -1,0 +1,13 @@
+dist/
+node_modules/
+*.lock
+*.md
+*.json
+public/
+.git/
+.vscode/
+coverage/
+*.log
+*.config.js
+*.config.ts
+drizzle.config.ts
