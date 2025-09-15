@@ -1265,6 +1265,17 @@ def main():
         print("❌ OPENAI_API_KEY missing in Replit Secrets.")
         return
 
+    # Periodically perform skill growth (every 5th task or if no evolution file exists)
+    critic_files = list(AGENT_DIR.glob("critic_report_*.md"))
+    should_evolve = (
+        not PROMPT_EVOLUTION_FILE.exists() or 
+        len(critic_files) % 5 == 0 and len(critic_files) > 0
+    )
+    
+    if should_evolve:
+        print("🧠 Triggering skill growth and prompt evolution...")
+        perform_skill_growth_cycle()
+
     task_file = pick_next_task()
     if not task_file:
         print("No tasks found in tasks/pending. Add a .md task and run again.")
