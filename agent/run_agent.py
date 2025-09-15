@@ -2442,8 +2442,8 @@ def main():
                     resp = str(resp)  # Convert to string for processing
                 else:
                     structured_output = False
-        
-        if not resp:
+
+            if not resp:
             print("❌ Failed to get response from OpenAI")
             return
         
