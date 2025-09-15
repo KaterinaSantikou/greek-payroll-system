@@ -454,6 +454,19 @@ export class PayrollEngineService {
       };
 
     } catch (error) {
+      // Finalize monitoring even on error to capture resource usage for debugging
+      if (resourceMonitor) {
+        const finalMetrics = resourceMonitor.finalize();
+        logger.error('Payroll computation failed - resource usage at failure', {
+          scopeId,
+          error: error instanceof Error ? error.message : String(error),
+          peakMemory: `${Math.round(finalMetrics.peakMemoryUsage / 1024 / 1024)}MB`,
+          duration: `${finalMetrics.totalDuration}ms`,
+          alertCount: finalMetrics.alerts.length,
+          alerts: finalMetrics.alerts.map(a => `${a.type}:${a.severity}`)
+        });
+      }
+      
       // Rollback on error
       await this.rollbackScopeComputation(scopeId);
       throw error;
