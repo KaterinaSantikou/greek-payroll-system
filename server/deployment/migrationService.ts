@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { nanoid } from 'nanoid';
 
 /**
  * Migration Service for PayrollSync Implementation
@@ -22,9 +22,20 @@ export interface SourceSystemInfo {
   systemName: string;
   vendor: string;
   version: string;
-  databaseType: 'MYSQL' | 'POSTGRESQL' | 'SQL_SERVER' | 'ORACLE' | 'ACCESS' | 'EXCEL';
+  databaseType:
+    | 'MYSQL'
+    | 'POSTGRESQL'
+    | 'SQL_SERVER'
+    | 'ORACLE'
+    | 'ACCESS'
+    | 'EXCEL';
   connectionString?: string;
-  exportCapability: 'DATABASE_DIRECT' | 'CSV_EXPORT' | 'XML_EXPORT' | 'API' | 'MANUAL';
+  exportCapability:
+    | 'DATABASE_DIRECT'
+    | 'CSV_EXPORT'
+    | 'XML_EXPORT'
+    | 'API'
+    | 'MANUAL';
   dataRetentionPeriod: number; // months
   lastBackupDate: Date;
   recordCount: SystemRecordCount;
@@ -42,7 +53,12 @@ export interface SystemRecordCount {
 export interface MigrationPhase {
   phaseId: string;
   phaseName: string;
-  phaseType: 'EXTRACTION' | 'TRANSFORMATION' | 'VALIDATION' | 'LOADING' | 'VERIFICATION';
+  phaseType:
+    | 'EXTRACTION'
+    | 'TRANSFORMATION'
+    | 'VALIDATION'
+    | 'LOADING'
+    | 'VERIFICATION';
   dataTypes: string[];
   dependencies: string[];
   estimatedDuration: number; // hours
@@ -165,7 +181,11 @@ export interface EntityQualityMetric {
 
 export interface DataQualityIssue {
   issueId: string;
-  issueType: 'MISSING_REQUIRED_FIELD' | 'INVALID_FORMAT' | 'BUSINESS_RULE_VIOLATION' | 'DUPLICATE_RECORD';
+  issueType:
+    | 'MISSING_REQUIRED_FIELD'
+    | 'INVALID_FORMAT'
+    | 'BUSINESS_RULE_VIOLATION'
+    | 'DUPLICATE_RECORD';
   entityType: string;
   recordId: string;
   fieldName: string;
@@ -273,7 +293,6 @@ export interface FilingMigrationRecord {
 }
 
 class MigrationService {
-
   /**
    * Create comprehensive migration plan
    */
@@ -282,21 +301,23 @@ class MigrationService {
     sourceSystem: SourceSystemInfo
   ): Promise<MigrationPlan> {
     const migrationId = nanoid();
-    
-    console.log(`Creating migration plan for property ${propertyCode} from ${sourceSystem.systemName}`);
-    
+
+    console.log(
+      `Creating migration plan for property ${propertyCode} from ${sourceSystem.systemName}`
+    );
+
     // Define migration phases
     const migrationPhases = this.defineMigrationPhases();
-    
+
     // Create data mapping configuration
     const dataMapping = this.createDataMapping(sourceSystem);
-    
+
     // Define validation rules
     const validationRules = this.createValidationRules();
-    
+
     // Create rollback plan
     const rollbackPlan = this.createMigrationRollbackPlan();
-    
+
     // Generate timeline
     const timeline = this.createMigrationTimeline(migrationPhases);
 
@@ -310,7 +331,7 @@ class MigrationService {
       rollbackPlan,
       timeline,
       createdDate: new Date(),
-      status: 'PLANNED'
+      status: 'PLANNED',
     };
 
     console.log(`Migration plan created with ${migrationPhases.length} phases`);
@@ -354,7 +375,7 @@ class MigrationService {
           // Migrate employee and contracts
           await this.migrateEmployeeRecord(transformedEmployee);
           migratedRecords++;
-          
+
           migrationLog.push({
             logId: nanoid(),
             timestamp: new Date(),
@@ -362,12 +383,12 @@ class MigrationService {
             phase: 'EMPLOYEE_MIGRATION',
             entityType: 'EMPLOYEE',
             recordId: transformedEmployee.sourceEmployeeId,
-            message: 'Employee migrated successfully'
+            message: 'Employee migrated successfully',
           });
         } else {
           errorRecords++;
           validationErrors.push(...validationResult.errors);
-          
+
           migrationLog.push({
             logId: nanoid(),
             timestamp: new Date(),
@@ -375,7 +396,7 @@ class MigrationService {
             phase: 'EMPLOYEE_MIGRATION',
             entityType: 'EMPLOYEE',
             recordId: sourceEmployee.id,
-            message: `Validation failed: ${validationResult.errors.map(e => e.description).join(', ')}`
+            message: `Validation failed: ${validationResult.errors.map(e => e.description).join(', ')}`,
           });
         }
       } catch (error) {
@@ -388,13 +409,13 @@ class MigrationService {
           entityType: 'EMPLOYEE',
           recordId: sourceEmployee.id,
           message: `Migration error: ${error}`,
-          details: error
+          details: error,
         });
       }
     }
 
     const duration = Math.floor((Date.now() - startTime) / 1000 / 60);
-    
+
     // Generate data quality report
     const dataQualityReport = this.generateDataQualityReport(
       sourceData.length,
@@ -404,7 +425,12 @@ class MigrationService {
 
     const result: MigrationResult = {
       migrationId,
-      status: errorRecords === 0 ? 'SUCCESS' : migratedRecords > 0 ? 'PARTIAL_SUCCESS' : 'FAILED',
+      status:
+        errorRecords === 0
+          ? 'SUCCESS'
+          : migratedRecords > 0
+            ? 'PARTIAL_SUCCESS'
+            : 'FAILED',
       summary: {
         totalRecords: sourceData.length,
         migratedRecords,
@@ -412,14 +438,16 @@ class MigrationService {
         errorRecords,
         validationErrors: validationErrors.length,
         warningsCount: migrationLog.filter(l => l.level === 'WARNING').length,
-        duration
+        duration,
       },
       dataQualityReport,
       migrationLog,
-      completedDate: new Date()
+      completedDate: new Date(),
     };
 
-    console.log(`Employee migration completed: ${migratedRecords}/${sourceData.length} records migrated`);
+    console.log(
+      `Employee migration completed: ${migratedRecords}/${sourceData.length} records migrated`
+    );
     return result;
   }
 
@@ -434,7 +462,9 @@ class MigrationService {
     const migrationLog: MigrationLogEntry[] = [];
     const startTime = Date.now();
 
-    console.log(`Migrating payroll balances for ${balanceData.length} employees`);
+    console.log(
+      `Migrating payroll balances for ${balanceData.length} employees`
+    );
 
     let migratedRecords = 0;
     let errorRecords = 0;
@@ -442,14 +472,15 @@ class MigrationService {
     for (const employeeBalance of balanceData) {
       try {
         // Transform balance data
-        const transformedBalance = this.transformPayrollBalance(employeeBalance);
-        
+        const transformedBalance =
+          this.transformPayrollBalance(employeeBalance);
+
         // Validate balance data
         if (this.validatePayrollBalance(transformedBalance)) {
           // Store balance information
           await this.storePayrollBalance(transformedBalance);
           migratedRecords++;
-          
+
           migrationLog.push({
             logId: nanoid(),
             timestamp: new Date(),
@@ -457,7 +488,7 @@ class MigrationService {
             phase: 'BALANCE_MIGRATION',
             entityType: 'PAYROLL',
             recordId: employeeBalance.employeeId,
-            message: 'Payroll balance migrated successfully'
+            message: 'Payroll balance migrated successfully',
           });
         } else {
           errorRecords++;
@@ -468,7 +499,7 @@ class MigrationService {
             phase: 'BALANCE_MIGRATION',
             entityType: 'PAYROLL',
             recordId: employeeBalance.employeeId,
-            message: 'Balance validation failed'
+            message: 'Balance validation failed',
           });
         }
       } catch (error) {
@@ -480,7 +511,7 @@ class MigrationService {
           phase: 'BALANCE_MIGRATION',
           entityType: 'PAYROLL',
           recordId: employeeBalance.employeeId,
-          message: `Balance migration error: ${error}`
+          message: `Balance migration error: ${error}`,
         });
       }
     }
@@ -497,16 +528,16 @@ class MigrationService {
         errorRecords,
         validationErrors: 0,
         warningsCount: 0,
-        duration
+        duration,
       },
       dataQualityReport: {
         overallQuality: (migratedRecords / balanceData.length) * 100,
         qualityByEntity: [],
         criticalIssues: [],
-        recommendations: []
+        recommendations: [],
       },
       migrationLog,
-      completedDate: new Date()
+      completedDate: new Date(),
     };
   }
 
@@ -531,7 +562,7 @@ class MigrationService {
         // Store filing record and associated documents
         await this.storeHistoricalFiling(filing);
         migratedRecords++;
-        
+
         migrationLog.push({
           logId: nanoid(),
           timestamp: new Date(),
@@ -539,12 +570,12 @@ class MigrationService {
           phase: 'FILING_MIGRATION',
           entityType: 'FILING',
           recordId: filing.filingId,
-          message: `${filing.filingType} filing migrated for period ${filing.period}`
+          message: `${filing.filingType} filing migrated for period ${filing.period}`,
         });
       } catch (error) {
         errorRecords++;
         filing.migrationStatus = 'ERROR';
-        
+
         migrationLog.push({
           logId: nanoid(),
           timestamp: new Date(),
@@ -552,7 +583,7 @@ class MigrationService {
           phase: 'FILING_MIGRATION',
           entityType: 'FILING',
           recordId: filing.filingId,
-          message: `Filing migration error: ${error}`
+          message: `Filing migration error: ${error}`,
         });
       }
     }
@@ -569,16 +600,16 @@ class MigrationService {
         errorRecords,
         validationErrors: 0,
         warningsCount: 0,
-        duration
+        duration,
       },
       dataQualityReport: {
         overallQuality: (migratedRecords / filingData.length) * 100,
         qualityByEntity: [],
         criticalIssues: [],
-        recommendations: []
+        recommendations: [],
       },
       migrationLog,
-      completedDate: new Date()
+      completedDate: new Date(),
     };
   }
 
@@ -594,7 +625,7 @@ class MigrationService {
         estimatedDuration: 8,
         criticalPhase: true,
         rollbackSupported: true,
-        validationRequired: true
+        validationRequired: true,
       },
       {
         phaseId: 'PHASE_2',
@@ -605,7 +636,7 @@ class MigrationService {
         estimatedDuration: 16,
         criticalPhase: true,
         rollbackSupported: true,
-        validationRequired: true
+        validationRequired: true,
       },
       {
         phaseId: 'PHASE_3',
@@ -616,7 +647,7 @@ class MigrationService {
         estimatedDuration: 4,
         criticalPhase: true,
         rollbackSupported: false,
-        validationRequired: false
+        validationRequired: false,
       },
       {
         phaseId: 'PHASE_4',
@@ -627,7 +658,7 @@ class MigrationService {
         estimatedDuration: 12,
         criticalPhase: true,
         rollbackSupported: true,
-        validationRequired: true
+        validationRequired: true,
       },
       {
         phaseId: 'PHASE_5',
@@ -638,8 +669,8 @@ class MigrationService {
         estimatedDuration: 8,
         criticalPhase: false,
         rollbackSupported: false,
-        validationRequired: false
-      }
+        validationRequired: false,
+      },
     ];
   }
 
@@ -651,21 +682,21 @@ class MigrationService {
           targetField: 'employeeId',
           dataType: 'STRING',
           required: true,
-          validationRules: ['NOT_NULL', 'UNIQUE']
+          validationRules: ['NOT_NULL', 'UNIQUE'],
         },
         {
           sourceField: 'first_name',
           targetField: 'firstName',
           dataType: 'STRING',
           required: true,
-          validationRules: ['NOT_NULL', 'MIN_LENGTH:2']
+          validationRules: ['NOT_NULL', 'MIN_LENGTH:2'],
         },
         {
           sourceField: 'last_name',
           targetField: 'lastName',
           dataType: 'STRING',
           required: true,
-          validationRules: ['NOT_NULL', 'MIN_LENGTH:2']
+          validationRules: ['NOT_NULL', 'MIN_LENGTH:2'],
         },
         {
           sourceField: 'tax_id',
@@ -673,7 +704,7 @@ class MigrationService {
           dataType: 'STRING',
           required: true,
           transformation: 'REMOVE_SPACES',
-          validationRules: ['AFM_FORMAT']
+          validationRules: ['AFM_FORMAT'],
         },
         {
           sourceField: 'social_security_no',
@@ -681,8 +712,8 @@ class MigrationService {
           dataType: 'STRING',
           required: true,
           transformation: 'REMOVE_SPACES',
-          validationRules: ['AMKA_FORMAT']
-        }
+          validationRules: ['AMKA_FORMAT'],
+        },
       ],
       contractMapping: [
         {
@@ -690,22 +721,22 @@ class MigrationService {
           targetField: 'contractId',
           dataType: 'STRING',
           required: true,
-          validationRules: ['NOT_NULL', 'UNIQUE']
+          validationRules: ['NOT_NULL', 'UNIQUE'],
         },
         {
           sourceField: 'start_date',
           targetField: 'startDate',
           dataType: 'DATE',
           required: true,
-          validationRules: ['VALID_DATE']
+          validationRules: ['VALID_DATE'],
         },
         {
           sourceField: 'salary',
           targetField: 'baseSalary',
           dataType: 'DECIMAL',
           required: true,
-          validationRules: ['POSITIVE_NUMBER', 'MIN_WAGE_CHECK']
-        }
+          validationRules: ['POSITIVE_NUMBER', 'MIN_WAGE_CHECK'],
+        },
       ],
       payrollMapping: [],
       timesheetMapping: [],
@@ -717,9 +748,9 @@ class MigrationService {
           sourceFields: ['full_name'],
           targetField: 'firstName,lastName',
           transformationLogic: 'SPLIT_ON_SPACE',
-          description: 'Split full name into first and last name'
-        }
-      ]
+          description: 'Split full name into first and last name',
+        },
+      ],
     };
   }
 
@@ -732,7 +763,7 @@ class MigrationService {
         entityType: 'EMPLOYEE',
         validationLogic: '/^\\d{9}$/.test(afm) && afm !== "000000000"',
         severity: 'ERROR',
-        blockingRule: true
+        blockingRule: true,
       },
       {
         ruleId: 'AMKA_VALIDATION',
@@ -741,7 +772,7 @@ class MigrationService {
         entityType: 'EMPLOYEE',
         validationLogic: '/^\\d{11}$/.test(amka) && amka !== "00000000000"',
         severity: 'ERROR',
-        blockingRule: true
+        blockingRule: true,
       },
       {
         ruleId: 'MINIMUM_WAGE_CHECK',
@@ -750,7 +781,7 @@ class MigrationService {
         entityType: 'CONTRACT',
         validationLogic: 'baseSalary >= 880', // 2025 Greek minimum wage
         severity: 'WARNING',
-        blockingRule: false
+        blockingRule: false,
       },
       {
         ruleId: 'EMPLOYMENT_DATE_VALIDATION',
@@ -759,8 +790,8 @@ class MigrationService {
         entityType: 'EMPLOYEE',
         validationLogic: 'hireDate <= new Date()',
         severity: 'ERROR',
-        blockingRule: true
-      }
+        blockingRule: true,
+      },
     ];
   }
 
@@ -771,17 +802,24 @@ class MigrationService {
         {
           scenarioId: 'DATA_CORRUPTION',
           scenarioName: 'Data Corruption Detected',
-          triggers: ['Invalid AFM/AMKA', 'Duplicate employees', 'Missing required fields'],
+          triggers: [
+            'Invalid AFM/AMKA',
+            'Duplicate employees',
+            'Missing required fields',
+          ],
           impact: 'FULL',
-          estimatedRecoveryTime: 4
+          estimatedRecoveryTime: 4,
         },
         {
           scenarioId: 'VALIDATION_FAILURES',
           scenarioName: 'High Validation Failure Rate',
-          triggers: ['Validation failures > 20%', 'Critical business rule violations'],
+          triggers: [
+            'Validation failures > 20%',
+            'Critical business rule violations',
+          ],
           impact: 'PARTIAL',
-          estimatedRecoveryTime: 2
-        }
+          estimatedRecoveryTime: 2,
+        },
       ],
       backupRetention: 90,
       recoveryProcedures: [
@@ -792,33 +830,38 @@ class MigrationService {
             'Stop migration process',
             'Restore database from pre-migration backup',
             'Validate data integrity',
-            'Notify stakeholders'
+            'Notify stakeholders',
           ],
           automation: 'SEMI_AUTO',
-          validationSteps: ['Data count verification', 'Key field validation']
-        }
-      ]
+          validationSteps: ['Data count verification', 'Key field validation'],
+        },
+      ],
     };
   }
 
   private createMigrationTimeline(phases: MigrationPhase[]): MigrationTimeline {
-    const totalDuration = phases.reduce((sum, phase) => sum + Math.ceil(phase.estimatedDuration / 8), 0);
+    const totalDuration = phases.reduce(
+      (sum, phase) => sum + Math.ceil(phase.estimatedDuration / 8),
+      0
+    );
     const startDate = new Date();
-    
+
     const phaseTimelines: PhaseTimeline[] = phases.map((phase, index) => {
       const phaseStart = new Date(startDate);
-      phaseStart.setDate(phaseStart.getDate() + (index * 2)); // 2 days between phases
-      
+      phaseStart.setDate(phaseStart.getDate() + index * 2); // 2 days between phases
+
       const phaseEnd = new Date(phaseStart);
-      phaseEnd.setDate(phaseEnd.getDate() + Math.ceil(phase.estimatedDuration / 8));
-      
+      phaseEnd.setDate(
+        phaseEnd.getDate() + Math.ceil(phase.estimatedDuration / 8)
+      );
+
       return {
         phaseId: phase.phaseId,
         startDate: phaseStart,
         endDate: phaseEnd,
         dependencies: phase.dependencies,
         resources: ['Migration Specialist', 'Data Analyst'],
-        risks: ['Data quality issues', 'System downtime']
+        risks: ['Data quality issues', 'System downtime'],
       };
     });
 
@@ -826,7 +869,7 @@ class MigrationService {
       totalDuration,
       phases: phaseTimelines,
       criticalPath: phases.filter(p => p.criticalPhase).map(p => p.phaseId),
-      bufferTime: 3 // 3 days buffer
+      bufferTime: 3, // 3 days buffer
     };
   }
 
@@ -843,29 +886,33 @@ class MigrationService {
         lastName: sourceEmployee.last_name?.trim(),
         afm: sourceEmployee.tax_id?.replace(/\s/g, ''),
         amka: sourceEmployee.social_security_no?.replace(/\s/g, ''),
-        dateOfBirth: sourceEmployee.birth_date ? new Date(sourceEmployee.birth_date) : undefined,
+        dateOfBirth: sourceEmployee.birth_date
+          ? new Date(sourceEmployee.birth_date)
+          : undefined,
         nationalityCode: sourceEmployee.nationality || 'GR',
         address: sourceEmployee.address,
         phone: sourceEmployee.phone,
-        email: sourceEmployee.email
+        email: sourceEmployee.email,
       },
       employmentInfo: {
         employeeNumber: sourceEmployee.employee_number,
         hireDate: new Date(sourceEmployee.hire_date),
-        termDate: sourceEmployee.term_date ? new Date(sourceEmployee.term_date) : undefined,
+        termDate: sourceEmployee.term_date
+          ? new Date(sourceEmployee.term_date)
+          : undefined,
         employmentType: sourceEmployee.employment_type || 'FULL_TIME',
         department: sourceEmployee.department,
         jobTitle: sourceEmployee.job_title,
-        grade: sourceEmployee.grade
+        grade: sourceEmployee.grade,
       },
       bankingInfo: {
         bankIban: sourceEmployee.bank_iban,
         bankName: sourceEmployee.bank_name,
-        paymentMethod: 'BANK_TRANSFER'
+        paymentMethod: 'BANK_TRANSFER',
       },
       contractHistory: [],
       payrollHistory: [],
-      migrationStatus: 'PENDING'
+      migrationStatus: 'PENDING',
     };
 
     return transformed;
@@ -878,7 +925,10 @@ class MigrationService {
     const errors: DataQualityIssue[] = [];
 
     // Validate AFM
-    if (!/^\d{9}$/.test(employee.personalInfo.afm) || employee.personalInfo.afm === '000000000') {
+    if (
+      !/^\d{9}$/.test(employee.personalInfo.afm) ||
+      employee.personalInfo.afm === '000000000'
+    ) {
       errors.push({
         issueId: nanoid(),
         issueType: 'INVALID_FORMAT',
@@ -887,12 +937,15 @@ class MigrationService {
         fieldName: 'afm',
         description: 'Invalid AFM format',
         severity: 'CRITICAL',
-        suggestedFix: 'Provide valid 9-digit AFM'
+        suggestedFix: 'Provide valid 9-digit AFM',
       });
     }
 
     // Validate AMKA
-    if (!/^\d{11}$/.test(employee.personalInfo.amka) || employee.personalInfo.amka === '00000000000') {
+    if (
+      !/^\d{11}$/.test(employee.personalInfo.amka) ||
+      employee.personalInfo.amka === '00000000000'
+    ) {
       errors.push({
         issueId: nanoid(),
         issueType: 'INVALID_FORMAT',
@@ -901,12 +954,15 @@ class MigrationService {
         fieldName: 'amka',
         description: 'Invalid AMKA format',
         severity: 'CRITICAL',
-        suggestedFix: 'Provide valid 11-digit AMKA'
+        suggestedFix: 'Provide valid 11-digit AMKA',
       });
     }
 
     // Validate required fields
-    if (!employee.personalInfo.firstName || employee.personalInfo.firstName.length < 2) {
+    if (
+      !employee.personalInfo.firstName ||
+      employee.personalInfo.firstName.length < 2
+    ) {
       errors.push({
         issueId: nanoid(),
         issueType: 'MISSING_REQUIRED_FIELD',
@@ -915,19 +971,25 @@ class MigrationService {
         fieldName: 'firstName',
         description: 'First name is required and must be at least 2 characters',
         severity: 'HIGH',
-        suggestedFix: 'Provide valid first name'
+        suggestedFix: 'Provide valid first name',
       });
     }
 
     return {
-      isValid: errors.filter(e => e.severity === 'CRITICAL' || e.severity === 'HIGH').length === 0,
-      errors
+      isValid:
+        errors.filter(e => e.severity === 'CRITICAL' || e.severity === 'HIGH')
+          .length === 0,
+      errors,
     };
   }
 
-  private async migrateEmployeeRecord(employee: EmployeeMigrationRecord): Promise<void> {
+  private async migrateEmployeeRecord(
+    employee: EmployeeMigrationRecord
+  ): Promise<void> {
     // Mock implementation - would insert into actual database
-    console.log(`Migrating employee ${employee.personalInfo.firstName} ${employee.personalInfo.lastName}`);
+    console.log(
+      `Migrating employee ${employee.personalInfo.firstName} ${employee.personalInfo.lastName}`
+    );
     employee.migrationStatus = 'MIGRATED';
   }
 
@@ -939,15 +1001,17 @@ class MigrationService {
       netPay: balanceData.net_pay || 0,
       incomeTax: balanceData.income_tax || 0,
       socialSecurity: balanceData.social_security || 0,
-      leaveBalance: balanceData.leave_balance || 0
+      leaveBalance: balanceData.leave_balance || 0,
     };
   }
 
   private validatePayrollBalance(balance: any): boolean {
-    return balance.employeeId && 
-           balance.year && 
-           balance.grossPay >= 0 && 
-           balance.netPay >= 0;
+    return (
+      balance.employeeId &&
+      balance.year &&
+      balance.grossPay >= 0 &&
+      balance.netPay >= 0
+    );
   }
 
   private async storePayrollBalance(balance: any): Promise<void> {
@@ -955,9 +1019,13 @@ class MigrationService {
     console.log(`Storing payroll balance for employee ${balance.employeeId}`);
   }
 
-  private async storeHistoricalFiling(filing: FilingMigrationRecord): Promise<void> {
+  private async storeHistoricalFiling(
+    filing: FilingMigrationRecord
+  ): Promise<void> {
     // Mock implementation - would store filing and documents
-    console.log(`Storing ${filing.filingType} filing for period ${filing.period}`);
+    console.log(
+      `Storing ${filing.filingType} filing for period ${filing.period}`
+    );
     filing.migrationStatus = 'MIGRATED';
   }
 
@@ -967,7 +1035,7 @@ class MigrationService {
     validationErrors: DataQualityIssue[]
   ): DataQualityReport {
     const overallQuality = (migratedRecords / totalRecords) * 100;
-    
+
     return {
       overallQuality,
       qualityByEntity: [
@@ -977,15 +1045,15 @@ class MigrationService {
           validRecords: migratedRecords,
           invalidRecords: totalRecords - migratedRecords,
           qualityScore: overallQuality,
-          commonIssues: validationErrors.map(e => e.description).slice(0, 5)
-        }
+          commonIssues: validationErrors.map(e => e.description).slice(0, 5),
+        },
       ],
       criticalIssues: validationErrors.filter(e => e.severity === 'CRITICAL'),
       recommendations: [
         'Validate AFM/AMKA formats before migration',
         'Ensure all required fields are populated',
-        'Review business rule violations'
-      ]
+        'Review business rule violations',
+      ],
     };
   }
 }

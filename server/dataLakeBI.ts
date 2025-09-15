@@ -203,7 +203,6 @@ export interface PayrollSummaryCurated {
 
 // Data processing engine
 export class DataLakeProcessor {
-  
   // Raw data ingestion
   static async ingestTimeEvent(event: any): Promise<void> {
     const rawEvent: TimeEventRaw = {
@@ -219,11 +218,11 @@ export class DataLakeProcessor {
       verification_method: event.verification?.method || 'unknown',
       offline_cached: event.metadata?.offline || false,
       created_at: new Date().toISOString(),
-      raw_payload: event
+      raw_payload: event,
     };
 
     await this.writeToRawLayer('time_events', rawEvent);
-    
+
     // Trigger downstream processing
     await this.triggerCurationPipeline('timesheet_update', rawEvent);
   }
@@ -232,13 +231,17 @@ export class DataLakeProcessor {
   static async processDailyTimesheets(date: string): Promise<void> {
     const rawEvents = await this.queryRawEvents({
       date,
-      eventTypes: ['clock_in', 'clock_out', 'break_start', 'break_end']
+      eventTypes: ['clock_in', 'clock_out', 'break_start', 'break_end'],
     });
 
     const timesheetsByEmployee = this.groupEventsByEmployee(rawEvents);
-    
+
     for (const [employeeId, events] of timesheetsByEmployee) {
-      const curatedTimesheet = await this.createCuratedTimesheet(employeeId, date, events);
+      const curatedTimesheet = await this.createCuratedTimesheet(
+        employeeId,
+        date,
+        events
+      );
       await this.writeToCuratedLayer('timesheets', curatedTimesheet);
     }
   }
@@ -246,38 +249,42 @@ export class DataLakeProcessor {
   // Aggregated metrics calculation
   static async calculateDailyMetrics(date: string): Promise<void> {
     const timesheets = await this.queryCuratedTimesheets(date);
-    
+
     const metrics = this.aggregateByPropertyAndDepartment(timesheets, {
       totalEmployees: 'COUNT(DISTINCT employee_id)',
       totalHours: 'SUM(regular_hours + overtime_hours)',
       averageHours: 'AVG(regular_hours + overtime_hours)',
-      overtimePercentage: 'SUM(overtime_hours) / SUM(regular_hours + overtime_hours) * 100',
+      overtimePercentage:
+        'SUM(overtime_hours) / SUM(regular_hours + overtime_hours) * 100',
       complianceRate: 'AVG(compliance_score)',
-      erganiSyncRate: 'COUNT(CASE WHEN ergani_synced THEN 1 END) / COUNT(*) * 100'
+      erganiSyncRate:
+        'COUNT(CASE WHEN ergani_synced THEN 1 END) / COUNT(*) * 100',
     });
 
     for (const metric of metrics) {
       await this.writeToAggregatedLayer('daily_metrics', {
         ...metric,
         date,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       });
     }
   }
 
   // Real-time analytics
-  static async getRealTimeMetrics(propertyId: string): Promise<RealTimeMetrics> {
+  static async getRealTimeMetrics(
+    propertyId: string
+  ): Promise<RealTimeMetrics> {
     const today = new Date().toISOString().split('T')[0];
-    
+
     // Current occupancy
     const currentlyOnSite = await this.queryCurrentOccupancy(propertyId);
-    
+
     // Today's compliance
     const todayCompliance = await this.queryTodayCompliance(propertyId, today);
-    
+
     // ERGANI sync status
     const erganiStatus = await this.queryErganiSyncStatus(propertyId, today);
-    
+
     // Alert counts
     const alertCounts = await this.queryActiveAlerts(propertyId);
 
@@ -288,24 +295,25 @@ export class DataLakeProcessor {
         currentlyOnSite: currentlyOnSite.total,
         byDepartment: currentlyOnSite.byDepartment,
         scheduledToday: currentlyOnSite.scheduled,
-        attendanceRate: (currentlyOnSite.total / currentlyOnSite.scheduled) * 100
+        attendanceRate:
+          (currentlyOnSite.total / currentlyOnSite.scheduled) * 100,
       },
       compliance: {
         overallScore: todayCompliance.averageScore,
         violationsToday: todayCompliance.violations,
         erganiSyncRate: erganiStatus.syncRate,
-        pendingSubmissions: erganiStatus.pending
+        pendingSubmissions: erganiStatus.pending,
       },
       alerts: {
         active: alertCounts.active,
         critical: alertCounts.critical,
-        byType: alertCounts.byType
+        byType: alertCounts.byType,
       },
       performance: {
         totalHoursToday: todayCompliance.totalHours,
         overtimeHours: todayCompliance.overtimeHours,
-        averageSessionDuration: todayCompliance.avgSessionDuration
-      }
+        averageSessionDuration: todayCompliance.avgSessionDuration,
+      },
     };
   }
 
@@ -314,7 +322,6 @@ export class DataLakeProcessor {
     propertyId: string,
     dateRange: { start: string; end: string }
   ): Promise<HRAnalyticsResult> {
-    
     const query = `
       SELECT 
         department,
@@ -332,19 +339,34 @@ export class DataLakeProcessor {
       ORDER BY total_labor_cost DESC
     `;
 
-    const results = await this.executeQuery(query, [propertyId, dateRange.start, dateRange.end]);
-    
+    const results = await this.executeQuery(query, [
+      propertyId,
+      dateRange.start,
+      dateRange.end,
+    ]);
+
     return {
       propertyId,
       dateRange,
       departmentMetrics: results,
       summary: {
-        totalEmployees: results.reduce((sum, dept) => sum + dept.employee_count, 0),
-        totalLaborCost: results.reduce((sum, dept) => sum + dept.total_labor_cost, 0),
-        averageComplianceScore: results.reduce((sum, dept) => sum + dept.avg_compliance_score, 0) / results.length,
-        unapprovedTimesheets: results.reduce((sum, dept) => sum + dept.unapproved_timesheets, 0)
+        totalEmployees: results.reduce(
+          (sum, dept) => sum + dept.employee_count,
+          0
+        ),
+        totalLaborCost: results.reduce(
+          (sum, dept) => sum + dept.total_labor_cost,
+          0
+        ),
+        averageComplianceScore:
+          results.reduce((sum, dept) => sum + dept.avg_compliance_score, 0) /
+          results.length,
+        unapprovedTimesheets: results.reduce(
+          (sum, dept) => sum + dept.unapproved_timesheets,
+          0
+        ),
       },
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
   }
 
@@ -353,18 +375,23 @@ export class DataLakeProcessor {
     propertyId: string,
     month: string
   ): Promise<ComplianceReport> {
-    
     // Labor law compliance
-    const laborLawMetrics = await this.queryLaborLawCompliance(propertyId, month);
-    
+    const laborLawMetrics = await this.queryLaborLawCompliance(
+      propertyId,
+      month
+    );
+
     // ERGANI compliance
     const erganiMetrics = await this.queryErganiCompliance(propertyId, month);
-    
+
     // Break compliance
     const breakMetrics = await this.queryBreakCompliance(propertyId, month);
-    
+
     // Overtime compliance
-    const overtimeMetrics = await this.queryOvertimeCompliance(propertyId, month);
+    const overtimeMetrics = await this.queryOvertimeCompliance(
+      propertyId,
+      month
+    );
 
     return {
       propertyId,
@@ -373,55 +400,70 @@ export class DataLakeProcessor {
         laborLawMetrics.score,
         erganiMetrics.score,
         breakMetrics.score,
-        overtimeMetrics.score
+        overtimeMetrics.score,
       ]),
       sections: {
         laborLaw: {
           score: laborLawMetrics.score,
           violations: laborLawMetrics.violations,
-          details: laborLawMetrics.details
+          details: laborLawMetrics.details,
         },
         ergani: {
           score: erganiMetrics.score,
           syncRate: erganiMetrics.syncRate,
           failedSubmissions: erganiMetrics.failed,
-          details: erganiMetrics.details
+          details: erganiMetrics.details,
         },
         breaks: {
           score: breakMetrics.score,
           missedBreaks: breakMetrics.missed,
           averageBreakDuration: breakMetrics.avgDuration,
-          details: breakMetrics.details
+          details: breakMetrics.details,
         },
         overtime: {
           score: overtimeMetrics.score,
           unapprovedHours: overtimeMetrics.unapproved,
           averageOvertimeRate: overtimeMetrics.avgRate,
-          details: overtimeMetrics.details
-        }
+          details: overtimeMetrics.details,
+        },
       },
-      recommendations: await this.generateComplianceRecommendations(propertyId, month),
-      generatedAt: new Date().toISOString()
+      recommendations: await this.generateComplianceRecommendations(
+        propertyId,
+        month
+      ),
+      generatedAt: new Date().toISOString(),
     };
   }
 
   // Helper methods
-  private static async writeToRawLayer(table: string, data: any): Promise<void> {
+  private static async writeToRawLayer(
+    table: string,
+    data: any
+  ): Promise<void> {
     // Implementation would write to data lake raw layer
     console.log(`Writing to raw layer: ${table}`, data);
   }
 
-  private static async writeToCuratedLayer(table: string, data: any): Promise<void> {
+  private static async writeToCuratedLayer(
+    table: string,
+    data: any
+  ): Promise<void> {
     // Implementation would write to data lake curated layer
     console.log(`Writing to curated layer: ${table}`, data);
   }
 
-  private static async writeToAggregatedLayer(table: string, data: any): Promise<void> {
+  private static async writeToAggregatedLayer(
+    table: string,
+    data: any
+  ): Promise<void> {
     // Implementation would write to data lake aggregated layer
     console.log(`Writing to aggregated layer: ${table}`, data);
   }
 
-  private static async triggerCurationPipeline(pipeline: string, event: any): Promise<void> {
+  private static async triggerCurationPipeline(
+    pipeline: string,
+    event: any
+  ): Promise<void> {
     // Implementation would trigger data pipeline
     console.log(`Triggering pipeline: ${pipeline}`, event);
   }
@@ -433,7 +475,7 @@ export class DataLakeProcessor {
 
   private static groupEventsByEmployee(events: any[]): Map<string, any[]> {
     const grouped = new Map<string, any[]>();
-    
+
     for (const event of events) {
       const employeeId = event.employee_id;
       if (!grouped.has(employeeId)) {
@@ -441,7 +483,7 @@ export class DataLakeProcessor {
       }
       grouped.get(employeeId)!.push(event);
     }
-    
+
     return grouped;
   }
 
@@ -468,7 +510,7 @@ export class DataLakeProcessor {
       approved: true,
       exported_to_payroll: false,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
   }
 
@@ -477,12 +519,18 @@ export class DataLakeProcessor {
     return [];
   }
 
-  private static aggregateByPropertyAndDepartment(data: any[], metrics: any): any[] {
+  private static aggregateByPropertyAndDepartment(
+    data: any[],
+    metrics: any
+  ): any[] {
     // Implementation would aggregate data
     return [];
   }
 
-  private static async executeQuery(query: string, params: any[]): Promise<any[]> {
+  private static async executeQuery(
+    query: string,
+    params: any[]
+  ): Promise<any[]> {
     // Implementation would execute SQL query
     return [];
   }
@@ -492,34 +540,58 @@ export class DataLakeProcessor {
     return { total: 45, scheduled: 50, byDepartment: {} };
   }
 
-  private static async queryTodayCompliance(propertyId: string, date: string): Promise<any> {
+  private static async queryTodayCompliance(
+    propertyId: string,
+    date: string
+  ): Promise<any> {
     // Implementation would query today's compliance
-    return { averageScore: 95, violations: 2, totalHours: 360, overtimeHours: 20, avgSessionDuration: 8.5 };
+    return {
+      averageScore: 95,
+      violations: 2,
+      totalHours: 360,
+      overtimeHours: 20,
+      avgSessionDuration: 8.5,
+    };
   }
 
-  private static async queryErganiSyncStatus(propertyId: string, date: string): Promise<any> {
+  private static async queryErganiSyncStatus(
+    propertyId: string,
+    date: string
+  ): Promise<any> {
     // Implementation would query ERGANI sync status
     return { syncRate: 98.5, pending: 3 };
   }
 
   private static async queryActiveAlerts(propertyId: string): Promise<any> {
     // Implementation would query active alerts
-    return { active: 5, critical: 1, byType: { 'overtime': 3, 'break': 2 } };
+    return { active: 5, critical: 1, byType: { overtime: 3, break: 2 } };
   }
 
-  private static async queryLaborLawCompliance(propertyId: string, month: string): Promise<any> {
+  private static async queryLaborLawCompliance(
+    propertyId: string,
+    month: string
+  ): Promise<any> {
     return { score: 95, violations: 2, details: [] };
   }
 
-  private static async queryErganiCompliance(propertyId: string, month: string): Promise<any> {
+  private static async queryErganiCompliance(
+    propertyId: string,
+    month: string
+  ): Promise<any> {
     return { score: 98, syncRate: 98.5, failed: 3, details: [] };
   }
 
-  private static async queryBreakCompliance(propertyId: string, month: string): Promise<any> {
+  private static async queryBreakCompliance(
+    propertyId: string,
+    month: string
+  ): Promise<any> {
     return { score: 92, missed: 5, avgDuration: 25, details: [] };
   }
 
-  private static async queryOvertimeCompliance(propertyId: string, month: string): Promise<any> {
+  private static async queryOvertimeCompliance(
+    propertyId: string,
+    month: string
+  ): Promise<any> {
     return { score: 88, unapproved: 15, avgRate: 1.5, details: [] };
   }
 
@@ -527,11 +599,14 @@ export class DataLakeProcessor {
     return scores.reduce((sum, score) => sum + score, 0) / scores.length;
   }
 
-  private static async generateComplianceRecommendations(propertyId: string, month: string): Promise<string[]> {
+  private static async generateComplianceRecommendations(
+    propertyId: string,
+    month: string
+  ): Promise<string[]> {
     return [
       'Improve break monitoring to reduce missed break violations',
       'Implement automated overtime approval workflow',
-      'Enhance ERGANI retry mechanisms for failed submissions'
+      'Enhance ERGANI retry mechanisms for failed submissions',
     ];
   }
 }

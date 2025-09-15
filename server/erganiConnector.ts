@@ -1,6 +1,6 @@
 /**
  * ERGANI II Connector - Real-time compliance reporting to Greek Ministry of Labor
- * 
+ *
  * Features:
  * - Ordered submission with idempotency keys
  * - Automatic retry with exponential backoff
@@ -9,7 +9,7 @@
  * - Inspector-friendly export capabilities
  */
 
-import { nanoid } from "nanoid";
+import { nanoid } from 'nanoid';
 
 // ERGANI II Event Types
 export interface ErganiEvent {
@@ -77,30 +77,32 @@ export class ErganiConnector {
       timeout: 30000,
       maxRetries: 3,
       retryDelayMs: 5000,
-      batchSize: 50
+      batchSize: 50,
     };
   }
 
   /**
    * Submit a single punch event to ERGANI II
    */
-  async submitEvent(event: Omit<ErganiEvent, 'submissionOrder' | 'idempotencyKey'>): Promise<ErganiSubmissionResult> {
+  async submitEvent(
+    event: Omit<ErganiEvent, 'submissionOrder' | 'idempotencyKey'>
+  ): Promise<ErganiSubmissionResult> {
     const erganiEvent: ErganiEvent = {
       ...event,
       submissionOrder: ++this.orderCounter,
-      idempotencyKey: `${event.eventId}_${Date.now()}_${nanoid(8)}`
+      idempotencyKey: `${event.eventId}_${Date.now()}_${nanoid(8)}`,
     };
 
     // Add to submission queue
     this.submissionQueue.push(erganiEvent);
-    
+
     // Initialize result tracking
     const result: ErganiSubmissionResult = {
       eventId: event.eventId,
       status: 'PENDING',
       retryCount: 0,
       submittedAt: new Date(),
-      lastAttemptAt: new Date()
+      lastAttemptAt: new Date(),
     };
     this.submissionResults.set(event.eventId, result);
 
@@ -115,11 +117,13 @@ export class ErganiConnector {
   /**
    * Submit events in bulk with strict ordering
    */
-  async submitBulk(events: Omit<ErganiEvent, 'submissionOrder' | 'idempotencyKey'>[]): Promise<ErganiSubmissionResult[]> {
+  async submitBulk(
+    events: Omit<ErganiEvent, 'submissionOrder' | 'idempotencyKey'>[]
+  ): Promise<ErganiSubmissionResult[]> {
     const erganiEvents: ErganiEvent[] = events.map(event => ({
       ...event,
       submissionOrder: ++this.orderCounter,
-      idempotencyKey: `${event.eventId}_${Date.now()}_${nanoid(8)}`
+      idempotencyKey: `${event.eventId}_${Date.now()}_${nanoid(8)}`,
     }));
 
     // Add all to submission queue in order
@@ -132,7 +136,7 @@ export class ErganiConnector {
         status: 'PENDING',
         retryCount: 0,
         submittedAt: new Date(),
-        lastAttemptAt: new Date()
+        lastAttemptAt: new Date(),
       };
       this.submissionResults.set(event.eventId, result);
       return result;
@@ -162,17 +166,23 @@ export class ErganiConnector {
     }
 
     this.isProcessing = true;
-    console.log(`[ERGANI] Processing ${this.submissionQueue.length} events in queue`);
+    console.log(
+      `[ERGANI] Processing ${this.submissionQueue.length} events in queue`
+    );
 
     try {
       // Process events in strict order
-      const sortedQueue = [...this.submissionQueue].sort((a, b) => a.submissionOrder - b.submissionOrder);
-      
+      const sortedQueue = [...this.submissionQueue].sort(
+        (a, b) => a.submissionOrder - b.submissionOrder
+      );
+
       for (const event of sortedQueue) {
         await this.submitSingleEvent(event);
-        
+
         // Remove from queue after processing
-        const index = this.submissionQueue.findIndex(e => e.eventId === event.eventId);
+        const index = this.submissionQueue.findIndex(
+          e => e.eventId === event.eventId
+        );
         if (index >= 0) {
           this.submissionQueue.splice(index, 1);
         }
@@ -181,7 +191,7 @@ export class ErganiConnector {
       console.error('[ERGANI] Error processing submission queue:', error);
     } finally {
       this.isProcessing = false;
-      
+
       // If more events were added during processing, process them
       if (this.submissionQueue.length > 0) {
         setTimeout(() => this.processSubmissionQueue(), 1000);
@@ -206,30 +216,44 @@ export class ErganiConnector {
 
       try {
         const response = await this.makeErganiRequest(event, attempt);
-        
+
         // Log the mirror entry
         this.logMirrorEntry(event, response, Date.now() - startTime, attempt);
 
         if (response.success) {
           result.status = 'SUCCESS';
           result.erganiId = response.erganiId;
-          console.log(`[ERGANI] Successfully submitted event ${event.eventId} (ERGANI ID: ${response.erganiId})`);
+          console.log(
+            `[ERGANI] Successfully submitted event ${event.eventId} (ERGANI ID: ${response.erganiId})`
+          );
           return;
         } else {
-          throw new Error(`ERGANI API error: ${response.errorCode} - ${response.errorMessage}`);
+          throw new Error(
+            `ERGANI API error: ${response.errorCode} - ${response.errorMessage}`
+          );
         }
       } catch (error) {
-        console.error(`[ERGANI] Attempt ${attempt} failed for event ${event.eventId}:`, error);
+        console.error(
+          `[ERGANI] Attempt ${attempt} failed for event ${event.eventId}:`,
+          error
+        );
 
         // Log failed attempt
-        this.logMirrorEntry(event, { error: (error as Error).message }, Date.now() - startTime, attempt);
+        this.logMirrorEntry(
+          event,
+          { error: (error as Error).message },
+          Date.now() - startTime,
+          attempt
+        );
 
         if (attempt > this.config.maxRetries) {
           // Move to quarantine for manual review
           result.status = 'QUARANTINED';
           result.errorMessage = (error as Error).message;
           this.quarantineQueue.push(event);
-          console.error(`[ERGANI] Event ${event.eventId} quarantined after ${this.config.maxRetries} failed attempts`);
+          console.error(
+            `[ERGANI] Event ${event.eventId} quarantined after ${this.config.maxRetries} failed attempts`
+          );
           return;
         }
 
@@ -243,10 +267,13 @@ export class ErganiConnector {
   /**
    * Make actual HTTP request to ERGANI II API
    */
-  private async makeErganiRequest(event: ErganiEvent, attempt: number): Promise<any> {
+  private async makeErganiRequest(
+    event: ErganiEvent,
+    attempt: number
+  ): Promise<any> {
     // In a real implementation, this would make actual HTTP requests to ERGANI II
     // For now, we'll simulate the API response based on realistic patterns
-    
+
     const requestPayload = {
       idempotencyKey: event.idempotencyKey,
       companyCode: this.config.companyCode,
@@ -256,23 +283,25 @@ export class ErganiConnector {
         timestamp: event.timestamp,
         eventType: event.eventType,
         location: event.location,
-        deviceId: event.deviceId
-      }
+        deviceId: event.deviceId,
+      },
     };
 
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
+    await new Promise(resolve =>
+      setTimeout(resolve, 500 + Math.random() * 1000)
+    );
 
     // Simulate different response scenarios
     const random = Math.random();
-    
+
     if (random < 0.85) {
       // Success case (85% success rate)
       return {
         success: true,
         erganiId: `ERG_${nanoid(12)}`,
         timestamp: new Date().toISOString(),
-        requestPayload
+        requestPayload,
       };
     } else if (random < 0.95) {
       // Temporary failure (10% temporary failure rate)
@@ -286,7 +315,12 @@ export class ErganiConnector {
   /**
    * Log mirror entry for request/response tracking
    */
-  private logMirrorEntry(event: ErganiEvent, response: any, duration: number, retryAttempt: number): void {
+  private logMirrorEntry(
+    event: ErganiEvent,
+    response: any,
+    duration: number,
+    retryAttempt: number
+  ): void {
     const mirrorLog: ErganiMirrorLog = {
       logId: nanoid(12),
       eventId: event.eventId,
@@ -299,18 +333,18 @@ export class ErganiConnector {
           timestamp: event.timestamp,
           eventType: event.eventType,
           location: event.location,
-          deviceId: event.deviceId
-        }
+          deviceId: event.deviceId,
+        },
       },
       responsePayload: response,
       httpStatus: response.success ? 200 : 500,
       timestamp: new Date(),
       duration,
-      retryAttempt
+      retryAttempt,
     };
 
     this.mirrorLogs.push(mirrorLog);
-    
+
     // Keep only last 10000 logs to prevent memory issues
     if (this.mirrorLogs.length > 10000) {
       this.mirrorLogs = this.mirrorLogs.slice(-5000);
@@ -332,9 +366,17 @@ export class ErganiConnector {
    */
   exportMirrorLogs(format: 'json' | 'csv' = 'json'): string {
     const logs = this.getMirrorLogs();
-    
+
     if (format === 'csv') {
-      const headers = ['logId', 'eventId', 'timestamp', 'httpStatus', 'duration', 'retryAttempt', 'success'];
+      const headers = [
+        'logId',
+        'eventId',
+        'timestamp',
+        'httpStatus',
+        'duration',
+        'retryAttempt',
+        'success',
+      ];
       const rows = logs.map(log => [
         log.logId,
         log.eventId,
@@ -342,12 +384,12 @@ export class ErganiConnector {
         log.httpStatus || 0,
         log.duration,
         log.retryAttempt,
-        log.responsePayload?.success || false
+        log.responsePayload?.success || false,
       ]);
-      
+
       return [headers, ...rows].map(row => row.join(',')).join('\n');
     }
-    
+
     return JSON.stringify(logs, null, 2);
   }
 
@@ -361,8 +403,12 @@ export class ErganiConnector {
   /**
    * Manually retry a quarantined event
    */
-  async retryQuarantinedEvent(eventId: string): Promise<ErganiSubmissionResult | undefined> {
-    const eventIndex = this.quarantineQueue.findIndex(event => event.eventId === eventId);
+  async retryQuarantinedEvent(
+    eventId: string
+  ): Promise<ErganiSubmissionResult | undefined> {
+    const eventIndex = this.quarantineQueue.findIndex(
+      event => event.eventId === eventId
+    );
     if (eventIndex === -1) {
       return undefined;
     }
@@ -380,7 +426,7 @@ export class ErganiConnector {
 
     // Add back to submission queue
     this.submissionQueue.push(event);
-    
+
     if (!this.isProcessing) {
       this.processSubmissionQueue();
     }
@@ -393,10 +439,14 @@ export class ErganiConnector {
    */
   getHealthMetrics() {
     const totalEvents = this.submissionResults.size;
-    const successfulEvents = Array.from(this.submissionResults.values()).filter(r => r.status === 'SUCCESS').length;
+    const successfulEvents = Array.from(this.submissionResults.values()).filter(
+      r => r.status === 'SUCCESS'
+    ).length;
     const pendingEvents = this.submissionQueue.length;
     const quarantinedEvents = this.quarantineQueue.length;
-    const failedEvents = Array.from(this.submissionResults.values()).filter(r => r.status === 'FAILED').length;
+    const failedEvents = Array.from(this.submissionResults.values()).filter(
+      r => r.status === 'FAILED'
+    ).length;
 
     return {
       totalEvents,
@@ -407,7 +457,10 @@ export class ErganiConnector {
       successRate: totalEvents > 0 ? (successfulEvents / totalEvents) * 100 : 0,
       queueBacklog: pendingEvents,
       isProcessing: this.isProcessing,
-      lastActivity: this.mirrorLogs.length > 0 ? this.mirrorLogs[this.mirrorLogs.length - 1].timestamp : null
+      lastActivity:
+        this.mirrorLogs.length > 0
+          ? this.mirrorLogs[this.mirrorLogs.length - 1].timestamp
+          : null,
     };
   }
 }

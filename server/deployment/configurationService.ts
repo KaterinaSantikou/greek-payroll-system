@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { nanoid } from 'nanoid';
 
 /**
  * Configuration Service for PayrollSync Implementation
@@ -162,7 +162,11 @@ export interface QualificationBonus {
 }
 
 export interface PerformanceRange {
-  performanceLevel: 'BELOW_EXPECTATIONS' | 'MEETS_EXPECTATIONS' | 'EXCEEDS_EXPECTATIONS' | 'OUTSTANDING';
+  performanceLevel:
+    | 'BELOW_EXPECTATIONS'
+    | 'MEETS_EXPECTATIONS'
+    | 'EXCEEDS_EXPECTATIONS'
+    | 'OUTSTANDING';
   multiplier: number;
   reviewFrequency: 'QUARTERLY' | 'ANNUALLY';
 }
@@ -179,7 +183,12 @@ export interface AllowanceStructure {
 }
 
 export interface AllowanceCondition {
-  conditionType: 'DEPARTMENT' | 'ROLE' | 'SHIFT_TYPE' | 'WORKING_HOURS' | 'LOCATION';
+  conditionType:
+    | 'DEPARTMENT'
+    | 'ROLE'
+    | 'SHIFT_TYPE'
+    | 'WORKING_HOURS'
+    | 'LOCATION';
   conditionValue: string;
   conditionAmount: number;
 }
@@ -231,7 +240,11 @@ export interface DayRule {
 }
 
 export interface RestrictionRule {
-  restrictionType: 'DAILY_MAX' | 'WEEKLY_MAX' | 'MONTHLY_MAX' | 'CONSECUTIVE_DAYS';
+  restrictionType:
+    | 'DAILY_MAX'
+    | 'WEEKLY_MAX'
+    | 'MONTHLY_MAX'
+    | 'CONSECUTIVE_DAYS';
   restrictionValue: number;
   enforcementLevel: 'WARNING' | 'BLOCK' | 'APPROVAL_REQUIRED';
 }
@@ -316,7 +329,13 @@ export interface BreakWindow {
 export interface LeaveTypeConfiguration {
   leaveTypeId: string;
   leaveTypeName: string;
-  category: 'ANNUAL' | 'SICK' | 'MATERNITY' | 'PATERNITY' | 'SPECIAL' | 'UNPAID';
+  category:
+    | 'ANNUAL'
+    | 'SICK'
+    | 'MATERNITY'
+    | 'PATERNITY'
+    | 'SPECIAL'
+    | 'UNPAID';
   entitlementRules: LeaveEntitlementRule[];
   accrualRules: LeaveAccrualRule[];
   carryOverRules: LeaveCarryOverRule;
@@ -373,7 +392,6 @@ export interface ValidationRuleConfiguration {
 }
 
 class ConfigurationService {
-  
   /**
    * Create system configuration for a property
    */
@@ -383,31 +401,31 @@ class ConfigurationService {
     cbaRequirements?: string
   ): Promise<SystemConfiguration> {
     const configId = nanoid();
-    
+
     // Generate default policies
     const policies = this.generateDefaultPolicies();
-    
+
     // Create wage structure based on Greek minimum wage
     const wageStructure = await this.createWageStructure(cbaRequirements);
-    
+
     // Configure overtime bands
     const overtimeBands = this.createOvertimeBands();
-    
+
     // Set up night shift configuration
     const nightShiftConfig = this.createNightShiftConfig();
-    
+
     // Configure tip scheme for hotels
     const tipScheme = this.createHotelTipScheme();
-    
+
     // Set up Greek holiday calendar
     const holidayCalendar = this.createGreekHolidayCalendar();
-    
+
     // Configure break rules per Greek labor law
     const breakRules = this.createGreekBreakRules();
-    
+
     // Set up leave types
     const leaveTypes = this.createGreekLeaveTypes();
-    
+
     // Create validation rules
     const validationRules = this.createValidationRules();
 
@@ -425,7 +443,7 @@ class ConfigurationService {
       breakRules,
       leaveTypes,
       validationRules,
-      status: 'DRAFT'
+      status: 'DRAFT',
     };
 
     console.log(`Configuration created for property ${propertyCode}`);
@@ -443,12 +461,12 @@ class ConfigurationService {
         payDay: 30, // Last day of month
         rounding: {
           method: 'ROUND_NEAREST',
-          precision: 2
+          precision: 2,
         },
         retroactivePayLimit: 6,
         advancePaymentLimit: 50,
         currencyCode: 'EUR',
-        taxYear: new Date().getFullYear()
+        taxYear: new Date().getFullYear(),
       },
       timekeepingPolicies: {
         clockInGracePeriod: 5,
@@ -459,9 +477,9 @@ class ConfigurationService {
         geofencing: {
           enabled: true,
           radiusMeters: 100,
-          strictMode: false
+          strictMode: false,
         },
-        biometricRequired: false
+        biometricRequired: false,
       },
       compliancePolicies: {
         erganiAutoSubmission: true,
@@ -471,38 +489,40 @@ class ConfigurationService {
         documentRetention: 6,
         dataBackup: {
           frequency: 'DAILY',
-          retentionDays: 90
-        }
+          retentionDays: 90,
+        },
       },
       approvalWorkflows: {
         timesheetApproval: {
           required: true,
           approverRole: 'Department Manager',
-          deadline: 3
+          deadline: 3,
         },
         overtimeApproval: {
           required: true,
           approverRole: 'Department Manager',
-          thresholdHours: 2
+          thresholdHours: 2,
         },
         payrollApproval: {
           dualApproval: true,
           firstApprover: 'Payroll Manager',
-          secondApprover: 'Finance Controller'
+          secondApprover: 'Finance Controller',
         },
         leaveApproval: {
           managerApproval: true,
           hrApproval: false,
-          advanceNoticeDays: 7
-        }
-      }
+          advanceNoticeDays: 7,
+        },
+      },
     };
   }
 
   /**
    * Create wage structure based on Greek minimum wage and CBA
    */
-  private async createWageStructure(cbaRequirements?: string): Promise<WageStructureConfiguration> {
+  private async createWageStructure(
+    cbaRequirements?: string
+  ): Promise<WageStructureConfiguration> {
     return {
       baseCurrency: 'EUR',
       minimumWageTables: [
@@ -518,7 +538,7 @@ class ConfigurationService {
               monthlyWage: 880, // 2025 minimum wage
               dailyWage: 29.33,
               hourlyWage: 4.07,
-              description: 'Standard minimum wage'
+              description: 'Standard minimum wage',
             },
             {
               ageMin: 17,
@@ -526,38 +546,38 @@ class ConfigurationService {
               monthlyWage: 748, // Youth wage (15% reduction)
               dailyWage: 24.93,
               hourlyWage: 3.46,
-              description: 'Youth minimum wage'
-            }
+              description: 'Youth minimum wage',
+            },
           ],
           experienceGroups: [
             {
               experienceMin: 0,
               experienceMax: 24,
               multiplier: 1.0,
-              description: 'Entry level'
+              description: 'Entry level',
             },
             {
               experienceMin: 25,
               experienceMax: 60,
               multiplier: 1.05,
-              description: '2-5 years experience'
+              description: '2-5 years experience',
             },
             {
               experienceMin: 61,
               experienceMax: 999,
-              multiplier: 1.10,
-              description: '5+ years experience'
-            }
+              multiplier: 1.1,
+              description: '5+ years experience',
+            },
           ],
           sectorModifiers: [
             {
               sectorCode: 'HOTEL_TOURISM',
               sectorName: 'Hotels & Tourism',
               modifier: 5, // 5% above minimum
-              minimumAmount: 50
-            }
-          ]
-        }
+              minimumAmount: 50,
+            },
+          ],
+        },
       ],
       gradeStructure: [
         {
@@ -565,9 +585,24 @@ class ConfigurationService {
           gradeName: 'Unskilled Worker',
           baseWage: 880,
           experienceIncrements: [
-            { fromYears: 0, toYears: 2, incrementAmount: 0, incrementPercentage: 0 },
-            { fromYears: 3, toYears: 5, incrementAmount: 50, incrementPercentage: 5.7 },
-            { fromYears: 6, toYears: 10, incrementAmount: 100, incrementPercentage: 11.4 }
+            {
+              fromYears: 0,
+              toYears: 2,
+              incrementAmount: 0,
+              incrementPercentage: 0,
+            },
+            {
+              fromYears: 3,
+              toYears: 5,
+              incrementAmount: 50,
+              incrementPercentage: 5.7,
+            },
+            {
+              fromYears: 6,
+              toYears: 10,
+              incrementAmount: 100,
+              incrementPercentage: 11.4,
+            },
           ],
           qualificationBonuses: [
             {
@@ -575,15 +610,23 @@ class ConfigurationService {
               qualificationName: 'Foreign Language',
               bonusAmount: 30,
               bonusPercentage: 3.4,
-              required: false
-            }
+              required: false,
+            },
           ],
           performanceRanges: [
-            { performanceLevel: 'MEETS_EXPECTATIONS', multiplier: 1.0, reviewFrequency: 'ANNUALLY' },
-            { performanceLevel: 'EXCEEDS_EXPECTATIONS', multiplier: 1.05, reviewFrequency: 'ANNUALLY' }
+            {
+              performanceLevel: 'MEETS_EXPECTATIONS',
+              multiplier: 1.0,
+              reviewFrequency: 'ANNUALLY',
+            },
+            {
+              performanceLevel: 'EXCEEDS_EXPECTATIONS',
+              multiplier: 1.05,
+              reviewFrequency: 'ANNUALLY',
+            },
           ],
-          effectiveDate: new Date('2025-01-01')
-        }
+          effectiveDate: new Date('2025-01-01'),
+        },
       ],
       allowanceStructure: [
         {
@@ -597,10 +640,13 @@ class ConfigurationService {
             {
               conditionType: 'WORKING_HOURS',
               conditionValue: '8',
-              conditionAmount: 11
-            }
+              conditionAmount: 11,
+            },
           ],
-          eligibilityCriteria: ['Full-time employees', 'Part-time over 6 hours']
+          eligibilityCriteria: [
+            'Full-time employees',
+            'Part-time over 6 hours',
+          ],
         },
         {
           allowanceCode: 'TRANSPORT_ALLOWANCE',
@@ -610,18 +656,18 @@ class ConfigurationService {
           taxable: false,
           socialSecuritySubject: false,
           conditions: [],
-          eligibilityCriteria: ['All employees']
-        }
+          eligibilityCriteria: ['All employees'],
+        },
       ],
       cbaMapping: {
         cbaId: cbaRequirements || 'HOTEL_TOURISM_CBA_2024',
         cbaName: 'Hotel & Tourism CBA 2024',
         applicableDepartments: ['ALL'],
         overrideRules: [],
-        escalationMatrix: []
+        escalationMatrix: [],
       },
       effectiveDate: new Date('2025-01-01'),
-      reviewFrequency: 'ANNUALLY'
+      reviewFrequency: 'ANNUALLY',
     };
   }
 
@@ -642,15 +688,15 @@ class ConfigurationService {
           { dayType: 'WEEKDAY', applicable: true },
           { dayType: 'SATURDAY', applicable: true },
           { dayType: 'SUNDAY', applicable: false },
-          { dayType: 'HOLIDAY', applicable: false }
+          { dayType: 'HOLIDAY', applicable: false },
         ],
         restrictionRules: [
           {
             restrictionType: 'DAILY_MAX',
             restrictionValue: 10,
-            enforcementLevel: 'APPROVAL_REQUIRED'
-          }
-        ]
+            enforcementLevel: 'APPROVAL_REQUIRED',
+          },
+        ],
       },
       {
         bandId: 'DAILY_OT_50',
@@ -661,15 +707,15 @@ class ConfigurationService {
         compoundingRules: [],
         applicableDays: [
           { dayType: 'WEEKDAY', applicable: true },
-          { dayType: 'SATURDAY', applicable: true }
+          { dayType: 'SATURDAY', applicable: true },
         ],
         restrictionRules: [
           {
             restrictionType: 'DAILY_MAX',
             restrictionValue: 12,
-            enforcementLevel: 'BLOCK'
-          }
-        ]
+            enforcementLevel: 'BLOCK',
+          },
+        ],
       },
       {
         bandId: 'SUNDAY_PREMIUM',
@@ -681,13 +727,11 @@ class ConfigurationService {
           {
             compoundWith: 'DAILY_OT_25',
             compoundingMethod: 'ADDITIVE',
-            priority: 1
-          }
+            priority: 1,
+          },
         ],
-        applicableDays: [
-          { dayType: 'SUNDAY', applicable: true }
-        ],
-        restrictionRules: []
+        applicableDays: [{ dayType: 'SUNDAY', applicable: true }],
+        restrictionRules: [],
       },
       {
         bandId: 'HOLIDAY_PREMIUM',
@@ -696,11 +740,9 @@ class ConfigurationService {
         thresholdHours: 0,
         premiumRate: 100,
         compoundingRules: [],
-        applicableDays: [
-          { dayType: 'HOLIDAY', applicable: true }
-        ],
-        restrictionRules: []
-      }
+        applicableDays: [{ dayType: 'HOLIDAY', applicable: true }],
+        restrictionRules: [],
+      },
     ];
   }
 
@@ -715,7 +757,7 @@ class ConfigurationService {
       minimumHours: 3, // Must work at least 3 hours during night period
       compoundWithOvertime: true,
       weekendModifier: 10, // Additional 10% for weekend nights
-      holidayModifier: 25 // Additional 25% for holiday nights
+      holidayModifier: 25, // Additional 25% for holiday nights
     };
   }
 
@@ -738,7 +780,7 @@ class ConfigurationService {
           role: 'ALL',
           sharePercentage: 100,
           minimumHours: 4,
-          performanceWeight: 0
+          performanceWeight: 0,
         },
         {
           ruleId: 'FB_TIPS',
@@ -747,22 +789,22 @@ class ConfigurationService {
           role: 'ALL',
           sharePercentage: 100,
           minimumHours: 4,
-          performanceWeight: 0
-        }
+          performanceWeight: 0,
+        },
       ],
       taxTreatment: {
         taxable: true,
         socialSecuritySubject: true,
         withholdingRate: 20,
         reportingThreshold: 150, // Monthly threshold
-        declarationMethod: 'AUTOMATIC'
+        declarationMethod: 'AUTOMATIC',
       },
       reportingRequirements: {
         dailyReporting: true,
         managerApproval: true,
         auditTrail: true,
-        erganiIntegration: true
-      }
+        erganiIntegration: true,
+      },
     };
   }
 
@@ -779,7 +821,7 @@ class ConfigurationService {
         recurring: true,
         paidHoliday: true,
         workPremium: 100,
-        compulsoryDay: true
+        compulsoryDay: true,
       },
       {
         holidayId: 'EPIPHANY',
@@ -789,7 +831,7 @@ class ConfigurationService {
         recurring: true,
         paidHoliday: true,
         workPremium: 100,
-        compulsoryDay: false
+        compulsoryDay: false,
       },
       {
         holidayId: 'INDEPENDENCE_DAY',
@@ -799,7 +841,7 @@ class ConfigurationService {
         recurring: true,
         paidHoliday: true,
         workPremium: 100,
-        compulsoryDay: true
+        compulsoryDay: true,
       },
       {
         holidayId: 'LABOR_DAY',
@@ -809,7 +851,7 @@ class ConfigurationService {
         recurring: true,
         paidHoliday: true,
         workPremium: 100,
-        compulsoryDay: true
+        compulsoryDay: true,
       },
       {
         holidayId: 'OHI_DAY',
@@ -819,7 +861,7 @@ class ConfigurationService {
         recurring: true,
         paidHoliday: true,
         workPremium: 100,
-        compulsoryDay: true
+        compulsoryDay: true,
       },
       {
         holidayId: 'CHRISTMAS',
@@ -829,7 +871,7 @@ class ConfigurationService {
         recurring: true,
         paidHoliday: true,
         workPremium: 100,
-        compulsoryDay: true
+        compulsoryDay: true,
       },
       {
         holidayId: 'BOXING_DAY',
@@ -839,8 +881,8 @@ class ConfigurationService {
         recurring: true,
         paidHoliday: true,
         workPremium: 100,
-        compulsoryDay: false
-      }
+        compulsoryDay: false,
+      },
     ];
   }
 
@@ -858,9 +900,19 @@ class ConfigurationService {
         mandatory: true,
         maxContinuousWork: 6,
         breakWindows: [
-          { startHour: 10, endHour: 11, description: 'Morning Break', priority: 1 },
-          { startHour: 14, endHour: 16, description: 'Afternoon Break', priority: 2 }
-        ]
+          {
+            startHour: 10,
+            endHour: 11,
+            description: 'Morning Break',
+            priority: 1,
+          },
+          {
+            startHour: 14,
+            endHour: 16,
+            description: 'Afternoon Break',
+            priority: 2,
+          },
+        ],
       },
       {
         ruleId: 'LUNCH_BREAK_8H',
@@ -871,10 +923,20 @@ class ConfigurationService {
         mandatory: true,
         maxContinuousWork: 6,
         breakWindows: [
-          { startHour: 12, endHour: 14, description: 'Lunch Break', priority: 1 },
-          { startHour: 14, endHour: 16, description: 'Late Lunch', priority: 2 }
-        ]
-      }
+          {
+            startHour: 12,
+            endHour: 14,
+            description: 'Lunch Break',
+            priority: 1,
+          },
+          {
+            startHour: 14,
+            endHour: 16,
+            description: 'Late Lunch',
+            priority: 2,
+          },
+        ],
+      },
     ];
   }
 
@@ -889,24 +951,24 @@ class ConfigurationService {
         category: 'ANNUAL',
         entitlementRules: [
           { serviceYears: 1, entitlementDays: 20, proRataRules: true },
-          { serviceYears: 10, entitlementDays: 25, proRataRules: true }
+          { serviceYears: 10, entitlementDays: 25, proRataRules: true },
         ],
         accrualRules: {
           accrualFrequency: 'MONTHLY',
           accrualRate: 1.67, // 20 days / 12 months
           maxAccrual: 40,
-          accrualStart: 'HIRE_DATE'
+          accrualStart: 'HIRE_DATE',
         },
         carryOverRules: {
           maxCarryOver: 10,
           carryOverExpiry: 6,
-          useItOrLoseIt: true
+          useItOrLoseIt: true,
         },
         compensationRules: {
           paymentPercentage: 100,
           baseSalaryOnly: false,
           includeAllowances: true,
-          averagingPeriod: 3
+          averagingPeriod: 3,
         },
         approvalRequired: true,
         advanceNotice: 7,
@@ -915,66 +977,66 @@ class ConfigurationService {
             startDate: '12-20',
             endDate: '01-10',
             description: 'Holiday Season Blackout',
-            exception: ['MANAGER']
-          }
-        ]
+            exception: ['MANAGER'],
+          },
+        ],
       },
       {
         leaveTypeId: 'SICK_LEAVE',
         leaveTypeName: 'Sick Leave',
         category: 'SICK',
         entitlementRules: [
-          { serviceYears: 0, entitlementDays: 15, proRataRules: false }
+          { serviceYears: 0, entitlementDays: 15, proRataRules: false },
         ],
         accrualRules: {
           accrualFrequency: 'ANNUALLY',
           accrualRate: 15,
           maxAccrual: 30,
-          accrualStart: 'CALENDAR_YEAR'
+          accrualStart: 'CALENDAR_YEAR',
         },
         carryOverRules: {
           maxCarryOver: 15,
           carryOverExpiry: 12,
-          useItOrLoseIt: false
+          useItOrLoseIt: false,
         },
         compensationRules: {
           paymentPercentage: 100,
           baseSalaryOnly: true,
           includeAllowances: false,
-          averagingPeriod: 1
+          averagingPeriod: 1,
         },
         approvalRequired: false,
         advanceNotice: 0,
-        blackoutPeriods: []
+        blackoutPeriods: [],
       },
       {
         leaveTypeId: 'MATERNITY_LEAVE',
         leaveTypeName: 'Maternity Leave',
         category: 'MATERNITY',
         entitlementRules: [
-          { serviceYears: 0, entitlementDays: 119, proRataRules: false }
+          { serviceYears: 0, entitlementDays: 119, proRataRules: false },
         ],
         accrualRules: {
           accrualFrequency: 'ANNUALLY',
           accrualRate: 119,
           maxAccrual: 119,
-          accrualStart: 'ANNIVERSARY'
+          accrualStart: 'ANNIVERSARY',
         },
         carryOverRules: {
           maxCarryOver: 0,
           carryOverExpiry: 0,
-          useItOrLoseIt: false
+          useItOrLoseIt: false,
         },
         compensationRules: {
           paymentPercentage: 100,
           baseSalaryOnly: false,
           includeAllowances: true,
-          averagingPeriod: 6
+          averagingPeriod: 6,
         },
         approvalRequired: true,
         advanceNotice: 30,
-        blackoutPeriods: []
-      }
+        blackoutPeriods: [],
+      },
     ];
   }
 
@@ -992,7 +1054,7 @@ class ConfigurationService {
         errorMessage: 'AFM must be exactly 9 digits and not all zeros',
         severity: 'ERROR',
         bypassable: false,
-        bypassRoles: []
+        bypassRoles: [],
       },
       {
         ruleId: 'AMKA_VALIDATION',
@@ -1003,7 +1065,7 @@ class ConfigurationService {
         errorMessage: 'AMKA must be exactly 11 digits and not all zeros',
         severity: 'ERROR',
         bypassable: false,
-        bypassRoles: []
+        bypassRoles: [],
       },
       {
         ruleId: 'DAILY_HOURS_LIMIT',
@@ -1012,10 +1074,11 @@ class ConfigurationService {
         applicableEntity: 'TIMESHEET',
         validationLogic: 'totalHours <= 12',
         errorMessage: 'Daily working hours cannot exceed 12 hours',
-        warningMessage: 'Daily working hours exceed 10 hours - overtime approval required',
+        warningMessage:
+          'Daily working hours exceed 10 hours - overtime approval required',
         severity: 'WARNING',
         bypassable: true,
-        bypassRoles: ['MANAGER', 'HR_ADMIN']
+        bypassRoles: ['MANAGER', 'HR_ADMIN'],
       },
       {
         ruleId: 'ERGANI_DEADLINE',
@@ -1026,15 +1089,17 @@ class ConfigurationService {
         errorMessage: 'ERGANI submission is past the legal deadline',
         severity: 'CRITICAL',
         bypassable: false,
-        bypassRoles: []
-      }
+        bypassRoles: [],
+      },
     ];
   }
 
   /**
    * Validate configuration completeness
    */
-  async validateConfiguration(config: SystemConfiguration): Promise<{ isValid: boolean; errors: string[] }> {
+  async validateConfiguration(
+    config: SystemConfiguration
+  ): Promise<{ isValid: boolean; errors: string[] }> {
     const errors: string[] = [];
 
     // Validate wage structure
@@ -1050,8 +1115,10 @@ class ConfigurationService {
     // Validate holiday calendar
     const requiredHolidays = ['NEW_YEAR', 'LABOR_DAY', 'CHRISTMAS'];
     const configuredHolidays = config.holidayCalendar.map(h => h.holidayId);
-    const missingHolidays = requiredHolidays.filter(h => !configuredHolidays.includes(h));
-    
+    const missingHolidays = requiredHolidays.filter(
+      h => !configuredHolidays.includes(h)
+    );
+
     if (missingHolidays.length > 0) {
       errors.push(`Missing required holidays: ${missingHolidays.join(', ')}`);
     }
@@ -1059,15 +1126,19 @@ class ConfigurationService {
     // Validate leave types
     const requiredLeaveTypes = ['ANNUAL_LEAVE', 'SICK_LEAVE'];
     const configuredLeaveTypes = config.leaveTypes.map(l => l.leaveTypeId);
-    const missingLeaveTypes = requiredLeaveTypes.filter(l => !configuredLeaveTypes.includes(l));
-    
+    const missingLeaveTypes = requiredLeaveTypes.filter(
+      l => !configuredLeaveTypes.includes(l)
+    );
+
     if (missingLeaveTypes.length > 0) {
-      errors.push(`Missing required leave types: ${missingLeaveTypes.join(', ')}`);
+      errors.push(
+        `Missing required leave types: ${missingLeaveTypes.join(', ')}`
+      );
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -1079,16 +1150,22 @@ class ConfigurationService {
       // Validate configuration first
       const validation = await this.validateConfiguration(config);
       if (!validation.isValid) {
-        throw new Error(`Configuration validation failed: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Configuration validation failed: ${validation.errors.join(', ')}`
+        );
       }
 
       // Apply configuration changes
-      console.log(`Applying configuration ${config.configId} to property ${config.propertyCode}`);
-      
+      console.log(
+        `Applying configuration ${config.configId} to property ${config.propertyCode}`
+      );
+
       // In production, this would update the actual system configuration
       config.status = 'ACTIVE';
-      
-      console.log(`Configuration applied successfully for property ${config.propertyCode}`);
+
+      console.log(
+        `Configuration applied successfully for property ${config.propertyCode}`
+      );
       return true;
     } catch (error) {
       console.error('Error applying configuration:', error);

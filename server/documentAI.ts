@@ -1,6 +1,6 @@
-import { Storage } from "@google-cloud/storage";
-import { DocumentProcessorServiceClient } from "@google-cloud/documentai";
-import { randomUUID } from "crypto";
+import { Storage } from '@google-cloud/storage';
+import { DocumentProcessorServiceClient } from '@google-cloud/documentai';
+import { randomUUID } from 'crypto';
 
 interface OCRResult {
   id: string;
@@ -60,7 +60,7 @@ export class DocumentAI {
     documentType: 'contract' | 'id_card' | 'passport' | 'other'
   ): Promise<OCRResult> {
     const processId = randomUUID();
-    
+
     try {
       // Construct the processor name
       const name = `projects/${this.projectId}/locations/eu/processors/${this.processorId}`;
@@ -84,8 +84,11 @@ export class DocumentAI {
 
       // Extract text and structured data based on document type
       const extractedText = document.text || '';
-      const structuredData = await this.extractStructuredData(document, documentType);
-      
+      const structuredData = await this.extractStructuredData(
+        document,
+        documentType
+      );
+
       // Calculate confidence score
       const confidence = this.calculateConfidence(document);
 
@@ -96,9 +99,8 @@ export class DocumentAI {
         structuredData,
         confidence,
         processedAt: new Date(),
-        status: 'processed'
+        status: 'processed',
       };
-
     } catch (error) {
       console.error('Document AI processing error:', error);
       return {
@@ -109,7 +111,7 @@ export class DocumentAI {
         confidence: 0,
         processedAt: new Date(),
         status: 'error',
-        errors: [error instanceof Error ? error.message : 'Unknown error']
+        errors: [error instanceof Error ? error.message : 'Unknown error'],
       };
     }
   }
@@ -117,9 +119,12 @@ export class DocumentAI {
   /**
    * Extract structured data based on document type
    */
-  private async extractStructuredData(document: any, documentType: string): Promise<Record<string, any>> {
+  private async extractStructuredData(
+    document: any,
+    documentType: string
+  ): Promise<Record<string, any>> {
     const entities = document.entities || [];
-    
+
     switch (documentType) {
       case 'contract':
         return this.extractContractData(document, entities);
@@ -139,15 +144,18 @@ export class DocumentAI {
 
     // Use regex patterns to extract Greek employment contract data
     const patterns = {
-      employeeName: /(?:Εργαζόμενος|Υπάλληλος|Όνομα)[\s:]+([Α-ΩΆ-Ώα-ωάέήίόύώ\s]+)/i,
+      employeeName:
+        /(?:Εργαζόμενος|Υπάλληλος|Όνομα)[\s:]+([Α-ΩΆ-Ώα-ωάέήίόύώ\s]+)/i,
       afm: /(?:ΑΦΜ|Α\.Φ\.Μ\.)[\s:]+(\d{9})/i,
       amka: /(?:ΑΜΚΑ|Α\.Μ\.Κ\.Α\.)[\s:]+(\d{11})/i,
-      contractType: /(?:Τύπος|Είδος)[\s:]+(?:σύμβασης|συμβολαίου)[\s:]+([Α-ΩΆ-Ώα-ωάέήίόύώ\s]+)/i,
-      startDate: /(?:Ημερομηνία|Έναρξη)[\s:]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i,
+      contractType:
+        /(?:Τύπος|Είδος)[\s:]+(?:σύμβασης|συμβολαίου)[\s:]+([Α-ΩΆ-Ώα-ωάέήίόύώ\s]+)/i,
+      startDate:
+        /(?:Ημερομηνία|Έναρξη)[\s:]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i,
       baseSalary: /(?:Μισθός|Αμοιβή)[\s:]+€?(\d+(?:[,\.]\d{2})?)/i,
       department: /(?:Τμήμα|Κλάδος)[\s:]+([Α-ΩΆ-Ώα-ωάέήίόύώ\s]+)/i,
       position: /(?:Θέση|Ειδικότητα)[\s:]+([Α-ΩΆ-Ώα-ωάέήίόύώ\s]+)/i,
-      workingHours: /(?:Ώρες|Ωράριο)[\s:]+εργασίας[\s:]+([0-9\-\s:]+)/i
+      workingHours: /(?:Ώρες|Ωράριο)[\s:]+εργασίας[\s:]+([0-9\-\s:]+)/i,
     };
 
     // Extract data using patterns
@@ -165,12 +173,13 @@ export class DocumentAI {
     }
 
     // Extract benefits from entities
-    const benefitEntities = entities.filter(e => 
-      e.type === 'BENEFIT' || 
-      e.mentionText?.toLowerCase().includes('παροχή') ||
-      e.mentionText?.toLowerCase().includes('επίδομα')
+    const benefitEntities = entities.filter(
+      e =>
+        e.type === 'BENEFIT' ||
+        e.mentionText?.toLowerCase().includes('παροχή') ||
+        e.mentionText?.toLowerCase().includes('επίδομα')
     );
-    
+
     if (benefitEntities.length > 0) {
       contractData.benefits = benefitEntities.map(e => e.mentionText);
     }
@@ -194,7 +203,7 @@ export class DocumentAI {
       idNumber: /(?:ΑΡΙΘΜΟΣ|Αρ\.)[\s:]+([Α-Ω]{2}\d+)/i,
       issueDate: /(?:ΕΚΔΟΣΗ|Έκδ\.)[\s:]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i,
       expiryDate: /(?:ΛΗΞΗ|Λήξη)[\s:]+(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})/i,
-      nationality: /(?:ΕΘΝΙΚΟΤΗΤΑ|Εθνικ\.)[\s:]+([Α-ΩΆ-Ώα-ωάέήίόύώ]+)/i
+      nationality: /(?:ΕΘΝΙΚΟΤΗΤΑ|Εθνικ\.)[\s:]+([Α-ΩΆ-Ώα-ωάέήίόύώ]+)/i,
     };
 
     // Extract data using patterns
@@ -209,7 +218,7 @@ export class DocumentAI {
     entities.forEach(entity => {
       const type = entity.type?.toLowerCase();
       const text = entity.mentionText;
-      
+
       if (type === 'person' && !idData.fullName) {
         idData.fullName = text;
       } else if (type === 'date' && text.match(/\d{4}/)) {
@@ -227,11 +236,11 @@ export class DocumentAI {
    */
   private extractGenericData(entities: any[]): Record<string, any> {
     const data: Record<string, any> = {};
-    
+
     entities.forEach(entity => {
       const type = entity.type;
       const text = entity.mentionText;
-      
+
       if (!data[type]) {
         data[type] = [];
       }
@@ -278,7 +287,10 @@ export class DocumentAI {
   /**
    * Validate extracted Greek identification data
    */
-  validateGreekData(data: IDCardData | ContractData): { valid: boolean; errors: string[] } {
+  validateGreekData(data: IDCardData | ContractData): {
+    valid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     // Validate AFM (9 digits)
@@ -300,7 +312,13 @@ export class DocumentAI {
     }
 
     // Validate dates
-    const dateFields = ['startDate', 'endDate', 'birthDate', 'issueDate', 'expiryDate'];
+    const dateFields = [
+      'startDate',
+      'endDate',
+      'birthDate',
+      'issueDate',
+      'expiryDate',
+    ];
     dateFields.forEach(field => {
       if (field in data && (data as any)[field]) {
         const dateStr = (data as any)[field];
@@ -326,7 +344,7 @@ export class DocumentAI {
 
     const remainder = sum % 11;
     const checkDigit = remainder < 10 ? remainder : 0;
-    
+
     return checkDigit === parseInt(afm[8]);
   }
 
@@ -348,7 +366,7 @@ export class DocumentAI {
     // Checksum validation
     let sum = 0;
     const weights = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    
+
     for (let i = 0; i < 10; i++) {
       sum += parseInt(amka[i]) * weights[i];
     }
@@ -364,7 +382,7 @@ export class DocumentAI {
     // Support DD/MM/YYYY, DD-MM-YYYY formats
     const datePattern = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/;
     const match = dateStr.match(datePattern);
-    
+
     if (!match) return false;
 
     const day = parseInt(match[1]);
@@ -373,52 +391,81 @@ export class DocumentAI {
 
     // Create date object and validate
     const date = new Date(year, month - 1, day);
-    return date.getFullYear() === year && 
-           date.getMonth() === month - 1 && 
-           date.getDate() === day;
+    return (
+      date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day
+    );
   }
 
   /**
    * Auto-categorize document based on content
    */
-  async categorizeDocument(text: string): Promise<'contract' | 'id_card' | 'passport' | 'other'> {
+  async categorizeDocument(
+    text: string
+  ): Promise<'contract' | 'id_card' | 'passport' | 'other'> {
     const lowerText = text.toLowerCase();
 
     // Greek contract indicators
     const contractKeywords = [
-      'σύμβαση', 'συμβόλαιο', 'εργασία', 'μισθωτή', 'εργαζόμενος',
-      'εργοδότης', 'αμοιβή', 'μισθός', 'υπάλληλος', 'θέση εργασίας'
+      'σύμβαση',
+      'συμβόλαιο',
+      'εργασία',
+      'μισθωτή',
+      'εργαζόμενος',
+      'εργοδότης',
+      'αμοιβή',
+      'μισθός',
+      'υπάλληλος',
+      'θέση εργασίας',
     ];
 
     // Greek ID card indicators
     const idKeywords = [
-      'ταυτότητα', 'δελτίο', 'αστυνομική', 'ονοματεπώνυμο',
-      'γέννηση', 'πατρώνυμο', 'εθνικότητα', 'έκδοση', 'λήξη'
+      'ταυτότητα',
+      'δελτίο',
+      'αστυνομική',
+      'ονοματεπώνυμο',
+      'γέννηση',
+      'πατρώνυμο',
+      'εθνικότητα',
+      'έκδοση',
+      'λήξη',
     ];
 
     // Passport indicators
     const passportKeywords = [
-      'διαβατήριο', 'passport', 'υπουργείο', 'εξωτερικών',
-      'ελληνική δημοκρατία', 'hellenic republic'
+      'διαβατήριο',
+      'passport',
+      'υπουργείο',
+      'εξωτερικών',
+      'ελληνική δημοκρατία',
+      'hellenic republic',
     ];
 
-    const contractScore = contractKeywords.reduce((score, keyword) => 
-      lowerText.includes(keyword) ? score + 1 : score, 0);
-    
-    const idScore = idKeywords.reduce((score, keyword) => 
-      lowerText.includes(keyword) ? score + 1 : score, 0);
-    
-    const passportScore = passportKeywords.reduce((score, keyword) => 
-      lowerText.includes(keyword) ? score + 1 : score, 0);
+    const contractScore = contractKeywords.reduce(
+      (score, keyword) => (lowerText.includes(keyword) ? score + 1 : score),
+      0
+    );
+
+    const idScore = idKeywords.reduce(
+      (score, keyword) => (lowerText.includes(keyword) ? score + 1 : score),
+      0
+    );
+
+    const passportScore = passportKeywords.reduce(
+      (score, keyword) => (lowerText.includes(keyword) ? score + 1 : score),
+      0
+    );
 
     const maxScore = Math.max(contractScore, idScore, passportScore);
-    
+
     if (maxScore === 0) return 'other';
-    
+
     if (contractScore === maxScore) return 'contract';
     if (idScore === maxScore) return 'id_card';
     if (passportScore === maxScore) return 'passport';
-    
+
     return 'other';
   }
 
@@ -429,23 +476,32 @@ export class DocumentAI {
     documents: Array<{ buffer: Buffer; mimeType: string; name: string }>
   ): Promise<OCRResult[]> {
     const results: OCRResult[] = [];
-    
+
     for (const doc of documents) {
       try {
         // Auto-categorize document
-        const tempResult = await this.processDocument(doc.buffer, doc.mimeType, 'other');
-        const category = await this.categorizeDocument(tempResult.extractedText);
-        
+        const tempResult = await this.processDocument(
+          doc.buffer,
+          doc.mimeType,
+          'other'
+        );
+        const category = await this.categorizeDocument(
+          tempResult.extractedText
+        );
+
         // Re-process with correct category
-        const finalResult = await this.processDocument(doc.buffer, doc.mimeType, category);
+        const finalResult = await this.processDocument(
+          doc.buffer,
+          doc.mimeType,
+          category
+        );
         results.push({
           ...finalResult,
-          id: `${finalResult.id}_${doc.name}`
+          id: `${finalResult.id}_${doc.name}`,
         });
-        
+
         // Add small delay to avoid API rate limits
         await new Promise(resolve => setTimeout(resolve, 100));
-        
       } catch (error) {
         console.error(`Error processing document ${doc.name}:`, error);
         results.push({
@@ -456,11 +512,11 @@ export class DocumentAI {
           confidence: 0,
           processedAt: new Date(),
           status: 'error',
-          errors: [error instanceof Error ? error.message : 'Unknown error']
+          errors: [error instanceof Error ? error.message : 'Unknown error'],
         });
       }
     }
-    
+
     return results;
   }
 }

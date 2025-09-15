@@ -1,6 +1,6 @@
-import { randomUUID } from "crypto";
-import { createHash } from "crypto";
-import nodemailer from "nodemailer";
+import { randomUUID } from 'crypto';
+import { createHash } from 'crypto';
+import nodemailer from 'nodemailer';
 
 interface SignatureRequest {
   id: string;
@@ -8,7 +8,13 @@ interface SignatureRequest {
   documentName: string;
   documentUrl: string;
   signers: Signer[];
-  status: 'draft' | 'sent' | 'in_progress' | 'completed' | 'declined' | 'expired';
+  status:
+    | 'draft'
+    | 'sent'
+    | 'in_progress'
+    | 'completed'
+    | 'declined'
+    | 'expired';
   createdAt: Date;
   updatedAt: Date;
   completedAt?: Date;
@@ -37,7 +43,14 @@ interface SignatureEvent {
   id: string;
   requestId: string;
   signerId: string;
-  type: 'created' | 'sent' | 'viewed' | 'signed' | 'declined' | 'reminded' | 'expired';
+  type:
+    | 'created'
+    | 'sent'
+    | 'viewed'
+    | 'signed'
+    | 'declined'
+    | 'reminded'
+    | 'expired';
   timestamp: Date;
   ipAddress?: string;
   userAgent?: string;
@@ -51,7 +64,12 @@ interface GreekLegalCompliance {
     afm: string;
     idNumber: string;
   };
-  contractType: 'indefinite' | 'fixed_term' | 'project_based' | 'part_time' | 'seasonal';
+  contractType:
+    | 'indefinite'
+    | 'fixed_term'
+    | 'project_based'
+    | 'part_time'
+    | 'seasonal';
   erganiNotificationRequired: boolean;
   collectiveBargainingAgreement?: string;
   minimumWageCompliance: boolean;
@@ -215,7 +233,7 @@ export class ESignatureService {
 
     // Check if all signers have signed
     const allSigned = request.signers.every(s => s.status === 'signed');
-    
+
     let nextSigner: Signer | undefined;
     let completed = false;
 
@@ -235,7 +253,6 @@ export class ESignatureService {
       if (request.metadata?.legalCompliance?.erganiNotificationRequired) {
         await this.triggerErganiNotification(request);
       }
-
     } else {
       // Find next signer in sequence
       const isSequential = request.metadata?.signingOrder === 'sequential';
@@ -310,7 +327,7 @@ export class ESignatureService {
     }
 
     const pendingSigners = request.signers.filter(s => s.status === 'pending');
-    
+
     for (const signer of pendingSigners) {
       await this.sendReminderEmail(request, signer);
       await this.logEvent(requestId, signer.id, 'reminded');
@@ -342,15 +359,18 @@ export class ESignatureService {
     request: SignatureRequest,
     signer: Signer
   ): Promise<void> {
-    const compliance = request.metadata?.legalCompliance as GreekLegalCompliance;
+    const compliance = request.metadata
+      ?.legalCompliance as GreekLegalCompliance;
     if (!compliance) return;
 
     // Check if witness signature is required and provided
     if (compliance.requiresWitness && signer.role === 'witness') {
       if (!compliance.witnessDetails) {
-        throw new Error('Witness details required for Greek employment contracts');
+        throw new Error(
+          'Witness details required for Greek employment contracts'
+        );
       }
-      
+
       // Validate witness AFM
       if (!this.validateAFM(compliance.witnessDetails.afm)) {
         throw new Error('Invalid witness AFM');
@@ -373,7 +393,9 @@ export class ESignatureService {
   /**
    * Generate completion certificate with Greek legal compliance
    */
-  private async generateCompletionCertificate(request: SignatureRequest): Promise<void> {
+  private async generateCompletionCertificate(
+    request: SignatureRequest
+  ): Promise<void> {
     const certificate = {
       requestId: request.id,
       documentName: request.documentName,
@@ -424,16 +446,19 @@ export class ESignatureService {
 
     const remainder = sum % 11;
     const checkDigit = remainder < 10 ? remainder : 0;
-    
+
     return checkDigit === parseInt(afm[8]);
   }
 
   /**
    * Send signing email to signer
    */
-  private async sendSigningEmail(request: SignatureRequest, signer: Signer): Promise<void> {
+  private async sendSigningEmail(
+    request: SignatureRequest,
+    signer: Signer
+  ): Promise<void> {
     const signingUrl = `${process.env.BASE_URL}/sign/${request.id}/${signer.id}`;
-    
+
     const emailContent = {
       from: process.env.FROM_EMAIL || 'noreply@payrollsync.gr',
       to: signer.email,
@@ -477,9 +502,12 @@ export class ESignatureService {
   /**
    * Send reminder email
    */
-  private async sendReminderEmail(request: SignatureRequest, signer: Signer): Promise<void> {
+  private async sendReminderEmail(
+    request: SignatureRequest,
+    signer: Signer
+  ): Promise<void> {
     const signingUrl = `${process.env.BASE_URL}/sign/${request.id}/${signer.id}`;
-    
+
     const emailContent = {
       from: process.env.FROM_EMAIL || 'noreply@payrollsync.gr',
       to: signer.email,
@@ -511,7 +539,7 @@ export class ESignatureService {
    */
   private async notifyCompletion(request: SignatureRequest): Promise<void> {
     const allEmails = request.signers.map(s => s.email);
-    
+
     const emailContent = {
       from: process.env.FROM_EMAIL || 'noreply@payrollsync.gr',
       to: allEmails.join(', '),
@@ -523,9 +551,12 @@ export class ESignatureService {
         
         <p><strong>Signing Details:</strong></p>
         <ul>
-          ${request.signers.map(s => 
-            `<li>${s.name} (${s.role}) - Signed on ${s.signedAt?.toLocaleDateString('el-GR')}</li>`
-          ).join('')}
+          ${request.signers
+            .map(
+              s =>
+                `<li>${s.name} (${s.role}) - Signed on ${s.signedAt?.toLocaleDateString('el-GR')}</li>`
+            )
+            .join('')}
         </ul>
         
         <p>A completion certificate has been generated for legal compliance.</p>
@@ -541,11 +572,15 @@ export class ESignatureService {
   /**
    * Notify decline to relevant parties
    */
-  private async notifyDecline(request: SignatureRequest, decliner: Signer, reason: string): Promise<void> {
+  private async notifyDecline(
+    request: SignatureRequest,
+    decliner: Signer,
+    reason: string
+  ): Promise<void> {
     const otherEmails = request.signers
       .filter(s => s.id !== decliner.id)
       .map(s => s.email);
-    
+
     if (otherEmails.length === 0) return;
 
     const emailContent = {
@@ -572,10 +607,15 @@ export class ESignatureService {
   /**
    * Trigger ERGANI notification for employment contracts
    */
-  private async triggerErganiNotification(request: SignatureRequest): Promise<void> {
+  private async triggerErganiNotification(
+    request: SignatureRequest
+  ): Promise<void> {
     // This would integrate with the ERGANI compliance system
-    console.log('ERGANI notification triggered for signed contract:', request.documentName);
-    
+    console.log(
+      'ERGANI notification triggered for signed contract:',
+      request.documentName
+    );
+
     // Extract employee data from signed contract
     const employee = request.signers.find(s => s.role === 'employee');
     if (employee) {
@@ -619,8 +659,9 @@ export class ESignatureService {
    */
   getExpiredRequests(): SignatureRequest[] {
     const now = new Date();
-    return Array.from(this.requests.values()).filter(r => 
-      r.expiresAt < now && r.status !== 'completed' && r.status !== 'declined'
+    return Array.from(this.requests.values()).filter(
+      r =>
+        r.expiresAt < now && r.status !== 'completed' && r.status !== 'declined'
     );
   }
 
@@ -629,13 +670,15 @@ export class ESignatureService {
    */
   async cleanupExpiredRequests(): Promise<void> {
     const expiredRequests = this.getExpiredRequests();
-    
+
     for (const request of expiredRequests) {
       request.status = 'expired';
       request.updatedAt = new Date();
-      
+
       // Notify signers of expiration
-      const pendingSigners = request.signers.filter(s => s.status === 'pending');
+      const pendingSigners = request.signers.filter(
+        s => s.status === 'pending'
+      );
       for (const signer of pendingSigners) {
         await this.logEvent(request.id, signer.id, 'expired');
       }

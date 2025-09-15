@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { nanoid } from 'nanoid';
 
 /**
  * Pilot Service for PayrollSync Implementation
@@ -16,7 +16,13 @@ export interface PilotPlan {
   resources: PilotResources;
   riskMitigation: RiskMitigationPlan;
   createdDate: Date;
-  status: 'PLANNED' | 'PREPARING' | 'RUNNING' | 'EVALUATING' | 'COMPLETED' | 'ABORTED';
+  status:
+    | 'PLANNED'
+    | 'PREPARING'
+    | 'RUNNING'
+    | 'EVALUATING'
+    | 'COMPLETED'
+    | 'ABORTED';
 }
 
 export interface PilotScope {
@@ -33,7 +39,12 @@ export interface PilotScope {
 export interface BusinessProcess {
   processId: string;
   processName: string;
-  processType: 'PAYROLL_RUN' | 'TIME_CAPTURE' | 'GOVERNMENT_FILING' | 'EMPLOYEE_ONBOARDING' | 'LEAVE_MANAGEMENT';
+  processType:
+    | 'PAYROLL_RUN'
+    | 'TIME_CAPTURE'
+    | 'GOVERNMENT_FILING'
+    | 'EMPLOYEE_ONBOARDING'
+    | 'LEAVE_MANAGEMENT';
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   complexity: 'LOW' | 'MEDIUM' | 'HIGH';
   stakeholders: string[];
@@ -53,7 +64,12 @@ export interface TestScenario {
   scenarioId: string;
   scenarioName: string;
   description: string;
-  category: 'FUNCTIONAL' | 'INTEGRATION' | 'PERFORMANCE' | 'USER_ACCEPTANCE' | 'COMPLIANCE';
+  category:
+    | 'FUNCTIONAL'
+    | 'INTEGRATION'
+    | 'PERFORMANCE'
+    | 'USER_ACCEPTANCE'
+    | 'COMPLIANCE';
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   prerequisites: string[];
   testSteps: TestStep[];
@@ -116,7 +132,12 @@ export interface ParallelRunConfig {
 export interface ComparisonPoint {
   pointId: string;
   pointName: string;
-  dataType: 'PAYROLL_CALCULATION' | 'TAX_WITHHOLDING' | 'SOCIAL_SECURITY' | 'NET_PAY' | 'FILING_DATA';
+  dataType:
+    | 'PAYROLL_CALCULATION'
+    | 'TAX_WITHHOLDING'
+    | 'SOCIAL_SECURITY'
+    | 'NET_PAY'
+    | 'FILING_DATA';
   comparisonMethod: 'EXACT_MATCH' | 'WITHIN_TOLERANCE' | 'BUSINESS_RULE';
   importance: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   validationQuery: string;
@@ -142,7 +163,12 @@ export interface EscalationRule {
 export interface SignOffCriteria {
   criteriaId: string;
   criteriaName: string;
-  criteriaType: 'FUNCTIONAL' | 'PERFORMANCE' | 'COMPLIANCE' | 'USER_ACCEPTANCE' | 'DATA_QUALITY';
+  criteriaType:
+    | 'FUNCTIONAL'
+    | 'PERFORMANCE'
+    | 'COMPLIANCE'
+    | 'USER_ACCEPTANCE'
+    | 'DATA_QUALITY';
   measurableTarget: string;
   actualValue?: string;
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'MET' | 'NOT_MET';
@@ -231,7 +257,12 @@ export interface InfrastructureRequirement {
 
 export interface BudgetAllocation {
   allocationId: string;
-  category: 'PERSONNEL' | 'TRAINING' | 'INFRASTRUCTURE' | 'EXTERNAL_SERVICES' | 'CONTINGENCY';
+  category:
+    | 'PERSONNEL'
+    | 'TRAINING'
+    | 'INFRASTRUCTURE'
+    | 'EXTERNAL_SERVICES'
+    | 'CONTINGENCY';
   amount: number;
   currency: 'EUR';
   responsible: string;
@@ -248,7 +279,12 @@ export interface RiskMitigationPlan {
 export interface PilotRisk {
   riskId: string;
   riskName: string;
-  riskCategory: 'TECHNICAL' | 'BUSINESS' | 'OPERATIONAL' | 'REGULATORY' | 'RESOURCE';
+  riskCategory:
+    | 'TECHNICAL'
+    | 'BUSINESS'
+    | 'OPERATIONAL'
+    | 'REGULATORY'
+    | 'RESOURCE';
   probability: 'LOW' | 'MEDIUM' | 'HIGH';
   impact: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   riskScore: number;
@@ -309,7 +345,11 @@ export interface AlertThreshold {
 export interface ReportingSchedule {
   reportId: string;
   reportName: string;
-  reportType: 'DAILY_STATUS' | 'WEEKLY_SUMMARY' | 'MILESTONE_REPORT' | 'ISSUE_REPORT';
+  reportType:
+    | 'DAILY_STATUS'
+    | 'WEEKLY_SUMMARY'
+    | 'MILESTONE_REPORT'
+    | 'ISSUE_REPORT';
   frequency: 'DAILY' | 'WEEKLY' | 'BI_WEEKLY' | 'MILESTONE';
   recipients: string[];
   deliveryMethod: 'EMAIL' | 'DASHBOARD' | 'MEETING';
@@ -354,7 +394,11 @@ export interface ParallelRunResult {
   comparisonResults: ComparisonResult[];
   overallMatch: number; // percentage
   significantDifferences: Difference[];
-  status: 'MATCH' | 'WITHIN_TOLERANCE' | 'SIGNIFICANT_DIFFERENCE' | 'MAJOR_VARIANCE';
+  status:
+    | 'MATCH'
+    | 'WITHIN_TOLERANCE'
+    | 'SIGNIFICANT_DIFFERENCE'
+    | 'MAJOR_VARIANCE';
 }
 
 export interface ComparisonResult {
@@ -388,7 +432,11 @@ export interface LessonsLearned {
 
 export interface Recommendation {
   recommendationId: string;
-  recommendationType: 'PROCESS_IMPROVEMENT' | 'TRAINING_ENHANCEMENT' | 'SYSTEM_MODIFICATION' | 'ROLLOUT_ADJUSTMENT';
+  recommendationType:
+    | 'PROCESS_IMPROVEMENT'
+    | 'TRAINING_ENHANCEMENT'
+    | 'SYSTEM_MODIFICATION'
+    | 'ROLLOUT_ADJUSTMENT';
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   description: string;
   benefitExpected: string;
@@ -398,7 +446,6 @@ export interface Recommendation {
 }
 
 class PilotService {
-
   /**
    * Create comprehensive pilot plan
    */
@@ -407,27 +454,27 @@ class PilotService {
     scopeDefinition: any
   ): Promise<PilotPlan> {
     const pilotId = nanoid();
-    
+
     console.log(`Creating pilot plan for property ${propertyCode}`);
-    
+
     // Define pilot scope
     const pilotScope = this.definePilotScope(scopeDefinition);
-    
+
     // Create test scenarios
     const testScenarios = this.createTestScenarios(pilotScope);
-    
+
     // Configure parallel run
     const parallelRunConfig = this.createParallelRunConfig();
-    
+
     // Define sign-off criteria
     const signOffCriteria = this.createSignOffCriteria();
-    
+
     // Create timeline
     const timeline = this.createPilotTimeline();
-    
+
     // Allocate resources
     const resources = this.allocatePilotResources();
-    
+
     // Create risk mitigation plan
     const riskMitigation = this.createRiskMitigationPlan();
 
@@ -442,10 +489,12 @@ class PilotService {
       resources,
       riskMitigation,
       createdDate: new Date(),
-      status: 'PLANNED'
+      status: 'PLANNED',
     };
 
-    console.log(`Pilot plan created with ${testScenarios.length} test scenarios`);
+    console.log(
+      `Pilot plan created with ${testScenarios.length} test scenarios`
+    );
     return plan;
   }
 
@@ -458,7 +507,7 @@ class PilotService {
     executedBy: string
   ): Promise<TestScenario> {
     console.log(`Executing pilot test scenario ${scenarioId}`);
-    
+
     // Mock test execution
     const testResult: TestScenario = {
       scenarioId,
@@ -466,7 +515,11 @@ class PilotService {
       description: 'Test complete payroll processing for 10 employees',
       category: 'FUNCTIONAL',
       priority: 'HIGH',
-      prerequisites: ['Employee data loaded', 'Timesheet approved', 'Payroll policies configured'],
+      prerequisites: [
+        'Employee data loaded',
+        'Timesheet approved',
+        'Payroll policies configured',
+      ],
       testSteps: [
         {
           stepId: 'STEP_1',
@@ -474,7 +527,7 @@ class PilotService {
           stepType: 'MANUAL',
           estimatedTime: 5,
           dependencies: [],
-          testData: { employees: 10, period: '2025-01' }
+          testData: { employees: 10, period: '2025-01' },
         },
         {
           stepId: 'STEP_2',
@@ -482,7 +535,7 @@ class PilotService {
           stepType: 'AUTOMATED',
           estimatedTime: 2,
           dependencies: ['STEP_1'],
-          testData: { includeOvertime: true, includeAllowances: true }
+          testData: { includeOvertime: true, includeAllowances: true },
         },
         {
           stepId: 'STEP_3',
@@ -490,22 +543,22 @@ class PilotService {
           stepType: 'VALIDATION',
           estimatedTime: 10,
           dependencies: ['STEP_2'],
-          testData: { expectedResults: 'previousSystem' }
-        }
+          testData: { expectedResults: 'previousSystem' },
+        },
       ],
       expectedResults: [
         {
           resultId: 'RESULT_1',
           resultType: 'OUTPUT',
           description: 'Payroll batch created successfully',
-          measurableValue: '10 employees processed'
+          measurableValue: '10 employees processed',
         },
         {
           resultId: 'RESULT_2',
           resultType: 'COMPLIANCE',
           description: 'All calculations match Greek labor law',
-          measurableValue: '100% compliance rate'
-        }
+          measurableValue: '100% compliance rate',
+        },
       ],
       actualResults: [
         {
@@ -513,7 +566,7 @@ class PilotService {
           actualValue: '10 employees processed successfully',
           timestamp: new Date(),
           passed: true,
-          notes: 'All employees processed without errors'
+          notes: 'All employees processed without errors',
         },
         {
           resultId: 'RESULT_2',
@@ -521,8 +574,8 @@ class PilotService {
           timestamp: new Date(),
           variance: '-2%',
           passed: false,
-          notes: 'Minor overtime calculation discrepancy for 1 employee'
-        }
+          notes: 'Minor overtime calculation discrepancy for 1 employee',
+        },
       ],
       status: 'PASSED',
       executedBy,
@@ -533,14 +586,20 @@ class PilotService {
           issueType: 'DATA',
           severity: 'LOW',
           description: 'Overtime calculation 2% variance for seasonal employee',
-          stepsToReproduce: ['Create payroll for seasonal employee', 'Include overtime hours', 'Compare with manual calculation'],
+          stepsToReproduce: [
+            'Create payroll for seasonal employee',
+            'Include overtime hours',
+            'Compare with manual calculation',
+          ],
           workaround: 'Manual adjustment required',
-          status: 'OPEN'
-        }
-      ]
+          status: 'OPEN',
+        },
+      ],
     };
 
-    console.log(`Test scenario ${scenarioId} executed with status: ${testResult.status}`);
+    console.log(
+      `Test scenario ${scenarioId} executed with status: ${testResult.status}`
+    );
     return testResult;
   }
 
@@ -552,39 +611,44 @@ class PilotService {
     period: string
   ): Promise<ParallelRunResult> {
     const runId = nanoid();
-    
+
     console.log(`Executing parallel run for period ${period}`);
-    
+
     // Mock parallel run execution
     const comparisonResults: ComparisonResult[] = [
       {
         comparisonPointId: 'GROSS_PAY',
-        legacyValue: 45000.00,
-        newSystemValue: 45000.00,
+        legacyValue: 45000.0,
+        newSystemValue: 45000.0,
         variance: 0,
         withinTolerance: true,
-        notes: 'Perfect match'
+        notes: 'Perfect match',
       },
       {
         comparisonPointId: 'INCOME_TAX',
-        legacyValue: 8100.00,
-        newSystemValue: 8150.00,
+        legacyValue: 8100.0,
+        newSystemValue: 8150.0,
         variance: 0.62, // percentage
         withinTolerance: true,
-        notes: 'Minor rounding difference'
+        notes: 'Minor rounding difference',
       },
       {
         comparisonPointId: 'NET_PAY',
-        legacyValue: 32400.00,
-        newSystemValue: 32350.00,
+        legacyValue: 32400.0,
+        newSystemValue: 32350.0,
         variance: -0.15,
         withinTolerance: true,
-        notes: 'Within acceptable tolerance'
-      }
+        notes: 'Within acceptable tolerance',
+      },
     ];
 
-    const overallMatch = comparisonResults.reduce((sum, r) => 
-      sum + (r.withinTolerance ? 1 : 0), 0) / comparisonResults.length * 100;
+    const overallMatch =
+      (comparisonResults.reduce(
+        (sum, r) => sum + (r.withinTolerance ? 1 : 0),
+        0
+      ) /
+        comparisonResults.length) *
+      100;
 
     const result: ParallelRunResult = {
       runId,
@@ -592,10 +656,12 @@ class PilotService {
       comparisonResults,
       overallMatch,
       significantDifferences: [],
-      status: overallMatch >= 95 ? 'MATCH' : 'WITHIN_TOLERANCE'
+      status: overallMatch >= 95 ? 'MATCH' : 'WITHIN_TOLERANCE',
     };
 
-    console.log(`Parallel run completed with ${overallMatch.toFixed(1)}% match rate`);
+    console.log(
+      `Parallel run completed with ${overallMatch.toFixed(1)}% match rate`
+    );
     return result;
   }
 
@@ -614,23 +680,28 @@ class PilotService {
         criteriaType: 'FUNCTIONAL',
         measurableTarget: '95% test pass rate',
         actualValue: this.calculateTestPassRate(testResults).toString() + '%',
-        status: this.calculateTestPassRate(testResults) >= 95 ? 'MET' : 'NOT_MET',
+        status:
+          this.calculateTestPassRate(testResults) >= 95 ? 'MET' : 'NOT_MET',
         signOffRole: 'Business User',
         signOffDate: undefined,
         signOffBy: undefined,
-        comments: 'Functional testing completed'
+        comments: 'Functional testing completed',
       },
       {
         criteriaId: 'PARALLEL_RUN_ACCURACY',
         criteriaName: 'Parallel run accuracy acceptable',
         criteriaType: 'DATA_QUALITY',
         measurableTarget: '98% calculation accuracy',
-        actualValue: this.calculateAverageMatch(parallelRunResults).toString() + '%',
-        status: this.calculateAverageMatch(parallelRunResults) >= 98 ? 'MET' : 'NOT_MET',
+        actualValue:
+          this.calculateAverageMatch(parallelRunResults).toString() + '%',
+        status:
+          this.calculateAverageMatch(parallelRunResults) >= 98
+            ? 'MET'
+            : 'NOT_MET',
         signOffRole: 'Payroll Manager',
         signOffDate: undefined,
         signOffBy: undefined,
-        comments: 'Parallel run results reviewed'
+        comments: 'Parallel run results reviewed',
       },
       {
         criteriaId: 'USER_ACCEPTANCE',
@@ -642,7 +713,7 @@ class PilotService {
         signOffRole: 'Department Managers',
         signOffDate: undefined,
         signOffBy: undefined,
-        comments: 'User feedback collected and positive'
+        comments: 'User feedback collected and positive',
       },
       {
         criteriaId: 'COMPLIANCE_VERIFICATION',
@@ -654,8 +725,8 @@ class PilotService {
         signOffRole: 'Compliance Officer',
         signOffDate: undefined,
         signOffBy: undefined,
-        comments: 'All Greek labor law requirements verified'
-      }
+        comments: 'All Greek labor law requirements verified',
+      },
     ];
 
     return criteria;
@@ -673,15 +744,25 @@ class PilotService {
     const passedTests = testResults.filter(t => t.status === 'PASSED').length;
     const failedTests = testResults.filter(t => t.status === 'FAILED').length;
     const blockedTests = testResults.filter(t => t.status === 'BLOCKED').length;
-    
-    const criticalIssues = testResults.reduce((sum, t) => 
-      sum + t.issues.filter(i => i.severity === 'CRITICAL').length, 0);
-    
-    const resolvedIssues = testResults.reduce((sum, t) => 
-      sum + t.issues.filter(i => i.status === 'RESOLVED' || i.status === 'CLOSED').length, 0);
 
-    const overallStatus = this.determineOverallStatus(testResults, signOffStatus);
-    
+    const criticalIssues = testResults.reduce(
+      (sum, t) => sum + t.issues.filter(i => i.severity === 'CRITICAL').length,
+      0
+    );
+
+    const resolvedIssues = testResults.reduce(
+      (sum, t) =>
+        sum +
+        t.issues.filter(i => i.status === 'RESOLVED' || i.status === 'CLOSED')
+          .length,
+      0
+    );
+
+    const overallStatus = this.determineOverallStatus(
+      testResults,
+      signOffStatus
+    );
+
     const performanceMetrics: PerformanceMetric[] = [
       {
         metricName: 'Test Pass Rate',
@@ -689,7 +770,8 @@ class PilotService {
         actualValue: this.calculateTestPassRate(testResults),
         unit: '%',
         variance: this.calculateTestPassRate(testResults) - 95,
-        status: this.calculateTestPassRate(testResults) >= 95 ? 'MET' : 'NOT_MET'
+        status:
+          this.calculateTestPassRate(testResults) >= 95 ? 'MET' : 'NOT_MET',
       },
       {
         metricName: 'Parallel Run Accuracy',
@@ -697,29 +779,35 @@ class PilotService {
         actualValue: this.calculateAverageMatch(parallelRunResults),
         unit: '%',
         variance: this.calculateAverageMatch(parallelRunResults) - 98,
-        status: this.calculateAverageMatch(parallelRunResults) >= 98 ? 'MET' : 'NOT_MET'
-      }
+        status:
+          this.calculateAverageMatch(parallelRunResults) >= 98
+            ? 'MET'
+            : 'NOT_MET',
+      },
     ];
 
     const lessons: LessonsLearned[] = [
       {
         lessonId: nanoid(),
         category: 'TRAINING',
-        description: 'Additional training needed on overtime calculations for seasonal employees',
+        description:
+          'Additional training needed on overtime calculations for seasonal employees',
         impact: 'POSITIVE',
         applicability: 'ALL_PROPERTIES',
         actionRequired: true,
-        recommendation: 'Create specialized training module for seasonal employee management'
+        recommendation:
+          'Create specialized training module for seasonal employee management',
       },
       {
         lessonId: nanoid(),
         category: 'PROCESS',
-        description: 'Parallel run process very effective for identifying calculation differences',
+        description:
+          'Parallel run process very effective for identifying calculation differences',
         impact: 'POSITIVE',
         applicability: 'ALL_PROPERTIES',
         actionRequired: false,
-        recommendation: 'Continue parallel runs for future implementations'
-      }
+        recommendation: 'Continue parallel runs for future implementations',
+      },
     ];
 
     const recommendations: Recommendation[] = [
@@ -731,7 +819,7 @@ class PilotService {
         benefitExpected: 'Reduce pilot issues by 50% in future implementations',
         implementationEffort: 'MEDIUM',
         targetAudience: ['Payroll Managers', 'HR Staff'],
-        timeframe: 'SHORT_TERM'
+        timeframe: 'SHORT_TERM',
       },
       {
         recommendationId: nanoid(),
@@ -741,8 +829,8 @@ class PilotService {
         benefitExpected: 'Reduce manual comparison effort by 80%',
         implementationEffort: 'HIGH',
         targetAudience: ['Implementation Team'],
-        timeframe: 'LONG_TERM'
-      }
+        timeframe: 'LONG_TERM',
+      },
     ];
 
     return {
@@ -757,14 +845,14 @@ class PilotService {
         criticalIssues,
         resolvedIssues,
         userSatisfaction: 85,
-        performanceMetrics
+        performanceMetrics,
       },
       testResults,
       parallelRunResults,
       signOffStatus,
       lessons,
       recommendations,
-      completedDate: new Date()
+      completedDate: new Date(),
     };
   }
 
@@ -786,16 +874,27 @@ class PilotService {
           priority: 'HIGH',
           complexity: 'HIGH',
           stakeholders: ['Payroll Manager', 'Finance Controller'],
-          successCriteria: ['Accurate calculations', 'Timely processing', 'Error-free filings'],
+          successCriteria: [
+            'Accurate calculations',
+            'Timely processing',
+            'Error-free filings',
+          ],
           testData: {
             dataType: 'PAYROLL_DATA',
             volume: 'MEDIUM',
             scenarios: ['Regular pay', 'Overtime pay', 'Bonus payments'],
-            expectedOutcomes: ['Calculations match legacy system', 'Compliance verified'],
-            validationPoints: ['Net pay accuracy', 'Tax calculations', 'Filing data']
-          }
-        }
-      ]
+            expectedOutcomes: [
+              'Calculations match legacy system',
+              'Compliance verified',
+            ],
+            validationPoints: [
+              'Net pay accuracy',
+              'Tax calculations',
+              'Filing data',
+            ],
+          },
+        },
+      ],
     };
   }
 
@@ -811,7 +910,7 @@ class PilotService {
         testSteps: [],
         expectedResults: [],
         status: 'PLANNED',
-        issues: []
+        issues: [],
       },
       {
         scenarioId: 'SCENARIO_2',
@@ -823,7 +922,7 @@ class PilotService {
         testSteps: [],
         expectedResults: [],
         status: 'PLANNED',
-        issues: []
+        issues: [],
       },
       {
         scenarioId: 'SCENARIO_3',
@@ -835,8 +934,8 @@ class PilotService {
         testSteps: [],
         expectedResults: [],
         status: 'PLANNED',
-        issues: []
-      }
+        issues: [],
+      },
     ];
   }
 
@@ -851,7 +950,7 @@ class PilotService {
           dataType: 'PAYROLL_CALCULATION',
           comparisonMethod: 'WITHIN_TOLERANCE',
           importance: 'CRITICAL',
-          validationQuery: 'SELECT SUM(gross_pay) FROM payroll_lines'
+          validationQuery: 'SELECT SUM(gross_pay) FROM payroll_lines',
         },
         {
           pointId: 'TAX_WITHHOLDING',
@@ -859,8 +958,8 @@ class PilotService {
           dataType: 'TAX_WITHHOLDING',
           comparisonMethod: 'WITHIN_TOLERANCE',
           importance: 'CRITICAL',
-          validationQuery: 'SELECT SUM(income_tax) FROM payroll_lines'
-        }
+          validationQuery: 'SELECT SUM(income_tax) FROM payroll_lines',
+        },
       ],
       toleranceThresholds: [
         {
@@ -868,8 +967,8 @@ class PilotService {
           thresholdType: 'PERCENTAGE',
           acceptableVariance: 0.5,
           escalationVariance: 2.0,
-          criticalVariance: 5.0
-        }
+          criticalVariance: 5.0,
+        },
       ],
       automatedComparison: true,
       reportingFrequency: 'WEEKLY',
@@ -880,9 +979,9 @@ class PilotService {
           escalationLevel: 1,
           notificationList: ['pilot.lead@company.com'],
           responseTime: 2,
-          escalationAction: 'INVESTIGATE'
-        }
-      ]
+          escalationAction: 'INVESTIGATE',
+        },
+      ],
     };
   }
 
@@ -894,7 +993,7 @@ class PilotService {
         criteriaType: 'FUNCTIONAL',
         measurableTarget: '95% test pass rate',
         status: 'NOT_STARTED',
-        signOffRole: 'Business User'
+        signOffRole: 'Business User',
       },
       {
         criteriaId: 'COMPLIANCE_SIGN_OFF',
@@ -902,14 +1001,14 @@ class PilotService {
         criteriaType: 'COMPLIANCE',
         measurableTarget: '100% compliance verification',
         status: 'NOT_STARTED',
-        signOffRole: 'Compliance Officer'
-      }
+        signOffRole: 'Compliance Officer',
+      },
     ];
   }
 
   private createPilotTimeline(): PilotTimeline {
     const startDate = new Date();
-    
+
     return {
       totalDuration: 30,
       phases: [
@@ -918,7 +1017,11 @@ class PilotService {
           phaseName: 'Setup and Preparation',
           startDate: startDate,
           endDate: new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000),
-          objectives: ['Environment setup', 'Data preparation', 'User training'],
+          objectives: [
+            'Environment setup',
+            'Data preparation',
+            'User training',
+          ],
           deliverables: ['Test environment ready', 'Users trained'],
           activities: [
             {
@@ -928,11 +1031,11 @@ class PilotService {
               duration: 16,
               assignedTo: ['Technical Lead'],
               dependencies: [],
-              status: 'PLANNED'
-            }
+              status: 'PLANNED',
+            },
           ],
-          exitCriteria: ['Environment validated', 'Training completed']
-        }
+          exitCriteria: ['Environment validated', 'Training completed'],
+        },
       ],
       milestones: [
         {
@@ -942,11 +1045,11 @@ class PilotService {
           completionCriteria: ['All preparations complete'],
           stakeholder: 'Pilot Lead',
           critical: true,
-          status: 'PENDING'
-        }
+          status: 'PENDING',
+        },
       ],
       dependencies: ['Migration completed', 'Configuration approved'],
-      criticalPath: ['SETUP', 'TESTING', 'VALIDATION']
+      criticalPath: ['SETUP', 'TESTING', 'VALIDATION'],
     };
   }
 
@@ -960,7 +1063,7 @@ class PilotService {
           department: 'IT',
           responsibilities: ['Overall pilot coordination', 'Issue escalation'],
           availability: 100,
-          trainingRequired: []
+          trainingRequired: [],
         },
         {
           memberId: 'BUSINESS_USER',
@@ -969,8 +1072,8 @@ class PilotService {
           department: 'HR',
           responsibilities: ['Business testing', 'User acceptance'],
           availability: 50,
-          trainingRequired: ['PayrollSync Training']
-        }
+          trainingRequired: ['PayrollSync Training'],
+        },
       ],
       trainingRequirements: [
         {
@@ -980,8 +1083,8 @@ class PilotService {
           targetAudience: ['Business Users'],
           duration: 8,
           deliveryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-          completionRequired: true
-        }
+          completionRequired: true,
+        },
       ],
       infrastructure: [
         {
@@ -991,8 +1094,8 @@ class PilotService {
           quantity: 5,
           deliveryDate: new Date(),
           responsible: 'IT Department',
-          status: 'DELIVERED'
-        }
+          status: 'DELIVERED',
+        },
       ],
       budget: [
         {
@@ -1002,9 +1105,9 @@ class PilotService {
           currency: 'EUR',
           responsible: 'Project Manager',
           approvalRequired: true,
-          approved: true
-        }
-      ]
+          approved: true,
+        },
+      ],
     };
   }
 
@@ -1022,7 +1125,7 @@ class PilotService {
           triggers: ['Low training attendance', 'Negative feedback'],
           mitigationStrategies: ['Comprehensive training', 'Change management'],
           owner: 'HR Manager',
-          status: 'IDENTIFIED'
+          status: 'IDENTIFIED',
         },
         {
           riskId: 'DATA_QUALITY',
@@ -1035,14 +1138,17 @@ class PilotService {
           triggers: ['Validation failures', 'Calculation discrepancies'],
           mitigationStrategies: ['Data validation', 'Parallel runs'],
           owner: 'Technical Lead',
-          status: 'MITIGATED'
-        }
+          status: 'MITIGATED',
+        },
       ],
       contingencyPlans: [
         {
           planId: 'ROLLBACK_PLAN',
           planName: 'Pilot Rollback',
-          triggerConditions: ['Critical system failure', 'Major data corruption'],
+          triggerConditions: [
+            'Critical system failure',
+            'Major data corruption',
+          ],
           actions: [
             {
               actionId: 'STOP_PILOT',
@@ -1051,14 +1157,14 @@ class PilotService {
               sequence: 1,
               estimatedTime: 30,
               responsible: 'Pilot Lead',
-              dependencies: []
-            }
+              dependencies: [],
+            },
           ],
           estimatedCost: 5000,
           estimatedTime: 4,
           approvalRequired: true,
-          responsible: ['Pilot Lead', 'Technical Lead']
-        }
+          responsible: ['Pilot Lead', 'Technical Lead'],
+        },
       ],
       monitoringPlan: {
         monitoringFrequency: 'DAILY',
@@ -1069,8 +1175,8 @@ class PilotService {
             metric: 'satisfaction_percentage',
             targetValue: 80,
             toleranceRange: 10,
-            measurementFrequency: 'WEEKLY'
-          }
+            measurementFrequency: 'WEEKLY',
+          },
         ],
         alertThresholds: [
           {
@@ -1079,8 +1185,8 @@ class PilotService {
             warningThreshold: 5,
             criticalThreshold: 10,
             notificationList: ['pilot.lead@company.com'],
-            escalationTime: 1
-          }
+            escalationTime: 1,
+          },
         ],
         reportingSchedule: [
           {
@@ -1089,10 +1195,10 @@ class PilotService {
             reportType: 'DAILY_STATUS',
             frequency: 'DAILY',
             recipients: ['Pilot Team'],
-            deliveryMethod: 'EMAIL'
-          }
-        ]
-      }
+            deliveryMethod: 'EMAIL',
+          },
+        ],
+      },
     };
   }
 
@@ -1102,9 +1208,14 @@ class PilotService {
     return Math.round((passedTests / testResults.length) * 100);
   }
 
-  private calculateAverageMatch(parallelRunResults: ParallelRunResult[]): number {
+  private calculateAverageMatch(
+    parallelRunResults: ParallelRunResult[]
+  ): number {
     if (parallelRunResults.length === 0) return 0;
-    const totalMatch = parallelRunResults.reduce((sum, r) => sum + r.overallMatch, 0);
+    const totalMatch = parallelRunResults.reduce(
+      (sum, r) => sum + r.overallMatch,
+      0
+    );
     return Math.round(totalMatch / parallelRunResults.length);
   }
 

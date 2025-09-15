@@ -1,4 +1,4 @@
-import { nanoid } from "nanoid";
+import { nanoid } from 'nanoid';
 
 /**
  * Discovery Service for PayrollSync Implementation
@@ -47,7 +47,11 @@ export interface ShiftPattern {
 export interface SeasonalityPattern {
   highSeason: { start: string; end: string; employeeMultiplier: number };
   lowSeason: { start: string; end: string; employeeMultiplier: number };
-  peakDates: Array<{ date: string; description: string; staffingBoost: number }>;
+  peakDates: Array<{
+    date: string;
+    description: string;
+    staffingBoost: number;
+  }>;
   contractTypes: {
     permanent: number;
     seasonal: number;
@@ -94,7 +98,12 @@ export interface TimeClockDevice {
 }
 
 export interface ComplianceGap {
-  gapType: 'ERGANI_DELAYS' | 'MISSING_ERGANI' | 'INCORRECT_CALCULATIONS' | 'MISSING_DOCUMENTS' | 'INADEQUATE_TRACKING';
+  gapType:
+    | 'ERGANI_DELAYS'
+    | 'MISSING_ERGANI'
+    | 'INCORRECT_CALCULATIONS'
+    | 'MISSING_DOCUMENTS'
+    | 'INADEQUATE_TRACKING';
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   description: string;
   affectedEmployees: number;
@@ -138,7 +147,11 @@ export interface ERPIntegrationNeeds {
 }
 
 export interface ERPIntegrationPoint {
-  dataType: 'GL_JOURNAL' | 'EMPLOYEE_MASTER' | 'COST_ALLOCATIONS' | 'BUDGET_DATA';
+  dataType:
+    | 'GL_JOURNAL'
+    | 'EMPLOYEE_MASTER'
+    | 'COST_ALLOCATIONS'
+    | 'BUDGET_DATA';
   frequency: 'REAL_TIME' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
   format: 'XML' | 'CSV' | 'JSON' | 'API';
   direction: 'INBOUND' | 'OUTBOUND' | 'BIDIRECTIONAL';
@@ -291,7 +304,6 @@ export interface CBASpecialProvision {
 }
 
 class DiscoveryService {
-  
   /**
    * Conduct comprehensive property discovery
    */
@@ -300,24 +312,28 @@ class DiscoveryService {
     discoveredBy: string
   ): Promise<PropertyDiscovery> {
     const discoveryId = nanoid();
-    
+
     console.log(`Starting discovery for property ${propertyCode}`);
-    
+
     // Gather property information
     const propertyInfo = await this.gatherPropertyInformation(propertyCode);
-    
+
     // Analyze current systems
     const currentSystems = await this.analyzeCurrentSystems(propertyCode);
-    
+
     // Identify compliance gaps
-    const complianceGaps = await this.identifyComplianceGaps(propertyCode, currentSystems);
-    
+    const complianceGaps = await this.identifyComplianceGaps(
+      propertyCode,
+      currentSystems
+    );
+
     // Determine CBA applicability
     const recommendedCBA = await this.determineCBARequirements(propertyInfo);
-    
+
     // Analyze banking requirements
-    const bankingRequirements = await this.analyzeBankingRequirements(propertyCode);
-    
+    const bankingRequirements =
+      await this.analyzeBankingRequirements(propertyCode);
+
     // Assess ERP integration needs
     const erpIntegrationNeeds = await this.assessERPIntegration(propertyCode);
 
@@ -336,11 +352,13 @@ class DiscoveryService {
       bankingRequirements,
       erpIntegrationNeeds,
       discoveryDate: new Date(),
-      discoveredBy
+      discoveredBy,
     };
 
-    console.log(`Discovery completed for ${propertyCode}: ${complianceGaps.length} gaps identified`);
-    
+    console.log(
+      `Discovery completed for ${propertyCode}: ${complianceGaps.length} gaps identified`
+    );
+
     return discovery;
   }
 
@@ -349,10 +367,10 @@ class DiscoveryService {
    */
   async analyzeCBA(cbaName: string): Promise<CBAAnalysis> {
     const cbaId = nanoid();
-    
+
     // Greek hotel industry CBAs
     const greekHotelCBAs: Record<string, Partial<CBAAnalysis>> = {
-      'HOTEL_TOURISM_CBA_2024': {
+      HOTEL_TOURISM_CBA_2024: {
         cbaName: 'Κλαδική Συλλογική Σύμβαση Εργαζομένων Ξενοδοχείων-Τουρισμού',
         industry: 'Hotels & Tourism',
         complianceComplexity: 'HIGH',
@@ -365,9 +383,9 @@ class DiscoveryService {
               experienceMultipliers: [
                 { years: 0, multiplier: 1.0 },
                 { years: 2, multiplier: 1.05 },
-                { years: 5, multiplier: 1.10 }
+                { years: 5, multiplier: 1.1 },
               ],
-              qualificationBonuses: []
+              qualificationBonuses: [],
             },
             {
               gradeCode: 'SKILLED',
@@ -376,19 +394,28 @@ class DiscoveryService {
               experienceMultipliers: [
                 { years: 0, multiplier: 1.0 },
                 { years: 3, multiplier: 1.08 },
-                { years: 7, multiplier: 1.15 }
+                { years: 7, multiplier: 1.15 },
               ],
               qualificationBonuses: [
                 { qualification: 'Πτυχίο ΤΕΙ', bonus: 50 },
-                { qualification: 'Γνώση Ξένων Γλωσσών', bonus: 30 }
-              ]
-            }
+                { qualification: 'Γνώση Ξένων Γλωσσών', bonus: 30 },
+              ],
+            },
           ],
           minimumWages: [
-            { year: 2025, monthlyAmount: 880, dailyAmount: 29.33, hourlyAmount: 4.07 }
+            {
+              year: 2025,
+              monthlyAmount: 880,
+              dailyAmount: 29.33,
+              hourlyAmount: 4.07,
+            },
           ],
           yearlyIncreases: [
-            { year: 2025, percentage: 2.5, effectiveDate: new Date('2025-01-01') }
+            {
+              year: 2025,
+              percentage: 2.5,
+              effectiveDate: new Date('2025-01-01'),
+            },
           ],
           allowances: [
             {
@@ -396,22 +423,22 @@ class DiscoveryService {
               description: 'Επίδομα Σίτισης',
               amount: 11,
               conditions: ['Per working day'],
-              taxable: false
+              taxable: false,
             },
             {
               allowanceCode: 'TRANSPORT',
               description: 'Επίδομα Μεταφοράς',
               amount: 50,
               conditions: ['Monthly allowance'],
-              taxable: false
-            }
-          ]
-        }
-      }
+              taxable: false,
+            },
+          ],
+        },
+      },
     };
 
     const cbaTemplate = greekHotelCBAs[cbaName] || this.getDefaultCBA();
-    
+
     return {
       cbaId,
       cbaName,
@@ -420,7 +447,7 @@ class DiscoveryService {
       effectiveDate: new Date('2025-01-01'),
       expiryDate: new Date('2026-12-31'),
       complianceComplexity: 'HIGH',
-      ...cbaTemplate
+      ...cbaTemplate,
     } as CBAAnalysis;
   }
 
@@ -436,7 +463,7 @@ class DiscoveryService {
       resources: this.estimateResourceRequirements(discoveries),
       timeline: this.createImplementationTimeline(discoveries),
       risks: this.identifyImplementationRisks(discoveries),
-      successFactors: this.defineSuccessFactors(discoveries)
+      successFactors: this.defineSuccessFactors(discoveries),
     };
 
     return recommendations;
@@ -463,27 +490,41 @@ class DiscoveryService {
               breakDuration: 30,
               employeeCount: 10,
               overtimeRisk: 'LOW',
-              erganiComplexity: 'SIMPLE'
-            }
+              erganiComplexity: 'SIMPLE',
+            },
           ],
           managerAFM: '123456789',
           costCenter: 'CC001',
           tipPoolingRequired: true,
-          seasonalVariation: true
-        }
+          seasonalVariation: true,
+        },
       ],
       seasonality: {
-        highSeason: { start: '2025-05-01', end: '2025-10-31', employeeMultiplier: 1.3 },
-        lowSeason: { start: '2025-11-01', end: '2025-04-30', employeeMultiplier: 0.8 },
+        highSeason: {
+          start: '2025-05-01',
+          end: '2025-10-31',
+          employeeMultiplier: 1.3,
+        },
+        lowSeason: {
+          start: '2025-11-01',
+          end: '2025-04-30',
+          employeeMultiplier: 0.8,
+        },
         peakDates: [
-          { date: '2025-12-31', description: 'New Year\'s Eve', staffingBoost: 1.5 }
+          {
+            date: '2025-12-31',
+            description: "New Year's Eve",
+            staffingBoost: 1.5,
+          },
         ],
-        contractTypes: { permanent: 80, seasonal: 50, temporary: 20 }
-      }
+        contractTypes: { permanent: 80, seasonal: 50, temporary: 20 },
+      },
     };
   }
 
-  private async analyzeCurrentSystems(propertyCode: string): Promise<CurrentSystemsAnalysis> {
+  private async analyzeCurrentSystems(
+    propertyCode: string
+  ): Promise<CurrentSystemsAnalysis> {
     // Mock implementation
     return {
       payrollSystem: {
@@ -492,7 +533,7 @@ class DiscoveryService {
         lastUpdate: new Date('2023-01-01'),
         dataExportCapability: false,
         migrationComplexity: 'HIGH',
-        retentionPeriod: 84
+        retentionPeriod: 84,
       },
       timekeepingSystem: {
         vendor: 'TimeTracker Pro',
@@ -504,28 +545,28 @@ class DiscoveryService {
             model: 'FingerprintPro X1',
             connectivity: 'ETHERNET',
             employeesAssigned: 150,
-            migrationRequired: true
-          }
+            migrationRequired: true,
+          },
         ],
         integrationMethod: 'Manual Export',
-        dataRetention: 36
+        dataRetention: 36,
       },
       hrSystem: {
         vendor: 'HR Manager',
         employeeCount: 150,
         documentStorage: true,
-        erpIntegrated: false
+        erpIntegrated: false,
       },
       erganiCompliance: {
         currentMethod: 'MANUAL',
         submissionAccuracy: 85,
-        averageDelayHours: 16
-      }
+        averageDelayHours: 16,
+      },
     };
   }
 
   private async identifyComplianceGaps(
-    propertyCode: string, 
+    propertyCode: string,
     currentSystems: CurrentSystemsAnalysis
   ): Promise<ComplianceGap[]> {
     const gaps: ComplianceGap[] = [];
@@ -538,7 +579,7 @@ class DiscoveryService {
         affectedEmployees: 150,
         estimatedFines: 5000,
         recommendedAction: 'Implement automated ERGANI integration',
-        implementationEffort: 'MEDIUM'
+        implementationEffort: 'MEDIUM',
       });
     }
 
@@ -550,7 +591,7 @@ class DiscoveryService {
         affectedEmployees: 20,
         estimatedFines: 2000,
         recommendedAction: 'Upgrade to automated payroll system',
-        implementationEffort: 'HIGH'
+        implementationEffort: 'HIGH',
       });
     }
 
@@ -565,7 +606,9 @@ class DiscoveryService {
     return 'GENERAL_TOURISM_CBA_2024';
   }
 
-  private async analyzeBankingRequirements(propertyCode: string): Promise<BankingRequirements> {
+  private async analyzeBankingRequirements(
+    propertyCode: string
+  ): Promise<BankingRequirements> {
     return {
       primaryBank: {
         bankName: 'Εθνική Τράπεζα',
@@ -574,7 +617,7 @@ class DiscoveryService {
         fileFormat: 'SEPA_XML',
         transmissionMethod: 'SFTP',
         encryptionRequired: true,
-        testingRequired: true
+        testingRequired: true,
       },
       secondaryBanks: [],
       sepaFormatRequired: true,
@@ -583,12 +626,14 @@ class DiscoveryService {
       approvalWorkflow: {
         singleApprover: false,
         dualApproval: true,
-        approverRoles: ['Finance Manager', 'General Manager']
-      }
+        approverRoles: ['Finance Manager', 'General Manager'],
+      },
     };
   }
 
-  private async assessERPIntegration(propertyCode: string): Promise<ERPIntegrationNeeds> {
+  private async assessERPIntegration(
+    propertyCode: string
+  ): Promise<ERPIntegrationNeeds> {
     return {
       erpSystem: 'SAP',
       version: 'S/4HANA 2023',
@@ -599,8 +644,8 @@ class DiscoveryService {
           frequency: 'MONTHLY',
           format: 'XML',
           direction: 'OUTBOUND',
-          validation: true
-        }
+          validation: true,
+        },
       ],
       chartOfAccounts: {
         salaryExpenseAccount: '641000',
@@ -608,7 +653,7 @@ class DiscoveryService {
         socialSecurityExpenseAccount: '641400',
         taxPayableAccount: '601100',
         salaryPayableAccount: '601000',
-        customMappings: []
+        customMappings: [],
       },
       costCenterStructure: [
         {
@@ -616,11 +661,14 @@ class DiscoveryService {
           costCenterCode: 'CC001',
           description: 'Front Office Operations',
           budgetOwner: 'Front Office Manager',
-          active: true
-        }
+          active: true,
+        },
       ],
-      reportingRequirements: ['Monthly P&L by Department', 'Labor Cost Analysis'],
-      realTimeRequired: false
+      reportingRequirements: [
+        'Monthly P&L by Department',
+        'Labor Cost Analysis',
+      ],
+      realTimeRequired: false,
     };
   }
 
@@ -631,47 +679,60 @@ class DiscoveryService {
       wageStructure: {
         grades: [],
         minimumWages: [
-          { year: 2025, monthlyAmount: 880, dailyAmount: 29.33, hourlyAmount: 4.07 }
+          {
+            year: 2025,
+            monthlyAmount: 880,
+            dailyAmount: 29.33,
+            hourlyAmount: 4.07,
+          },
         ],
         yearlyIncreases: [],
-        allowances: []
-      }
+        allowances: [],
+      },
     };
   }
 
-  private calculateImplementationPriority(discoveries: PropertyDiscovery[]): any[] {
-    return discoveries.map(discovery => ({
-      propertyCode: discovery.propertyCode,
-      priority: this.calculatePriorityScore(discovery),
-      reasoning: this.getPriorityReasoning(discovery)
-    })).sort((a, b) => b.priority - a.priority);
+  private calculateImplementationPriority(
+    discoveries: PropertyDiscovery[]
+  ): any[] {
+    return discoveries
+      .map(discovery => ({
+        propertyCode: discovery.propertyCode,
+        priority: this.calculatePriorityScore(discovery),
+        reasoning: this.getPriorityReasoning(discovery),
+      }))
+      .sort((a, b) => b.priority - a.priority);
   }
 
   private calculatePriorityScore(discovery: PropertyDiscovery): number {
     let score = 0;
-    
+
     // Higher score for more compliance gaps
     score += discovery.complianceGaps.length * 10;
-    
+
     // Higher score for critical gaps
-    score += discovery.complianceGaps.filter(g => g.severity === 'CRITICAL').length * 50;
-    
+    score +=
+      discovery.complianceGaps.filter(g => g.severity === 'CRITICAL').length *
+      50;
+
     // Higher score for larger properties
     score += discovery.totalEmployees * 0.1;
-    
+
     return score;
   }
 
   private getPriorityReasoning(discovery: PropertyDiscovery): string {
-    const criticalGaps = discovery.complianceGaps.filter(g => g.severity === 'CRITICAL').length;
+    const criticalGaps = discovery.complianceGaps.filter(
+      g => g.severity === 'CRITICAL'
+    ).length;
     if (criticalGaps > 0) {
       return `${criticalGaps} critical compliance gaps requiring immediate attention`;
     }
-    
+
     if (discovery.totalEmployees > 100) {
       return 'Large property with significant employee count';
     }
-    
+
     return 'Standard implementation priority';
   }
 
@@ -679,28 +740,31 @@ class DiscoveryService {
     return {
       phase1: discoveries.slice(0, 2).map(d => d.propertyCode),
       phase2: discoveries.slice(2, 5).map(d => d.propertyCode),
-      phase3: discoveries.slice(5).map(d => d.propertyCode)
+      phase3: discoveries.slice(5).map(d => d.propertyCode),
     };
   }
 
   private estimateResourceRequirements(discoveries: PropertyDiscovery[]): any {
-    const totalEmployees = discoveries.reduce((sum, d) => sum + d.totalEmployees, 0);
-    
+    const totalEmployees = discoveries.reduce(
+      (sum, d) => sum + d.totalEmployees,
+      0
+    );
+
     return {
       implementationTeam: Math.ceil(totalEmployees / 100),
       trainingHours: totalEmployees * 2,
       testingDays: discoveries.length * 5,
-      totalDuration: `${discoveries.length * 2} weeks`
+      totalDuration: `${discoveries.length * 2} weeks`,
     };
   }
 
   private createImplementationTimeline(discoveries: PropertyDiscovery[]): any {
     const phases = this.planImplementationPhases(discoveries);
-    
+
     return {
       phase1: { duration: '4 weeks', properties: phases.phase1 },
       phase2: { duration: '6 weeks', properties: phases.phase2 },
-      phase3: { duration: '8 weeks', properties: phases.phase3 }
+      phase3: { duration: '8 weeks', properties: phases.phase3 },
     };
   }
 
@@ -710,14 +774,14 @@ class DiscoveryService {
         risk: 'Data Migration Complexity',
         probability: 'HIGH',
         impact: 'MEDIUM',
-        mitigation: 'Comprehensive data validation and parallel runs'
+        mitigation: 'Comprehensive data validation and parallel runs',
       },
       {
         risk: 'User Adoption Resistance',
         probability: 'MEDIUM',
         impact: 'HIGH',
-        mitigation: 'Extensive training and change management'
-      }
+        mitigation: 'Extensive training and change management',
+      },
     ];
   }
 
@@ -727,7 +791,7 @@ class DiscoveryService {
       'Comprehensive user training program',
       'Phased rollout with lessons learned integration',
       'Real-time support during go-live periods',
-      'Continuous monitoring and improvement'
+      'Continuous monitoring and improvement',
     ];
   }
 }
