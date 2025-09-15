@@ -6,33 +6,63 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { AccessibleInput } from '@/components/ui/accessible-input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Eye, EyeOff, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { validateEmail, validatePassword, validatePasswordMatch } from '@/utils/validation';
+import {
+  validateEmail,
+  validatePassword,
+  validatePasswordMatch,
+} from '@/utils/validation';
 import { addCSRFHeader } from '@/utils/validation';
 
-const createSignupSchema = (t: (key: string) => string) => z.object({
-  email: z.string()
-    .min(1, t('auth.error.required'))
-    .refine(validateEmail, t('auth.error.email')),
-  password: z.string()
-    .min(1, t('auth.error.required'))
-    .refine((password) => validatePassword(password).isValid, t('auth.error.password')),
-  confirmPassword: z.string().min(1, t('auth.error.required')),
-  firstName: z.string().min(1, t('auth.error.required')),
-  lastName: z.string().min(1, t('auth.error.required')),
-  locale: z.enum(['en', 'el']).default('en'),
-  acceptTos: z.boolean().refine((val) => val === true, t('auth.error.tos')),
-  acceptPrivacy: z.boolean().refine((val) => val === true, t('auth.error.privacy')),
-}).refine((data) => validatePasswordMatch(data.password, data.confirmPassword), {
-  message: t('auth.error.passwordMatch'),
-  path: ['confirmPassword'],
-});
+const createSignupSchema = (t: (key: string) => string) =>
+  z
+    .object({
+      email: z
+        .string()
+        .min(1, t('auth.error.required'))
+        .refine(validateEmail, t('auth.error.email')),
+      password: z
+        .string()
+        .min(1, t('auth.error.required'))
+        .refine(
+          password => validatePassword(password).isValid,
+          t('auth.error.password')
+        ),
+      confirmPassword: z.string().min(1, t('auth.error.required')),
+      firstName: z.string().min(1, t('auth.error.required')),
+      lastName: z.string().min(1, t('auth.error.required')),
+      locale: z.enum(['en', 'el']).default('en'),
+      acceptTos: z.boolean().refine(val => val === true, t('auth.error.tos')),
+      acceptPrivacy: z
+        .boolean()
+        .refine(val => val === true, t('auth.error.privacy')),
+    })
+    .refine(
+      data => validatePasswordMatch(data.password, data.confirmPassword),
+      {
+        message: t('auth.error.passwordMatch'),
+        path: ['confirmPassword'],
+      }
+    );
 
 export default function Signup() {
   const { t, locale, changeLanguage } = useTranslation();
@@ -109,14 +139,19 @@ export default function Signup() {
     signupMutation.mutate(data);
   };
 
-  const passwordValidation = form.watch('password') ? validatePassword(form.watch('password')) : null;
+  const passwordValidation = form.watch('password')
+    ? validatePassword(form.watch('password'))
+    : null;
 
   if (signupSuccess) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
         <Card className="w-full max-w-md min-w-[480px] max-w-[560px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
           <CardHeader className="text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" aria-hidden="true" />
+            <CheckCircle
+              className="h-12 w-12 text-green-500 mx-auto mb-4"
+              aria-hidden="true"
+            />
             <CardTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               {t('auth.verify.title')}
             </CardTitle>
@@ -124,7 +159,7 @@ export default function Signup() {
               {t('auth.verify.sent')} <strong>{userEmail}</strong>
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
             {resendMutation.isSuccess && (
               <Alert className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
@@ -135,10 +170,15 @@ export default function Signup() {
             )}
 
             {resendMutation.error && (
-              <Alert variant="destructive" className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+              <Alert
+                variant="destructive"
+                className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+              >
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {resendMutation.error instanceof Error ? resendMutation.error.message : 'Failed to resend email'}
+                  {resendMutation.error instanceof Error
+                    ? resendMutation.error.message
+                    : 'Failed to resend email'}
                 </AlertDescription>
               </Alert>
             )}
@@ -157,7 +197,10 @@ export default function Signup() {
             >
               {resendMutation.isPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+                  <Loader2
+                    className="h-4 w-4 mr-2 animate-spin"
+                    aria-hidden="true"
+                  />
                   {t('auth.loading.sending')}
                 </>
               ) : (
@@ -184,10 +227,12 @@ export default function Signup() {
   }
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8"
-      style={{ 
-        animation: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : undefined 
+      style={{
+        animation: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? 'none'
+          : undefined,
       }}
     >
       <Card className="w-full max-w-md min-w-[480px] max-w-[560px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
@@ -199,14 +244,19 @@ export default function Signup() {
             Enter your information to get started with PayrollSync
           </CardDescription>
         </CardHeader>
-        
+
         <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
           <CardContent className="space-y-6">
             {signupMutation.error && (
-              <Alert variant="destructive" className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+              <Alert
+                variant="destructive"
+                className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
+              >
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  {signupMutation.error instanceof Error ? signupMutation.error.message : 'An error occurred'}
+                  {signupMutation.error instanceof Error
+                    ? signupMutation.error.message
+                    : 'An error occurred'}
                 </AlertDescription>
               </Alert>
             )}
@@ -247,12 +297,14 @@ export default function Signup() {
             />
 
             <div className="space-y-2">
-              <Label 
-                htmlFor="signup-password" 
+              <Label
+                htmlFor="signup-password"
                 className="block text-sm font-medium text-gray-900 dark:text-gray-100"
               >
                 {t('auth.password')}
-                <span className="text-red-500 ml-1" aria-label="required">*</span>
+                <span className="text-red-500 ml-1" aria-label="required">
+                  *
+                </span>
               </Label>
               <div className="relative">
                 <input
@@ -261,11 +313,13 @@ export default function Signup() {
                   placeholder="Create a strong password"
                   autoComplete="new-password"
                   className={`w-full px-3 py-2 pr-10 border rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 ${
-                    form.formState.errors.password 
-                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                    form.formState.errors.password
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
                       : ''
                   }`}
-                  aria-invalid={form.formState.errors.password ? 'true' : 'false'}
+                  aria-invalid={
+                    form.formState.errors.password ? 'true' : 'false'
+                  }
                   aria-describedby="signup-password-error signup-password-help"
                   {...form.register('password')}
                 />
@@ -284,21 +338,27 @@ export default function Signup() {
                 </button>
               </div>
               {form.formState.errors.password && (
-                <p 
+                <p
                   id="signup-password-error"
-                  className="text-sm text-red-600 dark:text-red-400" 
-                  role="alert" 
+                  className="text-sm text-red-600 dark:text-red-400"
+                  role="alert"
                   aria-live="polite"
                 >
                   {form.formState.errors.password.message}
                 </p>
               )}
-              <p id="signup-password-help" className="text-xs text-gray-500 dark:text-gray-400">
-                Password must be 12+ characters with uppercase, lowercase, number, and special character
+              <p
+                id="signup-password-help"
+                className="text-xs text-gray-500 dark:text-gray-400"
+              >
+                Password must be 12+ characters with uppercase, lowercase,
+                number, and special character
               </p>
               {passwordValidation && (
                 <div className="text-xs space-y-1">
-                  <div className={`flex items-center ${passwordValidation.strength === 'strong' ? 'text-green-600' : passwordValidation.strength === 'medium' ? 'text-yellow-600' : 'text-red-600'}`}>
+                  <div
+                    className={`flex items-center ${passwordValidation.strength === 'strong' ? 'text-green-600' : passwordValidation.strength === 'medium' ? 'text-yellow-600' : 'text-red-600'}`}
+                  >
                     Strength: {passwordValidation.strength}
                   </div>
                 </div>
@@ -306,12 +366,14 @@ export default function Signup() {
             </div>
 
             <div className="space-y-2">
-              <Label 
-                htmlFor="signup-confirm-password" 
+              <Label
+                htmlFor="signup-confirm-password"
                 className="block text-sm font-medium text-gray-900 dark:text-gray-100"
               >
                 {t('auth.confirmPassword')}
-                <span className="text-red-500 ml-1" aria-label="required">*</span>
+                <span className="text-red-500 ml-1" aria-label="required">
+                  *
+                </span>
               </Label>
               <div className="relative">
                 <input
@@ -320,19 +382,27 @@ export default function Signup() {
                   placeholder="Confirm your password"
                   autoComplete="new-password"
                   className={`w-full px-3 py-2 pr-10 border rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-blue-400 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 ${
-                    form.formState.errors.confirmPassword 
-                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                    form.formState.errors.confirmPassword
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
                       : ''
                   }`}
-                  aria-invalid={form.formState.errors.confirmPassword ? 'true' : 'false'}
-                  aria-describedby={form.formState.errors.confirmPassword ? 'signup-confirm-password-error' : undefined}
+                  aria-invalid={
+                    form.formState.errors.confirmPassword ? 'true' : 'false'
+                  }
+                  aria-describedby={
+                    form.formState.errors.confirmPassword
+                      ? 'signup-confirm-password-error'
+                      : undefined
+                  }
                   {...form.register('confirmPassword')}
                 />
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  aria-label={
+                    showConfirmPassword ? 'Hide password' : 'Show password'
+                  }
                   tabIndex={0}
                 >
                   {showConfirmPassword ? (
@@ -343,10 +413,10 @@ export default function Signup() {
                 </button>
               </div>
               {form.formState.errors.confirmPassword && (
-                <p 
+                <p
                   id="signup-confirm-password-error"
-                  className="text-sm text-red-600 dark:text-red-400" 
-                  role="alert" 
+                  className="text-sm text-red-600 dark:text-red-400"
+                  role="alert"
                   aria-live="polite"
                 >
                   {form.formState.errors.confirmPassword.message}
@@ -355,7 +425,10 @@ export default function Signup() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="signup-locale" className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+              <Label
+                htmlFor="signup-locale"
+                className="block text-sm font-medium text-gray-900 dark:text-gray-100"
+              >
                 {t('auth.language')}
               </Label>
               <Select
@@ -365,7 +438,10 @@ export default function Signup() {
                   changeLanguage(value);
                 }}
               >
-                <SelectTrigger id="signup-locale" className="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                <SelectTrigger
+                  id="signup-locale"
+                  className="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -380,18 +456,30 @@ export default function Signup() {
                 <Checkbox
                   id="signup-tos"
                   checked={form.watch('acceptTos')}
-                  onCheckedChange={(checked) => form.setValue('acceptTos', !!checked)}
+                  onCheckedChange={checked =>
+                    form.setValue('acceptTos', !!checked)
+                  }
                   className="mt-1 border-gray-300 dark:border-gray-600"
                 />
-                <Label htmlFor="signup-tos" className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 cursor-pointer">
+                <Label
+                  htmlFor="signup-tos"
+                  className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 cursor-pointer"
+                >
                   {t('auth.acceptTos')}{' '}
-                  <Link href="/legal/terms" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded">
+                  <Link
+                    href="/legal/terms"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                  >
                     {t('auth.tos')}
                   </Link>
                 </Label>
               </div>
               {form.formState.errors.acceptTos && (
-                <p className="text-sm text-red-600 dark:text-red-400 ml-7" role="alert" aria-live="polite">
+                <p
+                  className="text-sm text-red-600 dark:text-red-400 ml-7"
+                  role="alert"
+                  aria-live="polite"
+                >
                   {form.formState.errors.acceptTos.message}
                 </p>
               )}
@@ -400,18 +488,30 @@ export default function Signup() {
                 <Checkbox
                   id="signup-privacy"
                   checked={form.watch('acceptPrivacy')}
-                  onCheckedChange={(checked) => form.setValue('acceptPrivacy', !!checked)}
+                  onCheckedChange={checked =>
+                    form.setValue('acceptPrivacy', !!checked)
+                  }
                   className="mt-1 border-gray-300 dark:border-gray-600"
                 />
-                <Label htmlFor="signup-privacy" className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 cursor-pointer">
+                <Label
+                  htmlFor="signup-privacy"
+                  className="text-sm leading-relaxed text-gray-600 dark:text-gray-400 cursor-pointer"
+                >
                   {t('auth.acceptPrivacy')}{' '}
-                  <Link href="/legal/privacy" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded">
+                  <Link
+                    href="/legal/privacy"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                  >
                     {t('auth.privacy')}
                   </Link>
                 </Label>
               </div>
               {form.formState.errors.acceptPrivacy && (
-                <p className="text-sm text-red-600 dark:text-red-400 ml-7" role="alert" aria-live="polite">
+                <p
+                  className="text-sm text-red-600 dark:text-red-400 ml-7"
+                  role="alert"
+                  aria-live="polite"
+                >
                   {form.formState.errors.acceptPrivacy.message}
                 </p>
               )}
@@ -424,7 +524,10 @@ export default function Signup() {
             >
               {signupMutation.isPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+                  <Loader2
+                    className="h-4 w-4 mr-2 animate-spin"
+                    aria-hidden="true"
+                  />
                   {t('auth.loading.creatingAccount')}
                 </>
               ) : (
@@ -436,8 +539,8 @@ export default function Signup() {
           <CardFooter className="text-center">
             <div className="text-sm text-gray-600 dark:text-gray-400">
               {t('auth.hasAccount')}{' '}
-              <Link 
-                href="/auth/login" 
+              <Link
+                href="/auth/login"
                 className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
               >
                 {t('auth.signIn')}

@@ -18,12 +18,12 @@ export const ANNUAL_LEAVE_ENTITLEMENTS = {
       { years: 10, days: 23 }, // 10-15 years: 23 days
       { years: 15, days: 24 }, // 15-20 years: 24 days
       { years: 20, days: 25 }, // 20+ years: 25 days
-      { years: 25, days: 26 }  // 25+ years: 26 days (some sectors)
+      { years: 25, days: 26 }, // 25+ years: 26 days (some sectors)
     ],
     carryOverDays: 6, // Maximum 6 days can be carried to next year
     mustUseDays: 14, // Minimum 14 days must be used within the year
     mandatoryPeriod: '1-jun_30-sep', // Must take at least 14 days between June-September
-    paymentDuringLeave: 'full_salary_plus_bonus'
+    paymentDuringLeave: 'full_salary_plus_bonus',
   },
 
   SPECIAL_CATEGORIES: {
@@ -33,7 +33,7 @@ export const ANNUAL_LEAVE_ENTITLEMENTS = {
       description: 'Εργαζόμενοι κάτω των 18 ετών',
       ageLimit: 18,
       extraDays: 5, // Additional 5 days for workers under 18
-      mandatoryConsecutive: 14 // Must take at least 14 consecutive days
+      mandatoryConsecutive: 14, // Must take at least 14 consecutive days
     },
 
     MOTHERS_3_CHILDREN: {
@@ -41,7 +41,7 @@ export const ANNUAL_LEAVE_ENTITLEMENTS = {
       name: 'Μητέρες 3+ Τέκνων',
       description: 'Μητέρες με 3 ή περισσότερα τέκνα',
       extraDays: 2, // Additional 2 days
-      childrenRequired: 3
+      childrenRequired: 3,
     },
 
     DISABLED_WORKERS: {
@@ -49,7 +49,7 @@ export const ANNUAL_LEAVE_ENTITLEMENTS = {
       name: 'Άτομα με Αναπηρία',
       description: 'Εργαζόμενοι με αναπηρία άνω του 50%',
       extraDays: 6, // Additional 6 days
-      disabilityThreshold: 50 // 50% disability minimum
+      disabilityThreshold: 50, // 50% disability minimum
     },
 
     SHIFT_WORKERS: {
@@ -57,9 +57,9 @@ export const ANNUAL_LEAVE_ENTITLEMENTS = {
       name: 'Βαρδιακοί Εργαζόμενοι',
       description: 'Εργαζόμενοι σε συνεχή βάρδια',
       extraDays: 1, // Additional 1 day
-      shiftPattern: 'continuous'
-    }
-  }
+      shiftPattern: 'continuous',
+    },
+  },
 };
 
 // Sick Leave Entitlements
@@ -76,8 +76,8 @@ export const SICK_LEAVE_ENTITLEMENTS = {
     familyMemberCare: {
       enabled: true,
       daysPerYear: 5, // 5 days for family member care
-      relationshipRequired: ['spouse', 'child', 'parent', 'sibling']
-    }
+      relationshipRequired: ['spouse', 'child', 'parent', 'sibling'],
+    },
   },
 
   EXTENDED_SICK_LEAVE: {
@@ -88,7 +88,7 @@ export const SICK_LEAVE_ENTITLEMENTS = {
     paymentRate: 0.5, // 50% salary
     socialSecurityCoverage: true,
     specialistCertificateRequired: true,
-    reviewPeriod: 30 // Review every 30 days
+    reviewPeriod: 30, // Review every 30 days
   },
 
   CHRONIC_ILLNESS: {
@@ -98,8 +98,8 @@ export const SICK_LEAVE_ENTITLEMENTS = {
     maxDaysPerYear: 22, // Up to 22 additional days
     conditions: ['diabetes', 'cancer', 'heart_disease', 'mental_health'],
     specialDocumentation: true,
-    paymentRate: 0.75 // 75% salary
-  }
+    paymentRate: 0.75, // 75% salary
+  },
 };
 
 // Parental Leave Entitlements
@@ -116,8 +116,8 @@ export const PARENTAL_LEAVE_ENTITLEMENTS = {
     healthInsuranceRequired: true,
     additionalForMultiple: {
       twins: 14, // Additional 14 days for twins
-      triplets: 28 // Additional 28 days for triplets
-    }
+      triplets: 28, // Additional 28 days for triplets
+    },
   },
 
   PATERNITY_LEAVE: {
@@ -130,8 +130,8 @@ export const PARENTAL_LEAVE_ENTITLEMENTS = {
     consecutive: false, // Can be taken in parts
     additionalForMultiple: {
       twins: 1, // Additional 1 day for twins
-      triplets: 2 // Additional 2 days for triplets
-    }
+      triplets: 2, // Additional 2 days for triplets
+    },
   },
 
   PARENTAL_LEAVE: {
@@ -144,7 +144,7 @@ export const PARENTAL_LEAVE_ENTITLEMENTS = {
     jobProtection: true,
     canBeShared: true, // Can be shared between parents
     partTimeOption: true,
-    socialSecurityContinues: true
+    socialSecurityContinues: true,
   },
 
   ADOPTION_LEAVE: {
@@ -154,7 +154,7 @@ export const PARENTAL_LEAVE_ENTITLEMENTS = {
     totalDays: 49, // 7 weeks for adoption
     childAgeLimit: 12, // Child must be under 12 years old
     paymentRate: 1.0, // 100% salary
-    documentationRequired: true
+    documentationRequired: true,
   },
 
   // Law 5089/2024 - Parental & Family-Related Leave Enhancements
@@ -175,7 +175,7 @@ export const PARENTAL_LEAVE_ENTITLEMENTS = {
     annualLeaveAccrues: true, // Annual leave continues to accrue
     severanceRightsMaintained: true, // Severance rights maintained
     benefitsContinue: true, // Benefits continue during leave
-    samePositionGuarantee: true // Must be reinstated to same or equivalent position
+    samePositionGuarantee: true, // Must be reinstated to same or equivalent position
   },
 
   SPECIAL_MATERNITY_LEAVE: {
@@ -184,7 +184,12 @@ export const PARENTAL_LEAVE_ENTITLEMENTS = {
     description: 'Εννεάμηνη ειδική άδεια μητρότητας μετά τη νόμιμη άδεια',
     totalMonths: 9, // 9 months special maternity leave
     followsStatutoryLeave: true, // Follows statutory maternity leave
-    applicableToAll: ['birth_mothers', 'adoptive_mothers', 'surrogacy_mothers', 'presumed_mothers'],
+    applicableToAll: [
+      'birth_mothers',
+      'adoptive_mothers',
+      'surrogacy_mothers',
+      'presumed_mothers',
+    ],
     transferableMonths: 7, // Up to 7 months can be transferred to other parent
     minimumRetainedMonths: 2, // Mother must retain at least 2 months
     paymentRate: 0.0, // Unpaid leave
@@ -195,7 +200,7 @@ export const PARENTAL_LEAVE_ENTITLEMENTS = {
     severanceRightsMaintained: true, // Severance rights maintained
     benefitsContinue: true, // Benefits continue during leave
     samePositionGuarantee: true, // Must be reinstated to same or equivalent position
-    socialSecurityContinues: true
+    socialSecurityContinues: true,
   },
 
   CARERS_LEAVE: {
@@ -210,7 +215,7 @@ export const PARENTAL_LEAVE_ENTITLEMENTS = {
     documentationRequired: true, // Medical documentation required
     jobProtection: true,
     eligibleContractTypes: ['fixed_term', 'permanent'],
-    annualEntitlement: true // Annual entitlement resets each year
+    annualEntitlement: true, // Annual entitlement resets each year
   },
 
   FORCE_MAJEURE_LEAVE: {
@@ -226,8 +231,8 @@ export const PARENTAL_LEAVE_ENTITLEMENTS = {
     applicableTo: ['working_parents', 'carers'],
     immediateFamily: ['spouse', 'children', 'parents', 'siblings'],
     documentationDeadline: 48, // Must provide documentation within 48 hours
-    jobProtection: true
-  }
+    jobProtection: true,
+  },
 };
 
 // Special Leave Types
@@ -242,8 +247,8 @@ export const SPECIAL_LEAVE_TYPES = {
     documentationRequired: true,
     familyMarriage: {
       child: 1, // 1 day for child's marriage
-      sibling: 1 // 1 day for sibling's marriage
-    }
+      sibling: 1, // 1 day for sibling's marriage
+    },
   },
 
   BEREAVEMENT_LEAVE: {
@@ -256,11 +261,11 @@ export const SPECIAL_LEAVE_TYPES = {
       parent: 3,
       sibling: 2,
       grandparent: 1,
-      parentInLaw: 2
+      parentInLaw: 2,
     },
     paymentRate: 1.0,
     documentationRequired: true,
-    timeLimitAfterEvent: 30 // Must be taken within 30 days
+    timeLimitAfterEvent: 30, // Must be taken within 30 days
   },
 
   MILITARY_LEAVE: {
@@ -272,8 +277,8 @@ export const SPECIAL_LEAVE_TYPES = {
     jobProtection: true,
     reserveExercises: {
       days: 30, // Up to 30 days per year for reserve exercises
-      paymentRate: 0.5 // 50% salary
-    }
+      paymentRate: 0.5, // 50% salary
+    },
   },
 
   BLOOD_DONATION: {
@@ -283,7 +288,7 @@ export const SPECIAL_LEAVE_TYPES = {
     days: 1, // 1 day per donation
     maxPerYear: 4, // Maximum 4 donations per year
     paymentRate: 1.0,
-    documentationRequired: true
+    documentationRequired: true,
   },
 
   EDUCATION_LEAVE: {
@@ -294,8 +299,12 @@ export const SPECIAL_LEAVE_TYPES = {
     paymentRate: 0.0, // Usually unpaid
     approvalRequired: true,
     jobProtection: true,
-    conditions: ['university_exams', 'professional_certification', 'language_certification']
-  }
+    conditions: [
+      'university_exams',
+      'professional_certification',
+      'language_certification',
+    ],
+  },
 };
 
 // Unpaid Leave Types
@@ -308,7 +317,7 @@ export const UNPAID_LEAVE_TYPES = {
     approvalRequired: true,
     noticePeriod: 30, // 30 days notice required
     jobProtection: true,
-    socialSecurityContinues: false
+    socialSecurityContinues: false,
   },
 
   SABBATICAL_LEAVE: {
@@ -319,7 +328,7 @@ export const UNPAID_LEAVE_TYPES = {
     minimumTenure: 60, // Minimum 5 years employment
     approvalRequired: true,
     returnGuarantee: true,
-    socialSecurityOptions: true
+    socialSecurityOptions: true,
   },
 
   STUDY_LEAVE: {
@@ -330,25 +339,23 @@ export const UNPAID_LEAVE_TYPES = {
     academicInstitutionRequired: true,
     approvalRequired: true,
     returnCommitment: 24, // Must return for at least 24 months
-    partialPaymentOption: true
-  }
+    partialPaymentOption: true,
+  },
 };
 
 /**
  * Calculate annual leave entitlement based on tenure and special categories
  */
-export function calculateAnnualLeaveEntitlement(
-  employeeData: {
-    startDate: string;
-    dateOfBirth: string;
-    hasChildren: boolean;
-    numberOfChildren: number;
-    hasDisability: boolean;
-    disabilityPercentage: number;
-    workPattern: string;
-    gender: string;
-  }
-): {
+export function calculateAnnualLeaveEntitlement(employeeData: {
+  startDate: string;
+  dateOfBirth: string;
+  hasChildren: boolean;
+  numberOfChildren: number;
+  hasDisability: boolean;
+  disabilityPercentage: number;
+  workPattern: string;
+  gender: string;
+}): {
   basicDays: number;
   bonusDays: number;
   totalDays: number;
@@ -363,8 +370,14 @@ export function calculateAnnualLeaveEntitlement(
 } {
   const currentDate = new Date();
   const startDate = new Date(employeeData.startDate);
-  const yearsOfService = Math.floor((currentDate.getTime() - startDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-  const age = Math.floor((currentDate.getTime() - new Date(employeeData.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  const yearsOfService = Math.floor(
+    (currentDate.getTime() - startDate.getTime()) /
+      (365.25 * 24 * 60 * 60 * 1000)
+  );
+  const age = Math.floor(
+    (currentDate.getTime() - new Date(employeeData.dateOfBirth).getTime()) /
+      (365.25 * 24 * 60 * 60 * 1000)
+  );
 
   const breakdown = [];
   let totalDays = 0;
@@ -374,72 +387,86 @@ export function calculateAnnualLeaveEntitlement(
   const basicEntitlement = ANNUAL_LEAVE_ENTITLEMENTS.BASIC.increments
     .reverse()
     .find(increment => yearsOfService >= increment.years);
-  
+
   const basicDays = basicEntitlement?.days || 20;
   totalDays += basicDays;
-  
+
   breakdown.push({
     category: 'basic',
     description: 'Βασική ετήσια άδεια',
     days: basicDays,
-    reason: `${yearsOfService} έτη υπηρεσίας`
+    reason: `${yearsOfService} έτη υπηρεσίας`,
   });
 
   // Check for young worker bonus
-  if (age < ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.YOUNG_WORKERS.ageLimit) {
-    const youngWorkerBonus = ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.YOUNG_WORKERS.extraDays;
+  if (
+    age < ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.YOUNG_WORKERS.ageLimit
+  ) {
+    const youngWorkerBonus =
+      ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.YOUNG_WORKERS.extraDays;
     bonusDays += youngWorkerBonus;
     totalDays += youngWorkerBonus;
-    
+
     breakdown.push({
       category: 'young-worker',
       description: 'Νεαρός εργαζόμενος',
       days: youngWorkerBonus,
-      reason: `Ηλικία κάτω από ${ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.YOUNG_WORKERS.ageLimit} έτη`
+      reason: `Ηλικία κάτω από ${ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.YOUNG_WORKERS.ageLimit} έτη`,
     });
   }
 
   // Check for mothers with 3+ children bonus
-  if (employeeData.gender === 'female' && 
-      employeeData.numberOfChildren >= ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.MOTHERS_3_CHILDREN.childrenRequired) {
-    const mothersBonus = ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.MOTHERS_3_CHILDREN.extraDays;
+  if (
+    employeeData.gender === 'female' &&
+    employeeData.numberOfChildren >=
+      ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.MOTHERS_3_CHILDREN
+        .childrenRequired
+  ) {
+    const mothersBonus =
+      ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.MOTHERS_3_CHILDREN.extraDays;
     bonusDays += mothersBonus;
     totalDays += mothersBonus;
-    
+
     breakdown.push({
       category: 'mothers-bonus',
       description: 'Μητέρα 3+ τέκνων',
       days: mothersBonus,
-      reason: `${employeeData.numberOfChildren} τέκνα`
+      reason: `${employeeData.numberOfChildren} τέκνα`,
     });
   }
 
   // Check for disability bonus
-  if (employeeData.hasDisability && 
-      employeeData.disabilityPercentage >= ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.DISABLED_WORKERS.disabilityThreshold) {
-    const disabilityBonus = ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.DISABLED_WORKERS.extraDays;
+  if (
+    employeeData.hasDisability &&
+    employeeData.disabilityPercentage >=
+      ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.DISABLED_WORKERS
+        .disabilityThreshold
+  ) {
+    const disabilityBonus =
+      ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.DISABLED_WORKERS.extraDays;
     bonusDays += disabilityBonus;
     totalDays += disabilityBonus;
-    
+
     breakdown.push({
       category: 'disability-bonus',
       description: 'Άτομο με αναπηρία',
       days: disabilityBonus,
-      reason: `${employeeData.disabilityPercentage}% αναπηρία`
+      reason: `${employeeData.disabilityPercentage}% αναπηρία`,
     });
   }
 
   // Check for shift worker bonus
   if (employeeData.workPattern === 'continuous_shifts') {
-    const shiftBonus = ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.SHIFT_WORKERS.extraDays;
+    const shiftBonus =
+      ANNUAL_LEAVE_ENTITLEMENTS.SPECIAL_CATEGORIES.SHIFT_WORKERS.extraDays;
     bonusDays += shiftBonus;
     totalDays += shiftBonus;
-    
+
     breakdown.push({
       category: 'shift-bonus',
       description: 'Βαρδιακός εργαζόμενος',
       days: shiftBonus,
-      reason: 'Συνεχείς βάρδιες'
+      reason: 'Συνεχείς βάρδιες',
     });
   }
 
@@ -449,7 +476,7 @@ export function calculateAnnualLeaveEntitlement(
     totalDays,
     carryOverLimit: ANNUAL_LEAVE_ENTITLEMENTS.BASIC.carryOverDays,
     mandatoryUseDays: ANNUAL_LEAVE_ENTITLEMENTS.BASIC.mustUseDays,
-    breakdown
+    breakdown,
   };
 }
 
@@ -473,7 +500,7 @@ export function calculateLeaveBalance(
   const availableDays = totalEntitlement - usedDays - pendingDays;
   const carryOverLimit = ANNUAL_LEAVE_ENTITLEMENTS.BASIC.carryOverDays;
   const mandatoryUseDays = ANNUAL_LEAVE_ENTITLEMENTS.BASIC.mustUseDays;
-  
+
   const carryOverEligible = Math.min(availableDays, carryOverLimit);
   const mustUseBeforeYearEnd = Math.max(0, availableDays - carryOverLimit);
 
@@ -483,7 +510,7 @@ export function calculateLeaveBalance(
     pendingDays,
     availableDays,
     carryOverEligible,
-    mustUseBeforeYearEnd
+    mustUseBeforeYearEnd,
   };
 }
 
@@ -512,49 +539,70 @@ export function validateLeaveRequest(
 
   const start = new Date(startDate);
   const end = new Date(endDate);
-  const leaveDays = Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+  const leaveDays =
+    Math.ceil((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000)) + 1;
 
   // Check if employee has enough days
   if (leaveType === 'annual' && leaveDays > employeeData.availableDays) {
-    errors.push(`Δεν υπάρχουν αρκετές διαθέσιμες ημέρες. Ζητήθηκαν: ${leaveDays}, Διαθέσιμες: ${employeeData.availableDays}`);
+    errors.push(
+      `Δεν υπάρχουν αρκετές διαθέσιμες ημέρες. Ζητήθηκαν: ${leaveDays}, Διαθέσιμες: ${employeeData.availableDays}`
+    );
   }
 
   // Check mandatory summer leave period (June-September)
   const startMonth = start.getMonth();
   const endMonth = end.getMonth();
-  const isSummerPeriod = (startMonth >= 5 && startMonth <= 8) || (endMonth >= 5 && endMonth <= 8);
-  
-  if (leaveType === 'annual' && !employeeData.hasUsedMandatoryDays && !isSummerPeriod && leaveDays >= 14) {
-    warnings.push('Συνιστάται να χρησιμοποιήσετε τουλάχιστον 14 ημέρες κατά την περίοδο Ιουνίου-Σεπτεμβρίου');
+  const isSummerPeriod =
+    (startMonth >= 5 && startMonth <= 8) || (endMonth >= 5 && endMonth <= 8);
+
+  if (
+    leaveType === 'annual' &&
+    !employeeData.hasUsedMandatoryDays &&
+    !isSummerPeriod &&
+    leaveDays >= 14
+  ) {
+    warnings.push(
+      'Συνιστάται να χρησιμοποιήσετε τουλάχιστον 14 ημέρες κατά την περίοδο Ιουνίου-Σεπτεμβρίου'
+    );
   }
 
   // Check minimum gap between leaves
   if (employeeData.lastLeaveDate) {
     const lastLeave = new Date(employeeData.lastLeaveDate);
-    const daysSinceLastLeave = Math.ceil((start.getTime() - lastLeave.getTime()) / (24 * 60 * 60 * 1000));
-    
+    const daysSinceLastLeave = Math.ceil(
+      (start.getTime() - lastLeave.getTime()) / (24 * 60 * 60 * 1000)
+    );
+
     if (daysSinceLastLeave < 30) {
-      warnings.push('Η προηγούμενη άδεια έληξε πριν από λιγότερο από 30 ημέρες');
+      warnings.push(
+        'Η προηγούμενη άδεια έληξε πριν από λιγότερο από 30 ημέρες'
+      );
     }
   }
 
   // Check for weekend optimization
   const startDay = start.getDay();
   const endDay = end.getDay();
-  
-  if (startDay !== 1 && startDay !== 0) { // Not starting on Monday or Sunday
-    suggestions.push('Εξετάστε να ξεκινήσετε την άδεια τη Δευτέρα για βελτιστοποίηση');
+
+  if (startDay !== 1 && startDay !== 0) {
+    // Not starting on Monday or Sunday
+    suggestions.push(
+      'Εξετάστε να ξεκινήσετε την άδεια τη Δευτέρα για βελτιστοποίηση'
+    );
   }
-  
-  if (endDay !== 5 && endDay !== 6) { // Not ending on Friday or Saturday
-    suggestions.push('Εξετάστε να τελειώσετε την άδεια την Παρασκευή για βελτιστοποίηση');
+
+  if (endDay !== 5 && endDay !== 6) {
+    // Not ending on Friday or Saturday
+    suggestions.push(
+      'Εξετάστε να τελειώσετε την άδεια την Παρασκευή για βελτιστοποίηση'
+    );
   }
 
   return {
     isValid: errors.length === 0,
     warnings,
     errors,
-    suggestions
+    suggestions,
   };
 }
 
@@ -573,28 +621,36 @@ export function getLeaveTypesAndEntitlements(): {
     sickLeave: SICK_LEAVE_ENTITLEMENTS,
     parentalLeave: PARENTAL_LEAVE_ENTITLEMENTS,
     specialLeave: SPECIAL_LEAVE_TYPES,
-    unpaidLeave: UNPAID_LEAVE_TYPES
+    unpaidLeave: UNPAID_LEAVE_TYPES,
   };
 }
 
 /**
  * Calculate total leave days for a specific period
  */
-export function calculateLeaveDays(startDate: string, endDate: string, excludeWeekends: boolean = true): number {
+export function calculateLeaveDays(
+  startDate: string,
+  endDate: string,
+  excludeWeekends: boolean = true
+): number {
   const start = new Date(startDate);
   const end = new Date(endDate);
   let totalDays = 0;
-  
-  for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+
+  for (
+    let date = new Date(start);
+    date <= end;
+    date.setDate(date.getDate() + 1)
+  ) {
     const dayOfWeek = date.getDay();
-    
+
     if (excludeWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
       continue; // Skip weekends
     }
-    
+
     totalDays++;
   }
-  
+
   return totalDays;
 }
 
@@ -633,35 +689,41 @@ export function checkLeaveConflicts(
 
     // Check for overlap
     if (newStart <= existingEnd && newEnd >= existingStart) {
-      const overlapStart = new Date(Math.max(newStart.getTime(), existingStart.getTime()));
-      const overlapEnd = new Date(Math.min(newEnd.getTime(), existingEnd.getTime()));
-      const overlapDays = Math.ceil((overlapEnd.getTime() - overlapStart.getTime()) / (24 * 60 * 60 * 1000)) + 1;
+      const overlapStart = new Date(
+        Math.max(newStart.getTime(), existingStart.getTime())
+      );
+      const overlapEnd = new Date(
+        Math.min(newEnd.getTime(), existingEnd.getTime())
+      );
+      const overlapDays =
+        Math.ceil(
+          (overlapEnd.getTime() - overlapStart.getTime()) /
+            (24 * 60 * 60 * 1000)
+        ) + 1;
 
       conflicts.push({
         type: leave.type,
         startDate: leave.startDate,
         endDate: leave.endDate,
-        overlapDays
+        overlapDays,
       });
     }
   }
 
   return {
     hasConflicts: conflicts.length > 0,
-    conflicts
+    conflicts,
   };
 }
 
 /**
  * Calculate eligibility and entitlement for Law 5089/2024 Enhanced Parental Leave
  */
-export function calculateEnhancedParentalLeave(
-  employeeData: {
-    monthsEmployed: number;
-    children: Array<{ birthDate: string; age: number }>;
-    isParent: boolean;
-  }
-): {
+export function calculateEnhancedParentalLeave(employeeData: {
+  monthsEmployed: number;
+  children: Array<{ birthDate: string; age: number }>;
+  isParent: boolean;
+}): {
   isEligible: boolean;
   eligibleChildren: Array<{ age: number; birthDate: string }>;
   totalMonthsAvailable: number;
@@ -672,25 +734,36 @@ export function calculateEnhancedParentalLeave(
 } {
   const restrictions: string[] = [];
   const benefits: string[] = [];
-  
+
   // Check employment period requirement
-  const isEligible = employeeData.monthsEmployed >= PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.minimumEmploymentPeriod;
-  
+  const isEligible =
+    employeeData.monthsEmployed >=
+    PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.minimumEmploymentPeriod;
+
   if (!isEligible) {
-    restrictions.push(`Απαιτείται τουλάχιστον ${PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.minimumEmploymentPeriod} μήνες απασχόλησης`);
+    restrictions.push(
+      `Απαιτείται τουλάχιστον ${PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.minimumEmploymentPeriod} μήνες απασχόλησης`
+    );
   }
-  
+
   // Find eligible children (under 8 years old)
   const eligibleChildren = employeeData.children.filter(
-    child => child.age < PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.childAgeLimit
+    child =>
+      child.age <
+      PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.childAgeLimit
   );
-  
+
   if (eligibleChildren.length === 0 && employeeData.children.length > 0) {
-    restrictions.push(`Τα τέκνα πρέπει να είναι κάτω από ${PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.childAgeLimit} ετών`);
+    restrictions.push(
+      `Τα τέκνα πρέπει να είναι κάτω από ${PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.childAgeLimit} ετών`
+    );
   }
-  
-  const totalMonthsAvailable = eligibleChildren.length > 0 ? PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.totalMonths : 0;
-  
+
+  const totalMonthsAvailable =
+    eligibleChildren.length > 0
+      ? PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.totalMonths
+      : 0;
+
   // Add benefits information
   if (isEligible && eligibleChildren.length > 0) {
     benefits.push('Προστασία θέσης εργασίας');
@@ -701,15 +774,17 @@ export function calculateEnhancedParentalLeave(
     benefits.push('Συνέχιση παροχών');
     benefits.push('Επιστροφή στην ίδια ή ισοδύναμη θέση');
   }
-  
+
   return {
     isEligible: isEligible && eligibleChildren.length > 0,
     eligibleChildren,
     totalMonthsAvailable,
-    canBeSharedWithPartner: PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.canBeShared,
-    canBeTakenInParts: PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.consecutiveOrParts,
+    canBeSharedWithPartner:
+      PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.canBeShared,
+    canBeTakenInParts:
+      PARENTAL_LEAVE_ENTITLEMENTS.ENHANCED_PARENTAL_LEAVE.consecutiveOrParts,
     restrictions,
-    benefits
+    benefits,
   };
 }
 
@@ -719,7 +794,11 @@ export function calculateEnhancedParentalLeave(
 export function calculateSpecialMaternityLeaveTransfer(
   motherData: {
     isEligibleMother: boolean;
-    motherType: 'birth_mother' | 'adoptive_mother' | 'surrogacy_mother' | 'presumed_mother';
+    motherType:
+      | 'birth_mother'
+      | 'adoptive_mother'
+      | 'surrogacy_mother'
+      | 'presumed_mother';
   },
   transferData: {
     monthsToTransfer: number;
@@ -736,45 +815,58 @@ export function calculateSpecialMaternityLeaveTransfer(
 } {
   const errors: string[] = [];
   const warnings: string[] = [];
-  
-  const maxTransferable = PARENTAL_LEAVE_ENTITLEMENTS.SPECIAL_MATERNITY_LEAVE.transferableMonths;
-  const minimumRetained = PARENTAL_LEAVE_ENTITLEMENTS.SPECIAL_MATERNITY_LEAVE.minimumRetainedMonths;
-  const totalMonths = PARENTAL_LEAVE_ENTITLEMENTS.SPECIAL_MATERNITY_LEAVE.totalMonths;
-  
+
+  const maxTransferable =
+    PARENTAL_LEAVE_ENTITLEMENTS.SPECIAL_MATERNITY_LEAVE.transferableMonths;
+  const minimumRetained =
+    PARENTAL_LEAVE_ENTITLEMENTS.SPECIAL_MATERNITY_LEAVE.minimumRetainedMonths;
+  const totalMonths =
+    PARENTAL_LEAVE_ENTITLEMENTS.SPECIAL_MATERNITY_LEAVE.totalMonths;
+
   // Validate transfer amount
   if (transferData.monthsToTransfer > maxTransferable) {
-    errors.push(`Δεν μπορούν να μεταφερθούν περισσότεροι από ${maxTransferable} μήνες`);
+    errors.push(
+      `Δεν μπορούν να μεταφερθούν περισσότεροι από ${maxTransferable} μήνες`
+    );
   }
-  
+
   if (transferData.monthsToTransfer < 0) {
     errors.push('Ο αριθμός μηνών προς μεταφορά δεν μπορεί να είναι αρνητικός');
   }
-  
+
   const motherRetains = totalMonths - transferData.monthsToTransfer;
-  
+
   if (motherRetains < minimumRetained) {
-    errors.push(`Η μητέρα πρέπει να διατηρήσει τουλάχιστον ${minimumRetained} μήνες`);
+    errors.push(
+      `Η μητέρα πρέπει να διατηρήσει τουλάχιστον ${minimumRetained} μήνες`
+    );
   }
-  
+
   // Check partner eligibility
   if (transferData.monthsToTransfer > 0 && !transferData.partnerEligible) {
-    errors.push('Ο/Η σύντροφος δεν είναι επιλέξιμος/η για τη λήψη μεταφερόμενων μηνών');
+    errors.push(
+      'Ο/Η σύντροφος δεν είναι επιλέξιμος/η για τη λήψη μεταφερόμενων μηνών'
+    );
   }
-  
+
   // Check mother eligibility
   if (!motherData.isEligibleMother) {
     errors.push('Η μητέρα δεν είναι επιλέξιμη για ειδική άδεια μητρότητας');
   }
-  
+
   // Add warnings for optimal planning
   if (transferData.monthsToTransfer > 0 && transferData.monthsToTransfer < 2) {
-    warnings.push('Συνιστάται μεταφορά τουλάχιστον 2 μηνών για αποτελεσματική οικογενειακή υποστήριξη');
+    warnings.push(
+      'Συνιστάται μεταφορά τουλάχιστον 2 μηνών για αποτελεσματική οικογενειακή υποστήριξη'
+    );
   }
-  
+
   if (transferData.monthsToTransfer === maxTransferable) {
-    warnings.push('Μεταφέρθηκε ο μέγιστος αριθμός μηνών - η μητέρα διατηρεί μόνο το ελάχιστο');
+    warnings.push(
+      'Μεταφέρθηκε ο μέγιστος αριθμός μηνών - η μητέρα διατηρεί μόνο το ελάχιστο'
+    );
   }
-  
+
   return {
     isTransferValid: errors.length === 0,
     motherRetainsMonths: motherRetains,
@@ -782,22 +874,20 @@ export function calculateSpecialMaternityLeaveTransfer(
     maxTransferableMonths: maxTransferable,
     minimumMotherMonths: minimumRetained,
     errors,
-    warnings
+    warnings,
   };
 }
 
 /**
  * Calculate Carer's Leave eligibility (Law 5089/2024)
  */
-export function calculateCarersLeave(
-  employeeData: {
-    monthsEmployed: number;
-    contractType: 'fixed_term' | 'permanent' | 'temporary';
-    hasEligibleCareRecipient: boolean;
-    careRecipientRelation: 'relative' | 'household_member';
-    medicalDocumentationAvailable: boolean;
-  }
-): {
+export function calculateCarersLeave(employeeData: {
+  monthsEmployed: number;
+  contractType: 'fixed_term' | 'permanent' | 'temporary';
+  hasEligibleCareRecipient: boolean;
+  careRecipientRelation: 'relative' | 'household_member';
+  medicalDocumentationAvailable: boolean;
+}): {
   isEligible: boolean;
   totalDaysAvailable: number;
   eligibilityReasons: string[];
@@ -807,65 +897,75 @@ export function calculateCarersLeave(
   const eligibilityReasons: string[] = [];
   const requirements: string[] = [];
   const restrictions: string[] = [];
-  
+
   // Check employment period
-  const hasMinimumEmployment = employeeData.monthsEmployed >= PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.minimumEmploymentPeriod;
-  
+  const hasMinimumEmployment =
+    employeeData.monthsEmployed >=
+    PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.minimumEmploymentPeriod;
+
   if (!hasMinimumEmployment) {
-    eligibilityReasons.push(`Απαιτούνται τουλάχιστον ${PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.minimumEmploymentPeriod} μήνες απασχόλησης`);
+    eligibilityReasons.push(
+      `Απαιτούνται τουλάχιστον ${PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.minimumEmploymentPeriod} μήνες απασχόλησης`
+    );
   }
-  
+
   // Check contract type eligibility
-  const isEligibleContract = PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.eligibleContractTypes.includes(employeeData.contractType);
-  
+  const isEligibleContract =
+    PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.eligibleContractTypes.includes(
+      employeeData.contractType
+    );
+
   if (!isEligibleContract) {
-    eligibilityReasons.push('Ο τύπος σύμβασης δεν είναι επιλέξιμος για άδεια φροντιστή');
+    eligibilityReasons.push(
+      'Ο τύπος σύμβασης δεν είναι επιλέξιμος για άδεια φροντιστή'
+    );
   }
-  
+
   // Check care recipient
   if (!employeeData.hasEligibleCareRecipient) {
     eligibilityReasons.push('Δεν υπάρχει επιλέξιμος δικαιούχος φροντίδας');
   }
-  
+
   // Check medical documentation
   if (!employeeData.medicalDocumentationAvailable) {
     requirements.push('Απαιτείται ιατρική τεκμηρίωση σοβαρών ιατρικών αναγκών');
   }
-  
-  const isEligible = hasMinimumEmployment && 
-                    isEligibleContract && 
-                    employeeData.hasEligibleCareRecipient;
-  
+
+  const isEligible =
+    hasMinimumEmployment &&
+    isEligibleContract &&
+    employeeData.hasEligibleCareRecipient;
+
   // Add general requirements
   requirements.push('Υποβολή αίτησης με ιατρική βεβαίωση');
   requirements.push('Προηγούμενη ειδοποίηση εργοδότη');
-  
+
   // Add restrictions
   restrictions.push('Μέγιστο 5 ημέρες ανά έτος');
   restrictions.push('Άδεια χωρίς αποδοχές');
   restrictions.push('Ετήσια ανανέωση δικαιώματος');
-  
+
   return {
     isEligible,
-    totalDaysAvailable: isEligible ? PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.totalDays : 0,
+    totalDaysAvailable: isEligible
+      ? PARENTAL_LEAVE_ENTITLEMENTS.CARERS_LEAVE.totalDays
+      : 0,
     eligibilityReasons,
     requirements,
-    restrictions
+    restrictions,
   };
 }
 
 /**
  * Calculate Force Majeure Leave usage and eligibility (Law 5089/2024)
  */
-export function calculateForceMajeureLeave(
-  employeeData: {
-    isParentOrCarer: boolean;
-    usedOccurrencesThisYear: number;
-    emergencyType: 'illness' | 'accident' | 'emergency_care' | 'other';
-    hasMedicalCertificate: boolean;
-    familyMemberAffected: 'spouse' | 'child' | 'parent' | 'sibling' | 'other';
-  }
-): {
+export function calculateForceMajeureLeave(employeeData: {
+  isParentOrCarer: boolean;
+  usedOccurrencesThisYear: number;
+  emergencyType: 'illness' | 'accident' | 'emergency_care' | 'other';
+  hasMedicalCertificate: boolean;
+  familyMemberAffected: 'spouse' | 'child' | 'parent' | 'sibling' | 'other';
+}): {
   isEligible: boolean;
   remainingOccurrences: number;
   remainingDays: number;
@@ -877,59 +977,86 @@ export function calculateForceMajeureLeave(
   const requirements: string[] = [];
   const nextSteps: string[] = [];
   const eligibilityIssues: string[] = [];
-  
+
   // Check if user is parent or carer
   if (!employeeData.isParentOrCarer) {
-    eligibilityIssues.push('Δικαίωμα μόνο για εργαζόμενους γονείς ή φροντιστές');
+    eligibilityIssues.push(
+      'Δικαίωμα μόνο για εργαζόμενους γονείς ή φροντιστές'
+    );
   }
-  
+
   // Check remaining occurrences
-  const maxOccurrences = PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.maxOccurrencesPerYear;
-  const remainingOccurrences = Math.max(0, maxOccurrences - employeeData.usedOccurrencesThisYear);
-  
+  const maxOccurrences =
+    PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.maxOccurrencesPerYear;
+  const remainingOccurrences = Math.max(
+    0,
+    maxOccurrences - employeeData.usedOccurrencesThisYear
+  );
+
   if (remainingOccurrences === 0) {
-    eligibilityIssues.push(`Έχει εξαντληθεί το όριο των ${maxOccurrences} περιστατικών ανά έτος`);
+    eligibilityIssues.push(
+      `Έχει εξαντληθεί το όριο των ${maxOccurrences} περιστατικών ανά έτος`
+    );
   }
-  
+
   // Check emergency type eligibility
-  const eligibleEmergencyTypes = PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.urgentFamilyEmergencies;
-  const isEligibleEmergency = eligibleEmergencyTypes.includes(employeeData.emergencyType);
-  
+  const eligibleEmergencyTypes =
+    PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.urgentFamilyEmergencies;
+  const isEligibleEmergency = eligibleEmergencyTypes.includes(
+    employeeData.emergencyType
+  );
+
   if (!isEligibleEmergency && employeeData.emergencyType !== 'other') {
     eligibilityIssues.push('Ο τύπος επείγουσας κατάστασης δεν καλύπτεται');
   }
-  
+
   // Check family member eligibility
-  const eligibleFamilyMembers = PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.immediateFamily;
-  const isEligibleFamilyMember = eligibleFamilyMembers.includes(employeeData.familyMemberAffected);
-  
-  if (!isEligibleFamilyMember && employeeData.familyMemberAffected !== 'other') {
-    eligibilityIssues.push('Το μέλος της οικογένειας δεν καλύπτεται από την άδεια');
+  const eligibleFamilyMembers =
+    PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.immediateFamily;
+  const isEligibleFamilyMember = eligibleFamilyMembers.includes(
+    employeeData.familyMemberAffected
+  );
+
+  if (
+    !isEligibleFamilyMember &&
+    employeeData.familyMemberAffected !== 'other'
+  ) {
+    eligibilityIssues.push(
+      'Το μέλος της οικογένειας δεν καλύπτεται από την άδεια'
+    );
   }
-  
+
   // Medical certificate requirements
-  if (!employeeData.hasMedicalCertificate && employeeData.emergencyType !== 'other') {
+  if (
+    !employeeData.hasMedicalCertificate &&
+    employeeData.emergencyType !== 'other'
+  ) {
     requirements.push('Απαιτείται ιατρική βεβαίωση');
   }
-  
-  const isEligible = employeeData.isParentOrCarer && 
-                    remainingOccurrences > 0 && 
-                    isEligibleEmergency && 
-                    isEligibleFamilyMember;
-  
+
+  const isEligible =
+    employeeData.isParentOrCarer &&
+    remainingOccurrences > 0 &&
+    isEligibleEmergency &&
+    isEligibleFamilyMember;
+
   // Add standard requirements
   requirements.push('Άμεση ειδοποίηση εργοδότη');
-  requirements.push(`Υποβολή τεκμηρίωσης εντός ${PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.documentationDeadline} ωρών`);
-  
+  requirements.push(
+    `Υποβολή τεκμηρίωσης εντός ${PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.documentationDeadline} ωρών`
+  );
+
   // Add next steps if eligible
   if (isEligible) {
     nextSteps.push('Υποβολή αίτησης άδειας ανωτέρας βίας');
     nextSteps.push('Συλλογή απαραίτητων ιατρικών βεβαιώσεων');
     nextSteps.push('Συντονισμός με διεύθυνση ανθρώπινου δυναμικού');
   }
-  
-  const remainingDays = remainingOccurrences * PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.daysPerOccurrence;
-  
+
+  const remainingDays =
+    remainingOccurrences *
+    PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.daysPerOccurrence;
+
   return {
     isEligible,
     remainingOccurrences,
@@ -937,6 +1064,6 @@ export function calculateForceMajeureLeave(
     isPaid: PARENTAL_LEAVE_ENTITLEMENTS.FORCE_MAJEURE_LEAVE.paymentRate === 1.0,
     requirements,
     nextSteps,
-    eligibilityIssues
+    eligibilityIssues,
   };
 }

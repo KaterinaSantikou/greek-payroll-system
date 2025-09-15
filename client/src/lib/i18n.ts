@@ -55,7 +55,7 @@ interface TranslationKeys {
   'dashboard.ergani_sync': string;
   'dashboard.filings_due': string;
   'dashboard.updated_just_now': string;
-  
+
   // Enhanced dashboard content
   'dashboard.run_payroll': string;
   'dashboard.resume_payroll_run': string;
@@ -93,7 +93,7 @@ interface TranslationKeys {
   'dashboard.payroll_ready_desc': string;
   'dashboard.resume_payroll': string;
   'dashboard.resume_payroll_desc': string;
-  
+
   // Explanation system
   'explanation.title': string;
   'explanation.coverage': string;
@@ -318,13 +318,15 @@ const translations: Record<Locale, TranslationKeys> = {
     // Dashboard chips and status
     'dashboard.digital_card_sync': 'Digital Card',
     'dashboard.ergani_sync': 'ERGANI in sync',
-    'dashboard.filings_due': '{count, plural, one {# filing due} other {# filings due}}',
+    'dashboard.filings_due':
+      '{count, plural, one {# filing due} other {# filings due}}',
     'dashboard.updated_just_now': 'Updated just now',
-    
+
     // Enhanced dashboard content
     'dashboard.run_payroll': 'Run Payroll',
     'dashboard.resume_payroll_run': 'Resume Payroll Run',
-    'dashboard.draft_in_progress': 'Draft payroll in progress - pick up where you left off',
+    'dashboard.draft_in_progress':
+      'Draft payroll in progress - pick up where you left off',
     'dashboard.ready_to_process': 'Ready to process payroll for this period',
     'dashboard.employees': 'Employees',
     'dashboard.gross_total': 'Gross Total',
@@ -358,7 +360,7 @@ const translations: Record<Locale, TranslationKeys> = {
     'dashboard.payroll_ready_desc': 'Payroll run is ready for review',
     'dashboard.resume_payroll': 'Resuming Payroll',
     'dashboard.resume_payroll_desc': 'Continuing from where you left off',
-    
+
     // Explanation system
     'explanation.title': 'Payslip Explanation',
     'explanation.coverage': 'coverage',
@@ -372,7 +374,8 @@ const translations: Record<Locale, TranslationKeys> = {
     'explanation.helpful_question': 'How helpful was this explanation?',
     'explanation.calculation_formula': 'Calculation Formula',
     'explanation.unexplained_items': 'Unexplained Items',
-    'explanation.unexplained_description': 'The following items could not be explained automatically:',
+    'explanation.unexplained_description':
+      'The following items could not be explained automatically:',
     'explanation.earnings': 'Earnings',
     'explanation.deductions': 'Deductions',
     'explanation.summary': 'Summary',
@@ -392,7 +395,7 @@ const translations: Record<Locale, TranslationKeys> = {
     'errors.not_found': 'Item not found',
     'errors.server_error': 'Server error occurred',
   },
-  
+
   el: {
     // Navigation - Greek translations from the provided file
     'nav.dashboard': 'Πίνακας Ελέγχου',
@@ -510,17 +513,20 @@ const translations: Record<Locale, TranslationKeys> = {
     'portal.digital-card': 'Ψηφιακή Κάρτα',
     'portal.compliance-score': 'Βαθμός Συμμόρφωσης',
 
-    // Dashboard chips and status  
+    // Dashboard chips and status
     'dashboard.digital_card_sync': 'Ψηφιακή Κάρτα',
     'dashboard.ergani_sync': 'ΕΡΓΑΝΗ σε συγχρονισμό',
-    'dashboard.filings_due': '{count, plural, one {# δήλωση σε εκκρεμότητα} other {# δηλώσεις σε εκκρεμότητα}}',
+    'dashboard.filings_due':
+      '{count, plural, one {# δήλωση σε εκκρεμότητα} other {# δηλώσεις σε εκκρεμότητα}}',
     'dashboard.updated_just_now': 'Μόλις ενημερώθηκε',
-    
+
     // Enhanced dashboard content
     'dashboard.run_payroll': 'Εκτέλεση Μισθοδοσίας',
     'dashboard.resume_payroll_run': 'Συνέχεια Μισθοδοσίας',
-    'dashboard.draft_in_progress': 'Προσχέδιο μισθοδοσίας σε εξέλιξη - συνεχίστε από εκεί που σταματήσατε',
-    'dashboard.ready_to_process': 'Έτοιμο για επεξεργασία μισθοδοσίας για αυτή την περίοδο',
+    'dashboard.draft_in_progress':
+      'Προσχέδιο μισθοδοσίας σε εξέλιξη - συνεχίστε από εκεί που σταματήσατε',
+    'dashboard.ready_to_process':
+      'Έτοιμο για επεξεργασία μισθοδοσίας για αυτή την περίοδο',
     'dashboard.employees': 'Εργαζόμενοι',
     'dashboard.gross_total': 'Συνολικά Μικτά',
     'dashboard.vs_last_month': 'έναντι Προηγ. Μήνα',
@@ -548,12 +554,13 @@ const translations: Record<Locale, TranslationKeys> = {
     'dashboard.sync_ergani': 'Συγχρονισμός ΕΡΓΑΝΗ',
     'dashboard.view_coverage': 'Προβολή Κάλυψης',
     'dashboard.payroll_starting': 'Έναρξη Μισθοδοσίας',
-    'dashboard.payroll_starting_desc': 'Αρχικοποίηση υπολογισμών μισθοδοσίας...',
+    'dashboard.payroll_starting_desc':
+      'Αρχικοποίηση υπολογισμών μισθοδοσίας...',
     'dashboard.payroll_ready': 'Μισθοδοσία Έτοιμη',
     'dashboard.payroll_ready_desc': 'Η μισθοδοσία είναι έτοιμη για αναθεώρηση',
     'dashboard.resume_payroll': 'Συνέχεια Μισθοδοσίας',
     'dashboard.resume_payroll_desc': 'Συνέχεια από εκεί που σταματήσατε',
-    
+
     // Explanation system
     'explanation.title': 'Εξήγηση Μισθοδοσίας',
     'explanation.coverage': 'κάλυψη',
@@ -567,7 +574,8 @@ const translations: Record<Locale, TranslationKeys> = {
     'explanation.helpful_question': 'Πόσο χρήσιμη ήταν αυτή η εξήγηση;',
     'explanation.calculation_formula': 'Τύπος Υπολογισμού',
     'explanation.unexplained_items': 'Μη Εξηγημένα Στοιχεία',
-    'explanation.unexplained_description': 'Τα παρακάτω στοιχεία δεν μπόρεσαν να εξηγηθούν αυτόματα:',
+    'explanation.unexplained_description':
+      'Τα παρακάτω στοιχεία δεν μπόρεσαν να εξηγηθούν αυτόματα:',
     'explanation.earnings': 'Αποδοχές',
     'explanation.deductions': 'Κρατήσεις',
     'explanation.summary': 'Σύνοψη',
@@ -596,14 +604,16 @@ interface LocaleContextType {
   t: (key: keyof TranslationKeys) => string;
 }
 
-const LocaleContext = React.createContext<LocaleContextType | undefined>(undefined);
+const LocaleContext = React.createContext<LocaleContextType | undefined>(
+  undefined
+);
 
 export function LocaleProvider({ children }: { children: React.ReactNode }) {
   // Initialize with persisted locale before first paint
   const [locale, setLocale] = React.useState<Locale>(() => {
     // This runs only once during initialization, before first paint
     if (typeof window === 'undefined') return 'en'; // SSR fallback
-    
+
     // Check localStorage first
     const storedLocale = localStorage.getItem('preferred_locale') as Locale;
     if (storedLocale && ['en', 'el'].includes(storedLocale)) {
@@ -627,21 +637,23 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
     return 'en';
   });
 
-  const t = React.useCallback((key: keyof TranslationKeys): string => {
-    return translations[locale][key] || key;
-  }, [locale]);
-
-  const value = React.useMemo(() => ({
-    locale,
-    setLocale,
-    t,
-  }), [locale, t]);
-
-  return React.createElement(
-    LocaleContext.Provider,
-    { value },
-    children
+  const t = React.useCallback(
+    (key: keyof TranslationKeys): string => {
+      return translations[locale][key] || key;
+    },
+    [locale]
   );
+
+  const value = React.useMemo(
+    () => ({
+      locale,
+      setLocale,
+      t,
+    }),
+    [locale, t]
+  );
+
+  return React.createElement(LocaleContext.Provider, { value }, children);
 }
 
 export function useLocale() {
@@ -654,25 +666,37 @@ export function useLocale() {
 
 // Translation function with fallback for missing keys (dev warning)
 export function createTranslator(locale: Locale) {
-  return function t(key: keyof TranslationKeys, variables?: Record<string, any>): string {
-    let translation = translations[locale][key] || translations['en'][key] || key;
-    
+  return function t(
+    key: keyof TranslationKeys,
+    variables?: Record<string, any>
+  ): string {
+    let translation =
+      translations[locale][key] || translations['en'][key] || key;
+
     // Warn in development for missing translations
-    if (import.meta.env.DEV && !translations[locale][key] && translations['en'][key]) {
-      console.warn(`Missing translation for key "${key}" in locale "${locale}"`);
+    if (
+      import.meta.env.DEV &&
+      !translations[locale][key] &&
+      translations['en'][key]
+    ) {
+      console.warn(
+        `Missing translation for key "${key}" in locale "${locale}"`
+      );
     }
-    
+
     // Handle ICU-style variables and pluralization
     if (variables && typeof translation === 'string') {
       // Simple variable replacement
       translation = translation.replace(/\{(\w+)\}/g, (match, varName) => {
         return variables[varName]?.toString() || match;
       });
-      
+
       // Handle ICU plurals like {count, plural, one {...} other {...}}
       if (translation.includes('{count, plural,')) {
         const count = variables.count || 0;
-        const pluralMatch = translation.match(/\{count, plural, one \{([^}]+)\} other \{([^}]+)\}\}/);
+        const pluralMatch = translation.match(
+          /\{count, plural, one \{([^}]+)\} other \{([^}]+)\}\}/
+        );
         if (pluralMatch) {
           const [, oneForm, otherForm] = pluralMatch;
           const selectedForm = count === 1 ? oneForm : otherForm;
@@ -680,7 +704,7 @@ export function createTranslator(locale: Locale) {
         }
       }
     }
-    
+
     return translation;
   };
 }
@@ -688,9 +712,9 @@ export function createTranslator(locale: Locale) {
 // Hook that provides translator function
 export function useTranslation() {
   const { locale } = useLocale();
-  return { 
+  return {
     t: createTranslator(locale),
-    locale 
+    locale,
   };
 }
 
@@ -704,7 +728,11 @@ export function formatCurrency(amount: number, locale: Locale): string {
 }
 
 // Format numbers with proper Greek decimal comma
-export function formatNumber(value: number, locale: Locale, decimals: number = 2): string {
+export function formatNumber(
+  value: number,
+  locale: Locale,
+  decimals: number = 2
+): string {
   return new Intl.NumberFormat(locale === 'el' ? 'el-GR' : 'en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -717,76 +745,84 @@ export function pluralize(count: number, locale: Locale, key: string): string {
     // Greek pluralization rules
     const pluralRules = new Intl.PluralRules('el');
     const rule = pluralRules.select(count);
-    
+
     const greekPlurals: Record<string, Record<string, string>> = {
-      'hours': {
-        'one': 'ώρα',
-        'other': 'ώρες'
+      hours: {
+        one: 'ώρα',
+        other: 'ώρες',
       },
-      'filings': {
-        'one': 'δήλωση σε εκκρεμότητα', 
-        'other': 'δηλώσεις σε εκκρεμότητα'
+      filings: {
+        one: 'δήλωση σε εκκρεμότητα',
+        other: 'δηλώσεις σε εκκρεμότητα',
       },
-      'employees': {
-        'one': 'εργαζόμενος',
-        'other': 'εργαζόμενοι'
+      employees: {
+        one: 'εργαζόμενος',
+        other: 'εργαζόμενοι',
       },
-      'days': {
-        'one': 'ημέρα',
-        'other': 'ημέρες'
-      }
+      days: {
+        one: 'ημέρα',
+        other: 'ημέρες',
+      },
     };
-    
+
     const forms = greekPlurals[key];
     if (forms) {
       return forms[rule] || forms['other'];
     }
   }
-  
+
   // English fallback
   const englishPlurals: Record<string, Record<string, string>> = {
-    'hours': {
-      'one': 'hour',
-      'other': 'hours'
+    hours: {
+      one: 'hour',
+      other: 'hours',
     },
-    'filings': {
-      'one': 'filing due',
-      'other': 'filings due'
+    filings: {
+      one: 'filing due',
+      other: 'filings due',
     },
-    'employees': {
-      'one': 'employee',
-      'other': 'employees'
+    employees: {
+      one: 'employee',
+      other: 'employees',
     },
-    'days': {
-      'one': 'day',
-      'other': 'days'
-    }
+    days: {
+      one: 'day',
+      other: 'days',
+    },
   };
-  
+
   const forms = englishPlurals[key];
   if (forms) {
     const rule = count === 1 ? 'one' : 'other';
     return forms[rule];
   }
-  
+
   return key;
 }
 
 // Format with ICU-style pluralization and count
-export function formatPlural(count: number, locale: Locale, key: string): string {
+export function formatPlural(
+  count: number,
+  locale: Locale,
+  key: string
+): string {
   const pluralForm = pluralize(count, locale, key);
   const formattedCount = formatNumber(count, locale, 0);
   return `${formattedCount} ${pluralForm}`;
 }
 
 // Enhanced date formatting with Greek month names
-export function formatDate(date: Date, locale: Locale, options?: Intl.DateTimeFormatOptions): string {
+export function formatDate(
+  date: Date,
+  locale: Locale,
+  options?: Intl.DateTimeFormatOptions
+): string {
   const defaultOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   };
-  
+
   return new Intl.DateTimeFormat(locale === 'el' ? 'el-GR' : 'en-US', {
     ...defaultOptions,
     ...options,
@@ -800,7 +836,7 @@ export function formatRelativeTime(date: Date, locale: Locale): string {
   const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
   const diffInHours = Math.floor(diffInMinutes / 60);
   const diffInDays = Math.floor(diffInHours / 24);
-  
+
   if (locale === 'el') {
     if (diffInMinutes < 1) return 'Μόλις τώρα';
     if (diffInMinutes < 60) return `Πριν από ${diffInMinutes} λεπτά`;
@@ -808,7 +844,7 @@ export function formatRelativeTime(date: Date, locale: Locale): string {
     if (diffInDays < 30) return `Πριν από ${diffInDays} ημέρες`;
     return formatDate(date, locale, { month: 'short', day: 'numeric' });
   }
-  
+
   // English
   if (diffInMinutes < 1) return 'Just now';
   if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;

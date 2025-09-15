@@ -5,17 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Shield, 
-  CheckCircle, 
-  AlertTriangle, 
-  Clock, 
-  FileText, 
+import {
+  Shield,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
+  FileText,
   Settings,
   Target,
   Activity,
   TrendingUp,
-  Users
+  Users,
 } from 'lucide-react';
 
 interface ComplianceDashboard {
@@ -124,23 +124,35 @@ export default function Compliance() {
 
   const getRiskColor = (level: string) => {
     switch (level.toLowerCase()) {
-      case 'critical': return 'bg-red-500';
-      case 'high': return 'bg-orange-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      case 'critical':
+        return 'bg-red-500';
+      case 'high':
+        return 'bg-orange-500';
+      case 'medium':
+        return 'bg-yellow-500';
+      case 'low':
+        return 'bg-green-500';
+      default:
+        return 'bg-gray-500';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'implemented': return 'text-green-600';
-      case 'inprogress': return 'text-blue-600';
-      case 'notstarted': return 'text-gray-500';
-      case 'pass': return 'text-green-600';
-      case 'fail': return 'text-red-600';
-      case 'warning': return 'text-yellow-600';
-      default: return 'text-gray-500';
+      case 'implemented':
+        return 'text-green-600';
+      case 'inprogress':
+        return 'text-blue-600';
+      case 'notstarted':
+        return 'text-gray-500';
+      case 'pass':
+        return 'text-green-600';
+      case 'fail':
+        return 'text-red-600';
+      case 'warning':
+        return 'text-yellow-600';
+      default:
+        return 'text-gray-500';
     }
   };
 
@@ -148,7 +160,9 @@ export default function Compliance() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Compliance Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Compliance Dashboard
+          </h1>
           <p className="text-muted-foreground">
             ISO 27001:2022 + SOC 2 Controls Pack
           </p>
@@ -159,7 +173,11 @@ export default function Compliance() {
         </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="soa">Statement of Applicability</TabsTrigger>
@@ -172,53 +190,80 @@ export default function Compliance() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Controls</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Total Controls
+                </CardTitle>
                 <Shield className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboard?.overview.total || 0}</div>
+                <div className="text-2xl font-bold">
+                  {dashboard?.overview.total || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {dashboard?.overview.implemented || 0} implemented
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Implementation Rate</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Implementation Rate
+                </CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {dashboard ? Math.round((dashboard.overview.implemented / dashboard.overview.total) * 100) : 0}%
+                  {dashboard
+                    ? Math.round(
+                        (dashboard.overview.implemented /
+                          dashboard.overview.total) *
+                          100
+                      )
+                    : 0}
+                  %
                 </div>
-                <Progress 
-                  value={dashboard ? (dashboard.overview.implemented / dashboard.overview.total) * 100 : 0} 
+                <Progress
+                  value={
+                    dashboard
+                      ? (dashboard.overview.implemented /
+                          dashboard.overview.total) *
+                        100
+                      : 0
+                  }
                   className="mt-2"
                 />
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">High Risks</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  High Risks
+                </CardTitle>
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboard?.riskSummary.critical || 0}</div>
+                <div className="text-2xl font-bold">
+                  {dashboard?.riskSummary.critical || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Critical risks open
                 </p>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Evidence Status</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  Evidence Status
+                </CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboard?.evidenceFreshness.fresh || 0}</div>
+                <div className="text-2xl font-bold">
+                  {dashboard?.evidenceFreshness.fresh || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Fresh evidence items
                 </p>
@@ -233,8 +278,11 @@ export default function Compliance() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {dashboard?.recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-center space-x-4">
+                  {dashboard?.recentActivity.map(activity => (
+                    <div
+                      key={activity.id}
+                      className="flex items-center space-x-4"
+                    >
                       <div className="w-2 h-2 bg-blue-500 rounded-full" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
@@ -253,7 +301,7 @@ export default function Compliance() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card className="col-span-3">
               <CardHeader>
                 <CardTitle>Vulnerability Findings</CardTitle>
@@ -262,19 +310,27 @@ export default function Compliance() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Total Findings</span>
-                    <Badge variant="outline">{findings?.summary.total || 0}</Badge>
+                    <Badge variant="outline">
+                      {findings?.summary.total || 0}
+                    </Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Open</span>
-                    <Badge variant="destructive">{findings?.summary.open || 0}</Badge>
+                    <Badge variant="destructive">
+                      {findings?.summary.open || 0}
+                    </Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">In Progress</span>
-                    <Badge variant="secondary">{findings?.summary.inProgress || 0}</Badge>
+                    <Badge variant="secondary">
+                      {findings?.summary.inProgress || 0}
+                    </Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Resolved</span>
-                    <Badge variant="outline" className="text-green-600">{findings?.summary.resolved || 0}</Badge>
+                    <Badge variant="outline" className="text-green-600">
+                      {findings?.summary.resolved || 0}
+                    </Badge>
                   </div>
                 </div>
               </CardContent>
@@ -295,8 +351,11 @@ export default function Compliance() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {soa?.controls.map((control) => (
-                  <div key={control.id} className="border rounded-lg p-4 space-y-3">
+                {soa?.controls.map(control => (
+                  <div
+                    key={control.id}
+                    className="border rounded-lg p-4 space-y-3"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <Badge variant="outline">{control.framework}</Badge>
@@ -304,16 +363,26 @@ export default function Compliance() {
                         <span className="font-medium">{control.title}</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className={`w-3 h-3 rounded-full ${getRiskColor(control.riskLevel)}`} />
-                        <span className="text-sm text-muted-foreground">{control.riskLevel}</span>
+                        <div
+                          className={`w-3 h-3 rounded-full ${getRiskColor(control.riskLevel)}`}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {control.riskLevel}
+                        </span>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <Badge 
-                          variant={control.soa?.implementationStatus === 'Implemented' ? 'default' : 'outline'}
-                          className={getStatusColor(control.soa?.implementationStatus || 'NotStarted')}
+                        <Badge
+                          variant={
+                            control.soa?.implementationStatus === 'Implemented'
+                              ? 'default'
+                              : 'outline'
+                          }
+                          className={getStatusColor(
+                            control.soa?.implementationStatus || 'NotStarted'
+                          )}
                         >
                           {control.soa?.implementationStatus || 'Not Started'}
                         </Badge>
@@ -329,7 +398,9 @@ export default function Compliance() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="w-32">
-                          <Progress value={control.implementationProgress.progress} />
+                          <Progress
+                            value={control.implementationProgress.progress}
+                          />
                         </div>
                         <span className="text-sm text-muted-foreground">
                           {control.implementationProgress.progress}%
@@ -376,7 +447,7 @@ export default function Compliance() {
                   <div className="text-sm text-muted-foreground">Expired</div>
                 </div>
               </div>
-              
+
               <Button>
                 <FileText className="h-4 w-4 mr-2" />
                 Upload Evidence
@@ -396,39 +467,61 @@ export default function Compliance() {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-4 mb-6">
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold">{findings?.summary.total || 0}</div>
+                  <div className="text-2xl font-bold">
+                    {findings?.summary.total || 0}
+                  </div>
                   <div className="text-sm text-muted-foreground">Total</div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">{findings?.summary.open || 0}</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {findings?.summary.open || 0}
+                  </div>
                   <div className="text-sm text-muted-foreground">Open</div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{findings?.summary.inProgress || 0}</div>
-                  <div className="text-sm text-muted-foreground">In Progress</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {findings?.summary.inProgress || 0}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    In Progress
+                  </div>
                 </div>
                 <div className="text-center p-4 border rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{findings?.summary.resolved || 0}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {findings?.summary.resolved || 0}
+                  </div>
                   <div className="text-sm text-muted-foreground">Resolved</div>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Recent Findings</h3>
-                {findings?.recentFindings.map((finding) => (
-                  <div key={finding.id} className="flex items-center justify-between p-4 border rounded-lg">
+                {findings?.recentFindings.map(finding => (
+                  <div
+                    key={finding.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div className="flex items-center space-x-3">
-                      <div className={`w-3 h-3 rounded-full ${getRiskColor(finding.severity)}`} />
+                      <div
+                        className={`w-3 h-3 rounded-full ${getRiskColor(finding.severity)}`}
+                      />
                       <div>
                         <div className="font-medium">{finding.title}</div>
                         <div className="text-sm text-muted-foreground">
-                          Discovered: {new Date(finding.discoveredAt).toLocaleDateString()}
+                          Discovered:{' '}
+                          {new Date(finding.discoveredAt).toLocaleDateString()}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge variant="outline">{finding.severity}</Badge>
-                      <Badge variant={finding.status === 'Open' ? 'destructive' : 'secondary'}>
+                      <Badge
+                        variant={
+                          finding.status === 'Open'
+                            ? 'destructive'
+                            : 'secondary'
+                        }
+                      >
                         {finding.status}
                       </Badge>
                     </div>
@@ -448,13 +541,17 @@ export default function Compliance() {
             <CardHeader>
               <CardTitle>Automated Checks</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Control-as-code validation across cloud, identity, and development environments
+                Control-as-code validation across cloud, identity, and
+                development environments
               </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {checkResults?.map((result: any) => (
-                  <div key={result.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div
+                    key={result.id}
+                    className="flex items-center justify-between p-4 border rounded-lg"
+                  >
                     <div className="flex items-center space-x-3">
                       {result.result === 'Pass' ? (
                         <CheckCircle className="h-5 w-5 text-green-600" />
@@ -472,7 +569,11 @@ export default function Compliance() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge variant="outline">{result.score}%</Badge>
-                      <Badge variant={result.result === 'Pass' ? 'default' : 'destructive'}>
+                      <Badge
+                        variant={
+                          result.result === 'Pass' ? 'default' : 'destructive'
+                        }
+                      >
                         {result.result}
                       </Badge>
                     </div>
@@ -483,7 +584,7 @@ export default function Compliance() {
                   </div>
                 )}
               </div>
-              
+
               <Button className="mt-4">
                 <Activity className="h-4 w-4 mr-2" />
                 Run Manual Checks

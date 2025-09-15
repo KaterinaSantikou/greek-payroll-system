@@ -28,17 +28,24 @@ export interface PWAActions {
 }
 
 export function usePWA(): [PWAState, PWAActions] {
-  const [installPrompt, setInstallPrompt] = useState<PWAInstallEvent | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<PWAInstallEvent | null>(
+    null
+  );
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermission>('default');
 
   useEffect(() => {
     // Check if already installed (standalone mode)
     const checkInstallStatus = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      const isInWebApp = 'standalone' in window.navigator && (window.navigator as any).standalone;
+      const isStandalone = window.matchMedia(
+        '(display-mode: standalone)'
+      ).matches;
+      const isInWebApp =
+        'standalone' in window.navigator &&
+        (window.navigator as any).standalone;
       setIsInstalled(isStandalone || isInWebApp);
     };
 
@@ -50,7 +57,7 @@ export function usePWA(): [PWAState, PWAActions] {
       const installEvent = e as PWAInstallEvent;
       setInstallPrompt(installEvent);
       setIsInstallable(true);
-      
+
       console.log('PWA: Install prompt available');
     };
 
@@ -60,12 +67,12 @@ export function usePWA(): [PWAState, PWAActions] {
       setIsInstalled(true);
       setIsInstallable(false);
       setInstallPrompt(null);
-      
+
       // Track installation
       if (typeof window !== 'undefined' && (window as any).gtag) {
         (window as any).gtag('event', 'pwa_install', {
           event_category: 'pwa',
-          event_label: 'greek_payroll'
+          event_label: 'greek_payroll',
         });
       }
     };
@@ -89,7 +96,10 @@ export function usePWA(): [PWAState, PWAActions] {
 
     // Cleanup
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener(
+        'beforeinstallprompt',
+        handleBeforeInstallPrompt
+      );
       window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('online', handleOnlineStatus);
       window.removeEventListener('offline', handleOfflineStatus);
@@ -106,9 +116,9 @@ export function usePWA(): [PWAState, PWAActions] {
     try {
       await installPrompt.prompt();
       const { outcome } = await installPrompt.userChoice;
-      
+
       console.log('PWA: Install prompt result:', outcome);
-      
+
       if (outcome === 'accepted') {
         setIsInstallable(false);
         setInstallPrompt(null);
@@ -119,33 +129,34 @@ export function usePWA(): [PWAState, PWAActions] {
   };
 
   // Request notification permission
-  const requestNotificationPermission = async (): Promise<NotificationPermission> => {
-    if (!('Notification' in window)) {
-      console.log('PWA: Notifications not supported');
-      return 'denied';
-    }
+  const requestNotificationPermission =
+    async (): Promise<NotificationPermission> => {
+      if (!('Notification' in window)) {
+        console.log('PWA: Notifications not supported');
+        return 'denied';
+      }
 
-    if (Notification.permission !== 'default') {
-      return Notification.permission;
-    }
+      if (Notification.permission !== 'default') {
+        return Notification.permission;
+      }
 
-    try {
-      const permission = await Notification.requestPermission();
-      setNotificationPermission(permission);
-      
-      console.log('PWA: Notification permission:', permission);
-      return permission;
-    } catch (error) {
-      console.error('PWA: Notification permission request failed:', error);
-      return 'denied';
-    }
-  };
+      try {
+        const permission = await Notification.requestPermission();
+        setNotificationPermission(permission);
+
+        console.log('PWA: Notification permission:', permission);
+        return permission;
+      } catch (error) {
+        console.error('PWA: Notification permission request failed:', error);
+        return 'denied';
+      }
+    };
 
   // Subscribe to Greek payroll notifications
   const subscribeToGreekPayrollNotifications = async (): Promise<boolean> => {
     try {
       const permission = await requestNotificationPermission();
-      
+
       if (permission !== 'granted') {
         console.log('PWA: Notification permission denied');
         return false;
@@ -157,7 +168,7 @@ export function usePWA(): [PWAState, PWAActions] {
       }
 
       const registration = await navigator.serviceWorker.ready;
-      
+
       // Check if push is supported
       if (!('PushManager' in window)) {
         console.log('PWA: Push notifications not supported');
@@ -169,11 +180,12 @@ export function usePWA(): [PWAState, PWAActions] {
 
       if (!subscription) {
         // Create new subscription
-        const vapidPublicKey = 'BLGghbXjTKq7HHzGMYhk6tF8dKPLgG8N1J5TN2v6nLZ8vDr8aX6MsO-JzMV3e-7j9L3bS1pN8wA-_5VzA2Rq0';
-        
+        const vapidPublicKey =
+          'BLGghbXjTKq7HHzGMYhk6tF8dKPLgG8N1J5TN2v6nLZ8vDr8aX6MsO-JzMV3e-7j9L3bS1pN8wA-_5VzA2Rq0';
+
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlB64ToUint8Array(vapidPublicKey)
+          applicationServerKey: urlB64ToUint8Array(vapidPublicKey),
         });
       }
 
@@ -185,8 +197,13 @@ export function usePWA(): [PWAState, PWAActions] {
         },
         body: JSON.stringify({
           subscription,
-          topics: ['ergani_deadlines', 'payroll_ready', 'efka_reminders', 'greek_compliance']
-        })
+          topics: [
+            'ergani_deadlines',
+            'payroll_ready',
+            'efka_reminders',
+            'greek_compliance',
+          ],
+        }),
       });
 
       if (response.ok) {
@@ -210,16 +227,16 @@ export function usePWA(): [PWAState, PWAActions] {
 
     try {
       const registration = await navigator.serviceWorker.getRegistration();
-      
+
       if (registration) {
         await registration.update();
-        
+
         if (registration.waiting) {
           console.log('PWA: Update available');
           return true;
         }
       }
-      
+
       return false;
     } catch (error) {
       console.error('PWA: Update check failed:', error);
@@ -234,14 +251,14 @@ export function usePWA(): [PWAState, PWAActions] {
     installPrompt,
     canInstall: isInstallable && !isInstalled,
     pushSupported: 'PushManager' in window,
-    notificationPermission
+    notificationPermission,
   };
 
   const actions: PWAActions = {
     promptInstall,
     requestNotificationPermission,
     subscribeToGreekPayrollNotifications,
-    checkForUpdates
+    checkForUpdates,
   };
 
   return [state, actions];
@@ -249,7 +266,7 @@ export function usePWA(): [PWAState, PWAActions] {
 
 // Helper function to convert VAPID key
 function urlB64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
     .replace(/\-/g, '+')
     .replace(/_/g, '/');
@@ -260,29 +277,33 @@ function urlB64ToUint8Array(base64String: string): Uint8Array {
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
-  
+
   return outputArray;
 }
 
 // Greek payroll specific notification helpers
 export const GreekNotifications = {
   // Schedule ERGANI deadline reminders
-  scheduleErganiReminders: async (deadlines: Array<{ date: string; type: string }>) => {
+  scheduleErganiReminders: async (
+    deadlines: Array<{ date: string; type: string }>
+  ) => {
     if (!('serviceWorker' in navigator)) return;
-    
+
     const registration = await navigator.serviceWorker.ready;
-    
+
     deadlines.forEach((deadline, index) => {
       const deadlineDate = new Date(deadline.date);
-      const reminderDate = new Date(deadlineDate.getTime() - (2 * 24 * 60 * 60 * 1000));
-      
+      const reminderDate = new Date(
+        deadlineDate.getTime() - 2 * 24 * 60 * 60 * 1000
+      );
+
       if (reminderDate > new Date()) {
         setTimeout(() => {
           registration.showNotification('ΕΡΓΑΝΗ ΙΙ Deadline Reminder', {
             body: `${deadline.type} filing due in 2 days`,
             icon: '/images/icon-192x192.png',
             tag: `ergani-${index}`,
-            requireInteraction: true
+            requireInteraction: true,
           });
         }, reminderDate.getTime() - Date.now());
       }
@@ -292,27 +313,27 @@ export const GreekNotifications = {
   // Show payroll completion notification
   showPayrollComplete: async (amount: number, employeeCount: number) => {
     if (!('serviceWorker' in navigator)) return;
-    
+
     const registration = await navigator.serviceWorker.ready;
-    
+
     registration.showNotification('Payroll Complete! 🎉', {
       body: `Processed €${amount.toLocaleString()} for ${employeeCount} employees`,
       icon: '/images/icon-192x192.png',
-      tag: 'payroll-complete'
+      tag: 'payroll-complete',
     });
   },
 
   // Show EFKA payment reminder
   showEfkaReminder: async (amount: number, dueDate: string) => {
     if (!('serviceWorker' in navigator)) return;
-    
+
     const registration = await navigator.serviceWorker.ready;
-    
+
     registration.showNotification('ΕΦΚΑ Payment Due', {
       body: `€${amount.toLocaleString()} due by ${dueDate}`,
       icon: '/images/icon-192x192.png',
       tag: 'efka-reminder',
-      requireInteraction: true
+      requireInteraction: true,
     });
-  }
+  },
 };

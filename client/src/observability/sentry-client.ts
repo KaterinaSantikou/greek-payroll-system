@@ -9,32 +9,39 @@ import * as Sentry from '@sentry/react';
  */
 export function initializeClientSentry() {
   // Only initialize in production or if explicitly enabled
-  if (import.meta.env.MODE !== 'production' && import.meta.env.VITE_ENABLE_SENTRY !== 'true') {
-    console.log('[SENTRY] Client disabled in development (set VITE_ENABLE_SENTRY=true to enable)');
+  if (
+    import.meta.env.MODE !== 'production' &&
+    import.meta.env.VITE_ENABLE_SENTRY !== 'true'
+  ) {
+    console.log(
+      '[SENTRY] Client disabled in development (set VITE_ENABLE_SENTRY=true to enable)'
+    );
     return;
   }
 
   if (!import.meta.env.VITE_SENTRY_DSN) {
-    console.warn('[SENTRY] Warning: VITE_SENTRY_DSN not set, skipping client initialization');
+    console.warn(
+      '[SENTRY] Warning: VITE_SENTRY_DSN not set, skipping client initialization'
+    );
     return;
   }
 
   Sentry.init({
     dsn: import.meta.env.VITE_SENTRY_DSN,
     environment: import.meta.env.MODE || 'development',
-    
+
     integrations: [
       Sentry.browserTracingIntegration(),
       Sentry.replayIntegration({
         maskAllText: true, // PII protection
         blockAllMedia: true, // Don't record media
-        maskAllInputs: true // Mask form inputs for PII protection
+        maskAllInputs: true, // Mask form inputs for PII protection
       }),
     ],
 
     // Performance monitoring
     tracesSampleRate: import.meta.env.MODE === 'production' ? 0.1 : 1.0,
-    
+
     // Session replay (for debugging)
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
@@ -48,9 +55,9 @@ export function initializeClientSentry() {
     initialScope: {
       tags: {
         component: 'payrollsync-frontend',
-        version: import.meta.env.VITE_APP_VERSION || '1.0.0'
-      }
-    }
+        version: import.meta.env.VITE_APP_VERSION || '1.0.0',
+      },
+    },
   });
 
   console.log('[SENTRY] ✅ Initialized for client-side monitoring');
@@ -70,7 +77,10 @@ function redactClientPII(event: Sentry.Event): Sentry.Event | null {
   // Redact breadcrumbs (user interactions)
   if (event.breadcrumbs) {
     event.breadcrumbs = event.breadcrumbs.map(breadcrumb => {
-      if (breadcrumb.category === 'ui.input' || breadcrumb.category === 'ui.click') {
+      if (
+        breadcrumb.category === 'ui.input' ||
+        breadcrumb.category === 'ui.click'
+      ) {
         // Remove potentially sensitive data from form interactions
         if (breadcrumb.data) {
           breadcrumb.data = redactSensitiveClientData(breadcrumb.data);
@@ -107,15 +117,29 @@ function redactSensitiveClientData(data: any): any {
   }
 
   const sensitiveKeys = [
-    'password', 'token', 'secret', 'key', 'afm', 'amka', 'ssn',
-    'email', 'phone', 'iban', 'credit_card', 'authorization',
-    'session', 'cookie', 'csrf'
+    'password',
+    'token',
+    'secret',
+    'key',
+    'afm',
+    'amka',
+    'ssn',
+    'email',
+    'phone',
+    'iban',
+    'credit_card',
+    'authorization',
+    'session',
+    'cookie',
+    'csrf',
   ];
 
   const redacted: any = {};
   for (const [key, value] of Object.entries(data)) {
     const keyLower = key.toLowerCase();
-    const isSensitive = sensitiveKeys.some(sensitive => keyLower.includes(sensitive));
+    const isSensitive = sensitiveKeys.some(sensitive =>
+      keyLower.includes(sensitive)
+    );
 
     if (isSensitive) {
       redacted[key] = '[Redacted]';
@@ -136,7 +160,7 @@ export function setSentryUser(userId: string, email?: string) {
   Sentry.setUser({
     id: userId,
     // Don't set email in production for PII protection
-    email: import.meta.env.MODE === 'development' ? email : undefined
+    email: import.meta.env.MODE === 'development' ? email : undefined,
   });
 }
 
@@ -150,7 +174,11 @@ export function setSentryContext(key: string, context: Record<string, any>) {
 /**
  * Capture custom client metrics
  */
-export function captureClientMetric(name: string, value: number, tags?: Record<string, string>) {
+export function captureClientMetric(
+  name: string,
+  value: number,
+  tags?: Record<string, string>
+) {
   // Note: Sentry metrics API not available in current version
   console.debug(`[SENTRY] Metric: ${name} = ${value}`, tags);
 }

@@ -12,7 +12,7 @@ export const WORK_CARD_EVENT_TYPES = {
     description: 'Έναρξη εργασίας',
     erganiCode: 'WI', // Work In
     mandatory: true,
-    triggers: ['shift_start', 'overtime_start', 'break_end']
+    triggers: ['shift_start', 'overtime_start', 'break_end'],
   },
   CHECK_OUT: {
     code: 'check_out',
@@ -20,7 +20,7 @@ export const WORK_CARD_EVENT_TYPES = {
     description: 'Λήξη εργασίας',
     erganiCode: 'WO', // Work Out
     mandatory: true,
-    triggers: ['shift_end', 'overtime_end', 'emergency_leave']
+    triggers: ['shift_end', 'overtime_end', 'emergency_leave'],
   },
   BREAK_START: {
     code: 'break_start',
@@ -29,7 +29,7 @@ export const WORK_CARD_EVENT_TYPES = {
     erganiCode: 'BS', // Break Start
     mandatory: false,
     maxDuration: 60, // minutes
-    paidBreak: true
+    paidBreak: true,
   },
   BREAK_END: {
     code: 'break_end',
@@ -37,7 +37,7 @@ export const WORK_CARD_EVENT_TYPES = {
     description: 'Λήξη διαλείμματος',
     erganiCode: 'BE', // Break End
     mandatory: false,
-    autoReturn: true
+    autoReturn: true,
   },
   LOCATION_CHANGE: {
     code: 'location_change',
@@ -45,7 +45,7 @@ export const WORK_CARD_EVENT_TYPES = {
     description: 'Μετακίνηση σε άλλη τοποθεσία εργασίας',
     erganiCode: 'LC', // Location Change
     mandatory: false,
-    requiresApproval: true
+    requiresApproval: true,
   },
   EMERGENCY_EXIT: {
     code: 'emergency_exit',
@@ -53,8 +53,8 @@ export const WORK_CARD_EVENT_TYPES = {
     description: 'Έκτακτη διακοπή εργασίας',
     erganiCode: 'EE', // Emergency Exit
     mandatory: false,
-    requiresJustification: true
-  }
+    requiresJustification: true,
+  },
 };
 
 // Greek Hotel Industry Specific Work Patterns
@@ -65,57 +65,88 @@ export const HOTEL_WORK_PATTERNS = {
     shifts: [
       { name: 'Πρωινή', start: '06:00', end: '14:00', type: 'morning' },
       { name: 'Απογευματινή', start: '14:00', end: '22:00', type: 'afternoon' },
-      { name: 'Νυχτερινή', start: '22:00', end: '06:00', type: 'night', premium: 25 }
+      {
+        name: 'Νυχτερινή',
+        start: '22:00',
+        end: '06:00',
+        type: 'night',
+        premium: 25,
+      },
     ],
     breakPolicy: { duration: 30, paid: true, flexible: false },
-    overtimeRules: { threshold: 8, rate: 1.25, nightRate: 1.5 }
+    overtimeRules: { threshold: 8, rate: 1.25, nightRate: 1.5 },
   },
   HOUSEKEEPING: {
     code: 'housekeeping',
     name: 'Καθαριότητα',
     shifts: [
       { name: 'Πρωινή', start: '08:00', end: '16:00', type: 'morning' },
-      { name: 'Απογευματινή', start: '16:00', end: '00:00', type: 'afternoon' }
+      { name: 'Απογευματινή', start: '16:00', end: '00:00', type: 'afternoon' },
     ],
     breakPolicy: { duration: 45, paid: true, flexible: true },
     physicalWork: true,
-    safetyRequirements: ['protective_equipment', 'chemical_training']
+    safetyRequirements: ['protective_equipment', 'chemical_training'],
   },
   RESTAURANT: {
     code: 'restaurant',
     name: 'Εστιατόριο',
     shifts: [
-      { name: 'Πρωινή (Πρωινό)', start: '06:00', end: '12:00', type: 'breakfast' },
-      { name: 'Μεσημεριανή (Γεύμα)', start: '11:00', end: '17:00', type: 'lunch' },
-      { name: 'Βραδινή (Δείπνο)', start: '17:00', end: '23:00', type: 'dinner' }
+      {
+        name: 'Πρωινή (Πρωινό)',
+        start: '06:00',
+        end: '12:00',
+        type: 'breakfast',
+      },
+      {
+        name: 'Μεσημεριανή (Γεύμα)',
+        start: '11:00',
+        end: '17:00',
+        type: 'lunch',
+      },
+      {
+        name: 'Βραδινή (Δείπνο)',
+        start: '17:00',
+        end: '23:00',
+        type: 'dinner',
+      },
     ],
     breakPolicy: { duration: 30, paid: false, required: true },
     tipTracking: true,
-    foodHandling: true
+    foodHandling: true,
   },
   MAINTENANCE: {
     code: 'maintenance',
     name: 'Συντήρηση',
     shifts: [
-      { name: 'Κανονικό Ωράριο', start: '08:00', end: '17:00', type: 'standard' },
-      { name: 'Έκτακτο (24/7)', start: 'on_call', end: 'on_call', type: 'emergency' }
+      {
+        name: 'Κανονικό Ωράριο',
+        start: '08:00',
+        end: '17:00',
+        type: 'standard',
+      },
+      {
+        name: 'Έκτακτο (24/7)',
+        start: 'on_call',
+        end: 'on_call',
+        type: 'emergency',
+      },
     ],
     breakPolicy: { duration: 60, paid: true, flexible: true },
     hazardousWork: true,
     emergencyCall: true,
-    specialEquipment: true
+    specialEquipment: true,
   },
   SEASONAL_OUTDOOR: {
     code: 'seasonal_outdoor',
     name: 'Εποχιακό Εξωτερικό',
     shifts: [
       { name: 'Ημερήσια', start: '09:00', end: '18:00', type: 'day' },
-      { name: 'Εκδηλώσεων', start: '18:00', end: '02:00', type: 'events' }
+      { name: 'Εκδηλώσεων', start: '18:00', end: '02:00', type: 'events' },
     ],
     seasonality: { start: 'april', end: 'october' },
     weatherDependent: true,
-    outdoorWork: true
-  }
+    outdoorWork: true,
+  },
 };
 
 // ERGANI II Integration Configuration
@@ -123,25 +154,25 @@ export const ERGANI_II_CONFIG = {
   apiEndpoint: import.meta.env.VITE_ERGANI_API_ENDPOINT || '/api/ergani',
   requiredFields: [
     'employee_afm',
-    'employer_afm', 
+    'employer_afm',
     'workplace_id',
     'event_type',
     'timestamp',
     'location_coordinates',
-    'device_id'
+    'device_id',
   ],
   realTimeSync: true,
   retryPolicy: {
     maxRetries: 3,
     backoffMs: 1000,
-    timeoutMs: 5000
+    timeoutMs: 5000,
   },
   validationRules: {
     maxEventsPerDay: 20,
     minTimeBetweenEvents: 60, // seconds
     maxShiftDuration: 12 * 60, // minutes
-    requiredBreakAfter: 6 * 60 // minutes
-  }
+    requiredBreakAfter: 6 * 60, // minutes
+  },
 };
 
 // Digital Work Card Event Interface
@@ -232,13 +263,13 @@ export function calculateWorkSession(
     contractType: string;
   }
 ): WorkSession {
-  const sortedEvents = events.sort((a, b) => 
-    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  const sortedEvents = events.sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 
   const checkIn = sortedEvents.find(e => e.eventType === 'check_in');
   const checkOut = sortedEvents.find(e => e.eventType === 'check_out');
-  
+
   if (!checkIn) {
     throw new Error('Δεν βρέθηκε γεγονός εισόδου στην εργασία');
   }
@@ -262,8 +293,8 @@ export function calculateWorkSession(
       overtimePay: 0,
       nightShiftPremium: 0,
       breakPay: 0,
-      totalPay: 0
-    }
+      totalPay: 0,
+    },
   };
 
   // Process breaks
@@ -272,12 +303,15 @@ export function calculateWorkSession(
     if (event.eventType === 'break_start') {
       currentBreakStart = event;
     } else if (event.eventType === 'break_end' && currentBreakStart) {
-      const breakDuration = calculateMinutesBetween(currentBreakStart.timestamp, event.timestamp);
+      const breakDuration = calculateMinutesBetween(
+        currentBreakStart.timestamp,
+        event.timestamp
+      );
       session.breaks.push({
         start: currentBreakStart,
         end: event,
         duration: breakDuration,
-        paid: WORK_CARD_EVENT_TYPES.BREAK_START.paidBreak
+        paid: WORK_CARD_EVENT_TYPES.BREAK_START.paidBreak,
       });
       currentBreakStart = null;
     } else if (event.eventType === 'location_change') {
@@ -287,8 +321,14 @@ export function calculateWorkSession(
 
   // Calculate total worked time
   if (checkOut) {
-    const totalMinutes = calculateMinutesBetween(checkIn.timestamp, checkOut.timestamp);
-    const totalBreakMinutes = session.breaks.reduce((sum, br) => sum + (br.duration || 0), 0);
+    const totalMinutes = calculateMinutesBetween(
+      checkIn.timestamp,
+      checkOut.timestamp
+    );
+    const totalBreakMinutes = session.breaks.reduce(
+      (sum, br) => sum + (br.duration || 0),
+      0
+    );
     session.totalWorkedMinutes = totalMinutes - totalBreakMinutes;
     session.breakMinutes = totalBreakMinutes;
 
@@ -298,11 +338,15 @@ export function calculateWorkSession(
       session.regularMinutes = session.totalWorkedMinutes;
     } else {
       session.regularMinutes = standardShiftMinutes;
-      session.overtimeMinutes = session.totalWorkedMinutes - standardShiftMinutes;
+      session.overtimeMinutes =
+        session.totalWorkedMinutes - standardShiftMinutes;
     }
 
     // Calculate night shift hours (22:00 - 06:00)
-    session.nightShiftMinutes = calculateNightShiftMinutes(checkIn.timestamp, checkOut.timestamp);
+    session.nightShiftMinutes = calculateNightShiftMinutes(
+      checkIn.timestamp,
+      checkOut.timestamp
+    );
   }
 
   // Detect violations
@@ -318,7 +362,9 @@ export function calculateWorkSession(
  * Calculate minutes between two timestamps
  */
 function calculateMinutesBetween(start: string, end: string): number {
-  return Math.floor((new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60));
+  return Math.floor(
+    (new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60)
+  );
 }
 
 /**
@@ -332,17 +378,21 @@ function calculateNightShiftMinutes(checkIn: string, checkOut: string): number {
   // Create night shift start/end times for the same day
   const nightStart = new Date(start);
   nightStart.setHours(22, 0, 0, 0);
-  
+
   const nightEnd = new Date(start);
   nightEnd.setDate(nightEnd.getDate() + 1);
   nightEnd.setHours(6, 0, 0, 0);
 
   // Calculate overlap with night shift period
-  const overlapStart = new Date(Math.max(start.getTime(), nightStart.getTime()));
+  const overlapStart = new Date(
+    Math.max(start.getTime(), nightStart.getTime())
+  );
   const overlapEnd = new Date(Math.min(end.getTime(), nightEnd.getTime()));
 
   if (overlapStart < overlapEnd) {
-    nightMinutes = Math.floor((overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 60));
+    nightMinutes = Math.floor(
+      (overlapEnd.getTime() - overlapStart.getTime()) / (1000 * 60)
+    );
   }
 
   return nightMinutes;
@@ -352,9 +402,13 @@ function calculateNightShiftMinutes(checkIn: string, checkOut: string): number {
  * Detect labor law violations
  */
 function detectViolations(
-  session: WorkSession, 
+  session: WorkSession,
   employeeData: { contractType: string; shiftPattern: string }
-): Array<{ type: string; description: string; severity: 'low' | 'medium' | 'high' }> {
+): Array<{
+  type: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+}> {
   const violations = [];
 
   // Maximum daily working hours (10 hours + 2 overtime max)
@@ -362,7 +416,7 @@ function detectViolations(
     violations.push({
       type: 'excessive_daily_hours',
       description: `Υπερβολικές ώρες εργασίας: ${Math.floor(session.totalWorkedMinutes / 60)} ώρες (μέγιστο: 12)`,
-      severity: 'high' as const
+      severity: 'high' as const,
     });
   }
 
@@ -371,7 +425,7 @@ function detectViolations(
     violations.push({
       type: 'missing_mandatory_break',
       description: 'Απαιτείται διάλειμμα μετά από 6 ώρες συνεχούς εργασίας',
-      severity: 'medium' as const
+      severity: 'medium' as const,
     });
   }
 
@@ -380,7 +434,7 @@ function detectViolations(
     violations.push({
       type: 'excessive_overtime',
       description: `Υπερβολικές υπερωρίες: ${Math.floor(session.overtimeMinutes / 60)} ώρες (μέγιστο: 3)`,
-      severity: 'high' as const
+      severity: 'high' as const,
     });
   }
 
@@ -389,7 +443,7 @@ function detectViolations(
     violations.push({
       type: 'excessive_night_work',
       description: `Υπερβολικές νυχτερινές ώρες: ${Math.floor(session.nightShiftMinutes / 60)} ώρες`,
-      severity: 'medium' as const
+      severity: 'medium' as const,
     });
   }
 
@@ -410,22 +464,23 @@ function calculatePayrollImpact(
   totalPay: number;
 } {
   const { hourlyRate } = employeeData;
-  
+
   // Regular pay calculation
   const regularPay = (session.regularMinutes / 60) * hourlyRate;
-  
+
   // Overtime pay (25% premium)
   const overtimePay = (session.overtimeMinutes / 60) * hourlyRate * 1.25;
-  
+
   // Night shift premium (25% for hours between 22:00-06:00)
-  const nightShiftPremium = (session.nightShiftMinutes / 60) * hourlyRate * 0.25;
-  
+  const nightShiftPremium =
+    (session.nightShiftMinutes / 60) * hourlyRate * 0.25;
+
   // Paid break calculation
   const paidBreakMinutes = session.breaks
     .filter(br => br.paid)
     .reduce((sum, br) => sum + (br.duration || 0), 0);
   const breakPay = (paidBreakMinutes / 60) * hourlyRate;
-  
+
   const totalPay = regularPay + overtimePay + nightShiftPremium + breakPay;
 
   return {
@@ -433,7 +488,7 @@ function calculatePayrollImpact(
     overtimePay: Math.round(overtimePay * 100) / 100,
     nightShiftPremium: Math.round(nightShiftPremium * 100) / 100,
     breakPay: Math.round(breakPay * 100) / 100,
-    totalPay: Math.round(totalPay * 100) / 100
+    totalPay: Math.round(totalPay * 100) / 100,
   };
 }
 
@@ -470,42 +525,49 @@ export async function syncToERGANI(event: DigitalWorkCardEvent): Promise<{
       location: {
         lat: event.location.coordinates?.lat,
         lng: event.location.coordinates?.lng,
-        address: event.location.address
+        address: event.location.address,
       },
       device_id: event.device.id,
       metadata: {
         department: event.metadata.departmentCode,
-        biometric_verified: event.metadata.biometricVerified || false
-      }
+        biometric_verified: event.metadata.biometricVerified || false,
+      },
     };
 
     // Simulate ERGANI API call (replace with actual implementation)
-    const response = await fetch(ERGANI_II_CONFIG.apiEndpoint + '/work-events', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_ERGANI_API_TOKEN || ''}`,
-      },
-      body: JSON.stringify(erganiPayload),
-      signal: AbortSignal.timeout(ERGANI_II_CONFIG.retryPolicy.timeoutMs)
-    });
+    const response = await fetch(
+      ERGANI_II_CONFIG.apiEndpoint + '/work-events',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_ERGANI_API_TOKEN || ''}`,
+        },
+        body: JSON.stringify(erganiPayload),
+        signal: AbortSignal.timeout(ERGANI_II_CONFIG.retryPolicy.timeoutMs),
+      }
+    );
 
     if (!response.ok) {
-      throw new Error(`ERGANI API σφάλμα: ${response.status} - ${response.statusText}`);
+      throw new Error(
+        `ERGANI API σφάλμα: ${response.status} - ${response.statusText}`
+      );
     }
 
     const result = await response.json();
-    
+
     return {
       success: true,
-      erganiId: result.id || `ergani_${Date.now()}`
+      erganiId: result.id || `ergani_${Date.now()}`,
     };
-
   } catch (error) {
     console.error('ERGANI sync error:', error);
     return {
       success: false,
-      errorMessage: error instanceof Error ? error.message : 'Άγνωστο σφάλμα συγχρονισμού ERGANI'
+      errorMessage:
+        error instanceof Error
+          ? error.message
+          : 'Άγνωστο σφάλμα συγχρονισμού ERGANI',
     };
   }
 }
@@ -525,13 +587,16 @@ export function generateDigitalWorkCardComplianceReport(
   recommendations: string[];
 } {
   const totalSessions = sessions.length;
-  const compliantSessions = sessions.filter(s => s.violations.length === 0).length;
-  
+  const compliantSessions = sessions.filter(
+    s => s.violations.length === 0
+  ).length;
+
   // Count violations by type
   const violationSummary: { [key: string]: number } = {};
   sessions.forEach(session => {
     session.violations.forEach(violation => {
-      violationSummary[violation.type] = (violationSummary[violation.type] || 0) + 1;
+      violationSummary[violation.type] =
+        (violationSummary[violation.type] || 0) + 1;
     });
   });
 
@@ -544,16 +609,24 @@ export function generateDigitalWorkCardComplianceReport(
   // Generate recommendations
   const recommendations = [];
   if (compliantSessions / totalSessions < 0.9) {
-    recommendations.push('Βελτίωση εκπαίδευσης προσωπικού για σωστή χρήση ψηφιακής κάρτας');
+    recommendations.push(
+      'Βελτίωση εκπαίδευσης προσωπικού για σωστή χρήση ψηφιακής κάρτας'
+    );
   }
   if (violationSummary.excessive_daily_hours > 0) {
-    recommendations.push('Αναθεώρηση προγραμματισμού βαρδιών για αποφυγή υπερβολικών ωρών');
+    recommendations.push(
+      'Αναθεώρηση προγραμματισμού βαρδιών για αποφυγή υπερβολικών ωρών'
+    );
   }
   if (violationSummary.missing_mandatory_break > 0) {
-    recommendations.push('Υπενθύμιση υποχρεωτικών διαλειμμάτων σε εργαζομένους');
+    recommendations.push(
+      'Υπενθύμιση υποχρεωτικών διαλειμμάτων σε εργαζομένους'
+    );
   }
   if (erganiSyncRate < 95) {
-    recommendations.push('Βελτίωση σύνδεσης ERGANI II για πραγματικό χρόνο συγχρονισμό');
+    recommendations.push(
+      'Βελτίωση σύνδεσης ERGANI II για πραγματικό χρόνο συγχρονισμό'
+    );
   }
 
   return {
@@ -562,6 +635,6 @@ export function generateDigitalWorkCardComplianceReport(
     violationSummary,
     erganiSyncRate,
     payrollAccuracy,
-    recommendations
+    recommendations,
   };
 }

@@ -1,28 +1,47 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Plus, 
-  Key, 
-  Settings, 
-  Globe, 
-  Shield, 
-  Database, 
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Plus,
+  Key,
+  Settings,
+  Globe,
+  Shield,
+  Database,
   ExternalLink,
   Copy,
   Eye,
   EyeOff,
   AlertTriangle,
   FileText,
-  CreditCard
-} from "lucide-react";
+  CreditCard,
+} from 'lucide-react';
 
 interface Partner {
   id: string;
@@ -74,15 +93,19 @@ export default function EmbeddedPayroll() {
       clientId: 'demo_client_12345',
       clientSecret: 'demo_secret_abcdef123456',
       allowedOrigins: ['https://demo-erp.com', window.location.origin],
-      scopes: ['payroll.runs:read', 'payroll.runs:finalize', 'gl.journals:write'],
+      scopes: [
+        'payroll.runs:read',
+        'payroll.runs:finalize',
+        'gl.journals:write',
+      ],
       status: 'active',
       webhookUrl: 'https://demo-erp.com/webhooks/payroll',
       createdAt: new Date().toISOString(),
     };
-    
+
     setPartners([mockPartner]);
     setSelectedPartner(mockPartner);
-    
+
     const mockGLConnection: GLConnection = {
       id: 'demo-gl-1',
       glProvider: 'quickbooks',
@@ -91,13 +114,13 @@ export default function EmbeddedPayroll() {
       lastSyncAt: new Date(Date.now() - 3600000).toISOString(),
       createdAt: new Date().toISOString(),
     };
-    
+
     setGLConnections([mockGLConnection]);
   }, []);
 
   const generateAccessToken = async () => {
     if (!selectedPartner) return;
-    
+
     setIsLoading(true);
     try {
       const response = await fetch('/api/embedded/oauth/token', {
@@ -117,22 +140,23 @@ export default function EmbeddedPayroll() {
         const tokenData = await response.json();
         setAccessToken(tokenData);
         toast({
-          title: "Access Token Generated",
-          description: "OAuth2 access token generated successfully",
+          title: 'Access Token Generated',
+          description: 'OAuth2 access token generated successfully',
         });
       } else {
         const error = await response.json();
         toast({
-          title: "Token Generation Failed",
-          description: error.error_description || "Failed to generate access token",
-          variant: "destructive",
+          title: 'Token Generation Failed',
+          description:
+            error.error_description || 'Failed to generate access token',
+          variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Network error generating access token",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Network error generating access token',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -142,9 +166,9 @@ export default function EmbeddedPayroll() {
   const testAPIEndpoint = async (endpoint: string, method = 'GET') => {
     if (!accessToken) {
       toast({
-        title: "No Access Token",
-        description: "Generate an access token first",
-        variant: "destructive",
+        title: 'No Access Token',
+        description: 'Generate an access token first',
+        variant: 'destructive',
       });
       return;
     }
@@ -153,7 +177,7 @@ export default function EmbeddedPayroll() {
       const response = await fetch(endpoint, {
         method,
         headers: {
-          'Authorization': `Bearer ${accessToken.access_token}`,
+          Authorization: `Bearer ${accessToken.access_token}`,
           'Content-Type': 'application/json',
           ...(method !== 'GET' && { 'Idempotency-Key': `test-${Date.now()}` }),
         },
@@ -161,18 +185,18 @@ export default function EmbeddedPayroll() {
 
       const data = await response.json();
       console.log(`${method} ${endpoint}:`, data);
-      
+
       toast({
-        title: "API Test",
+        title: 'API Test',
         description: `${method} ${endpoint} - Status: ${response.status}`,
-        variant: response.ok ? "default" : "destructive",
+        variant: response.ok ? 'default' : 'destructive',
       });
     } catch (error) {
       console.error('API Test Error:', error);
       toast({
-        title: "API Test Failed",
-        description: "Network error during API test",
-        variant: "destructive",
+        title: 'API Test Failed',
+        description: 'Network error during API test',
+        variant: 'destructive',
       });
     }
   };
@@ -180,8 +204,8 @@ export default function EmbeddedPayroll() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast({
-      title: "Copied",
-      description: "Text copied to clipboard",
+      title: 'Copied',
+      description: 'Text copied to clipboard',
     });
   };
 
@@ -191,7 +215,8 @@ export default function EmbeddedPayroll() {
         <div>
           <h1 className="text-3xl font-bold">Embedded Payroll + GL API</h1>
           <p className="text-muted-foreground">
-            Partner API management, GL integrations, and embedded payroll surfaces
+            Partner API management, GL integrations, and embedded payroll
+            surfaces
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -243,7 +268,13 @@ export default function EmbeddedPayroll() {
                     </div>
                     <div>
                       <Label>Status</Label>
-                      <Badge variant={selectedPartner.status === 'active' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={
+                          selectedPartner.status === 'active'
+                            ? 'default'
+                            : 'secondary'
+                        }
+                      >
                         {selectedPartner.status}
                       </Badge>
                     </div>
@@ -254,35 +285,43 @@ export default function EmbeddedPayroll() {
                       <Label>Client ID</Label>
                       <div className="flex space-x-2">
                         <Input value={selectedPartner.clientId} readOnly />
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="icon"
-                          onClick={() => copyToClipboard(selectedPartner.clientId)}
+                          onClick={() =>
+                            copyToClipboard(selectedPartner.clientId)
+                          }
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
                       </div>
                     </div>
-                    
+
                     <div>
                       <Label>Client Secret</Label>
                       <div className="flex space-x-2">
-                        <Input 
-                          type={showClientSecret ? "text" : "password"}
-                          value={selectedPartner.clientSecret} 
-                          readOnly 
+                        <Input
+                          type={showClientSecret ? 'text' : 'password'}
+                          value={selectedPartner.clientSecret}
+                          readOnly
                         />
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="icon"
                           onClick={() => setShowClientSecret(!showClientSecret)}
                         >
-                          {showClientSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          {showClientSecret ? (
+                            <EyeOff className="w-4 h-4" />
+                          ) : (
+                            <Eye className="w-4 h-4" />
+                          )}
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="icon"
-                          onClick={() => copyToClipboard(selectedPartner.clientSecret)}
+                          onClick={() =>
+                            copyToClipboard(selectedPartner.clientSecret)
+                          }
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
@@ -294,7 +333,9 @@ export default function EmbeddedPayroll() {
                     <Label>Allowed Scopes</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
                       {selectedPartner.scopes.map((scope, index) => (
-                        <Badge key={index} variant="outline">{scope}</Badge>
+                        <Badge key={index} variant="outline">
+                          {scope}
+                        </Badge>
                       ))}
                     </div>
                   </div>
@@ -316,10 +357,12 @@ export default function EmbeddedPayroll() {
                       <Label>Webhook URL</Label>
                       <div className="flex space-x-2">
                         <Input value={selectedPartner.webhookUrl} readOnly />
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="icon"
-                          onClick={() => window.open(selectedPartner.webhookUrl, '_blank')}
+                          onClick={() =>
+                            window.open(selectedPartner.webhookUrl, '_blank')
+                          }
                         >
                           <ExternalLink className="w-4 h-4" />
                         </Button>
@@ -342,15 +385,17 @@ export default function EmbeddedPayroll() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex space-x-4">
-                <Button 
-                  onClick={generateAccessToken} 
+                <Button
+                  onClick={generateAccessToken}
                   disabled={isLoading || !selectedPartner}
                   className="flex items-center space-x-2"
                 >
                   <Key className="w-4 h-4" />
-                  <span>{isLoading ? 'Generating...' : 'Generate Access Token'}</span>
+                  <span>
+                    {isLoading ? 'Generating...' : 'Generate Access Token'}
+                  </span>
                 </Button>
-                
+
                 {accessToken && (
                   <Badge variant="secondary" className="px-3 py-2">
                     Token expires in {accessToken.expires_in}s
@@ -363,14 +408,18 @@ export default function EmbeddedPayroll() {
                   <div>
                     <Label>Access Token</Label>
                     <div className="flex space-x-2">
-                      <Input 
-                        value={accessToken.access_token.substring(0, 32) + '...'} 
-                        readOnly 
+                      <Input
+                        value={
+                          accessToken.access_token.substring(0, 32) + '...'
+                        }
+                        readOnly
                       />
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="icon"
-                        onClick={() => copyToClipboard(accessToken.access_token)}
+                        onClick={() =>
+                          copyToClipboard(accessToken.access_token)
+                        }
                       >
                         <Copy className="w-4 h-4" />
                       </Button>
@@ -378,27 +427,33 @@ export default function EmbeddedPayroll() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => testAPIEndpoint('/api/embedded/health')}
                     >
                       Test Health Endpoint
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => testAPIEndpoint('/api/embedded/partner/profile')}
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        testAPIEndpoint('/api/embedded/partner/profile')
+                      }
                     >
                       Test Partner Profile
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => testAPIEndpoint('/api/embedded/payroll/runs')}
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        testAPIEndpoint('/api/embedded/payroll/runs')
+                      }
                     >
                       Test Payroll Runs
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => testAPIEndpoint('/api/embedded/gl/connections')}
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        testAPIEndpoint('/api/embedded/gl/connections')
+                      }
                     >
                       Test GL Connections
                     </Button>
@@ -432,7 +487,7 @@ export default function EmbeddedPayroll() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {glConnections.map((connection) => (
+                  {glConnections.map(connection => (
                     <TableRow key={connection.id}>
                       <TableCell>
                         <Badge variant="outline" className="capitalize">
@@ -441,17 +496,20 @@ export default function EmbeddedPayroll() {
                       </TableCell>
                       <TableCell>{connection.connectionName}</TableCell>
                       <TableCell>
-                        <Badge 
-                          variant={connection.status === 'active' ? 'default' : 'secondary'}
+                        <Badge
+                          variant={
+                            connection.status === 'active'
+                              ? 'default'
+                              : 'secondary'
+                          }
                         >
                           {connection.status}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {connection.lastSyncAt 
+                        {connection.lastSyncAt
                           ? new Date(connection.lastSyncAt).toLocaleString()
-                          : 'Never'
-                        }
+                          : 'Never'}
                       </TableCell>
                       <TableCell>
                         <Button variant="outline" size="sm">
@@ -480,31 +538,39 @@ export default function EmbeddedPayroll() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-3">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="h-auto p-4 flex flex-col items-center space-y-2"
-                      onClick={() => window.open(
-                        `/embed?surface=payroll_run&token=${accessToken?.access_token}&tenantId=demo-tenant&runId=run-001&theme=light`,
-                        '_blank'
-                      )}
+                      onClick={() =>
+                        window.open(
+                          `/embed?surface=payroll_run&token=${accessToken?.access_token}&tenantId=demo-tenant&runId=run-001&theme=light`,
+                          '_blank'
+                        )
+                      }
                       disabled={!accessToken}
                     >
                       <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                         <Settings className="w-4 h-4 text-blue-600" />
                       </div>
                       <div className="text-center">
-                        <div className="font-semibold text-sm">Payroll Wizard</div>
-                        <div className="text-xs text-muted-foreground">Draft → Validate → Finalize → Post</div>
+                        <div className="font-semibold text-sm">
+                          Payroll Wizard
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Draft → Validate → Finalize → Post
+                        </div>
                       </div>
                     </Button>
-                    
-                    <Button 
-                      variant="outline" 
+
+                    <Button
+                      variant="outline"
                       className="h-auto p-4 flex flex-col items-center space-y-2"
-                      onClick={() => window.open(
-                        `/embed?surface=exceptions_review&token=${accessToken?.access_token}&tenantId=demo-tenant&theme=light`,
-                        '_blank'
-                      )}
+                      onClick={() =>
+                        window.open(
+                          `/embed?surface=exceptions_review&token=${accessToken?.access_token}&tenantId=demo-tenant&theme=light`,
+                          '_blank'
+                        )
+                      }
                       disabled={!accessToken}
                     >
                       <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -512,35 +578,45 @@ export default function EmbeddedPayroll() {
                       </div>
                       <div className="text-center">
                         <div className="font-semibold text-sm">Exceptions</div>
-                        <div className="text-xs text-muted-foreground">Missed punches, OT approvals</div>
+                        <div className="text-xs text-muted-foreground">
+                          Missed punches, OT approvals
+                        </div>
                       </div>
                     </Button>
-                    
-                    <Button 
-                      variant="outline" 
+
+                    <Button
+                      variant="outline"
                       className="h-auto p-4 flex flex-col items-center space-y-2"
-                      onClick={() => window.open(
-                        `/embed?surface=filings_panel&token=${accessToken?.access_token}&tenantId=demo-tenant&theme=light`,
-                        '_blank'
-                      )}
+                      onClick={() =>
+                        window.open(
+                          `/embed?surface=filings_panel&token=${accessToken?.access_token}&tenantId=demo-tenant&theme=light`,
+                          '_blank'
+                        )
+                      }
                       disabled={!accessToken}
                     >
                       <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
                         <FileText className="w-4 h-4 text-purple-600" />
                       </div>
                       <div className="text-center">
-                        <div className="font-semibold text-sm">Filings Panel</div>
-                        <div className="text-xs text-muted-foreground">ERGANI/APD/ΦΜΥ status</div>
+                        <div className="font-semibold text-sm">
+                          Filings Panel
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          ERGANI/APD/ΦΜΥ status
+                        </div>
                       </div>
                     </Button>
-                    
-                    <Button 
-                      variant="outline" 
+
+                    <Button
+                      variant="outline"
                       className="h-auto p-4 flex flex-col items-center space-y-2"
-                      onClick={() => window.open(
-                        `/embed?surface=payments_cockpit&token=${accessToken?.access_token}&tenantId=demo-tenant&theme=light`,
-                        '_blank'
-                      )}
+                      onClick={() =>
+                        window.open(
+                          `/embed?surface=payments_cockpit&token=${accessToken?.access_token}&tenantId=demo-tenant&theme=light`,
+                          '_blank'
+                        )
+                      }
                       disabled={!accessToken}
                     >
                       <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -548,7 +624,9 @@ export default function EmbeddedPayroll() {
                       </div>
                       <div className="text-center">
                         <div className="font-semibold text-sm">Payments</div>
-                        <div className="text-xs text-muted-foreground">SEPA batch status</div>
+                        <div className="text-xs text-muted-foreground">
+                          SEPA batch status
+                        </div>
                       </div>
                     </Button>
                   </div>
@@ -572,7 +650,7 @@ export default function EmbeddedPayroll() {
                       Option A: iFrame + SDK
                     </h4>
                     <div className="p-3 bg-gray-50 rounded-lg text-sm font-mono">
-{`// Initialize SDK
+                      {`// Initialize SDK
 const sdk = new PayrollSDK({
   tenantId: 'your-tenant',
   token: 'jwt-token',
@@ -598,7 +676,7 @@ await sdk.init(document.getElementById('payroll'));
                       Option B: Web Component
                     </h4>
                     <div className="p-3 bg-gray-50 rounded-lg text-sm font-mono">
-{`<!-- Direct HTML usage -->
+                      {`<!-- Direct HTML usage -->
 <payroll-surface 
   surface="exceptions_review"
   token="jwt-token"

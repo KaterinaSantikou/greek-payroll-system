@@ -14,7 +14,7 @@ export const CONTRACT_TYPES = {
     standardWeeklyHours: 40,
     trialPeriodMonths: { min: 2, max: 6 }, // EU Directive 2019/1152 limit
     fullBenefits: true,
-    description: 'Συμβάσεις αορίστου ή ορισμένου χρόνου με πλήρη απασχόληση'
+    description: 'Συμβάσεις αορίστου ή ορισμένου χρόνου με πλήρη απασχόληση',
   },
   PART_TIME: {
     code: 'part-time',
@@ -25,7 +25,7 @@ export const CONTRACT_TYPES = {
     trialPeriodMonths: { min: 1, max: 6 }, // EU Directive 2019/1152 compliant
     fullBenefits: false,
     proRatedBenefits: true,
-    description: 'Συμβάσεις μερικής απασχόλησης με αναλογικά δικαιώματα'
+    description: 'Συμβάσεις μερικής απασχόλησης με αναλογικά δικαιώματα',
   },
   TEMPORARY: {
     code: 'temporary',
@@ -36,7 +36,7 @@ export const CONTRACT_TYPES = {
     renewalAllowed: true,
     maxRenewals: 2,
     trialPeriodMonths: { min: 1, max: 3 }, // Shorter for temporary contracts
-    description: 'Προσωρινές συμβάσεις εργασίας για συγκεκριμένες ανάγκες'
+    description: 'Προσωρινές συμβάσεις εργασίας για συγκεκριμένες ανάγκες',
   },
   SEASONAL: {
     code: 'seasonal',
@@ -46,7 +46,8 @@ export const CONTRACT_TYPES = {
     maxDurationMonths: 8,
     seasonalWork: true,
     specialConditions: ['tourism', 'agriculture', 'hospitality'],
-    description: 'Εποχιακές συμβάσεις για τουρισμό, γεωργία και συναφείς κλάδους'
+    description:
+      'Εποχιακές συμβάσεις για τουρισμό, γεωργία και συναφείς κλάδους',
   },
   FREELANCE: {
     code: 'freelance',
@@ -55,7 +56,7 @@ export const CONTRACT_TYPES = {
     flexibleHours: true,
     projectBased: true,
     requiresWorkPermit: true,
-    description: 'Συμβάσεις ελεύθερης συνεργασίας και παροχής υπηρεσιών'
+    description: 'Συμβάσεις ελεύθερης συνεργασίας και παροχής υπηρεσιών',
   },
   APPRENTICESHIP: {
     code: 'apprenticeship',
@@ -65,7 +66,7 @@ export const CONTRACT_TYPES = {
     maxDurationMonths: 36,
     educationComponent: true,
     specialProtections: true,
-    description: 'Προγράμματα μαθητείας με εκπαιδευτικό στοιχείο'
+    description: 'Προγράμματα μαθητείας με εκπαιδευτικό στοιχείο',
   },
   INTERNSHIP: {
     code: 'internship',
@@ -75,8 +76,8 @@ export const CONTRACT_TYPES = {
     maxDurationMonths: 12,
     educationComponent: true,
     limitedBenefits: true,
-    description: 'Προγράμματα πρακτικής άσκησης για φοιτητές και αποφοίτους'
-  }
+    description: 'Προγράμματα πρακτικής άσκησης για φοιτητές και αποφοίτους',
+  },
 };
 
 // Schedule Types
@@ -86,7 +87,7 @@ export const SCHEDULE_TYPES = {
     name: 'Προβλέψιμο Ωράριο',
     fixedHours: true,
     advanceNotice: 0,
-    description: 'Σταθερό ωράριο εργασίας με προβλέψιμες ώρες'
+    description: 'Σταθερό ωράριο εργασίας με προβλέψιμες ώρες',
   },
   UNPREDICTABLE: {
     code: 'unpredictable',
@@ -94,7 +95,7 @@ export const SCHEDULE_TYPES = {
     fixedHours: false,
     advanceNotice: 48, // hours
     compensation: 0.1, // 10% premium for unpredictability
-    description: 'Μεταβλητό ωράριο εργασίας με 48ωρη προειδοποίηση'
+    description: 'Μεταβλητό ωράριο εργασίας με 48ωρη προειδοποίηση',
   },
   ROTATING: {
     code: 'rotating',
@@ -102,7 +103,7 @@ export const SCHEDULE_TYPES = {
     shiftWork: true,
     rotationCycle: 28, // days
     nightWorkPremium: 0.25,
-    description: 'Σύστημα εναλλασσόμενων βαρδιών με κυκλικό πρόγραμμα'
+    description: 'Σύστημα εναλλασσόμενων βαρδιών με κυκλικό πρόγραμμα',
   },
   ON_CALL: {
     code: 'on-call',
@@ -110,15 +111,15 @@ export const SCHEDULE_TYPES = {
     onCallAvailability: true,
     callOutPremium: 0.5,
     minCallOutHours: 3,
-    description: 'Διαθεσιμότητα για κλήση σε εργασία κατά περίπτωση'
+    description: 'Διαθεσιμότητα για κλήση σε εργασία κατά περίπτωση',
   },
   SHIFT: {
     code: 'shift',
     name: 'Βάρδιες',
     shiftWork: true,
     shiftPremiums: { morning: 0, evening: 0.15, night: 0.25 },
-    description: 'Σύστημα βαρδιών πρωί, απόγευμα και νύχτα'
-  }
+    description: 'Σύστημα βαρδιών πρωί, απόγευμα και νύχτα',
+  },
 };
 
 // Working Time Arrangements
@@ -128,7 +129,7 @@ export const WORKING_TIME_ARRANGEMENTS = {
     name: 'Στάνταρ Εργασία',
     fixedLocation: true,
     fixedHours: true,
-    description: 'Παραδοσιακό μοντέλο εργασίας σε σταθερό χώρο και ώρες'
+    description: 'Παραδοσιακό μοντέλο εργασίας σε σταθερό χώρο και ώρες',
   },
   FLEXIBLE: {
     code: 'flexible',
@@ -136,7 +137,8 @@ export const WORKING_TIME_ARRANGEMENTS = {
     flexibleStart: true,
     flexibleEnd: true,
     coreHoursRequired: true,
-    description: 'Ευελιξία στις ώρες έναρξης και λήξης με υποχρεωτικές κεντρικές ώρες'
+    description:
+      'Ευελιξία στις ώρες έναρξης και λήξης με υποχρεωτικές κεντρικές ώρες',
   },
   REMOTE: {
     code: 'remote',
@@ -144,7 +146,7 @@ export const WORKING_TIME_ARRANGEMENTS = {
     remoteWork: true,
     rightToDisconnect: true,
     digitalTools: true,
-    description: 'Πλήρης τηλεργασία από το σπίτι ή άλλο χώρο'
+    description: 'Πλήρης τηλεργασία από το σπίτι ή άλλο χώρο',
   },
   HYBRID: {
     code: 'hybrid',
@@ -152,7 +154,7 @@ export const WORKING_TIME_ARRANGEMENTS = {
     partialRemote: true,
     flexibleDays: true,
     officePresence: true,
-    description: 'Συνδυασμός γραφείου και τηλεργασίας'
+    description: 'Συνδυασμός γραφείου και τηλεργασίας',
   },
   COMPRESSED: {
     code: 'compressed',
@@ -160,8 +162,8 @@ export const WORKING_TIME_ARRANGEMENTS = {
     fourDayWeek: true,
     longerDays: true,
     extendedWeekend: true,
-    description: 'Τετραήμερη εργασία με περισσότερες ώρες ανά ημέρα'
-  }
+    description: 'Τετραήμερη εργασία με περισσότερες ώρες ανά ημέρα',
+  },
 };
 
 // EU Working Time Directive Limits
@@ -173,7 +175,7 @@ export const EU_WORKING_TIME_LIMITS = {
   MAX_CONSECUTIVE_DAYS: 6,
   MIN_ANNUAL_LEAVE: 20, // days (Greece provides 24)
   MAX_NIGHT_WORK: 8, // hours per night shift
-  NIGHT_PERIOD: { start: '22:00', end: '06:00' }
+  NIGHT_PERIOD: { start: '22:00', end: '06:00' },
 };
 
 // Greek Specific Requirements
@@ -187,7 +189,7 @@ export const GREEK_LABOR_REQUIREMENTS = {
   NOTICE_PERIOD_DAYS: { employee: 30, employer: 30 },
   OVERTIME_DAILY_LIMIT: 2, // hours
   OVERTIME_WEEKLY_LIMIT: 10, // hours
-  SUNDAY_WORK_PREMIUM: 0.75 // 75%
+  SUNDAY_WORK_PREMIUM: 0.75, // 75%
 };
 
 /**
@@ -210,16 +212,18 @@ export function calculateTrialPeriod(
   }
 
   // Determine recommended duration based on position complexity
-  const isManagementPosition = position.toLowerCase().includes('manager') || 
-                              position.toLowerCase().includes('director') ||
-                              position.toLowerCase().includes('supervisor');
-  
-  const isSpecialistPosition = position.toLowerCase().includes('specialist') ||
-                              position.toLowerCase().includes('analyst') ||
-                              position.toLowerCase().includes('engineer');
+  const isManagementPosition =
+    position.toLowerCase().includes('manager') ||
+    position.toLowerCase().includes('director') ||
+    position.toLowerCase().includes('supervisor');
+
+  const isSpecialistPosition =
+    position.toLowerCase().includes('specialist') ||
+    position.toLowerCase().includes('analyst') ||
+    position.toLowerCase().includes('engineer');
 
   let recommendedDuration = contract.trialPeriodMonths.min;
-  
+
   if (isManagementPosition) {
     recommendedDuration = Math.min(contract.trialPeriodMonths.max, 12);
   } else if (isSpecialistPosition) {
@@ -244,7 +248,7 @@ export function calculateTrialPeriod(
     maxDuration: contract.trialPeriodMonths.max,
     endDate,
     extensionAllowed: recommendedDuration < contract.trialPeriodMonths.max,
-    reviewDates
+    reviewDates,
   };
 }
 
@@ -269,50 +273,74 @@ export function validateWorkingTimeCompliance(schedule: {
 
   // Check EU Working Time Directive compliance
   if (schedule.weeklyHours > EU_WORKING_TIME_LIMITS.MAX_WEEKLY_HOURS) {
-    violations.push(`Υπέρβαση μέγιστων εβδομαδιαίων ωρών: ${schedule.weeklyHours} > ${EU_WORKING_TIME_LIMITS.MAX_WEEKLY_HOURS}`);
+    violations.push(
+      `Υπέρβαση μέγιστων εβδομαδιαίων ωρών: ${schedule.weeklyHours} > ${EU_WORKING_TIME_LIMITS.MAX_WEEKLY_HOURS}`
+    );
   }
 
   if (schedule.dailyHours > EU_WORKING_TIME_LIMITS.MAX_DAILY_HOURS) {
-    violations.push(`Υπέρβαση μέγιστων ημερήσιων ωρών: ${schedule.dailyHours} > ${EU_WORKING_TIME_LIMITS.MAX_DAILY_HOURS}`);
+    violations.push(
+      `Υπέρβαση μέγιστων ημερήσιων ωρών: ${schedule.dailyHours} > ${EU_WORKING_TIME_LIMITS.MAX_DAILY_HOURS}`
+    );
   }
 
   if (schedule.consecutiveDays > EU_WORKING_TIME_LIMITS.MAX_CONSECUTIVE_DAYS) {
-    violations.push(`Υπέρβαση συνεχόμενων ημερών εργασίας: ${schedule.consecutiveDays} > ${EU_WORKING_TIME_LIMITS.MAX_CONSECUTIVE_DAYS}`);
+    violations.push(
+      `Υπέρβαση συνεχόμενων ημερών εργασίας: ${schedule.consecutiveDays} > ${EU_WORKING_TIME_LIMITS.MAX_CONSECUTIVE_DAYS}`
+    );
   }
 
-  if (schedule.restBetweenShifts < EU_WORKING_TIME_LIMITS.MIN_REST_BETWEEN_SHIFTS) {
-    violations.push(`Ανεπαρκής ανάπαυση μεταξύ βαρδιών: ${schedule.restBetweenShifts} < ${EU_WORKING_TIME_LIMITS.MIN_REST_BETWEEN_SHIFTS} ώρες`);
+  if (
+    schedule.restBetweenShifts < EU_WORKING_TIME_LIMITS.MIN_REST_BETWEEN_SHIFTS
+  ) {
+    violations.push(
+      `Ανεπαρκής ανάπαυση μεταξύ βαρδιών: ${schedule.restBetweenShifts} < ${EU_WORKING_TIME_LIMITS.MIN_REST_BETWEEN_SHIFTS} ώρες`
+    );
   }
 
-  if (schedule.nightHours && schedule.nightHours > EU_WORKING_TIME_LIMITS.MAX_NIGHT_WORK) {
-    violations.push(`Υπέρβαση νυχτερινών ωρών: ${schedule.nightHours} > ${EU_WORKING_TIME_LIMITS.MAX_NIGHT_WORK}`);
+  if (
+    schedule.nightHours &&
+    schedule.nightHours > EU_WORKING_TIME_LIMITS.MAX_NIGHT_WORK
+  ) {
+    violations.push(
+      `Υπέρβαση νυχτερινών ωρών: ${schedule.nightHours} > ${EU_WORKING_TIME_LIMITS.MAX_NIGHT_WORK}`
+    );
   }
 
   // Check contract-specific limits
-  const contractType = CONTRACT_TYPES[schedule.contractType as keyof typeof CONTRACT_TYPES];
+  const contractType =
+    CONTRACT_TYPES[schedule.contractType as keyof typeof CONTRACT_TYPES];
   if (contractType) {
     if (schedule.weeklyHours < contractType.minWeeklyHours) {
-      violations.push(`Λιγότερες από τις ελάχιστες εβδομαδιαίες ώρες για ${contractType.name}: ${schedule.weeklyHours} < ${contractType.minWeeklyHours}`);
+      violations.push(
+        `Λιγότερες από τις ελάχιστες εβδομαδιαίες ώρες για ${contractType.name}: ${schedule.weeklyHours} < ${contractType.minWeeklyHours}`
+      );
     }
-    
+
     if (schedule.weeklyHours > contractType.maxWeeklyHours) {
-      violations.push(`Περισσότερες από τις μέγιστες εβδομαδιαίες ώρες για ${contractType.name}: ${schedule.weeklyHours} > ${contractType.maxWeeklyHours}`);
+      violations.push(
+        `Περισσότερες από τις μέγιστες εβδομαδιαίες ώρες για ${contractType.name}: ${schedule.weeklyHours} > ${contractType.maxWeeklyHours}`
+      );
     }
   }
 
   // Warnings for best practices
   if (schedule.weeklyHours > 45) {
-    warnings.push('Συνιστάται περιορισμός εβδομαδιαίων ωρών κάτω από 45 για καλύτερη ισορροπία εργασίας-ζωής');
+    warnings.push(
+      'Συνιστάται περιορισμός εβδομαδιαίων ωρών κάτω από 45 για καλύτερη ισορροπία εργασίας-ζωής'
+    );
   }
 
   if (schedule.weekendWork) {
-    warnings.push('Η εργασία Σαββατοκύριακου απαιτεί ειδική αποζημίωση και εγκρίσεις');
+    warnings.push(
+      'Η εργασία Σαββατοκύριακου απαιτεί ειδική αποζημίωση και εγκρίσεις'
+    );
   }
 
   return {
     isCompliant: violations.length === 0,
     violations,
-    warnings
+    warnings,
   };
 }
 
@@ -334,7 +362,15 @@ export function generateWeeklySchedulePattern(
   }>;
   totalWeeklyHours: number;
 } {
-  const dayNames = ['Κυριακή', 'Δευτέρα', 'Τρίτη', 'Τετάρτη', 'Πέμπτη', 'Παρασκευή', 'Σάββατο'];
+  const dayNames = [
+    'Κυριακή',
+    'Δευτέρα',
+    'Τρίτη',
+    'Τετάρτη',
+    'Πέμπτη',
+    'Παρασκευή',
+    'Σάββατο',
+  ];
   const pattern = [];
   let totalWeeklyHours = 0;
 
@@ -361,13 +397,16 @@ export function generateWeeklySchedulePattern(
       // Adjust times based on schedule type
       switch (scheduleType) {
         case 'shift':
-          if (day % 3 === 0) { // Morning shift
+          if (day % 3 === 0) {
+            // Morning shift
             startTime = '06:00';
             endTime = '14:00';
-          } else if (day % 3 === 1) { // Evening shift
+          } else if (day % 3 === 1) {
+            // Evening shift
             startTime = '14:00';
             endTime = '22:00';
-          } else { // Night shift
+          } else {
+            // Night shift
             startTime = '22:00';
             endTime = '06:00';
           }
@@ -388,7 +427,7 @@ export function generateWeeklySchedulePattern(
         startTime,
         endTime,
         workHours: dailyHours,
-        breaks: calculateBreaks(dailyHours)
+        breaks: calculateBreaks(dailyHours),
       });
 
       totalWeeklyHours += dailyHours;
@@ -399,7 +438,7 @@ export function generateWeeklySchedulePattern(
         startTime: '',
         endTime: '',
         workHours: 0,
-        breaks: []
+        breaks: [],
       });
     }
   }
@@ -429,7 +468,7 @@ export function calculatePremiumRates(workingConditions: {
     premiumBreakdown.push({
       type: 'Νυχτερινή Εργασία',
       rate: nightPremium,
-      description: 'Επίδομα νυχτερινής εργασίας (22:00-06:00)'
+      description: 'Επίδομα νυχτερινής εργασίας (22:00-06:00)',
     });
     totalPremiumRate += nightPremium;
   }
@@ -439,7 +478,7 @@ export function calculatePremiumRates(workingConditions: {
     premiumBreakdown.push({
       type: 'Εργασία Σαββατοκύριακου',
       rate: weekendPremium,
-      description: 'Επίδομα εργασίας Σαββάτου/Κυριακής'
+      description: 'Επίδομα εργασίας Σαββάτου/Κυριακής',
     });
     totalPremiumRate += weekendPremium;
   }
@@ -449,7 +488,7 @@ export function calculatePremiumRates(workingConditions: {
     premiumBreakdown.push({
       type: 'Εργασία Αργίας',
       rate: holidayPremium,
-      description: 'Επίδομα εργασίας σε επίσημες αργίες'
+      description: 'Επίδομα εργασίας σε επίσημες αργίες',
     });
     totalPremiumRate += holidayPremium;
   }
@@ -459,27 +498,27 @@ export function calculatePremiumRates(workingConditions: {
     premiumBreakdown.push({
       type: 'Υπερεργασία',
       rate: overtimePremium,
-      description: 'Επίδομα υπερεργασίας (πρώτες 2 ώρες 25%, μετά 50%)'
+      description: 'Επίδομα υπερεργασίας (πρώτες 2 ώρες 25%, μετά 50%)',
     });
     totalPremiumRate += overtimePremium;
   }
 
   if (workingConditions.isHazardousWork) {
-    const hazardPremium = 0.20; // 20%
+    const hazardPremium = 0.2; // 20%
     premiumBreakdown.push({
       type: 'Επικίνδυνη Εργασία',
       rate: hazardPremium,
-      description: 'Επίδομα επικινδυνότητας και δυσμενών συνθηκών'
+      description: 'Επίδομα επικινδυνότητας και δυσμενών συνθηκών',
     });
     totalPremiumRate += hazardPremium;
   }
 
   if (workingConditions.scheduleType === 'unpredictable') {
-    const unpredictablePremium = 0.10; // 10%
+    const unpredictablePremium = 0.1; // 10%
     premiumBreakdown.push({
       type: 'Μη Προβλέψιμο Ωράριο',
       rate: unpredictablePremium,
-      description: 'Επίδομα για μη προβλέψιμο πρόγραμμα εργασίας'
+      description: 'Επίδομα για μη προβλέψιμο πρόγραμμα εργασίας',
     });
     totalPremiumRate += unpredictablePremium;
   }
@@ -494,7 +533,7 @@ export function getContractTypeOptions() {
   return Object.values(CONTRACT_TYPES).map(contract => ({
     value: contract.code,
     label: contract.name,
-    description: contract.description
+    description: contract.description,
   }));
 }
 
@@ -505,7 +544,7 @@ export function getScheduleTypeOptions() {
   return Object.values(SCHEDULE_TYPES).map(schedule => ({
     value: schedule.code,
     label: schedule.name,
-    description: schedule.description
+    description: schedule.description,
   }));
 }
 
@@ -516,6 +555,6 @@ export function getWorkingTimeArrangementOptions() {
   return Object.values(WORKING_TIME_ARRANGEMENTS).map(arrangement => ({
     value: arrangement.code,
     label: arrangement.name,
-    description: arrangement.description
+    description: arrangement.description,
   }));
 }

@@ -1,15 +1,27 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { useToast } from "@/hooks/use-toast";
-import { 
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
+import {
   Calculator,
   DollarSign,
   Users,
@@ -20,8 +32,8 @@ import {
   Clock,
   Star,
   Building2,
-  PieChart
-} from "lucide-react";
+  PieChart,
+} from 'lucide-react';
 
 interface TipRole {
   id: string;
@@ -70,39 +82,53 @@ interface TipAllocation {
 export default function HotelTipPooling() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("");
-  const [newPeriod, setNewPeriod] = useState({ startDate: "", endDate: "" });
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('');
+  const [newPeriod, setNewPeriod] = useState({ startDate: '', endDate: '' });
   const [employeeShifts, setEmployeeShifts] = useState([
-    { employeeId: "", roleId: "", hoursWorked: 0, shiftsWorked: 0, serviceScore: 1.0 }
+    {
+      employeeId: '',
+      roleId: '',
+      hoursWorked: 0,
+      shiftsWorked: 0,
+      serviceScore: 1.0,
+    },
   ]);
 
   // Fetch data
   const { data: roles } = useQuery({
     queryKey: ['/api/tip-pooling/roles'],
-    refetchInterval: 30000
+    refetchInterval: 30000,
   }) as { data?: { data?: TipRole[] } };
 
   const { data: outlets } = useQuery({
     queryKey: ['/api/tip-pooling/outlets'],
-    refetchInterval: 30000
+    refetchInterval: 30000,
   }) as { data?: { data?: POSOutlet[] } };
 
   const { data: periods } = useQuery({
     queryKey: ['/api/tip-pooling/periods'],
-    refetchInterval: 15000
+    refetchInterval: 15000,
   }) as { data?: { data?: TipPoolPeriod[] } };
 
   const { data: analytics } = useQuery({
     queryKey: ['/api/tip-pooling/analytics'],
-    refetchInterval: 30000
+    refetchInterval: 30000,
   }) as { data?: { data?: any } };
 
   const { data: payrollSummary } = useQuery({
     queryKey: ['/api/tip-pooling/payroll-summary', selectedPeriod],
     enabled: !!selectedPeriod,
-    refetchInterval: 15000
-  }) as { data?: { data?: { period: TipPoolPeriod; allocations: TipAllocation[]; payrollEntries: any[] } } };
+    refetchInterval: 15000,
+  }) as {
+    data?: {
+      data?: {
+        period: TipPoolPeriod;
+        allocations: TipAllocation[];
+        payrollEntries: any[];
+      };
+    };
+  };
 
   // Mutations
   const simulateDataMutation = useMutation({
@@ -115,16 +141,18 @@ export default function HotelTipPooling() {
     },
     onSuccess: () => {
       toast({
-        title: "Demo Data Generated",
-        description: "30 days of sample POS revenue data has been imported",
+        title: 'Demo Data Generated',
+        description: '30 days of sample POS revenue data has been imported',
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/tip-pooling/analytics'] });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/tip-pooling/analytics'],
+      });
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to Generate Data",
+        title: 'Failed to Generate Data',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
@@ -140,17 +168,17 @@ export default function HotelTipPooling() {
     },
     onSuccess: () => {
       toast({
-        title: "Tip Pool Period Created",
-        description: "New tip pool period has been created successfully",
+        title: 'Tip Pool Period Created',
+        description: 'New tip pool period has been created successfully',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/tip-pooling/periods'] });
-      setNewPeriod({ startDate: "", endDate: "" });
+      setNewPeriod({ startDate: '', endDate: '' });
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to Create Period",
+        title: 'Failed to Create Period',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
@@ -164,16 +192,16 @@ export default function HotelTipPooling() {
     },
     onSuccess: () => {
       toast({
-        title: "Tip Pool Calculated",
-        description: "Revenue has been aggregated and tip pool calculated",
+        title: 'Tip Pool Calculated',
+        description: 'Revenue has been aggregated and tip pool calculated',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/tip-pooling/periods'] });
     },
     onError: (error: any) => {
       toast({
-        title: "Calculation Failed",
+        title: 'Calculation Failed',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
@@ -189,26 +217,42 @@ export default function HotelTipPooling() {
     },
     onSuccess: () => {
       toast({
-        title: "Allocations Calculated",
-        description: "Individual tip allocations have been calculated and are ready for payroll",
+        title: 'Allocations Calculated',
+        description:
+          'Individual tip allocations have been calculated and are ready for payroll',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/tip-pooling/periods'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/tip-pooling/payroll-summary', selectedPeriod] });
+      queryClient.invalidateQueries({
+        queryKey: ['/api/tip-pooling/payroll-summary', selectedPeriod],
+      });
     },
     onError: (error: any) => {
       toast({
-        title: "Allocation Failed",
+        title: 'Allocation Failed',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
 
   const handleAddEmployeeShift = () => {
-    setEmployeeShifts([...employeeShifts, { employeeId: "", roleId: "", hoursWorked: 0, shiftsWorked: 0, serviceScore: 1.0 }]);
+    setEmployeeShifts([
+      ...employeeShifts,
+      {
+        employeeId: '',
+        roleId: '',
+        hoursWorked: 0,
+        shiftsWorked: 0,
+        serviceScore: 1.0,
+      },
+    ]);
   };
 
-  const handleUpdateEmployeeShift = (index: number, field: string, value: any) => {
+  const handleUpdateEmployeeShift = (
+    index: number,
+    field: string,
+    value: any
+  ) => {
     const updatedShifts = [...employeeShifts];
     updatedShifts[index] = { ...updatedShifts[index], [field]: value };
     setEmployeeShifts(updatedShifts);
@@ -223,21 +267,31 @@ export default function HotelTipPooling() {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case 'service': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
-      case 'kitchen': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100';
-      case 'support': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
-      case 'management': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100';
+      case 'service':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
+      case 'kitchen':
+        return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100';
+      case 'support':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
+      case 'management':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100';
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
-      case 'calculating': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100';
-      case 'finalized': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
-      case 'paid': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100';
+      case 'open':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
+      case 'calculating':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100';
+      case 'finalized':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
+      case 'paid':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-100';
     }
   };
 
@@ -252,7 +306,8 @@ export default function HotelTipPooling() {
               Hotel Tip Pooling
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Manage POS revenue allocation, role weights, and tip pool distribution with Greek tax compliance
+              Manage POS revenue allocation, role weights, and tip pool
+              distribution with Greek tax compliance
             </p>
           </div>
           <Button
@@ -271,7 +326,9 @@ export default function HotelTipPooling() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue (30d)</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Total Revenue (30d)
+                  </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {formatCurrency(analytics?.data?.totalRevenue || 0)}
                   </p>
@@ -285,7 +342,9 @@ export default function HotelTipPooling() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Tip Pool (30d)</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Total Tip Pool (30d)
+                  </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {formatCurrency(analytics?.data?.totalTipPool || 0)}
                   </p>
@@ -299,7 +358,9 @@ export default function HotelTipPooling() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Outlets</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Active Outlets
+                  </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {outlets?.data?.filter(o => o.isActive).length || 0}
                   </p>
@@ -313,7 +374,9 @@ export default function HotelTipPooling() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Tip Roles</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Tip Roles
+                  </p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {roles?.data?.length || 0}
                   </p>
@@ -325,7 +388,11 @@ export default function HotelTipPooling() {
         </div>
 
         {/* Main Interface */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="outlets">POS Outlets</TabsTrigger>
@@ -348,22 +415,37 @@ export default function HotelTipPooling() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {analytics?.data?.outletBreakdown?.map((outlet: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">{outlet.outletName}</span>
-                            <span className="text-sm text-gray-600">
-                              {formatCurrency(outlet.revenue)} ({formatPercentage(outlet.percentage / 100)})
-                            </span>
-                          </div>
-                          <Progress value={outlet.percentage} className="mt-2" />
-                          <div className="text-xs text-gray-500 mt-1">
-                            Tip Pool: {formatCurrency(outlet.tipPoolAmount)}
+                    {analytics?.data?.outletBreakdown?.map(
+                      (outlet: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium">
+                                {outlet.outletName}
+                              </span>
+                              <span className="text-sm text-gray-600">
+                                {formatCurrency(outlet.revenue)} (
+                                {formatPercentage(outlet.percentage / 100)})
+                              </span>
+                            </div>
+                            <Progress
+                              value={outlet.percentage}
+                              className="mt-2"
+                            />
+                            <div className="text-xs text-gray-500 mt-1">
+                              Tip Pool: {formatCurrency(outlet.tipPoolAmount)}
+                            </div>
                           </div>
                         </div>
+                      )
+                    ) || (
+                      <div className="text-center text-gray-500">
+                        No data available - Generate demo data to start
                       </div>
-                    )) || <div className="text-center text-gray-500">No data available - Generate demo data to start</div>}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -378,21 +460,34 @@ export default function HotelTipPooling() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {analytics?.data?.dailyTrends?.slice(0, 7).map((day: any, index: number) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <span className="text-sm font-medium">
-                          {new Date(day.date).toLocaleDateString('en-GB', { 
-                            weekday: 'short', 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
-                        </span>
-                        <div className="text-right">
-                          <div className="font-medium">{formatCurrency(day.revenue)}</div>
-                          <div className="text-xs text-gray-500">Pool: {formatCurrency(day.tipPool)}</div>
+                    {analytics?.data?.dailyTrends
+                      ?.slice(0, 7)
+                      .map((day: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between"
+                        >
+                          <span className="text-sm font-medium">
+                            {new Date(day.date).toLocaleDateString('en-GB', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </span>
+                          <div className="text-right">
+                            <div className="font-medium">
+                              {formatCurrency(day.revenue)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              Pool: {formatCurrency(day.tipPool)}
+                            </div>
+                          </div>
                         </div>
+                      )) || (
+                      <div className="text-center text-gray-500">
+                        No trend data available
                       </div>
-                    )) || <div className="text-center text-gray-500">No trend data available</div>}
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -410,23 +505,38 @@ export default function HotelTipPooling() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {outlets?.data?.map((outlet) => (
-                    <div key={outlet.id} className="p-4 border rounded-lg space-y-3">
+                  {outlets?.data?.map(outlet => (
+                    <div
+                      key={outlet.id}
+                      className="p-4 border rounded-lg space-y-3"
+                    >
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold">{outlet.name}</h3>
-                        <Badge className={outlet.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                        <Badge
+                          className={
+                            outlet.isActive
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }
+                        >
                           {outlet.isActive ? 'Active' : 'Inactive'}
                         </Badge>
                       </div>
-                      
+
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-sm text-gray-600">Type:</span>
-                          <Badge variant="outline">{outlet.type.replace('_', ' ')}</Badge>
+                          <Badge variant="outline">
+                            {outlet.type.replace('_', ' ')}
+                          </Badge>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm text-gray-600">Tip Pool %:</span>
-                          <span className="font-medium">{formatPercentage(outlet.tipPoolPercentage)}</span>
+                          <span className="text-sm text-gray-600">
+                            Tip Pool %:
+                          </span>
+                          <span className="font-medium">
+                            {formatPercentage(outlet.tipPoolPercentage)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -442,30 +552,40 @@ export default function HotelTipPooling() {
               <CardHeader>
                 <CardTitle>Tip Roles & Point System</CardTitle>
                 <CardDescription>
-                  Define roles, weights, and service multipliers for tip distribution
+                  Define roles, weights, and service multipliers for tip
+                  distribution
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {roles?.data?.map((role) => (
-                    <div key={role.id} className="p-4 border rounded-lg space-y-3">
+                  {roles?.data?.map(role => (
+                    <div
+                      key={role.id}
+                      className="p-4 border rounded-lg space-y-3"
+                    >
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold">{role.name}</h3>
                         <Badge className={getCategoryColor(role.category)}>
                           {role.category}
                         </Badge>
                       </div>
-                      
-                      <p className="text-sm text-gray-600">{role.description}</p>
-                      
+
+                      <p className="text-sm text-gray-600">
+                        {role.description}
+                      </p>
+
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="text-gray-600">Base Weight:</span>
                           <div className="font-medium">{role.baseWeight}x</div>
                         </div>
                         <div>
-                          <span className="text-gray-600">Service Multiplier:</span>
-                          <div className="font-medium">{role.serviceMultiplier}x</div>
+                          <span className="text-gray-600">
+                            Service Multiplier:
+                          </span>
+                          <div className="font-medium">
+                            {role.serviceMultiplier}x
+                          </div>
                         </div>
                         <div>
                           <span className="text-gray-600">Hourly Points:</span>
@@ -498,7 +618,12 @@ export default function HotelTipPooling() {
                       id="startDate"
                       type="date"
                       value={newPeriod.startDate}
-                      onChange={(e) => setNewPeriod({ ...newPeriod, startDate: e.target.value })}
+                      onChange={e =>
+                        setNewPeriod({
+                          ...newPeriod,
+                          startDate: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div>
@@ -507,15 +632,23 @@ export default function HotelTipPooling() {
                       id="endDate"
                       type="date"
                       value={newPeriod.endDate}
-                      onChange={(e) => setNewPeriod({ ...newPeriod, endDate: e.target.value })}
+                      onChange={e =>
+                        setNewPeriod({ ...newPeriod, endDate: e.target.value })
+                      }
                     />
                   </div>
                   <Button
-                    onClick={() => createPeriodMutation.mutate({
-                      startDate: new Date(newPeriod.startDate).toISOString(),
-                      endDate: new Date(newPeriod.endDate).toISOString()
-                    })}
-                    disabled={!newPeriod.startDate || !newPeriod.endDate || createPeriodMutation.isPending}
+                    onClick={() =>
+                      createPeriodMutation.mutate({
+                        startDate: new Date(newPeriod.startDate).toISOString(),
+                        endDate: new Date(newPeriod.endDate).toISOString(),
+                      })
+                    }
+                    disabled={
+                      !newPeriod.startDate ||
+                      !newPeriod.endDate ||
+                      createPeriodMutation.isPending
+                    }
                   >
                     Create Period
                   </Button>
@@ -530,36 +663,49 @@ export default function HotelTipPooling() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {periods?.data?.map((period) => (
+                  {periods?.data?.map(period => (
                     <div key={period.id} className="p-4 border rounded-lg">
                       <div className="flex items-center justify-between mb-3">
                         <div>
                           <h3 className="font-semibold">
-                            {new Date(period.startDate).toLocaleDateString()} - {new Date(period.endDate).toLocaleDateString()}
+                            {new Date(period.startDate).toLocaleDateString()} -{' '}
+                            {new Date(period.endDate).toLocaleDateString()}
                           </h3>
-                          <p className="text-sm text-gray-600">ID: {period.id}</p>
+                          <p className="text-sm text-gray-600">
+                            ID: {period.id}
+                          </p>
                         </div>
                         <Badge className={getStatusColor(period.status)}>
                           {period.status.replace('_', ' ').toUpperCase()}
                         </Badge>
                       </div>
-                      
+
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                         <div>
                           <span className="text-gray-600">Total Revenue:</span>
-                          <div className="font-medium">{formatCurrency(period.totalRevenue)}</div>
+                          <div className="font-medium">
+                            {formatCurrency(period.totalRevenue)}
+                          </div>
                         </div>
                         <div>
                           <span className="text-gray-600">Tip Pool:</span>
-                          <div className="font-medium">{formatCurrency(period.totalTipPool)}</div>
+                          <div className="font-medium">
+                            {formatCurrency(period.totalTipPool)}
+                          </div>
                         </div>
                         <div>
-                          <span className="text-gray-600">Employer Top-up:</span>
-                          <div className="font-medium">{formatCurrency(period.employerTopUp)}</div>
+                          <span className="text-gray-600">
+                            Employer Top-up:
+                          </span>
+                          <div className="font-medium">
+                            {formatCurrency(period.employerTopUp)}
+                          </div>
                         </div>
                         <div>
                           <span className="text-gray-600">Total Points:</span>
-                          <div className="font-medium">{period.totalPoints.toFixed(1)}</div>
+                          <div className="font-medium">
+                            {period.totalPoints.toFixed(1)}
+                          </div>
                         </div>
                       </div>
 
@@ -567,7 +713,9 @@ export default function HotelTipPooling() {
                         {period.status === 'open' && (
                           <Button
                             size="sm"
-                            onClick={() => calculateTipPoolMutation.mutate(period.id)}
+                            onClick={() =>
+                              calculateTipPoolMutation.mutate(period.id)
+                            }
                             disabled={calculateTipPoolMutation.isPending}
                           >
                             <Calculator className="h-4 w-4 mr-2" />
@@ -602,17 +750,23 @@ export default function HotelTipPooling() {
                 {/* Period Selection */}
                 <div>
                   <Label>Select Tip Pool Period</Label>
-                  <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                  <Select
+                    value={selectedPeriod}
+                    onValueChange={setSelectedPeriod}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Choose a calculated period..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {periods?.data?.filter(p => p.status === 'calculating').map((period) => (
-                        <SelectItem key={period.id} value={period.id}>
-                          {new Date(period.startDate).toLocaleDateString()} - {new Date(period.endDate).toLocaleDateString()} 
-                          ({formatCurrency(period.totalTipPool)} pool)
-                        </SelectItem>
-                      ))}
+                      {periods?.data
+                        ?.filter(p => p.status === 'calculating')
+                        .map(period => (
+                          <SelectItem key={period.id} value={period.id}>
+                            {new Date(period.startDate).toLocaleDateString()} -{' '}
+                            {new Date(period.endDate).toLocaleDateString()}(
+                            {formatCurrency(period.totalTipPool)} pool)
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -629,24 +783,42 @@ export default function HotelTipPooling() {
                       </div>
 
                       {employeeShifts.map((shift, index) => (
-                        <div key={index} className="p-4 border rounded-lg space-y-4">
+                        <div
+                          key={index}
+                          className="p-4 border rounded-lg space-y-4"
+                        >
                           <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                             <div>
                               <Label>Employee ID</Label>
                               <Input
                                 placeholder="EMP001"
                                 value={shift.employeeId}
-                                onChange={(e) => handleUpdateEmployeeShift(index, 'employeeId', e.target.value)}
+                                onChange={e =>
+                                  handleUpdateEmployeeShift(
+                                    index,
+                                    'employeeId',
+                                    e.target.value
+                                  )
+                                }
                               />
                             </div>
                             <div>
                               <Label>Role</Label>
-                              <Select value={shift.roleId} onValueChange={(value) => handleUpdateEmployeeShift(index, 'roleId', value)}>
+                              <Select
+                                value={shift.roleId}
+                                onValueChange={value =>
+                                  handleUpdateEmployeeShift(
+                                    index,
+                                    'roleId',
+                                    value
+                                  )
+                                }
+                              >
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select role..." />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {roles?.data?.map((role) => (
+                                  {roles?.data?.map(role => (
                                     <SelectItem key={role.id} value={role.id}>
                                       {role.name}
                                     </SelectItem>
@@ -661,7 +833,13 @@ export default function HotelTipPooling() {
                                 min="0"
                                 step="0.5"
                                 value={shift.hoursWorked}
-                                onChange={(e) => handleUpdateEmployeeShift(index, 'hoursWorked', parseFloat(e.target.value) || 0)}
+                                onChange={e =>
+                                  handleUpdateEmployeeShift(
+                                    index,
+                                    'hoursWorked',
+                                    parseFloat(e.target.value) || 0
+                                  )
+                                }
                               />
                             </div>
                             <div>
@@ -670,7 +848,13 @@ export default function HotelTipPooling() {
                                 type="number"
                                 min="0"
                                 value={shift.shiftsWorked}
-                                onChange={(e) => handleUpdateEmployeeShift(index, 'shiftsWorked', parseInt(e.target.value) || 0)}
+                                onChange={e =>
+                                  handleUpdateEmployeeShift(
+                                    index,
+                                    'shiftsWorked',
+                                    parseInt(e.target.value) || 0
+                                  )
+                                }
                               />
                             </div>
                             <div>
@@ -681,7 +865,13 @@ export default function HotelTipPooling() {
                                 max="1"
                                 step="0.1"
                                 value={shift.serviceScore}
-                                onChange={(e) => handleUpdateEmployeeShift(index, 'serviceScore', parseFloat(e.target.value) || 1.0)}
+                                onChange={e =>
+                                  handleUpdateEmployeeShift(
+                                    index,
+                                    'serviceScore',
+                                    parseFloat(e.target.value) || 1.0
+                                  )
+                                }
                               />
                             </div>
                             <div className="flex items-end">
@@ -699,11 +889,19 @@ export default function HotelTipPooling() {
                     </div>
 
                     <Button
-                      onClick={() => calculateAllocationsMutation.mutate({
-                        periodId: selectedPeriod,
-                        employeeShifts: employeeShifts.filter(s => s.employeeId && s.roleId)
-                      })}
-                      disabled={calculateAllocationsMutation.isPending || employeeShifts.filter(s => s.employeeId && s.roleId).length === 0}
+                      onClick={() =>
+                        calculateAllocationsMutation.mutate({
+                          periodId: selectedPeriod,
+                          employeeShifts: employeeShifts.filter(
+                            s => s.employeeId && s.roleId
+                          ),
+                        })
+                      }
+                      disabled={
+                        calculateAllocationsMutation.isPending ||
+                        employeeShifts.filter(s => s.employeeId && s.roleId)
+                          .length === 0
+                      }
                       className="w-full"
                     >
                       <Calculator className="h-4 w-4 mr-2" />
@@ -728,17 +926,23 @@ export default function HotelTipPooling() {
                 {/* Period Selection */}
                 <div>
                   <Label>Select Finalized Period</Label>
-                  <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                  <Select
+                    value={selectedPeriod}
+                    onValueChange={setSelectedPeriod}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Choose a finalized period..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {periods?.data?.filter(p => p.status === 'finalized').map((period) => (
-                        <SelectItem key={period.id} value={period.id}>
-                          {new Date(period.startDate).toLocaleDateString()} - {new Date(period.endDate).toLocaleDateString()} 
-                          ({formatCurrency(period.totalTipPool)} distributed)
-                        </SelectItem>
-                      ))}
+                      {periods?.data
+                        ?.filter(p => p.status === 'finalized')
+                        .map(period => (
+                          <SelectItem key={period.id} value={period.id}>
+                            {new Date(period.startDate).toLocaleDateString()} -{' '}
+                            {new Date(period.endDate).toLocaleDateString()}(
+                            {formatCurrency(period.totalTipPool)} distributed)
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -751,19 +955,35 @@ export default function HotelTipPooling() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
                           <span className="text-gray-600">Total Revenue:</span>
-                          <div className="font-medium">{formatCurrency(payrollSummary.data.period.totalRevenue)}</div>
+                          <div className="font-medium">
+                            {formatCurrency(
+                              payrollSummary.data.period.totalRevenue
+                            )}
+                          </div>
                         </div>
                         <div>
                           <span className="text-gray-600">Tip Pool:</span>
-                          <div className="font-medium">{formatCurrency(payrollSummary.data.period.totalTipPool)}</div>
+                          <div className="font-medium">
+                            {formatCurrency(
+                              payrollSummary.data.period.totalTipPool
+                            )}
+                          </div>
                         </div>
                         <div>
-                          <span className="text-gray-600">Employer Top-up:</span>
-                          <div className="font-medium">{formatCurrency(payrollSummary.data.period.employerTopUp)}</div>
+                          <span className="text-gray-600">
+                            Employer Top-up:
+                          </span>
+                          <div className="font-medium">
+                            {formatCurrency(
+                              payrollSummary.data.period.employerTopUp
+                            )}
+                          </div>
                         </div>
                         <div>
                           <span className="text-gray-600">Employees:</span>
-                          <div className="font-medium">{payrollSummary.data.allocations.length}</div>
+                          <div className="font-medium">
+                            {payrollSummary.data.allocations.length}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -773,33 +993,67 @@ export default function HotelTipPooling() {
                       <table className="w-full">
                         <thead className="bg-gray-50 dark:bg-gray-800">
                           <tr>
-                            <th className="px-4 py-3 text-left text-sm font-medium">Employee</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium">Role</th>
-                            <th className="px-4 py-3 text-right text-sm font-medium">Hours</th>
-                            <th className="px-4 py-3 text-right text-sm font-medium">Points</th>
-                            <th className="px-4 py-3 text-right text-sm font-medium">Base</th>
-                            <th className="px-4 py-3 text-right text-sm font-medium">Bonus</th>
-                            <th className="px-4 py-3 text-right text-sm font-medium">Total</th>
-                            <th className="px-4 py-3 text-left text-sm font-medium">Code</th>
+                            <th className="px-4 py-3 text-left text-sm font-medium">
+                              Employee
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-medium">
+                              Role
+                            </th>
+                            <th className="px-4 py-3 text-right text-sm font-medium">
+                              Hours
+                            </th>
+                            <th className="px-4 py-3 text-right text-sm font-medium">
+                              Points
+                            </th>
+                            <th className="px-4 py-3 text-right text-sm font-medium">
+                              Base
+                            </th>
+                            <th className="px-4 py-3 text-right text-sm font-medium">
+                              Bonus
+                            </th>
+                            <th className="px-4 py-3 text-right text-sm font-medium">
+                              Total
+                            </th>
+                            <th className="px-4 py-3 text-left text-sm font-medium">
+                              Code
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="divide-y">
-                          {payrollSummary.data.allocations.map((allocation, index) => (
-                            <tr key={index}>
-                              <td className="px-4 py-3 font-medium">{allocation.employeeId}</td>
-                              <td className="px-4 py-3">
-                                {roles?.data?.find(r => r.id === allocation.roleId)?.name || allocation.roleId}
-                              </td>
-                              <td className="px-4 py-3 text-right">{allocation.hoursWorked}h</td>
-                              <td className="px-4 py-3 text-right">{allocation.totalPoints.toFixed(1)}</td>
-                              <td className="px-4 py-3 text-right">{formatCurrency(allocation.baseAllocation)}</td>
-                              <td className="px-4 py-3 text-right">{formatCurrency(allocation.serviceBonus)}</td>
-                              <td className="px-4 py-3 text-right font-medium">{formatCurrency(allocation.totalAmount)}</td>
-                              <td className="px-4 py-3">
-                                <Badge variant="outline">{allocation.earningsCode}</Badge>
-                              </td>
-                            </tr>
-                          ))}
+                          {payrollSummary.data.allocations.map(
+                            (allocation, index) => (
+                              <tr key={index}>
+                                <td className="px-4 py-3 font-medium">
+                                  {allocation.employeeId}
+                                </td>
+                                <td className="px-4 py-3">
+                                  {roles?.data?.find(
+                                    r => r.id === allocation.roleId
+                                  )?.name || allocation.roleId}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  {allocation.hoursWorked}h
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  {allocation.totalPoints.toFixed(1)}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  {formatCurrency(allocation.baseAllocation)}
+                                </td>
+                                <td className="px-4 py-3 text-right">
+                                  {formatCurrency(allocation.serviceBonus)}
+                                </td>
+                                <td className="px-4 py-3 text-right font-medium">
+                                  {formatCurrency(allocation.totalAmount)}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <Badge variant="outline">
+                                    {allocation.earningsCode}
+                                  </Badge>
+                                </td>
+                              </tr>
+                            )
+                          )}
                         </tbody>
                       </table>
                     </div>

@@ -1,9 +1,15 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CommandPalette } from "@/components/CommandPalette";
-import { useCommandPalette } from "@/hooks/useCommandPalette";
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { CommandPalette } from '@/components/CommandPalette';
+import { useCommandPalette } from '@/hooks/useCommandPalette';
 import {
   Search,
   Command,
@@ -19,7 +25,7 @@ import {
   Play,
   Upload,
   Download,
-} from "lucide-react";
+} from 'lucide-react';
 
 export default function CommandPaletteDemo() {
   const { open, setOpen } = useCommandPalette();
@@ -28,91 +34,98 @@ export default function CommandPaletteDemo() {
   const features = [
     {
       icon: Search,
-      title: "Semantic Search",
-      description: "Intelligent search across employees, payroll runs, filings, and settings",
-      examples: ["Open Maria's contract", "Show August payroll", "Find ERGANI settings"],
+      title: 'Semantic Search',
+      description:
+        'Intelligent search across employees, payroll runs, filings, and settings',
+      examples: [
+        "Open Maria's contract",
+        'Show August payroll',
+        'Find ERGANI settings',
+      ],
     },
     {
       icon: Zap,
-      title: "Quick Actions",
-      description: "Execute common tasks without navigating through menus",
-      examples: ["Run payroll August", "File APD", "Generate SEPA payment"],
+      title: 'Quick Actions',
+      description: 'Execute common tasks without navigating through menus',
+      examples: ['Run payroll August', 'File APD', 'Generate SEPA payment'],
     },
     {
       icon: Keyboard,
-      title: "Keyboard-First UX",
-      description: "Designed for power users who prefer keyboard navigation",
-      examples: ["⌘K to open", "↑↓ to navigate", "Enter to execute"],
+      title: 'Keyboard-First UX',
+      description: 'Designed for power users who prefer keyboard navigation',
+      examples: ['⌘K to open', '↑↓ to navigate', 'Enter to execute'],
     },
     {
       icon: Shield,
-      title: "Permission-Aware",
+      title: 'Permission-Aware',
       description: "Only shows actions and data you're authorized to access",
-      examples: ["Manager actions for managers", "Property-specific data", "Role-based filtering"],
+      examples: [
+        'Manager actions for managers',
+        'Property-specific data',
+        'Role-based filtering',
+      ],
     },
     {
       icon: Target,
-      title: "Top-5 Results",
-      description: "Focused results with the most relevant matches first",
-      examples: ["Exact title matches", "Keyword relevance", "Recent activity boost"],
+      title: 'Top-5 Results',
+      description: 'Focused results with the most relevant matches first',
+      examples: [
+        'Exact title matches',
+        'Keyword relevance',
+        'Recent activity boost',
+      ],
     },
   ];
 
   const commandCategories = [
     {
-      category: "Navigation",
+      category: 'Navigation',
       icon: Search,
-      color: "blue",
-      examples: [
-        "dashboard",
-        "employees", 
-        "payroll",
-        "compliance",
-        "payments"
-      ],
+      color: 'blue',
+      examples: ['dashboard', 'employees', 'payroll', 'compliance', 'payments'],
     },
     {
-      category: "Employee Actions",
+      category: 'Employee Actions',
       icon: Users,
-      color: "green",
+      color: 'green',
       examples: [
         "Open Maria's profile",
-        "View John's contract", 
-        "Edit employee records",
-        "Add new employee"
+        "View John's contract",
+        'Edit employee records',
+        'Add new employee',
       ],
     },
     {
-      category: "Payroll Operations",
+      category: 'Payroll Operations',
       icon: Play,
-      color: "purple",
+      color: 'purple',
       examples: [
-        "Run payroll August",
-        "Process monthly payroll",
-        "Review pay calculations",
-        "Lock timesheets"
+        'Run payroll August',
+        'Process monthly payroll',
+        'Review pay calculations',
+        'Lock timesheets',
       ],
     },
     {
-      category: "Compliance Filing",
+      category: 'Compliance Filing',
       icon: Upload,
-      color: "orange",
+      color: 'orange',
       examples: [
-        "File APD",
-        "Submit ERGANI",
-        "Send ΦΜΥ filing",
-        "Generate compliance report"
+        'File APD',
+        'Submit ERGANI',
+        'Send ΦΜΥ filing',
+        'Generate compliance report',
       ],
     },
     {
-      category: "Payments & Banking",
+      category: 'Payments & Banking',
       icon: CreditCard,
-      color: "indigo",
+      color: 'indigo',
       examples: [
-        "Generate SEPA file",
-        "Process bank transfers",
-        "Download payment report",
-        "Check payment status"
+        'Generate SEPA file',
+        'Process bank transfers',
+        'Download payment report',
+        'Check payment status',
       ],
     },
   ];
@@ -137,23 +150,27 @@ export default function CommandPaletteDemo() {
             Try It Now
           </CardTitle>
           <CardDescription>
-            Use the keyboard shortcut or click the button to open the command palette
+            Use the keyboard shortcut or click the button to open the command
+            palette
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
-            <Button onClick={() => setDemoOpen(true)} className="flex items-center gap-2">
+            <Button
+              onClick={() => setDemoOpen(true)}
+              className="flex items-center gap-2"
+            >
               <Search className="h-4 w-4" />
               Open Command Palette
             </Button>
             <div className="text-sm text-muted-foreground">
-              or press{" "}
+              or press{' '}
               <Badge variant="secondary" className="text-xs font-mono">
                 ⌘K
               </Badge>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div className="space-y-1">
               <p className="font-medium">Try these searches:</p>
@@ -190,7 +207,9 @@ export default function CommandPaletteDemo() {
                 {feature.description}
               </p>
               <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">Examples:</p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Examples:
+                </p>
                 <ul className="text-xs space-y-1">
                   {feature.examples.map((example, i) => (
                     <li key={i} className="flex items-center gap-1">
@@ -223,7 +242,9 @@ export default function CommandPaletteDemo() {
             {commandCategories.map((category, index) => (
               <div key={index} className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <category.icon className={`h-5 w-5 text-${category.color}-600`} />
+                  <category.icon
+                    className={`h-5 w-5 text-${category.color}-600`}
+                  />
                   <h3 className="font-medium">{category.category}</h3>
                   <Badge variant="outline" className="text-xs">
                     {category.examples.length} commands
@@ -231,7 +252,10 @@ export default function CommandPaletteDemo() {
                 </div>
                 <div className="grid grid-cols-1 gap-1">
                   {category.examples.map((example, i) => (
-                    <div key={i} className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded">
+                    <div
+                      key={i}
+                      className="text-sm text-muted-foreground bg-muted/50 px-2 py-1 rounded"
+                    >
                       <code>{example}</code>
                     </div>
                   ))}
@@ -271,13 +295,14 @@ export default function CommandPaletteDemo() {
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t pt-4">
             <h3 className="font-medium mb-2">Action Safeguards</h3>
             <div className="text-sm text-muted-foreground">
               <p>
-                All destructive actions (payroll runs, filings, deletions) require explicit confirmation.
-                The system displays a confirmation dialog with action details before execution.
+                All destructive actions (payroll runs, filings, deletions)
+                require explicit confirmation. The system displays a
+                confirmation dialog with action details before execution.
               </p>
             </div>
           </div>

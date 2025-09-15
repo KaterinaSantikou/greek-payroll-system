@@ -9,14 +9,14 @@ export function celebratePayrollSuccess() {
     spread: 360,
     ticks: 60,
     zIndex: 9999,
-    colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']
+    colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
   };
 
   function randomInRange(min: number, max: number) {
     return Math.random() * (max - min) + min;
   }
 
-  const interval = setInterval(function() {
+  const interval = setInterval(function () {
     const timeLeft = animationEnd - Date.now();
 
     if (timeLeft <= 0) {
@@ -24,19 +24,19 @@ export function celebratePayrollSuccess() {
     }
 
     const particleCount = 50 * (timeLeft / duration);
-    
+
     // Fire from the left
     confetti({
       ...defaults,
       particleCount,
-      origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+      origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
     });
-    
-    // Fire from the right  
+
+    // Fire from the right
     confetti({
       ...defaults,
       particleCount,
-      origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+      origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
     });
   }, 250);
 }
@@ -106,7 +106,7 @@ export function celebrateSmall() {
     colors: ['#3B82F6', '#1D4ED8'],
     zIndex: 9999,
   });
-  
+
   confetti({
     particleCount: 50,
     angle: 120,
@@ -120,7 +120,7 @@ export function celebrateSmall() {
 // ERGANI filing success
 export function celebrateCompliance() {
   const colors = ['#059669', '#0D9488', '#0891B2']; // Green/teal for compliance
-  
+
   confetti({
     particleCount: 120,
     spread: 80,
@@ -129,7 +129,7 @@ export function celebrateCompliance() {
     shapes: ['square'],
     zIndex: 9999,
   });
-  
+
   setTimeout(() => {
     confetti({
       particleCount: 60,

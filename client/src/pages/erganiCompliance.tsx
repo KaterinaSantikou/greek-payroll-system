@@ -1,17 +1,23 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { 
-  Shield, 
-  Smartphone, 
-  Clock, 
-  FileCheck, 
-  Euro, 
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import {
+  Shield,
+  Smartphone,
+  Clock,
+  FileCheck,
+  Euro,
   AlertTriangle,
   CheckCircle,
   RefreshCw,
@@ -25,12 +31,12 @@ import {
   Settings,
   Eye,
   Database,
-  Zap
-} from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { useAuth } from "@/hooks/useAuth";
+  Zap,
+} from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import { isUnauthorizedError } from '@/lib/authUtils';
+import { useAuth } from '@/hooks/useAuth';
 
 interface DigitalWorkCard {
   employeeId: string;
@@ -43,7 +49,14 @@ interface DigitalWorkCard {
 
 interface ERGANIEvent {
   eventId: string;
-  type: 'hire' | 'schedule_declaration' | 'schedule_change' | 'overtime' | 'leave' | 'contract_change' | 'termination';
+  type:
+    | 'hire'
+    | 'schedule_declaration'
+    | 'schedule_change'
+    | 'overtime'
+    | 'leave'
+    | 'contract_change'
+    | 'termination';
   employeeId: string;
   timestamp: string;
   status: 'submitted' | 'pending' | 'failed' | 'acknowledged';
@@ -87,54 +100,65 @@ export default function ERGANICompliancePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isAuthenticated, isLoading } = useAuth();
-  const [selectedFlow, setSelectedFlow] = useState<string>("ergani");
-  const [selectedPeriod, setSelectedPeriod] = useState<string>("2024-12");
+  const [selectedFlow, setSelectedFlow] = useState<string>('ergani');
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('2024-12');
 
   // Digital Work Cards Query
-  const { data: workCards, isLoading: workCardsLoading } = useQuery<DigitalWorkCard[]>({
-    queryKey: ["/api/compliance/digital-work-cards"],
+  const { data: workCards, isLoading: workCardsLoading } = useQuery<
+    DigitalWorkCard[]
+  >({
+    queryKey: ['/api/compliance/digital-work-cards'],
     enabled: isAuthenticated,
     refetchInterval: 30000,
   });
 
   // ERGANI Events Query
-  const { data: erganiEvents, isLoading: eventsLoading } = useQuery<ERGANIEvent[]>({
-    queryKey: ["/api/compliance/ergani-events", selectedPeriod],
+  const { data: erganiEvents, isLoading: eventsLoading } = useQuery<
+    ERGANIEvent[]
+  >({
+    queryKey: ['/api/compliance/ergani-events', selectedPeriod],
     enabled: isAuthenticated && !!selectedPeriod,
   });
 
   // Minimum Wage Rules Query
-  const { data: wageRules, isLoading: wageRulesLoading } = useQuery<MinimumWageRule[]>({
-    queryKey: ["/api/compliance/minimum-wage-rules"],
+  const { data: wageRules, isLoading: wageRulesLoading } = useQuery<
+    MinimumWageRule[]
+  >({
+    queryKey: ['/api/compliance/minimum-wage-rules'],
     enabled: isAuthenticated,
   });
 
   // Government Flows Query
-  const { data: governmentFlows, isLoading: flowsLoading } = useQuery<GovernmentFlow[]>({
-    queryKey: ["/api/compliance/government-flows"],
+  const { data: governmentFlows, isLoading: flowsLoading } = useQuery<
+    GovernmentFlow[]
+  >({
+    queryKey: ['/api/compliance/government-flows'],
     enabled: isAuthenticated,
     refetchInterval: 60000,
   });
 
   // Greek Special Pays Query
-  const { data: specialPays, isLoading: specialPaysLoading } = useQuery<GreekSpecialPay[]>({
-    queryKey: ["/api/compliance/special-pays"],
+  const { data: specialPays, isLoading: specialPaysLoading } = useQuery<
+    GreekSpecialPay[]
+  >({
+    queryKey: ['/api/compliance/special-pays'],
     enabled: isAuthenticated,
   });
 
   // Generate Demo Data Mutation
   const generateDemoMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("/api/compliance/generate-demo", "POST");
+      await apiRequest('/api/compliance/generate-demo', 'POST');
     },
     onSuccess: () => {
       toast({
-        title: "Demo Data Generated",
-        description: "Greece compliance demo data has been generated successfully.",
+        title: 'Demo Data Generated',
+        description:
+          'Greece compliance demo data has been generated successfully.',
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/compliance"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/compliance'] });
     },
-    onError: (error) => {
+    onError: error => {
       // if (isUnauthorizedError(error)) {
       //   toast({
       //     title: "Unauthorized",
@@ -147,9 +171,9 @@ export default function ERGANICompliancePage() {
       //   return;
       // }
       toast({
-        title: "Error",
-        description: "Failed to generate demo data. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to generate demo data. Please try again.',
+        variant: 'destructive',
       });
     },
   });
@@ -157,16 +181,16 @@ export default function ERGANICompliancePage() {
   // Sync ERGANI Mutation
   const syncERGANIMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("/api/compliance/ergani-sync", "POST");
+      await apiRequest('/api/compliance/ergani-sync', 'POST');
     },
     onSuccess: () => {
       toast({
-        title: "ERGANI Sync Started",
-        description: "Real-time ERGANI II synchronization initiated.",
+        title: 'ERGANI Sync Started',
+        description: 'Real-time ERGANI II synchronization initiated.',
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/compliance"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/compliance'] });
     },
-    onError: (error) => {
+    onError: error => {
       // if (isUnauthorizedError(error)) {
       //   toast({
       //     title: "Unauthorized",
@@ -179,9 +203,9 @@ export default function ERGANICompliancePage() {
       //   return;
       // }
       toast({
-        title: "Error",
-        description: "Failed to sync ERGANI. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to sync ERGANI. Please try again.',
+        variant: 'destructive',
       });
     },
   });
@@ -239,7 +263,8 @@ export default function ERGANICompliancePage() {
               Greece Compliance Anchor (2025)
             </h1>
             <p className="text-muted-foreground mt-2">
-              Digital Work Card, ERGANI II, e-EFKA/APD, AADE compliance with versioned rules DSL
+              Digital Work Card, ERGANI II, e-EFKA/APD, AADE compliance with
+              versioned rules DSL
             </p>
           </div>
           <div className="flex gap-2">
@@ -271,7 +296,9 @@ export default function ERGANICompliancePage() {
 
         <Tabs defaultValue="digital-work-card" className="space-y-6">
           <TabsList>
-            <TabsTrigger value="digital-work-card">Digital Work Card</TabsTrigger>
+            <TabsTrigger value="digital-work-card">
+              Digital Work Card
+            </TabsTrigger>
             <TabsTrigger value="ergani-events">ERGANI II Events</TabsTrigger>
             <TabsTrigger value="government-flows">Government Flows</TabsTrigger>
             <TabsTrigger value="minimum-wage">Minimum Wage</TabsTrigger>
@@ -283,51 +310,76 @@ export default function ERGANICompliancePage() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Cards</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Active Cards
+                  </CardTitle>
                   <Smartphone className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {workCards?.filter(card => card.status === 'active').length || 0}
+                    {workCards?.filter(card => card.status === 'active')
+                      .length || 0}
                   </div>
-                  <p className="text-xs text-muted-foreground">Real-time attendance enabled</p>
+                  <p className="text-xs text-muted-foreground">
+                    Real-time attendance enabled
+                  </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">ERGANI Sync Rate</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    ERGANI Sync Rate
+                  </CardTitle>
                   <Zap className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {Math.round(((workCards?.filter(card => card.erganiSyncStatus === 'synced').length || 0) / (workCards?.length || 1)) * 100)}%
+                    {Math.round(
+                      ((workCards?.filter(
+                        card => card.erganiSyncStatus === 'synced'
+                      ).length || 0) /
+                        (workCards?.length || 1)) *
+                        100
+                    )}
+                    %
                   </div>
-                  <p className="text-xs text-muted-foreground">Successfully synchronized</p>
+                  <p className="text-xs text-muted-foreground">
+                    Successfully synchronized
+                  </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Real-time Events</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Real-time Events
+                  </CardTitle>
                   <Clock className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {workCards?.filter(card => card.realTimeAttendance).length || 0}
+                    {workCards?.filter(card => card.realTimeAttendance)
+                      .length || 0}
                   </div>
-                  <p className="text-xs text-muted-foreground">Live attendance tracking</p>
+                  <p className="text-xs text-muted-foreground">
+                    Live attendance tracking
+                  </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Compliance Score</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Compliance Score
+                  </CardTitle>
                   <Shield className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">99.9%</div>
-                  <p className="text-xs text-muted-foreground">Digital Work Card compliance</p>
+                  <p className="text-xs text-muted-foreground">
+                    Digital Work Card compliance
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -346,23 +398,37 @@ export default function ERGANICompliancePage() {
                   </div>
                 ) : workCards && workCards.length > 0 ? (
                   <div className="space-y-4">
-                    {workCards.map((card) => (
-                      <div key={card.cardId} className="flex items-center justify-between p-4 border rounded-lg">
+                    {workCards.map(card => (
+                      <div
+                        key={card.cardId}
+                        className="flex items-center justify-between p-4 border rounded-lg"
+                      >
                         <div className="flex items-center gap-3">
                           <Smartphone className="h-5 w-5 text-primary" />
                           <div>
-                            <div className="font-semibold">{card.employeeId}</div>
-                            <div className="text-sm text-muted-foreground">Card: {card.cardId}</div>
+                            <div className="font-semibold">
+                              {card.employeeId}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Card: {card.cardId}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <div className="text-sm">Last Sync: {new Date(card.lastSync).toLocaleString()}</div>
+                            <div className="text-sm">
+                              Last Sync:{' '}
+                              {new Date(card.lastSync).toLocaleString()}
+                            </div>
                             <div className="flex items-center gap-2 mt-1">
                               <Badge className={getStatusColor(card.status)}>
                                 {card.status}
                               </Badge>
-                              <Badge className={getStatusColor(card.erganiSyncStatus)}>
+                              <Badge
+                                className={getStatusColor(
+                                  card.erganiSyncStatus
+                                )}
+                              >
                                 ERGANI: {card.erganiSyncStatus}
                               </Badge>
                             </div>
@@ -374,8 +440,12 @@ export default function ERGANICompliancePage() {
                 ) : (
                   <div className="text-center py-8">
                     <Smartphone className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Digital Work Cards</h3>
-                    <p className="text-muted-foreground mb-4">Generate demo data to see digital work cards</p>
+                    <h3 className="text-lg font-semibold mb-2">
+                      No Digital Work Cards
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Generate demo data to see digital work cards
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -385,8 +455,13 @@ export default function ERGANICompliancePage() {
           <TabsContent value="ergani-events" className="space-y-6">
             <div className="flex items-center gap-4 mb-6">
               <div>
-                <label htmlFor="period" className="text-sm font-medium">Period</label>
-                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                <label htmlFor="period" className="text-sm font-medium">
+                  Period
+                </label>
+                <Select
+                  value={selectedPeriod}
+                  onValueChange={setSelectedPeriod}
+                >
                   <SelectTrigger className="w-48">
                     <SelectValue placeholder="Select period" />
                   </SelectTrigger>
@@ -413,15 +488,22 @@ export default function ERGANICompliancePage() {
                   </div>
                 ) : erganiEvents && erganiEvents.length > 0 ? (
                   <div className="space-y-4">
-                    {erganiEvents.map((event) => (
-                      <div key={event.eventId} className="grid grid-cols-2 md:grid-cols-6 gap-4 p-4 border rounded-lg">
+                    {erganiEvents.map(event => (
+                      <div
+                        key={event.eventId}
+                        className="grid grid-cols-2 md:grid-cols-6 gap-4 p-4 border rounded-lg"
+                      >
                         <div>
                           <div className="text-sm font-medium">Event</div>
-                          <div className="text-sm text-muted-foreground">{event.type.replace('_', ' ')}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {event.type.replace('_', ' ')}
+                          </div>
                         </div>
                         <div>
                           <div className="text-sm font-medium">Employee</div>
-                          <div className="text-sm text-muted-foreground">{event.employeeId}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {event.employeeId}
+                          </div>
                         </div>
                         <div>
                           <div className="text-sm font-medium">Timestamp</div>
@@ -436,7 +518,9 @@ export default function ERGANICompliancePage() {
                           </Badge>
                         </div>
                         <div>
-                          <div className="text-sm font-medium">Submission ID</div>
+                          <div className="text-sm font-medium">
+                            Submission ID
+                          </div>
                           <div className="text-sm text-muted-foreground">
                             {event.submissionId || 'N/A'}
                           </div>
@@ -453,8 +537,12 @@ export default function ERGANICompliancePage() {
                 ) : (
                   <div className="text-center py-8">
                     <FileCheck className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No ERGANI Events</h3>
-                    <p className="text-muted-foreground mb-4">Generate demo data to see ERGANI II events</p>
+                    <h3 className="text-lg font-semibold mb-2">
+                      No ERGANI Events
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Generate demo data to see ERGANI II events
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -468,7 +556,7 @@ export default function ERGANICompliancePage() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
               ) : governmentFlows && governmentFlows.length > 0 ? (
-                governmentFlows.map((flow) => (
+                governmentFlows.map(flow => (
                   <Card key={flow.flowId}>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-lg">
@@ -476,7 +564,9 @@ export default function ERGANICompliancePage() {
                         {flow.name}
                       </CardTitle>
                       <div className="flex items-center gap-2">
-                        <Badge variant="outline">{flow.type.toUpperCase()}</Badge>
+                        <Badge variant="outline">
+                          {flow.type.toUpperCase()}
+                        </Badge>
                         <Badge variant="outline">{flow.frequency}</Badge>
                       </div>
                     </CardHeader>
@@ -502,7 +592,9 @@ export default function ERGANICompliancePage() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm">Total Filings</span>
-                          <span className="text-sm font-semibold">{flow.filings}</span>
+                          <span className="text-sm font-semibold">
+                            {flow.filings}
+                          </span>
                         </div>
                       </div>
                     </CardContent>
@@ -511,8 +603,12 @@ export default function ERGANICompliancePage() {
               ) : (
                 <div className="text-center py-8 col-span-3">
                   <Database className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">No Government Flows</h3>
-                  <p className="text-muted-foreground mb-4">Generate demo data to see government flows</p>
+                  <h3 className="text-lg font-semibold mb-2">
+                    No Government Flows
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Generate demo data to see government flows
+                  </p>
                 </div>
               )}
             </div>
@@ -533,25 +629,40 @@ export default function ERGANICompliancePage() {
                   </div>
                 ) : wageRules && wageRules.length > 0 ? (
                   <div className="space-y-4">
-                    {wageRules.map((rule) => (
-                      <div key={rule.ruleId} className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 border rounded-lg">
+                    {wageRules.map(rule => (
+                      <div
+                        key={rule.ruleId}
+                        className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 border rounded-lg"
+                      >
                         <div>
                           <div className="text-sm font-medium">Category</div>
-                          <div className="text-sm text-muted-foreground">{rule.category.replace('_', ' ')}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {rule.category.replace('_', ' ')}
+                          </div>
                         </div>
                         <div>
                           <div className="text-sm font-medium">Amount</div>
-                          <div className="text-sm font-semibold">€{rule.amount.toFixed(2)}</div>
+                          <div className="text-sm font-semibold">
+                            €{rule.amount.toFixed(2)}
+                          </div>
                         </div>
                         <div>
-                          <div className="text-sm font-medium">Effective Date</div>
+                          <div className="text-sm font-medium">
+                            Effective Date
+                          </div>
                           <div className="text-sm text-muted-foreground">
                             {new Date(rule.effectiveDate).toLocaleDateString()}
                           </div>
                         </div>
                         <div>
                           <div className="text-sm font-medium">Status</div>
-                          <Badge className={rule.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                          <Badge
+                            className={
+                              rule.isActive
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }
+                          >
                             {rule.isActive ? 'Active' : 'Inactive'}
                           </Badge>
                         </div>
@@ -567,8 +678,12 @@ export default function ERGANICompliancePage() {
                 ) : (
                   <div className="text-center py-8">
                     <Euro className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Wage Rules</h3>
-                    <p className="text-muted-foreground mb-4">Generate demo data to see minimum wage rules</p>
+                    <h3 className="text-lg font-semibold mb-2">
+                      No Wage Rules
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Generate demo data to see minimum wage rules
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -590,33 +705,51 @@ export default function ERGANICompliancePage() {
                   </div>
                 ) : specialPays && specialPays.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {specialPays.map((pay) => (
+                    {specialPays.map(pay => (
                       <Card key={pay.payId}>
                         <CardHeader>
                           <CardTitle className="text-lg">{pay.name}</CardTitle>
-                          <div className="text-sm text-muted-foreground">{pay.nameGreek}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {pay.nameGreek}
+                          </div>
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-3">
                             <div>
-                              <div className="text-sm font-medium">Calculation Rule</div>
-                              <div className="text-sm text-muted-foreground">{pay.calculationRule}</div>
+                              <div className="text-sm font-medium">
+                                Calculation Rule
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {pay.calculationRule}
+                              </div>
                             </div>
                             <div>
-                              <div className="text-sm font-medium">Tax & Insurance</div>
+                              <div className="text-sm font-medium">
+                                Tax & Insurance
+                              </div>
                               <div className="flex gap-2">
-                                <Badge variant={pay.taxable ? "default" : "outline"}>
-                                  {pay.taxable ? "Taxable" : "Tax Free"}
+                                <Badge
+                                  variant={pay.taxable ? 'default' : 'outline'}
+                                >
+                                  {pay.taxable ? 'Taxable' : 'Tax Free'}
                                 </Badge>
-                                <Badge variant={pay.efkaSubject ? "default" : "outline"}>
-                                  {pay.efkaSubject ? "EFKA Subject" : "EFKA Exempt"}
+                                <Badge
+                                  variant={
+                                    pay.efkaSubject ? 'default' : 'outline'
+                                  }
+                                >
+                                  {pay.efkaSubject
+                                    ? 'EFKA Subject'
+                                    : 'EFKA Exempt'}
                                 </Badge>
                               </div>
                             </div>
                             <div>
-                              <div className="text-sm font-medium">Eligibility</div>
+                              <div className="text-sm font-medium">
+                                Eligibility
+                              </div>
                               <div className="text-xs text-muted-foreground">
-                                {pay.eligibilityRules.join(", ")}
+                                {pay.eligibilityRules.join(', ')}
                               </div>
                             </div>
                           </div>
@@ -627,8 +760,12 @@ export default function ERGANICompliancePage() {
                 ) : (
                   <div className="text-center py-8">
                     <Building className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Special Pays</h3>
-                    <p className="text-muted-foreground mb-4">Generate demo data to see Greek special pays</p>
+                    <h3 className="text-lg font-semibold mb-2">
+                      No Special Pays
+                    </h3>
+                    <p className="text-muted-foreground mb-4">
+                      Generate demo data to see Greek special pays
+                    </p>
                   </div>
                 )}
               </CardContent>

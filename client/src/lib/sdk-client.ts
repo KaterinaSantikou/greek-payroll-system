@@ -36,10 +36,10 @@ class PayrollSyncClient implements PayrollSyncSDK {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...(options.headers as Record<string, string> || {}),
+      ...((options.headers as Record<string, string>) || {}),
     };
 
     if (this.apiKey) {
@@ -52,9 +52,9 @@ class PayrollSyncClient implements PayrollSyncSDK {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ 
-        error: 'HTTP_ERROR', 
-        detail: `${response.status} ${response.statusText}` 
+      const error = await response.json().catch(() => ({
+        error: 'HTTP_ERROR',
+        detail: `${response.status} ${response.statusText}`,
       }));
       throw new Error(`API Error: ${error.error} - ${error.detail}`);
     }
@@ -77,7 +77,10 @@ class PayrollSyncClient implements PayrollSyncSDK {
     return this.request<Journal>(`/gl/journal/${journalId}`);
   }
 
-  async postJournal(journalId: string, externalSystem?: string): Promise<PostJournalResponse> {
+  async postJournal(
+    journalId: string,
+    externalSystem?: string
+  ): Promise<PostJournalResponse> {
     return this.request<PostJournalResponse>(`/gl/journal/${journalId}/post`, {
       method: 'POST',
       body: JSON.stringify({ external_system: externalSystem }),
@@ -94,58 +97,90 @@ class PayrollSyncClient implements PayrollSyncSDK {
   // CONNECTOR MANAGEMENT
   // =============================================================================
 
-  async initiateAuth(request: ConnectorAuthRequest): Promise<ConnectorAuthResponse> {
+  async initiateAuth(
+    request: ConnectorAuthRequest
+  ): Promise<ConnectorAuthResponse> {
     const { partner_id, connector_type } = request;
     return this.request<ConnectorAuthResponse>(
       `/connectors/${connector_type}/auth?partner_id=${partner_id}`
     );
   }
 
-  async getConnectorStatus(partnerId: string, connectorType: "xero" | "quickbooks"): Promise<ConnectorStatus> {
+  async getConnectorStatus(
+    partnerId: string,
+    connectorType: 'xero' | 'quickbooks'
+  ): Promise<ConnectorStatus> {
     return this.request<ConnectorStatus>(
       `/connectors/${connectorType}/status?partner_id=${partnerId}`
     );
   }
 
-  async disconnectConnector(partnerId: string, connectorType: "xero" | "quickbooks"): Promise<{ disconnected: boolean }> {
+  async disconnectConnector(
+    partnerId: string,
+    connectorType: 'xero' | 'quickbooks'
+  ): Promise<{ disconnected: boolean }> {
     return this.request<{ disconnected: boolean }>(
       `/connectors/${connectorType}?partner_id=${partnerId}`,
       { method: 'DELETE' }
     );
   }
 
-  async postJournalToConnector(connectorType: "xero" | "quickbooks", request: PostJournalRequest): Promise<PostJournalResponse> {
-    return this.request<PostJournalResponse>(`/connectors/${connectorType}/post-journal`, {
-      method: 'POST',
-      body: JSON.stringify(request),
-    });
+  async postJournalToConnector(
+    connectorType: 'xero' | 'quickbooks',
+    request: PostJournalRequest
+  ): Promise<PostJournalResponse> {
+    return this.request<PostJournalResponse>(
+      `/connectors/${connectorType}/post-journal`,
+      {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }
+    );
   }
 
   // =============================================================================
   // GUIDED SETUP
   // =============================================================================
 
-  async initializeSetup(partnerId: string, connectorType: "xero" | "quickbooks"): Promise<SetupStatus> {
+  async initializeSetup(
+    partnerId: string,
+    connectorType: 'xero' | 'quickbooks'
+  ): Promise<SetupStatus> {
     return this.request<SetupStatus>('/setup/initialize', {
       method: 'POST',
-      body: JSON.stringify({ partner_id: partnerId, connector_type: connectorType }),
+      body: JSON.stringify({
+        partner_id: partnerId,
+        connector_type: connectorType,
+      }),
     });
   }
 
-  async getSetupStatus(partnerId: string, connectorType: "xero" | "quickbooks"): Promise<SetupStatus> {
+  async getSetupStatus(
+    partnerId: string,
+    connectorType: 'xero' | 'quickbooks'
+  ): Promise<SetupStatus> {
     return this.request<SetupStatus>(
       `/setup/status?partner_id=${partnerId}&connector_type=${connectorType}`
     );
   }
 
-  async fetchChartOfAccounts(partnerId: string, connectorType: "xero" | "quickbooks"): Promise<ChartOfAccount[]> {
-    const response = await this.request<{ data: { chart_of_accounts: ChartOfAccount[] } }>(
+  async fetchChartOfAccounts(
+    partnerId: string,
+    connectorType: 'xero' | 'quickbooks'
+  ): Promise<ChartOfAccount[]> {
+    const response = await this.request<{
+      data: { chart_of_accounts: ChartOfAccount[] };
+    }>(
       `/setup/fetch-data?partner_id=${partnerId}&connector_type=${connectorType}`
     );
     return response.data.chart_of_accounts;
   }
 
-  async saveMappings(partnerId: string, connectorType: "xero" | "quickbooks", mappings: SetupMappings): Promise<{ success: boolean }> {
+  async saveMappings(
+    partnerId: string,
+    connectorType: 'xero' | 'quickbooks',
+    mappings: SetupMappings
+  ): Promise<{ success: boolean }> {
     const response = await this.request<{ message: string }>('/setup/mapping', {
       method: 'POST',
       body: JSON.stringify({
@@ -158,14 +193,27 @@ class PayrollSyncClient implements PayrollSyncSDK {
     return { success: !!response.message };
   }
 
-  async validateSetup(partnerId: string, connectorType: "xero" | "quickbooks"): Promise<{ test_journal: Journal; validation: any }> {
-    return this.request<{ test_journal: Journal; validation: any }>('/setup/validate', {
-      method: 'POST',
-      body: JSON.stringify({ partner_id: partnerId, connector_type: connectorType }),
-    });
+  async validateSetup(
+    partnerId: string,
+    connectorType: 'xero' | 'quickbooks'
+  ): Promise<{ test_journal: Journal; validation: any }> {
+    return this.request<{ test_journal: Journal; validation: any }>(
+      '/setup/validate',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          partner_id: partnerId,
+          connector_type: connectorType,
+        }),
+      }
+    );
   }
 
-  async completeSetup(partnerId: string, connectorType: "xero" | "quickbooks", config: Partial<SetupConfig>): Promise<{ setup_complete: boolean }> {
+  async completeSetup(
+    partnerId: string,
+    connectorType: 'xero' | 'quickbooks',
+    config: Partial<SetupConfig>
+  ): Promise<{ setup_complete: boolean }> {
     return this.request<{ setup_complete: boolean }>('/setup/go-live', {
       method: 'POST',
       body: JSON.stringify({
@@ -180,8 +228,13 @@ class PayrollSyncClient implements PayrollSyncSDK {
   // RECONCILIATION
   // =============================================================================
 
-  async generateReconciliation(payrollSummary: PayrollSummary, journalId: string): Promise<ReconciliationReport> {
-    const response = await this.request<{ reconciliation: ReconciliationReport }>('/reconciliation/generate', {
+  async generateReconciliation(
+    payrollSummary: PayrollSummary,
+    journalId: string
+  ): Promise<ReconciliationReport> {
+    const response = await this.request<{
+      reconciliation: ReconciliationReport;
+    }>('/reconciliation/generate', {
       method: 'POST',
       body: JSON.stringify({
         payroll_summary: payrollSummary,
@@ -191,23 +244,34 @@ class PayrollSyncClient implements PayrollSyncSDK {
     return response.reconciliation;
   }
 
-  async applyRounding(lines: JournalLine[], config: RoundingConfig): Promise<{ rounded_lines: JournalLine[]; totals: any }> {
-    return this.request<{ rounded_lines: JournalLine[]; totals: any }>('/reconciliation/apply-rounding', {
-      method: 'POST',
-      body: JSON.stringify({
-        lines,
-        rounding_method: config.method,
-        precision: config.precision,
-        enforce_balance: config.enforce_balance,
-      }),
-    });
+  async applyRounding(
+    lines: JournalLine[],
+    config: RoundingConfig
+  ): Promise<{ rounded_lines: JournalLine[]; totals: any }> {
+    return this.request<{ rounded_lines: JournalLine[]; totals: any }>(
+      '/reconciliation/apply-rounding',
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          lines,
+          rounding_method: config.method,
+          precision: config.precision,
+          enforce_balance: config.enforce_balance,
+        }),
+      }
+    );
   }
 
-  async validateCurrency(journalCurrency: string): Promise<{ is_valid: boolean; warning?: string }> {
-    return this.request<{ is_valid: boolean; warning?: string }>('/reconciliation/validate-currency', {
-      method: 'POST',
-      body: JSON.stringify({ journal_currency: journalCurrency }),
-    });
+  async validateCurrency(
+    journalCurrency: string
+  ): Promise<{ is_valid: boolean; warning?: string }> {
+    return this.request<{ is_valid: boolean; warning?: string }>(
+      '/reconciliation/validate-currency',
+      {
+        method: 'POST',
+        body: JSON.stringify({ journal_currency: journalCurrency }),
+      }
+    );
   }
 }
 

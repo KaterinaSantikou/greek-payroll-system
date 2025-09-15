@@ -1,45 +1,73 @@
 import React from 'react';
 import { DataImportWizard } from '@/components/DataImportWizard';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { 
-  Upload, 
-  FileSpreadsheet, 
-  Users, 
+import {
+  Upload,
+  FileSpreadsheet,
+  Users,
   CreditCard,
   FileText,
-  Settings
+  Settings,
 } from 'lucide-react';
 
 const IMPORT_TYPES = [
   {
     id: 'employees',
     title: 'Employee Master Data',
-    description: 'Import employee personal information, employment details, and Greek compliance data (AFM, AMKA)',
+    description:
+      'Import employee personal information, employment details, and Greek compliance data (AFM, AMKA)',
     icon: Users,
-    fields: ['Employee Number', 'Name', 'AFM', 'AMKA', 'Date of Birth', 'Employment Type', 'Hire Date']
+    fields: [
+      'Employee Number',
+      'Name',
+      'AFM',
+      'AMKA',
+      'Date of Birth',
+      'Employment Type',
+      'Hire Date',
+    ],
   },
   {
     id: 'contracts',
     title: 'Employment Contracts',
-    description: 'Import contract details including type, pay rates, and effective dates',
+    description:
+      'Import contract details including type, pay rates, and effective dates',
     icon: FileText,
-    fields: ['Employee ID', 'Contract Type', 'Base Pay', 'FTE Percentage', 'Effective From/To']
+    fields: [
+      'Employee ID',
+      'Contract Type',
+      'Base Pay',
+      'FTE Percentage',
+      'Effective From/To',
+    ],
   },
   {
     id: 'bank_details',
     title: 'Bank Account Details',
     description: 'Import secure IBAN information with Greek banking validation',
     icon: CreditCard,
-    fields: ['Employee ID', 'IBAN', 'Account Holder Name', 'Bank Name']
+    fields: ['Employee ID', 'IBAN', 'Account Holder Name', 'Bank Name'],
   },
   {
     id: 'wage_components',
     title: 'Wage Components',
     description: 'Import salary structures, allowances, and premium rates',
     icon: Settings,
-    fields: ['Employee ID', 'Base Salary', 'Allowances', 'Overtime Rates', 'Effective Date']
-  }
+    fields: [
+      'Employee ID',
+      'Base Salary',
+      'Allowances',
+      'Overtime Rates',
+      'Effective Date',
+    ],
+  },
 ];
 
 export default function DataImport() {
@@ -50,13 +78,14 @@ export default function DataImport() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Data Import</h1>
           <p className="text-muted-foreground">
-            Import CSV and Excel files with intelligent field mapping and Greek compliance validation
+            Import CSV and Excel files with intelligent field mapping and Greek
+            compliance validation
           </p>
         </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
-        {IMPORT_TYPES.map((type) => {
+        {IMPORT_TYPES.map(type => {
           const IconComponent = type.icon;
           return (
             <Card key={type.id} className="hover:shadow-lg transition-shadow">
@@ -71,7 +100,7 @@ export default function DataImport() {
                 <div>
                   <h4 className="text-sm font-medium mb-2">Key Fields</h4>
                   <div className="flex flex-wrap gap-1">
-                    {type.fields.slice(0, 4).map((field) => (
+                    {type.fields.slice(0, 4).map(field => (
                       <span
                         key={field}
                         className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded"

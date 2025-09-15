@@ -38,14 +38,16 @@ import {
   History,
   Flag,
   Settings,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react';
 
 interface DemoProps {
   locale?: 'en' | 'el';
 }
 
-export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps) {
+export default function DigitalInspectorPortalDemo({
+  locale = 'en',
+}: DemoProps) {
   const [selectedLocale, setSelectedLocale] = useState<'en' | 'el'>(locale);
   const [showFullSystem, setShowFullSystem] = useState(false);
 
@@ -55,43 +57,51 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
       subtitle: 'Labor Inspection Management System',
       hero: {
         title: 'Revolutionize Labor Inspections with Digital Tools',
-        subtitle: 'Comprehensive digital portal that empowers Greek labor inspectors with real-time access to company data, streamlined inspection workflows, automated compliance tracking, and intelligent reporting capabilities for efficient and thorough labor law enforcement.',
+        subtitle:
+          'Comprehensive digital portal that empowers Greek labor inspectors with real-time access to company data, streamlined inspection workflows, automated compliance tracking, and intelligent reporting capabilities for efficient and thorough labor law enforcement.',
         cta: 'Access Inspector Portal',
-        ctaSecondary: 'Explore Features'
+        ctaSecondary: 'Explore Features',
       },
       features: {
         title: 'Advanced Digital Inspection Features',
         companyAccess: {
           title: 'Company Data Access',
-          description: 'Real-time access to complete company profiles, employee records, compliance history, and violation tracking with secure authentication.'
+          description:
+            'Real-time access to complete company profiles, employee records, compliance history, and violation tracking with secure authentication.',
         },
         inspectionManagement: {
           title: 'Inspection Management',
-          description: 'Streamlined inspection workflows with scheduling, progress tracking, finding documentation, and automated report generation.'
+          description:
+            'Streamlined inspection workflows with scheduling, progress tracking, finding documentation, and automated report generation.',
         },
         complianceTracking: {
           title: 'Compliance Tracking',
-          description: 'Comprehensive compliance monitoring with risk assessment, violation tracking, correction deadlines, and follow-up management.'
+          description:
+            'Comprehensive compliance monitoring with risk assessment, violation tracking, correction deadlines, and follow-up management.',
         },
         digitalReporting: {
           title: 'Digital Reporting',
-          description: 'Automated report generation with evidence management, fine calculations, legal references, and digital documentation.'
-        }
+          description:
+            'Automated report generation with evidence management, fine calculations, legal references, and digital documentation.',
+        },
       },
       benefits: {
         title: 'Why Digital Inspector Portal Transforms Labor Inspections',
         efficiency: {
           title: 'Inspection Efficiency',
-          description: 'Reduce inspection time by 60% through digital workflows, automated documentation, and real-time data access during on-site visits.'
+          description:
+            'Reduce inspection time by 60% through digital workflows, automated documentation, and real-time data access during on-site visits.',
         },
         accuracy: {
           title: 'Enhanced Accuracy',
-          description: 'Improve violation detection by 45% with comprehensive data analysis, historical trend tracking, and intelligent risk assessment.'
+          description:
+            'Improve violation detection by 45% with comprehensive data analysis, historical trend tracking, and intelligent risk assessment.',
         },
         compliance: {
           title: 'Better Compliance',
-          description: 'Achieve 89% faster violation correction through automated follow-up scheduling, deadline tracking, and digital communication.'
-        }
+          description:
+            'Achieve 89% faster violation correction through automated follow-up scheduling, deadline tracking, and digital communication.',
+        },
       },
       capabilities: {
         title: 'Digital Inspection Capabilities',
@@ -102,7 +112,7 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
         findingsManagement: 'Digital Findings Management',
         violationTracking: 'Comprehensive Violation Tracking',
         reportGeneration: 'Automated Report Generation',
-        followUpManagement: 'Intelligent Follow-up Management'
+        followUpManagement: 'Intelligent Follow-up Management',
       },
       inspectionTypes: {
         title: 'Supported Inspection Types',
@@ -111,14 +121,14 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
         followUp: 'Follow-up Inspections',
         random: 'Random Inspections',
         targeted: 'Targeted Risk-Based Inspections',
-        safety: 'Safety Compliance Inspections'
+        safety: 'Safety Compliance Inspections',
       },
       performance: {
         title: 'Digital Inspection Performance',
         inspectionsManaged: 'Inspections Managed',
         averageTime: 'Average Inspection Time',
         complianceRate: 'Overall Compliance Rate',
-        violationDetection: 'Violation Detection Rate'
+        violationDetection: 'Violation Detection Rate',
       },
       sectors: {
         title: 'Monitored Business Sectors',
@@ -127,51 +137,60 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
         manufacturing: 'Manufacturing',
         healthcare: 'Healthcare Services',
         construction: 'Construction',
-        technology: 'Technology & IT'
-      }
+        technology: 'Technology & IT',
+      },
     },
     el: {
       title: 'Ψηφιακή Πύλη Επιθεωρητή',
       subtitle: 'Σύστημα Διαχείρισης Επιθεωρήσεων Εργασίας',
       hero: {
         title: 'Επαναστατήστε τις Επιθεωρήσεις Εργασίας με Ψηφιακά Εργαλεία',
-        subtitle: 'Περιεκτική ψηφιακή πύλη που ενδυναμώνει τους Έλληνες επιθεωρητές εργασίας με πρόσβαση σε πραγματικό χρόνο σε δεδομένα επιχειρήσεων, εξορθολογισμένες ροές εργασίας επιθεώρησης, αυτοματοποιημένη παρακολούθηση συμμόρφωσης και έξυπνες δυνατότητες αναφοράς για αποτελεσματική και διεξοδική επιβολή του εργατικού δικαίου.',
+        subtitle:
+          'Περιεκτική ψηφιακή πύλη που ενδυναμώνει τους Έλληνες επιθεωρητές εργασίας με πρόσβαση σε πραγματικό χρόνο σε δεδομένα επιχειρήσεων, εξορθολογισμένες ροές εργασίας επιθεώρησης, αυτοματοποιημένη παρακολούθηση συμμόρφωσης και έξυπνες δυνατότητες αναφοράς για αποτελεσματική και διεξοδική επιβολή του εργατικού δικαίου.',
         cta: 'Πρόσβαση στην Πύλη Επιθεωρητή',
-        ctaSecondary: 'Εξερεύνηση Χαρακτηριστικών'
+        ctaSecondary: 'Εξερεύνηση Χαρακτηριστικών',
       },
       features: {
         title: 'Προηγμένα Χαρακτηριστικά Ψηφιακής Επιθεώρησης',
         companyAccess: {
           title: 'Πρόσβαση σε Δεδομένα Επιχειρήσεων',
-          description: 'Πρόσβαση σε πραγματικό χρόνο σε πλήρη προφίλ επιχειρήσεων, αρχεία εργαζομένων, ιστορικό συμμόρφωσης και παρακολούθηση παραβάσεων με ασφαλή πιστοποίηση.'
+          description:
+            'Πρόσβαση σε πραγματικό χρόνο σε πλήρη προφίλ επιχειρήσεων, αρχεία εργαζομένων, ιστορικό συμμόρφωσης και παρακολούθηση παραβάσεων με ασφαλή πιστοποίηση.',
         },
         inspectionManagement: {
           title: 'Διαχείριση Επιθεωρήσεων',
-          description: 'Εξορθολογισμένες ροές εργασίας επιθεώρησης με προγραμματισμό, παρακολούθηση προόδου, τεκμηρίωση ευρημάτων και αυτοματοποιημένη δημιουργία αναφορών.'
+          description:
+            'Εξορθολογισμένες ροές εργασίας επιθεώρησης με προγραμματισμό, παρακολούθηση προόδου, τεκμηρίωση ευρημάτων και αυτοματοποιημένη δημιουργία αναφορών.',
         },
         complianceTracking: {
           title: 'Παρακολούθηση Συμμόρφωσης',
-          description: 'Περιεκτική παρακολούθηση συμμόρφωσης με αξιολόγηση κινδύνων, παρακολούθηση παραβάσεων, προθεσμίες διόρθωσης και διαχείριση παρακολούθησης.'
+          description:
+            'Περιεκτική παρακολούθηση συμμόρφωσης με αξιολόγηση κινδύνων, παρακολούθηση παραβάσεων, προθεσμίες διόρθωσης και διαχείριση παρακολούθησης.',
         },
         digitalReporting: {
           title: 'Ψηφιακές Αναφορές',
-          description: 'Αυτοματοποιημένη δημιουργία αναφορών με διαχείριση στοιχείων, υπολογισμούς προστίμων, νομικές αναφορές και ψηφιακή τεκμηρίωση.'
-        }
+          description:
+            'Αυτοματοποιημένη δημιουργία αναφορών με διαχείριση στοιχείων, υπολογισμούς προστίμων, νομικές αναφορές και ψηφιακή τεκμηρίωση.',
+        },
       },
       benefits: {
-        title: 'Γιατί η Ψηφιακή Πύλη Επιθεωρητή Μεταμορφώνει τις Επιθεωρήσεις Εργασίας',
+        title:
+          'Γιατί η Ψηφιακή Πύλη Επιθεωρητή Μεταμορφώνει τις Επιθεωρήσεις Εργασίας',
         efficiency: {
           title: 'Αποδοτικότητα Επιθεώρησης',
-          description: 'Μειώστε τον χρόνο επιθεώρησης κατά 60% μέσω ψηφιακών ροών εργασίας, αυτοματοποιημένης τεκμηρίωσης και πρόσβασης σε δεδομένα πραγματικού χρόνου κατά τις επισκέψεις στις εγκαταστάσεις.'
+          description:
+            'Μειώστε τον χρόνο επιθεώρησης κατά 60% μέσω ψηφιακών ροών εργασίας, αυτοματοποιημένης τεκμηρίωσης και πρόσβασης σε δεδομένα πραγματικού χρόνου κατά τις επισκέψεις στις εγκαταστάσεις.',
         },
         accuracy: {
           title: 'Βελτιωμένη Ακρίβεια',
-          description: 'Βελτιώστε τον εντοπισμό παραβάσεων κατά 45% με περιεκτική ανάλυση δεδομένων, παρακολούθηση ιστορικών τάσεων και έξυπνη αξιολόγηση κινδύνων.'
+          description:
+            'Βελτιώστε τον εντοπισμό παραβάσεων κατά 45% με περιεκτική ανάλυση δεδομένων, παρακολούθηση ιστορικών τάσεων και έξυπνη αξιολόγηση κινδύνων.',
         },
         compliance: {
           title: 'Καλύτερη Συμμόρφωση',
-          description: 'Επιτύχετε 89% ταχύτερη διόρθωση παραβάσεων μέσω αυτοματοποιημένου προγραμματισμού παρακολούθησης, παρακολούθησης προθεσμιών και ψηφιακής επικοινωνίας.'
-        }
+          description:
+            'Επιτύχετε 89% ταχύτερη διόρθωση παραβάσεων μέσω αυτοματοποιημένου προγραμματισμού παρακολούθησης, παρακολούθησης προθεσμιών και ψηφιακής επικοινωνίας.',
+        },
       },
       capabilities: {
         title: 'Δυνατότητες Ψηφιακής Επιθεώρησης',
@@ -182,7 +201,7 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
         findingsManagement: 'Ψηφιακή Διαχείριση Ευρημάτων',
         violationTracking: 'Περιεκτική Παρακολούθηση Παραβάσεων',
         reportGeneration: 'Αυτοματοποιημένη Δημιουργία Αναφορών',
-        followUpManagement: 'Έξυπνη Διαχείριση Παρακολούθησης'
+        followUpManagement: 'Έξυπνη Διαχείριση Παρακολούθησης',
       },
       inspectionTypes: {
         title: 'Υποστηριζόμενοι Τύποι Επιθεώρησης',
@@ -191,14 +210,14 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
         followUp: 'Επιθεωρήσεις Παρακολούθησης',
         random: 'Τυχαίες Επιθεωρήσεις',
         targeted: 'Στοχευμένες Επιθεωρήσεις Βάσει Κινδύνου',
-        safety: 'Επιθεωρήσεις Συμμόρφωσης Ασφαλείας'
+        safety: 'Επιθεωρήσεις Συμμόρφωσης Ασφαλείας',
       },
       performance: {
         title: 'Απόδοση Ψηφιακής Επιθεώρησης',
         inspectionsManaged: 'Διαχειριζόμενες Επιθεωρήσεις',
         averageTime: 'Μέσος Χρόνος Επιθεώρησης',
         complianceRate: 'Συνολικό Ποσοστό Συμμόρφωσης',
-        violationDetection: 'Ποσοστό Εντοπισμού Παραβάσεων'
+        violationDetection: 'Ποσοστό Εντοπισμού Παραβάσεων',
       },
       sectors: {
         title: 'Παρακολουθούμενοι Επιχειρηματικοί Τομείς',
@@ -207,9 +226,9 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
         manufacturing: 'Βιομηχανία',
         healthcare: 'Υπηρεσίες Υγείας',
         construction: 'Κατασκευές',
-        technology: 'Τεχνολογία & Πληροφορική'
-      }
-    }
+        technology: 'Τεχνολογία & Πληροφορική',
+      },
+    },
   };
 
   const t = translations[selectedLocale];
@@ -222,7 +241,7 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
     { key: 'findingsManagement', icon: FileText, color: 'text-orange-600' },
     { key: 'violationTracking', icon: AlertTriangle, color: 'text-red-600' },
     { key: 'reportGeneration', icon: Download, color: 'text-indigo-600' },
-    { key: 'followUpManagement', icon: Calendar, color: 'text-pink-600' }
+    { key: 'followUpManagement', icon: Calendar, color: 'text-pink-600' },
   ];
 
   const inspectionTypes = [
@@ -231,14 +250,34 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
     { key: 'followUp', icon: RefreshCw, color: 'text-green-600' },
     { key: 'random', icon: Target, color: 'text-purple-600' },
     { key: 'targeted', icon: Eye, color: 'text-orange-600' },
-    { key: 'safety', icon: Shield, color: 'text-yellow-600' }
+    { key: 'safety', icon: Shield, color: 'text-yellow-600' },
   ];
 
   const performanceMetrics = [
-    { key: 'inspectionsManaged', value: '1,247', icon: Clipboard, color: 'text-blue-600' },
-    { key: 'averageTime', value: '195 min', icon: Clock, color: 'text-green-600' },
-    { key: 'complianceRate', value: '81.3%', icon: CheckCircle, color: 'text-emerald-600' },
-    { key: 'violationDetection', value: '18.8%', icon: AlertTriangle, color: 'text-orange-600' }
+    {
+      key: 'inspectionsManaged',
+      value: '1,247',
+      icon: Clipboard,
+      color: 'text-blue-600',
+    },
+    {
+      key: 'averageTime',
+      value: '195 min',
+      icon: Clock,
+      color: 'text-green-600',
+    },
+    {
+      key: 'complianceRate',
+      value: '81.3%',
+      icon: CheckCircle,
+      color: 'text-emerald-600',
+    },
+    {
+      key: 'violationDetection',
+      value: '18.8%',
+      icon: AlertTriangle,
+      color: 'text-orange-600',
+    },
   ];
 
   const sectors = [
@@ -247,7 +286,7 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
     { key: 'manufacturing', icon: Settings, color: 'text-gray-600' },
     { key: 'healthcare', icon: Activity, color: 'text-red-600' },
     { key: 'construction', icon: Flag, color: 'text-yellow-600' },
-    { key: 'technology', icon: Star, color: 'text-blue-600' }
+    { key: 'technology', icon: Star, color: 'text-blue-600' },
   ];
 
   if (showFullSystem) {
@@ -267,7 +306,9 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
             <div className="flex items-center gap-4">
               <Button
                 variant="outline"
-                onClick={() => setSelectedLocale(selectedLocale === 'en' ? 'el' : 'en')}
+                onClick={() =>
+                  setSelectedLocale(selectedLocale === 'en' ? 'el' : 'en')
+                }
               >
                 <Globe className="h-4 w-4 mr-2" />
                 {selectedLocale === 'en' ? 'EL' : 'EN'}
@@ -298,19 +339,23 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
             {t.hero.subtitle}
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="px-8 py-3 text-lg bg-blue-600 hover:bg-blue-700"
               onClick={() => setShowFullSystem(true)}
             >
               <Shield className="h-5 w-5 mr-2" />
               {t.hero.cta}
             </Button>
-            <Button 
-              variant="outline" 
-              size="lg" 
+            <Button
+              variant="outline"
+              size="lg"
               className="px-8 py-3 text-lg"
-              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() =>
+                document
+                  .getElementById('features')
+                  ?.scrollIntoView({ behavior: 'smooth' })
+              }
             >
               <Eye className="h-5 w-5 mr-2" />
               {t.hero.ctaSecondary}
@@ -320,13 +365,17 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
 
         {/* Performance Metrics */}
         <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-2xl p-8 mb-16">
-          <h2 className="text-2xl font-bold text-center mb-8">{t.performance.title}</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">
+            {t.performance.title}
+          </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {performanceMetrics.map((metric, index) => {
               const Icon = metric.icon;
               return (
                 <div key={index} className="text-center">
-                  <div className={`text-4xl font-bold mb-2 ${metric.color.replace('text-', 'text-')}`}>
+                  <div
+                    className={`text-4xl font-bold mb-2 ${metric.color.replace('text-', 'text-')}`}
+                  >
                     {metric.value}
                   </div>
                   <div className="text-gray-300 flex items-center justify-center gap-2">
@@ -349,32 +398,48 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.features.companyAccess.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.features.companyAccess.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.features.companyAccess.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.features.companyAccess.description}
+              </p>
             </div>
 
             <div className="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Clipboard className="h-8 w-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.features.inspectionManagement.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.features.inspectionManagement.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.features.inspectionManagement.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.features.inspectionManagement.description}
+              </p>
             </div>
 
             <div className="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckCircle className="h-8 w-8 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.features.complianceTracking.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.features.complianceTracking.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.features.complianceTracking.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.features.complianceTracking.description}
+              </p>
             </div>
 
             <div className="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FileText className="h-8 w-8 text-orange-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.features.digitalReporting.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.features.digitalReporting.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.features.digitalReporting.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.features.digitalReporting.description}
+              </p>
             </div>
           </div>
         </div>
@@ -388,12 +453,19 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
             {capabilities.map((capability, index) => {
               const Icon = capability.icon;
               return (
-                <div key={index} className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div
+                  key={index}
+                  className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+                >
                   <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                     <Icon className={`h-6 w-6 ${capability.color}`} />
                   </div>
                   <h3 className="font-semibold mb-2 text-sm">
-                    {t.capabilities[capability.key as keyof typeof t.capabilities]}
+                    {
+                      t.capabilities[
+                        capability.key as keyof typeof t.capabilities
+                      ]
+                    }
                   </h3>
                 </div>
               );
@@ -410,12 +482,19 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
             {inspectionTypes.map((type, index) => {
               const Icon = type.icon;
               return (
-                <div key={index} className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div
+                  key={index}
+                  className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+                >
                   <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                     <Icon className={`h-6 w-6 ${type.color}`} />
                   </div>
                   <h3 className="font-semibold mb-2">
-                    {t.inspectionTypes[type.key as keyof typeof t.inspectionTypes]}
+                    {
+                      t.inspectionTypes[
+                        type.key as keyof typeof t.inspectionTypes
+                      ]
+                    }
                   </h3>
                 </div>
               );
@@ -433,24 +512,36 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
                 <TrendingUp className="h-6 w-6 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.benefits.efficiency.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.benefits.efficiency.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.benefits.efficiency.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.benefits.efficiency.description}
+              </p>
             </div>
 
             <div className="p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                 <Target className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.benefits.accuracy.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.benefits.accuracy.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.benefits.accuracy.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.benefits.accuracy.description}
+              </p>
             </div>
 
             <div className="p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
                 <CheckCircle className="h-6 w-6 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.benefits.compliance.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.benefits.compliance.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.benefits.compliance.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.benefits.compliance.description}
+              </p>
             </div>
           </div>
         </div>
@@ -464,7 +555,10 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
             {sectors.map((sector, index) => {
               const Icon = sector.icon;
               return (
-                <div key={index} className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div
+                  key={index}
+                  className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+                >
                   <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                     <Icon className={`h-6 w-6 ${sector.color}`} />
                   </div>
@@ -479,13 +573,17 @@ export default function DigitalInspectorPortalDemo({ locale = 'en' }: DemoProps)
 
         {/* CTA Section */}
         <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-center rounded-2xl p-12">
-          <h2 className="text-3xl font-bold mb-4">Transform Labor Inspections Today</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            Transform Labor Inspections Today
+          </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Empower your inspection teams with cutting-edge digital tools that streamline workflows, enhance accuracy, and ensure comprehensive compliance monitoring across all Greek business sectors.
+            Empower your inspection teams with cutting-edge digital tools that
+            streamline workflows, enhance accuracy, and ensure comprehensive
+            compliance monitoring across all Greek business sectors.
           </p>
-          
-          <Button 
-            size="lg" 
+
+          <Button
+            size="lg"
             className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3"
             onClick={() => setShowFullSystem(true)}
           >

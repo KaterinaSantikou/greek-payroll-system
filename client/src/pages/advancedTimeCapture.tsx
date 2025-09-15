@@ -3,29 +3,41 @@
  * Comprehensive implementation of all clock methods, scheduling, alerts, and security
  */
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Smartphone, 
-  Wifi, 
-  TabletSmartphone, 
-  Monitor, 
-  MapPin, 
-  Shield, 
-  Clock, 
-  Calendar, 
-  Users, 
-  AlertTriangle, 
-  CheckCircle, 
-  Bell, 
+import { useState, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Smartphone,
+  Wifi,
+  TabletSmartphone,
+  Monitor,
+  MapPin,
+  Shield,
+  Clock,
+  Calendar,
+  Users,
+  AlertTriangle,
+  CheckCircle,
+  Bell,
   Lock,
   Camera,
   Fingerprint,
@@ -34,12 +46,12 @@ import {
   Settings,
   Activity,
   BarChart3,
-  Eye
-} from "lucide-react";
+  Eye,
+} from 'lucide-react';
 
 // Import the core systems
-import { CLOCK_METHODS } from "@/lib/timeCaptureCore";
-import { SYSTEM_ROLES } from "@/lib/securityPrivacySystem";
+import { CLOCK_METHODS } from '@/lib/timeCaptureCore';
+import { SYSTEM_ROLES } from '@/lib/securityPrivacySystem';
 
 export default function AdvancedTimeCapture() {
   const [selectedClockMethod, setSelectedClockMethod] = useState('mobile_qr');
@@ -56,7 +68,7 @@ export default function AdvancedTimeCapture() {
     scheduledToday: 52,
     overtimeActive: 8,
     alertsActive: 3,
-    erganiSyncRate: 98.7
+    erganiSyncRate: 98.7,
   });
 
   const [whosOnNow, setWhosOnNow] = useState([
@@ -65,36 +77,36 @@ export default function AdvancedTimeCapture() {
       current: 8,
       scheduled: 10,
       overtime: 2,
-      alerts: 1
+      alerts: 1,
     },
     {
       department: 'Καθαριότητα',
       current: 15,
       scheduled: 15,
       overtime: 3,
-      alerts: 0
+      alerts: 0,
     },
     {
       department: 'Εστιατόριο',
       current: 12,
       scheduled: 14,
       overtime: 2,
-      alerts: 1
+      alerts: 1,
     },
     {
       department: 'Συντήρηση',
       current: 6,
       scheduled: 8,
       overtime: 1,
-      alerts: 1
+      alerts: 1,
     },
     {
       department: 'Εξωτερικό',
       current: 6,
       scheduled: 5,
       overtime: 0,
-      alerts: 0
-    }
+      alerts: 0,
+    },
   ]);
 
   const [activeAlerts, setActiveAlerts] = useState([
@@ -105,7 +117,7 @@ export default function AdvancedTimeCapture() {
       message: 'Προσέγγιση μέγιστων ωρών (7.2/8.0)',
       severity: 'warning',
       department: 'Ρεσεψιόν',
-      timestamp: '2025-01-19T09:15:00Z'
+      timestamp: '2025-01-19T09:15:00Z',
     },
     {
       id: 'alert_002',
@@ -114,7 +126,7 @@ export default function AdvancedTimeCapture() {
       message: 'Μη εγκεκριμένες υπερωρίες (2.5 ώρες)',
       severity: 'high',
       department: 'Συντήρηση',
-      timestamp: '2025-01-19T08:45:00Z'
+      timestamp: '2025-01-19T08:45:00Z',
     },
     {
       id: 'alert_003',
@@ -123,8 +135,8 @@ export default function AdvancedTimeCapture() {
       message: 'Παράλειψη υποχρεωτικού διαλείμματος',
       severity: 'medium',
       department: 'Εστιατόριο',
-      timestamp: '2025-01-19T09:30:00Z'
-    }
+      timestamp: '2025-01-19T09:30:00Z',
+    },
   ]);
 
   const [recentPunches, setRecentPunches] = useState([
@@ -136,7 +148,7 @@ export default function AdvancedTimeCapture() {
       location: 'Ρεσεψιόν',
       timestamp: '2025-01-19T09:00:00Z',
       validated: true,
-      erganiSynced: true
+      erganiSynced: true,
     },
     {
       id: 'punch_002',
@@ -146,7 +158,7 @@ export default function AdvancedTimeCapture() {
       location: 'Καθαριότητα',
       timestamp: '2025-01-19T08:45:00Z',
       validated: true,
-      erganiSynced: true
+      erganiSynced: true,
     },
     {
       id: 'punch_003',
@@ -156,13 +168,13 @@ export default function AdvancedTimeCapture() {
       location: 'Εστιατόριο',
       timestamp: '2025-01-19T08:30:00Z',
       validated: true,
-      erganiSynced: false
-    }
+      erganiSynced: false,
+    },
   ]);
 
   const handleClockAction = (action: string) => {
     console.log(`Clock action: ${action} using ${selectedClockMethod}`);
-    
+
     // Simulate real-time validation
     const newPunch = {
       id: `punch_${Date.now()}`,
@@ -172,42 +184,52 @@ export default function AdvancedTimeCapture() {
       location: currentProperty,
       timestamp: new Date().toISOString(),
       validated: true,
-      erganiSynced: isOnline
+      erganiSynced: isOnline,
     };
 
     setRecentPunches(prev => [newPunch, ...prev.slice(0, 9)]);
-    
+
     // Update counts
     if (action === 'check_in') {
       setClockingData(prev => ({
         ...prev,
-        totalOnSite: prev.totalOnSite + 1
+        totalOnSite: prev.totalOnSite + 1,
       }));
     } else if (action === 'check_out') {
       setClockingData(prev => ({
         ...prev,
-        totalOnSite: prev.totalOnSite - 1
+        totalOnSite: prev.totalOnSite - 1,
       }));
     }
   };
 
   const getClockMethodIcon = (method: string) => {
     switch (method) {
-      case 'mobile_qr': return <QrCode className="h-4 w-4" />;
-      case 'mobile_nfc': return <Nfc className="h-4 w-4" />;
-      case 'kiosk_tablet': return <TabletSmartphone className="h-4 w-4" />;
-      case 'web_controlled': return <Monitor className="h-4 w-4" />;
-      case 'ble_geofenced': return <MapPin className="h-4 w-4" />;
-      default: return <Smartphone className="h-4 w-4" />;
+      case 'mobile_qr':
+        return <QrCode className="h-4 w-4" />;
+      case 'mobile_nfc':
+        return <Nfc className="h-4 w-4" />;
+      case 'kiosk_tablet':
+        return <TabletSmartphone className="h-4 w-4" />;
+      case 'web_controlled':
+        return <Monitor className="h-4 w-4" />;
+      case 'ble_geofenced':
+        return <MapPin className="h-4 w-4" />;
+      default:
+        return <Smartphone className="h-4 w-4" />;
     }
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'high': return 'bg-red-100 text-red-800 border-red-200';
-      case 'warning': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'medium': return 'bg-orange-100 text-orange-800 border-orange-200';
-      default: return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'warning':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'medium':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      default:
+        return 'bg-blue-100 text-blue-800 border-blue-200';
     }
   };
 
@@ -215,16 +237,31 @@ export default function AdvancedTimeCapture() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Προηγμένο Σύστημα Καταγραφής Χρόνου</h1>
+          <h1 className="text-3xl font-bold">
+            Προηγμένο Σύστημα Καταγραφής Χρόνου
+          </h1>
           <p className="text-gray-600 mt-2">
-            Ολοκληρωμένες δυνατότητες: Μέθοδοι καταγραφής, Προγραμματισμός, Ειδοποιήσεις & Ασφάλεια
+            Ολοκληρωμένες δυνατότητες: Μέθοδοι καταγραφής, Προγραμματισμός,
+            Ειδοποιήσεις & Ασφάλεια
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <Badge className={isOnline ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+          <Badge
+            className={
+              isOnline
+                ? 'bg-green-100 text-green-800'
+                : 'bg-red-100 text-red-800'
+            }
+          >
             {isOnline ? 'Online' : 'Offline'}
           </Badge>
-          <Badge className={deviceAttested ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}>
+          <Badge
+            className={
+              deviceAttested
+                ? 'bg-blue-100 text-blue-800'
+                : 'bg-orange-100 text-orange-800'
+            }
+          >
             {deviceAttested ? 'Device Attested' : 'Attestation Required'}
           </Badge>
           {pendingAlerts > 0 && (
@@ -247,7 +284,6 @@ export default function AdvancedTimeCapture() {
         {/* A. Time Capture & Compliance */}
         <TabsContent value="time-capture">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
             {/* Clock Methods */}
             <Card>
               <CardHeader>
@@ -262,11 +298,11 @@ export default function AdvancedTimeCapture() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 gap-3">
                   {Object.entries(CLOCK_METHODS).map(([key, method]) => (
-                    <div 
+                    <div
                       key={key}
                       className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                        selectedClockMethod === key 
-                          ? 'border-blue-500 bg-blue-50' 
+                        selectedClockMethod === key
+                          ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                       onClick={() => setSelectedClockMethod(key)}
@@ -275,7 +311,9 @@ export default function AdvancedTimeCapture() {
                         {getClockMethodIcon(key)}
                         <div className="flex-1">
                           <div className="font-medium">{method.name}</div>
-                          <div className="text-sm text-gray-600">{method.description}</div>
+                          <div className="text-sm text-gray-600">
+                            {method.description}
+                          </div>
                         </div>
                         {method.tamperResistant && (
                           <Badge className="bg-green-100 text-green-800 text-xs">
@@ -288,14 +326,14 @@ export default function AdvancedTimeCapture() {
                 </div>
 
                 <div className="flex gap-2 pt-4">
-                  <Button 
+                  <Button
                     onClick={() => handleClockAction('check_in')}
                     className="flex-1 bg-green-600 hover:bg-green-700"
                   >
                     <Clock className="mr-2 h-4 w-4" />
                     Check In
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => handleClockAction('check_out')}
                     variant="outline"
                     className="flex-1"
@@ -304,16 +342,16 @@ export default function AdvancedTimeCapture() {
                     Check Out
                   </Button>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-2">
-                  <Button 
+                  <Button
                     onClick={() => handleClockAction('break_start')}
                     variant="outline"
                     size="sm"
                   >
                     Break Start
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => handleClockAction('break_end')}
                     variant="outline"
                     size="sm"
@@ -362,16 +400,24 @@ export default function AdvancedTimeCapture() {
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">ERGANI II Sync</span>
-                    <span className="text-sm text-green-600">{clockingData.erganiSyncRate}%</span>
+                    <span className="text-sm text-green-600">
+                      {clockingData.erganiSyncRate}%
+                    </span>
                   </div>
-                  <Progress value={clockingData.erganiSyncRate} className="h-2" />
+                  <Progress
+                    value={clockingData.erganiSyncRate}
+                    className="h-2"
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm">Πρόσφατα Events</h4>
                   <div className="space-y-1 max-h-32 overflow-y-auto">
-                    {recentPunches.slice(0, 3).map((punch) => (
-                      <div key={punch.id} className="text-xs flex items-center justify-between p-2 bg-gray-50 rounded">
+                    {recentPunches.slice(0, 3).map(punch => (
+                      <div
+                        key={punch.id}
+                        className="text-xs flex items-center justify-between p-2 bg-gray-50 rounded"
+                      >
                         <span>{punch.employee}</span>
                         <div className="flex items-center gap-1">
                           {punch.erganiSynced ? (
@@ -400,7 +446,6 @@ export default function AdvancedTimeCapture() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  
                   {/* Missed Punch */}
                   <div className="border rounded-lg p-4">
                     <h4 className="font-medium mb-2">Missed Punch</h4>
@@ -414,12 +459,20 @@ export default function AdvancedTimeCapture() {
                         <SelectContent>
                           <SelectItem value="check_in">Check In</SelectItem>
                           <SelectItem value="check_out">Check Out</SelectItem>
-                          <SelectItem value="break_start">Break Start</SelectItem>
+                          <SelectItem value="break_start">
+                            Break Start
+                          </SelectItem>
                           <SelectItem value="break_end">Break End</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Textarea placeholder="Reason..." className="text-sm" rows={2} />
-                      <Button size="sm" className="w-full">Submit for Approval</Button>
+                      <Textarea
+                        placeholder="Reason..."
+                        className="text-sm"
+                        rows={2}
+                      />
+                      <Button size="sm" className="w-full">
+                        Submit for Approval
+                      </Button>
                     </div>
                   </div>
 
@@ -432,15 +485,25 @@ export default function AdvancedTimeCapture() {
                           <SelectValue placeholder="Correct Location" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="hotel_lobby">Hotel Lobby</SelectItem>
+                          <SelectItem value="hotel_lobby">
+                            Hotel Lobby
+                          </SelectItem>
                           <SelectItem value="restaurant">Restaurant</SelectItem>
                           <SelectItem value="kitchen">Kitchen</SelectItem>
-                          <SelectItem value="housekeeping">Housekeeping</SelectItem>
+                          <SelectItem value="housekeeping">
+                            Housekeeping
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <Input type="datetime-local" />
-                      <Textarea placeholder="Justification..." className="text-sm" rows={2} />
-                      <Button size="sm" variant="outline" className="w-full">Request Correction</Button>
+                      <Textarea
+                        placeholder="Justification..."
+                        className="text-sm"
+                        rows={2}
+                      />
+                      <Button size="sm" variant="outline" className="w-full">
+                        Request Correction
+                      </Button>
                     </div>
                   </div>
 
@@ -454,10 +517,18 @@ export default function AdvancedTimeCapture() {
                           <SelectValue placeholder="Correction Type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="time_adjustment">Time Adjustment</SelectItem>
-                          <SelectItem value="location_change">Location Change</SelectItem>
-                          <SelectItem value="break_correction">Break Correction</SelectItem>
-                          <SelectItem value="overtime_add">Add Overtime</SelectItem>
+                          <SelectItem value="time_adjustment">
+                            Time Adjustment
+                          </SelectItem>
+                          <SelectItem value="location_change">
+                            Location Change
+                          </SelectItem>
+                          <SelectItem value="break_correction">
+                            Break Correction
+                          </SelectItem>
+                          <SelectItem value="overtime_add">
+                            Add Overtime
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <Select>
@@ -465,12 +536,20 @@ export default function AdvancedTimeCapture() {
                           <SelectValue placeholder="Supervisor" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="manager_001">Μάνος Σωτηρίου</SelectItem>
-                          <SelectItem value="manager_002">Ελένη Κοστάκη</SelectItem>
-                          <SelectItem value="manager_003">Γιάννης Πέτρου</SelectItem>
+                          <SelectItem value="manager_001">
+                            Μάνος Σωτηρίου
+                          </SelectItem>
+                          <SelectItem value="manager_002">
+                            Ελένη Κοστάκη
+                          </SelectItem>
+                          <SelectItem value="manager_003">
+                            Γιάννης Πέτρου
+                          </SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button size="sm" variant="outline" className="w-full">Route for Approval</Button>
+                      <Button size="sm" variant="outline" className="w-full">
+                        Route for Approval
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -482,7 +561,6 @@ export default function AdvancedTimeCapture() {
         {/* C. Visibility & Monitoring */}
         <TabsContent value="visibility">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
             {/* Summary Cards */}
             <div className="lg:col-span-3 grid grid-cols-2 md:grid-cols-5 gap-4">
               <Card>
@@ -490,55 +568,69 @@ export default function AdvancedTimeCapture() {
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-blue-600" />
                     <div>
-                      <div className="text-2xl font-bold">{clockingData.totalOnSite}</div>
+                      <div className="text-2xl font-bold">
+                        {clockingData.totalOnSite}
+                      </div>
                       <div className="text-xs text-gray-600">Παρόντες</div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-green-600" />
                     <div>
-                      <div className="text-2xl font-bold">{clockingData.scheduledToday}</div>
-                      <div className="text-xs text-gray-600">Προγραμματισμένοι</div>
+                      <div className="text-2xl font-bold">
+                        {clockingData.scheduledToday}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        Προγραμματισμένοι
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-orange-600" />
                     <div>
-                      <div className="text-2xl font-bold">{clockingData.overtimeActive}</div>
+                      <div className="text-2xl font-bold">
+                        {clockingData.overtimeActive}
+                      </div>
                       <div className="text-xs text-gray-600">Υπερωρίες</div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="h-4 w-4 text-red-600" />
                     <div>
-                      <div className="text-2xl font-bold">{clockingData.alertsActive}</div>
-                      <div className="text-xs text-gray-600">Ενεργές Ειδοποιήσεις</div>
+                      <div className="text-2xl font-bold">
+                        {clockingData.alertsActive}
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        Ενεργές Ειδοποιήσεις
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2">
                     <Activity className="h-4 w-4 text-purple-600" />
                     <div>
-                      <div className="text-2xl font-bold">{clockingData.erganiSyncRate}%</div>
+                      <div className="text-2xl font-bold">
+                        {clockingData.erganiSyncRate}%
+                      </div>
                       <div className="text-xs text-gray-600">ERGANI Sync</div>
                     </div>
                   </div>
@@ -574,24 +666,30 @@ export default function AdvancedTimeCapture() {
                           </Badge>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <div className="text-gray-600">Παρόντες</div>
-                          <div className="font-bold text-lg">{dept.current}</div>
+                          <div className="font-bold text-lg">
+                            {dept.current}
+                          </div>
                         </div>
                         <div>
                           <div className="text-gray-600">Προγραμματισμένοι</div>
-                          <div className="font-bold text-lg">{dept.scheduled}</div>
+                          <div className="font-bold text-lg">
+                            {dept.scheduled}
+                          </div>
                         </div>
                         <div>
                           <div className="text-gray-600">Υπερωρίες</div>
-                          <div className="font-bold text-lg text-orange-600">{dept.overtime}</div>
+                          <div className="font-bold text-lg text-orange-600">
+                            {dept.overtime}
+                          </div>
                         </div>
                       </div>
-                      
-                      <Progress 
-                        value={(dept.current / dept.scheduled) * 100} 
+
+                      <Progress
+                        value={(dept.current / dept.scheduled) * 100}
                         className="mt-2 h-2"
                       />
                     </div>
@@ -610,12 +708,17 @@ export default function AdvancedTimeCapture() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {recentPunches.map((punch) => (
-                    <div key={punch.id} className="flex items-center justify-between p-2 border rounded">
+                  {recentPunches.map(punch => (
+                    <div
+                      key={punch.id}
+                      className="flex items-center justify-between p-2 border rounded"
+                    >
                       <div className="flex items-center gap-2">
                         {getClockMethodIcon(punch.method)}
                         <div>
-                          <div className="font-medium text-sm">{punch.employee}</div>
+                          <div className="font-medium text-sm">
+                            {punch.employee}
+                          </div>
                           <div className="text-xs text-gray-600">
                             {punch.type} • {punch.location}
                           </div>
@@ -623,19 +726,26 @@ export default function AdvancedTimeCapture() {
                       </div>
                       <div className="text-right">
                         <div className="text-xs">
-                          {new Date(punch.timestamp).toLocaleTimeString('el-GR', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                          {new Date(punch.timestamp).toLocaleTimeString(
+                            'el-GR',
+                            {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            }
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           {punch.validated && (
                             <CheckCircle className="h-3 w-3 text-green-600" />
                           )}
                           {punch.erganiSynced ? (
-                            <Badge className="bg-green-100 text-green-800 text-xs">ERGANI</Badge>
+                            <Badge className="bg-green-100 text-green-800 text-xs">
+                              ERGANI
+                            </Badge>
                           ) : (
-                            <Badge className="bg-yellow-100 text-yellow-800 text-xs">Pending</Badge>
+                            <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                              Pending
+                            </Badge>
                           )}
                         </div>
                       </div>
@@ -648,21 +758,25 @@ export default function AdvancedTimeCapture() {
         </TabsContent>
 
         {/* Additional tabs would continue with Scheduling, Alerts, and Security content... */}
-        
+
         <TabsContent value="scheduling">
           <Card>
             <CardHeader>
               <CardTitle>Scheduling & Overtime Management</CardTitle>
               <CardDescription>
-                Import/create rotas, overtime workflows, multiple jobs per employee
+                Import/create rotas, overtime workflows, multiple jobs per
+                employee
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="text-center py-8">
                 <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">Scheduling features implemented in core system</p>
+                <p className="text-gray-600">
+                  Scheduling features implemented in core system
+                </p>
                 <p className="text-sm text-gray-500 mt-2">
-                  Includes rota import, overtime approval workflows, and multi-property job assignments
+                  Includes rota import, overtime approval workflows, and
+                  multi-property job assignments
                 </p>
               </div>
             </CardContent>
@@ -680,14 +794,22 @@ export default function AdvancedTimeCapture() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {activeAlerts.map((alert) => (
-                    <div key={alert.id} className={`p-3 border rounded-lg ${getSeverityColor(alert.severity)}`}>
+                  {activeAlerts.map(alert => (
+                    <div
+                      key={alert.id}
+                      className={`p-3 border rounded-lg ${getSeverityColor(alert.severity)}`}
+                    >
                       <div className="flex items-start justify-between">
                         <div>
-                          <div className="font-medium text-sm">{alert.employee}</div>
+                          <div className="font-medium text-sm">
+                            {alert.employee}
+                          </div>
                           <div className="text-sm">{alert.message}</div>
                           <div className="text-xs text-gray-600 mt-1">
-                            {alert.department} • {new Date(alert.timestamp).toLocaleTimeString('el-GR')}
+                            {alert.department} •{' '}
+                            {new Date(alert.timestamp).toLocaleTimeString(
+                              'el-GR'
+                            )}
                           </div>
                         </div>
                         <Badge className={getSeverityColor(alert.severity)}>
@@ -763,19 +885,32 @@ export default function AdvancedTimeCapture() {
                       </SelectContent>
                     </Select>
                   </div>
-                  
+
                   <div className="border rounded-lg p-3">
                     <h4 className="font-medium mb-2">Current Permissions</h4>
                     <div className="space-y-1">
-                      {SYSTEM_ROLES[userRole.toUpperCase() as keyof typeof SYSTEM_ROLES]?.permissions.slice(0, 4).map((perm, index) => (
-                        <div key={index} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-3 w-3 text-green-600" />
-                          <span>{perm.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
-                      {SYSTEM_ROLES[userRole.toUpperCase() as keyof typeof SYSTEM_ROLES]?.permissions.length > 4 && (
+                      {SYSTEM_ROLES[
+                        userRole.toUpperCase() as keyof typeof SYSTEM_ROLES
+                      ]?.permissions
+                        .slice(0, 4)
+                        .map((perm, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 text-sm"
+                          >
+                            <CheckCircle className="h-3 w-3 text-green-600" />
+                            <span>{perm.replace(/_/g, ' ')}</span>
+                          </div>
+                        ))}
+                      {SYSTEM_ROLES[
+                        userRole.toUpperCase() as keyof typeof SYSTEM_ROLES
+                      ]?.permissions.length > 4 && (
                         <div className="text-xs text-gray-500">
-                          +{SYSTEM_ROLES[userRole.toUpperCase() as keyof typeof SYSTEM_ROLES].permissions.length - 4} more permissions
+                          +
+                          {SYSTEM_ROLES[
+                            userRole.toUpperCase() as keyof typeof SYSTEM_ROLES
+                          ].permissions.length - 4}{' '}
+                          more permissions
                         </div>
                       )}
                     </div>
@@ -794,24 +929,36 @@ export default function AdvancedTimeCapture() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Device Attestation</span>
-                  <Badge className={deviceAttested ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                  <Badge
+                    className={
+                      deviceAttested
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }
+                  >
                     {deviceAttested ? 'Verified' : 'Failed'}
                   </Badge>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
-                  <span className="text-sm">GPS Tracking (Outside Geofence)</span>
+                  <span className="text-sm">
+                    GPS Tracking (Outside Geofence)
+                  </span>
                   <Badge className="bg-red-100 text-red-800">Disabled</Badge>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Data Retention Compliance</span>
-                  <Badge className="bg-green-100 text-green-800">Greek Law</Badge>
+                  <Badge className="bg-green-100 text-green-800">
+                    Greek Law
+                  </Badge>
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Audit Log Integrity</span>
-                  <Badge className="bg-green-100 text-green-800">Tamper-Evident</Badge>
+                  <Badge className="bg-green-100 text-green-800">
+                    Tamper-Evident
+                  </Badge>
                 </div>
 
                 <div className="border rounded-lg p-3 mt-4">

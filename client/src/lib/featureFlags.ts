@@ -40,7 +40,7 @@ const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     requiresBackend: true,
     riskLevel: 'high',
     rolloutPercentage: 0,
-    dependencies: ['payrollEngine', 'database']
+    dependencies: ['payrollEngine', 'database'],
   },
 
   erganiIntegration: {
@@ -51,7 +51,7 @@ const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     requiresBackend: true,
     riskLevel: 'high',
     rolloutPercentage: 0,
-    dependencies: ['erganiAPI', 'auth']
+    dependencies: ['erganiAPI', 'auth'],
   },
 
   bulkEmployeeImport: {
@@ -62,7 +62,7 @@ const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     requiresBackend: true,
     riskLevel: 'high',
     rolloutPercentage: 25,
-    dependencies: ['fileUpload', 'validation']
+    dependencies: ['fileUpload', 'validation'],
   },
 
   // Medium-risk features
@@ -74,7 +74,7 @@ const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     requiresBackend: true,
     riskLevel: 'medium',
     rolloutPercentage: 50,
-    dependencies: ['database']
+    dependencies: ['database'],
   },
 
   notificationCenter: {
@@ -85,7 +85,7 @@ const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     requiresBackend: true,
     riskLevel: 'medium',
     rolloutPercentage: 75,
-    dependencies: ['notifications', 'auth']
+    dependencies: ['notifications', 'auth'],
   },
 
   // Low-risk UI-only features
@@ -96,7 +96,7 @@ const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     enabled: true,
     requiresBackend: false,
     riskLevel: 'low',
-    rolloutPercentage: 100
+    rolloutPercentage: 100,
   },
 
   enhancedSearch: {
@@ -106,7 +106,7 @@ const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     enabled: true,
     requiresBackend: false,
     riskLevel: 'low',
-    rolloutPercentage: 100
+    rolloutPercentage: 100,
   },
 
   mobileOptimizations: {
@@ -116,7 +116,7 @@ const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     enabled: true,
     requiresBackend: false,
     riskLevel: 'low',
-    rolloutPercentage: 100
+    rolloutPercentage: 100,
   },
 
   betaFeatures: {
@@ -126,8 +126,8 @@ const FEATURE_FLAGS: Record<string, FeatureFlag> = {
     enabled: false,
     requiresBackend: false,
     riskLevel: 'medium',
-    rolloutPercentage: 10
-  }
+    rolloutPercentage: 10,
+  },
 };
 
 /**
@@ -141,9 +141,9 @@ const ENV_OVERRIDES: Record<string, Partial<Record<string, boolean>>> = {
     bulkEmployeeImport: true,
     advancedReporting: true,
     notificationCenter: true,
-    betaFeatures: true
+    betaFeatures: true,
   },
-  
+
   staging: {
     // Conservative staging - only stable features
     realTimePayrollCalculations: false,
@@ -151,13 +151,13 @@ const ENV_OVERRIDES: Record<string, Partial<Record<string, boolean>>> = {
     bulkEmployeeImport: true,
     advancedReporting: true,
     notificationCenter: true,
-    betaFeatures: false
+    betaFeatures: false,
   },
-  
+
   production: {
     // Production follows rollout percentages
     // No overrides - use default rollout settings
-  }
+  },
 };
 
 class FeatureFlagManager {
@@ -169,8 +169,8 @@ class FeatureFlagManager {
       auth: false,
       payroll: false,
       ergani: false,
-      notifications: false
-    }
+      notifications: false,
+    },
   };
 
   private userId?: string;
@@ -205,8 +205,11 @@ class FeatureFlagManager {
 
     // Check dependencies
     if (flag.dependencies) {
-      const dependenciesHealthy = flag.dependencies.every(dep => 
-        this.backendHealth.services[dep as keyof typeof this.backendHealth.services]
+      const dependenciesHealthy = flag.dependencies.every(
+        dep =>
+          this.backendHealth.services[
+            dep as keyof typeof this.backendHealth.services
+          ]
       );
       if (!dependenciesHealthy) {
         return false;
@@ -217,7 +220,7 @@ class FeatureFlagManager {
     const rolloutSeed = userId || this.generateSessionSeed();
     const rolloutHash = this.hashString(rolloutSeed + flagKey);
     const rolloutValue = rolloutHash % 100;
-    
+
     return flag.enabled && rolloutValue < flag.rolloutPercentage;
   }
 
@@ -225,7 +228,7 @@ class FeatureFlagManager {
    * Get all enabled features for current user
    */
   getEnabledFeatures(userId?: string): string[] {
-    return Object.keys(FEATURE_FLAGS).filter(key => 
+    return Object.keys(FEATURE_FLAGS).filter(key =>
       this.isEnabled(key, userId)
     );
   }
@@ -249,10 +252,10 @@ class FeatureFlagManager {
    */
   private async checkBackendHealth(): Promise<void> {
     try {
-      const response = await fetch('/health/ready', { 
+      const response = await fetch('/health/ready', {
         method: 'GET',
         credentials: 'include',
-        cache: 'no-cache'
+        cache: 'no-cache',
       });
 
       if (response.ok) {
@@ -265,8 +268,8 @@ class FeatureFlagManager {
             auth: health.auth || false,
             payroll: health.payroll || false,
             ergani: health.ergani || false,
-            notifications: health.notifications || false
-          }
+            notifications: health.notifications || false,
+          },
         };
       } else {
         this.backendHealth = {
@@ -277,8 +280,8 @@ class FeatureFlagManager {
             auth: false,
             payroll: false,
             ergani: false,
-            notifications: false
-          }
+            notifications: false,
+          },
         };
       }
     } catch (error) {
@@ -291,8 +294,8 @@ class FeatureFlagManager {
           auth: false,
           payroll: false,
           ergani: false,
-          notifications: false
-        }
+          notifications: false,
+        },
       };
     }
   }
@@ -317,7 +320,7 @@ class FeatureFlagManager {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash);
@@ -345,8 +348,8 @@ export const featureFlags = new FeatureFlagManager();
  * React hook for feature flags
  */
 export function useFeatureFlag(flagKey: string, userId?: string): boolean {
-  const [isEnabled, setIsEnabled] = React.useState(
-    () => featureFlags.isEnabled(flagKey, userId)
+  const [isEnabled, setIsEnabled] = React.useState(() =>
+    featureFlags.isEnabled(flagKey, userId)
   );
 
   React.useEffect(() => {
@@ -366,8 +369,8 @@ export function useFeatureFlag(flagKey: string, userId?: string): boolean {
  * React hook for backend health
  */
 export function useBackendHealth(): BackendHealthCheck {
-  const [health, setHealth] = React.useState(
-    () => featureFlags.getBackendHealth()
+  const [health, setHealth] = React.useState(() =>
+    featureFlags.getBackendHealth()
   );
 
   React.useEffect(() => {
@@ -386,7 +389,7 @@ export const FEATURE_FLAG_CONFIG = {
   environment: import.meta.env.MODE || 'development',
   debugMode: import.meta.env.MODE === 'development',
   refreshInterval: 30000, // 30 seconds
-  rolloutRefreshInterval: 5000 // 5 seconds for UI updates
+  rolloutRefreshInterval: 5000, // 5 seconds for UI updates
 };
 
 export default featureFlags;

@@ -19,7 +19,7 @@ import {
   CheckCircle,
   Zap,
   Users,
-  Globe
+  Globe,
 } from 'lucide-react';
 
 type ViewState = 'selector' | 'configuration' | 'success';
@@ -41,12 +41,12 @@ export default function IndustryTemplates() {
           'Collective agreement integration',
           'Compliance requirements built-in',
           'Faster setup (hours vs weeks)',
-          'Proven templates used by 1000+ companies'
-        ]
+          'Proven templates used by 1000+ companies',
+        ],
       },
       industries: {
         title: 'Supported Industries',
-        subtitle: 'Specialized templates for Greece\'s key sectors'
+        subtitle: "Specialized templates for Greece's key sectors",
       },
       success: {
         title: 'Industry Template Deployed Successfully!',
@@ -55,11 +55,11 @@ export default function IndustryTemplates() {
           'Import employee data',
           'Configure first payroll run',
           'Test ERGANI II integration',
-          'Train your team'
+          'Train your team',
         ],
         startUsing: 'Start Using PayrollSync',
-        documentation: 'View Documentation'
-      }
+        documentation: 'View Documentation',
+      },
     },
     el: {
       title: 'Εξειδικευμένα Πρότυπα Κλάδου',
@@ -72,12 +72,12 @@ export default function IndustryTemplates() {
           'Ενσωμάτωση συλλογικών συμβάσεων',
           'Ενσωματωμένες απαιτήσεις συμμόρφωσης',
           'Ταχύτερη εγκατάσταση (ώρες αντί εβδομάδων)',
-          'Δοκιμασμένα πρότυπα από 1000+ εταιρείες'
-        ]
+          'Δοκιμασμένα πρότυπα από 1000+ εταιρείες',
+        ],
       },
       industries: {
         title: 'Υποστηριζόμενοι Κλάδοι',
-        subtitle: 'Εξειδικευμένα πρότυπα για βασικούς τομείς της Ελλάδας'
+        subtitle: 'Εξειδικευμένα πρότυπα για βασικούς τομείς της Ελλάδας',
       },
       success: {
         title: 'Πρότυπο Κλάδου Εγκαταστάθηκε Επιτυχώς!',
@@ -86,12 +86,12 @@ export default function IndustryTemplates() {
           'Εισαγωγή δεδομένων υπαλλήλων',
           'Διαμόρφωση πρώτης μισθοδοσίας',
           'Δοκιμή ενσωμάτωσης ΕΡΓΑΝΗ ΙΙ',
-          'Εκπαίδευση ομάδας σας'
+          'Εκπαίδευση ομάδας σας',
         ],
         startUsing: 'Ξεκινήστε το PayrollSync',
-        documentation: 'Δείτε Τεκμηρίωση'
-      }
-    }
+        documentation: 'Δείτε Τεκμηρίωση',
+      },
+    },
   };
 
   const t = translations[locale];
@@ -119,19 +119,24 @@ export default function IndustryTemplates() {
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="h-10 w-10 text-green-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t.success.title}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {t.success.title}
+            </h1>
             <p className="text-gray-600">{t.success.subtitle}</p>
           </div>
 
           <Card className="mb-8">
             <CardContent className="p-6">
               <div className="flex items-center gap-4 mb-6">
-                {selectedTemplate && React.createElement(selectedTemplate.icon, { 
-                  className: `h-8 w-8 text-white p-1.5 rounded ${selectedTemplate.color}` 
-                })}
+                {selectedTemplate &&
+                  React.createElement(selectedTemplate.icon, {
+                    className: `h-8 w-8 text-white p-1.5 rounded ${selectedTemplate.color}`,
+                  })}
                 <div className="text-left">
                   <h3 className="font-semibold text-lg">
-                    {locale === 'en' ? selectedTemplate?.name : selectedTemplate?.nameEl}
+                    {locale === 'en'
+                      ? selectedTemplate?.name
+                      : selectedTemplate?.nameEl}
                   </h3>
                   <p className="text-gray-600 text-sm">
                     Ready for {selectedTemplate?.employees} employees
@@ -143,9 +148,14 @@ export default function IndustryTemplates() {
                 <h4 className="font-semibold text-left">Next Steps:</h4>
                 <div className="grid grid-cols-1 gap-3">
                   {t.success.nextSteps.map((step, index) => (
-                    <div key={index} className="flex items-center gap-3 text-left">
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 text-left"
+                    >
                       <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-xs font-semibold text-blue-600">{index + 1}</span>
+                        <span className="text-xs font-semibold text-blue-600">
+                          {index + 1}
+                        </span>
                       </div>
                       <span className="text-sm">{step}</span>
                     </div>
@@ -261,7 +271,7 @@ export default function IndustryTemplates() {
       </div>
 
       {/* Template Selector */}
-      <IndustryTemplateSelector 
+      <IndustryTemplateSelector
         onSelectTemplate={handleTemplateSelect}
         locale={locale}
       />

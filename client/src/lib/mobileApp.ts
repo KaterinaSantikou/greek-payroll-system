@@ -64,17 +64,17 @@ export class MobileOfflineCache {
 
   static async cachePunchEvent(event: any): Promise<void> {
     const cache = await this.getCache();
-    
+
     // Add timestamp and offline flag
     const cachedEvent = {
       ...event,
       cachedAt: new Date().toISOString(),
       syncStatus: 'pending',
-      retryCount: 0
+      retryCount: 0,
     };
 
     cache.events.push(cachedEvent);
-    
+
     // Maintain cache size limit
     if (cache.events.length > this.MAX_CACHE_SIZE) {
       cache.events = cache.events.slice(-this.MAX_CACHE_SIZE);
@@ -86,7 +86,7 @@ export class MobileOfflineCache {
   static async syncCachedEvents(): Promise<SyncResult> {
     const cache = await this.getCache();
     const pendingEvents = cache.events.filter(e => e.syncStatus === 'pending');
-    
+
     if (pendingEvents.length === 0) {
       return { success: true, syncedCount: 0, failedCount: 0 };
     }
@@ -104,7 +104,7 @@ export class MobileOfflineCache {
       } catch (error) {
         event.retryCount++;
         event.lastError = error.message;
-        
+
         // Move to failed after 3 retries
         if (event.retryCount >= 3) {
           event.syncStatus = 'failed';
@@ -125,9 +125,9 @@ export class MobileOfflineCache {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${await this.getAuthToken()}`
+        Authorization: `Bearer ${await this.getAuthToken()}`,
       },
-      body: JSON.stringify(event)
+      body: JSON.stringify(event),
     });
 
     if (!response.ok) {
@@ -151,20 +151,19 @@ export class MobileOfflineCache {
 
 // Mobile device binding service
 export class MobileDeviceBinding {
-  
   static async bindDevice(employeeId: string): Promise<DeviceBinding> {
     const deviceFingerprint = await this.generateDeviceFingerprint();
-    
+
     const bindingRequest = {
       employeeId,
       deviceFingerprint,
-      deviceInfo: await this.getDeviceInfo()
+      deviceInfo: await this.getDeviceInfo(),
     };
 
     const response = await fetch('/api/mobile/bind-device', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bindingRequest)
+      body: JSON.stringify(bindingRequest),
     });
 
     if (!response.ok) {
@@ -172,10 +171,10 @@ export class MobileDeviceBinding {
     }
 
     const binding = await response.json();
-    
+
     // Store binding locally
     localStorage.setItem('device_binding', JSON.stringify(binding));
-    
+
     return binding;
   }
 
@@ -184,7 +183,7 @@ export class MobileDeviceBinding {
     if (!stored) return false;
 
     const binding: DeviceBinding = JSON.parse(stored);
-    
+
     // Check expiration
     if (new Date() > new Date(binding.expiresAt)) {
       return false;
@@ -202,7 +201,7 @@ export class MobileDeviceBinding {
   private static async generateDeviceFingerprint(): Promise<string> {
     const deviceInfo = await this.getDeviceInfo();
     const fingerprint = `${deviceInfo.platform}-${deviceInfo.model}-${deviceInfo.hardwareId}`;
-    
+
     // In a real implementation, use crypto.subtle.digest
     return btoa(fingerprint).substring(0, 32);
   }
@@ -214,7 +213,7 @@ export class MobileDeviceBinding {
       osVersion: navigator.platform,
       appVersion: '1.0.0',
       hardwareId: await this.getHardwareId(),
-      biometricSupport: await this.checkBiometricSupport()
+      biometricSupport: await this.checkBiometricSupport(),
     };
   }
 
@@ -241,7 +240,9 @@ export class MobileDeviceBinding {
 export class MobilePunchController {
   private static currentInterface: MobilePunchInterface | null = null;
 
-  static async initializePunchInterface(employeeId: string): Promise<MobilePunchInterface> {
+  static async initializePunchInterface(
+    employeeId: string
+  ): Promise<MobilePunchInterface> {
     // Verify device binding
     const bindingValid = await MobileDeviceBinding.verifyBinding();
     if (!bindingValid) {
@@ -250,13 +251,13 @@ export class MobilePunchController {
 
     // Get current location
     const location = await this.getCurrentLocation();
-    
+
     // Get current state from server
     const currentState = await this.getCurrentState(employeeId);
-    
+
     // Get today's shift info
     const currentShift = await this.getCurrentShift(employeeId);
-    
+
     // Calculate today's stats
     const todayStats = await this.getTodayStats(employeeId);
 
@@ -265,7 +266,7 @@ export class MobilePunchController {
       availableActions: this.determineAvailableActions(currentState, location),
       location,
       currentShift,
-      todayStats
+      todayStats,
     };
 
     return this.currentInterface;
@@ -277,7 +278,9 @@ export class MobilePunchController {
     }
 
     // Validate action is available
-    if (!this.currentInterface.availableActions.some(a => a.type === action.type)) {
+    if (
+      !this.currentInterface.availableActions.some(a => a.type === action.type)
+    ) {
       throw new Error('Action not available');
     }
 
@@ -296,7 +299,7 @@ export class MobilePunchController {
       timestamp: new Date().toISOString(),
       location: this.currentInterface.location,
       deviceInfo: await MobileDeviceBinding['getDeviceInfo'](),
-      biometricVerified: action.biometricRequired
+      biometricVerified: action.biometricRequired,
     };
 
     // Try to submit online first
@@ -320,24 +323,27 @@ export class MobilePunchController {
       }
 
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        position => {
           resolve({
             coordinates: {
               lat: position.coords.latitude,
-              lng: position.coords.longitude
+              lng: position.coords.longitude,
             },
             accuracy: position.coords.accuracy,
             geofenceStatus: 'unknown', // Would be determined by geofence service
-            workplaceName: 'Current Location'
+            workplaceName: 'Current Location',
           });
         },
-        (error) => reject(error),
+        error => reject(error),
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
       );
     });
   }
 
-  private static determineAvailableActions(state: string, location: any): PunchAction[] {
+  private static determineAvailableActions(
+    state: string,
+    location: any
+  ): PunchAction[] {
     const actions: PunchAction[] = [];
 
     switch (state) {
@@ -349,7 +355,7 @@ export class MobilePunchController {
           enabled: location.geofenceStatus !== 'outside',
           requiresConfirmation: false,
           biometricRequired: true,
-          validationRules: ['location_check', 'schedule_check']
+          validationRules: ['location_check', 'schedule_check'],
         });
         break;
 
@@ -361,7 +367,7 @@ export class MobilePunchController {
           enabled: true,
           requiresConfirmation: false,
           biometricRequired: false,
-          validationRules: ['break_rules']
+          validationRules: ['break_rules'],
         });
         actions.push({
           type: 'clock_out',
@@ -370,7 +376,7 @@ export class MobilePunchController {
           enabled: true,
           requiresConfirmation: true,
           biometricRequired: true,
-          validationRules: ['min_hours_check']
+          validationRules: ['min_hours_check'],
         });
         break;
 
@@ -382,7 +388,7 @@ export class MobilePunchController {
           enabled: true,
           requiresConfirmation: false,
           biometricRequired: false,
-          validationRules: ['break_duration']
+          validationRules: ['break_duration'],
         });
         break;
     }
@@ -390,7 +396,9 @@ export class MobilePunchController {
     return actions;
   }
 
-  private static async performBiometricVerification(): Promise<{ success: boolean }> {
+  private static async performBiometricVerification(): Promise<{
+    success: boolean;
+  }> {
     try {
       // Use WebAuthn for biometric verification
       const credential = await navigator.credentials.create({
@@ -400,14 +408,14 @@ export class MobilePunchController {
           user: {
             id: new Uint8Array(16),
             name: await this.getEmployeeId(),
-            displayName: 'Employee'
+            displayName: 'Employee',
           },
           pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
           authenticatorSelection: {
             authenticatorAttachment: 'platform',
-            userVerification: 'required'
-          }
-        }
+            userVerification: 'required',
+          },
+        },
       });
 
       return { success: !!credential };
@@ -422,9 +430,9 @@ export class MobilePunchController {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${await this.getAuthToken()}`
+        Authorization: `Bearer ${await this.getAuthToken()}`,
       },
-      body: JSON.stringify(event)
+      body: JSON.stringify(event),
     });
 
     if (!response.ok) {
@@ -459,7 +467,7 @@ export class MobilePunchController {
     return {
       hoursWorked: 0,
       breaksTaken: 0,
-      overtimeHours: 0
+      overtimeHours: 0,
     };
   }
 

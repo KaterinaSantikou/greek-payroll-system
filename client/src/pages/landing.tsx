@@ -1,6 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, Calculator, Shield, BarChart } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Users, Calculator, Shield, BarChart } from 'lucide-react';
 
 export default function Landing() {
   const handleSignIn = () => {
@@ -22,12 +28,17 @@ export default function Landing() {
             Σύστημα Διαχείρισης Ανθρώπινων Πόρων & Μισθοδοσίας
           </p>
           <p className="text-lg text-neutral-500 mt-2">
-            Ολοκληρωμένη λύση για τη διαχείριση εργαζομένων και υπολογισμό μισθοδοσίας σύμφωνα με την ελληνική νομοθεσία
+            Ολοκληρωμένη λύση για τη διαχείριση εργαζομένων και υπολογισμό
+            μισθοδοσίας σύμφωνα με την ελληνική νομοθεσία
           </p>
-          
+
           {/* Sign In Button */}
           <div className="mt-8">
-            <Button onClick={handleSignIn} size="lg" className="text-lg px-8 py-3">
+            <Button
+              onClick={handleSignIn}
+              size="lg"
+              className="text-lg px-8 py-3"
+            >
               Σύνδεση / Sign In
             </Button>
           </div>
@@ -42,7 +53,8 @@ export default function Landing() {
             </CardHeader>
             <CardContent>
               <CardDescription>
-                Πλήρη διαχείριση στοιχείων εργαζομένων με συμμόρφωση στην ελληνική νομοθεσία
+                Πλήρη διαχείριση στοιχείων εργαζομένων με συμμόρφωση στην
+                ελληνική νομοθεσία
               </CardDescription>
             </CardContent>
           </Card>
@@ -54,7 +66,8 @@ export default function Landing() {
             </CardHeader>
             <CardContent>
               <CardDescription>
-                Αυτόματος υπολογισμός φόρων και ασφαλιστικών εισφορών με βάση τη νομοθεσία
+                Αυτόματος υπολογισμός φόρων και ασφαλιστικών εισφορών με βάση τη
+                νομοθεσία
               </CardDescription>
             </CardContent>
           </Card>
@@ -94,10 +107,10 @@ export default function Landing() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="w-full"
-                onClick={() => window.location.href = '/api/login'}
+                onClick={() => (window.location.href = '/api/login')}
               >
                 Σύνδεση
               </Button>

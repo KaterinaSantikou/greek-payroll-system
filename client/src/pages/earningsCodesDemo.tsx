@@ -1,24 +1,37 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Calculator, 
-  CheckCircle, 
+import { useState } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Calculator,
+  CheckCircle,
   AlertTriangle,
   Clock,
   Euro,
   Info,
   Shield,
   FileText,
-  Layers
-} from "lucide-react";
+  Layers,
+} from 'lucide-react';
 
 interface EarningsCodeRule {
   code: string;
@@ -54,49 +67,56 @@ interface EarningsCodesResponse {
 }
 
 export default function EarningsCodesDemoPage() {
-  const [primaryCode, setPrimaryCode] = useState("REG");
-  const [stackedCodes, setStackedCodes] = useState("NIGHT_25,SUNDAY_75");
+  const [primaryCode, setPrimaryCode] = useState('REG');
+  const [stackedCodes, setStackedCodes] = useState('NIGHT_25,SUNDAY_75');
   const [earningsInput, setEarningsInput] = useState([
-    { code: "REG", hours: 40, hourlyRate: 15.50, fixedAmount: undefined },
-    { code: "NIGHT_25", hours: 8, hourlyRate: 15.50, fixedAmount: undefined },
-    { code: "SUNDAY_75", hours: 6, hourlyRate: 15.50, fixedAmount: undefined },
-    { code: "OT_TIER1_40", hours: 5, hourlyRate: 15.50, fixedAmount: undefined },
-    { code: "BONUS_EASTER", hours: 0, hourlyRate: 0, fixedAmount: 650 },
-    { code: "TIPS_DISTRIBUTED", hours: 0, hourlyRate: 0, fixedAmount: 85 },
-    { code: "MEAL_VOUCHER", hours: 0, hourlyRate: 0, fixedAmount: 120 }
+    { code: 'REG', hours: 40, hourlyRate: 15.5, fixedAmount: undefined },
+    { code: 'NIGHT_25', hours: 8, hourlyRate: 15.5, fixedAmount: undefined },
+    { code: 'SUNDAY_75', hours: 6, hourlyRate: 15.5, fixedAmount: undefined },
+    { code: 'OT_TIER1_40', hours: 5, hourlyRate: 15.5, fixedAmount: undefined },
+    { code: 'BONUS_EASTER', hours: 0, hourlyRate: 0, fixedAmount: 650 },
+    { code: 'TIPS_DISTRIBUTED', hours: 0, hourlyRate: 0, fixedAmount: 85 },
+    { code: 'MEAL_VOUCHER', hours: 0, hourlyRate: 0, fixedAmount: 120 },
   ]);
   const { toast } = useToast();
 
   // Fetch all earnings codes
-  const { data: earningsCodesData, isLoading } = useQuery<EarningsCodesResponse>({
-    queryKey: ['/api/payroll/earnings-codes'],
-  });
+  const { data: earningsCodesData, isLoading } =
+    useQuery<EarningsCodesResponse>({
+      queryKey: ['/api/payroll/earnings-codes'],
+    });
 
   // Validate code stacking
   const validateStacking = useMutation({
-    mutationFn: async ({ primary, stacked }: { primary: string; stacked: string[] }) => {
+    mutationFn: async ({
+      primary,
+      stacked,
+    }: {
+      primary: string;
+      stacked: string[];
+    }) => {
       const response = await fetch('/api/payroll/validate-stacking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ primaryCode: primary, stackedCodes: stacked })
+        body: JSON.stringify({ primaryCode: primary, stackedCodes: stacked }),
       });
       if (!response.ok) throw new Error('Failed to validate stacking');
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.valid) {
         toast({
-          title: "Stacking Valid",
-          description: "The selected earnings codes can be stacked together.",
+          title: 'Stacking Valid',
+          description: 'The selected earnings codes can be stacked together.',
         });
       } else {
         toast({
-          title: "Stacking Invalid",
+          title: 'Stacking Invalid',
           description: `Errors: ${data.errors.join(', ')}`,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
-    }
+    },
   });
 
   // Calculate earnings breakdown
@@ -105,26 +125,31 @@ export default function EarningsCodesDemoPage() {
       const response = await fetch('/api/payroll/calculate-earnings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ earnings })
+        body: JSON.stringify({ earnings }),
       });
       if (!response.ok) throw new Error('Failed to calculate earnings');
       return response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Calculation Complete",
-        description: "Earnings breakdown has been calculated successfully.",
+        title: 'Calculation Complete',
+        description: 'Earnings breakdown has been calculated successfully.',
       });
-    }
+    },
   });
 
   const handleValidateStacking = () => {
-    const codes = stackedCodes.split(',').map(c => c.trim()).filter(c => c);
+    const codes = stackedCodes
+      .split(',')
+      .map(c => c.trim())
+      .filter(c => c);
     validateStacking.mutate({ primary: primaryCode, stacked: codes });
   };
 
   const handleCalculateEarnings = () => {
-    const validEarnings = earningsInput.filter(e => e.code && (e.hours > 0 || e.fixedAmount !== undefined));
+    const validEarnings = earningsInput.filter(
+      e => e.code && (e.hours > 0 || e.fixedAmount !== undefined)
+    );
     calculateEarnings.mutate(validEarnings);
   };
 
@@ -148,9 +173,12 @@ export default function EarningsCodesDemoPage() {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Standardized Earnings Codes</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Standardized Earnings Codes
+        </h1>
         <p className="text-gray-600">
-          Greek payroll system with standardized taxation, EFKA contributions, and APD reporting rules
+          Greek payroll system with standardized taxation, EFKA contributions,
+          and APD reporting rules
         </p>
       </div>
 
@@ -166,23 +194,33 @@ export default function EarningsCodesDemoPage() {
             <CardContent>
               <div className="grid grid-cols-5 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">{earningsCodesData.summary.totalCodes}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {earningsCodesData.summary.totalCodes}
+                  </p>
                   <p className="text-gray-600 text-sm">Total Codes</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-red-600">{earningsCodesData.summary.taxableCodes}</p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {earningsCodesData.summary.taxableCodes}
+                  </p>
                   <p className="text-gray-600 text-sm">Taxable</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-blue-600">{earningsCodesData.summary.efkaContributoryCodes}</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {earningsCodesData.summary.efkaContributoryCodes}
+                  </p>
                   <p className="text-gray-600 text-sm">EFKA Subject</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-purple-600">{earningsCodesData.summary.apdIncludedCodes}</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {earningsCodesData.summary.apdIncludedCodes}
+                  </p>
                   <p className="text-gray-600 text-sm">APD Included</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-green-600">{earningsCodesData.summary.stackableCodes}</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {earningsCodesData.summary.stackableCodes}
+                  </p>
                   <p className="text-gray-600 text-sm">Stackable</p>
                 </div>
               </div>
@@ -214,82 +252,182 @@ export default function EarningsCodesDemoPage() {
               {/* Featured Greek Premium Codes */}
               <Card className="border-blue-200 bg-blue-50">
                 <CardHeader>
-                  <CardTitle className="text-blue-900">Featured: Greek Premium System</CardTitle>
+                  <CardTitle className="text-blue-900">
+                    Featured: Greek Premium System
+                  </CardTitle>
                   <CardDescription className="text-blue-800">
-                    Complete Greek payroll premium structure with correct 2025 rates
+                    Complete Greek payroll premium structure with correct 2025
+                    rates
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-4">
-                    {earningsCodesData.baseWages.filter(code => code.code === 'REG').map((rule) => (
-                      <div key={rule.code} className="bg-white p-4 rounded-lg border">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="default" className="font-mono">{rule.code}</Badge>
-                          <div className="flex gap-1">
-                            {rule.taxable && <Badge variant="destructive" className="text-xs">Taxable</Badge>}
-                            {rule.contributoryEFKA && <Badge variant="secondary" className="text-xs">EFKA</Badge>}
-                            {rule.includedAPD && <Badge variant="outline" className="text-xs">APD</Badge>}
+                    {earningsCodesData.baseWages
+                      .filter(code => code.code === 'REG')
+                      .map(rule => (
+                        <div
+                          key={rule.code}
+                          className="bg-white p-4 rounded-lg border"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <Badge variant="default" className="font-mono">
+                              {rule.code}
+                            </Badge>
+                            <div className="flex gap-1">
+                              {rule.taxable && (
+                                <Badge
+                                  variant="destructive"
+                                  className="text-xs"
+                                >
+                                  Taxable
+                                </Badge>
+                              )}
+                              {rule.contributoryEFKA && (
+                                <Badge variant="secondary" className="text-xs">
+                                  EFKA
+                                </Badge>
+                              )}
+                              {rule.includedAPD && (
+                                <Badge variant="outline" className="text-xs">
+                                  APD
+                                </Badge>
+                              )}
+                            </div>
                           </div>
+                          <h4 className="font-semibold mb-1">{rule.name}</h4>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {rule.description}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            <strong>Calculation:</strong> Hours × hourly rate
+                            (base wage, no stacking)
+                          </p>
                         </div>
-                        <h4 className="font-semibold mb-1">{rule.name}</h4>
-                        <p className="text-sm text-gray-600 mb-2">{rule.description}</p>
-                        <p className="text-xs text-gray-500">
-                          <strong>Calculation:</strong> Hours × hourly rate (base wage, no stacking)
-                        </p>
-                      </div>
-                    ))}
-                    
-                    {earningsCodesData.premiums.filter(code => code.code === 'NIGHT_25').map((rule) => (
-                      <div key={rule.code} className="bg-white p-4 rounded-lg border">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="default" className="font-mono">{rule.code}</Badge>
-                          <div className="flex gap-1">
-                            {rule.taxable && <Badge variant="destructive" className="text-xs">Taxable</Badge>}
-                            {rule.contributoryEFKA && <Badge variant="secondary" className="text-xs">EFKA</Badge>}
-                            {rule.includedAPD && <Badge variant="outline" className="text-xs">APD</Badge>}
-                            {rule.stackable && <Badge variant="default" className="text-xs">Stackable</Badge>}
+                      ))}
+
+                    {earningsCodesData.premiums
+                      .filter(code => code.code === 'NIGHT_25')
+                      .map(rule => (
+                        <div
+                          key={rule.code}
+                          className="bg-white p-4 rounded-lg border"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <Badge variant="default" className="font-mono">
+                              {rule.code}
+                            </Badge>
+                            <div className="flex gap-1">
+                              {rule.taxable && (
+                                <Badge
+                                  variant="destructive"
+                                  className="text-xs"
+                                >
+                                  Taxable
+                                </Badge>
+                              )}
+                              {rule.contributoryEFKA && (
+                                <Badge variant="secondary" className="text-xs">
+                                  EFKA
+                                </Badge>
+                              )}
+                              {rule.includedAPD && (
+                                <Badge variant="outline" className="text-xs">
+                                  APD
+                                </Badge>
+                              )}
+                              {rule.stackable && (
+                                <Badge variant="default" className="text-xs">
+                                  Stackable
+                                </Badge>
+                              )}
+                            </div>
                           </div>
+                          <h4 className="font-semibold mb-1">{rule.name}</h4>
+                          <p className="text-sm text-gray-600 mb-2">
+                            {rule.description}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            <strong>Premium:</strong>{' '}
+                            {rule.premiumRate && rule.premiumRate * 100}% over
+                            hourly rate (22:00-06:00)
+                          </p>
+                          <p className="text-xs text-green-600 mt-1">
+                            ✓ Stackable with Sunday, holiday, or overtime
+                            premiums
+                          </p>
                         </div>
-                        <h4 className="font-semibold mb-1">{rule.name}</h4>
-                        <p className="text-sm text-gray-600 mb-2">{rule.description}</p>
-                        <p className="text-xs text-gray-500">
-                          <strong>Premium:</strong> {rule.premiumRate && (rule.premiumRate * 100)}% over hourly rate (22:00-06:00)
-                        </p>
-                        <p className="text-xs text-green-600 mt-1">
-                          ✓ Stackable with Sunday, holiday, or overtime premiums
-                        </p>
-                      </div>
-                    ))}
-                    
+                      ))}
+
                     {/* Greek Premium Codes Showcase */}
-                    {earningsCodesData.premiums.filter(code => ['SUNDAY_75', 'HOLIDAY_75', 'OT_TIER1_40', 'OT_TIER2_60'].includes(code.code)).map((rule) => (
-                      <div key={rule.code} className="bg-white p-4 rounded-lg border">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="default" className="font-mono text-xs">{rule.code}</Badge>
-                          <div className="flex gap-1">
-                            {rule.taxable && <Badge variant="destructive" className="text-xs">Tax</Badge>}
-                            {rule.contributoryEFKA && <Badge variant="secondary" className="text-xs">EFKA</Badge>}
-                            {rule.includedAPD && <Badge variant="outline" className="text-xs">APD</Badge>}
-                            {rule.stackable && <Badge variant="default" className="text-xs">Stack</Badge>}
+                    {earningsCodesData.premiums
+                      .filter(code =>
+                        [
+                          'SUNDAY_75',
+                          'HOLIDAY_75',
+                          'OT_TIER1_40',
+                          'OT_TIER2_60',
+                        ].includes(code.code)
+                      )
+                      .map(rule => (
+                        <div
+                          key={rule.code}
+                          className="bg-white p-4 rounded-lg border"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <Badge
+                              variant="default"
+                              className="font-mono text-xs"
+                            >
+                              {rule.code}
+                            </Badge>
+                            <div className="flex gap-1">
+                              {rule.taxable && (
+                                <Badge
+                                  variant="destructive"
+                                  className="text-xs"
+                                >
+                                  Tax
+                                </Badge>
+                              )}
+                              {rule.contributoryEFKA && (
+                                <Badge variant="secondary" className="text-xs">
+                                  EFKA
+                                </Badge>
+                              )}
+                              {rule.includedAPD && (
+                                <Badge variant="outline" className="text-xs">
+                                  APD
+                                </Badge>
+                              )}
+                              {rule.stackable && (
+                                <Badge variant="default" className="text-xs">
+                                  Stack
+                                </Badge>
+                              )}
+                            </div>
                           </div>
+                          <h4 className="font-semibold text-sm mb-1">
+                            {rule.name}
+                          </h4>
+                          <p className="text-xs text-gray-600 mb-2">
+                            {rule.description}
+                          </p>
+                          <p className="text-xs text-blue-600">
+                            <strong>Premium:</strong>{' '}
+                            {rule.premiumRate && rule.premiumRate * 100}%
+                          </p>
+                          {rule.code === 'SUNDAY_75' && (
+                            <p className="text-xs text-green-600 mt-1">
+                              ✓ Requires relevant work permit
+                            </p>
+                          )}
+                          {rule.code === 'HOLIDAY_75' && (
+                            <p className="text-xs text-green-600 mt-1">
+                              ✓ Public holiday hours premium
+                            </p>
+                          )}
                         </div>
-                        <h4 className="font-semibold text-sm mb-1">{rule.name}</h4>
-                        <p className="text-xs text-gray-600 mb-2">{rule.description}</p>
-                        <p className="text-xs text-blue-600">
-                          <strong>Premium:</strong> {rule.premiumRate && (rule.premiumRate * 100)}%
-                        </p>
-                        {rule.code === 'SUNDAY_75' && (
-                          <p className="text-xs text-green-600 mt-1">
-                            ✓ Requires relevant work permit
-                          </p>
-                        )}
-                        {rule.code === 'HOLIDAY_75' && (
-                          <p className="text-xs text-green-600 mt-1">
-                            ✓ Public holiday hours premium
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </CardContent>
               </Card>
@@ -297,98 +435,223 @@ export default function EarningsCodesDemoPage() {
               {/* Greek Bonuses & Allowances */}
               <Card className="border-green-200 bg-green-50">
                 <CardHeader>
-                  <CardTitle className="text-green-900">Greek Bonuses & Allowances</CardTitle>
+                  <CardTitle className="text-green-900">
+                    Greek Bonuses & Allowances
+                  </CardTitle>
                   <CardDescription className="text-green-800">
-                    Mandatory Greek bonuses with tenure-based calculations and special allowances
+                    Mandatory Greek bonuses with tenure-based calculations and
+                    special allowances
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-4">
-                    {earningsCodesData.bonuses && earningsCodesData.bonuses.filter(code => 
-                      ['BONUS_EASTER', 'BONUS_CHRISTMAS', 'ALLOWANCE_LEAVE'].includes(code.code)
-                    ).map((rule) => (
-                      <div key={rule.code} className="bg-white p-4 rounded-lg border">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="default" className="font-mono text-xs">{rule.code}</Badge>
-                          <div className="flex gap-1">
-                            {rule.taxable && <Badge variant="destructive" className="text-xs">Tax</Badge>}
-                            {rule.contributoryEFKA && <Badge variant="secondary" className="text-xs">EFKA</Badge>}
-                            {rule.includedAPD && <Badge variant="outline" className="text-xs">APD</Badge>}
-                            {!rule.stackable && <Badge variant="outline" className="text-xs bg-red-50">No Stack</Badge>}
+                    {earningsCodesData.bonuses &&
+                      earningsCodesData.bonuses
+                        .filter(code =>
+                          [
+                            'BONUS_EASTER',
+                            'BONUS_CHRISTMAS',
+                            'ALLOWANCE_LEAVE',
+                          ].includes(code.code)
+                        )
+                        .map(rule => (
+                          <div
+                            key={rule.code}
+                            className="bg-white p-4 rounded-lg border"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <Badge
+                                variant="default"
+                                className="font-mono text-xs"
+                              >
+                                {rule.code}
+                              </Badge>
+                              <div className="flex gap-1">
+                                {rule.taxable && (
+                                  <Badge
+                                    variant="destructive"
+                                    className="text-xs"
+                                  >
+                                    Tax
+                                  </Badge>
+                                )}
+                                {rule.contributoryEFKA && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    EFKA
+                                  </Badge>
+                                )}
+                                {rule.includedAPD && (
+                                  <Badge variant="outline" className="text-xs">
+                                    APD
+                                  </Badge>
+                                )}
+                                {!rule.stackable && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs bg-red-50"
+                                  >
+                                    No Stack
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <h4 className="font-semibold text-sm mb-1">
+                              {rule.name}
+                            </h4>
+                            <p className="text-xs text-gray-600 mb-2">
+                              {rule.description}
+                            </p>
+                            {rule.code === 'BONUS_EASTER' && (
+                              <p className="text-xs text-green-600 mt-1">
+                                ✓ Δώρο Πάσχα - Based on tenure, prorated
+                              </p>
+                            )}
+                            {rule.code === 'ALLOWANCE_LEAVE' && (
+                              <p className="text-xs text-orange-600 mt-1">
+                                ⚠️ Not stackable per Greek payroll law
+                              </p>
+                            )}
                           </div>
-                        </div>
-                        <h4 className="font-semibold text-sm mb-1">{rule.name}</h4>
-                        <p className="text-xs text-gray-600 mb-2">{rule.description}</p>
-                        {rule.code === 'BONUS_EASTER' && (
-                          <p className="text-xs text-green-600 mt-1">
-                            ✓ Δώρο Πάσχα - Based on tenure, prorated
-                          </p>
-                        )}
-                        {rule.code === 'ALLOWANCE_LEAVE' && (
-                          <p className="text-xs text-orange-600 mt-1">
-                            ⚠️ Not stackable per Greek payroll law
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                        ))}
 
                     {/* Special Allowances */}
-                    {earningsCodesData.allowances && earningsCodesData.allowances.filter(code => 
-                      ['TIPS_DISTRIBUTED', 'MEAL_VOUCHER', 'TRAVEL_PER_DIEM', 'SICK_EMP_50', 'SICK_EFKA', 'HOLIDAY_NOT_WORKED'].includes(code.code)
-                    ).map((rule) => (
-                      <div key={rule.code} className="bg-white p-4 rounded-lg border">
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge variant="outline" className="font-mono text-xs">{rule.code}</Badge>
-                          <div className="flex gap-1">
-                            {rule.taxable ? <Badge variant="destructive" className="text-xs">Tax</Badge> : <Badge variant="default" className="text-xs bg-green-100 text-green-800">Tax-Free</Badge>}
-                            {rule.contributoryEFKA ? <Badge variant="secondary" className="text-xs">EFKA</Badge> : <Badge variant="outline" className="text-xs bg-gray-100">No EFKA</Badge>}
-                            {rule.includedAPD ? <Badge variant="outline" className="text-xs">APD</Badge> : <Badge variant="outline" className="text-xs bg-gray-100">No APD</Badge>}
+                    {earningsCodesData.allowances &&
+                      earningsCodesData.allowances
+                        .filter(code =>
+                          [
+                            'TIPS_DISTRIBUTED',
+                            'MEAL_VOUCHER',
+                            'TRAVEL_PER_DIEM',
+                            'SICK_EMP_50',
+                            'SICK_EFKA',
+                            'HOLIDAY_NOT_WORKED',
+                          ].includes(code.code)
+                        )
+                        .map(rule => (
+                          <div
+                            key={rule.code}
+                            className="bg-white p-4 rounded-lg border"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <Badge
+                                variant="outline"
+                                className="font-mono text-xs"
+                              >
+                                {rule.code}
+                              </Badge>
+                              <div className="flex gap-1">
+                                {rule.taxable ? (
+                                  <Badge
+                                    variant="destructive"
+                                    className="text-xs"
+                                  >
+                                    Tax
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="default"
+                                    className="text-xs bg-green-100 text-green-800"
+                                  >
+                                    Tax-Free
+                                  </Badge>
+                                )}
+                                {rule.contributoryEFKA ? (
+                                  <Badge
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    EFKA
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs bg-gray-100"
+                                  >
+                                    No EFKA
+                                  </Badge>
+                                )}
+                                {rule.includedAPD ? (
+                                  <Badge variant="outline" className="text-xs">
+                                    APD
+                                  </Badge>
+                                ) : (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs bg-gray-100"
+                                  >
+                                    No APD
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <h4 className="font-semibold text-sm mb-1">
+                              {rule.name}
+                            </h4>
+                            <p className="text-xs text-gray-600 mb-2">
+                              {rule.description}
+                            </p>
+                            {rule.code === 'MEAL_VOUCHER' && (
+                              <p className="text-xs text-blue-600 mt-1">
+                                ✓ €6/day tax-free limit, automatic excess
+                                splitting
+                              </p>
+                            )}
+                            {rule.code === 'TIPS_DISTRIBUTED' && (
+                              <p className="text-xs text-purple-600 mt-1">
+                                ✓ Always taxable, EFKA configurable by role
+                              </p>
+                            )}
+                            {rule.code === 'TRAVEL_PER_DIEM' && (
+                              <p className="text-xs text-blue-600 mt-1">
+                                ✓ Within statutory limits, excess reclassified
+                              </p>
+                            )}
+                            {rule.code === 'SICK_EMP_50' && (
+                              <p className="text-xs text-orange-600 mt-1">
+                                ✓ First 3 days at 50%, EFKA offset after
+                              </p>
+                            )}
+                            {rule.code === 'SICK_EFKA' && (
+                              <p className="text-xs text-gray-600 mt-1">
+                                ⓘ Informational only - EFKA direct payment
+                              </p>
+                            )}
+                            {rule.code === 'HOLIDAY_NOT_WORKED' && (
+                              <p className="text-xs text-green-600 mt-1">
+                                ✓ Salaried employees daily wage entitlement
+                              </p>
+                            )}
                           </div>
-                        </div>
-                        <h4 className="font-semibold text-sm mb-1">{rule.name}</h4>
-                        <p className="text-xs text-gray-600 mb-2">{rule.description}</p>
-                        {rule.code === 'MEAL_VOUCHER' && (
-                          <p className="text-xs text-blue-600 mt-1">
-                            ✓ €6/day tax-free limit, automatic excess splitting
-                          </p>
-                        )}
-                        {rule.code === 'TIPS_DISTRIBUTED' && (
-                          <p className="text-xs text-purple-600 mt-1">
-                            ✓ Always taxable, EFKA configurable by role
-                          </p>
-                        )}
-                        {rule.code === 'TRAVEL_PER_DIEM' && (
-                          <p className="text-xs text-blue-600 mt-1">
-                            ✓ Within statutory limits, excess reclassified
-                          </p>
-                        )}
-                        {rule.code === 'SICK_EMP_50' && (
-                          <p className="text-xs text-orange-600 mt-1">
-                            ✓ First 3 days at 50%, EFKA offset after
-                          </p>
-                        )}
-                        {rule.code === 'SICK_EFKA' && (
-                          <p className="text-xs text-gray-600 mt-1">
-                            ⓘ Informational only - EFKA direct payment
-                          </p>
-                        )}
-                        {rule.code === 'HOLIDAY_NOT_WORKED' && (
-                          <p className="text-xs text-green-600 mt-1">
-                            ✓ Salaried employees daily wage entitlement
-                          </p>
-                        )}
-                      </div>
-                    ))}
+                        ))}
                   </div>
                 </CardContent>
               </Card>
 
               {/* All Categories */}
               {[
-                { title: "Premium Codes", data: earningsCodesData.premiums, color: "bg-yellow-50 border-yellow-200" },
-                { title: "Allowances", data: earningsCodesData.allowances, color: "bg-green-50 border-green-200" },
-                { title: "Bonuses", data: earningsCodesData.bonuses, color: "bg-purple-50 border-purple-200" },
-                { title: "Tips", data: earningsCodesData.tips, color: "bg-orange-50 border-orange-200" }
+                {
+                  title: 'Premium Codes',
+                  data: earningsCodesData.premiums,
+                  color: 'bg-yellow-50 border-yellow-200',
+                },
+                {
+                  title: 'Allowances',
+                  data: earningsCodesData.allowances,
+                  color: 'bg-green-50 border-green-200',
+                },
+                {
+                  title: 'Bonuses',
+                  data: earningsCodesData.bonuses,
+                  color: 'bg-purple-50 border-purple-200',
+                },
+                {
+                  title: 'Tips',
+                  data: earningsCodesData.tips,
+                  color: 'bg-orange-50 border-orange-200',
+                },
               ].map(category => (
                 <Card key={category.title} className={category.color}>
                   <CardHeader>
@@ -396,21 +659,48 @@ export default function EarningsCodesDemoPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {category.data.map((rule) => (
-                        <div key={rule.code} className="bg-white p-3 rounded border">
+                      {category.data.map(rule => (
+                        <div
+                          key={rule.code}
+                          className="bg-white p-3 rounded border"
+                        >
                           <div className="flex items-center justify-between mb-2">
-                            <Badge variant="outline" className="font-mono text-xs">{rule.code}</Badge>
+                            <Badge
+                              variant="outline"
+                              className="font-mono text-xs"
+                            >
+                              {rule.code}
+                            </Badge>
                             <div className="flex gap-1">
-                              {rule.taxable && <Badge variant="destructive" className="text-xs">Tax</Badge>}
-                              {rule.contributoryEFKA && <Badge variant="secondary" className="text-xs">EFKA</Badge>}
-                              {rule.stackable && <Badge variant="default" className="text-xs">Stack</Badge>}
+                              {rule.taxable && (
+                                <Badge
+                                  variant="destructive"
+                                  className="text-xs"
+                                >
+                                  Tax
+                                </Badge>
+                              )}
+                              {rule.contributoryEFKA && (
+                                <Badge variant="secondary" className="text-xs">
+                                  EFKA
+                                </Badge>
+                              )}
+                              {rule.stackable && (
+                                <Badge variant="default" className="text-xs">
+                                  Stack
+                                </Badge>
+                              )}
                             </div>
                           </div>
-                          <h5 className="font-medium text-sm mb-1">{rule.name}</h5>
-                          <p className="text-xs text-gray-600">{rule.description}</p>
+                          <h5 className="font-medium text-sm mb-1">
+                            {rule.name}
+                          </h5>
+                          <p className="text-xs text-gray-600">
+                            {rule.description}
+                          </p>
                           {rule.premiumRate && (
                             <p className="text-xs text-blue-600 mt-1">
-                              Premium: {(rule.premiumRate * 100)}%
+                              Premium: {rule.premiumRate * 100}%
                             </p>
                           )}
                         </div>
@@ -432,7 +722,8 @@ export default function EarningsCodesDemoPage() {
                 Code Stacking Validation
               </CardTitle>
               <CardDescription>
-                Test if earnings codes can be combined according to Greek payroll rules
+                Test if earnings codes can be combined according to Greek
+                payroll rules
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -442,22 +733,24 @@ export default function EarningsCodesDemoPage() {
                   <Input
                     id="primaryCode"
                     value={primaryCode}
-                    onChange={(e) => setPrimaryCode(e.target.value)}
+                    onChange={e => setPrimaryCode(e.target.value)}
                     placeholder="REG"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="stackedCodes">Stacked Codes (comma-separated)</Label>
+                  <Label htmlFor="stackedCodes">
+                    Stacked Codes (comma-separated)
+                  </Label>
                   <Input
                     id="stackedCodes"
                     value={stackedCodes}
-                    onChange={(e) => setStackedCodes(e.target.value)}
+                    onChange={e => setStackedCodes(e.target.value)}
                     placeholder="NIGHT_25,SUNDAY_75,OT_TIER1_40,HOLIDAY_75"
                   />
                 </div>
               </div>
 
-              <Button 
+              <Button
                 onClick={handleValidateStacking}
                 disabled={validateStacking.isPending}
                 className="w-full"
@@ -476,22 +769,30 @@ export default function EarningsCodesDemoPage() {
               </Button>
 
               {validateStacking.data && (
-                <div className={`p-4 rounded-lg ${validateStacking.data.valid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                <div
+                  className={`p-4 rounded-lg ${validateStacking.data.valid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}
+                >
                   <div className="flex items-center gap-2 mb-2">
                     {validateStacking.data.valid ? (
                       <CheckCircle className="h-5 w-5 text-green-600" />
                     ) : (
                       <AlertTriangle className="h-5 w-5 text-red-600" />
                     )}
-                    <span className={`font-medium ${validateStacking.data.valid ? 'text-green-900' : 'text-red-900'}`}>
-                      {validateStacking.data.valid ? 'Valid Stacking' : 'Invalid Stacking'}
+                    <span
+                      className={`font-medium ${validateStacking.data.valid ? 'text-green-900' : 'text-red-900'}`}
+                    >
+                      {validateStacking.data.valid
+                        ? 'Valid Stacking'
+                        : 'Invalid Stacking'}
                     </span>
                   </div>
                   {!validateStacking.data.valid && (
                     <ul className="text-sm text-red-800 space-y-1">
-                      {validateStacking.data.errors.map((error: string, index: number) => (
-                        <li key={index}>• {error}</li>
-                      ))}
+                      {validateStacking.data.errors.map(
+                        (error: string, index: number) => (
+                          <li key={index}>• {error}</li>
+                        )
+                      )}
                     </ul>
                   )}
                 </div>
@@ -516,12 +817,17 @@ export default function EarningsCodesDemoPage() {
               <div className="space-y-4">
                 <Label>Earnings Input</Label>
                 {earningsInput.map((earning, index) => (
-                  <div key={index} className="grid grid-cols-4 gap-2 p-3 bg-gray-50 rounded">
+                  <div
+                    key={index}
+                    className="grid grid-cols-4 gap-2 p-3 bg-gray-50 rounded"
+                  >
                     <div>
                       <Input
                         placeholder="Code"
                         value={earning.code}
-                        onChange={(e) => updateEarningsInput(index, 'code', e.target.value)}
+                        onChange={e =>
+                          updateEarningsInput(index, 'code', e.target.value)
+                        }
                       />
                     </div>
                     <div>
@@ -530,7 +836,13 @@ export default function EarningsCodesDemoPage() {
                         step="0.1"
                         placeholder="Hours"
                         value={earning.hours || ''}
-                        onChange={(e) => updateEarningsInput(index, 'hours', parseFloat(e.target.value) || 0)}
+                        onChange={e =>
+                          updateEarningsInput(
+                            index,
+                            'hours',
+                            parseFloat(e.target.value) || 0
+                          )
+                        }
                       />
                     </div>
                     <div>
@@ -539,7 +851,13 @@ export default function EarningsCodesDemoPage() {
                         step="0.01"
                         placeholder="Hourly Rate"
                         value={earning.hourlyRate || ''}
-                        onChange={(e) => updateEarningsInput(index, 'hourlyRate', parseFloat(e.target.value) || 0)}
+                        onChange={e =>
+                          updateEarningsInput(
+                            index,
+                            'hourlyRate',
+                            parseFloat(e.target.value) || 0
+                          )
+                        }
                       />
                     </div>
                     <div>
@@ -548,14 +866,20 @@ export default function EarningsCodesDemoPage() {
                         step="0.01"
                         placeholder="Fixed Amount"
                         value={earning.fixedAmount || ''}
-                        onChange={(e) => updateEarningsInput(index, 'fixedAmount', parseFloat(e.target.value) || undefined)}
+                        onChange={e =>
+                          updateEarningsInput(
+                            index,
+                            'fixedAmount',
+                            parseFloat(e.target.value) || undefined
+                          )
+                        }
                       />
                     </div>
                   </div>
                 ))}
               </div>
 
-              <Button 
+              <Button
                 onClick={handleCalculateEarnings}
                 disabled={calculateEarnings.isPending}
                 className="w-full"
@@ -579,19 +903,30 @@ export default function EarningsCodesDemoPage() {
                     <h4 className="font-semibold mb-3">Earnings Summary</h4>
                     <div className="grid grid-cols-4 gap-4 text-sm">
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-gray-900">€{calculateEarnings.data.totalGross.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-gray-900">
+                          €{calculateEarnings.data.totalGross.toFixed(2)}
+                        </p>
                         <p className="text-gray-600">Total Gross</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-red-600">€{calculateEarnings.data.taxableAmount.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-red-600">
+                          €{calculateEarnings.data.taxableAmount.toFixed(2)}
+                        </p>
                         <p className="text-gray-600">Taxable</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-blue-600">€{calculateEarnings.data.efkaContributoryAmount.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          €
+                          {calculateEarnings.data.efkaContributoryAmount.toFixed(
+                            2
+                          )}
+                        </p>
                         <p className="text-gray-600">EFKA Subject</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-purple-600">€{calculateEarnings.data.apdIncludedAmount.toFixed(2)}</p>
+                        <p className="text-2xl font-bold text-purple-600">
+                          €{calculateEarnings.data.apdIncludedAmount.toFixed(2)}
+                        </p>
                         <p className="text-gray-600">APD Included</p>
                       </div>
                     </div>
@@ -611,20 +946,47 @@ export default function EarningsCodesDemoPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {calculateEarnings.data.breakdown.map((item: any, index: number) => (
-                          <TableRow key={index}>
-                            <TableCell className="font-mono">{item.code}</TableCell>
-                            <TableCell>{item.name}</TableCell>
-                            <TableCell className="text-right font-medium">€{item.amount.toFixed(2)}</TableCell>
-                            <TableCell>
-                              <div className="flex gap-1">
-                                {item.taxable && <Badge variant="destructive" className="text-xs">Tax</Badge>}
-                                {item.contributoryEFKA && <Badge variant="secondary" className="text-xs">EFKA</Badge>}
-                                {item.includedAPD && <Badge variant="outline" className="text-xs">APD</Badge>}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {calculateEarnings.data.breakdown.map(
+                          (item: any, index: number) => (
+                            <TableRow key={index}>
+                              <TableCell className="font-mono">
+                                {item.code}
+                              </TableCell>
+                              <TableCell>{item.name}</TableCell>
+                              <TableCell className="text-right font-medium">
+                                €{item.amount.toFixed(2)}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-1">
+                                  {item.taxable && (
+                                    <Badge
+                                      variant="destructive"
+                                      className="text-xs"
+                                    >
+                                      Tax
+                                    </Badge>
+                                  )}
+                                  {item.contributoryEFKA && (
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs"
+                                    >
+                                      EFKA
+                                    </Badge>
+                                  )}
+                                  {item.includedAPD && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
+                                      APD
+                                    </Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        )}
                       </TableBody>
                     </Table>
                   </div>

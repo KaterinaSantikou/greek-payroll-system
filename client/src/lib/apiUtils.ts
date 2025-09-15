@@ -20,7 +20,7 @@ export function toRelativeApiUrl(url: string): string {
   if (url.startsWith('/')) {
     return url;
   }
-  
+
   // If it's an absolute URL, extract the path
   if (url.includes('://')) {
     try {
@@ -31,7 +31,7 @@ export function toRelativeApiUrl(url: string): string {
       return `/${url}`;
     }
   }
-  
+
   // Default: make it relative
   return `/${url}`;
 }

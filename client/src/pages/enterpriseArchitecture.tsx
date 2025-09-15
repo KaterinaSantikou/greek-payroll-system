@@ -3,21 +3,27 @@
  * Complete system demonstration with all components
  */
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { 
-  Smartphone, 
-  TabletSmartphone, 
-  Server, 
-  Database, 
-  Shield, 
-  BarChart3, 
-  Zap, 
-  GitBranch, 
-  Layers, 
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import {
+  Smartphone,
+  TabletSmartphone,
+  Server,
+  Database,
+  Shield,
+  BarChart3,
+  Zap,
+  GitBranch,
+  Layers,
   Network,
   Cloud,
   Lock,
@@ -31,8 +37,8 @@ import {
   FileText,
   Cpu,
   HardDrive,
-  Wifi
-} from "lucide-react";
+  Wifi,
+} from 'lucide-react';
 
 export default function EnterpriseArchitecture() {
   const [selectedComponent, setSelectedComponent] = useState('mobile-app');
@@ -41,11 +47,27 @@ export default function EnterpriseArchitecture() {
   const systemHealth = {
     mobileApp: { status: 'operational', uptime: 99.8, activeDevices: 847 },
     kioskApp: { status: 'operational', uptime: 99.9, activeDevices: 23 },
-    timeService: { status: 'operational', uptime: 99.7, throughput: '1.2k req/min' },
-    complianceConnector: { status: 'operational', uptime: 98.9, erganiSyncRate: 98.7 },
-    payrollConnector: { status: 'operational', uptime: 99.5, timesheetsProcessed: 2847 },
-    policyEngine: { status: 'operational', uptime: 99.9, rulesEvaluated: '45k/day' },
-    dataLake: { status: 'operational', uptime: 99.6, dataVolume: '2.3TB' }
+    timeService: {
+      status: 'operational',
+      uptime: 99.7,
+      throughput: '1.2k req/min',
+    },
+    complianceConnector: {
+      status: 'operational',
+      uptime: 98.9,
+      erganiSyncRate: 98.7,
+    },
+    payrollConnector: {
+      status: 'operational',
+      uptime: 99.5,
+      timesheetsProcessed: 2847,
+    },
+    policyEngine: {
+      status: 'operational',
+      uptime: 99.9,
+      rulesEvaluated: '45k/day',
+    },
+    dataLake: { status: 'operational', uptime: 99.6, dataVolume: '2.3TB' },
   };
 
   // Architecture components
@@ -62,9 +84,9 @@ export default function EnterpriseArchitecture() {
         'Offline cache with sync',
         'Device binding security',
         'Geofence validation',
-        'Real-time validation'
+        'Real-time validation',
       ],
-      metrics: systemHealth.mobileApp
+      metrics: systemHealth.mobileApp,
     },
     {
       id: 'kiosk-app',
@@ -78,9 +100,9 @@ export default function EnterpriseArchitecture() {
         'Enhanced offline support',
         'Integrity monitoring',
         'Biometric readers',
-        'Photo verification'
+        'Photo verification',
       ],
-      metrics: systemHealth.kioskApp
+      metrics: systemHealth.kioskApp,
     },
     {
       id: 'time-service',
@@ -94,9 +116,9 @@ export default function EnterpriseArchitecture() {
         'Geofence checks',
         'Policy evaluation',
         'Batch processing',
-        'Exception workflows'
+        'Exception workflows',
       ],
-      metrics: systemHealth.timeService
+      metrics: systemHealth.timeService,
     },
     {
       id: 'compliance-connector',
@@ -110,9 +132,9 @@ export default function EnterpriseArchitecture() {
         'Status ledger',
         'Rate limiting',
         'Digital signatures',
-        'Audit trails'
+        'Audit trails',
       ],
-      metrics: systemHealth.complianceConnector
+      metrics: systemHealth.complianceConnector,
     },
     {
       id: 'payroll-connector',
@@ -126,9 +148,9 @@ export default function EnterpriseArchitecture() {
         'Cost center allocation',
         'Compliance validation',
         'Batch export',
-        'Error handling'
+        'Error handling',
       ],
-      metrics: systemHealth.payrollConnector
+      metrics: systemHealth.payrollConnector,
     },
     {
       id: 'policy-engine',
@@ -142,9 +164,9 @@ export default function EnterpriseArchitecture() {
         'Property overrides',
         'Rule evaluation',
         'Exception handling',
-        'Dynamic updates'
+        'Dynamic updates',
       ],
-      metrics: systemHealth.policyEngine
+      metrics: systemHealth.policyEngine,
     },
     {
       id: 'data-lake',
@@ -158,21 +180,26 @@ export default function EnterpriseArchitecture() {
         'Real-time analytics',
         'Compliance reporting',
         'HR analytics',
-        'Operational metrics'
+        'Operational metrics',
       ],
-      metrics: systemHealth.dataLake
-    }
+      metrics: systemHealth.dataLake,
+    },
   ];
 
-  const selectedComponentData = architectureComponents.find(c => c.id === selectedComponent);
+  const selectedComponentData = architectureComponents.find(
+    c => c.id === selectedComponent
+  );
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Enterprise Architecture Overview</h1>
+          <h1 className="text-3xl font-bold">
+            Enterprise Architecture Overview
+          </h1>
           <p className="text-gray-600 mt-2">
-            Complete PayrollSync system architecture with all components and integrations
+            Complete PayrollSync system architecture with all components and
+            integrations
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -194,7 +221,6 @@ export default function EnterpriseArchitecture() {
         {/* System Overview */}
         <TabsContent value="overview">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
             {/* Architecture Diagram */}
             <Card className="lg:col-span-2">
               <CardHeader>
@@ -203,16 +229,18 @@ export default function EnterpriseArchitecture() {
                   System Architecture
                 </CardTitle>
                 <CardDescription>
-                  Enterprise-grade time capture and compliance system for Greek hotel operations
+                  Enterprise-grade time capture and compliance system for Greek
+                  hotel operations
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  
                   {/* Client Layer */}
                   <div className="space-y-3">
-                    <h4 className="font-medium text-center mb-3">Client Layer</h4>
-                    
+                    <h4 className="font-medium text-center mb-3">
+                      Client Layer
+                    </h4>
+
                     <div className="border rounded-lg p-3 bg-blue-50">
                       <div className="flex items-center gap-2 mb-2">
                         <Smartphone className="h-4 w-4 text-blue-600" />
@@ -236,7 +264,9 @@ export default function EnterpriseArchitecture() {
                     <div className="border rounded-lg p-3 bg-gray-50">
                       <div className="flex items-center gap-2 mb-2">
                         <Wifi className="h-4 w-4 text-gray-600" />
-                        <span className="font-medium text-sm">Web Interface</span>
+                        <span className="font-medium text-sm">
+                          Web Interface
+                        </span>
                       </div>
                       <div className="text-xs text-gray-600">
                         Manager Controls • Reports • Admin
@@ -246,12 +276,16 @@ export default function EnterpriseArchitecture() {
 
                   {/* Service Layer */}
                   <div className="space-y-3">
-                    <h4 className="font-medium text-center mb-3">Service Layer</h4>
-                    
+                    <h4 className="font-medium text-center mb-3">
+                      Service Layer
+                    </h4>
+
                     <div className="border rounded-lg p-3 bg-purple-50">
                       <div className="flex items-center gap-2 mb-2">
                         <Server className="h-4 w-4 text-purple-600" />
-                        <span className="font-medium text-sm">Time Service</span>
+                        <span className="font-medium text-sm">
+                          Time Service
+                        </span>
                       </div>
                       <div className="text-xs text-gray-600">
                         Event Ingestion • Validation • Policy
@@ -281,7 +315,9 @@ export default function EnterpriseArchitecture() {
                     <div className="border rounded-lg p-3 bg-yellow-50">
                       <div className="flex items-center gap-2 mb-2">
                         <Settings className="h-4 w-4 text-yellow-600" />
-                        <span className="font-medium text-sm">Policy Engine</span>
+                        <span className="font-medium text-sm">
+                          Policy Engine
+                        </span>
                       </div>
                       <div className="text-xs text-gray-600">
                         Greek Law • CBA • Property Rules
@@ -292,7 +328,7 @@ export default function EnterpriseArchitecture() {
                   {/* Data Layer */}
                   <div className="space-y-3">
                     <h4 className="font-medium text-center mb-3">Data Layer</h4>
-                    
+
                     <div className="border rounded-lg p-3 bg-teal-50">
                       <div className="flex items-center gap-2 mb-2">
                         <Database className="h-4 w-4 text-teal-600" />
@@ -316,7 +352,9 @@ export default function EnterpriseArchitecture() {
                     <div className="border rounded-lg p-3 bg-blue-50">
                       <div className="flex items-center gap-2 mb-2">
                         <Cloud className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium text-sm">Object Storage</span>
+                        <span className="font-medium text-sm">
+                          Object Storage
+                        </span>
                       </div>
                       <div className="text-xs text-gray-600">
                         Documents • Photos • Attachments
@@ -326,7 +364,9 @@ export default function EnterpriseArchitecture() {
                     <div className="border rounded-lg p-3 bg-green-50">
                       <div className="flex items-center gap-2 mb-2">
                         <BarChart3 className="h-4 w-4 text-green-600" />
-                        <span className="font-medium text-sm">BI Warehouse</span>
+                        <span className="font-medium text-sm">
+                          BI Warehouse
+                        </span>
                       </div>
                       <div className="text-xs text-gray-600">
                         Reports • Dashboards • Analytics
@@ -362,9 +402,12 @@ export default function EnterpriseArchitecture() {
                     'Geofence validation',
                     'Exception workflows',
                     'Cost center allocation',
-                    'Real-time analytics'
+                    'Real-time analytics',
                   ].map((feature, index) => (
-                    <div key={index} className="flex items-center gap-2 text-sm">
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 text-sm"
+                    >
                       <CheckCircle className="h-3 w-3 text-green-600" />
                       <span>{feature}</span>
                     </div>
@@ -390,7 +433,7 @@ export default function EnterpriseArchitecture() {
                     </div>
                     <Progress value={99.2} className="h-2" />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>ERGANI Sync Rate</span>
@@ -398,7 +441,7 @@ export default function EnterpriseArchitecture() {
                     </div>
                     <Progress value={98.7} className="h-2" />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Compliance Score</span>
@@ -406,7 +449,7 @@ export default function EnterpriseArchitecture() {
                     </div>
                     <Progress value={96.8} className="h-2" />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between text-sm mb-1">
                       <span>Data Processing</span>
@@ -442,7 +485,6 @@ export default function EnterpriseArchitecture() {
         {/* Components Detail */}
         <TabsContent value="components">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
             {/* Component List */}
             <Card>
               <CardHeader>
@@ -452,14 +494,14 @@ export default function EnterpriseArchitecture() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                {architectureComponents.map((component) => {
+                {architectureComponents.map(component => {
                   const Icon = component.icon;
                   return (
                     <div
                       key={component.id}
                       className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                        selectedComponent === component.id 
-                          ? 'border-blue-500 bg-blue-50' 
+                        selectedComponent === component.id
+                          ? 'border-blue-500 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                       onClick={() => setSelectedComponent(component.id)}
@@ -467,8 +509,12 @@ export default function EnterpriseArchitecture() {
                       <div className="flex items-center gap-2">
                         <Icon className="h-4 w-4" />
                         <div className="flex-1">
-                          <div className="font-medium text-sm">{component.name}</div>
-                          <div className="text-xs text-gray-600">{component.description}</div>
+                          <div className="font-medium text-sm">
+                            {component.name}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {component.description}
+                          </div>
                         </div>
                         <Badge className={component.color}>
                           {component.metrics.status}
@@ -484,7 +530,9 @@ export default function EnterpriseArchitecture() {
             <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  {selectedComponentData && <selectedComponentData.icon className="h-5 w-5" />}
+                  {selectedComponentData && (
+                    <selectedComponentData.icon className="h-5 w-5" />
+                  )}
                   {selectedComponentData?.name}
                 </CardTitle>
                 <CardDescription>
@@ -492,18 +540,21 @@ export default function EnterpriseArchitecture() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                
                 {/* Status */}
                 <div>
                   <h4 className="font-medium mb-3">System Status</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span className="text-sm">Status: {selectedComponentData?.metrics.status}</span>
+                      <span className="text-sm">
+                        Status: {selectedComponentData?.metrics.status}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Activity className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm">Uptime: {selectedComponentData?.metrics.uptime}%</span>
+                      <span className="text-sm">
+                        Uptime: {selectedComponentData?.metrics.uptime}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -513,7 +564,10 @@ export default function EnterpriseArchitecture() {
                   <h4 className="font-medium mb-3">Key Features</h4>
                   <div className="grid grid-cols-2 gap-2">
                     {selectedComponentData?.features.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 text-sm"
+                      >
                         <CheckCircle className="h-3 w-3 text-green-600" />
                         <span>{feature}</span>
                       </div>
@@ -568,50 +622,54 @@ export default function EnterpriseArchitecture() {
                 Data Flow Architecture
               </CardTitle>
               <CardDescription>
-                End-to-end data processing from punch events to payroll and compliance
+                End-to-end data processing from punch events to payroll and
+                compliance
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                
                 {/* Flow Steps */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   {[
-                    { 
-                      step: '1', 
-                      title: 'Event Capture', 
-                      description: 'Mobile/Kiosk punch events with offline support',
+                    {
+                      step: '1',
+                      title: 'Event Capture',
+                      description:
+                        'Mobile/Kiosk punch events with offline support',
                       icon: Smartphone,
-                      color: 'bg-blue-100 text-blue-800'
+                      color: 'bg-blue-100 text-blue-800',
                     },
-                    { 
-                      step: '2', 
-                      title: 'Validation', 
-                      description: 'Real-time policy engine and geofence validation',
+                    {
+                      step: '2',
+                      title: 'Validation',
+                      description:
+                        'Real-time policy engine and geofence validation',
                       icon: Shield,
-                      color: 'bg-orange-100 text-orange-800'
+                      color: 'bg-orange-100 text-orange-800',
                     },
-                    { 
-                      step: '3', 
-                      title: 'Storage', 
-                      description: 'Raw events to data lake, processed to database',
+                    {
+                      step: '3',
+                      title: 'Storage',
+                      description:
+                        'Raw events to data lake, processed to database',
                       icon: Database,
-                      color: 'bg-teal-100 text-teal-800'
+                      color: 'bg-teal-100 text-teal-800',
                     },
-                    { 
-                      step: '4', 
-                      title: 'Processing', 
-                      description: 'Timesheet generation and compliance reporting',
+                    {
+                      step: '4',
+                      title: 'Processing',
+                      description:
+                        'Timesheet generation and compliance reporting',
                       icon: Cpu,
-                      color: 'bg-purple-100 text-purple-800'
+                      color: 'bg-purple-100 text-purple-800',
                     },
-                    { 
-                      step: '5', 
-                      title: 'Integration', 
+                    {
+                      step: '5',
+                      title: 'Integration',
                       description: 'ERGANI submission and payroll export',
                       icon: Network,
-                      color: 'bg-green-100 text-green-800'
-                    }
+                      color: 'bg-green-100 text-green-800',
+                    },
                   ].map((flow, index) => {
                     const Icon = flow.icon;
                     return (
@@ -620,7 +678,9 @@ export default function EnterpriseArchitecture() {
                           <Badge className={flow.color}>Step {flow.step}</Badge>
                           <Icon className="h-8 w-8 mx-auto text-gray-600" />
                           <h4 className="font-medium">{flow.title}</h4>
-                          <p className="text-xs text-gray-600">{flow.description}</p>
+                          <p className="text-xs text-gray-600">
+                            {flow.description}
+                          </p>
                         </div>
                         {index < 4 && (
                           <div className="hidden md:block mt-2">
@@ -634,16 +694,42 @@ export default function EnterpriseArchitecture() {
 
                 {/* Data Processing Pipeline */}
                 <div className="border rounded-lg p-4">
-                  <h4 className="font-medium mb-3">Real-time Processing Pipeline</h4>
+                  <h4 className="font-medium mb-3">
+                    Real-time Processing Pipeline
+                  </h4>
                   <div className="space-y-2 text-sm">
-                    <div>1. <strong>Event Ingestion:</strong> Time events received via REST API</div>
-                    <div>2. <strong>Validation Engine:</strong> Policy rules evaluated in real-time</div>
-                    <div>3. <strong>Geofence Check:</strong> Location validation against property boundaries</div>
-                    <div>4. <strong>Data Lake Storage:</strong> Raw events stored for audit and analytics</div>
-                    <div>5. <strong>Timesheet Processing:</strong> Events aggregated into daily/weekly timesheets</div>
-                    <div>6. <strong>Compliance Submission:</strong> ERGANI II reporting with retry logic</div>
-                    <div>7. <strong>Payroll Integration:</strong> Normalized timesheets exported to payroll system</div>
-                    <div>8. <strong>Analytics Update:</strong> Real-time dashboards and compliance metrics</div>
+                    <div>
+                      1. <strong>Event Ingestion:</strong> Time events received
+                      via REST API
+                    </div>
+                    <div>
+                      2. <strong>Validation Engine:</strong> Policy rules
+                      evaluated in real-time
+                    </div>
+                    <div>
+                      3. <strong>Geofence Check:</strong> Location validation
+                      against property boundaries
+                    </div>
+                    <div>
+                      4. <strong>Data Lake Storage:</strong> Raw events stored
+                      for audit and analytics
+                    </div>
+                    <div>
+                      5. <strong>Timesheet Processing:</strong> Events
+                      aggregated into daily/weekly timesheets
+                    </div>
+                    <div>
+                      6. <strong>Compliance Submission:</strong> ERGANI II
+                      reporting with retry logic
+                    </div>
+                    <div>
+                      7. <strong>Payroll Integration:</strong> Normalized
+                      timesheets exported to payroll system
+                    </div>
+                    <div>
+                      8. <strong>Analytics Update:</strong> Real-time dashboards
+                      and compliance metrics
+                    </div>
                   </div>
                 </div>
               </div>
@@ -654,7 +740,6 @@ export default function EnterpriseArchitecture() {
         {/* Monitoring */}
         <TabsContent value="monitoring">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
             {/* System Health */}
             <Card>
               <CardHeader>
@@ -664,13 +749,18 @@ export default function EnterpriseArchitecture() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {architectureComponents.map((component) => {
+                {architectureComponents.map(component => {
                   const Icon = component.icon;
                   return (
-                    <div key={component.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div
+                      key={component.id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div className="flex items-center gap-2">
                         <Icon className="h-4 w-4" />
-                        <span className="font-medium text-sm">{component.name}</span>
+                        <span className="font-medium text-sm">
+                          {component.name}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className={component.color}>
@@ -718,15 +808,21 @@ export default function EnterpriseArchitecture() {
                     <div className="flex items-start gap-2 text-sm">
                       <AlertTriangle className="h-3 w-3 text-yellow-600 mt-0.5" />
                       <div>
-                        <div>High overtime hours detected in Reception dept</div>
-                        <div className="text-xs text-gray-500">2 minutes ago</div>
+                        <div>
+                          High overtime hours detected in Reception dept
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          2 minutes ago
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-start gap-2 text-sm">
                       <CheckCircle className="h-3 w-3 text-green-600 mt-0.5" />
                       <div>
                         <div>ERGANI sync resumed after temporary failure</div>
-                        <div className="text-xs text-gray-500">15 minutes ago</div>
+                        <div className="text-xs text-gray-500">
+                          15 minutes ago
+                        </div>
                       </div>
                     </div>
                   </div>

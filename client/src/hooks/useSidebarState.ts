@@ -15,7 +15,9 @@ interface SidebarStateHook {
 
 export function useSidebarState(): SidebarStateHook {
   const [sidebarState, setSidebarState] = useState<SidebarState>('expanded');
-  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>('desktop');
+  const [screenSize, setScreenSize] = useState<'mobile' | 'tablet' | 'desktop'>(
+    'desktop'
+  );
 
   // Detect screen size changes
   useEffect(() => {
@@ -38,7 +40,10 @@ export function useSidebarState(): SidebarStateHook {
   // Load saved state from localStorage
   useEffect(() => {
     const savedState = localStorage.getItem(`sidebar-state-${screenSize}`);
-    if (savedState && ['expanded', 'collapsed', 'hidden'].includes(savedState)) {
+    if (
+      savedState &&
+      ['expanded', 'collapsed', 'hidden'].includes(savedState)
+    ) {
       setSidebarState(savedState as SidebarState);
     } else {
       // Set default states based on screen size

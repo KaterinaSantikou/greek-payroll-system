@@ -4,12 +4,24 @@
  */
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -33,7 +45,7 @@ import {
   Mail,
   Globe,
   Eye,
-  EyeOff
+  EyeOff,
 } from 'lucide-react';
 
 interface CompanyInfo {
@@ -43,23 +55,23 @@ interface CompanyInfo {
   taxisCode: string;
   afmNumber: string;
   doyOffice: string;
-  
+
   // Address Information
   address: string;
   city: string;
   postalCode: string;
   prefecture: string;
-  
+
   // Contact Information
   phone: string;
   email: string;
   website: string;
-  
+
   // Business Information
   industry: string;
   employeeCount: string;
   foundedYear: string;
-  
+
   // ERGANI II Credentials
   erganiUsername: string;
   erganiPassword: string;
@@ -83,8 +95,12 @@ export default function CompanySetup() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'testing' | 'success' | 'error'>('idle');
-  const [discoveredEmployees, setDiscoveredEmployees] = useState<DiscoveredEmployee[]>([]);
+  const [connectionStatus, setConnectionStatus] = useState<
+    'idle' | 'testing' | 'success' | 'error'
+  >('idle');
+  const [discoveredEmployees, setDiscoveredEmployees] = useState<
+    DiscoveredEmployee[]
+  >([]);
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
 
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
@@ -105,7 +121,7 @@ export default function CompanySetup() {
     foundedYear: '',
     erganiUsername: '',
     erganiPassword: '',
-    erganiEnvironment: 'production'
+    erganiEnvironment: 'production',
   });
 
   const totalSteps = 4;
@@ -121,13 +137,26 @@ export default function CompanySetup() {
     { value: 'transport', label: 'Μεταφορές' },
     { value: 'food', label: 'Εστίαση' },
     { value: 'technology', label: 'Τεχνολογία' },
-    { value: 'other', label: 'Άλλο' }
+    { value: 'other', label: 'Άλλο' },
   ];
 
   const prefectures = [
-    'Αττική', 'Θεσσαλονίκη', 'Ηράκλειο', 'Πάτρα', 'Λάρισα', 'Βόλος', 
-    'Ιωάννινα', 'Καβάλα', 'Χανιά', 'Ρόδος', 'Σέρρες', 'Κατερίνη', 
-    'Τρίκαλα', 'Καλαμάτα', 'Κοζάνη', 'Άλλη'
+    'Αττική',
+    'Θεσσαλονίκη',
+    'Ηράκλειο',
+    'Πάτρα',
+    'Λάρισα',
+    'Βόλος',
+    'Ιωάννινα',
+    'Καβάλα',
+    'Χανιά',
+    'Ρόδος',
+    'Σέρρες',
+    'Κατερίνη',
+    'Τρίκαλα',
+    'Καλαμάτα',
+    'Κοζάνη',
+    'Άλλη',
   ];
 
   const handleInputChange = (field: keyof CompanyInfo, value: string) => {
@@ -154,7 +183,7 @@ export default function CompanySetup() {
           position: 'Υπεύθυνη Λογιστηρίου',
           department: 'Διοίκηση',
           status: 'active',
-          lastErganiUpdate: '2024-01-20T10:30:00Z'
+          lastErganiUpdate: '2024-01-20T10:30:00Z',
         },
         {
           id: '2',
@@ -166,7 +195,7 @@ export default function CompanySetup() {
           position: 'Τεχνικός Υποστήριξης',
           department: 'IT',
           status: 'active',
-          lastErganiUpdate: '2024-01-20T10:30:00Z'
+          lastErganiUpdate: '2024-01-20T10:30:00Z',
         },
         {
           id: '3',
@@ -178,7 +207,7 @@ export default function CompanySetup() {
           position: 'Υπάλληλος Πωλήσεων',
           department: 'Πωλήσεις',
           status: 'active',
-          lastErganiUpdate: '2024-01-19T14:15:00Z'
+          lastErganiUpdate: '2024-01-19T14:15:00Z',
         },
         {
           id: '4',
@@ -190,12 +219,14 @@ export default function CompanySetup() {
           position: 'Διευθυντής Πωλήσεων',
           department: 'Πωλήσεις',
           status: 'terminated',
-          lastErganiUpdate: '2023-12-31T23:59:00Z'
-        }
+          lastErganiUpdate: '2023-12-31T23:59:00Z',
+        },
       ];
 
       setDiscoveredEmployees(mockEmployees);
-      setSelectedEmployees(mockEmployees.filter(emp => emp.status === 'active').map(emp => emp.id));
+      setSelectedEmployees(
+        mockEmployees.filter(emp => emp.status === 'active').map(emp => emp.id)
+      );
       setConnectionStatus('success');
     } catch (error) {
       setConnectionStatus('error');
@@ -218,11 +249,11 @@ export default function CompanySetup() {
 
   const handleFinish = async () => {
     setIsLoading(true);
-    
+
     try {
       // Simulate company setup and employee import
       await new Promise(resolve => setTimeout(resolve, 3000));
-      
+
       // Redirect to dashboard
       window.location.href = '/dashboard';
     } catch (error) {
@@ -233,8 +264,8 @@ export default function CompanySetup() {
   };
 
   const toggleEmployeeSelection = (employeeId: string) => {
-    setSelectedEmployees(prev => 
-      prev.includes(employeeId) 
+    setSelectedEmployees(prev =>
+      prev.includes(employeeId)
         ? prev.filter(id => id !== employeeId)
         : [...prev, employeeId]
     );
@@ -252,14 +283,17 @@ export default function CompanySetup() {
             <h1 className="text-2xl font-bold">Ρύθμιση Εταιρείας</h1>
           </div>
           <p className="text-gray-600 dark:text-gray-400">
-            Ολοκληρώστε τα στοιχεία της εταιρείας σας για σύνδεση με το ΕΡΓΑΝΗ ΙΙ
+            Ολοκληρώστε τα στοιχεία της εταιρείας σας για σύνδεση με το ΕΡΓΑΝΗ
+            ΙΙ
           </p>
         </div>
 
         {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between text-sm text-gray-600 mb-2">
-            <span>Βήμα {currentStep} από {totalSteps}</span>
+            <span>
+              Βήμα {currentStep} από {totalSteps}
+            </span>
             <span>{Math.round(progressPercentage)}% ολοκληρωμένο</span>
           </div>
           <Progress value={progressPercentage} className="h-2" />
@@ -271,8 +305,12 @@ export default function CompanySetup() {
               <div className="space-y-6">
                 <div className="text-center mb-6">
                   <Building2 className="h-12 w-12 text-blue-600 mx-auto mb-3" />
-                  <h2 className="text-xl font-semibold">Βασικές Πληροφορίες Εταιρείας</h2>
-                  <p className="text-gray-600">Συμπληρώστε τα βασικά στοιχεία της εταιρείας σας</p>
+                  <h2 className="text-xl font-semibold">
+                    Βασικές Πληροφορίες Εταιρείας
+                  </h2>
+                  <p className="text-gray-600">
+                    Συμπληρώστε τα βασικά στοιχεία της εταιρείας σας
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,7 +319,7 @@ export default function CompanySetup() {
                     <Input
                       id="name"
                       value={companyInfo.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      onChange={e => handleInputChange('name', e.target.value)}
                       placeholder="π.χ. ACME Α.Ε."
                       required
                     />
@@ -292,7 +330,9 @@ export default function CompanySetup() {
                     <Input
                       id="legalName"
                       value={companyInfo.legalName}
-                      onChange={(e) => handleInputChange('legalName', e.target.value)}
+                      onChange={e =>
+                        handleInputChange('legalName', e.target.value)
+                      }
                       placeholder="π.χ. ACME ΑΝΩΝΥΜΗ ΕΤΑΙΡΕΙΑ"
                       required
                     />
@@ -303,7 +343,9 @@ export default function CompanySetup() {
                     <Input
                       id="afmNumber"
                       value={companyInfo.afmNumber}
-                      onChange={(e) => handleInputChange('afmNumber', e.target.value)}
+                      onChange={e =>
+                        handleInputChange('afmNumber', e.target.value)
+                      }
                       placeholder="123456789"
                       maxLength={9}
                       required
@@ -315,7 +357,9 @@ export default function CompanySetup() {
                     <Input
                       id="doyOffice"
                       value={companyInfo.doyOffice}
-                      onChange={(e) => handleInputChange('doyOffice', e.target.value)}
+                      onChange={e =>
+                        handleInputChange('doyOffice', e.target.value)
+                      }
                       placeholder="π.χ. Α' ΑΘΗΝΩΝ"
                       required
                     />
@@ -323,13 +367,21 @@ export default function CompanySetup() {
 
                   <div>
                     <Label htmlFor="industry">Κλάδος Δραστηριότητας *</Label>
-                    <Select value={companyInfo.industry} onValueChange={(value) => handleInputChange('industry', value)}>
+                    <Select
+                      value={companyInfo.industry}
+                      onValueChange={value =>
+                        handleInputChange('industry', value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Επιλέξτε κλάδο" />
                       </SelectTrigger>
                       <SelectContent>
                         {industries.map(industry => (
-                          <SelectItem key={industry.value} value={industry.value}>
+                          <SelectItem
+                            key={industry.value}
+                            value={industry.value}
+                          >
                             {industry.label}
                           </SelectItem>
                         ))}
@@ -339,7 +391,12 @@ export default function CompanySetup() {
 
                   <div>
                     <Label htmlFor="employeeCount">Αριθμός Εργαζομένων *</Label>
-                    <Select value={companyInfo.employeeCount} onValueChange={(value) => handleInputChange('employeeCount', value)}>
+                    <Select
+                      value={companyInfo.employeeCount}
+                      onValueChange={value =>
+                        handleInputChange('employeeCount', value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Επιλέξτε εύρος" />
                       </SelectTrigger>
@@ -347,7 +404,9 @@ export default function CompanySetup() {
                         <SelectItem value="1-5">1-5 εργαζόμενοι</SelectItem>
                         <SelectItem value="6-20">6-20 εργαζόμενοι</SelectItem>
                         <SelectItem value="21-50">21-50 εργαζόμενοι</SelectItem>
-                        <SelectItem value="51-100">51-100 εργαζόμενοι</SelectItem>
+                        <SelectItem value="51-100">
+                          51-100 εργαζόμενοι
+                        </SelectItem>
                         <SelectItem value="100+">100+ εργαζόμενοι</SelectItem>
                       </SelectContent>
                     </Select>
@@ -360,7 +419,9 @@ export default function CompanySetup() {
                     <Input
                       id="address"
                       value={companyInfo.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
+                      onChange={e =>
+                        handleInputChange('address', e.target.value)
+                      }
                       placeholder="π.χ. Λεωφ. Συγγρού 123"
                       required
                     />
@@ -371,7 +432,7 @@ export default function CompanySetup() {
                     <Input
                       id="city"
                       value={companyInfo.city}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      onChange={e => handleInputChange('city', e.target.value)}
                       placeholder="π.χ. Αθήνα"
                       required
                     />
@@ -382,7 +443,9 @@ export default function CompanySetup() {
                     <Input
                       id="postalCode"
                       value={companyInfo.postalCode}
-                      onChange={(e) => handleInputChange('postalCode', e.target.value)}
+                      onChange={e =>
+                        handleInputChange('postalCode', e.target.value)
+                      }
                       placeholder="π.χ. 11741"
                       maxLength={5}
                       required
@@ -391,7 +454,12 @@ export default function CompanySetup() {
 
                   <div>
                     <Label htmlFor="prefecture">Νομός *</Label>
-                    <Select value={companyInfo.prefecture} onValueChange={(value) => handleInputChange('prefecture', value)}>
+                    <Select
+                      value={companyInfo.prefecture}
+                      onValueChange={value =>
+                        handleInputChange('prefecture', value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Επιλέξτε νομό" />
                       </SelectTrigger>
@@ -412,7 +480,7 @@ export default function CompanySetup() {
                     <Input
                       id="phone"
                       value={companyInfo.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      onChange={e => handleInputChange('phone', e.target.value)}
                       placeholder="210 1234567"
                       required
                     />
@@ -424,7 +492,7 @@ export default function CompanySetup() {
                       id="email"
                       type="email"
                       value={companyInfo.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      onChange={e => handleInputChange('email', e.target.value)}
                       placeholder="info@company.gr"
                       required
                     />
@@ -435,7 +503,9 @@ export default function CompanySetup() {
                     <Input
                       id="website"
                       value={companyInfo.website}
-                      onChange={(e) => handleInputChange('website', e.target.value)}
+                      onChange={e =>
+                        handleInputChange('website', e.target.value)
+                      }
                       placeholder="www.company.gr"
                     />
                   </div>
@@ -447,15 +517,21 @@ export default function CompanySetup() {
               <div className="space-y-6">
                 <div className="text-center mb-6">
                   <Shield className="h-12 w-12 text-blue-600 mx-auto mb-3" />
-                  <h2 className="text-xl font-semibold">TAXIS Κωδικοί & ΕΡΓΑΝΗ ΙΙ</h2>
-                  <p className="text-gray-600">Συνδέστε την εταιρεία σας με το σύστημα ΕΡΓΑΝΗ ΙΙ</p>
+                  <h2 className="text-xl font-semibold">
+                    TAXIS Κωδικοί & ΕΡΓΑΝΗ ΙΙ
+                  </h2>
+                  <p className="text-gray-600">
+                    Συνδέστε την εταιρεία σας με το σύστημα ΕΡΓΑΝΗ ΙΙ
+                  </p>
                 </div>
 
                 <Alert>
                   <Shield className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Ασφαλής Σύνδεση:</strong> Τα διαπιστευτήριά σας κρυπτογραφούνται και αποθηκεύονται με ασφάλεια. 
-                    Χρησιμοποιούνται μόνο για τη σύνδεση με τα επίσημα συστήματα του Υπουργείου Εργασίας.
+                    <strong>Ασφαλής Σύνδεση:</strong> Τα διαπιστευτήριά σας
+                    κρυπτογραφούνται και αποθηκεύονται με ασφάλεια.
+                    Χρησιμοποιούνται μόνο για τη σύνδεση με τα επίσημα συστήματα
+                    του Υπουργείου Εργασίας.
                   </AlertDescription>
                 </Alert>
 
@@ -465,13 +541,16 @@ export default function CompanySetup() {
                     <Input
                       id="taxisCode"
                       value={companyInfo.taxisCode}
-                      onChange={(e) => handleInputChange('taxisCode', e.target.value)}
+                      onChange={e =>
+                        handleInputChange('taxisCode', e.target.value)
+                      }
                       placeholder="π.χ. 1234567890123"
                       maxLength={13}
                       required
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Ο 13-ψήφιος κωδικός που χρησιμοποιείτε στο TAXIS για τις δηλώσεις ΕΡΓΑΝΗ ΙΙ
+                      Ο 13-ψήφιος κωδικός που χρησιμοποιείτε στο TAXIS για τις
+                      δηλώσεις ΕΡΓΑΝΗ ΙΙ
                     </p>
                   </div>
 
@@ -480,7 +559,9 @@ export default function CompanySetup() {
                     <Input
                       id="erganiUsername"
                       value={companyInfo.erganiUsername}
-                      onChange={(e) => handleInputChange('erganiUsername', e.target.value)}
+                      onChange={e =>
+                        handleInputChange('erganiUsername', e.target.value)
+                      }
                       placeholder="username"
                       required
                     />
@@ -493,7 +574,9 @@ export default function CompanySetup() {
                         id="erganiPassword"
                         type={showPassword ? 'text' : 'password'}
                         value={companyInfo.erganiPassword}
-                        onChange={(e) => handleInputChange('erganiPassword', e.target.value)}
+                        onChange={e =>
+                          handleInputChange('erganiPassword', e.target.value)
+                        }
                         placeholder="••••••••"
                         required
                       />
@@ -504,24 +587,40 @@ export default function CompanySetup() {
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
                       </Button>
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor="erganiEnvironment">Περιβάλλον ΕΡΓΑΝΗ ΙΙ</Label>
-                    <Select value={companyInfo.erganiEnvironment} onValueChange={(value: 'production' | 'testing') => handleInputChange('erganiEnvironment', value)}>
+                    <Label htmlFor="erganiEnvironment">
+                      Περιβάλλον ΕΡΓΑΝΗ ΙΙ
+                    </Label>
+                    <Select
+                      value={companyInfo.erganiEnvironment}
+                      onValueChange={(value: 'production' | 'testing') =>
+                        handleInputChange('erganiEnvironment', value)
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="production">Παραγωγή (Production)</SelectItem>
-                        <SelectItem value="testing">Δοκιμαστικό (Testing)</SelectItem>
+                        <SelectItem value="production">
+                          Παραγωγή (Production)
+                        </SelectItem>
+                        <SelectItem value="testing">
+                          Δοκιμαστικό (Testing)
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                     <p className="text-sm text-gray-500 mt-1">
-                      Επιλέξτε "Δοκιμαστικό" μόνο αν χρησιμοποιείτε το δοκιμαστικό περιβάλλον του ΕΡΓΑΝΗ ΙΙ
+                      Επιλέξτε "Δοκιμαστικό" μόνο αν χρησιμοποιείτε το
+                      δοκιμαστικό περιβάλλον του ΕΡΓΑΝΗ ΙΙ
                     </p>
                   </div>
                 </div>
@@ -529,7 +628,12 @@ export default function CompanySetup() {
                 <div className="border-t pt-4">
                   <Button
                     onClick={testErganiConnection}
-                    disabled={!companyInfo.taxisCode || !companyInfo.erganiUsername || !companyInfo.erganiPassword || isLoading}
+                    disabled={
+                      !companyInfo.taxisCode ||
+                      !companyInfo.erganiUsername ||
+                      !companyInfo.erganiPassword ||
+                      isLoading
+                    }
                     className="w-full"
                   >
                     {isLoading ? (
@@ -549,8 +653,9 @@ export default function CompanySetup() {
                     <Alert className="mt-4 border-green-200 bg-green-50">
                       <CheckCircle className="h-4 w-4 text-green-600" />
                       <AlertDescription className="text-green-800">
-                        <strong>Επιτυχής Σύνδεση!</strong> Η σύνδεση με το ΕΡΓΑΝΗ ΙΙ ολοκληρώθηκε με επιτυχία. 
-                        Βρέθηκαν {discoveredEmployees.length} εργαζόμενοι.
+                        <strong>Επιτυχής Σύνδεση!</strong> Η σύνδεση με το
+                        ΕΡΓΑΝΗ ΙΙ ολοκληρώθηκε με επιτυχία. Βρέθηκαν{' '}
+                        {discoveredEmployees.length} εργαζόμενοι.
                       </AlertDescription>
                     </Alert>
                   )}
@@ -559,8 +664,9 @@ export default function CompanySetup() {
                     <Alert className="mt-4 border-red-200 bg-red-50">
                       <AlertCircle className="h-4 w-4 text-red-600" />
                       <AlertDescription className="text-red-800">
-                        <strong>Σφάλμα Σύνδεσης!</strong> Δεν ήταν δυνατή η σύνδεση με το ΕΡΓΑΝΗ ΙΙ. 
-                        Ελέγξτε τα διαπιστευτήρια και δοκιμάστε ξανά.
+                        <strong>Σφάλμα Σύνδεσης!</strong> Δεν ήταν δυνατή η
+                        σύνδεση με το ΕΡΓΑΝΗ ΙΙ. Ελέγξτε τα διαπιστευτήρια και
+                        δοκιμάστε ξανά.
                       </AlertDescription>
                     </Alert>
                   )}
@@ -572,9 +678,12 @@ export default function CompanySetup() {
               <div className="space-y-6">
                 <div className="text-center mb-6">
                   <Users className="h-12 w-12 text-blue-600 mx-auto mb-3" />
-                  <h2 className="text-xl font-semibold">Εργαζόμενοι από ΕΡΓΑΝΗ ΙΙ</h2>
+                  <h2 className="text-xl font-semibold">
+                    Εργαζόμενοι από ΕΡΓΑΝΗ ΙΙ
+                  </h2>
                   <p className="text-gray-600">
-                    Βρέθηκαν {discoveredEmployees.length} εργαζόμενοι στο σύστημα ΕΡΓΑΝΗ ΙΙ
+                    Βρέθηκαν {discoveredEmployees.length} εργαζόμενοι στο
+                    σύστημα ΕΡΓΑΝΗ ΙΙ
                   </p>
                 </div>
 
@@ -583,24 +692,32 @@ export default function CompanySetup() {
                     <Alert>
                       <Database className="h-4 w-4" />
                       <AlertDescription>
-                        <strong>Αυτόματη Ανίχνευση:</strong> Οι παρακάτω εργαζόμενοι βρέθηκαν στο σύστημα ΕΡΓΑΝΗ ΙΙ 
-                        και θα εισαχθούν αυτόματα στο PayrollSync. Μπορείτε να επιλέξετε ποιους θέλετε να συμπεριλάβετε.
+                        <strong>Αυτόματη Ανίχνευση:</strong> Οι παρακάτω
+                        εργαζόμενοι βρέθηκαν στο σύστημα ΕΡΓΑΝΗ ΙΙ και θα
+                        εισαχθούν αυτόματα στο PayrollSync. Μπορείτε να
+                        επιλέξετε ποιους θέλετε να συμπεριλάβετε.
                       </AlertDescription>
                     </Alert>
 
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-medium">Επιλογή Εργαζομένων</h3>
+                        <h3 className="text-lg font-medium">
+                          Επιλογή Εργαζομένων
+                        </h3>
                         <div className="space-x-2">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
-                            onClick={() => setSelectedEmployees(discoveredEmployees.map(emp => emp.id))}
+                            onClick={() =>
+                              setSelectedEmployees(
+                                discoveredEmployees.map(emp => emp.id)
+                              )
+                            }
                           >
                             Επιλογή Όλων
                           </Button>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => setSelectedEmployees([])}
                           >
@@ -614,41 +731,68 @@ export default function CompanySetup() {
                           <div
                             key={employee.id}
                             className={`border rounded-lg p-4 transition-colors ${
-                              selectedEmployees.includes(employee.id) 
-                                ? 'border-blue-300 bg-blue-50 dark:bg-blue-950/20' 
+                              selectedEmployees.includes(employee.id)
+                                ? 'border-blue-300 bg-blue-50 dark:bg-blue-950/20'
                                 : 'border-gray-200 hover:border-gray-300'
                             }`}
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex items-start space-x-3">
                                 <Checkbox
-                                  checked={selectedEmployees.includes(employee.id)}
-                                  onCheckedChange={() => toggleEmployeeSelection(employee.id)}
+                                  checked={selectedEmployees.includes(
+                                    employee.id
+                                  )}
+                                  onCheckedChange={() =>
+                                    toggleEmployeeSelection(employee.id)
+                                  }
                                 />
                                 <div className="flex-1">
                                   <div className="flex items-center space-x-2 mb-2">
                                     <h4 className="font-medium">
                                       {employee.firstName} {employee.lastName}
                                     </h4>
-                                    <Badge 
-                                      variant={employee.status === 'active' ? 'default' : 
-                                              employee.status === 'terminated' ? 'destructive' : 'secondary'}
+                                    <Badge
+                                      variant={
+                                        employee.status === 'active'
+                                          ? 'default'
+                                          : employee.status === 'terminated'
+                                            ? 'destructive'
+                                            : 'secondary'
+                                      }
                                     >
-                                      {employee.status === 'active' ? 'Ενεργός' :
-                                       employee.status === 'terminated' ? 'Απολυμένος' : 'Αναστολή'}
+                                      {employee.status === 'active'
+                                        ? 'Ενεργός'
+                                        : employee.status === 'terminated'
+                                          ? 'Απολυμένος'
+                                          : 'Αναστολή'}
                                     </Badge>
                                   </div>
-                                  
+
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                                    <div><strong>Θέση:</strong> {employee.position}</div>
-                                    <div><strong>Τμήμα:</strong> {employee.department}</div>
-                                    <div><strong>Έναρξη:</strong> {new Date(employee.startDate).toLocaleDateString('el-GR')}</div>
-                                    <div><strong>A.Φ.Μ.:</strong> {employee.afm}</div>
+                                    <div>
+                                      <strong>Θέση:</strong> {employee.position}
+                                    </div>
+                                    <div>
+                                      <strong>Τμήμα:</strong>{' '}
+                                      {employee.department}
+                                    </div>
+                                    <div>
+                                      <strong>Έναρξη:</strong>{' '}
+                                      {new Date(
+                                        employee.startDate
+                                      ).toLocaleDateString('el-GR')}
+                                    </div>
+                                    <div>
+                                      <strong>A.Φ.Μ.:</strong> {employee.afm}
+                                    </div>
                                   </div>
-                                  
+
                                   <div className="flex items-center text-xs text-gray-500 mt-2">
                                     <Clock className="h-3 w-3 mr-1" />
-                                    Τελευταία ενημέρωση ΕΡΓΑΝΗ ΙΙ: {new Date(employee.lastErganiUpdate).toLocaleString('el-GR')}
+                                    Τελευταία ενημέρωση ΕΡΓΑΝΗ ΙΙ:{' '}
+                                    {new Date(
+                                      employee.lastErganiUpdate
+                                    ).toLocaleString('el-GR')}
                                   </div>
                                 </div>
                               </div>
@@ -663,22 +807,34 @@ export default function CompanySetup() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
                           <span className="text-gray-600">Συνολικοί:</span>
-                          <span className="ml-2 font-medium">{discoveredEmployees.length}</span>
+                          <span className="ml-2 font-medium">
+                            {discoveredEmployees.length}
+                          </span>
                         </div>
                         <div>
                           <span className="text-gray-600">Επιλεγμένοι:</span>
-                          <span className="ml-2 font-medium text-blue-600">{selectedEmployees.length}</span>
+                          <span className="ml-2 font-medium text-blue-600">
+                            {selectedEmployees.length}
+                          </span>
                         </div>
                         <div>
                           <span className="text-gray-600">Ενεργοί:</span>
                           <span className="ml-2 font-medium text-green-600">
-                            {discoveredEmployees.filter(emp => emp.status === 'active').length}
+                            {
+                              discoveredEmployees.filter(
+                                emp => emp.status === 'active'
+                              ).length
+                            }
                           </span>
                         </div>
                         <div>
                           <span className="text-gray-600">Απολυμένοι:</span>
                           <span className="ml-2 font-medium text-red-600">
-                            {discoveredEmployees.filter(emp => emp.status === 'terminated').length}
+                            {
+                              discoveredEmployees.filter(
+                                emp => emp.status === 'terminated'
+                              ).length
+                            }
                           </span>
                         </div>
                       </div>
@@ -688,8 +844,9 @@ export default function CompanySetup() {
                   <Alert>
                     <Users className="h-4 w-4" />
                     <AlertDescription>
-                      Δεν βρέθηκαν εργαζόμενοι στο σύστημα ΕΡΓΑΝΗ ΙΙ. Μπορείτε να προσθέσετε εργαζόμενους 
-                      μετά την ολοκλήρωση της εγκατάστασης.
+                      Δεν βρέθηκαν εργαζόμενοι στο σύστημα ΕΡΓΑΝΗ ΙΙ. Μπορείτε
+                      να προσθέσετε εργαζόμενους μετά την ολοκλήρωση της
+                      εγκατάστασης.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -700,15 +857,21 @@ export default function CompanySetup() {
               <div className="space-y-6">
                 <div className="text-center mb-6">
                   <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-3" />
-                  <h2 className="text-xl font-semibold">Επιβεβαίωση Εγκατάστασης</h2>
-                  <p className="text-gray-600">Ελέγξτε τις ρυθμίσεις πριν την ολοκλήρωση</p>
+                  <h2 className="text-xl font-semibold">
+                    Επιβεβαίωση Εγκατάστασης
+                  </h2>
+                  <p className="text-gray-600">
+                    Ελέγξτε τις ρυθμίσεις πριν την ολοκλήρωση
+                  </p>
                 </div>
 
                 <div className="space-y-6">
                   {/* Company Summary */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Στοιχεία Εταιρείας</CardTitle>
+                      <CardTitle className="text-lg">
+                        Στοιχεία Εταιρείας
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -723,12 +886,18 @@ export default function CompanySetup() {
                         <div>
                           <span className="font-medium">Κλάδος:</span>
                           <span className="ml-2">
-                            {industries.find(ind => ind.value === companyInfo.industry)?.label}
+                            {
+                              industries.find(
+                                ind => ind.value === companyInfo.industry
+                              )?.label
+                            }
                           </span>
                         </div>
                         <div>
                           <span className="font-medium">Εργαζόμενοι:</span>
-                          <span className="ml-2">{companyInfo.employeeCount}</span>
+                          <span className="ml-2">
+                            {companyInfo.employeeCount}
+                          </span>
                         </div>
                         <div>
                           <span className="font-medium">Πόλη:</span>
@@ -745,16 +914,26 @@ export default function CompanySetup() {
                   {/* ERGANI Connection */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Σύνδεση ΕΡΓΑΝΗ ΙΙ</CardTitle>
+                      <CardTitle className="text-lg">
+                        Σύνδεση ΕΡΓΑΝΗ ΙΙ
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center space-x-2">
                         <CheckCircle className="h-5 w-5 text-green-600" />
-                        <span>Επιτυχής σύνδεση με TAXIS κωδικό: {companyInfo.taxisCode}</span>
+                        <span>
+                          Επιτυχής σύνδεση με TAXIS κωδικό:{' '}
+                          {companyInfo.taxisCode}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2 mt-2">
                         <CheckCircle className="h-5 w-5 text-green-600" />
-                        <span>Περιβάλλον: {companyInfo.erganiEnvironment === 'production' ? 'Παραγωγή' : 'Δοκιμαστικό'}</span>
+                        <span>
+                          Περιβάλλον:{' '}
+                          {companyInfo.erganiEnvironment === 'production'
+                            ? 'Παραγωγή'
+                            : 'Δοκιμαστικό'}
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
@@ -763,17 +942,21 @@ export default function CompanySetup() {
                   {discoveredEmployees.length > 0 && (
                     <Card>
                       <CardHeader>
-                        <CardTitle className="text-lg">Εισαγωγή Εργαζομένων</CardTitle>
+                        <CardTitle className="text-lg">
+                          Εισαγωγή Εργαζομένων
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center space-x-2">
                           <Users className="h-5 w-5 text-blue-600" />
                           <span>
-                            Θα εισαχθούν {selectedEmployees.length} από {discoveredEmployees.length} εργαζόμενοι
+                            Θα εισαχθούν {selectedEmployees.length} από{' '}
+                            {discoveredEmployees.length} εργαζόμενοι
                           </span>
                         </div>
                         <div className="text-sm text-gray-600 mt-2">
-                          Όλα τα στοιχεία θα συγχρονιστούν αυτόματα από το ΕΡΓΑΝΗ ΙΙ
+                          Όλα τα στοιχεία θα συγχρονιστούν αυτόματα από το
+                          ΕΡΓΑΝΗ ΙΙ
                         </div>
                       </CardContent>
                     </Card>
@@ -782,8 +965,9 @@ export default function CompanySetup() {
                   <Alert>
                     <Shield className="h-4 w-4" />
                     <AlertDescription>
-                      <strong>Αυτόματος Συγχρονισμός:</strong> Το σύστημα θα συγχρονίζεται καθημερινά με το ΕΡΓΑΝΗ ΙΙ 
-                      για ενημερώσεις εργαζομένων, νέες προσλήψεις και τερματισμούς συμβολαίων.
+                      <strong>Αυτόματος Συγχρονισμός:</strong> Το σύστημα θα
+                      συγχρονίζεται καθημερινά με το ΕΡΓΑΝΗ ΙΙ για ενημερώσεις
+                      εργαζομένων, νέες προσλήψεις και τερματισμούς συμβολαίων.
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -805,7 +989,10 @@ export default function CompanySetup() {
                 <Button
                   onClick={handleNext}
                   disabled={
-                    (currentStep === 1 && (!companyInfo.name || !companyInfo.afmNumber || !companyInfo.industry)) ||
+                    (currentStep === 1 &&
+                      (!companyInfo.name ||
+                        !companyInfo.afmNumber ||
+                        !companyInfo.industry)) ||
                     (currentStep === 2 && connectionStatus !== 'success')
                   }
                 >

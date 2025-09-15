@@ -1,19 +1,25 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { 
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import {
   Calendar as CalendarIcon,
-  Users, 
+  Users,
   Home,
   Utensils,
   DollarSign,
@@ -28,12 +34,12 @@ import {
   BarChart3,
   Zap,
   Target,
-  CheckCircle
-} from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { apiRequest } from "@/lib/queryClient";
-import { format } from "date-fns";
+  CheckCircle,
+} from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { isUnauthorizedError } from '@/lib/authUtils';
+import { apiRequest } from '@/lib/queryClient';
+import { format } from 'date-fns';
 
 interface SeasonalityDashboard {
   currentSeason: {
@@ -91,44 +97,50 @@ interface TipPoolAnalytics {
 export default function HotelEnhancementsPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedProperty, setSelectedProperty] = useState("default");
-  const [activeSeasonId, setActiveSeasonId] = useState("summer_2025");
+  const [selectedProperty, setSelectedProperty] = useState('default');
+  const [activeSeasonId, setActiveSeasonId] = useState('summer_2025');
 
   // Fetch Seasonality Analytics
-  const { data: seasonalData, isLoading: seasonalLoading } = useQuery<SeasonalityDashboard>({
-    queryKey: [`/api/hotel-enhancements/seasonal-analytics/${selectedProperty}`],
-    retry: false,
-    onError: (error: Error) => {
-      // if (isUnauthorizedError(error)) {
-      //   toast({
-      //     title: "Unauthorized",
-      //     description: "You are logged out. Logging in again...",
-      //     variant: "destructive",
-      //   });
-      //   setTimeout(() => {
-      //     window.location.href = "/api/login";
-      //   }, 500);
-      // }
-    },
-  });
+  const { data: seasonalData, isLoading: seasonalLoading } =
+    useQuery<SeasonalityDashboard>({
+      queryKey: [
+        `/api/hotel-enhancements/seasonal-analytics/${selectedProperty}`,
+      ],
+      retry: false,
+      onError: (error: Error) => {
+        // if (isUnauthorizedError(error)) {
+        //   toast({
+        //     title: "Unauthorized",
+        //     description: "You are logged out. Logging in again...",
+        //     variant: "destructive",
+        //   });
+        //   setTimeout(() => {
+        //     window.location.href = "/api/login";
+        //   }, 500);
+        // }
+      },
+    });
 
   // Fetch Tip Pool Analytics
-  const { data: tipPoolData, isLoading: tipPoolLoading } = useQuery<TipPoolAnalytics>({
-    queryKey: [`/api/hotel-enhancements/tip-pool-analytics/${selectedProperty}`],
-    retry: false,
-    onError: (error: Error) => {
-      // if (isUnauthorizedError(error)) {
-      //   toast({
-      //     title: "Unauthorized",
-      //     description: "You are logged out. Logging in again...",
-      //     variant: "destructive",
-      //   });
-      //   setTimeout(() => {
-      //     window.location.href = "/api/login";
-      //   }, 500);
-      // }
-    },
-  });
+  const { data: tipPoolData, isLoading: tipPoolLoading } =
+    useQuery<TipPoolAnalytics>({
+      queryKey: [
+        `/api/hotel-enhancements/tip-pool-analytics/${selectedProperty}`,
+      ],
+      retry: false,
+      onError: (error: Error) => {
+        // if (isUnauthorizedError(error)) {
+        //   toast({
+        //     title: "Unauthorized",
+        //     description: "You are logged out. Logging in again...",
+        //     variant: "destructive",
+        //   });
+        //   setTimeout(() => {
+        //     window.location.href = "/api/login";
+        //   }, 500);
+        // }
+      },
+    });
 
   // Create Batch Hiring Campaign
   const batchHiringMutation = useMutation({
@@ -140,10 +152,12 @@ export default function HotelEnhancementsPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Batch hiring campaign created successfully",
+        title: 'Success',
+        description: 'Batch hiring campaign created successfully',
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/hotel-enhancements/seasonal-analytics`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/hotel-enhancements/seasonal-analytics`],
+      });
     },
     onError: (error: Error) => {
       // if (isUnauthorizedError(error)) {
@@ -158,9 +172,9 @@ export default function HotelEnhancementsPage() {
       //   return;
       // }
       toast({
-        title: "Error",
-        description: "Failed to create batch hiring campaign",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to create batch hiring campaign',
+        variant: 'destructive',
       });
     },
   });
@@ -175,10 +189,12 @@ export default function HotelEnhancementsPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Tip pool configuration updated successfully",
+        title: 'Success',
+        description: 'Tip pool configuration updated successfully',
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/hotel-enhancements/tip-pool-analytics`] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/hotel-enhancements/tip-pool-analytics`],
+      });
     },
     onError: (error: Error) => {
       // if (isUnauthorizedError(error)) {
@@ -193,19 +209,23 @@ export default function HotelEnhancementsPage() {
       //   return;
       // }
       toast({
-        title: "Error",
-        description: "Failed to configure tip pool",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to configure tip pool',
+        variant: 'destructive',
       });
     },
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'planning': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'planning':
+        return 'bg-blue-100 text-blue-800';
+      case 'completed':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -218,15 +238,15 @@ export default function HotelEnhancementsPage() {
           department: 'Housekeeping',
           position: 'Room Attendant',
           targetCount: 25,
-          priorityLevel: 'high'
+          priorityLevel: 'high',
         },
         {
           department: 'F&B Service',
           position: 'Server',
           targetCount: 20,
-          priorityLevel: 'high'
-        }
-      ]
+          priorityLevel: 'high',
+        },
+      ],
     };
     batchHiringMutation.mutate(campaignData);
   };
@@ -239,7 +259,8 @@ export default function HotelEnhancementsPage() {
             Hotel-Specific Enhancements
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Seasonality toolkit, accommodation & meal allowances, tip pooling, and split-shift costing
+            Seasonality toolkit, accommodation & meal allowances, tip pooling,
+            and split-shift costing
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -285,238 +306,338 @@ export default function HotelEnhancementsPage() {
             <div className="flex items-center justify-center h-32">
               <RefreshCw className="h-8 w-8 animate-spin" />
             </div>
-          ) : seasonalData && (
-            <>
-              {/* Current Season Overview */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <CalendarIcon className="h-5 w-5" />
-                      Current Season: {seasonalData.currentSeason.name}
-                    </CardTitle>
-                    <Badge className={getStatusColor(seasonalData.currentSeason.status)}>
-                      {seasonalData.currentSeason.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Days Remaining</p>
-                      <p className="text-2xl font-bold text-blue-600">{seasonalData.currentSeason.daysRemaining}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Staffing Progress</p>
-                      <p className="text-2xl font-bold text-green-600">{seasonalData.currentSeason.staffingProgress.toFixed(1)}%</p>
-                      <Progress value={seasonalData.currentSeason.staffingProgress} className="mt-2" />
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Current Staff</p>
-                      <p className="text-2xl font-bold">{seasonalData.metrics.staffingLevels.current}</p>
-                      <p className="text-xs text-gray-500">Target: {seasonalData.metrics.staffingLevels.target}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Rehire Success</p>
-                      <p className="text-2xl font-bold text-purple-600">{seasonalData.metrics.rehireSuccess.rate.toFixed(1)}%</p>
-                      <p className="text-xs text-gray-500">{seasonalData.metrics.rehireSuccess.totalReturning} returning</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Batch Hiring & Mass Renewals */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          ) : (
+            seasonalData && (
+              <>
+                {/* Current Season Overview */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      Batch Hiring Campaign
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <CalendarIcon className="h-5 w-5" />
+                        Current Season: {seasonalData.currentSeason.name}
+                      </CardTitle>
+                      <Badge
+                        className={getStatusColor(
+                          seasonalData.currentSeason.status
+                        )}
+                      >
+                        {seasonalData.currentSeason.status}
+                      </Badge>
+                    </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-600 dark:text-gray-400">Target Positions</p>
-                        <p className="font-medium">53 positions</p>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Days Remaining
+                        </p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {seasonalData.currentSeason.daysRemaining}
+                        </p>
                       </div>
-                      <div>
-                        <p className="text-gray-600 dark:text-gray-400">Automated Screening</p>
-                        <p className="font-medium text-green-600">Enabled</p>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Staffing Progress
+                        </p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {seasonalData.currentSeason.staffingProgress.toFixed(
+                            1
+                          )}
+                          %
+                        </p>
+                        <Progress
+                          value={seasonalData.currentSeason.staffingProgress}
+                          className="mt-2"
+                        />
                       </div>
-                      <div>
-                        <p className="text-gray-600 dark:text-gray-400">Bulk Onboarding</p>
-                        <p className="font-medium text-green-600">Ready</p>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Current Staff
+                        </p>
+                        <p className="text-2xl font-bold">
+                          {seasonalData.metrics.staffingLevels.current}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Target: {seasonalData.metrics.staffingLevels.target}
+                        </p>
                       </div>
-                      <div>
-                        <p className="text-gray-600 dark:text-gray-400">Priority Departments</p>
-                        <p className="font-medium">Housekeeping, F&B</p>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Rehire Success
+                        </p>
+                        <p className="text-2xl font-bold text-purple-600">
+                          {seasonalData.metrics.rehireSuccess.rate.toFixed(1)}%
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {seasonalData.metrics.rehireSuccess.totalReturning}{' '}
+                          returning
+                        </p>
                       </div>
                     </div>
-                    <Button 
-                      onClick={handleBatchHiring}
-                      disabled={batchHiringMutation.isPending}
-                      className="w-full"
-                    >
-                      {batchHiringMutation.isPending ? (
-                        <>
-                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                          Launching Campaign...
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Launch Hiring Campaign
-                        </>
-                      )}
-                    </Button>
                   </CardContent>
                 </Card>
 
+                {/* Batch Hiring & Mass Renewals */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        Batch Hiring Campaign
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            Target Positions
+                          </p>
+                          <p className="font-medium">53 positions</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            Automated Screening
+                          </p>
+                          <p className="font-medium text-green-600">Enabled</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            Bulk Onboarding
+                          </p>
+                          <p className="font-medium text-green-600">Ready</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            Priority Departments
+                          </p>
+                          <p className="font-medium">Housekeeping, F&B</p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={handleBatchHiring}
+                        disabled={batchHiringMutation.isPending}
+                        className="w-full"
+                      >
+                        {batchHiringMutation.isPending ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            Launching Campaign...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Launch Hiring Campaign
+                          </>
+                        )}
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Award className="h-5 w-5" />
+                        Mass Contract Renewals
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            Eligible Employees
+                          </p>
+                          <p className="font-medium">
+                            {seasonalData.metrics.rehireSuccess.totalReturning}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            Performance Threshold
+                          </p>
+                          <p className="font-medium">3.5/5.0</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            Wage Increase
+                          </p>
+                          <p className="font-medium text-green-600">+5.0%</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600 dark:text-gray-400">
+                            Bonus Eligibility
+                          </p>
+                          <p className="font-medium text-blue-600">Included</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" className="w-full">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Configure Renewals
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Seniority Carry-Over */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Award className="h-5 w-5" />
-                      Mass Contract Renewals
+                      <Target className="h-5 w-5" />
+                      Seniority Carry-Over Rules
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-600 dark:text-gray-400">Eligible Employees</p>
-                        <p className="font-medium">{seasonalData.metrics.rehireSuccess.totalReturning}</p>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="border rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Badge className="bg-blue-100 text-blue-800">
+                            Standard
+                          </Badge>
+                          <h3 className="font-semibold">Regular Seasonal</h3>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Carry-over Period:
+                            </span>
+                            <span className="font-medium">24 months</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Multiplier:
+                            </span>
+                            <span className="font-medium">1.2x</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Benefits:
+                            </span>
+                            <span className="font-medium">Standard</span>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-gray-600 dark:text-gray-400">Performance Threshold</p>
-                        <p className="font-medium">3.5/5.0</p>
+
+                      <div className="border rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Badge className="bg-purple-100 text-purple-800">
+                            Veteran
+                          </Badge>
+                          <h3 className="font-semibold">Veteran Seasonal</h3>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Min Seasons:
+                            </span>
+                            <span className="font-medium">3+</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Multiplier:
+                            </span>
+                            <span className="font-medium">1.15x</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Privileges:
+                            </span>
+                            <span className="font-medium">Priority</span>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-gray-600 dark:text-gray-400">Wage Increase</p>
-                        <p className="font-medium text-green-600">+5.0%</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600 dark:text-gray-400">Bonus Eligibility</p>
-                        <p className="font-medium text-blue-600">Included</p>
+
+                      <div className="border rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Badge className="bg-gold-100 text-gold-800">
+                            Expert
+                          </Badge>
+                          <h3 className="font-semibold">Expert Seasonal</h3>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Min Seasons:
+                            </span>
+                            <span className="font-medium">5+</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Multiplier:
+                            </span>
+                            <span className="font-medium">1.25x</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600 dark:text-gray-400">
+                              Privileges:
+                            </span>
+                            <span className="font-medium">Lead Roles</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <Button variant="outline" className="w-full">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configure Renewals
-                    </Button>
                   </CardContent>
                 </Card>
-              </div>
 
-              {/* Seniority Carry-Over */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    Seniority Carry-Over Rules
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Badge className="bg-blue-100 text-blue-800">Standard</Badge>
-                        <h3 className="font-semibold">Regular Seasonal</h3>
+                {/* Cost Efficiency Metrics */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <DollarSign className="h-5 w-5" />
+                      Seasonal Cost Efficiency
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Seasonal Labor
+                        </p>
+                        <p className="text-xl font-bold">
+                          €
+                          {seasonalData.metrics.costEfficiency.seasonalLabor.toLocaleString()}
+                        </p>
                       </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Carry-over Period:</span>
-                          <span className="font-medium">24 months</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Multiplier:</span>
-                          <span className="font-medium">1.2x</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Benefits:</span>
-                          <span className="font-medium">Standard</span>
-                        </div>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Accommodation
+                        </p>
+                        <p className="text-xl font-bold">
+                          €
+                          {seasonalData.metrics.costEfficiency.accommodation.toLocaleString()}
+                        </p>
                       </div>
-                    </div>
-
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Badge className="bg-purple-100 text-purple-800">Veteran</Badge>
-                        <h3 className="font-semibold">Veteran Seasonal</h3>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Meals
+                        </p>
+                        <p className="text-xl font-bold">
+                          €
+                          {seasonalData.metrics.costEfficiency.meals.toLocaleString()}
+                        </p>
                       </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Min Seasons:</span>
-                          <span className="font-medium">3+</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Multiplier:</span>
-                          <span className="font-medium">1.15x</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Privileges:</span>
-                          <span className="font-medium">Priority</span>
-                        </div>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Tips
+                        </p>
+                        <p className="text-xl font-bold">
+                          €
+                          {seasonalData.metrics.costEfficiency.tips.toLocaleString()}
+                        </p>
                       </div>
-                    </div>
-
-                    <div className="border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Badge className="bg-gold-100 text-gold-800">Expert</Badge>
-                        <h3 className="font-semibold">Expert Seasonal</h3>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Min Seasons:</span>
-                          <span className="font-medium">5+</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Multiplier:</span>
-                          <span className="font-medium">1.25x</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600 dark:text-gray-400">Privileges:</span>
-                          <span className="font-medium">Lead Roles</span>
-                        </div>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Total Cost
+                        </p>
+                        <p className="text-xl font-bold text-blue-600">
+                          €
+                          {seasonalData.metrics.costEfficiency.total.toLocaleString()}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Cost Efficiency Metrics */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <DollarSign className="h-5 w-5" />
-                    Seasonal Cost Efficiency
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Seasonal Labor</p>
-                      <p className="text-xl font-bold">€{seasonalData.metrics.costEfficiency.seasonalLabor.toLocaleString()}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Accommodation</p>
-                      <p className="text-xl font-bold">€{seasonalData.metrics.costEfficiency.accommodation.toLocaleString()}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Meals</p>
-                      <p className="text-xl font-bold">€{seasonalData.metrics.costEfficiency.meals.toLocaleString()}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Tips</p>
-                      <p className="text-xl font-bold">€{seasonalData.metrics.costEfficiency.tips.toLocaleString()}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Total Cost</p>
-                      <p className="text-xl font-bold text-blue-600">€{seasonalData.metrics.costEfficiency.total.toLocaleString()}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
+                  </CardContent>
+                </Card>
+              </>
+            )
           )}
         </TabsContent>
 
@@ -533,18 +654,28 @@ export default function HotelEnhancementsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="accommodation-enabled">Enable Accommodation Allowances</Label>
+                    <Label htmlFor="accommodation-enabled">
+                      Enable Accommodation Allowances
+                    </Label>
                     <Switch id="accommodation-enabled" defaultChecked />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="per-day-cap">Per Day Cap</Label>
-                      <Input id="per-day-cap" placeholder="€50.00" defaultValue="50.00" />
+                      <Input
+                        id="per-day-cap"
+                        placeholder="€50.00"
+                        defaultValue="50.00"
+                      />
                     </div>
                     <div>
                       <Label htmlFor="max-days">Max Days</Label>
-                      <Input id="max-days" placeholder="180" defaultValue="180" />
+                      <Input
+                        id="max-days"
+                        placeholder="180"
+                        defaultValue="180"
+                      />
                     </div>
                   </div>
 
@@ -570,7 +701,8 @@ export default function HotelEnhancementsPage() {
                     <CheckCircle className="h-4 w-4" />
                     <AlertTitle>Tax Compliance</AlertTitle>
                     <AlertDescription>
-                      Accommodation allowances up to €600/month are tax-free. Current monthly calculation: €1,500 (taxable: €900)
+                      Accommodation allowances up to €600/month are tax-free.
+                      Current monthly calculation: €1,500 (taxable: €900)
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -587,18 +719,30 @@ export default function HotelEnhancementsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="meals-enabled">Enable Meal Allowances</Label>
+                    <Label htmlFor="meals-enabled">
+                      Enable Meal Allowances
+                    </Label>
                     <Switch id="meals-enabled" defaultChecked />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="meal-per-day-cap">Per Day Cap</Label>
-                      <Input id="meal-per-day-cap" placeholder="€25.00" defaultValue="25.00" />
+                      <Input
+                        id="meal-per-day-cap"
+                        placeholder="€25.00"
+                        defaultValue="25.00"
+                      />
                     </div>
                     <div>
-                      <Label htmlFor="reimbursement-rate">Reimbursement Rate</Label>
-                      <Input id="reimbursement-rate" placeholder="60%" defaultValue="60" />
+                      <Label htmlFor="reimbursement-rate">
+                        Reimbursement Rate
+                      </Label>
+                      <Input
+                        id="reimbursement-rate"
+                        placeholder="60%"
+                        defaultValue="60"
+                      />
                     </div>
                   </div>
 
@@ -641,22 +785,30 @@ export default function HotelEnhancementsPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Accommodation</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Total Accommodation
+                  </p>
                   <p className="text-2xl font-bold">€45,680</p>
                   <p className="text-xs text-gray-500">124 employees</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Meals</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Total Meals
+                  </p>
                   <p className="text-2xl font-bold">€28,950</p>
                   <p className="text-xs text-gray-500">162 employees</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Tax-Free Amount</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Tax-Free Amount
+                  </p>
                   <p className="text-2xl font-bold text-green-600">€58,420</p>
                   <p className="text-xs text-gray-500">78% of total</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Taxable Amount</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Taxable Amount
+                  </p>
                   <p className="text-2xl font-bold text-orange-600">€16,210</p>
                   <p className="text-xs text-gray-500">22% of total</p>
                 </div>
@@ -671,117 +823,173 @@ export default function HotelEnhancementsPage() {
             <div className="flex items-center justify-center h-32">
               <RefreshCw className="h-8 w-8 animate-spin" />
             </div>
-          ) : tipPoolData && (
-            <>
-              {/* Tip Pool Overview */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <Star className="h-5 w-5" />
-                      {tipPoolData.poolName}
-                    </CardTitle>
-                    <Button 
-                      onClick={() => tipPoolMutation.mutate({
-                        propertyId: selectedProperty,
-                        poolName: 'Main Property Tip Pool',
-                        distributionMethod: 'weighted'
-                      })}
-                      disabled={tipPoolMutation.isPending}
-                      variant="outline"
-                    >
-                      <Settings className="h-4 w-4 mr-2" />
-                      Configure Pool
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Total Tips Collected</p>
-                      <p className="text-2xl font-bold text-green-600">€{tipPoolData.totalTipsCollected.toLocaleString()}</p>
-                      <p className="text-xs text-gray-500">This week</p>
+          ) : (
+            tipPoolData && (
+              <>
+                {/* Tip Pool Overview */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Star className="h-5 w-5" />
+                        {tipPoolData.poolName}
+                      </CardTitle>
+                      <Button
+                        onClick={() =>
+                          tipPoolMutation.mutate({
+                            propertyId: selectedProperty,
+                            poolName: 'Main Property Tip Pool',
+                            distributionMethod: 'weighted',
+                          })
+                        }
+                        disabled={tipPoolMutation.isPending}
+                        variant="outline"
+                      >
+                        <Settings className="h-4 w-4 mr-2" />
+                        Configure Pool
+                      </Button>
                     </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Average per Employee</p>
-                      <p className="text-2xl font-bold">€{tipPoolData.averagePerEmployee.toLocaleString()}</p>
-                      <p className="text-xs text-gray-500">Weekly average</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Top Performer</p>
-                      <p className="text-2xl font-bold text-purple-600">€{tipPoolData.topPerformers[0]?.tipAmount.toLocaleString()}</p>
-                      <p className="text-xs text-gray-500">{tipPoolData.topPerformers[0]?.employeeName}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Performance Score</p>
-                      <p className="text-2xl font-bold text-blue-600">{tipPoolData.topPerformers[0]?.performanceScore.toFixed(1)}</p>
-                      <p className="text-xs text-gray-500">Top performer rating</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Department Breakdown */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Department Tip Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {tipPoolData.departmentBreakdown.map((dept, index) => (
-                      <div key={index} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold">{dept.department}</h3>
-                          <span className="font-bold text-green-600">€{dept.totalTips.toLocaleString()}</span>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-600 dark:text-gray-400">Employee Count</p>
-                            <p className="font-medium">{dept.employeeCount}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600 dark:text-gray-400">Average per Employee</p>
-                            <p className="font-medium">€{dept.averagePerEmployee.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-600 dark:text-gray-400">Share of Total</p>
-                            <p className="font-medium">{((dept.totalTips / tipPoolData.totalTipsCollected) * 100).toFixed(1)}%</p>
-                          </div>
-                        </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Total Tips Collected
+                        </p>
+                        <p className="text-2xl font-bold text-green-600">
+                          €{tipPoolData.totalTipsCollected.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-gray-500">This week</p>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Top Performers */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top Performers</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {tipPoolData.topPerformers.map((performer, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gold-100 flex items-center justify-center font-bold text-gold-800">
-                            {index + 1}
-                          </div>
-                          <div>
-                            <p className="font-medium">{performer.employeeName}</p>
-                            <p className="text-sm text-gray-600">Performance Score: {performer.performanceScore.toFixed(1)}/5.0</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-green-600">€{performer.tipAmount.toLocaleString()}</p>
-                          <p className="text-xs text-gray-500">This week</p>
-                        </div>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Average per Employee
+                        </p>
+                        <p className="text-2xl font-bold">
+                          €{tipPoolData.averagePerEmployee.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-gray-500">Weekly average</p>
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Top Performer
+                        </p>
+                        <p className="text-2xl font-bold text-purple-600">
+                          €
+                          {tipPoolData.topPerformers[0]?.tipAmount.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {tipPoolData.topPerformers[0]?.employeeName}
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Performance Score
+                        </p>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {tipPoolData.topPerformers[0]?.performanceScore.toFixed(
+                            1
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Top performer rating
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Department Breakdown */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Department Tip Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {tipPoolData.departmentBreakdown.map((dept, index) => (
+                        <div key={index} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-semibold">{dept.department}</h3>
+                            <span className="font-bold text-green-600">
+                              €{dept.totalTips.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                              <p className="text-gray-600 dark:text-gray-400">
+                                Employee Count
+                              </p>
+                              <p className="font-medium">
+                                {dept.employeeCount}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600 dark:text-gray-400">
+                                Average per Employee
+                              </p>
+                              <p className="font-medium">
+                                €{dept.averagePerEmployee.toLocaleString()}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-gray-600 dark:text-gray-400">
+                                Share of Total
+                              </p>
+                              <p className="font-medium">
+                                {(
+                                  (dept.totalTips /
+                                    tipPoolData.totalTipsCollected) *
+                                  100
+                                ).toFixed(1)}
+                                %
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Top Performers */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Performers</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {tipPoolData.topPerformers.map((performer, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 border rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gold-100 flex items-center justify-center font-bold text-gold-800">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium">
+                                {performer.employeeName}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Performance Score:{' '}
+                                {performer.performanceScore.toFixed(1)}/5.0
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-green-600">
+                              €{performer.tipAmount.toLocaleString()}
+                            </p>
+                            <p className="text-xs text-gray-500">This week</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )
           )}
         </TabsContent>
 
@@ -814,7 +1022,11 @@ export default function HotelEnhancementsPage() {
                   </div>
                   <div>
                     <Label htmlFor="shift-date">Date</Label>
-                    <Input id="shift-date" type="date" defaultValue={format(new Date(), 'yyyy-MM-dd')} />
+                    <Input
+                      id="shift-date"
+                      type="date"
+                      defaultValue={format(new Date(), 'yyyy-MM-dd')}
+                    />
                   </div>
                   <div>
                     <Label htmlFor="total-hours">Total Hours</Label>
@@ -830,8 +1042,12 @@ export default function HotelEnhancementsPage() {
               {/* Example Split Shift */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Split Shift Example - Maria Papadopoulos</CardTitle>
-                  <p className="text-sm text-gray-600">{format(new Date(), 'MMMM dd, yyyy')}</p>
+                  <CardTitle className="text-lg">
+                    Split Shift Example - Maria Papadopoulos
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">
+                    {format(new Date(), 'MMMM dd, yyyy')}
+                  </p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -853,7 +1069,7 @@ export default function HotelEnhancementsPage() {
                             <p className="text-gray-600">€52.00</p>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center justify-between p-3 border rounded-lg">
                           <div className="flex items-center gap-4">
                             <div className="text-sm">
@@ -876,7 +1092,9 @@ export default function HotelEnhancementsPage() {
                       <h4 className="font-medium mb-3">Cost Distribution</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <h5 className="text-sm font-medium mb-2">By Outlet</h5>
+                          <h5 className="text-sm font-medium mb-2">
+                            By Outlet
+                          </h5>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                               <span>Restaurant</span>
@@ -889,7 +1107,9 @@ export default function HotelEnhancementsPage() {
                           </div>
                         </div>
                         <div>
-                          <h5 className="text-sm font-medium mb-2">By Department</h5>
+                          <h5 className="text-sm font-medium mb-2">
+                            By Department
+                          </h5>
                           <div className="space-y-2">
                             <div className="flex justify-between text-sm">
                               <span>F&B Service</span>

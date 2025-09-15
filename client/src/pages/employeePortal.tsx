@@ -1,11 +1,11 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Euro, 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import {
+  Euro,
   Clock,
   Calendar,
   FileText,
@@ -17,28 +17,28 @@ import {
   Eye,
   Send,
   CheckCircle,
-  AlertCircle
-} from "lucide-react";
-import { useLocale } from "@/lib/i18n";
-import { formatCurrency } from "@/lib/i18n";
+  AlertCircle,
+} from 'lucide-react';
+import { useLocale } from '@/lib/i18n';
+import { formatCurrency } from '@/lib/i18n';
 
 export default function EmployeePortal() {
   const { t, locale } = useLocale();
   const employee = {
-    name: "Katerina Santikos",
-    id: "EMP-001234",
-    department: "Front Office",
-    position: "Guest Relations Manager",
-    hireDate: "2023-03-15",
-    email: "katerina@santikos.hotels"
+    name: 'Katerina Santikos',
+    id: 'EMP-001234',
+    department: 'Front Office',
+    position: 'Guest Relations Manager',
+    hireDate: '2023-03-15',
+    email: 'katerina@santikos.hotels',
   };
 
   const payslipData = {
-    period: "December 2024",
+    period: 'December 2024',
     grossPay: 2850,
     netPay: 2284,
     deductions: 566,
-    status: "available"
+    status: 'available',
   };
 
   const timeData = {
@@ -46,40 +46,80 @@ export default function EmployeePortal() {
     weekHours: 41.5,
     monthHours: 168.5,
     overtimeWeek: 1.5,
-    lastPunch: "08:02 - Clock In"
+    lastPunch: '08:02 - Clock In',
   };
 
   const leaveBalance = {
     annual: { total: 25, used: 8, remaining: 17 },
     sick: { total: 10, used: 2, remaining: 8 },
-    personal: { total: 3, used: 1, remaining: 2 }
+    personal: { total: 3, used: 1, remaining: 2 },
   };
 
   const digitalCard = {
-    status: "active",
-    lastUsed: "Today 08:02",
+    status: 'active',
+    lastUsed: 'Today 08:02',
     monthlyPunches: 42,
-    complianceScore: 98
+    complianceScore: 98,
   };
 
   const pendingRequests = [
-    { id: 1, type: "Annual Leave", dates: "Feb 10-14, 2025", status: "pending", urgent: false },
-    { id: 2, type: "Schedule Change", dates: "Jan 22, 2025", status: "approved", urgent: false },
-    { id: 3, type: "Overtime Request", dates: "Jan 20, 2025", status: "pending", urgent: true }
+    {
+      id: 1,
+      type: 'Annual Leave',
+      dates: 'Feb 10-14, 2025',
+      status: 'pending',
+      urgent: false,
+    },
+    {
+      id: 2,
+      type: 'Schedule Change',
+      dates: 'Jan 22, 2025',
+      status: 'approved',
+      urgent: false,
+    },
+    {
+      id: 3,
+      type: 'Overtime Request',
+      dates: 'Jan 20, 2025',
+      status: 'pending',
+      urgent: true,
+    },
   ];
 
   const notifications = [
-    { id: 1, title: "Payslip Available", message: "December 2024 payslip ready for download", time: "2 hours ago", read: false },
-    { id: 2, title: "Schedule Updated", message: "Next week schedule has been published", time: "1 day ago", read: true },
-    { id: 3, title: "Leave Approved", message: "Your leave request has been approved", time: "3 days ago", read: true }
+    {
+      id: 1,
+      title: 'Payslip Available',
+      message: 'December 2024 payslip ready for download',
+      time: '2 hours ago',
+      read: false,
+    },
+    {
+      id: 2,
+      title: 'Schedule Updated',
+      message: 'Next week schedule has been published',
+      time: '1 day ago',
+      read: true,
+    },
+    {
+      id: 3,
+      title: 'Leave Approved',
+      message: 'Your leave request has been approved',
+      time: '3 days ago',
+      read: true,
+    },
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'approved': return 'default';
-      case 'pending': return 'secondary';
-      case 'rejected': return 'destructive';
-      default: return 'outline';
+      case 'approved':
+        return 'default';
+      case 'pending':
+        return 'secondary';
+      case 'rejected':
+        return 'destructive';
+      default:
+        return 'outline';
     }
   };
 
@@ -97,7 +137,9 @@ export default function EmployeePortal() {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-600 dark:text-gray-400">Employee ID</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Employee ID
+            </p>
             <p className="font-mono font-medium">{employee.id}</p>
           </div>
         </div>
@@ -113,7 +155,9 @@ export default function EmployeePortal() {
               </div>
               <div>
                 <p className="text-sm font-medium">{t('portal.net-pay')}</p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-400">{formatCurrency(payslipData.netPay, locale)}</p>
+                <p className="text-2xl font-bold text-green-700 dark:text-green-400">
+                  {formatCurrency(payslipData.netPay, locale)}
+                </p>
                 <p className="text-xs text-gray-500">{payslipData.period}</p>
               </div>
             </div>
@@ -128,8 +172,12 @@ export default function EmployeePortal() {
               </div>
               <div>
                 <p className="text-sm font-medium">{t('portal.hours-week')}</p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{timeData.weekHours}h</p>
-                <p className="text-xs text-gray-500">+{timeData.overtimeWeek}h OT</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">
+                  {timeData.weekHours}h
+                </p>
+                <p className="text-xs text-gray-500">
+                  +{timeData.overtimeWeek}h OT
+                </p>
               </div>
             </div>
           </CardContent>
@@ -143,7 +191,9 @@ export default function EmployeePortal() {
               </div>
               <div>
                 <p className="text-sm font-medium">Leave Left</p>
-                <p className="text-2xl font-bold text-orange-700 dark:text-orange-400">{leaveBalance.annual.remaining}</p>
+                <p className="text-2xl font-bold text-orange-700 dark:text-orange-400">
+                  {leaveBalance.annual.remaining}
+                </p>
                 <p className="text-xs text-gray-500">Annual days</p>
               </div>
             </div>
@@ -158,7 +208,9 @@ export default function EmployeePortal() {
               </div>
               <div>
                 <p className="text-sm font-medium">Digital Card</p>
-                <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">{digitalCard.complianceScore}%</p>
+                <p className="text-2xl font-bold text-purple-700 dark:text-purple-400">
+                  {digitalCard.complianceScore}%
+                </p>
                 <p className="text-xs text-gray-500">Compliance score</p>
               </div>
             </div>
@@ -178,24 +230,34 @@ export default function EmployeePortal() {
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Period</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Period
+                </span>
                 <span className="font-medium">{payslipData.period}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Gross Pay</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Gross Pay
+                </span>
                 <span className="font-medium">€{payslipData.grossPay}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Deductions</span>
-                <span className="font-medium text-red-600">-€{payslipData.deductions}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Deductions
+                </span>
+                <span className="font-medium text-red-600">
+                  -€{payslipData.deductions}
+                </span>
               </div>
               <Separator />
               <div className="flex justify-between items-center">
                 <span className="font-medium">Net Pay</span>
-                <span className="font-bold text-green-600 text-lg">€{payslipData.netPay}</span>
+                <span className="font-bold text-green-600 text-lg">
+                  €{payslipData.netPay}
+                </span>
               </div>
             </div>
-            
+
             <div className="flex gap-2">
               <Button className="flex-1">
                 <Eye className="h-4 w-4 mr-2" />
@@ -220,23 +282,33 @@ export default function EmployeePortal() {
           <CardContent className="space-y-4">
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Today</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Today
+                </span>
                 <span className="font-medium">{timeData.todayHours} hours</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">This Week</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  This Week
+                </span>
                 <span className="font-medium">{timeData.weekHours} hours</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">This Month</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  This Month
+                </span>
                 <span className="font-medium">{timeData.monthHours} hours</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Last Punch</span>
-                <span className="font-medium text-green-600">{timeData.lastPunch}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Last Punch
+                </span>
+                <span className="font-medium text-green-600">
+                  {timeData.lastPunch}
+                </span>
               </div>
             </div>
-            
+
             <Button className="w-full">
               <MapPin className="h-4 w-4 mr-2" />
               View Digital Work Card
@@ -258,15 +330,20 @@ export default function EmployeePortal() {
             {Object.entries(leaveBalance).map(([type, data]) => (
               <div key={type} className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium capitalize">{type} Leave</span>
+                  <span className="text-sm font-medium capitalize">
+                    {type} Leave
+                  </span>
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {data.remaining}/{data.total} days left
                   </span>
                 </div>
-                <Progress value={(data.remaining / data.total) * 100} className="h-2" />
+                <Progress
+                  value={(data.remaining / data.total) * 100}
+                  className="h-2"
+                />
               </div>
             ))}
-            
+
             <Button className="w-full">
               <Send className="h-4 w-4 mr-2" />
               Request Leave
@@ -279,27 +356,40 @@ export default function EmployeePortal() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Pending Requests ({pendingRequests.filter(r => r.status === 'pending').length})
+              Pending Requests (
+              {pendingRequests.filter(r => r.status === 'pending').length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {pendingRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
+              {pendingRequests.map(request => (
+                <div
+                  key={request.id}
+                  className="flex items-center justify-between p-3 border rounded-lg"
+                >
                   <div className="flex-1">
                     <p className="font-medium text-sm">{request.type}</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">{request.dates}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {request.dates}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {request.urgent && <Badge variant="destructive" className="text-xs">Urgent</Badge>}
-                    <Badge variant={getStatusColor(request.status)} className="text-xs">
+                    {request.urgent && (
+                      <Badge variant="destructive" className="text-xs">
+                        Urgent
+                      </Badge>
+                    )}
+                    <Badge
+                      variant={getStatusColor(request.status)}
+                      className="text-xs"
+                    >
                       {request.status.toUpperCase()}
                     </Badge>
                   </div>
                 </div>
               ))}
             </div>
-            
+
             <Button variant="outline" className="w-full mt-3">
               <FileText className="h-4 w-4 mr-2" />
               Submit New Request
@@ -318,19 +408,27 @@ export default function EmployeePortal() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {notifications.map((notification) => (
-              <div 
-                key={notification.id} 
+            {notifications.map(notification => (
+              <div
+                key={notification.id}
                 className={`p-3 border rounded-lg ${!notification.read ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800' : ''}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium text-sm">{notification.title}</h3>
-                      {!notification.read && <div className="w-2 h-2 bg-blue-500 rounded-full"></div>}
+                      <h3 className="font-medium text-sm">
+                        {notification.title}
+                      </h3>
+                      {!notification.read && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      )}
                     </div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{notification.message}</p>
-                    <p className="text-xs text-gray-500 mt-2">{notification.time}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      {notification.message}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {notification.time}
+                    </p>
                   </div>
                   {!notification.read && (
                     <Button size="sm" variant="ghost">

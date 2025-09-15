@@ -36,7 +36,7 @@ import {
   BookOpen,
   Flag,
   Calendar,
-  Download
+  Download,
 } from 'lucide-react';
 
 interface DemoProps {
@@ -53,43 +53,51 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
       subtitle: 'Automated Collective Bargaining Agreement Updates',
       hero: {
         title: 'Stay Current with All Greek Collective Agreements',
-        subtitle: 'Automated system that continuously monitors, tracks, and applies all Greek collective bargaining agreement updates to ensure continuous compliance with the latest sectoral wage scales and labor conditions.',
+        subtitle:
+          'Automated system that continuously monitors, tracks, and applies all Greek collective bargaining agreement updates to ensure continuous compliance with the latest sectoral wage scales and labor conditions.',
         cta: 'Launch CBA Tracker',
-        ctaSecondary: 'Explore Features'
+        ctaSecondary: 'Explore Features',
       },
       features: {
         title: 'Comprehensive CBA Management Features',
         automaticMonitoring: {
           title: 'Automatic Monitoring',
-          description: 'Continuously track all Greek collective agreements across 15+ sectors with real-time update detection and notification.'
+          description:
+            'Continuously track all Greek collective agreements across 15+ sectors with real-time update detection and notification.',
         },
         instantUpdates: {
           title: 'Instant Updates',
-          description: 'Receive immediate notifications when CBAs are modified, ensuring you never miss critical wage or condition changes.'
+          description:
+            'Receive immediate notifications when CBAs are modified, ensuring you never miss critical wage or condition changes.',
         },
         smartApplication: {
           title: 'Smart Application',
-          description: 'Intelligently apply CBA updates to payroll systems with configurable auto-application and manual review options.'
+          description:
+            'Intelligently apply CBA updates to payroll systems with configurable auto-application and manual review options.',
         },
         complianceTracking: {
           title: 'Compliance Tracking',
-          description: 'Maintain 96.8% compliance rate with comprehensive tracking and reporting across all applicable agreements.'
-        }
+          description:
+            'Maintain 96.8% compliance rate with comprehensive tracking and reporting across all applicable agreements.',
+        },
       },
       benefits: {
         title: 'Why CBA Updates Transform Labor Compliance',
         continuousCompliance: {
           title: 'Continuous Compliance',
-          description: 'Ensure 100% adherence to the latest Greek labor agreements with automated monitoring and instant update application.'
+          description:
+            'Ensure 100% adherence to the latest Greek labor agreements with automated monitoring and instant update application.',
         },
         riskPrevention: {
           title: 'Risk Prevention',
-          description: 'Prevent costly labor law violations and penalties through proactive CBA compliance management and early warning systems.'
+          description:
+            'Prevent costly labor law violations and penalties through proactive CBA compliance management and early warning systems.',
         },
         operationalEfficiency: {
           title: 'Operational Efficiency',
-          description: 'Reduce manual effort by 85% with automated agreement tracking, update detection, and intelligent application workflows.'
-        }
+          description:
+            'Reduce manual effort by 85% with automated agreement tracking, update detection, and intelligent application workflows.',
+        },
       },
       sectors: {
         title: 'Monitored Sectors & Agreements',
@@ -107,7 +115,7 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
         energy: 'Energy & Utilities',
         telecommunications: 'Telecommunications',
         media: 'Media & Entertainment',
-        professional: 'Professional Services'
+        professional: 'Professional Services',
       },
       updateTypes: {
         title: 'Types of CBA Updates Tracked',
@@ -118,14 +126,14 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
         holidayProvisions: 'Holiday & Leave Provisions',
         terminationRules: 'Termination & Severance Rules',
         safetyRequirements: 'Safety & Health Requirements',
-        trainingProvisions: 'Training & Development Provisions'
+        trainingProvisions: 'Training & Development Provisions',
       },
       performance: {
         title: 'CBA Management Performance',
         agreementsTracked: 'Agreements Tracked',
         updateSpeed: 'Update Detection Speed',
         complianceRate: 'Compliance Rate',
-        autoApplySuccess: 'Auto-Apply Success Rate'
+        autoApplySuccess: 'Auto-Apply Success Rate',
       },
       industries: {
         title: 'Industry Applications',
@@ -134,51 +142,60 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
         manufacturing: 'Manufacturing',
         services: 'Professional Services',
         healthcare: 'Healthcare',
-        technology: 'Technology & IT'
-      }
+        technology: 'Technology & IT',
+      },
     },
     el: {
       title: 'Ενημερώσεις ΣΣΕ',
       subtitle: 'Αυτοματοποιημένες Ενημερώσεις Συλλογικών Συμβάσεων Εργασίας',
       hero: {
-        title: 'Παραμείνετε Ενημερωμένοι με Όλες τις Ελληνικές Συλλογικές Συμβάσεις',
-        subtitle: 'Αυτοματοποιημένο σύστημα που συνεχώς παρακολουθεί, εντοπίζει και εφαρμόζει όλες τις ενημερώσεις των ελληνικών συλλογικών συμβάσεων εργασίας για διασφάλιση συνεχούς συμμόρφωσης με τις τελευταίες κλαδικές μισθολογικές κλίμακες και εργασιακές συνθήκες.',
+        title:
+          'Παραμείνετε Ενημερωμένοι με Όλες τις Ελληνικές Συλλογικές Συμβάσεις',
+        subtitle:
+          'Αυτοματοποιημένο σύστημα που συνεχώς παρακολουθεί, εντοπίζει και εφαρμόζει όλες τις ενημερώσεις των ελληνικών συλλογικών συμβάσεων εργασίας για διασφάλιση συνεχούς συμμόρφωσης με τις τελευταίες κλαδικές μισθολογικές κλίμακες και εργασιακές συνθήκες.',
         cta: 'Εκκίνηση Παρακολούθησης ΣΣΕ',
-        ctaSecondary: 'Εξερεύνηση Χαρακτηριστικών'
+        ctaSecondary: 'Εξερεύνηση Χαρακτηριστικών',
       },
       features: {
         title: 'Περιεκτικά Χαρακτηριστικά Διαχείρισης ΣΣΕ',
         automaticMonitoring: {
           title: 'Αυτόματη Παρακολούθηση',
-          description: 'Συνεχής παρακολούθηση όλων των ελληνικών συλλογικών συμβάσεων σε 15+ κλάδους με εντοπισμό ενημερώσεων πραγματικού χρόνου και ειδοποιήσεις.'
+          description:
+            'Συνεχής παρακολούθηση όλων των ελληνικών συλλογικών συμβάσεων σε 15+ κλάδους με εντοπισμό ενημερώσεων πραγματικού χρόνου και ειδοποιήσεις.',
         },
         instantUpdates: {
           title: 'Άμεσες Ενημερώσεις',
-          description: 'Λάβετε άμεσες ειδοποιήσεις όταν τροποποιούνται οι ΣΣΕ, διασφαλίζοντας ότι δεν χάνετε κρίσιμες αλλαγές μισθών ή συνθηκών.'
+          description:
+            'Λάβετε άμεσες ειδοποιήσεις όταν τροποποιούνται οι ΣΣΕ, διασφαλίζοντας ότι δεν χάνετε κρίσιμες αλλαγές μισθών ή συνθηκών.',
         },
         smartApplication: {
           title: 'Έξυπνη Εφαρμογή',
-          description: 'Έξυπνη εφαρμογή ενημερώσεων ΣΣΕ στα συστήματα μισθοδοσίας με ρυθμιζόμενη αυτόματη εφαρμογή και επιλογές χειροκίνητης επιθεώρησης.'
+          description:
+            'Έξυπνη εφαρμογή ενημερώσεων ΣΣΕ στα συστήματα μισθοδοσίας με ρυθμιζόμενη αυτόματη εφαρμογή και επιλογές χειροκίνητης επιθεώρησης.',
         },
         complianceTracking: {
           title: 'Παρακολούθηση Συμμόρφωσης',
-          description: 'Διατήρηση ποσοστού συμμόρφωσης 96.8% με περιεκτική παρακολούθηση και αναφορά σε όλες τις εφαρμοστέες συμφωνίες.'
-        }
+          description:
+            'Διατήρηση ποσοστού συμμόρφωσης 96.8% με περιεκτική παρακολούθηση και αναφορά σε όλες τις εφαρμοστέες συμφωνίες.',
+        },
       },
       benefits: {
         title: 'Γιατί οι Ενημερώσεις ΣΣΕ Μεταμορφώνουν τη Συμμόρφωση Εργασίας',
         continuousCompliance: {
           title: 'Συνεχής Συμμόρφωση',
-          description: 'Διασφαλίστε 100% τήρηση των τελευταίων ελληνικών εργασιακών συμφωνιών με αυτοματοποιημένη παρακολούθηση και άμεση εφαρμογή ενημερώσεων.'
+          description:
+            'Διασφαλίστε 100% τήρηση των τελευταίων ελληνικών εργασιακών συμφωνιών με αυτοματοποιημένη παρακολούθηση και άμεση εφαρμογή ενημερώσεων.',
         },
         riskPrevention: {
           title: 'Πρόληψη Κινδύνων',
-          description: 'Αποτρέψτε κοστοβόρες παραβάσεις του εργατικού δικαίου και πρόστιμα μέσω προληπτικής διαχείρισης συμμόρφωσης ΣΣΕ και συστημάτων έγκαιρης προειδοποίησης.'
+          description:
+            'Αποτρέψτε κοστοβόρες παραβάσεις του εργατικού δικαίου και πρόστιμα μέσω προληπτικής διαχείρισης συμμόρφωσης ΣΣΕ και συστημάτων έγκαιρης προειδοποίησης.',
         },
         operationalEfficiency: {
           title: 'Λειτουργική Αποδοτικότητα',
-          description: 'Μειώστε τη χειροκίνητη προσπάθεια κατά 85% με αυτοματοποιημένη παρακολούθηση συμφωνιών, εντοπισμό ενημερώσεων και έξυπνες ροές εργασίας εφαρμογής.'
-        }
+          description:
+            'Μειώστε τη χειροκίνητη προσπάθεια κατά 85% με αυτοματοποιημένη παρακολούθηση συμφωνιών, εντοπισμό ενημερώσεων και έξυπνες ροές εργασίας εφαρμογής.',
+        },
       },
       sectors: {
         title: 'Παρακολουθούμενοι Κλάδοι & Συμφωνίες',
@@ -196,7 +213,7 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
         energy: 'Ενέργεια & Κοινωφελή',
         telecommunications: 'Τηλεπικοινωνίες',
         media: 'Μέσα & Ψυχαγωγία',
-        professional: 'Επαγγελματικές Υπηρεσίες'
+        professional: 'Επαγγελματικές Υπηρεσίες',
       },
       updateTypes: {
         title: 'Τύποι Ενημερώσεων ΣΣΕ που Παρακολουθούνται',
@@ -207,14 +224,14 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
         holidayProvisions: 'Διατάξεις Αργιών & Αδειών',
         terminationRules: 'Κανόνες Καταγγελίας & Αποζημίωσης',
         safetyRequirements: 'Απαιτήσεις Ασφάλειας & Υγείας',
-        trainingProvisions: 'Διατάξεις Εκπαίδευσης & Ανάπτυξης'
+        trainingProvisions: 'Διατάξεις Εκπαίδευσης & Ανάπτυξης',
       },
       performance: {
         title: 'Απόδοση Διαχείρισης ΣΣΕ',
         agreementsTracked: 'Παρακολουθούμενες Συμφωνίες',
         updateSpeed: 'Ταχύτητα Εντοπισμού Ενημερώσεων',
         complianceRate: 'Ποσοστό Συμμόρφωσης',
-        autoApplySuccess: 'Ποσοστό Επιτυχίας Αυτόματης Εφαρμογής'
+        autoApplySuccess: 'Ποσοστό Επιτυχίας Αυτόματης Εφαρμογής',
       },
       industries: {
         title: 'Εφαρμογές Κλάδων',
@@ -223,29 +240,84 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
         manufacturing: 'Βιομηχανία',
         services: 'Επαγγελματικές Υπηρεσίες',
         healthcare: 'Υγειονομική Περίθαλψη',
-        technology: 'Τεχνολογία & Πληροφορική'
-      }
-    }
+        technology: 'Τεχνολογία & Πληροφορική',
+      },
+    },
   };
 
   const t = translations[selectedLocale];
 
   const sectors = [
     { key: 'general', icon: Scale, color: 'text-blue-600', employees: '850K' },
-    { key: 'tourism', icon: Hotel, color: 'text-orange-600', employees: '125K' },
-    { key: 'retail', icon: ShoppingCart, color: 'text-purple-600', employees: '180K' },
-    { key: 'banking', icon: Building, color: 'text-green-600', employees: '45K' },
-    { key: 'manufacturing', icon: Factory, color: 'text-gray-600', employees: '95K' },
-    { key: 'healthcare', icon: Activity, color: 'text-red-600', employees: '78K' },
-    { key: 'education', icon: BookOpen, color: 'text-indigo-600', employees: '120K' },
-    { key: 'construction', icon: Award, color: 'text-yellow-600', employees: '65K' },
-    { key: 'transport', icon: TrendingUp, color: 'text-pink-600', employees: '42K' },
+    {
+      key: 'tourism',
+      icon: Hotel,
+      color: 'text-orange-600',
+      employees: '125K',
+    },
+    {
+      key: 'retail',
+      icon: ShoppingCart,
+      color: 'text-purple-600',
+      employees: '180K',
+    },
+    {
+      key: 'banking',
+      icon: Building,
+      color: 'text-green-600',
+      employees: '45K',
+    },
+    {
+      key: 'manufacturing',
+      icon: Factory,
+      color: 'text-gray-600',
+      employees: '95K',
+    },
+    {
+      key: 'healthcare',
+      icon: Activity,
+      color: 'text-red-600',
+      employees: '78K',
+    },
+    {
+      key: 'education',
+      icon: BookOpen,
+      color: 'text-indigo-600',
+      employees: '120K',
+    },
+    {
+      key: 'construction',
+      icon: Award,
+      color: 'text-yellow-600',
+      employees: '65K',
+    },
+    {
+      key: 'transport',
+      icon: TrendingUp,
+      color: 'text-pink-600',
+      employees: '42K',
+    },
     { key: 'technology', icon: Zap, color: 'text-cyan-600', employees: '38K' },
-    { key: 'agriculture', icon: Target, color: 'text-emerald-600', employees: '55K' },
+    {
+      key: 'agriculture',
+      icon: Target,
+      color: 'text-emerald-600',
+      employees: '55K',
+    },
     { key: 'energy', icon: Star, color: 'text-violet-600', employees: '28K' },
-    { key: 'telecommunications', icon: Flag, color: 'text-rose-600', employees: '25K' },
+    {
+      key: 'telecommunications',
+      icon: Flag,
+      color: 'text-rose-600',
+      employees: '25K',
+    },
     { key: 'media', icon: Calendar, color: 'text-amber-600', employees: '22K' },
-    { key: 'professional', icon: FileText, color: 'text-slate-600', employees: '85K' }
+    {
+      key: 'professional',
+      icon: FileText,
+      color: 'text-slate-600',
+      employees: '85K',
+    },
   ];
 
   const updateTypes = [
@@ -256,14 +328,29 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
     { key: 'holidayProvisions', icon: Calendar, color: 'text-red-600' },
     { key: 'terminationRules', icon: Scale, color: 'text-indigo-600' },
     { key: 'safetyRequirements', icon: Shield, color: 'text-yellow-600' },
-    { key: 'trainingProvisions', icon: BookOpen, color: 'text-pink-600' }
+    { key: 'trainingProvisions', icon: BookOpen, color: 'text-pink-600' },
   ];
 
   const performanceMetrics = [
-    { key: 'agreementsTracked', value: '47', icon: FileText, color: 'text-blue-600' },
+    {
+      key: 'agreementsTracked',
+      value: '47',
+      icon: FileText,
+      color: 'text-blue-600',
+    },
     { key: 'updateSpeed', value: '<2 min', icon: Zap, color: 'text-green-600' },
-    { key: 'complianceRate', value: '96.8%', icon: CheckCircle, color: 'text-emerald-600' },
-    { key: 'autoApplySuccess', value: '94.2%', icon: RefreshCw, color: 'text-purple-600' }
+    {
+      key: 'complianceRate',
+      value: '96.8%',
+      icon: CheckCircle,
+      color: 'text-emerald-600',
+    },
+    {
+      key: 'autoApplySuccess',
+      value: '94.2%',
+      icon: RefreshCw,
+      color: 'text-purple-600',
+    },
   ];
 
   const industries = [
@@ -272,7 +359,7 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
     { key: 'manufacturing', icon: Factory, color: 'text-gray-600' },
     { key: 'services', icon: Users, color: 'text-green-600' },
     { key: 'healthcare', icon: Activity, color: 'text-red-600' },
-    { key: 'technology', icon: Zap, color: 'text-blue-600' }
+    { key: 'technology', icon: Zap, color: 'text-blue-600' },
   ];
 
   if (showFullSystem) {
@@ -292,7 +379,9 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
             <div className="flex items-center gap-4">
               <Button
                 variant="outline"
-                onClick={() => setSelectedLocale(selectedLocale === 'en' ? 'el' : 'en')}
+                onClick={() =>
+                  setSelectedLocale(selectedLocale === 'en' ? 'el' : 'en')
+                }
               >
                 <Globe className="h-4 w-4 mr-2" />
                 {selectedLocale === 'en' ? 'EL' : 'EN'}
@@ -323,19 +412,23 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
             {t.hero.subtitle}
           </p>
           <div className="flex items-center justify-center gap-4">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="px-8 py-3 text-lg bg-blue-600 hover:bg-blue-700"
               onClick={() => setShowFullSystem(true)}
             >
               <RefreshCw className="h-5 w-5 mr-2" />
               {t.hero.cta}
             </Button>
-            <Button 
-              variant="outline" 
-              size="lg" 
+            <Button
+              variant="outline"
+              size="lg"
               className="px-8 py-3 text-lg"
-              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() =>
+                document
+                  .getElementById('features')
+                  ?.scrollIntoView({ behavior: 'smooth' })
+              }
             >
               <Eye className="h-5 w-5 mr-2" />
               {t.hero.ctaSecondary}
@@ -345,13 +438,17 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
 
         {/* Performance Metrics */}
         <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-2xl p-8 mb-16">
-          <h2 className="text-2xl font-bold text-center mb-8">{t.performance.title}</h2>
+          <h2 className="text-2xl font-bold text-center mb-8">
+            {t.performance.title}
+          </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {performanceMetrics.map((metric, index) => {
               const Icon = metric.icon;
               return (
                 <div key={index} className="text-center">
-                  <div className={`text-4xl font-bold mb-2 ${metric.color.replace('text-', 'text-')}`}>
+                  <div
+                    className={`text-4xl font-bold mb-2 ${metric.color.replace('text-', 'text-')}`}
+                  >
                     {metric.value}
                   </div>
                   <div className="text-gray-300 flex items-center justify-center gap-2">
@@ -374,32 +471,48 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Eye className="h-8 w-8 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.features.automaticMonitoring.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.features.automaticMonitoring.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.features.automaticMonitoring.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.features.automaticMonitoring.description}
+              </p>
             </div>
 
             <div className="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Zap className="h-8 w-8 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.features.instantUpdates.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.features.instantUpdates.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.features.instantUpdates.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.features.instantUpdates.description}
+              </p>
             </div>
 
             <div className="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <RefreshCw className="h-8 w-8 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.features.smartApplication.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.features.smartApplication.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.features.smartApplication.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.features.smartApplication.description}
+              </p>
             </div>
 
             <div className="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Shield className="h-8 w-8 text-orange-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.features.complianceTracking.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.features.complianceTracking.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.features.complianceTracking.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.features.complianceTracking.description}
+              </p>
             </div>
           </div>
         </div>
@@ -413,7 +526,10 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
             {sectors.map((sector, index) => {
               const Icon = sector.icon;
               return (
-                <div key={index} className="p-6 bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow">
+                <div
+                  key={index}
+                  className="p-6 bg-white rounded-xl border shadow-sm hover:shadow-md transition-shadow"
+                >
                   <div className="text-center">
                     <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
                       <Icon className={`h-6 w-6 ${sector.color}`} />
@@ -421,7 +537,9 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
                     <h3 className="font-semibold text-sm mb-1">
                       {t.sectors[sector.key as keyof typeof t.sectors]}
                     </h3>
-                    <p className="text-xs text-gray-600">{sector.employees} employees</p>
+                    <p className="text-xs text-gray-600">
+                      {sector.employees} employees
+                    </p>
                   </div>
                 </div>
               );
@@ -438,7 +556,10 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
             {updateTypes.map((type, index) => {
               const Icon = type.icon;
               return (
-                <div key={index} className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div
+                  key={index}
+                  className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+                >
                   <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                     <Icon className={`h-6 w-6 ${type.color}`} />
                   </div>
@@ -461,24 +582,36 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.benefits.continuousCompliance.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.benefits.continuousCompliance.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.benefits.continuousCompliance.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.benefits.continuousCompliance.description}
+              </p>
             </div>
 
             <div className="p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-6">
                 <AlertTriangle className="h-6 w-6 text-red-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.benefits.riskPrevention.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.benefits.riskPrevention.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.benefits.riskPrevention.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.benefits.riskPrevention.description}
+              </p>
             </div>
 
             <div className="p-8 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                 <TrendingUp className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-4">{t.benefits.operationalEfficiency.title}</h3>
-              <p className="text-gray-600 leading-relaxed">{t.benefits.operationalEfficiency.description}</p>
+              <h3 className="text-xl font-semibold mb-4">
+                {t.benefits.operationalEfficiency.title}
+              </h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t.benefits.operationalEfficiency.description}
+              </p>
             </div>
           </div>
         </div>
@@ -492,7 +625,10 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
             {industries.map((industry, index) => {
               const Icon = industry.icon;
               return (
-                <div key={index} className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                <div
+                  key={index}
+                  className="text-center p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow"
+                >
                   <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                     <Icon className={`h-6 w-6 ${industry.color}`} />
                   </div>
@@ -507,13 +643,17 @@ export default function CBAUpdatesDemo({ locale = 'en' }: DemoProps) {
 
         {/* CTA Section */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-center rounded-2xl p-12">
-          <h2 className="text-3xl font-bold mb-4">Never Miss Another CBA Update</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            Never Miss Another CBA Update
+          </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Transform your labor compliance with automated CBA monitoring that ensures continuous adherence to all Greek collective bargaining agreements.
+            Transform your labor compliance with automated CBA monitoring that
+            ensures continuous adherence to all Greek collective bargaining
+            agreements.
           </p>
-          
-          <Button 
-            size="lg" 
+
+          <Button
+            size="lg"
             className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3"
             onClick={() => setShowFullSystem(true)}
           >

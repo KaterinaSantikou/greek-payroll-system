@@ -95,31 +95,33 @@ export class KioskOfflineCache {
       metadata: {
         version: '1.0',
         platform: 'kiosk',
-        initTime: new Date().toISOString()
-      }
+        initTime: new Date().toISOString(),
+      },
     };
 
     await this.saveCache(cache);
-    
+
     // Start integrity monitoring
     this.startIntegrityMonitoring();
   }
 
   static async cacheKioskEvent(event: any): Promise<void> {
     const cache = await this.getCache();
-    
+
     const cachedEvent = {
       ...event,
       cachedAt: new Date().toISOString(),
       syncStatus: 'pending',
       retryCount: 0,
-      integrityCheck: await this.calculateEventHash(event)
+      integrityCheck: await this.calculateEventHash(event),
     };
 
     cache.events.push(cachedEvent);
-    
+
     // Maintain cache size by time window
-    const cutoffTime = new Date(Date.now() - (this.MAX_CACHE_HOURS * 60 * 60 * 1000));
+    const cutoffTime = new Date(
+      Date.now() - this.MAX_CACHE_HOURS * 60 * 60 * 1000
+    );
     cache.events = cache.events.filter(e => new Date(e.cachedAt) > cutoffTime);
 
     cache.integrityHash = await this.calculateCacheHash(cache);
@@ -129,13 +131,13 @@ export class KioskOfflineCache {
   static async syncKioskEvents(): Promise<KioskSyncResult> {
     const cache = await this.getCache();
     const pendingEvents = cache.events.filter(e => e.syncStatus === 'pending');
-    
+
     if (pendingEvents.length === 0) {
-      return { 
-        success: true, 
-        syncedCount: 0, 
-        failedCount: 0, 
-        integrityStatus: 'verified' 
+      return {
+        success: true,
+        syncedCount: 0,
+        failedCount: 0,
+        integrityStatus: 'verified',
       };
     }
 
@@ -157,8 +159,9 @@ export class KioskOfflineCache {
       } catch (error) {
         event.retryCount++;
         event.lastError = error.message;
-        
-        if (event.retryCount >= 5) { // Higher retry count for kiosks
+
+        if (event.retryCount >= 5) {
+          // Higher retry count for kiosks
           event.syncStatus = 'failed';
           failedCount++;
         }
@@ -169,37 +172,42 @@ export class KioskOfflineCache {
     cache.events = cache.events.filter(e => e.syncStatus !== 'synced');
     cache.lastSync = new Date().toISOString();
     cache.integrityHash = await this.calculateCacheHash(cache);
-    
+
     await this.saveCache(cache);
 
-    return { 
-      success: true, 
-      syncedCount, 
-      failedCount, 
-      integrityStatus: 'verified' 
+    return {
+      success: true,
+      syncedCount,
+      failedCount,
+      integrityStatus: 'verified',
     };
   }
 
-  static async updateEmployeeDirectory(employees: KioskEmployee[]): Promise<void> {
+  static async updateEmployeeDirectory(
+    employees: KioskEmployee[]
+  ): Promise<void> {
     const employeeCache = {
       lastUpdated: new Date().toISOString(),
       employees,
-      checksum: await this.calculateDirectoryHash(employees)
+      checksum: await this.calculateDirectoryHash(employees),
     };
 
-    localStorage.setItem(this.EMPLOYEE_CACHE_KEY, JSON.stringify(employeeCache));
+    localStorage.setItem(
+      this.EMPLOYEE_CACHE_KEY,
+      JSON.stringify(employeeCache)
+    );
   }
 
   static async getEmployeeDirectory(): Promise<KioskEmployeeDirectory> {
     const stored = localStorage.getItem(this.EMPLOYEE_CACHE_KEY);
     const cached = stored ? JSON.parse(stored) : { employees: [] };
-    
+
     return {
       employees: cached.employees || [],
       searchEnabled: true,
       recentEmployees: this.getRecentEmployees(),
       favoriteEmployees: this.getFavoriteEmployees(),
-      departmentFilter: this.getUniqueDepartments(cached.employees)
+      departmentFilter: this.getUniqueDepartments(cached.employees),
     };
   }
 
@@ -208,9 +216,9 @@ export class KioskOfflineCache {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Kiosk-Auth': await this.getKioskToken()
+        'X-Kiosk-Auth': await this.getKioskToken(),
       },
-      body: JSON.stringify(event)
+      body: JSON.stringify(event),
     });
 
     if (!response.ok) {
@@ -232,7 +240,7 @@ export class KioskOfflineCache {
       employeeId: event.employeeId,
       type: event.type,
       timestamp: event.timestamp,
-      kioskId: event.kioskId
+      kioskId: event.kioskId,
     });
     return btoa(data).substring(0, 16);
   }
@@ -241,12 +249,14 @@ export class KioskOfflineCache {
     const data = JSON.stringify({
       kioskId: cache.kioskId,
       eventCount: cache.events.length,
-      lastSync: cache.lastSync
+      lastSync: cache.lastSync,
     });
     return btoa(data).substring(0, 16);
   }
 
-  private static async calculateDirectoryHash(employees: any[]): Promise<string> {
+  private static async calculateDirectoryHash(
+    employees: any[]
+  ): Promise<string> {
     const data = JSON.stringify(employees.map(e => e.employeeId).sort());
     return btoa(data).substring(0, 16);
   }
@@ -260,7 +270,7 @@ export class KioskOfflineCache {
     setInterval(async () => {
       const cache = await this.getCache();
       const integrityValid = await this.verifyCacheIntegrity(cache);
-      
+
       if (!integrityValid) {
         console.error('Kiosk cache integrity violation detected');
         // Trigger security alert
@@ -298,7 +308,10 @@ export class KioskPunchController {
   private static currentSession: KioskSession | null = null;
   private static sessionTimeout: NodeJS.Timeout | null = null;
 
-  static async startEmployeeSession(employeeId: string, authMethod: string): Promise<KioskSession> {
+  static async startEmployeeSession(
+    employeeId: string,
+    authMethod: string
+  ): Promise<KioskSession> {
     // End any existing session
     if (this.currentSession) {
       await this.endSession();
@@ -318,12 +331,12 @@ export class KioskPunchController {
       sessionState: 'active',
       authenticationMethod: authMethod as any,
       permissions: await this.getEmployeePermissions(employeeId),
-      timeoutWarnings: 0
+      timeoutWarnings: 0,
     };
 
     this.currentSession = session;
     this.startSessionTimeout();
-    
+
     // Add to recent employees
     await this.addToRecentEmployees(employeeId);
 
@@ -340,7 +353,7 @@ export class KioskPunchController {
     this.resetSessionTimeout();
 
     const kioskConfig = await this.getKioskConfiguration();
-    
+
     // Perform additional verification if required
     if (kioskConfig.operationalSettings.requiresPhoto) {
       await this.captureVerificationPhoto();
@@ -358,7 +371,9 @@ export class KioskPunchController {
       timestamp: new Date().toISOString(),
       location: kioskConfig.location,
       sessionId: this.currentSession.sessionId,
-      verificationMethod: kioskConfig.operationalSettings.requiresBiometric ? 'biometric' : 'session'
+      verificationMethod: kioskConfig.operationalSettings.requiresBiometric
+        ? 'biometric'
+        : 'session',
     };
 
     // Try online first, fallback to cache
@@ -376,9 +391,9 @@ export class KioskPunchController {
     if (this.currentSession) {
       // Log session end
       console.log(`Ending kiosk session: ${this.currentSession.sessionId}`);
-      
+
       this.currentSession = null;
-      
+
       if (this.sessionTimeout) {
         clearTimeout(this.sessionTimeout);
         this.sessionTimeout = null;
@@ -388,41 +403,48 @@ export class KioskPunchController {
 
   static async searchEmployees(query: string): Promise<KioskEmployee[]> {
     const directory = await KioskOfflineCache.getEmployeeDirectory();
-    
+
     if (!query) {
       return directory.employees.slice(0, 20); // Limit for performance
     }
 
-    return directory.employees.filter(emp => 
-      emp.name.toLowerCase().includes(query.toLowerCase()) ||
-      emp.employeeId.includes(query) ||
-      emp.badgeNumber?.includes(query)
-    ).slice(0, 10);
+    return directory.employees
+      .filter(
+        emp =>
+          emp.name.toLowerCase().includes(query.toLowerCase()) ||
+          emp.employeeId.includes(query) ||
+          emp.badgeNumber?.includes(query)
+      )
+      .slice(0, 10);
   }
 
   static async getKioskStatus(): Promise<any> {
     const config = await this.getKioskConfiguration();
     const cache = await KioskOfflineCache['getCache']();
-    
+
     return {
       kioskId: config.kioskId,
       online: navigator.onLine,
-      pendingEvents: cache.events?.filter(e => e.syncStatus === 'pending').length || 0,
+      pendingEvents:
+        cache.events?.filter(e => e.syncStatus === 'pending').length || 0,
       lastSync: cache.lastSync,
       currentSession: this.currentSession,
-      operationalStatus: this.determineOperationalStatus(config)
+      operationalStatus: this.determineOperationalStatus(config),
     };
   }
 
   private static startSessionTimeout(): void {
     const timeoutMinutes = 5; // Configurable session timeout
-    
-    this.sessionTimeout = setTimeout(() => {
-      if (this.currentSession) {
-        this.currentSession.sessionState = 'expired';
-        this.endSession();
-      }
-    }, timeoutMinutes * 60 * 1000);
+
+    this.sessionTimeout = setTimeout(
+      () => {
+        if (this.currentSession) {
+          this.currentSession.sessionState = 'expired';
+          this.endSession();
+        }
+      },
+      timeoutMinutes * 60 * 1000
+    );
   }
 
   private static resetSessionTimeout(): void {
@@ -432,9 +454,11 @@ export class KioskPunchController {
     this.startSessionTimeout();
   }
 
-  private static async verifyEmployeeAccess(employeeId: string): Promise<boolean> {
+  private static async verifyEmployeeAccess(
+    employeeId: string
+  ): Promise<boolean> {
     const config = await this.getKioskConfiguration();
-    
+
     if (config.operationalSettings.allowedEmployees === 'all') {
       return true;
     }
@@ -442,14 +466,19 @@ export class KioskPunchController {
     return config.operationalSettings.allowedEmployees.includes(employeeId);
   }
 
-  private static async getEmployeePermissions(employeeId: string): Promise<string[]> {
+  private static async getEmployeePermissions(
+    employeeId: string
+  ): Promise<string[]> {
     // This would fetch from employee service
     return ['clock_in', 'clock_out', 'break_start', 'break_end'];
   }
 
   private static async addToRecentEmployees(employeeId: string): Promise<void> {
     const recent = KioskOfflineCache['getRecentEmployees']();
-    const updated = [employeeId, ...recent.filter(id => id !== employeeId)].slice(0, 10);
+    const updated = [
+      employeeId,
+      ...recent.filter(id => id !== employeeId),
+    ].slice(0, 10);
     localStorage.setItem('kiosk_recent_employees', JSON.stringify(updated));
   }
 
@@ -468,9 +497,9 @@ export class KioskPunchController {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Kiosk-Auth': await this.getKioskToken()
+        'X-Kiosk-Auth': await this.getKioskToken(),
       },
-      body: JSON.stringify(event)
+      body: JSON.stringify(event),
     });
 
     if (!response.ok) {
@@ -487,7 +516,7 @@ export class KioskPunchController {
         name: 'Main Lobby',
         department: 'Reception',
         coordinates: { lat: 37.9755, lng: 23.7348 },
-        geofenceId: 'geofence_001'
+        geofenceId: 'geofence_001',
       },
       hardware: {
         platform: 'android',
@@ -497,36 +526,42 @@ export class KioskPunchController {
         biometricReader: true,
         cardReader: false,
         camera: true,
-        nfcReader: true
+        nfcReader: true,
       },
       operationalSettings: {
         allowedEmployees: 'all',
         operatingHours: {
           start: '06:00',
           end: '23:00',
-          timezone: 'Europe/Athens'
+          timezone: 'Europe/Athens',
         },
         sessionTimeout: 5,
         requiresBiometric: false,
         requiresPhoto: false,
         offlineMode: true,
-        maxOfflineHours: 72
+        maxOfflineHours: 72,
       },
       securitySettings: {
         adminPin: '****',
         kioskMode: true,
         remoteWipe: true,
         tamperDetection: true,
-        auditLogging: true
-      }
+        auditLogging: true,
+      },
     };
   }
 
-  private static determineOperationalStatus(config: KioskConfiguration): string {
+  private static determineOperationalStatus(
+    config: KioskConfiguration
+  ): string {
     const now = new Date();
     const hours = now.getHours();
-    const startHour = parseInt(config.operationalSettings.operatingHours.start.split(':')[0]);
-    const endHour = parseInt(config.operationalSettings.operatingHours.end.split(':')[0]);
+    const startHour = parseInt(
+      config.operationalSettings.operatingHours.start.split(':')[0]
+    );
+    const endHour = parseInt(
+      config.operationalSettings.operatingHours.end.split(':')[0]
+    );
 
     if (hours >= startHour && hours < endHour) {
       return 'operational';

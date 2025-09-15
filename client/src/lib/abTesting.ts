@@ -76,13 +76,25 @@ export interface ABTestEvent {
 
 // Statistical functions
 export class ABTestStatistics {
-  static calculateConversionRate(conversions: number, impressions: number): number {
+  static calculateConversionRate(
+    conversions: number,
+    impressions: number
+  ): number {
     return impressions > 0 ? (conversions / impressions) * 100 : 0;
   }
 
-  static calculateZScore(controlRate: number, testRate: number, controlSize: number, testSize: number): number {
-    const pooledRate = (controlRate * controlSize + testRate * testSize) / (controlSize + testSize);
-    const standardError = Math.sqrt(pooledRate * (1 - pooledRate) * (1/controlSize + 1/testSize));
+  static calculateZScore(
+    controlRate: number,
+    testRate: number,
+    controlSize: number,
+    testSize: number
+  ): number {
+    const pooledRate =
+      (controlRate * controlSize + testRate * testSize) /
+      (controlSize + testSize);
+    const standardError = Math.sqrt(
+      pooledRate * (1 - pooledRate) * (1 / controlSize + 1 / testSize)
+    );
     return standardError > 0 ? (testRate - controlRate) / standardError : 0;
   }
 
@@ -91,14 +103,18 @@ export class ABTestStatistics {
     return 2 * (1 - this.normalCDF(Math.abs(zScore)));
   }
 
-  static calculateConfidenceInterval(rate: number, sampleSize: number, confidence: number = 0.95): { lower: number; upper: number } {
+  static calculateConfidenceInterval(
+    rate: number,
+    sampleSize: number,
+    confidence: number = 0.95
+  ): { lower: number; upper: number } {
     const z = this.getZValue(confidence);
     const standardError = Math.sqrt((rate * (1 - rate)) / sampleSize);
     const margin = z * standardError;
-    
+
     return {
       lower: Math.max(0, (rate - margin) * 100),
-      upper: Math.min(100, (rate + margin) * 100)
+      upper: Math.min(100, (rate + margin) * 100),
     };
   }
 
@@ -108,19 +124,26 @@ export class ABTestStatistics {
     alpha: number = 0.05,
     beta: number = 0.2
   ): number {
-    const zAlpha = this.getZValue(1 - alpha/2);
+    const zAlpha = this.getZValue(1 - alpha / 2);
     const zBeta = this.getZValue(1 - beta);
     const p1 = baselineRate;
     const p2 = baselineRate * (1 + minimumDetectableEffect);
     const pooledP = (p1 + p2) / 2;
-    
-    const numerator = Math.pow(zAlpha * Math.sqrt(2 * pooledP * (1 - pooledP)) + zBeta * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2)), 2);
+
+    const numerator = Math.pow(
+      zAlpha * Math.sqrt(2 * pooledP * (1 - pooledP)) +
+        zBeta * Math.sqrt(p1 * (1 - p1) + p2 * (1 - p2)),
+      2
+    );
     const denominator = Math.pow(p2 - p1, 2);
-    
+
     return Math.ceil(numerator / denominator);
   }
 
-  static isStatisticallySignificant(pValue: number, alpha: number = 0.05): boolean {
+  static isStatisticallySignificant(
+    pValue: number,
+    alpha: number = 0.05
+  ): boolean {
     return pValue < alpha;
   }
 
@@ -130,18 +153,20 @@ export class ABTestStatistics {
 
   private static normalCDF(x: number): number {
     // Approximation of the cumulative distribution function for standard normal distribution
-    const a1 =  0.254829592;
+    const a1 = 0.254829592;
     const a2 = -0.284496736;
-    const a3 =  1.421413741;
+    const a3 = 1.421413741;
     const a4 = -1.453152027;
-    const a5 =  1.061405429;
-    const p  =  0.3275911;
+    const a5 = 1.061405429;
+    const p = 0.3275911;
 
     const sign = x < 0 ? -1 : 1;
     x = Math.abs(x) / Math.sqrt(2.0);
 
     const t = 1.0 / (1.0 + p * x);
-    const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+    const y =
+      1.0 -
+      ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
 
     return 0.5 * (1.0 + sign * y);
   }
@@ -149,11 +174,11 @@ export class ABTestStatistics {
   private static getZValue(confidence: number): number {
     // Common z-values for confidence levels
     const zValues: Record<number, number> = {
-      0.90: 1.645,
-      0.95: 1.960,
-      0.99: 2.576
+      0.9: 1.645,
+      0.95: 1.96,
+      0.99: 2.576,
     };
-    return zValues[confidence] || 1.960;
+    return zValues[confidence] || 1.96;
   }
 }
 
@@ -162,12 +187,14 @@ export class ABTestManager {
   private static tests: Map<string, ABTest> = new Map();
   private static events: ABTestEvent[] = [];
 
-  static createTest(test: Omit<ABTest, 'id' | 'createdAt' | 'updatedAt'>): ABTest {
+  static createTest(
+    test: Omit<ABTest, 'id' | 'createdAt' | 'updatedAt'>
+  ): ABTest {
     const newTest: ABTest = {
       ...test,
       id: this.generateId(),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     this.tests.set(newTest.id, newTest);
@@ -182,14 +209,17 @@ export class ABTestManager {
     return Array.from(this.tests.values());
   }
 
-  static updateTest(testId: string, updates: Partial<ABTest>): ABTest | undefined {
+  static updateTest(
+    testId: string,
+    updates: Partial<ABTest>
+  ): ABTest | undefined {
     const test = this.tests.get(testId);
     if (!test) return undefined;
 
     const updatedTest = {
       ...test,
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     this.tests.set(testId, updatedTest);
@@ -200,9 +230,9 @@ export class ABTestManager {
     const test = this.tests.get(testId);
     if (!test || test.status !== 'draft') return false;
 
-    this.updateTest(testId, { 
+    this.updateTest(testId, {
       status: 'running',
-      startDate: new Date().toISOString()
+      startDate: new Date().toISOString(),
     });
     return true;
   }
@@ -211,9 +241,9 @@ export class ABTestManager {
     const test = this.tests.get(testId);
     if (!test || test.status !== 'running') return false;
 
-    this.updateTest(testId, { 
+    this.updateTest(testId, {
       status: 'completed',
-      endDate: new Date().toISOString()
+      endDate: new Date().toISOString(),
     });
     return true;
   }
@@ -225,7 +255,7 @@ export class ABTestManager {
     // Simple hash-based assignment for consistent user experience
     const hash = this.hashUserId(userId, testId);
     const trafficThreshold = test.trafficAllocation / 100;
-    
+
     if (hash > trafficThreshold) return null; // User not in test
 
     // Assign variant based on traffic weights
@@ -245,13 +275,18 @@ export class ABTestManager {
   static trackEvent(event: Omit<ABTestEvent, 'timestamp'>): void {
     const fullEvent: ABTestEvent = {
       ...event,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     this.events.push(fullEvent);
 
     // Update test metrics
-    this.updateTestMetrics(event.testId, event.variantId, event.eventType, event.eventValue);
+    this.updateTestMetrics(
+      event.testId,
+      event.variantId,
+      event.eventType,
+      event.eventValue
+    );
   }
 
   static getTestResults(testId: string): ABTestResult | null {
@@ -269,12 +304,14 @@ export class ABTestManager {
         test.confidenceLevel
       );
 
-      const zScore = variant.isControl ? 0 : ABTestStatistics.calculateZScore(
-        controlVariant.metrics.conversionRate / 100,
-        conversionRate,
-        controlVariant.metrics.impressions,
-        variant.metrics.impressions
-      );
+      const zScore = variant.isControl
+        ? 0
+        : ABTestStatistics.calculateZScore(
+            controlVariant.metrics.conversionRate / 100,
+            conversionRate,
+            controlVariant.metrics.impressions,
+            variant.metrics.impressions
+          );
 
       return {
         variantId: variant.id,
@@ -282,30 +319,44 @@ export class ABTestManager {
         isControl: variant.isControl,
         metrics: variant.metrics,
         confidenceInterval,
-        zScore
+        zScore,
       };
     });
 
     // Find best performing non-control variant
     const testVariants = results.filter(r => !r.isControl);
-    const bestVariant = testVariants.reduce((best, current) => 
-      current.metrics.conversionRate > best.metrics.conversionRate ? current : best
-    , testVariants[0]);
+    const bestVariant = testVariants.reduce(
+      (best, current) =>
+        current.metrics.conversionRate > best.metrics.conversionRate
+          ? current
+          : best,
+      testVariants[0]
+    );
 
     const controlResult = results.find(r => r.isControl)!;
-    const pValue = bestVariant ? ABTestStatistics.calculatePValue(bestVariant.zScore) : 1;
-    const lift = bestVariant ? ABTestStatistics.calculateLift(
-      controlResult.metrics.conversionRate,
-      bestVariant.metrics.conversionRate
-    ) : 0;
+    const pValue = bestVariant
+      ? ABTestStatistics.calculatePValue(bestVariant.zScore)
+      : 1;
+    const lift = bestVariant
+      ? ABTestStatistics.calculateLift(
+          controlResult.metrics.conversionRate,
+          bestVariant.metrics.conversionRate
+        )
+      : 0;
 
     const isSignificant = ABTestStatistics.isStatisticallySignificant(pValue);
-    const hasMinimumSample = test.variants.every(v => v.metrics.impressions >= test.minimumSampleSize);
+    const hasMinimumSample = test.variants.every(
+      v => v.metrics.impressions >= test.minimumSampleSize
+    );
 
     let recommendedAction: ABTestResult['recommendedAction'] = 'continue';
     if (hasMinimumSample && isSignificant) {
-      recommendedAction = bestVariant && bestVariant.metrics.conversionRate > controlResult.metrics.conversionRate 
-        ? 'stop_winner' : 'stop_no_winner';
+      recommendedAction =
+        bestVariant &&
+        bestVariant.metrics.conversionRate >
+          controlResult.metrics.conversionRate
+          ? 'stop_winner'
+          : 'stop_no_winner';
     } else if (hasMinimumSample && !isSignificant) {
       recommendedAction = 'stop_no_winner';
     }
@@ -318,11 +369,16 @@ export class ABTestManager {
       liftPercentage: lift,
       isStatisticallySignificant: isSignificant,
       recommendedAction,
-      results
+      results,
     };
   }
 
-  private static updateTestMetrics(testId: string, variantId: string, eventType: string, eventValue?: number): void {
+  private static updateTestMetrics(
+    testId: string,
+    variantId: string,
+    eventType: string,
+    eventValue?: number
+  ): void {
     const test = this.tests.get(testId);
     if (!test) return;
 
@@ -345,7 +401,8 @@ export class ABTestManager {
     );
 
     if (variant.metrics.revenue && variant.metrics.conversions > 0) {
-      variant.metrics.averageOrderValue = variant.metrics.revenue / variant.metrics.conversions;
+      variant.metrics.averageOrderValue =
+        variant.metrics.revenue / variant.metrics.conversions;
     }
 
     this.updateTest(testId, test);
@@ -356,13 +413,16 @@ export class ABTestManager {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return Math.abs(hash) / 2147483647; // Normalize to 0-1
   }
 
   private static generateId(): string {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    return (
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
   }
 }

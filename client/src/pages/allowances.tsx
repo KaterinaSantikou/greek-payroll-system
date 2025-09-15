@@ -1,15 +1,36 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Gift, Euro, Users, Calendar, Calculator, Settings, Plus, Trash2 } from "lucide-react";
-import { 
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Gift,
+  Euro,
+  Users,
+  Calendar,
+  Calculator,
+  Settings,
+  Plus,
+  Trash2,
+} from 'lucide-react';
+import {
   GREEK_HOLIDAY_BONUSES,
   REGULAR_ALLOWANCES,
   INDUSTRY_ALLOWANCES,
@@ -19,27 +40,29 @@ import {
   calculateIndustryAllowance,
   calculateFamilyAllowances,
   calculateTotalAllowances,
-  getAllowanceOptions
-} from "@/lib/allowancesCalculations";
+  getAllowanceOptions,
+} from '@/lib/allowancesCalculations';
 
 export default function AllowancesPage() {
-  const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState('');
   const [employeeData, setEmployeeData] = useState({
     baseSalary: 1200,
     serviceMonths: 12,
     isMarried: false,
     numberOfChildren: 0,
     childrenAges: [] as number[],
-    industry: "general"
+    industry: 'general',
   });
 
-  const [selectedAllowances, setSelectedAllowances] = useState<Array<{
-    id: string;
-    type: string;
-    subType?: string;
-    amount?: number;
-    performanceData?: any;
-  }>>([]);
+  const [selectedAllowances, setSelectedAllowances] = useState<
+    Array<{
+      id: string;
+      type: string;
+      subType?: string;
+      amount?: number;
+      performanceData?: any;
+    }>
+  >([]);
 
   const [calculationResults, setCalculationResults] = useState<any>(null);
 
@@ -56,7 +79,7 @@ export default function AllowancesPage() {
     const newAllowance = {
       id: Math.random().toString(36).substr(2, 9),
       type: allowanceType,
-      amount: 0
+      amount: 0,
     };
     setSelectedAllowances([...selectedAllowances, newAllowance]);
   };
@@ -66,9 +89,11 @@ export default function AllowancesPage() {
   };
 
   const updateAllowance = (id: string, field: string, value: any) => {
-    setSelectedAllowances(selectedAllowances.map(allowance => 
-      allowance.id === id ? { ...allowance, [field]: value } : allowance
-    ));
+    setSelectedAllowances(
+      selectedAllowances.map(allowance =>
+        allowance.id === id ? { ...allowance, [field]: value } : allowance
+      )
+    );
   };
 
   const allowanceOptions = getAllowanceOptions();
@@ -79,7 +104,9 @@ export default function AllowancesPage() {
         <Gift className="h-8 w-8 text-green-600" />
         <div>
           <h1 className="text-3xl font-bold">Επιδόματα & Δώρα</h1>
-          <p className="text-gray-600">Διαχείριση επιδομάτων, δώρων εορτών και οικογενειακών παροχών</p>
+          <p className="text-gray-600">
+            Διαχείριση επιδομάτων, δώρων εορτών και οικογενειακών παροχών
+          </p>
         </div>
       </div>
 
@@ -87,7 +114,9 @@ export default function AllowancesPage() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="calculator">Υπολογιστής</TabsTrigger>
           <TabsTrigger value="holiday-bonuses">Δώρα Εορτών</TabsTrigger>
-          <TabsTrigger value="regular-allowances">Τακτικά Επιδόματα</TabsTrigger>
+          <TabsTrigger value="regular-allowances">
+            Τακτικά Επιδόματα
+          </TabsTrigger>
           <TabsTrigger value="industry-specific">Κλαδικά Επιδόματα</TabsTrigger>
         </TabsList>
 
@@ -111,7 +140,12 @@ export default function AllowancesPage() {
                     id="baseSalary"
                     type="number"
                     value={employeeData.baseSalary}
-                    onChange={(e) => setEmployeeData({...employeeData, baseSalary: parseFloat(e.target.value)})}
+                    onChange={e =>
+                      setEmployeeData({
+                        ...employeeData,
+                        baseSalary: parseFloat(e.target.value),
+                      })
+                    }
                   />
                 </div>
 
@@ -121,15 +155,22 @@ export default function AllowancesPage() {
                     id="serviceMonths"
                     type="number"
                     value={employeeData.serviceMonths}
-                    onChange={(e) => setEmployeeData({...employeeData, serviceMonths: parseInt(e.target.value)})}
+                    onChange={e =>
+                      setEmployeeData({
+                        ...employeeData,
+                        serviceMonths: parseInt(e.target.value),
+                      })
+                    }
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="industry">Κλάδος</Label>
-                  <Select 
-                    value={employeeData.industry} 
-                    onValueChange={(value) => setEmployeeData({...employeeData, industry: value})}
+                  <Select
+                    value={employeeData.industry}
+                    onValueChange={value =>
+                      setEmployeeData({ ...employeeData, industry: value })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -149,12 +190,14 @@ export default function AllowancesPage() {
 
                 <div className="space-y-3">
                   <h4 className="font-medium">Οικογενειακή Κατάσταση</h4>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="married"
                       checked={employeeData.isMarried}
-                      onCheckedChange={(checked) => setEmployeeData({...employeeData, isMarried: checked})}
+                      onCheckedChange={checked =>
+                        setEmployeeData({ ...employeeData, isMarried: checked })
+                      }
                     />
                     <Label htmlFor="married">Παντρεμένος/η</Label>
                   </div>
@@ -167,12 +210,14 @@ export default function AllowancesPage() {
                       min="0"
                       max="10"
                       value={employeeData.numberOfChildren}
-                      onChange={(e) => {
+                      onChange={e => {
                         const count = parseInt(e.target.value) || 0;
                         setEmployeeData({
-                          ...employeeData, 
+                          ...employeeData,
                           numberOfChildren: count,
-                          childrenAges: Array(count).fill(0).map((_, i) => employeeData.childrenAges[i] || 10)
+                          childrenAges: Array(count)
+                            .fill(0)
+                            .map((_, i) => employeeData.childrenAges[i] || 10),
                         });
                       }}
                     />
@@ -181,21 +226,26 @@ export default function AllowancesPage() {
                   {employeeData.numberOfChildren > 0 && (
                     <div className="space-y-2">
                       <Label>Ηλικίες Τέκνων</Label>
-                      {Array(employeeData.numberOfChildren).fill(0).map((_, index) => (
-                        <Input
-                          key={index}
-                          type="number"
-                          placeholder={`Ηλικία ${index + 1}ου τέκνου`}
-                          min="0"
-                          max="25"
-                          value={employeeData.childrenAges[index] || ''}
-                          onChange={(e) => {
-                            const newAges = [...employeeData.childrenAges];
-                            newAges[index] = parseInt(e.target.value) || 0;
-                            setEmployeeData({...employeeData, childrenAges: newAges});
-                          }}
-                        />
-                      ))}
+                      {Array(employeeData.numberOfChildren)
+                        .fill(0)
+                        .map((_, index) => (
+                          <Input
+                            key={index}
+                            type="number"
+                            placeholder={`Ηλικία ${index + 1}ου τέκνου`}
+                            min="0"
+                            max="25"
+                            value={employeeData.childrenAges[index] || ''}
+                            onChange={e => {
+                              const newAges = [...employeeData.childrenAges];
+                              newAges[index] = parseInt(e.target.value) || 0;
+                              setEmployeeData({
+                                ...employeeData,
+                                childrenAges: newAges,
+                              });
+                            }}
+                          />
+                        ))}
                     </div>
                   )}
                 </div>
@@ -214,47 +264,78 @@ export default function AllowancesPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  {selectedAllowances.map((allowance) => {
-                    const option = allowanceOptions.find(opt => opt.value === allowance.type);
+                  {selectedAllowances.map(allowance => {
+                    const option = allowanceOptions.find(
+                      opt => opt.value === allowance.type
+                    );
                     return (
-                      <div key={allowance.id} className="flex items-center gap-2 p-3 border rounded-lg">
+                      <div
+                        key={allowance.id}
+                        className="flex items-center gap-2 p-3 border rounded-lg"
+                      >
                         <div className="flex-1">
                           <Select
                             value={allowance.type}
-                            onValueChange={(value) => updateAllowance(allowance.id, 'type', value)}
+                            onValueChange={value =>
+                              updateAllowance(allowance.id, 'type', value)
+                            }
                           >
                             <SelectTrigger className="w-full">
                               <SelectValue placeholder="Επιλέξτε επίδομα" />
                             </SelectTrigger>
                             <SelectContent>
-                              {allowanceOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
+                              {allowanceOptions.map(option => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
                                   <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       {option.category}
                                     </Badge>
                                     {option.label}
-                                    {option.mandatory && <Badge variant="default" className="text-xs">Υποχρεωτικό</Badge>}
+                                    {option.mandatory && (
+                                      <Badge
+                                        variant="default"
+                                        className="text-xs"
+                                      >
+                                        Υποχρεωτικό
+                                      </Badge>
+                                    )}
                                   </div>
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
-                          
+
                           {option && (
-                            <p className="text-xs text-gray-600 mt-1">{option.description}</p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              {option.description}
+                            </p>
                           )}
                         </div>
 
-                        {allowance.type && !allowance.type.includes('CHRISTMAS') && !allowance.type.includes('EASTER') && !allowance.type.includes('VACATION') && (
-                          <Input
-                            type="number"
-                            placeholder="Ποσό"
-                            className="w-24"
-                            value={allowance.amount || ''}
-                            onChange={(e) => updateAllowance(allowance.id, 'amount', parseFloat(e.target.value))}
-                          />
-                        )}
+                        {allowance.type &&
+                          !allowance.type.includes('CHRISTMAS') &&
+                          !allowance.type.includes('EASTER') &&
+                          !allowance.type.includes('VACATION') && (
+                            <Input
+                              type="number"
+                              placeholder="Ποσό"
+                              className="w-24"
+                              value={allowance.amount || ''}
+                              onChange={e =>
+                                updateAllowance(
+                                  allowance.id,
+                                  'amount',
+                                  parseFloat(e.target.value)
+                                )
+                              }
+                            />
+                          )}
 
                         <Button
                           variant="outline"
@@ -268,18 +349,18 @@ export default function AllowancesPage() {
                   })}
                 </div>
 
-                <Button 
-                  onClick={() => addAllowance('')} 
-                  variant="outline" 
+                <Button
+                  onClick={() => addAllowance('')}
+                  variant="outline"
                   className="w-full"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Προσθήκη Επιδόματος
                 </Button>
 
-                <Button 
-                  onClick={handleCalculateAllowances} 
-                  className="w-full" 
+                <Button
+                  onClick={handleCalculateAllowances}
+                  className="w-full"
                   size="lg"
                 >
                   <Calculator className="mr-2 h-4 w-4" />
@@ -307,7 +388,9 @@ export default function AllowancesPage() {
                     <div className="text-2xl font-bold text-blue-600">
                       €{calculationResults.totalMonthlyAllowances.toFixed(2)}
                     </div>
-                    <div className="text-sm text-gray-600">Μηνιαία Επιδόματα</div>
+                    <div className="text-sm text-gray-600">
+                      Μηνιαία Επιδόματα
+                    </div>
                   </div>
 
                   <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -319,7 +402,11 @@ export default function AllowancesPage() {
 
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <div className="text-2xl font-bold text-purple-600">
-                      €{(calculationResults.totalMonthlyAllowances * 12 + calculationResults.totalAnnualBonuses).toFixed(2)}
+                      €
+                      {(
+                        calculationResults.totalMonthlyAllowances * 12 +
+                        calculationResults.totalAnnualBonuses
+                      ).toFixed(2)}
                     </div>
                     <div className="text-sm text-gray-600">Συνολικό Ετήσιο</div>
                   </div>
@@ -328,24 +415,40 @@ export default function AllowancesPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Monthly Allowances Breakdown */}
                   <div>
-                    <h4 className="font-medium mb-3">Ανάλυση Μηνιαίων Επιδομάτων</h4>
+                    <h4 className="font-medium mb-3">
+                      Ανάλυση Μηνιαίων Επιδομάτων
+                    </h4>
                     <div className="space-y-2">
-                      {calculationResults.breakdown.map((item: any, index: number) => (
-                        <div key={index} className="flex justify-between items-center p-2 border rounded">
-                          <div>
-                            <span className="font-medium">{item.description}</span>
-                            <div className="flex gap-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
-                                {item.category}
-                              </Badge>
-                              <Badge variant={item.taxable ? "destructive" : "secondary"} className="text-xs">
-                                {item.taxable ? 'Φορολογητέο' : 'Αφορολόγητο'}
-                              </Badge>
+                      {calculationResults.breakdown.map(
+                        (item: any, index: number) => (
+                          <div
+                            key={index}
+                            className="flex justify-between items-center p-2 border rounded"
+                          >
+                            <div>
+                              <span className="font-medium">
+                                {item.description}
+                              </span>
+                              <div className="flex gap-2 mt-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {item.category}
+                                </Badge>
+                                <Badge
+                                  variant={
+                                    item.taxable ? 'destructive' : 'secondary'
+                                  }
+                                  className="text-xs"
+                                >
+                                  {item.taxable ? 'Φορολογητέο' : 'Αφορολόγητο'}
+                                </Badge>
+                              </div>
                             </div>
+                            <span className="font-bold">
+                              €{item.amount.toFixed(2)}
+                            </span>
                           </div>
-                          <span className="font-bold">€{item.amount.toFixed(2)}</span>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   </div>
 
@@ -353,17 +456,29 @@ export default function AllowancesPage() {
                   <div>
                     <h4 className="font-medium mb-3">Δώρα Εορτών</h4>
                     <div className="space-y-2">
-                      {calculationResults.holidayBonuses.map((bonus: any, index: number) => (
-                        <div key={index} className="flex justify-between items-center p-2 border rounded">
-                          <div>
-                            <span className="font-medium">{bonus.description}</span>
-                            <div className="text-sm text-gray-600">
-                              Πληρωμή: {typeof bonus.month === 'number' ? `Μήνας ${bonus.month}` : bonus.month}
+                      {calculationResults.holidayBonuses.map(
+                        (bonus: any, index: number) => (
+                          <div
+                            key={index}
+                            className="flex justify-between items-center p-2 border rounded"
+                          >
+                            <div>
+                              <span className="font-medium">
+                                {bonus.description}
+                              </span>
+                              <div className="text-sm text-gray-600">
+                                Πληρωμή:{' '}
+                                {typeof bonus.month === 'number'
+                                  ? `Μήνας ${bonus.month}`
+                                  : bonus.month}
+                              </div>
                             </div>
+                            <span className="font-bold">
+                              €{bonus.amount.toFixed(2)}
+                            </span>
                           </div>
-                          <span className="font-bold">€{bonus.amount.toFixed(2)}</span>
-                        </div>
-                      ))}
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -387,31 +502,39 @@ export default function AllowancesPage() {
                 <CardContent className="space-y-3">
                   <div className="flex justify-between">
                     <span>Ποσοστό μισθού:</span>
-                    <Badge variant="default">{(bonus.rate * 100).toFixed(1)}%</Badge>
+                    <Badge variant="default">
+                      {(bonus.rate * 100).toFixed(1)}%
+                    </Badge>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span>Ελάχιστη υπηρεσία:</span>
-                    <Badge variant="outline">{bonus.minimumServiceMonths} μήνες</Badge>
+                    <Badge variant="outline">
+                      {bonus.minimumServiceMonths} μήνες
+                    </Badge>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span>Αναλογική καταβολή:</span>
-                    <Badge variant={bonus.proRated ? "default" : "secondary"}>
+                    <Badge variant={bonus.proRated ? 'default' : 'secondary'}>
                       {bonus.proRated ? 'Ναι' : 'Όχι'}
                     </Badge>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span>Υποχρεωτικό:</span>
-                    <Badge variant={bonus.mandatory ? "destructive" : "secondary"}>
+                    <Badge
+                      variant={bonus.mandatory ? 'destructive' : 'secondary'}
+                    >
                       {bonus.mandatory ? 'Ναι' : 'Όχι'}
                     </Badge>
                   </div>
-                  
+
                   <div className="flex justify-between">
                     <span>Φορολογητέο:</span>
-                    <Badge variant={bonus.taxable ? "destructive" : "secondary"}>
+                    <Badge
+                      variant={bonus.taxable ? 'destructive' : 'secondary'}
+                    >
                       {bonus.taxable ? 'Ναι' : 'Όχι'}
                     </Badge>
                   </div>
@@ -432,35 +555,47 @@ export default function AllowancesPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Object.entries(allowance.types).map(([subKey, subType]) => (
-                      <div key={subKey} className="p-3 border rounded-lg">
-                        <h5 className="font-medium">{subType.name}</h5>
-                        <div className="mt-2 space-y-1 text-sm">
-                          {'percentage' in subType && (
-                            <div>Ποσοστό: {(subType.percentage * 100)}% μισθού</div>
-                          )}
-                          {'fixedAmount' in subType && (
-                            <div>Σταθερό ποσό: €{subType.fixedAmount}</div>
-                          )}
-                          {'maxMonthly' in subType && (
-                            <div>Μέγιστο μηνιαίο: €{subType.maxMonthly}</div>
-                          )}
-                          {'maxDaily' in subType && (
-                            <div>Μέγιστο ημερήσιο: €{subType.maxDaily}</div>
-                          )}
-                          {'taxExempt' in subType && (
-                            <div className="text-green-600">Αφορολόγητο όριο: €{subType.taxExempt}</div>
-                          )}
+                    {Object.entries(allowance.types).map(
+                      ([subKey, subType]) => (
+                        <div key={subKey} className="p-3 border rounded-lg">
+                          <h5 className="font-medium">{subType.name}</h5>
+                          <div className="mt-2 space-y-1 text-sm">
+                            {'percentage' in subType && (
+                              <div>
+                                Ποσοστό: {subType.percentage * 100}% μισθού
+                              </div>
+                            )}
+                            {'fixedAmount' in subType && (
+                              <div>Σταθερό ποσό: €{subType.fixedAmount}</div>
+                            )}
+                            {'maxMonthly' in subType && (
+                              <div>Μέγιστο μηνιαίο: €{subType.maxMonthly}</div>
+                            )}
+                            {'maxDaily' in subType && (
+                              <div>Μέγιστο ημερήσιο: €{subType.maxDaily}</div>
+                            )}
+                            {'taxExempt' in subType && (
+                              <div className="text-green-600">
+                                Αφορολόγητο όριο: €{subType.taxExempt}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
-                  
+
                   <div className="mt-4 flex gap-2">
-                    <Badge variant={allowance.mandatory ? "destructive" : "secondary"}>
+                    <Badge
+                      variant={
+                        allowance.mandatory ? 'destructive' : 'secondary'
+                      }
+                    >
                       {allowance.mandatory ? 'Υποχρεωτικό' : 'Προαιρετικό'}
                     </Badge>
-                    <Badge variant={allowance.taxable ? "destructive" : "default"}>
+                    <Badge
+                      variant={allowance.taxable ? 'destructive' : 'default'}
+                    >
                       {allowance.taxable ? 'Φορολογητέο' : 'Αφορολόγητο'}
                     </Badge>
                     {(allowance as any).socialSecurityExempt && (
@@ -489,25 +624,41 @@ export default function AllowancesPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(config.allowances).map(([key, allowanceConfig]) => (
-                      <div key={key} className="p-3 border rounded-lg">
-                        <h5 className="font-medium">{allowanceConfig.name}</h5>
-                        <p className="text-sm text-gray-600 mt-1">{allowanceConfig.description}</p>
-                        <div className="mt-2 space-y-1 text-sm">
-                          {'percentage' in allowanceConfig && (
-                            <div>Ποσοστό: {(allowanceConfig.percentage * 100)}% μισθού</div>
-                          )}
-                          {'fixedAmount' in allowanceConfig && (
-                            <div>Σταθερό ποσό: €{allowanceConfig.fixedAmount}/μήνα</div>
-                          )}
-                          {'calculation' in allowanceConfig && (
-                            <div className="text-blue-600">
-                              Υπολογισμός: {allowanceConfig.calculation === 'performance_based' ? 'Βάσει απόδοσης' : 'Βάσει προμήθειας'}
-                            </div>
-                          )}
+                    {Object.entries(config.allowances).map(
+                      ([key, allowanceConfig]) => (
+                        <div key={key} className="p-3 border rounded-lg">
+                          <h5 className="font-medium">
+                            {allowanceConfig.name}
+                          </h5>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {allowanceConfig.description}
+                          </p>
+                          <div className="mt-2 space-y-1 text-sm">
+                            {'percentage' in allowanceConfig && (
+                              <div>
+                                Ποσοστό: {allowanceConfig.percentage * 100}%
+                                μισθού
+                              </div>
+                            )}
+                            {'fixedAmount' in allowanceConfig && (
+                              <div>
+                                Σταθερό ποσό: €{allowanceConfig.fixedAmount}
+                                /μήνα
+                              </div>
+                            )}
+                            {'calculation' in allowanceConfig && (
+                              <div className="text-blue-600">
+                                Υπολογισμός:{' '}
+                                {allowanceConfig.calculation ===
+                                'performance_based'
+                                  ? 'Βάσει απόδοσης'
+                                  : 'Βάσει προμήθειας'}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    )}
                   </div>
                 </CardContent>
               </Card>

@@ -53,13 +53,13 @@ class OfflineStorageService {
         resolve();
       };
 
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = event => {
         const db = (event.target as IDBOpenDBRequest).result;
 
         // Punch Events Store
         if (!db.objectStoreNames.contains('punchEvents')) {
-          const punchStore = db.createObjectStore('punchEvents', { 
-            keyPath: 'clientEventId' 
+          const punchStore = db.createObjectStore('punchEvents', {
+            keyPath: 'clientEventId',
           });
           punchStore.createIndex('employeeId', 'employeeId');
           punchStore.createIndex('timestamp', 'timestamp');
@@ -68,8 +68,8 @@ class OfflineStorageService {
 
         // Payroll Previews Store
         if (!db.objectStoreNames.contains('payrollPreviews')) {
-          const payrollStore = db.createObjectStore('payrollPreviews', { 
-            keyPath: 'previewId' 
+          const payrollStore = db.createObjectStore('payrollPreviews', {
+            keyPath: 'previewId',
           });
           payrollStore.createIndex('payPeriod', 'payPeriod');
           payrollStore.createIndex('syncStatus', 'syncStatus');
@@ -77,8 +77,8 @@ class OfflineStorageService {
 
         // Sync Queue Store
         if (!db.objectStoreNames.contains('syncQueue')) {
-          const syncStore = db.createObjectStore('syncQueue', { 
-            keyPath: 'id' 
+          const syncStore = db.createObjectStore('syncQueue', {
+            keyPath: 'id',
           });
           syncStore.createIndex('type', 'type');
           syncStore.createIndex('attempts', 'attempts');
@@ -86,8 +86,8 @@ class OfflineStorageService {
 
         // Employee Cache Store (for offline access)
         if (!db.objectStoreNames.contains('employeeCache')) {
-          const empStore = db.createObjectStore('employeeCache', { 
-            keyPath: 'employeeId' 
+          const empStore = db.createObjectStore('employeeCache', {
+            keyPath: 'employeeId',
           });
           empStore.createIndex('propertyId', 'defaultPropertyId');
           empStore.createIndex('lastSync', 'lastSync');
@@ -107,7 +107,7 @@ class OfflineStorageService {
 
     const transaction = this.db.transaction(['punchEvents'], 'readwrite');
     const store = transaction.objectStore('punchEvents');
-    
+
     await new Promise<void>((resolve, reject) => {
       const request = store.put(event);
       request.onsuccess = () => resolve();
@@ -135,7 +135,7 @@ class OfflineStorageService {
   }
 
   async updatePunchEventSyncStatus(
-    clientEventId: string, 
+    clientEventId: string,
     status: 'synced' | 'failed' | 'conflict',
     error?: string
   ): Promise<void> {
@@ -170,7 +170,7 @@ class OfflineStorageService {
 
     const transaction = this.db.transaction(['payrollPreviews'], 'readwrite');
     const store = transaction.objectStore('payrollPreviews');
-    
+
     return new Promise<void>((resolve, reject) => {
       const request = store.put(preview);
       request.onsuccess = () => resolve();
@@ -178,7 +178,9 @@ class OfflineStorageService {
     });
   }
 
-  async getPayrollPreview(payPeriod: string): Promise<OfflinePayrollPreview | null> {
+  async getPayrollPreview(
+    payPeriod: string
+  ): Promise<OfflinePayrollPreview | null> {
     if (!this.db) throw new Error('Database not initialized');
 
     const transaction = this.db.transaction(['payrollPreviews'], 'readonly');
@@ -213,12 +215,12 @@ class OfflineStorageService {
       id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type: type as any,
       data,
-      attempts: 0
+      attempts: 0,
     };
 
     const transaction = this.db.transaction(['syncQueue'], 'readwrite');
     const store = transaction.objectStore('syncQueue');
-    
+
     return new Promise<void>((resolve, reject) => {
       const request = store.put(queueItem);
       request.onsuccess = () => resolve();
@@ -244,7 +246,7 @@ class OfflineStorageService {
 
     const transaction = this.db.transaction(['syncQueue'], 'readwrite');
     const store = transaction.objectStore('syncQueue');
-    
+
     return new Promise<void>((resolve, reject) => {
       const request = store.delete(id);
       request.onsuccess = () => resolve();
@@ -252,7 +254,10 @@ class OfflineStorageService {
     });
   }
 
-  async updateSyncQueueItem(id: string, updates: Partial<SyncQueueItem>): Promise<void> {
+  async updateSyncQueueItem(
+    id: string,
+    updates: Partial<SyncQueueItem>
+  ): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
     const transaction = this.db.transaction(['syncQueue'], 'readwrite');
@@ -281,12 +286,12 @@ class OfflineStorageService {
 
     const employeeWithSync = {
       ...employee,
-      lastSync: new Date().toISOString()
+      lastSync: new Date().toISOString(),
     };
 
     const transaction = this.db.transaction(['employeeCache'], 'readwrite');
     const store = transaction.objectStore('employeeCache');
-    
+
     return new Promise<void>((resolve, reject) => {
       const request = store.put(employeeWithSync);
       request.onsuccess = () => resolve();
@@ -311,17 +316,25 @@ class OfflineStorageService {
   async clearAllData(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
-    const stores = ['punchEvents', 'payrollPreviews', 'syncQueue', 'employeeCache', 'appSettings'];
+    const stores = [
+      'punchEvents',
+      'payrollPreviews',
+      'syncQueue',
+      'employeeCache',
+      'appSettings',
+    ];
     const transaction = this.db.transaction(stores, 'readwrite');
 
-    await Promise.all(stores.map(storeName => {
-      return new Promise<void>((resolve, reject) => {
-        const store = transaction.objectStore(storeName);
-        const request = store.clear();
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      });
-    }));
+    await Promise.all(
+      stores.map(storeName => {
+        return new Promise<void>((resolve, reject) => {
+          const store = transaction.objectStore(storeName);
+          const request = store.clear();
+          request.onsuccess = () => resolve();
+          request.onerror = () => reject(request.error);
+        });
+      })
+    );
   }
 
   async getStorageStats(): Promise<{
@@ -332,20 +345,23 @@ class OfflineStorageService {
   }> {
     if (!this.db) throw new Error('Database not initialized');
 
-    const transaction = this.db.transaction(['punchEvents', 'payrollPreviews', 'syncQueue', 'employeeCache'], 'readonly');
+    const transaction = this.db.transaction(
+      ['punchEvents', 'payrollPreviews', 'syncQueue', 'employeeCache'],
+      'readonly'
+    );
 
     const counts = await Promise.all([
       this.getStoreCount(transaction.objectStore('punchEvents')),
       this.getStoreCount(transaction.objectStore('payrollPreviews')),
       this.getStoreCount(transaction.objectStore('syncQueue')),
-      this.getStoreCount(transaction.objectStore('employeeCache'))
+      this.getStoreCount(transaction.objectStore('employeeCache')),
     ]);
 
     return {
       punchEvents: counts[0],
       payrollPreviews: counts[1],
       syncQueue: counts[2],
-      cachedEmployees: counts[3]
+      cachedEmployees: counts[3],
     };
   }
 

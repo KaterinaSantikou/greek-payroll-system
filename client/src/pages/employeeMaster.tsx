@@ -1,41 +1,88 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useToast } from "@/hooks/use-toast";
-import { Users, Plus, Search, Building2, CreditCard, Calendar, MapPin, Phone, Shield } from "lucide-react";
-import type { Employee, InsertEmployee, WageComponent, InsertWageComponent, Property } from "@shared/schema";
+import { useState, useEffect } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Users,
+  Plus,
+  Search,
+  Building2,
+  CreditCard,
+  Calendar,
+  MapPin,
+  Phone,
+  Shield,
+} from 'lucide-react';
+import type {
+  Employee,
+  InsertEmployee,
+  WageComponent,
+  InsertWageComponent,
+  Property,
+} from '@shared/schema';
 
 // Comprehensive employee form schema with Greek-specific validations
 const employeeFormSchema = z.object({
-  employeeNumber: z.string().min(1, "Employee number required"),
-  firstName: z.string().min(1, "First name required"),
-  lastName: z.string().min(1, "Last name required"),
-  afm: z.string().length(9, "AFM must be exactly 9 digits").regex(/^\d{9}$/, "AFM must contain only numbers").optional().or(z.literal("")),
-  amka: z.string().length(11, "AMKA must be exactly 11 digits").regex(/^\d{11}$/, "AMKA must contain only numbers").optional().or(z.literal("")),
+  employeeNumber: z.string().min(1, 'Employee number required'),
+  firstName: z.string().min(1, 'First name required'),
+  lastName: z.string().min(1, 'Last name required'),
+  afm: z
+    .string()
+    .length(9, 'AFM must be exactly 9 digits')
+    .regex(/^\d{9}$/, 'AFM must contain only numbers')
+    .optional()
+    .or(z.literal('')),
+  amka: z
+    .string()
+    .length(11, 'AMKA must be exactly 11 digits')
+    .regex(/^\d{11}$/, 'AMKA must contain only numbers')
+    .optional()
+    .or(z.literal('')),
   paaypa: z.string().optional(),
-  bankIban: z.string().min(15).max(34).optional().or(z.literal("")),
+  bankIban: z.string().min(15).max(34).optional().or(z.literal('')),
   dateOfBirth: z.string().optional(),
-  nationalityCode: z.string().default("GRC"),
-  employmentType: z.enum(["indefinite", "fixed-term", "seasonal"]),
+  nationalityCode: z.string().default('GRC'),
+  employmentType: z.enum(['indefinite', 'fixed-term', 'seasonal']),
   grade: z.string().optional(),
   unionCbaRef: z.string().optional(),
-  hireDate: z.string().min(1, "Hire date required"),
-  termDate: z.string().optional().or(z.literal("")),
-  probationEndDate: z.string().optional().or(z.literal("")),
+  hireDate: z.string().min(1, 'Hire date required'),
+  termDate: z.string().optional().or(z.literal('')),
+  probationEndDate: z.string().optional().or(z.literal('')),
   defaultPropertyId: z.string().optional(),
-  maritalStatus: z.enum(["single", "married", "divorced", "widowed"]).optional(),
+  maritalStatus: z
+    .enum(['single', 'married', 'divorced', 'widowed'])
+    .optional(),
   dependents: z.coerce.number().min(0).default(0),
   disabilityPercentage: z.coerce.number().min(0).max(100).default(0),
   emergencyContactName: z.string().optional(),
@@ -44,7 +91,7 @@ const employeeFormSchema = z.object({
 
 // Wage components form schema
 const wageFormSchema = z.object({
-  baseSalary: z.coerce.number().min(0, "Base salary must be positive"),
+  baseSalary: z.coerce.number().min(0, 'Base salary must be positive'),
   hourlyRate: z.coerce.number().min(0).optional(),
   foodAllowance: z.coerce.number().min(0).default(0),
   housingAllowance: z.coerce.number().min(0).default(0),
@@ -59,7 +106,7 @@ const wageFormSchema = z.object({
   tipsPoolPercentage: z.coerce.number().min(0).max(100).default(0),
   perDiemRate: z.coerce.number().min(0).default(0),
   overtimeEligible: z.boolean().default(true),
-  effectiveFrom: z.string().min(1, "Effective date required"),
+  effectiveFrom: z.string().min(1, 'Effective date required'),
 });
 
 type EmployeeFormData = z.infer<typeof employeeFormSchema>;
@@ -67,8 +114,10 @@ type WageFormData = z.infer<typeof wageFormSchema>;
 
 export default function EmployeeMaster() {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null
+  );
   const [showEmployeeDialog, setShowEmployeeDialog] = useState(false);
   const [showWageDialog, setShowWageDialog] = useState(false);
 
@@ -91,8 +140,8 @@ export default function EmployeeMaster() {
   const employeeForm = useForm<EmployeeFormData>({
     resolver: zodResolver(employeeFormSchema),
     defaultValues: {
-      employmentType: "indefinite",
-      nationalityCode: "GRC",
+      employmentType: 'indefinite',
+      nationalityCode: 'GRC',
       dependents: 0,
       disabilityPercentage: 0,
     },
@@ -133,15 +182,25 @@ export default function EmployeeMaster() {
       queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
       setShowEmployeeDialog(false);
       employeeForm.reset();
-      toast({ title: "Employee created successfully" });
+      toast({ title: 'Employee created successfully' });
     },
     onError: (error: Error) => {
-      toast({ title: "Error creating employee", description: error.message, variant: "destructive" });
+      toast({
+        title: 'Error creating employee',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 
   const updateEmployeeMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<InsertEmployee> }) => {
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<InsertEmployee>;
+    }) => {
       const response = await fetch(`/api/employees/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -154,10 +213,14 @@ export default function EmployeeMaster() {
       queryClient.invalidateQueries({ queryKey: ['/api/employees'] });
       setShowEmployeeDialog(false);
       employeeForm.reset();
-      toast({ title: "Employee updated successfully" });
+      toast({ title: 'Employee updated successfully' });
     },
     onError: (error: Error) => {
-      toast({ title: "Error updating employee", description: error.message, variant: "destructive" });
+      toast({
+        title: 'Error updating employee',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 
@@ -176,10 +239,14 @@ export default function EmployeeMaster() {
       queryClient.invalidateQueries({ queryKey: ['/api/wage-components'] });
       setShowWageDialog(false);
       wageForm.reset();
-      toast({ title: "Wage components updated successfully" });
+      toast({ title: 'Wage components updated successfully' });
     },
     onError: (error: Error) => {
-      toast({ title: "Error updating wage components", description: error.message, variant: "destructive" });
+      toast({
+        title: 'Error updating wage components',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 
@@ -195,7 +262,10 @@ export default function EmployeeMaster() {
     };
 
     if (selectedEmployee) {
-      updateEmployeeMutation.mutate({ id: selectedEmployee.employeeId, data: employeeData });
+      updateEmployeeMutation.mutate({
+        id: selectedEmployee.employeeId,
+        data: employeeData,
+      });
     } else {
       createEmployeeMutation.mutate(employeeData);
     }
@@ -221,12 +291,12 @@ export default function EmployeeMaster() {
       tipsPoolPercentage: data.tipsPoolPercentage.toString(),
       perDiemRate: data.perDiemRate.toString(),
       overtimeEligible: data.overtimeEligible,
-      overtimeTier1Rate: "1.25",
-      overtimeTier2Rate: "1.50",
-      overtimeTier3Rate: "1.75",
-      nightPremiumRate: "0.25",
-      sundayPremiumRate: "0.75",
-      holidayPremiumRate: "1.00",
+      overtimeTier1Rate: '1.25',
+      overtimeTier2Rate: '1.50',
+      overtimeTier3Rate: '1.75',
+      nightPremiumRate: '0.25',
+      sundayPremiumRate: '0.75',
+      holidayPremiumRate: '1.00',
       effectiveFrom: data.effectiveFrom,
       effectiveTo: null,
     };
@@ -241,30 +311,30 @@ export default function EmployeeMaster() {
         employeeNumber: employee.employeeNumber,
         firstName: employee.firstName,
         lastName: employee.lastName,
-        afm: employee.afm || "",
-        amka: employee.amka || "",
-        paaypa: employee.paaypa || "",
-        bankIban: employee.bankIban || "",
-        dateOfBirth: employee.dateOfBirth || "",
-        nationalityCode: employee.nationalityCode || "GRC",
+        afm: employee.afm || '',
+        amka: employee.amka || '',
+        paaypa: employee.paaypa || '',
+        bankIban: employee.bankIban || '',
+        dateOfBirth: employee.dateOfBirth || '',
+        nationalityCode: employee.nationalityCode || 'GRC',
         employmentType: employee.employmentType,
-        grade: employee.grade || "",
-        unionCbaRef: employee.unionCbaRef || "",
+        grade: employee.grade || '',
+        unionCbaRef: employee.unionCbaRef || '',
         hireDate: employee.hireDate,
-        termDate: employee.termDate || "",
-        probationEndDate: employee.probationEndDate || "",
-        defaultPropertyId: employee.defaultPropertyId || "",
+        termDate: employee.termDate || '',
+        probationEndDate: employee.probationEndDate || '',
+        defaultPropertyId: employee.defaultPropertyId || '',
         maritalStatus: employee.maritalStatus || undefined,
         dependents: employee.dependents || 0,
         disabilityPercentage: employee.disabilityPercentage || 0,
-        emergencyContactName: employee.emergencyContactName || "",
-        emergencyContactPhone: employee.emergencyContactPhone || "",
+        emergencyContactName: employee.emergencyContactName || '',
+        emergencyContactPhone: employee.emergencyContactPhone || '',
       });
     } else {
       setSelectedEmployee(null);
       employeeForm.reset({
-        employmentType: "indefinite",
-        nationalityCode: "GRC",
+        employmentType: 'indefinite',
+        nationalityCode: 'GRC',
         dependents: 0,
         disabilityPercentage: 0,
       });
@@ -278,19 +348,21 @@ export default function EmployeeMaster() {
     if (currentWage) {
       wageForm.reset({
         baseSalary: parseFloat(currentWage.baseSalary),
-        hourlyRate: currentWage.hourlyRate ? parseFloat(currentWage.hourlyRate) : undefined,
-        foodAllowance: parseFloat(currentWage.foodAllowance || "0"),
-        housingAllowance: parseFloat(currentWage.housingAllowance || "0"),
-        transportAllowance: parseFloat(currentWage.transportAllowance || "0"),
-        marriageAllowance: parseFloat(currentWage.marriageAllowance || "0"),
-        familyAllowance: parseFloat(currentWage.familyAllowance || "0"),
-        educationAllowance: parseFloat(currentWage.educationAllowance || "0"),
-        experienceAllowance: parseFloat(currentWage.experienceAllowance || "0"),
-        positionAllowance: parseFloat(currentWage.positionAllowance || "0"),
-        uniformAllowance: parseFloat(currentWage.uniformAllowance || "0"),
+        hourlyRate: currentWage.hourlyRate
+          ? parseFloat(currentWage.hourlyRate)
+          : undefined,
+        foodAllowance: parseFloat(currentWage.foodAllowance || '0'),
+        housingAllowance: parseFloat(currentWage.housingAllowance || '0'),
+        transportAllowance: parseFloat(currentWage.transportAllowance || '0'),
+        marriageAllowance: parseFloat(currentWage.marriageAllowance || '0'),
+        familyAllowance: parseFloat(currentWage.familyAllowance || '0'),
+        educationAllowance: parseFloat(currentWage.educationAllowance || '0'),
+        experienceAllowance: parseFloat(currentWage.experienceAllowance || '0'),
+        positionAllowance: parseFloat(currentWage.positionAllowance || '0'),
+        uniformAllowance: parseFloat(currentWage.uniformAllowance || '0'),
         tipsEligible: currentWage.tipsEligible || false,
-        tipsPoolPercentage: parseFloat(currentWage.tipsPoolPercentage || "0"),
-        perDiemRate: parseFloat(currentWage.perDiemRate || "0"),
+        tipsPoolPercentage: parseFloat(currentWage.tipsPoolPercentage || '0'),
+        perDiemRate: parseFloat(currentWage.perDiemRate || '0'),
         overtimeEligible: currentWage.overtimeEligible || true,
         effectiveFrom: new Date().toISOString().split('T')[0],
       });
@@ -332,10 +404,15 @@ export default function EmployeeMaster() {
           <Users className="h-8 w-8 text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold">Employee Master</h1>
-            <p className="text-gray-600">Complete employee and contract management</p>
+            <p className="text-gray-600">
+              Complete employee and contract management
+            </p>
           </div>
         </div>
-        <Button onClick={() => openEmployeeDialog()} className="bg-blue-600 hover:bg-blue-700">
+        <Button
+          onClick={() => openEmployeeDialog()}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Add Employee
         </Button>
@@ -351,7 +428,7 @@ export default function EmployeeMaster() {
                 <Input
                   placeholder="Search employees by name, AFM, or employee number..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -362,11 +439,16 @@ export default function EmployeeMaster() {
 
       {/* Employee List */}
       <div className="grid gap-4">
-        {employees.map((employee) => {
-          const currentWage = wageComponents.find(w => w.employeeId === employee.employeeId && w.effectiveTo === null);
-          
+        {employees.map(employee => {
+          const currentWage = wageComponents.find(
+            w => w.employeeId === employee.employeeId && w.effectiveTo === null
+          );
+
           return (
-            <Card key={employee.employeeId} className="hover:shadow-lg transition-shadow">
+            <Card
+              key={employee.employeeId}
+              className="hover:shadow-lg transition-shadow"
+            >
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
@@ -380,8 +462,10 @@ export default function EmployeeMaster() {
                     </div>
                   </div>
                   <div className="flex space-x-2">
-                    <Badge variant={employee.isActive ? "default" : "secondary"}>
-                      {employee.isActive ? "Active" : "Inactive"}
+                    <Badge
+                      variant={employee.isActive ? 'default' : 'secondary'}
+                    >
+                      {employee.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                     <Badge variant="outline">{employee.employmentType}</Badge>
                   </div>
@@ -391,16 +475,21 @@ export default function EmployeeMaster() {
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                   <div className="flex items-center space-x-2">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    <span>Hired: {new Date(employee.hireDate).toLocaleDateString()}</span>
+                    <span>
+                      Hired: {new Date(employee.hireDate).toLocaleDateString()}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Building2 className="w-4 h-4 text-gray-400" />
-                    <span>{employee.grade || "No grade"}</span>
+                    <span>{employee.grade || 'No grade'}</span>
                   </div>
                   {currentWage && (
                     <div className="flex items-center space-x-2">
                       <CreditCard className="w-4 h-4 text-gray-400" />
-                      <span>€{parseFloat(currentWage.baseSalary).toLocaleString()}/mo</span>
+                      <span>
+                        €{parseFloat(currentWage.baseSalary).toLocaleString()}
+                        /mo
+                      </span>
                     </div>
                   )}
                   {employee.emergencyContactName && (
@@ -411,16 +500,16 @@ export default function EmployeeMaster() {
                   )}
                 </div>
                 <div className="mt-4 flex space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => openEmployeeDialog(employee)}
                   >
                     Edit Details
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => openWageDialog(employee)}
                   >
                     Wage Components
@@ -437,8 +526,8 @@ export default function EmployeeMaster() {
           <CardContent>
             <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">No employees found</p>
-            <Button 
-              onClick={() => openEmployeeDialog()} 
+            <Button
+              onClick={() => openEmployeeDialog()}
               className="mt-4 bg-blue-600 hover:bg-blue-700"
             >
               Add First Employee
@@ -452,16 +541,23 @@ export default function EmployeeMaster() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedEmployee ? "Edit Employee" : "Add New Employee"}
+              {selectedEmployee ? 'Edit Employee' : 'Add New Employee'}
             </DialogTitle>
           </DialogHeader>
 
           <Form {...employeeForm}>
-            <form onSubmit={employeeForm.handleSubmit(onSubmitEmployee)} className="space-y-6">
+            <form
+              onSubmit={employeeForm.handleSubmit(onSubmitEmployee)}
+              className="space-y-6"
+            >
               <Tabs defaultValue="personal" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="personal">Personal Information</TabsTrigger>
-                  <TabsTrigger value="employment">Employment Details</TabsTrigger>
+                  <TabsTrigger value="personal">
+                    Personal Information
+                  </TabsTrigger>
+                  <TabsTrigger value="employment">
+                    Employment Details
+                  </TabsTrigger>
                   <TabsTrigger value="contact">Contact & Emergency</TabsTrigger>
                 </TabsList>
 
@@ -486,7 +582,10 @@ export default function EmployeeMaster() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Nationality</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue />
@@ -541,7 +640,11 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>AFM (Tax ID)</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="9 digits" maxLength={9} />
+                            <Input
+                              {...field}
+                              placeholder="9 digits"
+                              maxLength={9}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -554,7 +657,11 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>AMKA (Social Security)</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="11 digits" maxLength={11} />
+                            <Input
+                              {...field}
+                              placeholder="11 digits"
+                              maxLength={11}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -613,15 +720,22 @@ export default function EmployeeMaster() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Employment Type*</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="indefinite">Indefinite Term</SelectItem>
-                              <SelectItem value="fixed-term">Fixed Term</SelectItem>
+                              <SelectItem value="indefinite">
+                                Indefinite Term
+                              </SelectItem>
+                              <SelectItem value="fixed-term">
+                                Fixed Term
+                              </SelectItem>
                               <SelectItem value="seasonal">Seasonal</SelectItem>
                             </SelectContent>
                           </Select>
@@ -693,15 +807,21 @@ export default function EmployeeMaster() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Default Property</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select property" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {properties.map((property) => (
-                                <SelectItem key={property.propertyId} value={property.propertyId}>
+                              {properties.map(property => (
+                                <SelectItem
+                                  key={property.propertyId}
+                                  value={property.propertyId}
+                                >
                                   {property.name}
                                 </SelectItem>
                               ))}
@@ -735,7 +855,10 @@ export default function EmployeeMaster() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Marital Status</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select status" />
@@ -813,22 +936,27 @@ export default function EmployeeMaster() {
               </Tabs>
 
               <div className="flex justify-end space-x-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => setShowEmployeeDialog(false)}
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createEmployeeMutation.isPending || updateEmployeeMutation.isPending}
+                <Button
+                  type="submit"
+                  disabled={
+                    createEmployeeMutation.isPending ||
+                    updateEmployeeMutation.isPending
+                  }
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  {createEmployeeMutation.isPending || updateEmployeeMutation.isPending 
-                    ? "Saving..." 
-                    : selectedEmployee ? "Update Employee" : "Create Employee"
-                  }
+                  {createEmployeeMutation.isPending ||
+                  updateEmployeeMutation.isPending
+                    ? 'Saving...'
+                    : selectedEmployee
+                      ? 'Update Employee'
+                      : 'Create Employee'}
                 </Button>
               </div>
             </form>
@@ -841,12 +969,16 @@ export default function EmployeeMaster() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Wage Components - {selectedEmployee?.firstName} {selectedEmployee?.lastName}
+              Wage Components - {selectedEmployee?.firstName}{' '}
+              {selectedEmployee?.lastName}
             </DialogTitle>
           </DialogHeader>
 
           <Form {...wageForm}>
-            <form onSubmit={wageForm.handleSubmit(onSubmitWage)} className="space-y-6">
+            <form
+              onSubmit={wageForm.handleSubmit(onSubmitWage)}
+              className="space-y-6"
+            >
               <Tabs defaultValue="base" className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="base">Base Salary</TabsTrigger>
@@ -864,7 +996,12 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>Monthly Base Salary (€)*</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" min="0" />
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -877,7 +1014,12 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>Hourly Rate (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" min="0" />
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -908,7 +1050,12 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>Food Allowance (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" min="0" />
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -921,7 +1068,12 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>Housing Allowance (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" min="0" />
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -934,7 +1086,12 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>Transport Allowance (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" min="0" />
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -950,7 +1107,12 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>Marriage Allowance (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" min="0" />
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -963,7 +1125,12 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>Family Allowance (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" min="0" />
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -976,7 +1143,12 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>Education Allowance (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" min="0" />
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -992,7 +1164,12 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>Experience Allowance (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" min="0" />
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1005,7 +1182,12 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>Position Allowance (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" min="0" />
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1018,7 +1200,12 @@ export default function EmployeeMaster() {
                         <FormItem>
                           <FormLabel>Uniform Allowance (€)</FormLabel>
                           <FormControl>
-                            <Input {...field} type="number" step="0.01" min="0" />
+                            <Input
+                              {...field}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1049,7 +1236,7 @@ export default function EmployeeMaster() {
                         )}
                       />
                     </div>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={wageForm.control}
@@ -1058,7 +1245,13 @@ export default function EmployeeMaster() {
                           <FormItem>
                             <FormLabel>Tips Pool Percentage (%)</FormLabel>
                             <FormControl>
-                              <Input {...field} type="number" step="0.01" min="0" max="100" />
+                              <Input
+                                {...field}
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                max="100"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1071,7 +1264,12 @@ export default function EmployeeMaster() {
                           <FormItem>
                             <FormLabel>Per Diem Rate (€)</FormLabel>
                             <FormControl>
-                              <Input {...field} type="number" step="0.01" min="0" />
+                              <Input
+                                {...field}
+                                type="number"
+                                step="0.01"
+                                min="0"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1102,9 +1300,12 @@ export default function EmployeeMaster() {
                       )}
                     />
                   </div>
-                  
+
                   <div className="text-sm text-gray-600 space-y-2">
-                    <p>Premium rates are configured automatically based on Greek labor law:</p>
+                    <p>
+                      Premium rates are configured automatically based on Greek
+                      labor law:
+                    </p>
                     <ul className="list-disc list-inside space-y-1">
                       <li>Overtime Tier 1: +25% (first 2 hours)</li>
                       <li>Overtime Tier 2: +50% (next 2 hours)</li>
@@ -1118,19 +1319,21 @@ export default function EmployeeMaster() {
               </Tabs>
 
               <div className="flex justify-end space-x-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => setShowWageDialog(false)}
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={createWageComponentMutation.isPending}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
-                  {createWageComponentMutation.isPending ? "Saving..." : "Update Wage Components"}
+                  {createWageComponentMutation.isPending
+                    ? 'Saving...'
+                    : 'Update Wage Components'}
                 </Button>
               </div>
             </form>

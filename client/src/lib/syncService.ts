@@ -3,7 +3,11 @@
  * Manages conflict resolution and background sync operations
  */
 
-import { offlineStorage, type OfflinePunchEvent, type SyncQueueItem } from './offlineStorage';
+import {
+  offlineStorage,
+  type OfflinePunchEvent,
+  type SyncQueueItem,
+} from './offlineStorage';
 import { apiRequest } from './queryClient';
 
 interface SyncResult {
@@ -41,7 +45,7 @@ class SyncService {
       success: true,
       syncedItems: 0,
       failedItems: 0,
-      conflicts: []
+      conflicts: [],
     };
 
     try {
@@ -60,7 +64,6 @@ class SyncService {
       const queueResult = await this.processSyncQueue();
       result.syncedItems += queueResult.syncedItems;
       result.failedItems += queueResult.failedItems;
-
     } catch (error) {
       console.error('Sync failed:', error);
       result.success = false;
@@ -73,54 +76,60 @@ class SyncService {
 
   // Sync punch events with conflict detection
   private async syncPunchEvents(): Promise<SyncResult> {
-    const result: SyncResult = { success: true, syncedItems: 0, failedItems: 0, conflicts: [] };
-    
+    const result: SyncResult = {
+      success: true,
+      syncedItems: 0,
+      failedItems: 0,
+      conflicts: [],
+    };
+
     try {
       const pendingEvents = await offlineStorage.getPendingPunchEvents();
-      
+
       for (const event of pendingEvents) {
         try {
           // Check if event already exists on server (potential conflict)
           const existingEvent = await this.checkServerEventExists(event);
-          
+
           if (existingEvent) {
             // Conflict detected
             result.conflicts.push({
               id: event.clientEventId,
               type: 'punch_event',
               localData: event,
-              serverData: existingEvent
+              serverData: existingEvent,
             });
             continue;
           }
 
           // Upload to server
-          const serverResponse = await apiRequest(
-            'POST',
-            '/api/punch-events',
-            {
-              employeeId: event.employeeId,
-              propertyId: event.propertyId,
-              timestamp: event.timestamp,
-              type: event.type,
-              method: event.method,
-              latitude: event.latitude,
-              longitude: event.longitude,
-              sourceDeviceId: event.sourceDeviceId,
-              clientEventId: event.clientEventId,
-              offlineFlag: true
-            }
-          );
+          const serverResponse = await apiRequest('POST', '/api/punch-events', {
+            employeeId: event.employeeId,
+            propertyId: event.propertyId,
+            timestamp: event.timestamp,
+            type: event.type,
+            method: event.method,
+            latitude: event.latitude,
+            longitude: event.longitude,
+            sourceDeviceId: event.sourceDeviceId,
+            clientEventId: event.clientEventId,
+            offlineFlag: true,
+          });
 
           // Mark as synced
-          await offlineStorage.updatePunchEventSyncStatus(event.clientEventId, 'synced');
-          result.syncedItems++;
-
-        } catch (error) {
-          console.error(`Failed to sync punch event ${event.clientEventId}:`, error);
           await offlineStorage.updatePunchEventSyncStatus(
-            event.clientEventId, 
-            'failed', 
+            event.clientEventId,
+            'synced'
+          );
+          result.syncedItems++;
+        } catch (error) {
+          console.error(
+            `Failed to sync punch event ${event.clientEventId}:`,
+            error
+          );
+          await offlineStorage.updatePunchEventSyncStatus(
+            event.clientEventId,
+            'failed',
             error instanceof Error ? error.message : 'Unknown error'
           );
           result.failedItems++;
@@ -135,7 +144,9 @@ class SyncService {
   }
 
   // Check if event exists on server (for conflict detection)
-  private async checkServerEventExists(event: OfflinePunchEvent): Promise<any | null> {
+  private async checkServerEventExists(
+    event: OfflinePunchEvent
+  ): Promise<any | null> {
     try {
       const response = await fetch(`/api/punch-events/check`, {
         method: 'POST',
@@ -146,14 +157,14 @@ class SyncService {
           employeeId: event.employeeId,
           timestamp: event.timestamp,
           type: event.type,
-          clientEventId: event.clientEventId
-        })
+          clientEventId: event.clientEventId,
+        }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Check failed');
       }
-      
+
       const data = await response.json();
       return data.exists ? data.event : null;
     } catch (error) {
@@ -164,33 +175,43 @@ class SyncService {
 
   // Sync payroll previews (refresh from server)
   private async syncPayrollPreviews(): Promise<SyncResult> {
-    const result: SyncResult = { success: true, syncedItems: 0, failedItems: 0, conflicts: [] };
-    
+    const result: SyncResult = {
+      success: true,
+      syncedItems: 0,
+      failedItems: 0,
+      conflicts: [],
+    };
+
     try {
       const previews = await offlineStorage.getAllPayrollPreviews();
-      
+
       for (const preview of previews) {
         try {
           // Fetch fresh data from server
-          const response = await fetch(`/api/payroll/preview/${preview.payPeriod}`);
+          const response = await fetch(
+            `/api/payroll/preview/${preview.payPeriod}`
+          );
           if (!response.ok) {
             throw new Error('Failed to fetch payroll preview');
           }
-          
+
           const freshData = await response.json();
-          
+
           // Update local cache
           await offlineStorage.savePayrollPreview({
             ...preview,
             employeeData: freshData.employeeData,
             calculations: freshData.calculations,
             syncStatus: 'synced',
-            lastSync: new Date().toISOString()
+            lastSync: new Date().toISOString(),
           });
 
           result.syncedItems++;
         } catch (error) {
-          console.error(`Failed to sync payroll preview ${preview.previewId}:`, error);
+          console.error(
+            `Failed to sync payroll preview ${preview.previewId}:`,
+            error
+          );
           result.failedItems++;
         }
       }
@@ -204,11 +225,16 @@ class SyncService {
 
   // Process sync queue for other operations
   private async processSyncQueue(): Promise<SyncResult> {
-    const result: SyncResult = { success: true, syncedItems: 0, failedItems: 0, conflicts: [] };
-    
+    const result: SyncResult = {
+      success: true,
+      syncedItems: 0,
+      failedItems: 0,
+      conflicts: [],
+    };
+
     try {
       const queueItems = await offlineStorage.getSyncQueue();
-      
+
       for (const item of queueItems) {
         if (item.attempts >= this.maxRetries) {
           console.warn(`Max retries reached for sync item ${item.id}`);
@@ -221,12 +247,15 @@ class SyncService {
           result.syncedItems++;
         } catch (error) {
           const nextAttempt = item.attempts + 1;
-          const delay = this.retryIntervals[Math.min(nextAttempt - 1, this.retryIntervals.length - 1)];
-          
+          const delay =
+            this.retryIntervals[
+              Math.min(nextAttempt - 1, this.retryIntervals.length - 1)
+            ];
+
           await offlineStorage.updateSyncQueueItem(item.id, {
             attempts: nextAttempt,
             lastAttempt: new Date().toISOString(),
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Unknown error',
           });
 
           // Schedule retry
@@ -251,7 +280,7 @@ class SyncService {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(item.data)
+          body: JSON.stringify(item.data),
         });
         if (!response.ok) {
           throw new Error('Failed to sync punch event');
@@ -259,13 +288,16 @@ class SyncService {
         break;
 
       case 'employee_data':
-        const empResponse = await fetch(`/api/employees/${item.data.employeeId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(item.data)
-        });
+        const empResponse = await fetch(
+          `/api/employees/${item.data.employeeId}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(item.data),
+          }
+        );
         if (!empResponse.ok) {
           throw new Error('Failed to sync employee data');
         }
@@ -288,28 +320,37 @@ class SyncService {
 
           case 'use_server':
             // Mark local as synced (server wins)
-            await offlineStorage.updatePunchEventSyncStatus(resolution.id, 'synced');
+            await offlineStorage.updatePunchEventSyncStatus(
+              resolution.id,
+              'synced'
+            );
             break;
 
           case 'merge':
             // Use merged data
             if (resolution.mergedData) {
-              const response = await fetch('/api/punch-events/resolve-conflict', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  clientEventId: resolution.id,
-                  resolvedData: resolution.mergedData
-                })
-              });
-              
+              const response = await fetch(
+                '/api/punch-events/resolve-conflict',
+                {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    clientEventId: resolution.id,
+                    resolvedData: resolution.mergedData,
+                  }),
+                }
+              );
+
               if (!response.ok) {
                 throw new Error('Failed to resolve conflict');
               }
-              
-              await offlineStorage.updatePunchEventSyncStatus(resolution.id, 'synced');
+
+              await offlineStorage.updatePunchEventSyncStatus(
+                resolution.id,
+                'synced'
+              );
             }
             break;
         }
@@ -341,18 +382,23 @@ class SyncService {
       console.log('Connection restored, starting sync...');
       this.syncAll().then(result => {
         console.log('Auto-sync completed:', result);
-        
+
         // Dispatch custom event for UI updates
-        window.dispatchEvent(new CustomEvent('syncCompleted', { detail: result }));
+        window.dispatchEvent(
+          new CustomEvent('syncCompleted', { detail: result })
+        );
       });
     });
 
     // Periodic background sync (every 5 minutes when online)
-    setInterval(() => {
-      if (navigator.onLine) {
-        this.backgroundSync();
-      }
-    }, 5 * 60 * 1000);
+    setInterval(
+      () => {
+        if (navigator.onLine) {
+          this.backgroundSync();
+        }
+      },
+      5 * 60 * 1000
+    );
 
     // Sync on page visibility change (when app regains focus)
     document.addEventListener('visibilitychange', () => {
@@ -372,12 +418,12 @@ class SyncService {
     const stats = await offlineStorage.getStorageStats();
     const pendingEvents = await offlineStorage.getPendingPunchEvents();
     const queueItems = await offlineStorage.getSyncQueue();
-    
+
     return {
       isOnline: navigator.onLine,
       pendingItems: pendingEvents.length + queueItems.length,
       lastSync: localStorage.getItem('lastSyncTime'),
-      hasConflicts: pendingEvents.some(e => e.syncStatus === 'conflict')
+      hasConflicts: pendingEvents.some(e => e.syncStatus === 'conflict'),
     };
   }
 
@@ -385,11 +431,11 @@ class SyncService {
   async forcSync(): Promise<SyncResult> {
     console.log('Force sync initiated...');
     const result = await this.syncAll();
-    
+
     if (result.success) {
       localStorage.setItem('lastSyncTime', new Date().toISOString());
     }
-    
+
     return result;
   }
 }

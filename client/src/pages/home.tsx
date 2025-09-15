@@ -1,27 +1,47 @@
-import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Users, Calculator, FileText, TrendingUp, Shield, CheckCircle, AlertTriangle, Sparkles, UserCog, Eye } from "lucide-react";
-import { Link } from "wouter";
-import GreekComplianceInfo from "@/components/GreekComplianceInfo";
-import ComplianceRecommendations from "@/components/ComplianceRecommendations";
-import LegalWatchNewsfeed from "@/components/LegalWatchNewsfeed";
-import { useAppContext } from "@/contexts/AppContext";
-import { CompliancePaymentsCues, EnhancedKPICard } from "@/components/CompliancePaymentsCues";
+import { useAuth } from '@/hooks/useAuth';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Users,
+  Calculator,
+  FileText,
+  TrendingUp,
+  Shield,
+  CheckCircle,
+  AlertTriangle,
+  Sparkles,
+  UserCog,
+  Eye,
+} from 'lucide-react';
+import { Link } from 'wouter';
+import GreekComplianceInfo from '@/components/GreekComplianceInfo';
+import ComplianceRecommendations from '@/components/ComplianceRecommendations';
+import LegalWatchNewsfeed from '@/components/LegalWatchNewsfeed';
+import { useAppContext } from '@/contexts/AppContext';
+import {
+  CompliancePaymentsCues,
+  EnhancedKPICard,
+} from '@/components/CompliancePaymentsCues';
 
 export default function Home() {
   const { user } = useAuth();
   const { viewingMode, setViewingMode } = useAppContext();
 
   const toggleEmployeeView = () => {
-    if (viewingMode.type === "normal") {
+    if (viewingMode.type === 'normal') {
       setViewingMode({
-        type: "employee_view",
-        originalRole: user?.firstName || "Manager"
+        type: 'employee_view',
+        originalRole: user?.firstName || 'Manager',
       });
     } else {
-      setViewingMode({ type: "normal" });
+      setViewingMode({ type: 'normal' });
     }
   };
 
@@ -34,31 +54,38 @@ export default function Home() {
             Καλώς ήρθατε, {user?.firstName || 'Χρήστη'}!
           </h1>
           <p className="text-neutral-600 dark:text-neutral-300">
-            Επισκόπηση του συστήματος διαχείρισης ανθρώπινων πόρων και μισθοδοσίας
+            Επισκόπηση του συστήματος διαχείρισης ανθρώπινων πόρων και
+            μισθοδοσίας
           </p>
         </div>
-        
+
         {/* Demo Context Controls */}
         <div className="flex items-center gap-3">
           <Button
-            variant={viewingMode.type === "employee_view" ? "default" : "outline"}
+            variant={
+              viewingMode.type === 'employee_view' ? 'default' : 'outline'
+            }
             size="sm"
             onClick={toggleEmployeeView}
             className="flex items-center gap-2"
           >
             <Eye className="h-4 w-4" />
-            {viewingMode.type === "employee_view" ? "Έξοδος Προβολής Εργαζομένου" : "Προβολή ως Εργαζόμενος"}
+            {viewingMode.type === 'employee_view'
+              ? 'Έξοδος Προβολής Εργαζομένου'
+              : 'Προβολή ως Εργαζόμενος'}
           </Button>
-          
-          {viewingMode.type === "normal" && (
+
+          {viewingMode.type === 'normal' && (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setViewingMode({
-                type: "impersonation",
-                originalRole: user?.firstName || "Manager",
-                targetEmployee: { id: "emp-123", name: "Μαρία Παπαδάκη" }
-              })}
+              onClick={() =>
+                setViewingMode({
+                  type: 'impersonation',
+                  originalRole: user?.firstName || 'Manager',
+                  targetEmployee: { id: 'emp-123', name: 'Μαρία Παπαδάκη' },
+                })
+              }
               className="flex items-center gap-2"
             >
               <UserCog className="h-4 w-4" />
@@ -79,8 +106,8 @@ export default function Home() {
           description="Ενεργοί εργαζόμενοι"
           icon={Users}
           trend={{
-            value: "+12%",
-            isPositive: true
+            value: '+12%',
+            isPositive: true,
           }}
           lastUpdated="πριν 2 λεπτά"
           ctaLabel="Διαχείριση"
@@ -94,8 +121,8 @@ export default function Home() {
           description="Τρέχων μήνας"
           icon={Calculator}
           trend={{
-            value: "+8,5%",
-            isPositive: true
+            value: '+8,5%',
+            isPositive: true,
           }}
           lastUpdated="πριν 5 λεπτά"
           ctaLabel="Εκτέλεση"
@@ -109,8 +136,8 @@ export default function Home() {
           description="Τρέχων μήνας"
           icon={TrendingUp}
           trend={{
-            value: "+156 ώρες",
-            isPositive: true
+            value: '+156 ώρες',
+            isPositive: true,
           }}
           lastUpdated="πριν 1 ώρα"
           ctaLabel="Ανάλυση"
@@ -127,7 +154,8 @@ export default function Home() {
             Κατάσταση Συμμόρφωσης Ελληνικού Δικαίου 2025
           </CardTitle>
           <CardDescription>
-            Ενημερωμένη συμμόρφωση με νόμο 4808/2021 και τελευταίες τροποποιήσεις
+            Ενημερωμένη συμμόρφωση με νόμο 4808/2021 και τελευταίες
+            τροποποιήσεις
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -135,36 +163,60 @@ export default function Home() {
             <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
               <CheckCircle className="h-6 w-6 text-green-600" />
               <div>
-                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">Ελληνικές Ταυτοποιήσεις</p>
-                <p className="text-xs text-neutral-600 dark:text-neutral-300">ΑΦΜ, ΑΜΚΑ, ΔΟΥ</p>
-                <Badge variant="outline" className="mt-1 text-xs">Ενεργό</Badge>
+                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">
+                  Ελληνικές Ταυτοποιήσεις
+                </p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-300">
+                  ΑΦΜ, ΑΜΚΑ, ΔΟΥ
+                </p>
+                <Badge variant="outline" className="mt-1 text-xs">
+                  Ενεργό
+                </Badge>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
               <CheckCircle className="h-6 w-6 text-green-600" />
               <div>
-                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">Μισθοδοσία 2025</p>
-                <p className="text-xs text-neutral-600 dark:text-neutral-300">€760 κατώτατος</p>
-                <Badge variant="outline" className="mt-1 text-xs">Ενημερωμένο</Badge>
+                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">
+                  Μισθοδοσία 2025
+                </p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-300">
+                  €760 κατώτατος
+                </p>
+                <Badge variant="outline" className="mt-1 text-xs">
+                  Ενημερωμένο
+                </Badge>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
               <CheckCircle className="h-6 w-6 text-green-600" />
               <div>
-                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">ΕΦΚΑ Εισφορές</p>
-                <p className="text-xs text-neutral-600 dark:text-neutral-300">16% / 24,78%</p>
-                <Badge variant="outline" className="mt-1 text-xs">Συμμορφή</Badge>
+                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">
+                  ΕΦΚΑ Εισφορές
+                </p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-300">
+                  16% / 24,78%
+                </p>
+                <Badge variant="outline" className="mt-1 text-xs">
+                  Συμμορφή
+                </Badge>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
               <CheckCircle className="h-6 w-6 text-green-600" />
               <div>
-                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">ERGANI II</p>
-                <p className="text-xs text-neutral-600 dark:text-neutral-300">Αυτόματη υποβολή</p>
-                <Badge variant="outline" className="mt-1 text-xs">Συγχρονισμένο</Badge>
+                <p className="font-medium text-sm text-neutral-900 dark:text-neutral-100">
+                  ERGANI II
+                </p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-300">
+                  Αυτόματη υποβολή
+                </p>
+                <Badge variant="outline" className="mt-1 text-xs">
+                  Συγχρονισμένο
+                </Badge>
               </div>
             </div>
           </div>

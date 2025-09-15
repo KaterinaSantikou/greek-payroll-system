@@ -1,6 +1,11 @@
-import { User } from "@shared/schema";
+import { User } from '@shared/schema';
 
-export type UserRole = 'payroll-admin' | 'hr' | 'manager' | 'compliance-auditor' | 'employee';
+export type UserRole =
+  | 'payroll-admin'
+  | 'hr'
+  | 'manager'
+  | 'compliance-auditor'
+  | 'employee';
 
 export interface RoleBasedView {
   role: UserRole;
@@ -15,44 +20,56 @@ export const ROLE_CONFIGURATIONS: Record<UserRole, RoleBasedView> = {
   'payroll-admin': {
     role: 'payroll-admin',
     defaultRoute: '/payroll',
-    primarySections: ['dashboard', 'payroll', 'filings', 'payments', 'accounting'],
+    primarySections: [
+      'dashboard',
+      'payroll',
+      'filings',
+      'payments',
+      'accounting',
+    ],
     defaultDashboardWidgets: [
       'payroll-runs-status',
       'pending-filings',
       'sepa-payments',
       'exception-summary',
-      'compliance-alerts'
+      'compliance-alerts',
     ],
     quickActions: [
       'run-payroll',
       'submit-filings',
       'generate-sepa',
       'approve-exceptions',
-      'gl-export'
-    ]
+      'gl-export',
+    ],
   },
 
-  'hr': {
+  hr: {
     role: 'hr',
     defaultRoute: '/employees',
-    primarySections: ['dashboard', 'people', 'filings', 'analytics', 'help-audit'],
+    primarySections: [
+      'dashboard',
+      'people',
+      'filings',
+      'analytics',
+      'help-audit',
+    ],
     defaultDashboardWidgets: [
       'employee-overview',
       'onboarding-pipeline',
       'ergani-status',
       'turnover-rates',
-      'compliance-checklist'
+      'compliance-checklist',
     ],
     quickActions: [
       'add-employee',
       'bulk-onboard',
       'ergani-submit',
       'generate-reports',
-      'view-audit-log'
-    ]
+      'view-audit-log',
+    ],
   },
 
-  'manager': {
+  manager: {
     role: 'manager',
     defaultRoute: '/punches',
     primarySections: ['dashboard', 'time', 'people', 'analytics'],
@@ -61,16 +78,16 @@ export const ROLE_CONFIGURATIONS: Record<UserRole, RoleBasedView> = {
       'pending-exceptions',
       'overtime-alerts',
       'schedule-conflicts',
-      'department-costs'
+      'department-costs',
     ],
     quickActions: [
       'approve-overtime',
       'resolve-exceptions',
       'view-schedules',
       'team-reports',
-      'approve-leaves'
+      'approve-leaves',
     ],
-    restrictions: ['filings', 'payments', 'accounting']
+    restrictions: ['filings', 'payments', 'accounting'],
   },
 
   'compliance-auditor': {
@@ -82,18 +99,18 @@ export const ROLE_CONFIGURATIONS: Record<UserRole, RoleBasedView> = {
       'filing-status',
       'audit-alerts',
       'inspector-readiness',
-      'regulation-updates'
+      'regulation-updates',
     ],
     quickActions: [
       'inspector-pack',
       'audit-trail',
       'compliance-report',
       'filing-history',
-      'regulation-check'
-    ]
+      'regulation-check',
+    ],
   },
 
-  'employee': {
+  employee: {
     role: 'employee',
     defaultRoute: '/employee-portal',
     primarySections: ['employee-portal'],
@@ -102,26 +119,26 @@ export const ROLE_CONFIGURATIONS: Record<UserRole, RoleBasedView> = {
       'time-summary',
       'leave-balance',
       'digital-card',
-      'pending-requests'
+      'pending-requests',
     ],
     quickActions: [
       'view-payslip',
       'request-leave',
       'clock-in-out',
       'view-schedule',
-      'submit-request'
+      'submit-request',
     ],
-    restrictions: ['payroll', 'filings', 'payments', 'accounting', 'settings']
-  }
+    restrictions: ['payroll', 'filings', 'payments', 'accounting', 'settings'],
+  },
 };
 
 export function getUserRole(user: User | undefined): UserRole {
   if (!user) return 'employee';
-  
+
   // Extract role from user data or determine based on permissions
   // This is a simplified example - in practice, roles would be stored in user profile
   const userEmail = user.email?.toLowerCase() || '';
-  
+
   if (userEmail.includes('payroll') || userEmail.includes('finance')) {
     return 'payroll-admin';
   }
@@ -134,7 +151,7 @@ export function getUserRole(user: User | undefined): UserRole {
   if (userEmail.includes('audit') || userEmail.includes('compliance')) {
     return 'compliance-auditor';
   }
-  
+
   return 'employee';
 }
 
@@ -148,17 +165,17 @@ export function getDefaultRouteForRole(role: UserRole): string {
 
 export function canAccessSection(role: UserRole, sectionId: string): boolean {
   const config = ROLE_CONFIGURATIONS[role];
-  
+
   // If there are restrictions, check them first
   if (config.restrictions?.includes(sectionId)) {
     return false;
   }
-  
+
   // For employee role, only allow specified sections
   if (role === 'employee') {
     return config.primarySections.includes(sectionId);
   }
-  
+
   // Other roles can access most sections unless restricted
   return true;
 }
@@ -174,10 +191,10 @@ export function getDashboardWidgetsForRole(role: UserRole): string[] {
 export function getRoleDisplayName(role: UserRole): string {
   const names: Record<UserRole, string> = {
     'payroll-admin': 'Payroll Administrator',
-    'hr': 'HR Manager',
-    'manager': 'Department Manager',
+    hr: 'HR Manager',
+    manager: 'Department Manager',
     'compliance-auditor': 'Compliance & Auditor',
-    'employee': 'Employee'
+    employee: 'Employee',
   };
   return names[role];
 }
