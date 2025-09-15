@@ -1,0 +1,2500 @@
+{
+  "timestamp": "2025-09-15T12:18:50.051Z",
+  "projectRoot": "..",
+  "totalFiles": 670,
+  "dependencyGraph": {
+    "forwardDeps": {
+      "vite.config.ts": [],
+      "server/advancedAnalyticsService.ts": [
+        "server/db.ts"
+      ],
+      "server/analyticsService.ts": [
+        "server/db.ts"
+      ],
+      "server/changeLogLegalWatch.ts": [],
+      "server/complianceConnector.ts": [],
+      "server/complianceGuardrails.ts": [
+        "server/db.ts",
+        "server/erganiConnector.ts"
+      ],
+      "server/csrdService.ts": [
+        "server/db.ts",
+        "server/esrsCalculationEngine.ts"
+      ],
+      "server/dataLakeBI.ts": [],
+      "server/db.ts": [],
+      "server/documentAI.ts": [],
+      "server/emailService.ts": [],
+      "server/erganiConnector.ts": [],
+      "server/eSignature.ts": [],
+      "server/esrsCalculationEngine.ts": [
+        "server/db.ts"
+      ],
+      "server/evidencePackService.ts": [
+        "server/db.ts"
+      ],
+      "server/exceptionAutoResolutionEngine.ts": [
+        "server/storage.ts"
+      ],
+      "server/exceptionAutoResolutionEngineSimple.ts": [
+        "server/storage.ts"
+      ],
+      "server/filingComplianceService.ts": [
+        "server/db.ts"
+      ],
+      "server/glExportService.ts": [
+        "server/db.ts"
+      ],
+      "server/glMappingService.ts": [
+        "server/db.ts"
+      ],
+      "server/greekPayrollCalculator.ts": [],
+      "server/hotelEnhancementsService.ts": [
+        "server/storage.ts"
+      ],
+      "server/hotelOperations.ts": [
+        "server/storage.ts"
+      ],
+      "server/hotelTipPooling.ts": [],
+      "server/index.ts": [
+        "server/utils/envValidation.ts",
+        "server/routes.ts",
+        "server/vite.ts",
+        "server/db.ts"
+      ],
+      "server/modernPayrollEngine.ts": [
+        "server/greekPayrollCalculator.ts"
+      ],
+      "server/objectAcl.ts": [],
+      "server/objectStorage.ts": [
+        "server/objectAcl.ts"
+      ],
+      "server/overtimePreventionEngine.ts": [
+        "server/storage.ts"
+      ],
+      "server/overtimePreventionEngineSimple.ts": [
+        "server/storage.ts"
+      ],
+      "server/payEquityService.ts": [
+        "server/db.ts"
+      ],
+      "server/payExplanationService.ts": [],
+      "server/payrollConnector.ts": [
+        "server/storage.ts"
+      ],
+      "server/payrollConnectorOld.ts": [],
+      "server/payslipGenerator.ts": [
+        "server/db.ts",
+        "server/standardizedEarningsCodesService.ts"
+      ],
+      "server/policyEngine.ts": [],
+      "server/productVisionService.ts": [],
+      "server/replitAuth.ts": [
+        "server/lib/passport.ts",
+        "server/storage.ts"
+      ],
+      "server/routes.ts": [
+        "server/objectStorage.ts",
+        "server/objectAcl.ts",
+        "server/replitAuth.ts",
+        "server/utils/envValidation.ts",
+        "server/api/health.ts",
+        "server/api/properties.ts"
+      ],
+      "server/rulesAPI.ts": [
+        "server/replitAuth.ts",
+        "server/rulesEngine.ts",
+        "server/rulesDSLParser.ts"
+      ],
+      "server/rulesDSLParser.ts": [
+        "server/rulesEngine.ts"
+      ],
+      "server/rulesEngine.ts": [
+        "server/db.ts"
+      ],
+      "server/s1AcceptanceCriteria.ts": [
+        "server/s1ComplianceEngine.ts",
+        "server/xbrlTaggingService.ts",
+        "server/evidencePackService.ts",
+        "server/db.ts"
+      ],
+      "server/s1ComplianceEngine.ts": [
+        "server/db.ts"
+      ],
+      "server/selfServiceManager.ts": [
+        "server/db.ts"
+      ],
+      "server/sepaEngineValidator.ts": [
+        "server/sepaFileGenerator.ts"
+      ],
+      "server/sepaFileGenerator.ts": [
+        "server/db.ts"
+      ],
+      "server/sepaInstantPaymentService.ts": [
+        "server/sepaFileGenerator.ts",
+        "server/db.ts"
+      ],
+      "server/sepaPaymentService.ts": [
+        "server/db.ts"
+      ],
+      "server/slackIntegration.ts": [],
+      "server/slackTeamsApprovals.ts": [
+        "server/storage.ts",
+        "server/workflowManager.ts"
+      ],
+      "server/smartNotificationsService.ts": [
+        "server/storage.ts",
+        "server/slackIntegration.ts",
+        "server/teamsIntegration.ts"
+      ],
+      "server/standardizedEarningsCodesService.ts": [
+        "server/db.ts"
+      ],
+      "server/storage.ts": [
+        "server/db.ts"
+      ],
+      "server/successMetricsService.ts": [
+        "server/db.ts"
+      ],
+      "server/teamsIntegration.ts": [],
+      "server/timeService.ts": [],
+      "server/visualAnalyticsService.ts": [
+        "server/storage.ts"
+      ],
+      "server/vite.ts": [],
+      "server/workflowManager.ts": [
+        "server/storage.ts",
+        "server/erganiConnector.ts",
+        "server/payrollConnector.ts"
+      ],
+      "server/xbrlTaggingService.ts": [
+        "server/db.ts"
+      ],
+      "shared/bddIbanTests.ts": [
+        "shared/ibanValidationEnhanced.ts",
+        "shared/greekNameNormalization.ts"
+      ],
+      "shared/billingSchema.ts": [],
+      "shared/grcSchema.ts": [],
+      "shared/greekNameNormalization.ts": [],
+      "shared/ibanI18n.ts": [],
+      "shared/ibanValidation.ts": [],
+      "shared/ibanValidationEnhanced.ts": [
+        "shared/greekNameNormalization.ts"
+      ],
+      "shared/multi-tenancy-schema.ts": [
+        "shared/schema.ts"
+      ],
+      "shared/payments-canonical-schema.ts": [],
+      "shared/payments-schema.ts": [],
+      "shared/schema.ts": [],
+      "shared/sdk-types.ts": [],
+      "client/src/App.tsx": [
+        "client/src/lib/queryClient.ts"
+      ],
+      "client/src/main.tsx": [
+        "client/src/App.tsx"
+      ],
+      "server/ai/complianceCopilot.ts": [
+        "server/db.ts"
+      ],
+      "server/analytics/forecastingService.ts": [
+        "server/db.ts"
+      ],
+      "server/api/acceptanceCriteria.ts": [
+        "server/services/performanceOptimizer.ts",
+        "server/services/idempotencyService.ts",
+        "server/services/auditTrailService.ts",
+        "server/services/webhookService.ts"
+      ],
+      "server/api/acceptanceTestApi.ts": [
+        "server/services/AcceptanceTestService.ts",
+        "server/services/EdgeCaseService.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/ai.ts": [
+        "server/ai/complianceCopilot.ts",
+        "server/replitAuth.ts",
+        "server/security/auditService.ts"
+      ],
+      "server/api/aiCopilot.ts": [
+        "server/replitAuth.ts"
+      ],
+      "server/api/auth.ts": [
+        "server/replitAuth.ts"
+      ],
+      "server/api/authStatus.ts": [
+        "server/db.ts"
+      ],
+      "server/api/automatedRunbooks.ts": [
+        "server/replitAuth.ts",
+        "server/services/AutomatedRunbooksService.ts",
+        "server/db.ts"
+      ],
+      "server/api/canonicalPayments.ts": [
+        "server/services/canonicalPaymentsService.ts"
+      ],
+      "server/api/cbaGovernanceApi.ts": [
+        "server/services/CBAGovernanceService.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/cbaPacksApi.ts": [
+        "server/services/CbaPackService.ts",
+        "server/seeders/cbaPackSeeder.ts"
+      ],
+      "server/api/changeLogLegalWatch.ts": [
+        "server/changeLogLegalWatch.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/clientApproval.ts": [
+        "server/db.ts",
+        "server/services/ClientAccessService.ts"
+      ],
+      "server/api/csrd.ts": [
+        "server/csrdService.ts",
+        "server/evidencePackService.ts",
+        "server/xbrlTaggingService.ts",
+        "server/db.ts",
+        "server/s1ComplianceEngine.ts",
+        "server/s1AcceptanceCriteria.ts"
+      ],
+      "server/api/cutOffLogic.ts": [
+        "server/services/cutOffLogic.ts"
+      ],
+      "server/api/dataImport.ts": [
+        "server/db.ts",
+        "server/services/greekValidation.ts",
+        "server/services/IbanValidationService.ts"
+      ],
+      "server/api/disaster.ts": [
+        "server/replitAuth.ts",
+        "server/api/oneClickFlow.ts"
+      ],
+      "server/api/disasterRecovery.ts": [
+        "server/replitAuth.ts",
+        "server/services/TabletopDRExerciseService.ts",
+        "server/services/AutomatedRestoreTestingService.ts",
+        "server/services/RPOandRTOSLAService.ts",
+        "server/services/ObjectStorageWORMService.ts",
+        "server/services/DisasterRecoveryInitializer.ts"
+      ],
+      "server/api/documentAI.ts": [
+        "server/documentAI.ts",
+        "server/eSignature.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/dstTestingApi.ts": [
+        "server/services/TimezoneTestService.ts",
+        "server/services/DSTTransitionService.ts",
+        "server/services/DSTAwareOvertimeService.ts",
+        "server/services/InternationalTimezoneService.ts"
+      ],
+      "server/api/dunningEmails.ts": [
+        "server/services/DunningEmailService.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/edgeCases.ts": [
+        "server/services/edgeCaseHandler.ts"
+      ],
+      "server/api/embedded.ts": [
+        "server/db.ts",
+        "server/auth/oauth2.ts",
+        "server/services/glExportService.ts"
+      ],
+      "server/api/employees.ts": [
+        "server/replitAuth.ts",
+        "server/db.ts",
+        "server/middleware/idempotency.ts",
+        "server/middleware/auditLog.ts"
+      ],
+      "server/api/evaluation.ts": [],
+      "server/api/eventQueue.ts": [
+        "server/replitAuth.ts",
+        "server/services/EventQueueService.ts"
+      ],
+      "server/api/explanations.ts": [
+        "server/services/PayslipExplanationService.ts",
+        "shared/schema.ts"
+      ],
+      "server/api/filings.ts": [
+        "server/replitAuth.ts",
+        "server/db.ts"
+      ],
+      "server/api/filingWorkflow.ts": [
+        "server/replitAuth.ts",
+        "server/services/AuditService.ts"
+      ],
+      "server/api/forecasting.ts": [
+        "server/analytics/forecastingService.ts",
+        "server/replitAuth.ts",
+        "server/security/auditService.ts"
+      ],
+      "server/api/garnishmentApi.ts": [
+        "server/services/GarnishmentService.ts",
+        "server/replitAuth.ts",
+        "shared/schema.ts",
+        "server/services/GarnishmentRBACService.ts",
+        "server/services/PayrollGarnishmentIntegration.ts",
+        "server/services/PayslipGarnishmentRenderer.ts",
+        "server/test/garnishment-bdd-tests.ts"
+      ],
+      "server/api/glGeneric.ts": [
+        "server/db.ts",
+        "server/services/glExportCanonical.ts",
+        "server/services/webhookService.ts",
+        "server/services/roundingService.ts"
+      ],
+      "server/api/governmentSystemMonitoring.ts": [
+        "server/replitAuth.ts",
+        "server/services/GovernmentSystemMonitoringService.ts",
+        "server/db.ts"
+      ],
+      "server/api/grc.ts": [
+        "server/replitAuth.ts",
+        "server/services/GRCService.ts",
+        "server/services/ChecksEngine.ts",
+        "server/services/FindingsService.ts",
+        "server/services/IntegrationsHub.ts"
+      ],
+      "server/api/guidedSetup.ts": [
+        "server/db.ts",
+        "server/services/guidedSetupService.ts"
+      ],
+      "server/api/health.ts": [
+        "server/db.ts"
+      ],
+      "server/api/hotelTipPooling.ts": [
+        "server/hotelTipPooling.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/ibanValidation.ts": [
+        "server/replitAuth.ts",
+        "server/services/IbanValidationService.ts"
+      ],
+      "server/api/incidentOwnership.ts": [
+        "server/services/IncidentOwnershipService.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/incidentResponseOwnership.ts": [
+        "server/services/IncidentResponseOwnershipService.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/incidentTemplates.ts": [
+        "server/services/StatusPageService.ts",
+        "server/services/IncidentCommunicationTemplates.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/instantPayments.ts": [
+        "server/sepaInstantPaymentService.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/instantReissue.ts": [
+        "server/services/InstantReissueService.ts",
+        "server/services/InstantMetricsService.ts",
+        "server/services/webhookIngestion.ts"
+      ],
+      "server/api/integrations.ts": [
+        "server/replitAuth.ts"
+      ],
+      "server/api/laborNewsfeed.ts": [
+        "server/db.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/logs.ts": [
+        "server/replitAuth.ts",
+        "server/services/CentralLogAggregationService.ts"
+      ],
+      "server/api/mockGRC.ts": [],
+      "server/api/nativeConnectors.ts": [
+        "server/db.ts",
+        "server/services/nativeConnectors.ts",
+        "server/services/glExportCanonical.ts"
+      ],
+      "server/api/notifications.ts": [
+        "server/db.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/onCallRota.ts": [
+        "server/replitAuth.ts",
+        "server/services/OnCallRotaService.ts",
+        "server/db.ts"
+      ],
+      "server/api/oneClickFlow.ts": [
+        "server/services/OneClickFlowService.ts",
+        "server/services/safetyComplianceService.ts"
+      ],
+      "server/api/partners.ts": [
+        "server/db.ts",
+        "server/replitAuth.ts",
+        "server/services/OboService.ts",
+        "server/services/AuditService.ts",
+        "server/services/SecurityService.ts",
+        "server/services/ConsentService.ts",
+        "server/services/MakerCheckerService.ts",
+        "server/services/ClientAccessService.ts"
+      ],
+      "server/api/payEquity.ts": [
+        "server/payEquityService.ts",
+        "server/db.ts"
+      ],
+      "server/api/paymentBatch.ts": [
+        "server/services/paymentBatchService.ts"
+      ],
+      "server/api/payments.ts": [
+        "server/services/webhookService.ts",
+        "server/services/connectorService.ts",
+        "server/services/safetyComplianceService.ts",
+        "server/services/metricsService.ts",
+        "server/services/edgeCaseHandler.ts",
+        "server/services/acceptanceCriteriaValidator.ts",
+        "server/services/testPlanExecutor.ts"
+      ],
+      "server/api/paymentsOps.ts": [
+        "server/services/paymentsOpsService.ts"
+      ],
+      "server/api/paymentStateMachine.ts": [
+        "server/services/paymentStateMachine.ts"
+      ],
+      "server/api/payroll.ts": [
+        "server/replitAuth.ts",
+        "server/db.ts",
+        "server/services/GarnishmentService.ts",
+        "server/glExportService.ts"
+      ],
+      "server/api/payrollCalculationApi.ts": [
+        "server/services/PayrollCalculationEngine.ts"
+      ],
+      "server/api/payslips.ts": [],
+      "server/api/policies.ts": [],
+      "server/api/properties.ts": [
+        "server/db.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/rca.ts": [
+        "server/services/RootCauseAnalysisService.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/reconciliation.ts": [
+        "server/services/roundingService.ts",
+        "server/services/glExportCanonical.ts"
+      ],
+      "server/api/reconciliationEngine.ts": [
+        "server/services/reconciliationEngine.ts"
+      ],
+      "server/api/reissueAlgorithm.ts": [
+        "server/services/reissueAlgorithm.ts"
+      ],
+      "server/api/reports.ts": [
+        "server/replitAuth.ts",
+        "server/reports/apdGenerator.ts",
+        "server/reports/fmyGenerator.ts",
+        "server/reports/erganiReports.ts",
+        "server/reports/payslipGenerator.ts",
+        "server/reports/glExport.ts",
+        "server/reports/digitalCardPack.ts",
+        "server/reports/annualCertificate.ts"
+      ],
+      "server/api/rulesets.ts": [],
+      "server/api/security.ts": [
+        "server/replitAuth.ts",
+        "server/security/gdprCompliance.ts",
+        "server/security/rbacService.ts",
+        "server/security/auditService.ts",
+        "server/security/dataResidency.ts"
+      ],
+      "server/api/securityAuditApi.ts": [
+        "server/services/CalcProvenanceService.ts",
+        "server/services/MakerCheckerService.ts",
+        "server/services/DocumentTrailService.ts"
+      ],
+      "server/api/selfService.ts": [
+        "server/db.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/severanceApi.ts": [
+        "server/services/SeveranceFinalPayService.ts",
+        "server/services/ErganiTerminationService.ts",
+        "server/services/MakerCheckerService.ts",
+        "server/replitAuth.ts",
+        "server/storage.ts",
+        "server/services/SeveranceHelpers.ts"
+      ],
+      "server/api/statusPage.ts": [
+        "server/services/StatusPageService.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/testing.ts": [
+        "server/replitAuth.ts",
+        "server/services/MakerCheckerService.ts",
+        "server/services/SecurityService.ts",
+        "server/services/WatermarkingService.ts"
+      ],
+      "server/api/time.ts": [
+        "server/replitAuth.ts",
+        "server/db.ts"
+      ],
+      "server/api/timesheets.ts": [
+        "server/storage.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/userProfile.ts": [
+        "server/db.ts",
+        "server/replitAuth.ts"
+      ],
+      "server/api/webhooks.ts": [
+        "server/replitAuth.ts"
+      ],
+      "server/auth/oauth2.ts": [
+        "server/db.ts"
+      ],
+      "server/backgroundJobs/jobExamples.ts": [],
+      "server/connectors/quickbooksConnector.ts": [],
+      "server/connectors/xeroConnector.ts": [],
+      "server/database/databaseBestPractices.ts": [],
+      "server/database/implementationStatus.ts": [],
+      "server/database/migrations.ts": [],
+      "server/database/uniquenessConstraints.ts": [],
+      "server/deployment/configurationService.ts": [],
+      "server/deployment/discoveryService.ts": [],
+      "server/deployment/integrationService.ts": [],
+      "server/deployment/migrationService.ts": [],
+      "server/deployment/pilotService.ts": [],
+      "server/lib/passport.ts": [],
+      "server/middleware/auditLog.ts": [],
+      "server/middleware/authMiddleware.ts": [
+        "server/services/authService.ts"
+      ],
+      "server/middleware/idempotency.ts": [
+        "server/utils/safeScheduler.ts"
+      ],
+      "server/middleware/loggingMiddleware.ts": [
+        "server/services/CentralLogAggregationService.ts"
+      ],
+      "server/middleware/mfaEnforcementMiddleware.ts": [
+        "server/services/MfaService.ts",
+        "server/storage.ts"
+      ],
+      "server/middleware/multiTenancy.ts": [
+        "server/db.ts"
+      ],
+      "server/middleware/oboMiddleware.ts": [
+        "server/services/OboService.ts"
+      ],
+      "server/middleware/rateLimitMiddleware.ts": [
+        "server/services/RateLimitService.ts"
+      ],
+      "server/middleware/SecurityMiddleware.ts": [
+        "server/services/SecurityService.ts",
+        "server/services/AnalyticsService.ts"
+      ],
+      "server/middleware/securityMiddleware.ts": [
+        "server/utils/safeScheduler.ts"
+      ],
+      "server/observability/healthChecks.ts": [],
+      "server/observability/logging.ts": [],
+      "server/observability/metrics.ts": [],
+      "server/observability/sentry.ts": [],
+      "server/reports/annualCertificate.ts": [],
+      "server/reports/apdGenerator.ts": [],
+      "server/reports/digitalCardPack.ts": [],
+      "server/reports/erganiReports.ts": [],
+      "server/reports/fmyGenerator.ts": [],
+      "server/reports/glExport.ts": [],
+      "server/reports/payslipGenerator.ts": [],
+      "server/routes/auth.ts": [
+        "server/services/RateLimitService.ts",
+        "server/services/PasswordService.ts",
+        "server/services/TokenService.ts",
+        "server/services/SessionService.ts",
+        "server/services/MfaService.ts",
+        "server/services/AuditService.ts",
+        "server/services/SsoService.ts",
+        "server/services/LocalizationService.ts",
+        "server/services/GdprService.ts",
+        "server/db.ts",
+        "server/middleware/rateLimitMiddleware.ts",
+        "server/middleware/securityMiddleware.ts"
+      ],
+      "server/routes/backgroundJobs.ts": [],
+      "server/routes/billing.ts": [
+        "server/db.ts",
+        "server/replitAuth.ts",
+        "server/services/BillingService.ts",
+        "server/services/PaymentService.ts",
+        "server/services/DunningService.ts",
+        "server/services/MyDataService.ts",
+        "server/services/InvoicePDFService.ts"
+      ],
+      "server/routes/cbaPackRoutes.ts": [
+        "server/services/CbaPackService.ts",
+        "server/services/SectorPackDefinitions.ts",
+        "shared/schema.ts"
+      ],
+      "server/routes/securityRoutes.ts": [
+        "server/services/SecurityAuditService.ts",
+        "server/services/SecurityComplianceValidator.ts",
+        "server/services/SecurityService.ts",
+        "server/services/SecretManagementService.ts",
+        "server/middleware/SecurityMiddleware.ts"
+      ],
+      "server/security/auditService.ts": [
+        "server/db.ts"
+      ],
+      "server/security/dataResidency.ts": [],
+      "server/security/gdprCompliance.ts": [
+        "server/db.ts"
+      ],
+      "server/security/rbacService.ts": [
+        "server/db.ts"
+      ],
+      "server/seeders/cbaPackSeeder.ts": [
+        "server/services/CbaPackService.ts",
+        "server/services/SectorPackDefinitions.ts"
+      ],
+      "server/services/acceptanceCriteriaValidator.ts": [
+        "server/services/safetyComplianceService.ts",
+        "server/services/metricsService.ts",
+        "server/services/edgeCaseHandler.ts"
+      ],
+      "server/services/AcceptanceTestService.ts": [
+        "server/services/EdgeCaseService.ts",
+        "server/services/APDMappingService.ts"
+      ],
+      "server/services/AnalyticsService.ts": [
+        "server/utils/safeScheduler.ts"
+      ],
+      "server/services/APDMappingService.ts": [],
+      "server/services/ApprovalEventBus.ts": [
+        "server/services/AuditService.ts"
+      ],
+      "server/services/AuditService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/auditTrailService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/authService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/AutomatedRestoreTestingService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/AutomatedRunbooksService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/AutomatedSecretRotationService.ts": [
+        "server/services/SecretManagementService.ts",
+        "server/services/AuditService.ts",
+        "server/utils/safeScheduler.ts"
+      ],
+      "server/services/BackupCodeService.ts": [
+        "server/db.ts",
+        "server/services/PasswordService.ts"
+      ],
+      "server/services/BillingService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/BreachResponseService.ts": [
+        "server/services/AuditService.ts"
+      ],
+      "server/services/CalcProvenanceService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/canonicalPaymentsService.ts": [
+        "server/db.ts",
+        "server/services/paymentStateMachine.ts"
+      ],
+      "server/services/CapTrackingService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/CBAGovernanceService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/CbaPackService.ts": [
+        "server/db.ts",
+        "shared/schema.ts"
+      ],
+      "server/services/CentralLogAggregationService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/ChecksEngine.ts": [
+        "server/db.ts"
+      ],
+      "server/services/ClientAccessService.ts": [
+        "server/db.ts",
+        "shared/schema.ts",
+        "server/services/AuditService.ts",
+        "server/services/MakerCheckerService.ts"
+      ],
+      "server/services/ComprehensiveAuthService.ts": [
+        "server/services/PerformanceMonitoringService.ts",
+        "server/services/AnalyticsService.ts",
+        "server/services/FeatureFlagService.ts",
+        "server/services/LocalizationService.ts",
+        "server/services/GdprService.ts",
+        "server/services/BackupCodeService.ts",
+        "server/services/WebAuthnService.ts",
+        "server/services/QATestMatrixService.ts"
+      ],
+      "server/services/ComprehensiveKMSService.ts": [
+        "server/services/SecretManagementService.ts",
+        "server/services/AuditService.ts"
+      ],
+      "server/services/connectorService.ts": [
+        "server/services/webhookService.ts"
+      ],
+      "server/services/ConsentService.ts": [
+        "server/db.ts",
+        "server/services/OboService.ts",
+        "server/services/AuditService.ts"
+      ],
+      "server/services/CookieConsentService.ts": [
+        "server/services/AuditService.ts"
+      ],
+      "server/services/CoverageValidationService.ts": [
+        "server/db.ts",
+        "shared/schema.ts"
+      ],
+      "server/services/CreditNoteService.ts": [
+        "server/db.ts",
+        "server/services/BillingService.ts",
+        "server/services/CurrencyService.ts"
+      ],
+      "server/services/CurrencyService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/cutOffLogic.ts": [
+        "server/db.ts"
+      ],
+      "server/services/DisasterRecoveryInitializer.ts": [
+        "server/services/TabletopDRExerciseService.ts",
+        "server/services/AutomatedRestoreTestingService.ts",
+        "server/services/RPOandRTOSLAService.ts",
+        "server/services/ObjectStorageWORMService.ts"
+      ],
+      "server/services/DisasterRecoveryService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/DisbursementKeyService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/DocumentPackWorker.ts": [
+        "server/services/WatermarkingService.ts"
+      ],
+      "server/services/DocumentTrailService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/DPAService.ts": [
+        "server/services/AuditService.ts"
+      ],
+      "server/services/DPIAService.ts": [
+        "server/services/AuditService.ts"
+      ],
+      "server/services/DSTAwareOvertimeService.ts": [
+        "server/services/DSTTransitionService.ts"
+      ],
+      "server/services/DSTTransitionService.ts": [],
+      "server/services/DunningEmailService.ts": [],
+      "server/services/DunningService.ts": [
+        "server/db.ts",
+        "server/services/PaymentService.ts"
+      ],
+      "server/services/edgeCaseHandler_old.ts": [
+        "server/services/safetyComplianceService.ts",
+        "server/services/webhookService.ts"
+      ],
+      "server/services/edgeCaseHandler.ts": [
+        "server/services/safetyComplianceService.ts",
+        "server/services/webhookService.ts"
+      ],
+      "server/services/EdgeCaseService.ts": [
+        "server/services/CbaPackService.ts"
+      ],
+      "server/services/EmailService.ts": [
+        "server/services/EmailTemplateService.ts",
+        "server/services/AnalyticsService.ts"
+      ],
+      "server/services/EmailTemplateService.ts": [],
+      "server/services/ErganiIntegrationEnhanced.ts": [
+        "server/services/CbaPackService.ts",
+        "server/services/PayrollCalculationEngine.ts"
+      ],
+      "server/services/ErganiTemplateService.ts": [],
+      "server/services/ErganiTerminationService.ts": [
+        "shared/schema.ts"
+      ],
+      "server/services/EventQueueService.ts": [
+        "server/api/webhooks.ts",
+        "server/utils/safeScheduler.ts",
+        "server/services/glExportService.ts",
+        "server/services/glExportCanonical.ts"
+      ],
+      "server/services/ExplanationRulesSeeder.ts": [
+        "server/db.ts",
+        "shared/schema.ts"
+      ],
+      "server/services/ExplanationTemplateService.ts": [],
+      "server/services/FeatureFlagService.ts": [],
+      "server/services/FindingsService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/GarnishmentRBACService.ts": [],
+      "server/services/GarnishmentService.ts": [
+        "server/db.ts",
+        "shared/schema.ts"
+      ],
+      "server/services/GDPRComplianceInitializer.ts": [
+        "server/services/DPIAService.ts",
+        "server/services/DPAService.ts",
+        "server/services/ROPAService.ts",
+        "server/services/BreachResponseService.ts",
+        "server/services/CookieConsentService.ts",
+        "server/services/RTBFService.ts",
+        "server/services/AuditService.ts"
+      ],
+      "server/services/GdprService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/GLCostCenterService.ts": [],
+      "server/services/glExportCanonical.ts": [
+        "server/db.ts"
+      ],
+      "server/services/glExportService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/GovernmentSystemMonitoringService.ts": [
+        "server/db.ts",
+        "server/services/AutomatedRunbooksService.ts"
+      ],
+      "server/services/GRCInitializer.ts": [
+        "server/services/GRCService.ts",
+        "server/services/ChecksEngine.ts"
+      ],
+      "server/services/GRCService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/greekValidation.ts": [],
+      "server/services/guidedSetupService.ts": [
+        "server/db.ts",
+        "server/services/nativeConnectors.ts"
+      ],
+      "server/services/IbanValidationService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/idempotencyService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/IncidentCommunicationTemplates.ts": [],
+      "server/services/IncidentOwnershipService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/IncidentResponseOwnershipService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/InstantMetricsService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/InstantReissueService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/IntegrationsHub.ts": [
+        "server/db.ts"
+      ],
+      "server/services/InternationalTimezoneService.ts": [
+        "server/services/DSTTransitionService.ts"
+      ],
+      "server/services/InvoicePDFService.ts": [],
+      "server/services/LegalApprovalService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/LocalizationService.ts": [],
+      "server/services/MakerCheckerService.ts": [
+        "server/db.ts",
+        "server/services/OboService.ts",
+        "server/services/AuditService.ts",
+        "server/services/SecurityService.ts"
+      ],
+      "server/services/metricsService.ts": [],
+      "server/services/MfaService.ts": [
+        "server/db.ts",
+        "server/services/PasswordService.ts"
+      ],
+      "server/services/MyDataService.ts": [],
+      "server/services/nativeConnectors.ts": [
+        "server/services/webhookService.ts",
+        "server/db.ts"
+      ],
+      "server/services/ObjectStorageWORMService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/OboService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/OnCallRotaService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/OneClickFlowService.ts": [
+        "server/db.ts",
+        "server/services/safetyComplianceService.ts"
+      ],
+      "server/services/OperationalMonitoringService.ts": [
+        "server/db.ts",
+        "server/services/MyDataService.ts",
+        "server/services/CurrencyService.ts"
+      ],
+      "server/services/PasswordService.ts": [],
+      "server/services/paymentBatchService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/PaymentService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/paymentsOpsService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/paymentStateMachine.ts": [
+        "server/db.ts"
+      ],
+      "server/services/PayrollBusinessRulesService.ts": [
+        "server/db.ts",
+        "server/services/CapTrackingService.ts",
+        "server/services/DisbursementKeyService.ts"
+      ],
+      "server/services/PayrollCalculationEngine.ts": [
+        "server/db.ts",
+        "shared/schema.ts",
+        "server/services/CbaPackService.ts",
+        "server/services/CalcProvenanceService.ts"
+      ],
+      "server/services/PayrollEngineService.ts": [
+        "server/db.ts",
+        "server/services/CapTrackingService.ts",
+        "server/services/DisbursementKeyService.ts",
+        "server/services/PayrollBusinessRulesService.ts"
+      ],
+      "server/services/PayrollGarnishmentIntegration.ts": [
+        "server/services/GarnishmentService.ts",
+        "server/glExportService.ts"
+      ],
+      "server/services/PayslipExplanationService.ts": [
+        "server/db.ts",
+        "shared/schema.ts"
+      ],
+      "server/services/PayslipGarnishmentRenderer.ts": [],
+      "server/services/PerformanceBudgetService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/PerformanceMonitoringService.ts": [
+        "server/utils/safeScheduler.ts"
+      ],
+      "server/services/performanceOptimizer.ts": [
+        "server/db.ts"
+      ],
+      "server/services/ProrationService.ts": [
+        "server/db.ts",
+        "server/services/BillingService.ts",
+        "server/services/CreditNoteService.ts"
+      ],
+      "server/services/QATestMatrixService.ts": [
+        "server/services/AnalyticsService.ts",
+        "server/services/PerformanceMonitoringService.ts",
+        "server/services/FeatureFlagService.ts"
+      ],
+      "server/services/RateLimitService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/reconciliationEngine.ts": [
+        "server/db.ts",
+        "server/services/paymentStateMachine.ts"
+      ],
+      "server/services/reissueAlgorithm.ts": [],
+      "server/services/RootCauseAnalysisService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/ROPAService.ts": [
+        "server/services/AuditService.ts"
+      ],
+      "server/services/roundingService.ts": [],
+      "server/services/RPOandRTOSLAService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/RTBFService.ts": [
+        "server/services/AuditService.ts"
+      ],
+      "server/services/safetyComplianceService.ts": [
+        "server/services/webhookService.ts"
+      ],
+      "server/services/SecretManagementService.ts": [],
+      "server/services/SectorPackDefinitions.ts": [
+        "server/services/CbaPackService.ts"
+      ],
+      "server/services/SecurityAuditService.ts": [
+        "server/services/SecurityService.ts",
+        "server/services/SecretManagementService.ts",
+        "server/services/AnalyticsService.ts"
+      ],
+      "server/services/SecurityComplianceValidator.ts": [
+        "server/services/SecurityService.ts",
+        "server/services/SecurityAuditService.ts",
+        "server/services/SecretManagementService.ts"
+      ],
+      "server/services/SecurityEnforcementInitializer.ts": [
+        "server/services/MfaService.ts",
+        "server/services/SsoService.ts",
+        "server/services/SsoAdminIntegrationService.ts",
+        "server/services/SecretManagementService.ts",
+        "server/services/AutomatedSecretRotationService.ts",
+        "server/services/ComprehensiveKMSService.ts",
+        "server/services/AuditService.ts"
+      ],
+      "server/services/SecurityService.ts": [
+        "server/services/AnalyticsService.ts"
+      ],
+      "server/services/SessionService.ts": [
+        "server/db.ts",
+        "server/services/TokenService.ts",
+        "server/services/AuditService.ts"
+      ],
+      "server/services/SeveranceFinalPayService.ts": [
+        "server/db.ts",
+        "shared/schema.ts",
+        "server/services/CalcProvenanceService.ts",
+        "server/services/SeveranceRulesService.ts",
+        "server/services/ExplanationTemplateService.ts",
+        "server/services/SeveranceHelpers.ts"
+      ],
+      "server/services/SeveranceHelpers.ts": [],
+      "server/services/SeveranceRulesService.ts": [
+        "server/db.ts",
+        "shared/schema.ts"
+      ],
+      "server/services/SsoAdminIntegrationService.ts": [
+        "server/services/SsoService.ts",
+        "server/storage.ts",
+        "server/services/AuditService.ts"
+      ],
+      "server/services/SsoService.ts": [
+        "server/db.ts",
+        "server/services/AuditService.ts"
+      ],
+      "server/services/StatusPageService.ts": [
+        "server/db.ts",
+        "server/services/IncidentCommunicationTemplates.ts",
+        "server/utils/safeScheduler.ts",
+        "server/services/RootCauseAnalysisService.ts",
+        "server/services/IncidentOwnershipService.ts"
+      ],
+      "server/services/TabletopDRExerciseService.ts": [
+        "server/db.ts"
+      ],
+      "server/services/testPlanExecutor.ts": [
+        "server/services/acceptanceCriteriaValidator.ts",
+        "server/services/safetyComplianceService.ts",
+        "server/services/edgeCaseHandler.ts",
+        "server/services/metricsService.ts"
+      ],
+      "server/services/TimezoneTestService.ts": [
+        "server/services/DSTTransitionService.ts"
+      ],
+      "server/services/TokenService.ts": [],
+      "server/services/WatermarkingService.ts": [],
+      "server/services/WebAuthnService.ts": [
+        "server/db.ts",
+        "server/utils/safeScheduler.ts"
+      ],
+      "server/services/webhookIngestion.ts": [
+        "server/db.ts",
+        "server/services/InstantReissueService.ts"
+      ],
+      "server/services/webhookService.ts": [
+        "server/db.ts"
+      ],
+      "server/test/garnishment-bdd-tests.ts": [
+        "server/services/GarnishmentService.ts"
+      ],
+      "server/test/garnishment-calc-demo.ts": [
+        "server/services/GarnishmentService.ts"
+      ],
+      "server/tests/eventedPlatform.shiptest.ts": [
+        "server/services/EventQueueService.ts"
+      ],
+      "server/utils/envValidation.ts": [],
+      "server/utils/metaTags.ts": [],
+      "server/utils/safeScheduler.ts": [],
+      "server/utils/serviceRole.ts": [
+        "server/utils/envValidation.ts"
+      ],
+      "client/src/__tests__/AuthBootstrap.test.tsx": [],
+      "client/src/components/ABTestComponent.tsx": [],
+      "client/src/components/ABTestProvider.tsx": [],
+      "client/src/components/AICopilot.tsx": [],
+      "client/src/components/AutomatedTraining.tsx": [],
+      "client/src/components/BatchStateMachineDisplay.tsx": [],
+      "client/src/components/BillingDashboard.tsx": [],
+      "client/src/components/CBAUpdates.tsx": [],
+      "client/src/components/ChurnPrevention.tsx": [],
+      "client/src/components/CommandPalette.tsx": [],
+      "client/src/components/CommandPaletteButton.tsx": [],
+      "client/src/components/CommandPaletteModal.tsx": [],
+      "client/src/components/CompliancePaymentsCues.tsx": [
+        "client/src/components/ui/card.tsx",
+        "client/src/components/ui/button.tsx",
+        "client/src/components/ui/badge.tsx",
+        "client/src/components/ui/alert.tsx"
+      ],
+      "client/src/components/ComplianceRecommendations.tsx": [],
+      "client/src/components/ComplianceRiskScoring.tsx": [],
+      "client/src/components/ContextAwareBanner.tsx": [
+        "client/src/components/ui/context-banner.tsx"
+      ],
+      "client/src/components/CostBenchmarking.tsx": [],
+      "client/src/components/CutOffDisplay.tsx": [],
+      "client/src/components/DashboardSkeleton.tsx": [],
+      "client/src/components/DataImportWizard.tsx": [],
+      "client/src/components/DeviceComplianceMonitor.tsx": [],
+      "client/src/components/DigitalInspectorPortal.tsx": [],
+      "client/src/components/DisasterRecoveryManager.tsx": [],
+      "client/src/components/DunningEmailManager.tsx": [],
+      "client/src/components/EmployeeCard.tsx": [],
+      "client/src/components/EmployeeProfileCBA.tsx": [],
+      "client/src/components/ERGANIValidation.tsx": [],
+      "client/src/components/ErrorAnalytics.tsx": [],
+      "client/src/components/ErrorBoundary.tsx": [],
+      "client/src/components/ErrorTrackingDashboard.tsx": [],
+      "client/src/components/ExitIntentPopup.tsx": [],
+      "client/src/components/FeatureFlagProvider.tsx": [],
+      "client/src/components/GreekComplianceInfo.tsx": [],
+      "client/src/components/HelpCenter.tsx": [],
+      "client/src/components/ImprovedSidebar.tsx": [
+        "client/src/components/ui/badge.tsx",
+        "client/src/components/ui/sidebar-section.tsx",
+        "client/src/components/ui/profile-footer.tsx"
+      ],
+      "client/src/components/InAppStatusPage.tsx": [],
+      "client/src/components/IncidentCommunicationManager.tsx": [],
+      "client/src/components/IncidentOwnershipManager.tsx": [],
+      "client/src/components/IndustryConfigurationWizard.tsx": [],
+      "client/src/components/IndustryTemplateSelector.tsx": [],
+      "client/src/components/IntegrationManager.tsx": [],
+      "client/src/components/IntegrationMarketplace.tsx": [],
+      "client/src/components/InteractiveDemo.tsx": [],
+      "client/src/components/LanguageSwitch.tsx": [],
+      "client/src/components/LanguageSwitcher.tsx": [],
+      "client/src/components/Layout.tsx": [
+        "client/src/components/MainNavigation.tsx",
+        "client/src/components/PropertySwitcher.tsx",
+        "client/src/components/LanguageSwitcher.tsx",
+        "client/src/components/ThemeToggle.tsx",
+        "client/src/components/CommandPaletteButton.tsx",
+        "client/src/components/SupportChat.tsx"
+      ],
+      "client/src/components/LegalWatchNewsfeed.tsx": [],
+      "client/src/components/LoadingSpinner.tsx": [],
+      "client/src/components/MainNavigation.tsx": [
+        "client/src/components/StructuredNavigation.tsx"
+      ],
+      "client/src/components/MobileManagerApproval.tsx": [],
+      "client/src/components/MobilePayrollDashboard.tsx": [],
+      "client/src/components/MobilePunchApp.tsx": [],
+      "client/src/components/MotionWrapper.tsx": [],
+      "client/src/components/MultiFactorAuth.tsx": [],
+      "client/src/components/Navigation.tsx": [],
+      "client/src/components/NotificationBell.tsx": [],
+      "client/src/components/ObjectUploader.tsx": [],
+      "client/src/components/OfflinePayrollPreview.tsx": [],
+      "client/src/components/OnboardingChatbot.tsx": [],
+      "client/src/components/OneClickFlowButton.tsx": [],
+      "client/src/components/PayExplanation.tsx": [],
+      "client/src/components/PaymentsCockpit.tsx": [
+        "client/src/components/BatchStateMachineDisplay.tsx",
+        "client/src/components/CutOffDisplay.tsx"
+      ],
+      "client/src/components/PayrollCalculator.tsx": [],
+      "client/src/components/PayslipExplanation.tsx": [],
+      "client/src/components/PerformanceBudgetManager.tsx": [],
+      "client/src/components/PerformanceOptimizer.tsx": [],
+      "client/src/components/PredictiveLaborCosts.tsx": [],
+      "client/src/components/PropertySwitcher.tsx": [],
+      "client/src/components/ProtectedRoute.tsx": [],
+      "client/src/components/PublicStatusPage.tsx": [],
+      "client/src/components/PWAInstallPrompt.tsx": [],
+      "client/src/components/ResponsiveSidebar.tsx": [
+        "client/src/components/MainNavigation.tsx"
+      ],
+      "client/src/components/RoleBasedDashboard.tsx": [],
+      "client/src/components/RootCauseAnalysisManager.tsx": [],
+      "client/src/components/SelectivePayrollRuns.tsx": [],
+      "client/src/components/SeveranceCalculator.tsx": [],
+      "client/src/components/SeveranceWizard.tsx": [],
+      "client/src/components/Sidebar.tsx": [
+        "client/src/components/ThreeLevelNavigation.tsx"
+      ],
+      "client/src/components/SimpleEmployeeForm.tsx": [],
+      "client/src/components/SLADashboard.tsx": [],
+      "client/src/components/StructuredNavigation.tsx": [],
+      "client/src/components/SupportChat.tsx": [],
+      "client/src/components/TaxLawAlerts.tsx": [],
+      "client/src/components/ThemeToggle.tsx": [],
+      "client/src/components/ThreeLevelNavigation.tsx": [],
+      "client/src/components/WebhookSystem.tsx": [],
+      "client/src/components/ZeroTrustDashboard.tsx": [],
+      "client/src/contexts/AppContext.tsx": [],
+      "client/src/contexts/OboContext.tsx": [],
+      "client/src/contexts/PropertyContext.tsx": [],
+      "client/src/contexts/ThemeContext.tsx": [],
+      "client/src/contexts/UserRoleContext.tsx": [],
+      "client/src/examples/FileUploadExample.tsx": [],
+      "client/src/hooks/use-mobile.tsx": [],
+      "client/src/hooks/use-toast.ts": [],
+      "client/src/hooks/useABTest.ts": [],
+      "client/src/hooks/useAuth.ts": [],
+      "client/src/hooks/useCommandPalette.ts": [],
+      "client/src/hooks/useExitIntent.ts": [
+        "client/src/hooks/useAuth.ts"
+      ],
+      "client/src/hooks/useLanguage.ts": [],
+      "client/src/hooks/useLocale.ts": [],
+      "client/src/hooks/usePerformanceOptimization.ts": [],
+      "client/src/hooks/usePWA.ts": [],
+      "client/src/hooks/useSidebarState.ts": [],
+      "client/src/hooks/useTranslation.ts": [
+        "client/src/locales/en.json",
+        "client/src/locales/el.json"
+      ],
+      "client/src/lib/abTesting.ts": [],
+      "client/src/lib/alertsAndVisibility.ts": [],
+      "client/src/lib/allowancesCalculations.ts": [],
+      "client/src/lib/apiUtils.ts": [],
+      "client/src/lib/authUtils.ts": [],
+      "client/src/lib/confetti.ts": [],
+      "client/src/lib/digitalWorkCard.ts": [],
+      "client/src/lib/featureFlags.ts": [],
+      "client/src/lib/greekValidations.ts": [],
+      "client/src/lib/i18n.ts": [],
+      "client/src/lib/kioskApp.ts": [],
+      "client/src/lib/leaveCalculations.ts": [],
+      "client/src/lib/legalDocumentation.ts": [],
+      "client/src/lib/mobileApp.ts": [],
+      "client/src/lib/offlineStorage.ts": [],
+      "client/src/lib/overtimeCalculations.ts": [],
+      "client/src/lib/payrollCalculations.ts": [],
+      "client/src/lib/payrollSDK.ts": [],
+      "client/src/lib/queryClient.ts": [],
+      "client/src/lib/roleBasedRouting.ts": [],
+      "client/src/lib/schedulingSystem.ts": [],
+      "client/src/lib/sdk-client.ts": [],
+      "client/src/lib/securityPrivacySystem.ts": [],
+      "client/src/lib/syncService.ts": [
+        "client/src/lib/offlineStorage.ts",
+        "client/src/lib/queryClient.ts"
+      ],
+      "client/src/lib/timeCaptureCore.ts": [],
+      "client/src/lib/utils.ts": [],
+      "client/src/lib/workingTimeCalculations.ts": [],
+      "client/src/locales/el.json": [],
+      "client/src/locales/en.json": [],
+      "client/src/observability/sentry-client.ts": [],
+      "client/src/pages/ABTestingDashboard.tsx": [],
+      "client/src/pages/ABTestingDemo.tsx": [],
+      "client/src/pages/advancedTimeCapture.tsx": [],
+      "client/src/pages/aiEnginesDemo.tsx": [],
+      "client/src/pages/allowances.tsx": [],
+      "client/src/pages/analytics.tsx": [],
+      "client/src/pages/AutomatedTrainingDemo.tsx": [],
+      "client/src/pages/CBAGovernanceDashboard.tsx": [],
+      "client/src/pages/CBAMatrixView.tsx": [],
+      "client/src/pages/CBAUpdatesDemo.tsx": [],
+      "client/src/pages/changeLogLegalWatch.tsx": [],
+      "client/src/pages/ChurnPreventionDemo.tsx": [],
+      "client/src/pages/commandPaletteDemo.tsx": [],
+      "client/src/pages/CompanySetup.tsx": [],
+      "client/src/pages/CompanySetupWizard.tsx": [],
+      "client/src/pages/compliance.tsx": [],
+      "client/src/pages/ComplianceRiskScoringDemo.tsx": [],
+      "client/src/pages/CostBenchmarkingDemo.tsx": [],
+      "client/src/pages/costOtAnalytics.tsx": [],
+      "client/src/pages/dashboard.tsx": [],
+      "client/src/pages/dataContracts.tsx": [],
+      "client/src/pages/DataImport.tsx": [],
+      "client/src/pages/deployment.tsx": [],
+      "client/src/pages/devices.tsx": [],
+      "client/src/pages/DigitalInspectorPortalDemo.tsx": [],
+      "client/src/pages/digitalWorkCard.tsx": [],
+      "client/src/pages/documentAI.tsx": [],
+      "client/src/pages/earningsCodesDemo.tsx": [],
+      "client/src/pages/earningsCodesPolicy.tsx": [],
+      "client/src/pages/EmbeddedPayroll.tsx": [],
+      "client/src/pages/EmbedPage.tsx": [],
+      "client/src/pages/employeeMaster.tsx": [],
+      "client/src/pages/employeePortal.tsx": [],
+      "client/src/pages/employees.tsx": [],
+      "client/src/pages/employeeSelfService.tsx": [],
+      "client/src/pages/enterpriseArchitecture.tsx": [],
+      "client/src/pages/erganiCompliance.tsx": [],
+      "client/src/pages/ERGANIValidationDemo.tsx": [],
+      "client/src/pages/ErrorTrackingPage.tsx": [],
+      "client/src/pages/exceptions.tsx": [],
+      "client/src/pages/ExitIntentDemo.tsx": [],
+      "client/src/pages/exits.tsx": [],
+      "client/src/pages/ExplanationDemo.tsx": [],
+      "client/src/pages/filings.tsx": [],
+      "client/src/pages/forecasting.tsx": [],
+      "client/src/pages/GarnishmentPage.tsx": [],
+      "client/src/pages/GRCCompliance.tsx": [],
+      "client/src/pages/greekPayrollDemo.tsx": [],
+      "client/src/pages/HelpCenter.tsx": [],
+      "client/src/pages/home-backup.tsx": [],
+      "client/src/pages/home.tsx": [],
+      "client/src/pages/hotelEnhancements.tsx": [],
+      "client/src/pages/hotelOperations.tsx": [],
+      "client/src/pages/hotelTipPooling.tsx": [],
+      "client/src/pages/IndustryTemplates.tsx": [],
+      "client/src/pages/IntegrationMarketplacePage.tsx": [],
+      "client/src/pages/kpiDashboard.tsx": [],
+      "client/src/pages/landing.tsx": [],
+      "client/src/pages/LandingPage.tsx": [],
+      "client/src/pages/leave.tsx": [],
+      "client/src/pages/legal.tsx": [],
+      "client/src/pages/managerDashboard.tsx": [],
+      "client/src/pages/managerWorkflows.tsx": [],
+      "client/src/pages/MarketingHome.tsx": [],
+      "client/src/pages/MarketingLanding.tsx": [],
+      "client/src/pages/MobilePayroll.tsx": [],
+      "client/src/pages/mobilePunch.tsx": [],
+      "client/src/pages/modernPayrollEngine.tsx": [],
+      "client/src/pages/not-found.tsx": [],
+      "client/src/pages/NotFound.tsx": [],
+      "client/src/pages/onboarding.tsx": [],
+      "client/src/pages/OnboardingChatbotDemo.tsx": [],
+      "client/src/pages/overtime.tsx": [],
+      "client/src/pages/Partner.tsx": [],
+      "client/src/pages/PartnerConsole.tsx": [],
+      "client/src/pages/payExplanationDemo.tsx": [],
+      "client/src/pages/paymentOpsChecklist.tsx": [],
+      "client/src/pages/payments.tsx": [],
+      "client/src/pages/PaymentsCockpitDemo.tsx": [],
+      "client/src/pages/payroll.tsx": [],
+      "client/src/pages/payrollIntegration.tsx": [],
+      "client/src/pages/payrollPreview.tsx": [],
+      "client/src/pages/payrollProcessing.tsx": [],
+      "client/src/pages/payrollRunWizard.tsx": [],
+      "client/src/pages/PredictiveLaborCostsDemo.tsx": [],
+      "client/src/pages/productVision.tsx": [],
+      "client/src/pages/propertyDashboard.tsx": [],
+      "client/src/pages/public-status.tsx": [],
+      "client/src/pages/punches.tsx": [],
+      "client/src/pages/ROICalculator.tsx": [],
+      "client/src/pages/rulesEngine.tsx": [],
+      "client/src/pages/S1AcceptanceTesting.tsx": [],
+      "client/src/pages/S1Dashboard.tsx": [],
+      "client/src/pages/S1MetricsPage.tsx": [],
+      "client/src/pages/schedules.tsx": [],
+      "client/src/pages/sepaEngineDemo.tsx": [],
+      "client/src/pages/sepaPayments.tsx": [],
+      "client/src/pages/SeverancePage.tsx": [],
+      "client/src/pages/SeveranceTestPage.tsx": [],
+      "client/src/pages/SimpleIbanTest.tsx": [],
+      "client/src/pages/smartNotifications.tsx": [],
+      "client/src/pages/successMetrics.tsx": [],
+      "client/src/pages/TaxLawAlertsDemo.tsx": [],
+      "client/src/pages/teamsRoles.tsx": [],
+      "client/src/pages/uxArchitecture.tsx": [],
+      "client/src/pages/visualAnalytics.tsx": [],
+      "client/src/pages/WebhookSystemDemo.tsx": [],
+      "client/src/pages/ZeroTrustSecurityPage.tsx": [],
+      "client/src/test/setup.ts": [],
+      "client/src/utils/configUtils.ts": [],
+      "client/src/utils/metaUtils.ts": [],
+      "client/src/utils/performanceOptimizations.ts": [],
+      "client/src/utils/validation.ts": [],
+      "client/src/components/auth/AuthCard.tsx": [],
+      "client/src/components/auth/EmailField.tsx": [],
+      "client/src/components/auth/MfaModal.tsx": [],
+      "client/src/components/auth/PasswordField.tsx": [],
+      "client/src/components/auth/SsoButton.tsx": [],
+      "client/src/components/csrd/AssumptionsDrawer.tsx": [],
+      "client/src/components/csrd/MetricCard.tsx": [],
+      "client/src/components/csrd/S1MetricsPage.tsx": [
+        "client/src/components/csrd/MetricCard.tsx",
+        "client/src/components/csrd/AssumptionsDrawer.tsx"
+      ],
+      "client/src/components/csrd/S1ReadinessTile.tsx": [],
+      "client/src/components/embedded/EmbedFrame.tsx": [
+        "client/src/components/embedded/PayrollRunWizard.tsx",
+        "client/src/components/embedded/ExceptionsReview.tsx",
+        "client/src/components/embedded/FilingsPanel.tsx",
+        "client/src/components/embedded/PaymentsCockpit.tsx"
+      ],
+      "client/src/components/embedded/ExceptionsReview.tsx": [],
+      "client/src/components/embedded/FilingsPanel.tsx": [],
+      "client/src/components/embedded/PaymentsCockpit.tsx": [],
+      "client/src/components/embedded/PayrollRunWizard.tsx": [],
+      "client/src/components/embedded/PayrollWebComponent.ts": [],
+      "client/src/components/marketing/LanguageToggle.tsx": [],
+      "client/src/components/ui/accessible-input.tsx": [],
+      "client/src/components/ui/accordion.tsx": [],
+      "client/src/components/ui/alert-dialog.tsx": [],
+      "client/src/components/ui/alert.tsx": [],
+      "client/src/components/ui/aspect-ratio.tsx": [],
+      "client/src/components/ui/avatar.tsx": [],
+      "client/src/components/ui/badge.tsx": [],
+      "client/src/components/ui/breadcrumb.tsx": [],
+      "client/src/components/ui/button.tsx": [],
+      "client/src/components/ui/calendar.tsx": [],
+      "client/src/components/ui/card.tsx": [],
+      "client/src/components/ui/carousel.tsx": [],
+      "client/src/components/ui/chart.tsx": [],
+      "client/src/components/ui/checkbox.tsx": [],
+      "client/src/components/ui/collapsible.tsx": [],
+      "client/src/components/ui/command.tsx": [],
+      "client/src/components/ui/context-banner.tsx": [
+        "client/src/components/ui/button.tsx"
+      ],
+      "client/src/components/ui/context-menu.tsx": [],
+      "client/src/components/ui/date-range-picker.tsx": [],
+      "client/src/components/ui/dialog.tsx": [],
+      "client/src/components/ui/drawer.tsx": [],
+      "client/src/components/ui/dropdown-menu.tsx": [],
+      "client/src/components/ui/fallback-context-banner.tsx": [
+        "client/src/components/ui/badge.tsx"
+      ],
+      "client/src/components/ui/form.tsx": [],
+      "client/src/components/ui/hover-card.tsx": [],
+      "client/src/components/ui/input-otp.tsx": [],
+      "client/src/components/ui/input.tsx": [],
+      "client/src/components/ui/label.tsx": [],
+      "client/src/components/ui/menubar.tsx": [],
+      "client/src/components/ui/navigation-menu.tsx": [],
+      "client/src/components/ui/pagination.tsx": [],
+      "client/src/components/ui/popover.tsx": [],
+      "client/src/components/ui/profile-footer.tsx": [
+        "client/src/components/ui/badge.tsx",
+        "client/src/components/ui/button.tsx",
+        "client/src/components/ui/separator.tsx",
+        "client/src/components/ui/dropdown-menu.tsx"
+      ],
+      "client/src/components/ui/progress.tsx": [],
+      "client/src/components/ui/radio-group.tsx": [],
+      "client/src/components/ui/resizable.tsx": [],
+      "client/src/components/ui/scroll-area.tsx": [],
+      "client/src/components/ui/select.tsx": [],
+      "client/src/components/ui/separator.tsx": [],
+      "client/src/components/ui/sheet.tsx": [],
+      "client/src/components/ui/sidebar-section.tsx": [],
+      "client/src/components/ui/sidebar.tsx": [],
+      "client/src/components/ui/skeleton.tsx": [],
+      "client/src/components/ui/slider.tsx": [],
+      "client/src/components/ui/switch.tsx": [],
+      "client/src/components/ui/table.tsx": [],
+      "client/src/components/ui/tabs.tsx": [],
+      "client/src/components/ui/textarea.tsx": [],
+      "client/src/components/ui/toast.tsx": [],
+      "client/src/components/ui/toaster.tsx": [],
+      "client/src/components/ui/toggle-group.tsx": [],
+      "client/src/components/ui/toggle.tsx": [],
+      "client/src/components/ui/tooltip.tsx": [],
+      "client/src/components/widgets/CsrdS1Dashboard.tsx": [],
+      "client/src/components/widgets/InstantPaymentWidget.tsx": [],
+      "client/src/components/widgets/JobSalaryRangeGenerator.tsx": [],
+      "client/src/components/widgets/LaborNewsfeedWidget.tsx": [],
+      "client/src/components/widgets/PayEquityDashboard.tsx": [
+        "client/src/components/widgets/JobSalaryRangeGenerator.tsx",
+        "client/src/components/widgets/RightToInfoWorkflow.tsx"
+      ],
+      "client/src/components/widgets/RightToInfoWorkflow.tsx": [],
+      "client/src/pages/auth/ForgotPassword.tsx": [],
+      "client/src/pages/auth/Login.tsx": [],
+      "client/src/pages/auth/ResetPassword.tsx": [],
+      "client/src/pages/auth/Signup.tsx": [],
+      "client/src/pages/auth/SSO.tsx": [],
+      "client/src/pages/auth/VerifyEmail.tsx": []
+    },
+    "reverseDeps": {
+      "server/db.ts": [
+        "server/advancedAnalyticsService.ts",
+        "server/analyticsService.ts",
+        "server/complianceGuardrails.ts",
+        "server/csrdService.ts",
+        "server/esrsCalculationEngine.ts",
+        "server/evidencePackService.ts",
+        "server/filingComplianceService.ts",
+        "server/glExportService.ts",
+        "server/glMappingService.ts",
+        "server/index.ts",
+        "server/payEquityService.ts",
+        "server/payslipGenerator.ts",
+        "server/rulesEngine.ts",
+        "server/s1AcceptanceCriteria.ts",
+        "server/s1ComplianceEngine.ts",
+        "server/selfServiceManager.ts",
+        "server/sepaFileGenerator.ts",
+        "server/sepaInstantPaymentService.ts",
+        "server/sepaPaymentService.ts",
+        "server/standardizedEarningsCodesService.ts",
+        "server/storage.ts",
+        "server/successMetricsService.ts",
+        "server/xbrlTaggingService.ts",
+        "server/ai/complianceCopilot.ts",
+        "server/analytics/forecastingService.ts",
+        "server/api/authStatus.ts",
+        "server/api/automatedRunbooks.ts",
+        "server/api/clientApproval.ts",
+        "server/api/csrd.ts",
+        "server/api/dataImport.ts",
+        "server/api/embedded.ts",
+        "server/api/employees.ts",
+        "server/api/filings.ts",
+        "server/api/glGeneric.ts",
+        "server/api/governmentSystemMonitoring.ts",
+        "server/api/guidedSetup.ts",
+        "server/api/health.ts",
+        "server/api/laborNewsfeed.ts",
+        "server/api/nativeConnectors.ts",
+        "server/api/notifications.ts",
+        "server/api/onCallRota.ts",
+        "server/api/partners.ts",
+        "server/api/payEquity.ts",
+        "server/api/payroll.ts",
+        "server/api/properties.ts",
+        "server/api/selfService.ts",
+        "server/api/time.ts",
+        "server/api/userProfile.ts",
+        "server/auth/oauth2.ts",
+        "server/middleware/multiTenancy.ts",
+        "server/routes/auth.ts",
+        "server/routes/billing.ts",
+        "server/security/auditService.ts",
+        "server/security/gdprCompliance.ts",
+        "server/security/rbacService.ts",
+        "server/services/AuditService.ts",
+        "server/services/auditTrailService.ts",
+        "server/services/authService.ts",
+        "server/services/AutomatedRestoreTestingService.ts",
+        "server/services/AutomatedRunbooksService.ts",
+        "server/services/BackupCodeService.ts",
+        "server/services/BillingService.ts",
+        "server/services/CalcProvenanceService.ts",
+        "server/services/canonicalPaymentsService.ts",
+        "server/services/CapTrackingService.ts",
+        "server/services/CBAGovernanceService.ts",
+        "server/services/CbaPackService.ts",
+        "server/services/CentralLogAggregationService.ts",
+        "server/services/ChecksEngine.ts",
+        "server/services/ClientAccessService.ts",
+        "server/services/ConsentService.ts",
+        "server/services/CoverageValidationService.ts",
+        "server/services/CreditNoteService.ts",
+        "server/services/CurrencyService.ts",
+        "server/services/cutOffLogic.ts",
+        "server/services/DisasterRecoveryService.ts",
+        "server/services/DisbursementKeyService.ts",
+        "server/services/DocumentTrailService.ts",
+        "server/services/DunningService.ts",
+        "server/services/ExplanationRulesSeeder.ts",
+        "server/services/FindingsService.ts",
+        "server/services/GarnishmentService.ts",
+        "server/services/GdprService.ts",
+        "server/services/glExportCanonical.ts",
+        "server/services/glExportService.ts",
+        "server/services/GovernmentSystemMonitoringService.ts",
+        "server/services/GRCService.ts",
+        "server/services/guidedSetupService.ts",
+        "server/services/IbanValidationService.ts",
+        "server/services/idempotencyService.ts",
+        "server/services/IncidentOwnershipService.ts",
+        "server/services/IncidentResponseOwnershipService.ts",
+        "server/services/InstantMetricsService.ts",
+        "server/services/InstantReissueService.ts",
+        "server/services/IntegrationsHub.ts",
+        "server/services/LegalApprovalService.ts",
+        "server/services/MakerCheckerService.ts",
+        "server/services/MfaService.ts",
+        "server/services/nativeConnectors.ts",
+        "server/services/ObjectStorageWORMService.ts",
+        "server/services/OboService.ts",
+        "server/services/OnCallRotaService.ts",
+        "server/services/OneClickFlowService.ts",
+        "server/services/OperationalMonitoringService.ts",
+        "server/services/paymentBatchService.ts",
+        "server/services/PaymentService.ts",
+        "server/services/paymentsOpsService.ts",
+        "server/services/paymentStateMachine.ts",
+        "server/services/PayrollBusinessRulesService.ts",
+        "server/services/PayrollCalculationEngine.ts",
+        "server/services/PayrollEngineService.ts",
+        "server/services/PayslipExplanationService.ts",
+        "server/services/PerformanceBudgetService.ts",
+        "server/services/performanceOptimizer.ts",
+        "server/services/ProrationService.ts",
+        "server/services/RateLimitService.ts",
+        "server/services/reconciliationEngine.ts",
+        "server/services/RootCauseAnalysisService.ts",
+        "server/services/RPOandRTOSLAService.ts",
+        "server/services/SessionService.ts",
+        "server/services/SeveranceFinalPayService.ts",
+        "server/services/SeveranceRulesService.ts",
+        "server/services/SsoService.ts",
+        "server/services/StatusPageService.ts",
+        "server/services/TabletopDRExerciseService.ts",
+        "server/services/WebAuthnService.ts",
+        "server/services/webhookIngestion.ts",
+        "server/services/webhookService.ts"
+      ],
+      "server/erganiConnector.ts": [
+        "server/complianceGuardrails.ts",
+        "server/workflowManager.ts"
+      ],
+      "server/esrsCalculationEngine.ts": [
+        "server/csrdService.ts"
+      ],
+      "server/storage.ts": [
+        "server/exceptionAutoResolutionEngine.ts",
+        "server/exceptionAutoResolutionEngineSimple.ts",
+        "server/hotelEnhancementsService.ts",
+        "server/hotelOperations.ts",
+        "server/overtimePreventionEngine.ts",
+        "server/overtimePreventionEngineSimple.ts",
+        "server/payrollConnector.ts",
+        "server/replitAuth.ts",
+        "server/slackTeamsApprovals.ts",
+        "server/smartNotificationsService.ts",
+        "server/visualAnalyticsService.ts",
+        "server/workflowManager.ts",
+        "server/api/severanceApi.ts",
+        "server/api/timesheets.ts",
+        "server/middleware/mfaEnforcementMiddleware.ts",
+        "server/services/SsoAdminIntegrationService.ts"
+      ],
+      "server/utils/envValidation.ts": [
+        "server/index.ts",
+        "server/routes.ts",
+        "server/utils/serviceRole.ts"
+      ],
+      "server/routes.ts": [
+        "server/index.ts"
+      ],
+      "server/vite.ts": [
+        "server/index.ts"
+      ],
+      "server/greekPayrollCalculator.ts": [
+        "server/modernPayrollEngine.ts"
+      ],
+      "server/objectAcl.ts": [
+        "server/objectStorage.ts",
+        "server/routes.ts"
+      ],
+      "server/standardizedEarningsCodesService.ts": [
+        "server/payslipGenerator.ts"
+      ],
+      "server/lib/passport.ts": [
+        "server/replitAuth.ts"
+      ],
+      "server/objectStorage.ts": [
+        "server/routes.ts"
+      ],
+      "server/replitAuth.ts": [
+        "server/routes.ts",
+        "server/rulesAPI.ts",
+        "server/api/acceptanceTestApi.ts",
+        "server/api/ai.ts",
+        "server/api/aiCopilot.ts",
+        "server/api/auth.ts",
+        "server/api/automatedRunbooks.ts",
+        "server/api/cbaGovernanceApi.ts",
+        "server/api/changeLogLegalWatch.ts",
+        "server/api/disaster.ts",
+        "server/api/disasterRecovery.ts",
+        "server/api/documentAI.ts",
+        "server/api/dunningEmails.ts",
+        "server/api/employees.ts",
+        "server/api/eventQueue.ts",
+        "server/api/filings.ts",
+        "server/api/filingWorkflow.ts",
+        "server/api/forecasting.ts",
+        "server/api/garnishmentApi.ts",
+        "server/api/governmentSystemMonitoring.ts",
+        "server/api/grc.ts",
+        "server/api/hotelTipPooling.ts",
+        "server/api/ibanValidation.ts",
+        "server/api/incidentOwnership.ts",
+        "server/api/incidentResponseOwnership.ts",
+        "server/api/incidentTemplates.ts",
+        "server/api/instantPayments.ts",
+        "server/api/integrations.ts",
+        "server/api/laborNewsfeed.ts",
+        "server/api/logs.ts",
+        "server/api/notifications.ts",
+        "server/api/onCallRota.ts",
+        "server/api/partners.ts",
+        "server/api/payroll.ts",
+        "server/api/properties.ts",
+        "server/api/rca.ts",
+        "server/api/reports.ts",
+        "server/api/security.ts",
+        "server/api/selfService.ts",
+        "server/api/severanceApi.ts",
+        "server/api/statusPage.ts",
+        "server/api/testing.ts",
+        "server/api/time.ts",
+        "server/api/timesheets.ts",
+        "server/api/userProfile.ts",
+        "server/api/webhooks.ts",
+        "server/routes/billing.ts"
+      ],
+      "server/api/health.ts": [
+        "server/routes.ts"
+      ],
+      "server/api/properties.ts": [
+        "server/routes.ts"
+      ],
+      "server/rulesEngine.ts": [
+        "server/rulesAPI.ts",
+        "server/rulesDSLParser.ts"
+      ],
+      "server/rulesDSLParser.ts": [
+        "server/rulesAPI.ts"
+      ],
+      "server/s1ComplianceEngine.ts": [
+        "server/s1AcceptanceCriteria.ts",
+        "server/api/csrd.ts"
+      ],
+      "server/xbrlTaggingService.ts": [
+        "server/s1AcceptanceCriteria.ts",
+        "server/api/csrd.ts"
+      ],
+      "server/evidencePackService.ts": [
+        "server/s1AcceptanceCriteria.ts",
+        "server/api/csrd.ts"
+      ],
+      "server/sepaFileGenerator.ts": [
+        "server/sepaEngineValidator.ts",
+        "server/sepaInstantPaymentService.ts"
+      ],
+      "server/workflowManager.ts": [
+        "server/slackTeamsApprovals.ts"
+      ],
+      "server/slackIntegration.ts": [
+        "server/smartNotificationsService.ts"
+      ],
+      "server/teamsIntegration.ts": [
+        "server/smartNotificationsService.ts"
+      ],
+      "server/payrollConnector.ts": [
+        "server/workflowManager.ts"
+      ],
+      "shared/ibanValidationEnhanced.ts": [
+        "shared/bddIbanTests.ts"
+      ],
+      "shared/greekNameNormalization.ts": [
+        "shared/bddIbanTests.ts",
+        "shared/ibanValidationEnhanced.ts"
+      ],
+      "shared/schema.ts": [
+        "shared/multi-tenancy-schema.ts",
+        "server/api/explanations.ts",
+        "server/api/garnishmentApi.ts",
+        "server/routes/cbaPackRoutes.ts",
+        "server/services/CbaPackService.ts",
+        "server/services/ClientAccessService.ts",
+        "server/services/CoverageValidationService.ts",
+        "server/services/ErganiTerminationService.ts",
+        "server/services/ExplanationRulesSeeder.ts",
+        "server/services/GarnishmentService.ts",
+        "server/services/PayrollCalculationEngine.ts",
+        "server/services/PayslipExplanationService.ts",
+        "server/services/SeveranceFinalPayService.ts",
+        "server/services/SeveranceRulesService.ts"
+      ],
+      "client/src/lib/queryClient.ts": [
+        "client/src/App.tsx",
+        "client/src/lib/syncService.ts"
+      ],
+      "client/src/App.tsx": [
+        "client/src/main.tsx"
+      ],
+      "server/services/performanceOptimizer.ts": [
+        "server/api/acceptanceCriteria.ts"
+      ],
+      "server/services/idempotencyService.ts": [
+        "server/api/acceptanceCriteria.ts"
+      ],
+      "server/services/auditTrailService.ts": [
+        "server/api/acceptanceCriteria.ts"
+      ],
+      "server/services/webhookService.ts": [
+        "server/api/acceptanceCriteria.ts",
+        "server/api/glGeneric.ts",
+        "server/api/payments.ts",
+        "server/services/connectorService.ts",
+        "server/services/edgeCaseHandler_old.ts",
+        "server/services/edgeCaseHandler.ts",
+        "server/services/nativeConnectors.ts",
+        "server/services/safetyComplianceService.ts"
+      ],
+      "server/services/AcceptanceTestService.ts": [
+        "server/api/acceptanceTestApi.ts"
+      ],
+      "server/services/EdgeCaseService.ts": [
+        "server/api/acceptanceTestApi.ts",
+        "server/services/AcceptanceTestService.ts"
+      ],
+      "server/ai/complianceCopilot.ts": [
+        "server/api/ai.ts"
+      ],
+      "server/security/auditService.ts": [
+        "server/api/ai.ts",
+        "server/api/forecasting.ts",
+        "server/api/security.ts"
+      ],
+      "server/services/AutomatedRunbooksService.ts": [
+        "server/api/automatedRunbooks.ts",
+        "server/services/GovernmentSystemMonitoringService.ts"
+      ],
+      "server/services/canonicalPaymentsService.ts": [
+        "server/api/canonicalPayments.ts"
+      ],
+      "server/services/CBAGovernanceService.ts": [
+        "server/api/cbaGovernanceApi.ts"
+      ],
+      "server/services/CbaPackService.ts": [
+        "server/api/cbaPacksApi.ts",
+        "server/routes/cbaPackRoutes.ts",
+        "server/seeders/cbaPackSeeder.ts",
+        "server/services/EdgeCaseService.ts",
+        "server/services/ErganiIntegrationEnhanced.ts",
+        "server/services/PayrollCalculationEngine.ts",
+        "server/services/SectorPackDefinitions.ts"
+      ],
+      "server/seeders/cbaPackSeeder.ts": [
+        "server/api/cbaPacksApi.ts"
+      ],
+      "server/changeLogLegalWatch.ts": [
+        "server/api/changeLogLegalWatch.ts"
+      ],
+      "server/services/ClientAccessService.ts": [
+        "server/api/clientApproval.ts",
+        "server/api/partners.ts"
+      ],
+      "server/csrdService.ts": [
+        "server/api/csrd.ts"
+      ],
+      "server/s1AcceptanceCriteria.ts": [
+        "server/api/csrd.ts"
+      ],
+      "server/services/cutOffLogic.ts": [
+        "server/api/cutOffLogic.ts"
+      ],
+      "server/services/greekValidation.ts": [
+        "server/api/dataImport.ts"
+      ],
+      "server/services/IbanValidationService.ts": [
+        "server/api/dataImport.ts",
+        "server/api/ibanValidation.ts"
+      ],
+      "server/api/oneClickFlow.ts": [
+        "server/api/disaster.ts"
+      ],
+      "server/services/TabletopDRExerciseService.ts": [
+        "server/api/disasterRecovery.ts",
+        "server/services/DisasterRecoveryInitializer.ts"
+      ],
+      "server/services/AutomatedRestoreTestingService.ts": [
+        "server/api/disasterRecovery.ts",
+        "server/services/DisasterRecoveryInitializer.ts"
+      ],
+      "server/services/RPOandRTOSLAService.ts": [
+        "server/api/disasterRecovery.ts",
+        "server/services/DisasterRecoveryInitializer.ts"
+      ],
+      "server/services/ObjectStorageWORMService.ts": [
+        "server/api/disasterRecovery.ts",
+        "server/services/DisasterRecoveryInitializer.ts"
+      ],
+      "server/services/DisasterRecoveryInitializer.ts": [
+        "server/api/disasterRecovery.ts"
+      ],
+      "server/documentAI.ts": [
+        "server/api/documentAI.ts"
+      ],
+      "server/eSignature.ts": [
+        "server/api/documentAI.ts"
+      ],
+      "server/services/TimezoneTestService.ts": [
+        "server/api/dstTestingApi.ts"
+      ],
+      "server/services/DSTTransitionService.ts": [
+        "server/api/dstTestingApi.ts",
+        "server/services/DSTAwareOvertimeService.ts",
+        "server/services/InternationalTimezoneService.ts",
+        "server/services/TimezoneTestService.ts"
+      ],
+      "server/services/DSTAwareOvertimeService.ts": [
+        "server/api/dstTestingApi.ts"
+      ],
+      "server/services/InternationalTimezoneService.ts": [
+        "server/api/dstTestingApi.ts"
+      ],
+      "server/services/DunningEmailService.ts": [
+        "server/api/dunningEmails.ts"
+      ],
+      "server/services/edgeCaseHandler.ts": [
+        "server/api/edgeCases.ts",
+        "server/api/payments.ts",
+        "server/services/acceptanceCriteriaValidator.ts",
+        "server/services/testPlanExecutor.ts"
+      ],
+      "server/auth/oauth2.ts": [
+        "server/api/embedded.ts"
+      ],
+      "server/services/glExportService.ts": [
+        "server/api/embedded.ts",
+        "server/services/EventQueueService.ts"
+      ],
+      "server/middleware/idempotency.ts": [
+        "server/api/employees.ts"
+      ],
+      "server/middleware/auditLog.ts": [
+        "server/api/employees.ts"
+      ],
+      "server/services/EventQueueService.ts": [
+        "server/api/eventQueue.ts",
+        "server/tests/eventedPlatform.shiptest.ts"
+      ],
+      "server/services/PayslipExplanationService.ts": [
+        "server/api/explanations.ts"
+      ],
+      "server/services/AuditService.ts": [
+        "server/api/filingWorkflow.ts",
+        "server/api/partners.ts",
+        "server/routes/auth.ts",
+        "server/services/ApprovalEventBus.ts",
+        "server/services/AutomatedSecretRotationService.ts",
+        "server/services/BreachResponseService.ts",
+        "server/services/ClientAccessService.ts",
+        "server/services/ComprehensiveKMSService.ts",
+        "server/services/ConsentService.ts",
+        "server/services/CookieConsentService.ts",
+        "server/services/DPAService.ts",
+        "server/services/DPIAService.ts",
+        "server/services/GDPRComplianceInitializer.ts",
+        "server/services/MakerCheckerService.ts",
+        "server/services/ROPAService.ts",
+        "server/services/RTBFService.ts",
+        "server/services/SecurityEnforcementInitializer.ts",
+        "server/services/SessionService.ts",
+        "server/services/SsoAdminIntegrationService.ts",
+        "server/services/SsoService.ts"
+      ],
+      "server/analytics/forecastingService.ts": [
+        "server/api/forecasting.ts"
+      ],
+      "server/services/GarnishmentService.ts": [
+        "server/api/garnishmentApi.ts",
+        "server/api/payroll.ts",
+        "server/services/PayrollGarnishmentIntegration.ts",
+        "server/test/garnishment-bdd-tests.ts",
+        "server/test/garnishment-calc-demo.ts"
+      ],
+      "server/services/GarnishmentRBACService.ts": [
+        "server/api/garnishmentApi.ts"
+      ],
+      "server/services/PayrollGarnishmentIntegration.ts": [
+        "server/api/garnishmentApi.ts"
+      ],
+      "server/services/PayslipGarnishmentRenderer.ts": [
+        "server/api/garnishmentApi.ts"
+      ],
+      "server/test/garnishment-bdd-tests.ts": [
+        "server/api/garnishmentApi.ts"
+      ],
+      "server/services/glExportCanonical.ts": [
+        "server/api/glGeneric.ts",
+        "server/api/nativeConnectors.ts",
+        "server/api/reconciliation.ts",
+        "server/services/EventQueueService.ts"
+      ],
+      "server/services/roundingService.ts": [
+        "server/api/glGeneric.ts",
+        "server/api/reconciliation.ts"
+      ],
+      "server/services/GovernmentSystemMonitoringService.ts": [
+        "server/api/governmentSystemMonitoring.ts"
+      ],
+      "server/services/GRCService.ts": [
+        "server/api/grc.ts",
+        "server/services/GRCInitializer.ts"
+      ],
+      "server/services/ChecksEngine.ts": [
+        "server/api/grc.ts",
+        "server/services/GRCInitializer.ts"
+      ],
+      "server/services/FindingsService.ts": [
+        "server/api/grc.ts"
+      ],
+      "server/services/IntegrationsHub.ts": [
+        "server/api/grc.ts"
+      ],
+      "server/services/guidedSetupService.ts": [
+        "server/api/guidedSetup.ts"
+      ],
+      "server/hotelTipPooling.ts": [
+        "server/api/hotelTipPooling.ts"
+      ],
+      "server/services/IncidentOwnershipService.ts": [
+        "server/api/incidentOwnership.ts",
+        "server/services/StatusPageService.ts"
+      ],
+      "server/services/IncidentResponseOwnershipService.ts": [
+        "server/api/incidentResponseOwnership.ts"
+      ],
+      "server/services/StatusPageService.ts": [
+        "server/api/incidentTemplates.ts",
+        "server/api/statusPage.ts"
+      ],
+      "server/services/IncidentCommunicationTemplates.ts": [
+        "server/api/incidentTemplates.ts",
+        "server/services/StatusPageService.ts"
+      ],
+      "server/sepaInstantPaymentService.ts": [
+        "server/api/instantPayments.ts"
+      ],
+      "server/services/InstantReissueService.ts": [
+        "server/api/instantReissue.ts",
+        "server/services/webhookIngestion.ts"
+      ],
+      "server/services/InstantMetricsService.ts": [
+        "server/api/instantReissue.ts"
+      ],
+      "server/services/webhookIngestion.ts": [
+        "server/api/instantReissue.ts"
+      ],
+      "server/services/CentralLogAggregationService.ts": [
+        "server/api/logs.ts",
+        "server/middleware/loggingMiddleware.ts"
+      ],
+      "server/services/nativeConnectors.ts": [
+        "server/api/nativeConnectors.ts",
+        "server/services/guidedSetupService.ts"
+      ],
+      "server/services/OnCallRotaService.ts": [
+        "server/api/onCallRota.ts"
+      ],
+      "server/services/OneClickFlowService.ts": [
+        "server/api/oneClickFlow.ts"
+      ],
+      "server/services/safetyComplianceService.ts": [
+        "server/api/oneClickFlow.ts",
+        "server/api/payments.ts",
+        "server/services/acceptanceCriteriaValidator.ts",
+        "server/services/edgeCaseHandler_old.ts",
+        "server/services/edgeCaseHandler.ts",
+        "server/services/OneClickFlowService.ts",
+        "server/services/testPlanExecutor.ts"
+      ],
+      "server/services/OboService.ts": [
+        "server/api/partners.ts",
+        "server/middleware/oboMiddleware.ts",
+        "server/services/ConsentService.ts",
+        "server/services/MakerCheckerService.ts"
+      ],
+      "server/services/SecurityService.ts": [
+        "server/api/partners.ts",
+        "server/api/testing.ts",
+        "server/middleware/SecurityMiddleware.ts",
+        "server/routes/securityRoutes.ts",
+        "server/services/MakerCheckerService.ts",
+        "server/services/SecurityAuditService.ts",
+        "server/services/SecurityComplianceValidator.ts"
+      ],
+      "server/services/ConsentService.ts": [
+        "server/api/partners.ts"
+      ],
+      "server/services/MakerCheckerService.ts": [
+        "server/api/partners.ts",
+        "server/api/securityAuditApi.ts",
+        "server/api/severanceApi.ts",
+        "server/api/testing.ts",
+        "server/services/ClientAccessService.ts"
+      ],
+      "server/payEquityService.ts": [
+        "server/api/payEquity.ts"
+      ],
+      "server/services/paymentBatchService.ts": [
+        "server/api/paymentBatch.ts"
+      ],
+      "server/services/connectorService.ts": [
+        "server/api/payments.ts"
+      ],
+      "server/services/metricsService.ts": [
+        "server/api/payments.ts",
+        "server/services/acceptanceCriteriaValidator.ts",
+        "server/services/testPlanExecutor.ts"
+      ],
+      "server/services/acceptanceCriteriaValidator.ts": [
+        "server/api/payments.ts",
+        "server/services/testPlanExecutor.ts"
+      ],
+      "server/services/testPlanExecutor.ts": [
+        "server/api/payments.ts"
+      ],
+      "server/services/paymentsOpsService.ts": [
+        "server/api/paymentsOps.ts"
+      ],
+      "server/services/paymentStateMachine.ts": [
+        "server/api/paymentStateMachine.ts",
+        "server/services/canonicalPaymentsService.ts",
+        "server/services/reconciliationEngine.ts"
+      ],
+      "server/glExportService.ts": [
+        "server/api/payroll.ts",
+        "server/services/PayrollGarnishmentIntegration.ts"
+      ],
+      "server/services/PayrollCalculationEngine.ts": [
+        "server/api/payrollCalculationApi.ts",
+        "server/services/ErganiIntegrationEnhanced.ts"
+      ],
+      "server/services/RootCauseAnalysisService.ts": [
+        "server/api/rca.ts",
+        "server/services/StatusPageService.ts"
+      ],
+      "server/services/reconciliationEngine.ts": [
+        "server/api/reconciliationEngine.ts"
+      ],
+      "server/services/reissueAlgorithm.ts": [
+        "server/api/reissueAlgorithm.ts"
+      ],
+      "server/reports/apdGenerator.ts": [
+        "server/api/reports.ts"
+      ],
+      "server/reports/fmyGenerator.ts": [
+        "server/api/reports.ts"
+      ],
+      "server/reports/erganiReports.ts": [
+        "server/api/reports.ts"
+      ],
+      "server/reports/payslipGenerator.ts": [
+        "server/api/reports.ts"
+      ],
+      "server/reports/glExport.ts": [
+        "server/api/reports.ts"
+      ],
+      "server/reports/digitalCardPack.ts": [
+        "server/api/reports.ts"
+      ],
+      "server/reports/annualCertificate.ts": [
+        "server/api/reports.ts"
+      ],
+      "server/security/gdprCompliance.ts": [
+        "server/api/security.ts"
+      ],
+      "server/security/rbacService.ts": [
+        "server/api/security.ts"
+      ],
+      "server/security/dataResidency.ts": [
+        "server/api/security.ts"
+      ],
+      "server/services/CalcProvenanceService.ts": [
+        "server/api/securityAuditApi.ts",
+        "server/services/PayrollCalculationEngine.ts",
+        "server/services/SeveranceFinalPayService.ts"
+      ],
+      "server/services/DocumentTrailService.ts": [
+        "server/api/securityAuditApi.ts"
+      ],
+      "server/services/SeveranceFinalPayService.ts": [
+        "server/api/severanceApi.ts"
+      ],
+      "server/services/ErganiTerminationService.ts": [
+        "server/api/severanceApi.ts"
+      ],
+      "server/services/SeveranceHelpers.ts": [
+        "server/api/severanceApi.ts",
+        "server/services/SeveranceFinalPayService.ts"
+      ],
+      "server/services/WatermarkingService.ts": [
+        "server/api/testing.ts",
+        "server/services/DocumentPackWorker.ts"
+      ],
+      "server/services/authService.ts": [
+        "server/middleware/authMiddleware.ts"
+      ],
+      "server/utils/safeScheduler.ts": [
+        "server/middleware/idempotency.ts",
+        "server/middleware/securityMiddleware.ts",
+        "server/services/AnalyticsService.ts",
+        "server/services/AutomatedSecretRotationService.ts",
+        "server/services/EventQueueService.ts",
+        "server/services/PerformanceMonitoringService.ts",
+        "server/services/StatusPageService.ts",
+        "server/services/WebAuthnService.ts"
+      ],
+      "server/services/MfaService.ts": [
+        "server/middleware/mfaEnforcementMiddleware.ts",
+        "server/routes/auth.ts",
+        "server/services/SecurityEnforcementInitializer.ts"
+      ],
+      "server/services/RateLimitService.ts": [
+        "server/middleware/rateLimitMiddleware.ts",
+        "server/routes/auth.ts"
+      ],
+      "server/services/AnalyticsService.ts": [
+        "server/middleware/SecurityMiddleware.ts",
+        "server/services/ComprehensiveAuthService.ts",
+        "server/services/EmailService.ts",
+        "server/services/QATestMatrixService.ts",
+        "server/services/SecurityAuditService.ts",
+        "server/services/SecurityService.ts"
+      ],
+      "server/services/PasswordService.ts": [
+        "server/routes/auth.ts",
+        "server/services/BackupCodeService.ts",
+        "server/services/MfaService.ts"
+      ],
+      "server/services/TokenService.ts": [
+        "server/routes/auth.ts",
+        "server/services/SessionService.ts"
+      ],
+      "server/services/SessionService.ts": [
+        "server/routes/auth.ts"
+      ],
+      "server/services/SsoService.ts": [
+        "server/routes/auth.ts",
+        "server/services/SecurityEnforcementInitializer.ts",
+        "server/services/SsoAdminIntegrationService.ts"
+      ],
+      "server/services/LocalizationService.ts": [
+        "server/routes/auth.ts",
+        "server/services/ComprehensiveAuthService.ts"
+      ],
+      "server/services/GdprService.ts": [
+        "server/routes/auth.ts",
+        "server/services/ComprehensiveAuthService.ts"
+      ],
+      "server/middleware/rateLimitMiddleware.ts": [
+        "server/routes/auth.ts"
+      ],
+      "server/middleware/securityMiddleware.ts": [
+        "server/routes/auth.ts"
+      ],
+      "server/services/BillingService.ts": [
+        "server/routes/billing.ts",
+        "server/services/CreditNoteService.ts",
+        "server/services/ProrationService.ts"
+      ],
+      "server/services/PaymentService.ts": [
+        "server/routes/billing.ts",
+        "server/services/DunningService.ts"
+      ],
+      "server/services/DunningService.ts": [
+        "server/routes/billing.ts"
+      ],
+      "server/services/MyDataService.ts": [
+        "server/routes/billing.ts",
+        "server/services/OperationalMonitoringService.ts"
+      ],
+      "server/services/InvoicePDFService.ts": [
+        "server/routes/billing.ts"
+      ],
+      "server/services/SectorPackDefinitions.ts": [
+        "server/routes/cbaPackRoutes.ts",
+        "server/seeders/cbaPackSeeder.ts"
+      ],
+      "server/services/SecurityAuditService.ts": [
+        "server/routes/securityRoutes.ts",
+        "server/services/SecurityComplianceValidator.ts"
+      ],
+      "server/services/SecurityComplianceValidator.ts": [
+        "server/routes/securityRoutes.ts"
+      ],
+      "server/services/SecretManagementService.ts": [
+        "server/routes/securityRoutes.ts",
+        "server/services/AutomatedSecretRotationService.ts",
+        "server/services/ComprehensiveKMSService.ts",
+        "server/services/SecurityAuditService.ts",
+        "server/services/SecurityComplianceValidator.ts",
+        "server/services/SecurityEnforcementInitializer.ts"
+      ],
+      "server/middleware/SecurityMiddleware.ts": [
+        "server/routes/securityRoutes.ts"
+      ],
+      "server/services/APDMappingService.ts": [
+        "server/services/AcceptanceTestService.ts"
+      ],
+      "server/services/PerformanceMonitoringService.ts": [
+        "server/services/ComprehensiveAuthService.ts",
+        "server/services/QATestMatrixService.ts"
+      ],
+      "server/services/FeatureFlagService.ts": [
+        "server/services/ComprehensiveAuthService.ts",
+        "server/services/QATestMatrixService.ts"
+      ],
+      "server/services/BackupCodeService.ts": [
+        "server/services/ComprehensiveAuthService.ts"
+      ],
+      "server/services/WebAuthnService.ts": [
+        "server/services/ComprehensiveAuthService.ts"
+      ],
+      "server/services/QATestMatrixService.ts": [
+        "server/services/ComprehensiveAuthService.ts"
+      ],
+      "server/services/CurrencyService.ts": [
+        "server/services/CreditNoteService.ts",
+        "server/services/OperationalMonitoringService.ts"
+      ],
+      "server/services/EmailTemplateService.ts": [
+        "server/services/EmailService.ts"
+      ],
+      "server/api/webhooks.ts": [
+        "server/services/EventQueueService.ts"
+      ],
+      "server/services/DPIAService.ts": [
+        "server/services/GDPRComplianceInitializer.ts"
+      ],
+      "server/services/DPAService.ts": [
+        "server/services/GDPRComplianceInitializer.ts"
+      ],
+      "server/services/ROPAService.ts": [
+        "server/services/GDPRComplianceInitializer.ts"
+      ],
+      "server/services/BreachResponseService.ts": [
+        "server/services/GDPRComplianceInitializer.ts"
+      ],
+      "server/services/CookieConsentService.ts": [
+        "server/services/GDPRComplianceInitializer.ts"
+      ],
+      "server/services/RTBFService.ts": [
+        "server/services/GDPRComplianceInitializer.ts"
+      ],
+      "server/services/CapTrackingService.ts": [
+        "server/services/PayrollBusinessRulesService.ts",
+        "server/services/PayrollEngineService.ts"
+      ],
+      "server/services/DisbursementKeyService.ts": [
+        "server/services/PayrollBusinessRulesService.ts",
+        "server/services/PayrollEngineService.ts"
+      ],
+      "server/services/PayrollBusinessRulesService.ts": [
+        "server/services/PayrollEngineService.ts"
+      ],
+      "server/services/CreditNoteService.ts": [
+        "server/services/ProrationService.ts"
+      ],
+      "server/services/SsoAdminIntegrationService.ts": [
+        "server/services/SecurityEnforcementInitializer.ts"
+      ],
+      "server/services/AutomatedSecretRotationService.ts": [
+        "server/services/SecurityEnforcementInitializer.ts"
+      ],
+      "server/services/ComprehensiveKMSService.ts": [
+        "server/services/SecurityEnforcementInitializer.ts"
+      ],
+      "server/services/SeveranceRulesService.ts": [
+        "server/services/SeveranceFinalPayService.ts"
+      ],
+      "server/services/ExplanationTemplateService.ts": [
+        "server/services/SeveranceFinalPayService.ts"
+      ],
+      "client/src/components/ui/card.tsx": [
+        "client/src/components/CompliancePaymentsCues.tsx"
+      ],
+      "client/src/components/ui/button.tsx": [
+        "client/src/components/CompliancePaymentsCues.tsx",
+        "client/src/components/ui/context-banner.tsx",
+        "client/src/components/ui/profile-footer.tsx"
+      ],
+      "client/src/components/ui/badge.tsx": [
+        "client/src/components/CompliancePaymentsCues.tsx",
+        "client/src/components/ImprovedSidebar.tsx",
+        "client/src/components/ui/fallback-context-banner.tsx",
+        "client/src/components/ui/profile-footer.tsx"
+      ],
+      "client/src/components/ui/alert.tsx": [
+        "client/src/components/CompliancePaymentsCues.tsx"
+      ],
+      "client/src/components/ui/context-banner.tsx": [
+        "client/src/components/ContextAwareBanner.tsx"
+      ],
+      "client/src/components/ui/sidebar-section.tsx": [
+        "client/src/components/ImprovedSidebar.tsx"
+      ],
+      "client/src/components/ui/profile-footer.tsx": [
+        "client/src/components/ImprovedSidebar.tsx"
+      ],
+      "client/src/components/MainNavigation.tsx": [
+        "client/src/components/Layout.tsx",
+        "client/src/components/ResponsiveSidebar.tsx"
+      ],
+      "client/src/components/PropertySwitcher.tsx": [
+        "client/src/components/Layout.tsx"
+      ],
+      "client/src/components/LanguageSwitcher.tsx": [
+        "client/src/components/Layout.tsx"
+      ],
+      "client/src/components/ThemeToggle.tsx": [
+        "client/src/components/Layout.tsx"
+      ],
+      "client/src/components/CommandPaletteButton.tsx": [
+        "client/src/components/Layout.tsx"
+      ],
+      "client/src/components/SupportChat.tsx": [
+        "client/src/components/Layout.tsx"
+      ],
+      "client/src/components/StructuredNavigation.tsx": [
+        "client/src/components/MainNavigation.tsx"
+      ],
+      "client/src/components/BatchStateMachineDisplay.tsx": [
+        "client/src/components/PaymentsCockpit.tsx"
+      ],
+      "client/src/components/CutOffDisplay.tsx": [
+        "client/src/components/PaymentsCockpit.tsx"
+      ],
+      "client/src/components/ThreeLevelNavigation.tsx": [
+        "client/src/components/Sidebar.tsx"
+      ],
+      "client/src/hooks/useAuth.ts": [
+        "client/src/hooks/useExitIntent.ts"
+      ],
+      "client/src/locales/en.json": [
+        "client/src/hooks/useTranslation.ts"
+      ],
+      "client/src/locales/el.json": [
+        "client/src/hooks/useTranslation.ts"
+      ],
+      "client/src/lib/offlineStorage.ts": [
+        "client/src/lib/syncService.ts"
+      ],
+      "client/src/components/csrd/MetricCard.tsx": [
+        "client/src/components/csrd/S1MetricsPage.tsx"
+      ],
+      "client/src/components/csrd/AssumptionsDrawer.tsx": [
+        "client/src/components/csrd/S1MetricsPage.tsx"
+      ],
+      "client/src/components/embedded/PayrollRunWizard.tsx": [
+        "client/src/components/embedded/EmbedFrame.tsx"
+      ],
+      "client/src/components/embedded/ExceptionsReview.tsx": [
+        "client/src/components/embedded/EmbedFrame.tsx"
+      ],
+      "client/src/components/embedded/FilingsPanel.tsx": [
+        "client/src/components/embedded/EmbedFrame.tsx"
+      ],
+      "client/src/components/embedded/PaymentsCockpit.tsx": [
+        "client/src/components/embedded/EmbedFrame.tsx"
+      ],
+      "client/src/components/ui/separator.tsx": [
+        "client/src/components/ui/profile-footer.tsx"
+      ],
+      "client/src/components/ui/dropdown-menu.tsx": [
+        "client/src/components/ui/profile-footer.tsx"
+      ],
+      "client/src/components/widgets/JobSalaryRangeGenerator.tsx": [
+        "client/src/components/widgets/PayEquityDashboard.tsx"
+      ],
+      "client/src/components/widgets/RightToInfoWorkflow.tsx": [
+        "client/src/components/widgets/PayEquityDashboard.tsx"
+      ]
+    }
+  },
+  "impactAnalysis": null,
+  "success": true
+}
