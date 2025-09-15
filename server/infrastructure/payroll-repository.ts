@@ -105,8 +105,17 @@ export class PayrollRepository {
 
   /**
    * Get employee information for payroll processing
+   * PERFORMANCE OPTIMIZED: Now uses bulk operations and Map lookups
    */
   async getEmployeePayrollInfo(employeeIds: string[]): Promise<EmployeePayrollInfo[]> {
+    // Use optimized bulk fetch for large datasets
+    if (employeeIds.length > 100) {
+      const { DatabaseOptimizations } = await import('./database-optimizations');
+      const employeeMap = await DatabaseOptimizations.getBulkEmployeeData(employeeIds);
+      return Array.from(employeeMap.values());
+    }
+    
+    // Fallback to original implementation for small datasets
     const employeeData = await db
       .select({
         employeeId: employees.employeeId,
