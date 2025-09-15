@@ -144,11 +144,11 @@ export default [
       'security/detect-pseudoRandomBytes': 'error',
       'security/detect-unsafe-regex': 'error',
       
-      // Node.js Security Rules
-      'node/no-deprecated-api': 'error',
-      'node/no-extraneous-import': 'error',
-      'node/no-missing-import': 'off', // Handled by TypeScript
-      'node/no-unpublished-import': 'off', // Allow dev dependencies
+      // Node.js Security Rules (temporarily disabled due to ESLint v9 compatibility)
+      // 'node/no-deprecated-api': 'error',
+      // 'node/no-extraneous-import': 'error',
+      // 'node/no-missing-import': 'off', // Handled by TypeScript
+      // 'node/no-unpublished-import': 'off', // Allow dev dependencies
       
       // Complexity rules
       'complexity': ['warn', 10],
