@@ -2294,8 +2294,8 @@ def main():
             return
         
         try:
-        # Read task and context information
-        task_text = read_file(task_file)
+            # Read task and context information
+            task_text = read_file(task_file)
         tree = repo_tree()
         knowledge = read_knowledge()
         architecture_guide = read_architecture_guide()
