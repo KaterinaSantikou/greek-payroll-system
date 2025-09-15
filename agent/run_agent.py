@@ -59,10 +59,58 @@ def call_with_retry(func, max_tries=5):
 # ---- SIMPLE OPENAI CALLER (no extra installs needed on Replit if using requests) ----
 import requests
 
-def call_openai(messages, model=MODEL, temperature=0.2):
+def call_openai(messages, model=MODEL, temperature=0.2, use_structured_output=False):
     url = "https://api.openai.com/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENAI_API_KEY}", "Content-Type":"application/json"}
     payload = {"model": model, "messages": messages, "temperature": temperature}
+    
+    # Add structured output schema if requested
+    if use_structured_output:
+        payload["response_format"] = {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "agent_response",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "plan": {
+                            "type": "string",
+                            "description": "Brief implementation plan as bullet points"
+                        },
+                        "test_plan": {
+                            "type": "string", 
+                            "description": "How to verify the changes locally"
+                        },
+                        "files": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "path": {
+                                        "type": "string",
+                                        "description": "Relative path to the file"
+                                    },
+                                    "content": {
+                                        "type": "string",
+                                        "description": "Complete file content"
+                                    }
+                                },
+                                "required": ["path", "content"],
+                                "additionalProperties": False
+                            }
+                        },
+                        "notes": {
+                            "type": "string",
+                            "description": "Additional implementation notes or considerations"
+                        }
+                    },
+                    "required": ["plan", "test_plan", "files"],
+                    "additionalProperties": False
+                }
+            }
+        }
+    
     r = requests.post(url, headers=headers, json=payload, timeout=120)
     r.raise_for_status()
     return r.json()["choices"][0]["message"]["content"]
