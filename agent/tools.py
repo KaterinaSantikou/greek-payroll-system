@@ -177,6 +177,31 @@ class GitTool:
                 error=str(e),
                 duration=duration
             )
+    
+    @staticmethod
+    def get_changed_files(cwd: Optional[pathlib.Path] = None) -> ToolResult:
+        """Get list of changed files in current commit"""
+        start_time = time.time()
+        try:
+            working_dir = cwd or ROOT
+            result = GitTool.safe_run_git(["git", "diff", "--cached", "--name-only"], cwd=working_dir)
+            duration = time.time() - start_time
+            
+            changed_files = [f.strip() for f in result.stdout.split('\n') if f.strip()]
+            return ToolResult(
+                success=True,
+                message=f"Found {len(changed_files)} changed files in {duration:.1f}s",
+                data=changed_files,
+                duration=duration
+            )
+        except Exception as e:
+            duration = time.time() - start_time
+            return ToolResult(
+                success=False,
+                message="Failed to get changed files",
+                error=str(e),
+                duration=duration
+            )
 
     @staticmethod
     def stash_changes(message: str = "Auto-stash", cwd: Optional[pathlib.Path] = None) -> ToolResult:
