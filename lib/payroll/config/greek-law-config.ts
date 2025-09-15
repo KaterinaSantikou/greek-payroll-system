@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { legalDocumentTracker, getLegalReferencesForPayroll } from './legal-document-tracker.js';
 
 // =============================================================================
 // CONFIGURATION SCHEMAS
