@@ -735,6 +735,448 @@ export class ComplianceGuardrailsSystem {
   }
 
   /**
+   * Validate payroll calculation results against Greek law constraints
+   */
+  async validatePayrollResults(
+    results: PayrollCalculationResult | PayrollCalculationResult[]
+  ): Promise<PayrollComplianceResult> {
+    const resultsArray = Array.isArray(results) ? results : [results];
+    const allViolations: PayrollGuardrailViolation[] = [];
+    const allWarnings: PayrollGuardrailViolation[] = [];
+    let totalChecks = 0;
+
+    for (const result of resultsArray) {
+      try {
+        const law = lawRegistry.getActiveVersion(result.calculationDate);
+        const violations: PayrollGuardrailViolation[] = [];
+        const warnings: PayrollGuardrailViolation[] = [];
+
+        // 1. EFKA Compliance Checks
+        this.validateEfkaCompliance(result, law, violations, warnings);
+        
+        // 2. Tax Compliance Checks  
+        this.validateTaxCompliance(result, law, violations, warnings);
+        
+        // 3. Bonus Compliance Checks
+        this.validateBonusCompliance(result, law, violations, warnings);
+        
+        // 4. Overtime Compliance Checks
+        this.validateOvertimeCompliance(result, law, violations, warnings);
+        
+        // 5. Mathematical Consistency Checks
+        this.validateMathematicalConsistency(result, violations, warnings);
+        
+        // 6. Legal Constraint Checks
+        this.validateLegalConstraints(result, law, violations, warnings);
+        
+        // 7. Minimum Wage and Deduction Limits
+        this.validateWageAndDeductionLimits(result, law, violations, warnings);
+
+        allViolations.push(...violations);
+        allWarnings.push(...warnings);
+        totalChecks += 50; // Approximate number of checks per employee
+
+        // Create alerts for critical violations
+        for (const violation of violations.filter(v => v.severity === 'error')) {
+          this.alerts.push({
+            alertId: nanoid(),
+            type: this.mapViolationToAlertType(violation.category),
+            severity: 'HIGH',
+            employeeId: result.employeeId,
+            message: violation.message,
+            details: {
+              violation,
+              payrollResult: {
+                grossPay: result.grossPay,
+                netPay: result.netPay,
+                periodId: result.periodId
+              }
+            },
+            createdAt: new Date(),
+          });
+        }
+
+        // Create audit log entry
+        await this.createAuditLogEntry({
+          eventType: 'PAYROLL_COMPLIANCE_CHECK',
+          entityType: 'payroll_result',
+          entityId: result.employeeId + '_' + result.periodId,
+          changes: {
+            violationCount: violations.length,
+            warningCount: warnings.length,
+            complianceChecks: totalChecks / resultsArray.length,
+            lawVersionUsed: law.version.versionId
+          },
+        });
+
+      } catch (error) {
+        allViolations.push({
+          code: 'VALIDATION_ERROR',
+          severity: 'error',
+          category: 'math',
+          message: `Payroll validation failed: ${error instanceof Error ? error.message : String(error)}`,
+          messageGr: 'Αποτυχία επικύρωσης μισθοδοσίας',
+          actualValue: 0,
+          employeeId: result.employeeId,
+          fieldName: 'validation',
+          context: { originalError: error }
+        });
+      }
+    }
+
+    const errorCount = allViolations.filter(v => v.severity === 'error').length;
+    const warningCount = allViolations.filter(v => v.severity === 'warning').length + allWarnings.length;
+    const complianceRate = totalChecks > 0 ? 1 - (errorCount / totalChecks) : 1;
+
+    return {
+      isCompliant: errorCount === 0,
+      violations: allViolations,
+      warnings: allWarnings,
+      summary: {
+        totalChecks,
+        errorCount,
+        warningCount,
+        complianceRate
+      }
+    };
+  }
+
+  /**
+   * Validate EFKA compliance - rates, ceilings, minimums
+   */
+  private validateEfkaCompliance(
+    result: PayrollCalculationResult,
+    law: GreekLawConstants,
+    violations: PayrollGuardrailViolation[],
+    warnings: PayrollGuardrailViolation[]
+  ): void {
+    const rates = law.efkaRates;
+    const minWage = law.minimumWage.monthly;
+    
+    // 1. EFKA employee contribution rates
+    const expectedEfkaMain = safeMultiply(result.grossPay, rates.employee.main);
+    const expectedEfkaAux = safeMultiply(result.grossPay, rates.employee.auxiliary);
+    
+    this.checkValueRange(
+      result.employeeEfkaMain,
+      expectedEfkaMain,
+      0.02, // 2% tolerance
+      'EFKA_MAIN_RATE_MISMATCH',
+      'Employee EFKA main contribution rate mismatch',
+      'Ανταπόκριση κύριας εισφοράς ΕΦΚΑ εργαζομένου',
+      'efka',
+      result.employeeId,
+      'employeeEfkaMain',
+      violations,
+      `Article 5, Law 4387/2016 - Expected rate: ${(rates.employee.main * 100).toFixed(2)}%`
+    );
+    
+    // 2. EFKA contribution ceilings
+    const efkaCeiling = safeMultiply(minWage, 5.88); // 5.88 times minimum wage
+    if (result.grossPay > efkaCeiling) {
+      const maxEfkaMain = safeMultiply(efkaCeiling, rates.employee.main);
+      
+      if (result.employeeEfkaMain > maxEfkaMain) {
+        violations.push({
+          code: 'EFKA_CEILING_EXCEEDED',
+          severity: 'error',
+          category: 'efka',
+          message: `EFKA contribution exceeds ceiling (€${maxEfkaMain.toFixed(2)})`,
+          messageGr: `Η εισφορά ΕΦΚΑ υπερβαίνει το ανώτατο όριο (€${maxEfkaMain.toFixed(2)})`,
+          expectedRange: { min: 0, max: maxEfkaMain },
+          actualValue: result.employeeEfkaMain,
+          employeeId: result.employeeId,
+          fieldName: 'employeeEfkaMain',
+          lawReference: 'Article 15, Law 4387/2016'
+        });
+      }
+    }
+  }
+
+  /**
+   * Validate tax compliance - rates, brackets, thresholds
+   */
+  private validateTaxCompliance(
+    result: PayrollCalculationResult,
+    law: GreekLawConstants,
+    violations: PayrollGuardrailViolation[],
+    warnings: PayrollGuardrailViolation[]
+  ): void {
+    // Check effective tax rate sanity
+    if (result.taxableIncome > 0) {
+      const effectiveTaxRate = safeDivide(result.incomeTax + result.solidarityTax, result.taxableIncome);
+      
+      if (effectiveTaxRate > 0.5) {
+        violations.push({
+          code: 'EXCESSIVE_TAX_RATE',
+          severity: 'error',
+          category: 'tax',
+          message: `Effective tax rate too high: ${(effectiveTaxRate * 100).toFixed(2)}%`,
+          messageGr: `Πολύ υψηλός πραγματικός φορολογικός συντελεστής: ${(effectiveTaxRate * 100).toFixed(2)}%`,
+          actualValue: effectiveTaxRate,
+          employeeId: result.employeeId,
+          fieldName: 'effectiveTaxRate',
+          expectedRange: { min: 0, max: 0.5 }
+        });
+      }
+    }
+    
+    // Check solidarity tax thresholds
+    if (result.solidarityTax > 0 && result.taxableIncome < 12000) {
+      violations.push({
+        code: 'SOLIDARITY_TAX_THRESHOLD_VIOLATION',
+        severity: 'error',
+        category: 'tax',
+        message: `Solidarity tax applied below threshold (€12,000)`,
+        messageGr: `Τέλος αλληλεγγύης εφαρμόστηκε κάτω από το όριο (€12.000)`,
+        actualValue: result.solidarityTax,
+        employeeId: result.employeeId,
+        fieldName: 'solidarityTax',
+        lawReference: 'Law 4223/2013, Article 29'
+      });
+    }
+  }
+
+  /**
+   * Validate bonus compliance - amounts, proration
+   */
+  private validateBonusCompliance(
+    result: PayrollCalculationResult,
+    law: GreekLawConstants,
+    violations: PayrollGuardrailViolation[],
+    warnings: PayrollGuardrailViolation[]
+  ): void {
+    // Christmas bonus validation
+    if (result.christmasBonus > result.baseSalary) {
+      violations.push({
+        code: 'CHRISTMAS_BONUS_EXCESSIVE',
+        severity: 'error',
+        category: 'bonus',
+        message: `Christmas bonus exceeds monthly salary`,
+        messageGr: `Το δώρο Χριστουγέννων υπερβαίνει τον μηνιαίο μισθό`,
+        actualValue: result.christmasBonus,
+        employeeId: result.employeeId,
+        fieldName: 'christmasBonus',
+        expectedRange: { min: 0, max: result.baseSalary },
+        lawReference: 'Law 3833/2010, Article 1'
+      });
+    }
+    
+    // Easter bonus validation
+    if (result.easterBonus > result.baseSalary * 0.5) {
+      violations.push({
+        code: 'EASTER_BONUS_EXCESSIVE',
+        severity: 'error',
+        category: 'bonus',
+        message: `Easter bonus exceeds half monthly salary`,
+        messageGr: `Το δώρο Πάσχα υπερβαίνει τον μισό μηνιαίο μισθό`,
+        actualValue: result.easterBonus,
+        employeeId: result.employeeId,
+        fieldName: 'easterBonus',
+        expectedRange: { min: 0, max: result.baseSalary * 0.5 }
+      });
+    }
+  }
+
+  /**
+   * Validate overtime compliance - rates, limits
+   */
+  private validateOvertimeCompliance(
+    result: PayrollCalculationResult,
+    law: GreekLawConstants,
+    violations: PayrollGuardrailViolation[],
+    warnings: PayrollGuardrailViolation[]
+  ): void {
+    const limits = law.workingTimeLimits;
+    
+    // Estimate overtime hours from amount
+    if (result.overtimeAmount > 0) {
+      const regularHourlyRate = safeDivide(result.baseSalary, limits.standardMonthlyHours);
+      const expectedOvertimeRate = law.premiumRates.overtime.firstTier;
+      const expectedOvertimeHourlyRate = safeMultiply(regularHourlyRate, expectedOvertimeRate);
+      const estimatedOvertimeHours = safeDivide(result.overtimeAmount, expectedOvertimeHourlyRate);
+      
+      // Daily overtime limit check (3 hours max per day)
+      const dailyOvertimeHours = safeDivide(estimatedOvertimeHours, 22); // ~22 working days
+      
+      if (dailyOvertimeHours > 3.5) {
+        violations.push({
+          code: 'DAILY_OVERTIME_EXCEEDED',
+          severity: 'error',
+          category: 'overtime',
+          message: `Daily overtime likely exceeds 3 hours limit`,
+          messageGr: `Οι ημερήσιες υπερωρίες πιθανώς υπερβαίνουν το όριο των 3 ωρών`,
+          actualValue: dailyOvertimeHours,
+          employeeId: result.employeeId,
+          fieldName: 'overtimeHours',
+          expectedRange: { min: 0, max: 3 },
+          lawReference: 'Law 1346/1983, Article 4'
+        });
+      }
+    }
+  }
+
+  /**
+   * Validate mathematical consistency
+   */
+  private validateMathematicalConsistency(
+    result: PayrollCalculationResult,
+    violations: PayrollGuardrailViolation[],
+    warnings: PayrollGuardrailViolation[]
+  ): void {
+    // Net pay calculation consistency
+    const calculatedNetPay = result.grossPay - result.totalDeductions;
+    
+    if (Math.abs(result.netPay - calculatedNetPay) > 0.01) {
+      violations.push({
+        code: 'NET_PAY_CALCULATION_ERROR',
+        severity: 'error',
+        category: 'math',
+        message: `Net pay calculation inconsistency: expected ${calculatedNetPay.toFixed(2)}, got ${result.netPay.toFixed(2)}`,
+        messageGr: `Ασυνέπεια υπολογισμού καθαρών αποδοχών`,
+        actualValue: result.netPay,
+        employeeId: result.employeeId,
+        fieldName: 'netPay',
+        expectedRange: { min: calculatedNetPay - 0.01, max: calculatedNetPay + 0.01 }
+      });
+    }
+    
+    // Total deductions consistency
+    const calculatedDeductions = 
+      result.incomeTax + 
+      result.solidarityTax + 
+      result.employeeEfkaMain + 
+      result.employeeEfkaAux + 
+      result.employeeUnemployment;
+    
+    if (Math.abs(result.totalDeductions - calculatedDeductions) > 0.01) {
+      violations.push({
+        code: 'DEDUCTIONS_CALCULATION_ERROR',
+        severity: 'error',
+        category: 'math',
+        message: `Total deductions calculation inconsistency`,
+        messageGr: `Ασυνέπεια υπολογισμού συνολικών κρατήσεων`,
+        actualValue: result.totalDeductions,
+        employeeId: result.employeeId,
+        fieldName: 'totalDeductions',
+        expectedRange: { min: calculatedDeductions - 0.01, max: calculatedDeductions + 0.01 }
+      });
+    }
+  }
+
+  /**
+   * Validate legal constraints
+   */
+  private validateLegalConstraints(
+    result: PayrollCalculationResult,
+    law: GreekLawConstants,
+    violations: PayrollGuardrailViolation[],
+    warnings: PayrollGuardrailViolation[]
+  ): void {
+    // Tips tax treatment validation
+    if (result.totalTips > 0) {
+      const tipsThreshold = law.tipsTaxRules.taxFreeThreshold;
+      const expectedTipsTax = Math.max(0, (result.totalTips - tipsThreshold) * law.tipsTaxRules.taxRate);
+      
+      if (Math.abs(result.tipsTax - expectedTipsTax) > 0.01) {
+        violations.push({
+          code: 'TIPS_TAX_CALCULATION_ERROR',
+          severity: 'error',
+          category: 'tax',
+          message: `Tips tax calculation error`,
+          messageGr: `Σφάλμα υπολογισμού φόρου φιλοδωρημάτων`,
+          actualValue: result.tipsTax,
+          employeeId: result.employeeId,
+          fieldName: 'tipsTax',
+          lawReference: 'Law 4172/2013, Article 12'
+        });
+      }
+    }
+  }
+
+  /**
+   * Validate wage and deduction limits
+   */
+  private validateWageAndDeductionLimits(
+    result: PayrollCalculationResult,
+    law: GreekLawConstants,
+    violations: PayrollGuardrailViolation[],
+    warnings: PayrollGuardrailViolation[]
+  ): void {
+    // Check deduction limits
+    if (result.grossPay > 0) {
+      const deductionRate = safeDivide(result.totalDeductions, result.grossPay);
+      
+      // Greek labor law limit
+      if (deductionRate > 0.5) {
+        violations.push({
+          code: 'DEDUCTION_LIMIT_EXCEEDED',
+          severity: 'error',
+          category: 'legal',
+          message: `Deduction rate exceeds 50% limit: ${(deductionRate * 100).toFixed(1)}%`,
+          messageGr: `Ο συντελεστής κρατήσεων υπερβαίνει το όριο 50%: ${(deductionRate * 100).toFixed(1)}%`,
+          actualValue: deductionRate,
+          employeeId: result.employeeId,
+          fieldName: 'deductionRate',
+          expectedRange: { min: 0, max: 0.5 },
+          lawReference: 'Law 2112/1920, Article 7'
+        });
+      }
+    }
+  }
+
+  /**
+   * Helper method to check value ranges with tolerance
+   */
+  private checkValueRange(
+    actualValue: number,
+    expectedValue: number,
+    tolerance: number,
+    code: string,
+    message: string,
+    messageGr: string,
+    category: PayrollGuardrailViolation['category'],
+    employeeId: string,
+    fieldName: string,
+    violations: PayrollGuardrailViolation[],
+    lawReference?: string
+  ): void {
+    const lowerBound = expectedValue * (1 - tolerance);
+    const upperBound = expectedValue * (1 + tolerance);
+    
+    if (actualValue < lowerBound || actualValue > upperBound) {
+      violations.push({
+        code,
+        severity: 'error',
+        category,
+        message: `${message}: expected ~${expectedValue.toFixed(2)}, got ${actualValue.toFixed(2)}`,
+        messageGr: `${messageGr}: αναμενόμενο ~${expectedValue.toFixed(2)}, λήφθηκε ${actualValue.toFixed(2)}`,
+        actualValue,
+        employeeId,
+        fieldName,
+        expectedRange: { min: lowerBound, max: upperBound },
+        lawReference
+      });
+    }
+  }
+
+  /**
+   * Map violation category to alert type
+   */
+  private mapViolationToAlertType(category: string): ComplianceAlert['type'] {
+    const mapping: Record<string, ComplianceAlert['type']> = {
+      efka: 'EFKA_RATE_MISMATCH',
+      tax: 'TAX_CALCULATION_ERROR',
+      bonus: 'BONUS_COMPLIANCE_ERROR',
+      math: 'MATH_CONSISTENCY_ERROR',
+      legal: 'PAYROLL_COMPLIANCE_VIOLATION',
+      overtime: 'PAYROLL_COMPLIANCE_VIOLATION'
+    };
+    
+    return mapping[category] || 'PAYROLL_COMPLIANCE_VIOLATION';
+  }
+
+  /**
    * Check data retention compliance
    */
   checkDataRetentionCompliance(): {
