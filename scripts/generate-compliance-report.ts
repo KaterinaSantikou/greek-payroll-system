@@ -278,7 +278,11 @@ class ComplianceReportGenerator {
   }> {
     try {
       const registry = legalDocumentTracker.loadRegistry();
-      const upcomingReviews: any[] = [];
+      const upcomingReviews: Array<{
+        documentId: string;
+        reviewDate: string;
+        priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+      }> = [];
       const now = new Date();
       const sixMonthsFromNow = new Date(now.getTime() + 6 * 30 * 24 * 60 * 60 * 1000);
 
