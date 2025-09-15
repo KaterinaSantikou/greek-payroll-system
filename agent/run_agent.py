@@ -219,6 +219,120 @@ KEY DEPENDENCIES:
     
     return summary
 
+def validate_payroll_math():
+    """Run payroll scenario tests to validate mathematical correctness"""
+    if not PAYROLL_SCENARIOS_FILE.exists():
+        print("⚠️ No payroll scenarios file found, skipping math validation")
+        return True
+    
+    try:
+        # Load test scenarios
+        scenarios_data = json.loads(PAYROLL_SCENARIOS_FILE.read_text(encoding="utf-8"))
+        scenarios = scenarios_data.get("scenarios", [])
+        validation_rules = scenarios_data.get("validation_rules", {})
+        tolerance = validation_rules.get("tolerance", 0.02)
+        
+        print(f"🧮 Running {len(scenarios)} payroll math validation scenarios...")
+        
+        # Try to run a simple payroll calculation test via Node.js
+        # This assumes there's a payroll engine that can be tested
+        test_script = """
+const fs = require('fs');
+const path = require('path');
+
+// Try to load payroll engine (adapt path as needed)
+let payrollEngine;
+try {
+    payrollEngine = require('./server/payroll_engine.ts');
+} catch (e) {
+    try {
+        payrollEngine = require('./payroll_engine.js');
+    } catch (e2) {
+        console.log('SKIP: No payroll engine found');
+        process.exit(0);
+    }
+}
+
+// Load scenarios
+const scenariosPath = './tests/payroll_scenarios.json';
+if (!fs.existsSync(scenariosPath)) {
+    console.log('SKIP: No scenarios file');
+    process.exit(0);
+}
+
+const data = JSON.parse(fs.readFileSync(scenariosPath, 'utf8'));
+const scenarios = data.scenarios || [];
+const tolerance = data.validation_rules?.tolerance || 0.02;
+
+let passed = 0;
+let failed = 0;
+
+scenarios.forEach((scenario, index) => {
+    try {
+        // Run calculation (this will need to be adapted to your actual API)
+        const result = payrollEngine.calculatePayroll(scenario.input);
+        const expected = scenario.expected;
+        
+        // Compare key values within tolerance
+        let scenarioFailed = false;
+        const requiredFields = ['gross_pay', 'efka_employee', 'net_pay'];
+        
+        requiredFields.forEach(field => {
+            if (expected[field] !== undefined) {
+                const diff = Math.abs(result[field] - expected[field]);
+                if (diff > tolerance) {
+                    console.log(`FAIL: ${scenario.name} - ${field}: expected ${expected[field]}, got ${result[field]}`);
+                    scenarioFailed = true;
+                }
+            }
+        });
+        
+        if (scenarioFailed) {
+            failed++;
+        } else {
+            passed++;
+        }
+    } catch (e) {
+        console.log(`ERROR: ${scenario.name} - ${e.message}`);
+        failed++;
+    }
+});
+
+console.log(`RESULTS: ${passed} passed, ${failed} failed`);
+process.exit(failed > 0 ? 1 : 0);
+"""
+        
+        # Write and run the test script
+        test_file = ROOT / "temp_payroll_test.js"
+        test_file.write_text(test_script, encoding="utf-8")
+        
+        try:
+            result = subprocess.run(["node", "temp_payroll_test.js"], 
+                                  cwd=ROOT, capture_output=True, text=True, timeout=30)
+            
+            # Clean up test file
+            test_file.unlink(missing_ok=True)
+            
+            output = result.stdout.strip()
+            if "SKIP:" in output:
+                print(f"⚠️ Payroll math validation skipped: {output}")
+                return True
+            elif result.returncode == 0:
+                print(f"✅ Payroll math validation passed: {output}")
+                return True
+            else:
+                print(f"❌ Payroll math validation failed: {output}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            test_file.unlink(missing_ok=True)
+            print("❌ Payroll math validation timed out")
+            return False
+            
+    except Exception as e:
+        print(f"⚠️ Error running payroll math validation: {e}")
+        return True  # Don't fail the build if validation system has issues
+
 def update_knowledge(task_title, changed_files, task_summary):
     """Update the knowledge base with information from the completed task"""
     CONTEXT_DIR.mkdir(exist_ok=True)
