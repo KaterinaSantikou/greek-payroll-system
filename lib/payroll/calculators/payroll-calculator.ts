@@ -1019,31 +1019,11 @@ export class PayrollCalculator {
 
       const isFullTime = Boolean(input.isFullTime);
 
-      // Extract validated inputs for calculation
-      const validatedInput = {
-        employeeId,
-        periodId,
-        baseSalary,
-        hourlyRate,
-        regularHours,
-        overtimeHours,
-        nightHours,
-        sundayHours,
-        holidayHours,
-        leaveHours,
-        allowances,
-        tips,
-        benefitsInKind,
-        contractType,
-        isFullTime,
-        employmentStartDate,
-        periodStartDate,
-        periodEndDate,
-      };
-
-    // Calculate hourly rate if not provided
-    const effectiveHourlyRate =
-      hourlyRate || baseSalary / WORKING_TIME_LIMITS.standardMonthlyHours;
+      // PROCEED WITH VALIDATED INPUTS TO CALCULATIONS
+      
+      // Calculate hourly rate if not provided
+      const effectiveHourlyRate =
+        hourlyRate || baseSalary / WORKING_TIME_LIMITS.standardMonthlyHours;
 
     // Calculate regular pay
     const regularPay = regularHours * effectiveHourlyRate;
