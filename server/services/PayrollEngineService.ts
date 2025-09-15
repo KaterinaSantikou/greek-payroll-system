@@ -124,9 +124,10 @@ export class PayrollEngineService {
       const employees = await payrollRepository.getEmployeePayrollInfo(employeeIds);
       const timesheets = await payrollRepository.getTimesheetData(employeeIds, scope.period);
       
-      // Convert to business layer format for validation
+      // PERFORMANCE OPTIMIZATION: Use Map for O(1) timesheet lookups
+      const timesheetMap = new Map(timesheets.map(ts => [ts.employeeId, ts]));
       const employeeData = employees.map(emp => {
-        const timesheet = timesheets.find(ts => ts.employeeId === emp.employeeId);
+        const timesheet = timesheetMap.get(emp.employeeId);
         return {
           ...emp,
           approvedHours: timesheet?.approvedHours || 0,
@@ -153,15 +154,38 @@ export class PayrollEngineService {
       const errors = [];
       const warnings = [];
 
-      for (const employeeId of employeeIds) {
-        try {
-          const calculation = await this.calculateEmployeePayroll(
-            employeeId,
-            scope.period,
-            businessRules.timesheetFilters.find(f => f.employeeId === employeeId),
-            capTrackers.get(employeeId),
-            options
-          );
+      // PERFORMANCE OPTIMIZATION: Process employees in chunks and use parallel processing
+      const CHUNK_SIZE = 250; // Process 250 employees at a time to avoid DB parameter limits
+      const employeeChunks = this.chunkArray(employeeIds, CHUNK_SIZE);
+      
+      // Create map for O(1) timesheet filter lookups
+      const timesheetFilterMap = new Map(
+        businessRules.timesheetFilters.map(f => [f.employeeId, f])
+      );
+
+      for (const chunk of employeeChunks) {
+        // Process chunk in parallel with limited concurrency
+        const chunkPromises = chunk.map(async employeeId => {
+          try {
+            const calculation = await this.calculateEmployeePayroll(
+              employeeId,
+              scope.period,
+              timesheetFilterMap.get(employeeId),
+              capTrackers.get(employeeId),
+              options
+            );
+            return { success: true, employeeId, calculation };
+          } catch (error) {
+            return { success: false, employeeId, error: error instanceof Error ? error.message : String(error) };
+          }
+        });
+
+        // Process chunk with limited concurrency (8 parallel calculations)
+        const chunkResults = await this.processWithConcurrencyLimit(chunkPromises, 8);
+        
+        for (const result of chunkResults) {
+          if (result.success) {
+            const calculation = result.calculation!;
           
           calculations.push(calculation);
           
