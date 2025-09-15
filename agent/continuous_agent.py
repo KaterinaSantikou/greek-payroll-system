@@ -78,24 +78,18 @@ while True:
 
     # ---- Auto commit and push to GitHub ----
     task_title = get_last_done_task_title()
-    print(f"💾 Committing and pushing changes to dev branch (task: {task_title})...")
     
     token = os.environ.get("GITHUB_TOKEN")
     if not token:
-        print("❌ No GITHUB_TOKEN found in Replit Secrets.")
+        print("❌ No GITHUB_TOKEN found in Replit Secrets. Please add it first.")
     else:
         try:
-            subprocess.run([
-                "git", "config", "--global", "user.name", "AI Dev Agent"
-            ], check=True)
-            subprocess.run([
-                "git", "config", "--global", "user.email", "agent@localhost"
-            ], check=True)
+            print(f"💾 Committing and pushing changes to dev branch (task: {task_title})...")
+            subprocess.run(["git", "config", "--global", "user.name", "AI Dev Agent"], check=True)
+            subprocess.run(["git", "config", "--global", "user.email", "agent@localhost"], check=True)
             subprocess.run(["git", "checkout", "dev"], check=False)
             subprocess.run(["git", "add", "."], check=True)
-            subprocess.run([
-                "git", "commit", "-m", f"AI Agent: Completed task — {task_title}"
-            ], check=False)
+            subprocess.run(["git", "commit", "-m", f"AI Agent: Completed task — {task_title}"], check=False)
             subprocess.run([
                 "git",
                 "push",
