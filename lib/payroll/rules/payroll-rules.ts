@@ -1,11 +1,73 @@
 /**
- * Greek Payroll Rules Domain
+ * Greek Payroll Rules Domain - Configurable Version
  * 
- * Contains pure domain rules for Greek payroll calculations including
- * bonuses, premiums, and overtime calculations.
+ * Contains configurable domain rules for Greek payroll calculations including
+ * bonuses, premiums, and overtime calculations. All values are externalized
+ * and can be updated when labor laws change.
  */
 
-// Greek National Holidays and Bonus Calculations (Δώρα)
+import { getGreekLawConfig } from '../config/greek-law-config.js';
+
+// =============================================================================
+// CONFIGURABLE PAYROLL RULES
+// =============================================================================
+
+let configCache: any = null;
+let cacheExpiry: number = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Get current configuration with caching
+ */
+async function getCurrentConfig() {
+  const now = Date.now();
+  if (!configCache || now > cacheExpiry) {
+    configCache = await getGreekLawConfig();
+    cacheExpiry = now + CACHE_TTL;
+  }
+  return configCache;
+}
+
+/**
+ * Premium Rates for Greek Labor Law - Configurable
+ */
+export async function getPremiumRates() {
+  const config = await getCurrentConfig();
+  return config.premiumRates;
+}
+
+/**
+ * Severance Pay Rules - Configurable
+ */
+export async function getSeveranceRules() {
+  const config = await getCurrentConfig();
+  return config.severanceRules;
+}
+
+// Greek National Holidays and Bonus Calculations (Δώρα) - Configurable
+export async function getGreekBonuses() {
+  // For now, return hardcoded values but these should eventually be configurable too
+  return {
+    christmas: {
+      fullTimeMonthly: 1.0417, // 25/24 of monthly salary
+      partTimeHourly: 0.0417 // 1/24 of monthly for part-time
+    },
+    easter: {
+      fullTimeMonthly: 0.5, // Half month salary
+      partTimeHourly: 0.02083 // Pro-rated for part-time
+    },
+    vacation: {
+      fullTimeMonthly: 0.5, // Half month salary
+      partTimeHourly: 0.02083 // Pro-rated for part-time
+    }
+  };
+}
+
+// =============================================================================
+// BACKWARD COMPATIBILITY - DEPRECATED CONSTANTS
+// =============================================================================
+
+/** @deprecated Use getGreekBonuses() instead */
 export const GREEK_BONUSES = {
   christmas: {
     fullTimeMonthly: 1.0417, // 25/24 of monthly salary
@@ -21,7 +83,7 @@ export const GREEK_BONUSES = {
   }
 } as const;
 
-// Premium Rates for Greek Labor Law
+/** @deprecated Use getPremiumRates() instead */
 export const PREMIUM_RATES = {
   overtime: {
     tier1: 1.25, // First 2 hours: 25% premium
