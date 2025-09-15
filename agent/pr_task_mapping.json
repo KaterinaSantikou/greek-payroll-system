@@ -1,0 +1,20 @@
+{
+  "123": {
+    "commit_hash": "abc123def456",
+    "task_id": "payroll_fix_001",
+    "timestamp": "2025-09-15T14:07:08.578110",
+    "status": "open"
+  },
+  "124": {
+    "commit_hash": "def456ghi789",
+    "task_id": "efka_calculation_002",
+    "timestamp": "2025-09-15T14:07:08.579710",
+    "status": "open"
+  },
+  "125": {
+    "commit_hash": "ghi789jkl012",
+    "task_id": "tax_update_003",
+    "timestamp": "2025-09-15T14:07:08.611278",
+    "status": "open"
+  }
+}
