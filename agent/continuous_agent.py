@@ -94,9 +94,19 @@ try:
             print("✅ All backlog tasks are complete. No tasks left to build. Exiting cleanly.")
             sys.exit(0)
 
+        # Check rate limiting before processing tasks
+        if not rate_limiter.can_make_call():
+            print("⏱️ Rate limit reached. Waiting before processing next task...")
+            rate_limiter.wait_for_rate_limit()
+        
         if any(PENDING.glob("*.md")):
             print("🛠 Found a pending task — running agent...")
-            call_with_retry(run_once)
+            result = call_with_retry(run_once)
+            
+            # If rate limited, wait before continuing
+            if result is None:
+                print("⏱️ Task skipped due to rate limiting. Waiting...")
+                time.sleep(30)  # Wait 30 seconds before checking again
         else:
             # Pick from the first available backlog file
             idea = None
@@ -115,7 +125,12 @@ try:
                     encoding="utf-8"
                 )
                 print("🚀 Running agent immediately on new task...")
-                call_with_retry(run_once)
+                result = call_with_retry(run_once)
+                
+                # If rate limited, don't process more backlog items
+                if result is None:
+                    print("⏱️ Task skipped due to rate limiting. Pausing backlog processing...")
+                    time.sleep(30)
             else:
                 print(f"💤 No {label} backlog ideas left.")
                 print("⏳ Waiting 10 seconds before checking again...")
