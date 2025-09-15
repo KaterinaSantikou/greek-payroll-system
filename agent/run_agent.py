@@ -2766,6 +2766,27 @@ def main():
             # Update knowledge base with task completion info
             update_knowledge(task_title, changed, task_summary)
             
+            # ===== OUTPUT VALIDATION BEFORE COMPLETION =====
+            print("\n🔍 Running comprehensive output validation before task completion...")
+            task_file_path = pathlib.Path(task_file)
+            task_description = f"Completed task: {task_file_path.stem}"
+            
+            # Run validation with strict requirements
+            validation_config = ValidationConfig(
+                require_build_pass=True,
+                require_tests_pass=True, 
+                minimum_coverage=80.0
+            )
+            
+            validation_passed = validate_and_handle_task(task_file_path, task_description)
+            
+            if not validation_passed:
+                print("❌ Task failed output validation - moved back to pending")
+                print("   The task will be retried after fixing validation issues")
+                return  # Exit without completing the task
+            
+            print("✅ Output validation passed - proceeding with task completion")
+            
             # Move task to done
             done_path = task_file.replace(str(ROOT / "tasks/pending"), str(ROOT / "tasks/done"))
             pathlib.Path(done_path).parent.mkdir(parents=True, exist_ok=True)
