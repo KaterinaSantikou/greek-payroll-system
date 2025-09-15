@@ -2486,7 +2486,7 @@ def main():
                 print("❌ TypeScript check failed in sandbox.")
                 validation_failed = True
 
-        if not validation_failed:
+            if not validation_failed:
             print("🧪 Running tests in sandbox...")
             tests = subprocess.run(["npm", "test", "--", "--bail"], cwd=SANDBOX_DIR, capture_output=True)
             if tests.returncode != 0:
