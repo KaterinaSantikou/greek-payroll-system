@@ -6,42 +6,26 @@
  * and can be updated when labor laws change.
  */
 
-import { getGreekLawConfig } from '../config/greek-law-config.js';
+import { CachedConstants } from '../cache/LegalConstantsCache.js';
 
 // =============================================================================
-// CONFIGURABLE PAYROLL RULES
+// HIGH-PERFORMANCE CACHED PAYROLL RULES
 // =============================================================================
 
-let configCache: Awaited<ReturnType<typeof getGreekLawConfig>> | null = null;
-let cacheExpiry: number = 0;
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-
 /**
- * Get current configuration with caching
- */
-async function getCurrentConfig() {
-  const now = Date.now();
-  if (!configCache || now > cacheExpiry) {
-    configCache = await getGreekLawConfig();
-    cacheExpiry = now + CACHE_TTL;
-  }
-  return configCache;
-}
-
-/**
- * Premium Rates for Greek Labor Law - Configurable
+ * Premium Rates for Greek Labor Law - High-Performance Cached
  */
 export async function getPremiumRates() {
-  const config = await getCurrentConfig();
-  return config.premiumRates;
+  const constants = await CachedConstants.getAllConstants();
+  return constants.premiumRates;
 }
 
 /**
- * Severance Pay Rules - Configurable
+ * Severance Pay Rules - High-Performance Cached
  */
 export async function getSeveranceRules() {
-  const config = await getCurrentConfig();
-  return config.severanceRules;
+  const constants = await CachedConstants.getAllConstants();
+  return constants.severanceRules;
 }
 
 // Greek National Holidays and Bonus Calculations (Δώρα) - Configurable
