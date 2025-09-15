@@ -124,7 +124,7 @@ while True:
             safe_run(["git", "add", "."])
             
             # Check if there are actually changes to commit
-            diff_result = safe_run(["git", "diff", "--quiet", "--cached"])
+            diff_result = subprocess.run(["git", "diff", "--quiet", "--cached"], capture_output=True)
             if diff_result.returncode == 0:
                 print("⚠️ No changes to commit, skipping.")
                 return
