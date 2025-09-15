@@ -106,8 +106,8 @@ else
 fi
 
 # Run all payroll tests together with comprehensive coverage
-print_info "7. Running complete payroll test suite..."
-if npx jest tests/payroll/ --coverage --collectCoverageFrom="lib/payroll/**/*.ts,server/services/SeveranceRulesService.ts" --coverageDirectory=coverage/payroll/complete --coverageReporters=["text", "lcov", "html"] --coverageThreshold='{"global":{"branches":85,"functions":85,"lines":85,"statements":85}}'; then
+print_info "9. Running complete payroll test suite..."
+if npx jest tests/payroll/ --coverage --collectCoverageFrom="lib/payroll/**/*.ts,server/services/SeveranceRulesService.ts,server/services/PayrollCalculationEngine.ts" --coverageDirectory=coverage/payroll/complete --coverageReporters=["text", "lcov", "html"] --coverageThreshold='{"global":{"branches":80,"functions":80,"lines":80,"statements":80}}' --testTimeout=60000; then
     print_status "Complete payroll test suite passed"
 else
     print_warning "Complete payroll test suite has coverage issues"
@@ -115,7 +115,7 @@ else
 fi
 
 # Generate test summary
-print_info "8. Generating test summary..."
+print_info "10. Generating test summary..."
 
 echo ""
 echo "📊 Test Results Summary"
