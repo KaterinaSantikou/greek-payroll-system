@@ -1293,7 +1293,7 @@ def get_planned_files_from_response(plan_text):
         print(f"⚠️ Error extracting planned files: {e}")
         return []
 
-def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolved_guidelines):
+def execute_planning_phase(task_text, tree, knowledge, dependency_summary, evolved_guidelines, impact_context=""):
     """Execute planning phase to create detailed implementation plan"""
     try:
         print("🎯 Starting planning phase...")
