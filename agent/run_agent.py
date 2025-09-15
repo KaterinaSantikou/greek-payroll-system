@@ -113,6 +113,10 @@ def mask_secrets(text):
     # Mask GitHub tokens in URLs
     masked = re.sub(r"https://[^@]+@", "https://***@", text)
     
+    # Mask database connection strings (DSNs) - CRITICAL for preventing credential leaks
+    masked = re.sub(r"(postgres|postgresql|mysql|mariadb|mongodb(\+srv)?|redis|amqp|mssql|sqlite)://[^:]+:[^@]+@", r"\1://***:***@", masked)
+    masked = re.sub(r"jdbc:(postgresql|mysql|mariadb|sqlserver|oracle)://[^:]+:[^@]+@", r"jdbc:\1://***:***@", masked)
+    
     # Mask API keys (comprehensive patterns)
     masked = re.sub(r"sk-[a-zA-Z0-9]{48,}", "sk-***MASKED***", masked)  # OpenAI API keys
     masked = re.sub(r"ghp_[a-zA-Z0-9]{36}", "ghp_***MASKED***", masked)  # GitHub personal access tokens
@@ -126,6 +130,9 @@ def mask_secrets(text):
     masked = re.sub(r"xoxp-[a-zA-Z0-9\-]{50,}", "xoxp-***MASKED***", masked)  # Slack user tokens
     masked = re.sub(r"sk-ant-[a-zA-Z0-9_\-]{48,}", "sk-ant-***MASKED***", masked)  # Anthropic API keys
     masked = re.sub(r"AIza[a-zA-Z0-9_\-]{35}", "AIza***MASKED***", masked)  # Google API keys
+    
+    # Mask multiline private keys
+    masked = re.sub(r"-----BEGIN [A-Z\s]+ PRIVATE KEY-----.*?-----END [A-Z\s]+ PRIVATE KEY-----", "-----BEGIN ***MASKED*** PRIVATE KEY-----", masked, flags=re.DOTALL)
     
     # Mask generic long tokens/secrets (32-64 characters of base64/hex)
     masked = re.sub(r"[a-zA-Z0-9+/]{32,64}={0,2}", "***MASKED_TOKEN***", masked)
@@ -534,7 +541,7 @@ def is_path_allowed(file_path, allowed_config):
     # Check allowed patterns
     allowed_patterns = allowed_config.get("allowed_patterns", [])
     if not allowed_patterns:
-        return True, "No allowed patterns specified"
+        return False, "No allowed patterns specified - denying all modifications for security"
     
     for pattern in allowed_patterns:
         if fnmatch.fnmatch(normalized_path, pattern):
