@@ -1,0 +1,122 @@
+0) Contain the blast radius (1 min)
+# from repo root
+git stash -u -m "pre-fix backup"      # snapshot current state
+git checkout -B fix/breakage          # work on a safe branch
+
+1) Put the agent in “safe/diagnostic” mode (no auto-push to dev)
+
+Open agent/config.json (create if missing) and set:
+
+{ "allow_write": true, "require_manual_approval": true }
+
+
+This makes the agent open a PR instead of pushing directly.
+
+2) Give the agent a precise “Break-Fix” task
+
+Create a task file the agent can act on immediately:
+
+tasks/pending/00-break-fix.md
+
+# Task: Diagnose and fix current production breakage
+
+**Symptom (observed):**
+- App "broke" after recent changes. Build or runtime fails; users see errors or endless redirect.
+
+**Required Diagnosis Steps:**
+1) Run: `npm ci && npm run build`
+2) Run tests: `npm test` and `npm run test:baseline`
+3) Start server locally (`npm run dev` or `npm start`) and hit health endpoint `/health` (add if missing).
+4) Capture stack traces, TypeScript errors, unmet imports, failing suites. Summarize root cause.
+
+**Acceptance Criteria (must meet ALL):**
+- [ ] Root cause identified and documented in `agent/WHY.md` with exact file/lines.
+- [ ] Minimized, targeted fix applied (no unrelated refactors).
+- [ ] `npm run build` passes.
+- [ ] `npm test` + `npm run test:baseline` pass.
+- [ ] Add/extend tests that reproduce this failure (prevent regression).
+- [ ] If auth loop is involved, add integration test: login remains valid 60s+.
+- [ ] Create branch `fix/breakage`, open PR to `dev` with summary and diffs.
+
+**Files Allowed to Change:**
+- `server/**`, `shared/**`, `client/**`, `tests/**`, `docs/**`, `agent/WHY.md`
+
+**Non-Goals:**
+- No unrelated feature work.
+- No schema changes unless strictly necessary (then add migration + tests).
+
+**Context to use:**
+- Use `context/architecture.md`, `shared/schema.ts`, `server/greekPayrollCalculator.ts`.
+- If auth is broken: check cookies/JWT TTL, SameSite/Secure, CORS, `useAuth()` hydration, server session middleware.
+
+**Extra Validation (if auth involved):**
+- [ ] Confirm cookie is set (HttpOnly, Secure on HTTPS, SameSite=None for cross-site).
+- [ ] Confirm token TTL > 5 minutes and server clock not skewed.
+- [ ] Confirm `/me` or session check returns 200 beyond 60s after login.
+
+3) Run the agent once (interactive fix)
+python agent/run_agent.py
+# or if your import requires: python -m agent.run_agent
+
+
+The agent should:
+
+reproduce the failure (build/tests/server)
+
+apply a minimal fix
+
+update/add tests
+
+open a PR from fix/breakage → dev (due to approval mode)
+
+4) Review the PR artifacts
+
+PR description should include a summary + agent/WHY.md
+
+Verify CI is green (build + tests + baseline)
+
+If good: merge PR to dev, then to main
+
+5) If the agent can’t reproduce locally
+
+Create a small telemetry task to add health checks & tighter logs, so the agent gets more signal next pass:
+
+tasks/pending/01-add-health-and-logs.md
+
+# Task: Add health endpoint and structured error logging
+
+**Acceptance Criteria:**
+- [ ] Add `GET /health` returning `{ ok: true, version, time }`.
+- [ ] Wrap server startup and top-level routes with error logging (masked PII).
+- [ ] Add auth diagnostics (logs on login success, cookie set headers, session check).
+- [ ] Tests: `/health` 200; logging utility doesn’t leak IBAN/SSN (masking).
+
+**Files Allowed:** `server/routes/health.ts`, `server/middleware/logger.ts`, `tests/**`
+
+
+Run the agent again; it will add diagnostics, then rerun 00-break-fix with better data.
+
+6) Recommended guardrails while fixing
+
+Ensure agent/continuous_agent.py does not auto-push (keep require_manual_approval: true).
+
+Make sure run_agent.py blocks commits unless all pass:
+
+npm run build && npm test && npm run test:baseline
+
+
+Keep your baseline tests in place — they’ll prevent silent payroll regressions.
+
+7) Common instant fixes the agent may apply (don’t wait on them)
+
+Auth redirect loop: set cookie to SameSite=None; Secure (on HTTPS), extend token TTL, align server/client domains, fix /me hydration in useAuth(), ensure server clock not skewed.
+
+Build breaks: restore strict TS types, fix moved imports, re-export index barrels, pin versions and run npm ci.
+
+Runtime crash: null-check config/env, guard undefined payloads, add safeMath() on all payroll numerics.
+
+One-liner to create the task quickly (optional)
+cat > tasks/pending/00-break-fix.md <<'EOF'
+# Task: Diagnose and fix current production breakage
+... (paste the content above) ...
+EOF
