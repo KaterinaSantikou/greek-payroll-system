@@ -2136,34 +2136,34 @@ def main():
             print("Review the summary to understand why no changes were made.")
             return
     
-    # Run validation checks in sandbox environment
-    validation_failed = False
-    
-    print("🔍 Running TypeScript validation in sandbox...")
-    result = subprocess.run(["npm", "run", "tsc", "--", "--noEmit"], cwd=SANDBOX_DIR, capture_output=True)
-    if result.returncode != 0:
-        print("❌ TypeScript check failed in sandbox.")
-        validation_failed = True
-
-    if not validation_failed:
-        print("🧪 Running tests in sandbox...")
-        tests = subprocess.run(["npm", "test", "--", "--bail"], cwd=SANDBOX_DIR, capture_output=True)
-        if tests.returncode != 0:
-            print("❌ Tests failed in sandbox.")
+        # Run validation checks in sandbox environment
+        validation_failed = False
+        
+        print("🔍 Running TypeScript validation in sandbox...")
+        result = subprocess.run(["npm", "run", "tsc", "--", "--noEmit"], cwd=SANDBOX_DIR, capture_output=True)
+        if result.returncode != 0:
+            print("❌ TypeScript check failed in sandbox.")
             validation_failed = True
-    
-    if not validation_failed:
-        print("🧮 Running payroll math validation in sandbox...")
-        # Temporarily switch context for validation
-        original_root = globals()['ROOT']
-        globals()['ROOT'] = SANDBOX_DIR
-        try:
-            payroll_valid = validate_payroll_math()
-            if not payroll_valid:
-                print("❌ Payroll math validation failed in sandbox.")
+
+        if not validation_failed:
+            print("🧪 Running tests in sandbox...")
+            tests = subprocess.run(["npm", "test", "--", "--bail"], cwd=SANDBOX_DIR, capture_output=True)
+            if tests.returncode != 0:
+                print("❌ Tests failed in sandbox.")
                 validation_failed = True
-        finally:
-            globals()['ROOT'] = original_root
+    
+        if not validation_failed:
+            print("🧮 Running payroll math validation in sandbox...")
+            # Temporarily switch context for validation
+            original_root = globals()['ROOT']
+            globals()['ROOT'] = SANDBOX_DIR
+            try:
+                payroll_valid = validate_payroll_math()
+                if not payroll_valid:
+                    print("❌ Payroll math validation failed in sandbox.")
+                    validation_failed = True
+            finally:
+                globals()['ROOT'] = original_root
     
     if not validation_failed:
         print("🗄️ Running schema migration validation in sandbox...")
