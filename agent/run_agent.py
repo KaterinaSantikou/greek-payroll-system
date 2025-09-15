@@ -2793,6 +2793,17 @@ def main():
             if not validation_passed:
                 print("❌ Task failed output validation - moved back to pending")
                 print("   The task will be retried after fixing validation issues")
+                
+                # Log failed task metrics for performance tracking
+                failed_metrics = collect_task_metrics(
+                    task_name=task_name,
+                    changed_files=changed or [],
+                    start_time=task_start_time,
+                    success=False,
+                    validation_passed=False
+                )
+                performance_tracker.log_task_completion(failed_metrics)
+                
                 return  # Exit without completing the task
             
             print("✅ Output validation passed - proceeding with task completion")
