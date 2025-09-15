@@ -332,6 +332,12 @@ export class PayrollEngineService {
         }
       }
 
+      // End cap consumption phase and start database persistence
+      if (resourceMonitor) {
+        resourceMonitor.endPhase();
+        resourceMonitor.startPhase('database_persistence');
+      }
+
       // Create payroll scope lines
       await this.createScopeLines(scopeId, calculations);
 
@@ -340,6 +346,16 @@ export class PayrollEngineService {
 
       // Create period ledger entries
       await this.createPeriodLedgerEntries(scope.period, calculations);
+      
+      // End persistence phase
+      if (resourceMonitor) {
+        resourceMonitor.endPhase();
+        
+        // Final GC suggestion for very large runs
+        if (employeeIds.length > 3000) {
+          ResourceMonitoringUtils.suggestGarbageCollection();
+        }
+      }
 
       // Calculate totals
       const totalGross = calculations.reduce((sum, c) => sum + c.grossTotal, 0);
