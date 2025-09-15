@@ -65,9 +65,23 @@ else
 fi
 
 print_status "Linting and formatting completed!"
+
+# Run security checks after linting
 echo ""
-echo "💡 To run individual tools:"
-echo "   Format:  npx prettier --write ."
-echo "   Lint:    npx eslint . --fix"
-echo "   Check:   npx prettier --check ."
-echo "   Lint check: npx eslint . --max-warnings 0"
+echo "🔒 Running quick security check..."
+if command -v ./scripts/ci-security-check.sh >/dev/null 2>&1; then
+    if ./scripts/ci-security-check.sh >/dev/null 2>&1; then
+        print_status "Security checks passed"
+    else
+        print_warning "Security issues detected - run 'npm run security:scan' for details"
+    fi
+else
+    print_warning "Security scripts not found - run './scripts/setup-security-monitoring.sh'"
+fi
+
+echo ""
+echo "💡 Available commands:"
+echo "   Format:    npx prettier --write ."
+echo "   Lint:      npx eslint . --fix"
+echo "   Security:  npm run security:scan"
+echo "   Audit:     npm run security:audit"
