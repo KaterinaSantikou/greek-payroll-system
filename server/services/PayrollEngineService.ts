@@ -127,6 +127,7 @@ export class PayrollEngineService {
     } = {}
   ): Promise<ScopeComputationResult> {
     const startTime = Date.now();
+    let resourceMonitor: ReturnType<typeof createPayrollResourceMonitor> | null = null;
     
     try {
       // Get scope details
