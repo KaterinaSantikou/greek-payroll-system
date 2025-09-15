@@ -720,7 +720,7 @@ router.get('/api/payroll/filter-options', isAuthenticated, addUserContext, requi
 });
 
 // GET /api/payroll/scopes - Get existing payroll scopes
-router.get('/api/payroll/scopes', isAuthenticated, async (req, res) => {
+router.get('/api/payroll/scopes', isAuthenticated, addUserContext, requirePayrollAccess, async (req, res) => {
   try {
     const { period } = req.query;
 
