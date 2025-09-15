@@ -181,8 +181,8 @@ class ComplianceReportGenerator {
    * Determine overall compliance status
    */
   private determineOverallCompliance(
-    status: any,
-    attentionItems: any
+    status: { status: string; issues: string[] },
+    attentionItems: { expiringSoon: unknown[]; underReview: unknown[] }
   ): 'COMPLIANT' | 'WARNING' | 'NON_COMPLIANT' {
     if (status.status === 'CRITICAL' || status.issues.length > 5) {
       return 'NON_COMPLIANT';
@@ -200,7 +200,11 @@ class ComplianceReportGenerator {
   /**
    * Generate actionable recommendations
    */
-  private generateRecommendations(attentionItems: any): string[] {
+  private generateRecommendations(attentionItems: {
+    expiringSoon: unknown[];
+    underReview: unknown[];
+    missingChecksums: unknown[];
+  }): string[] {
     const recommendations: string[] = [];
 
     if (attentionItems.expiringSoon.length > 0) {
@@ -235,7 +239,12 @@ class ComplianceReportGenerator {
     try {
       const registry = legalDocumentTracker.loadRegistry();
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      const recentChanges: any[] = [];
+      const recentChanges: Array<{
+        documentId: string;
+        version: string;
+        date: string;
+        changes: string;
+      }> = [];
 
       registry.documentRegistry.documents.forEach(doc => {
         doc.versionHistory.forEach(version => {
