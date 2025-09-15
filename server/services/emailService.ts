@@ -1,182 +1,329 @@
-import nodemailer from 'nodemailer';
+import { MailService } from '@sendgrid/mail';
 
-export class EmailService {
-  private static transporter = nodemailer.createTransport({
-    // For development, use ethereal email or console logging
-    streamTransport: true,
-    newline: 'unix',
-    buffer: true,
+let mailService: MailService | null = null;
+
+if (process.env.SENDGRID_API_KEY) {
+  mailService = new MailService();
+  mailService.setApiKey(process.env.SENDGRID_API_KEY);
+} else {
+  console.warn("SENDGRID_API_KEY environment variable not set. Email notifications disabled.");
+}
+
+export interface EmailParams {
+  to: string;
+  from: string;
+  subject: string;
+  text?: string;
+  html?: string;
+  templateId?: string;
+  dynamicTemplateData?: any;
+}
+
+/**
+ * Sends an email using SendGrid
+ */
+export async function sendEmail(
+  apiKey: string | undefined,
+  params: EmailParams
+): Promise<boolean> {
+  if (!mailService) {
+    console.warn("SendGrid not configured - skipping email");
+    return false;
+  }
+
+  try {
+    await mailService.send({
+      to: params.to,
+      from: params.from,
+      subject: params.subject,
+      text: params.text,
+      html: params.html,
+      templateId: params.templateId,
+      dynamicTemplateData: params.dynamicTemplateData,
+    });
+    return true;
+  } catch (error) {
+    console.error('SendGrid email error:', error);
+    return false;
+  }
+}
+
+/**
+ * Sends overtime approval email
+ */
+export async function sendOvertimeApprovalEmail(
+  managerEmail: string,
+  employeeName: string,
+  requestedHours: string,
+  reason: string,
+  approvalUrl: string
+): Promise<boolean> {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Overtime Approval Required</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #007bff; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 30px; background: #f8f9fa; border-radius: 0 0 8px 8px; }
+        .info-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .info-table td { padding: 12px; border-bottom: 1px solid #dee2e6; }
+        .info-table .label { font-weight: bold; background: #e9ecef; width: 150px; }
+        .actions { margin-top: 30px; text-align: center; }
+        .btn { display: inline-block; padding: 12px 24px; margin: 5px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>⏰ Overtime Approval Required</h1>
+        </div>
+        <div class="content">
+          <p>Hello,</p>
+          <p>A new overtime request has been submitted and requires your approval:</p>
+          
+          <table class="info-table">
+            <tr>
+              <td class="label">Employee:</td>
+              <td>${employeeName}</td>
+            </tr>
+            <tr>
+              <td class="label">Requested Time:</td>
+              <td>${requestedHours}</td>
+            </tr>
+            <tr>
+              <td class="label">Reason:</td>
+              <td>${reason}</td>
+            </tr>
+          </table>
+          
+          <div class="actions">
+            <a href="${approvalUrl}" class="btn btn-primary">Review & Approve</a>
+          </div>
+          
+          <p style="margin-top: 30px; font-size: 14px; color: #666;">
+            This request was submitted through PayrollSync and requires your immediate attention.
+            Please review and take action within 24 hours.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  if (!process.env.SENDGRID_API_KEY) {
+    return false;
+  }
+
+  return await sendEmail(process.env.SENDGRID_API_KEY, {
+    to: managerEmail,
+    from: 'noreply@payrollsync.gr',
+    subject: `Overtime Approval Required - ${employeeName}`,
+    html
   });
+}
 
-  /**
-   * Send email verification email
-   */
-  static async sendVerificationEmail(email: string, token: string, locale: string = 'en'): Promise<void> {
-    const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/verify-email?token=${token}`;
-    
-    const messages = {
-      en: {
-        subject: 'Verify your email address',
-        html: `
-          <h2>Welcome to PayrollSync!</h2>
-          <p>Please click the link below to verify your email address:</p>
-          <p><a href="${verificationUrl}" style="background: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Verify Email</a></p>
-          <p>Or copy and paste this link into your browser:</p>
-          <p>${verificationUrl}</p>
-          <p>This link will expire in 24 hours.</p>
-          <hr>
-          <p><small>PayrollSync - Greek HR & Payroll Management System</small></p>
-        `,
-        text: `Welcome to PayrollSync! Please verify your email by visiting: ${verificationUrl}`
-      },
-      el: {
-        subject: 'Επιβεβαιώστε τη διεύθυνση email σας',
-        html: `
-          <h2>Καλώς ήρθατε στο PayrollSync!</h2>
-          <p>Παρακαλώ κάντε κλικ στον παρακάτω σύνδεσμο για να επιβεβαιώσετε τη διεύθυνση email σας:</p>
-          <p><a href="${verificationUrl}" style="background: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Επιβεβαίωση Email</a></p>
-          <p>Ή αντιγράψτε και επικολλήστε αυτόν τον σύνδεσμο στον browser σας:</p>
-          <p>${verificationUrl}</p>
-          <p>Αυτός ο σύνδεσμος θα λήξει σε 24 ώρες.</p>
-          <hr>
-          <p><small>PayrollSync - Ελληνικό Σύστημα Διαχείρισης Μισθοδοσίας & Ανθρώπινου Δυναμικού</small></p>
-        `,
-        text: `Καλώς ήρθατε στο PayrollSync! Παρακαλώ επιβεβαιώστε το email σας επισκεπτόμενοι: ${verificationUrl}`
-      }
-    };
+/**
+ * Sends ERGANI failure alert email
+ */
+export async function sendErganiFailureEmail(
+  recipientEmail: string,
+  errorMessage: string,
+  submissionType: string,
+  retryUrl: string
+): Promise<boolean> {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>ERGANI Submission Failed</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #dc3545; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 30px; background: #f8f9fa; border-radius: 0 0 8px 8px; }
+        .alert { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 15px; border-radius: 6px; margin: 20px 0; }
+        .actions { margin-top: 30px; text-align: center; }
+        .btn { display: inline-block; padding: 12px 24px; margin: 5px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🚨 ERGANI Submission Failed</h1>
+        </div>
+        <div class="content">
+          <p>Hello,</p>
+          <p>An ERGANI submission has failed and requires your attention:</p>
+          
+          <div class="alert">
+            <strong>Submission Type:</strong> ${submissionType}<br>
+            <strong>Error Message:</strong> ${errorMessage}
+          </div>
+          
+          <p>This submission failure may impact compliance reporting. Please retry the submission or contact support if the issue persists.</p>
+          
+          <div class="actions">
+            <a href="${retryUrl}" class="btn btn-primary">Retry Submission</a>
+            <a href="/compliance/ergani" class="btn btn-warning">View All Submissions</a>
+          </div>
+          
+          <p style="margin-top: 30px; font-size: 14px; color: #666;">
+            This alert was generated automatically by PayrollSync. Please take action promptly to maintain compliance.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
 
-    const message = messages[locale as keyof typeof messages] || messages.en;
-
-    const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@payrollsync.com',
-      to: email,
-      subject: message.subject,
-      html: message.html,
-      text: message.text,
-    };
-
-    try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('Verification email sent:', result.messageId);
-    } catch (error) {
-      console.error('Failed to send verification email:', error);
-      throw error;
-    }
+  if (!process.env.SENDGRID_API_KEY) {
+    return false;
   }
 
-  /**
-   * Send password reset email
-   */
-  static async sendPasswordResetEmail(email: string, token: string, locale: string = 'en'): Promise<void> {
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/reset-password?token=${token}`;
-    
-    const messages = {
-      en: {
-        subject: 'Reset your password',
-        html: `
-          <h2>Password Reset Request</h2>
-          <p>You requested to reset your password. Click the link below to reset it:</p>
-          <p><a href="${resetUrl}" style="background: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Reset Password</a></p>
-          <p>Or copy and paste this link into your browser:</p>
-          <p>${resetUrl}</p>
-          <p>This link will expire in 1 hour.</p>
-          <p>If you didn't request this, please ignore this email.</p>
-          <hr>
-          <p><small>PayrollSync - Greek HR & Payroll Management System</small></p>
-        `,
-        text: `Password reset requested. Reset your password by visiting: ${resetUrl}`
-      },
-      el: {
-        subject: 'Επαναφορά του κωδικού σας',
-        html: `
-          <h2>Αίτημα Επαναφοράς Κωδικού</h2>
-          <p>Ζητήσατε να επαναφέρετε τον κωδικό σας. Κάντε κλικ στον παρακάτω σύνδεσμο:</p>
-          <p><a href="${resetUrl}" style="background: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Επαναφορά Κωδικού</a></p>
-          <p>Ή αντιγράψτε και επικολλήστε αυτόν τον σύνδεσμο στον browser σας:</p>
-          <p>${resetUrl}</p>
-          <p>Αυτός ο σύνδεσμος θα λήξει σε 1 ώρα.</p>
-          <p>Αν δεν ζητήσατε αυτό, παρακαλώ αγνοήστε αυτό το email.</p>
-          <hr>
-          <p><small>PayrollSync - Ελληνικό Σύστημα Διαχείρισης Μισθοδοσίας & Ανθρώπινου Δυναμικού</small></p>
-        `,
-        text: `Αίτημα επαναφοράς κωδικού. Επαναφέρετε τον κωδικό σας επισκεπτόμενοι: ${resetUrl}`
-      }
-    };
+  return await sendEmail(process.env.SENDGRID_API_KEY, {
+    to: recipientEmail,
+    from: 'noreply@payrollsync.gr',
+    subject: `🚨 ERGANI Submission Failed - ${submissionType}`,
+    html
+  });
+}
 
-    const message = messages[locale as keyof typeof messages] || messages.en;
+/**
+ * Sends weekly compliance digest email
+ */
+export async function sendComplianceDigestEmail(
+  recipientEmail: string,
+  digestData: any
+): Promise<boolean> {
+  const { period, erganiSubmissions, overtimeRequests, complianceAlerts, payrollReadiness } = digestData;
+  const weekOf = new Date(period.start).toLocaleDateString('en-GB');
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Weekly Compliance & Payroll Summary</title>
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #28a745; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+        .content { padding: 30px; background: #f8f9fa; border-radius: 0 0 8px 8px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #007bff; }
+        .stat-number { font-size: 24px; font-weight: bold; color: #007bff; }
+        .stat-label { font-size: 14px; color: #666; margin-top: 5px; }
+        .summary-table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
+        .summary-table th, .summary-table td { padding: 12px; text-align: left; border-bottom: 1px solid #dee2e6; }
+        .summary-table th { background: #e9ecef; font-weight: bold; }
+        .status-good { color: #28a745; }
+        .status-warning { color: #ffc107; }
+        .status-danger { color: #dc3545; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>📊 Weekly Compliance Summary</h1>
+          <p>Week of ${weekOf}</p>
+        </div>
+        <div class="content">
+          <p>Hello,</p>
+          <p>Here's your weekly compliance and payroll readiness summary:</p>
+          
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number">${erganiSubmissions.successful}</div>
+              <div class="stat-label">ERGANI Submissions Success</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number status-warning">${erganiSubmissions.failed}</div>
+              <div class="stat-label">ERGANI Failures</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number status-warning">${overtimeRequests.pending}</div>
+              <div class="stat-label">Pending Overtime Approvals</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">${payrollReadiness.complete}%</div>
+              <div class="stat-label">Payroll Readiness</div>
+            </div>
+          </div>
+          
+          <table class="summary-table">
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Action Required</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ERGANI Submissions</td>
+                <td class="${erganiSubmissions.failed > 0 ? 'status-warning' : 'status-good'}">
+                  ${erganiSubmissions.failed > 0 ? `${erganiSubmissions.failed} failed` : 'All successful'}
+                </td>
+                <td>${erganiSubmissions.failed > 0 ? 'Review & retry failed submissions' : 'None'}</td>
+              </tr>
+              <tr>
+                <td>Overtime Approvals</td>
+                <td class="${overtimeRequests.pending > 0 ? 'status-warning' : 'status-good'}">
+                  ${overtimeRequests.pending} pending
+                </td>
+                <td>${overtimeRequests.pending > 0 ? 'Review pending requests' : 'None'}</td>
+              </tr>
+              <tr>
+                <td>Compliance Alerts</td>
+                <td class="${complianceAlerts.pending > 0 ? 'status-danger' : 'status-good'}">
+                  ${complianceAlerts.pending} unresolved
+                </td>
+                <td>${complianceAlerts.pending > 0 ? 'Address compliance issues' : 'None'}</td>
+              </tr>
+              <tr>
+                <td>Payroll Readiness</td>
+                <td class="${payrollReadiness.complete < 100 ? 'status-warning' : 'status-good'}">
+                  ${payrollReadiness.complete}% complete
+                </td>
+                <td>${payrollReadiness.complete < 100 ? 'Complete missing employee data' : 'Ready for payroll'}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <p style="margin-top: 30px;">
+            <a href="/compliance/dashboard" style="color: #007bff; text-decoration: none;">
+              → View detailed compliance dashboard
+            </a>
+          </p>
+          
+          <p style="margin-top: 20px; font-size: 14px; color: #666;">
+            This summary is generated automatically every Monday morning. 
+            For immediate alerts, ensure your notification preferences are configured in PayrollSync.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
 
-    const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@payrollsync.com',
-      to: email,
-      subject: message.subject,
-      html: message.html,
-      text: message.text,
-    };
-
-    try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('Password reset email sent:', result.messageId);
-    } catch (error) {
-      console.error('Failed to send password reset email:', error);
-      throw error;
-    }
+  if (!process.env.SENDGRID_API_KEY) {
+    return false;
   }
 
-  /**
-   * Send magic link email
-   */
-  static async sendMagicLinkEmail(email: string, token: string, locale: string = 'en'): Promise<void> {
-    const loginUrl = `${process.env.FRONTEND_URL || 'http://localhost:5000'}/magic-login?token=${token}`;
-    
-    const messages = {
-      en: {
-        subject: 'Your magic login link',
-        html: `
-          <h2>Magic Login Link</h2>
-          <p>Click the link below to sign in to your account:</p>
-          <p><a href="${loginUrl}" style="background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Sign In</a></p>
-          <p>Or copy and paste this link into your browser:</p>
-          <p>${loginUrl}</p>
-          <p>This link will expire in 15 minutes.</p>
-          <p>If you didn't request this, please ignore this email.</p>
-          <hr>
-          <p><small>PayrollSync - Greek HR & Payroll Management System</small></p>
-        `,
-        text: `Sign in to your account by visiting: ${loginUrl}`
-      },
-      el: {
-        subject: 'Ο μαγικός σύνδεσμος σύνδεσης σας',
-        html: `
-          <h2>Μαγικός Σύνδεσμος Σύνδεσης</h2>
-          <p>Κάντε κλικ στον παρακάτω σύνδεσμο για να συνδεθείτε στον λογαριασμό σας:</p>
-          <p><a href="${loginUrl}" style="background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">Σύνδεση</a></p>
-          <p>Ή αντιγράψτε και επικολλήστε αυτόν τον σύνδεσμο στον browser σας:</p>
-          <p>${loginUrl}</p>
-          <p>Αυτός ο σύνδεσμος θα λήξει σε 15 λεπτά.</p>
-          <p>Αν δεν ζητήσατε αυτό, παρακαλώ αγνοήστε αυτό το email.</p>
-          <hr>
-          <p><small>PayrollSync - Ελληνικό Σύστημα Διαχείρισης Μισθοδοσίας & Ανθρώπινου Δυναμικού</small></p>
-        `,
-        text: `Συνδεθείτε στον λογαριασμό σας επισκεπτόμενοι: ${loginUrl}`
-      }
-    };
-
-    const message = messages[locale as keyof typeof messages] || messages.en;
-
-    const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@payrollsync.com',
-      to: email,
-      subject: message.subject,
-      html: message.html,
-      text: message.text,
-    };
-
-    try {
-      const result = await this.transporter.sendMail(mailOptions);
-      console.log('Magic link email sent:', result.messageId);
-    } catch (error) {
-      console.error('Failed to send magic link email:', error);
-      throw error;
-    }
-  }
+  return await sendEmail(process.env.SENDGRID_API_KEY, {
+    to: recipientEmail,
+    from: 'noreply@payrollsync.gr',
+    subject: `📊 Weekly Compliance Summary - Week of ${weekOf}`,
+    html
+  });
 }
