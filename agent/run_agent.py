@@ -617,7 +617,7 @@ def pick_next_task():
     task_candidates = []
     blocked_tasks = []
     
-    for task_file in pending_files:
+    for task_file in relevant_tasks:
         metadata = parse_task_metadata(task_file)
         priority = metadata.get('priority', 'medium')
         dependencies = metadata.get('depends_on', [])
