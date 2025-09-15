@@ -2797,6 +2797,34 @@ def main():
             
             print("✅ Output validation passed - proceeding with task completion")
             
+            # ===== EVALUATION LOOP - PERFORMANCE TRACKING =====
+            print("\n📊 Collecting task performance metrics...")
+            
+            # Collect comprehensive task metrics
+            task_metrics = collect_task_metrics(
+                task_name=task_name,
+                changed_files=changed or [],
+                start_time=task_start_time,
+                success=True,
+                validation_passed=validation_passed
+            )
+            
+            # Log metrics to history.csv
+            performance_tracker.log_task_completion(task_metrics)
+            
+            # Generate critic report for self-evaluation
+            print("🔍 Generating self-critical evaluation report...")
+            critic_report_path = agent_critic.generate_critic_report(
+                task_name=task_name,
+                changed_files=changed or [],
+                task_summary=task_summary,
+                metrics=task_metrics
+            )
+            
+            # Display performance summary
+            perf_summary = performance_tracker.get_performance_summary()
+            print(f"📈 Performance Summary: {perf_summary.get('success_rate', 'N/A')} success rate, {perf_summary.get('avg_runtime', 'N/A')} avg runtime")
+            
             # Move task to done
             done_path = task_file.replace(str(ROOT / "tasks/pending"), str(ROOT / "tasks/done"))
             pathlib.Path(done_path).parent.mkdir(parents=True, exist_ok=True)
