@@ -255,7 +255,27 @@ export class PayrollCalculator {
   }
 
   /**
-   * Calculate overtime premiums according to Greek law
+   * Calculate overtime premiums according to Greek Labor Law (P.D. 156/1994)
+   * 
+   * LEGAL BASIS:
+   * - Presidential Decree 156/1994, Article 1: Overtime compensation rates
+   * - Working Time Directive implementation for Greece
+   * - 3-tier progressive overtime system to discourage excessive overtime
+   * 
+   * OVERTIME TIER SYSTEM (P.D. 156/1994, Article 1):
+   * - Tier 1: First 2 hours = 25% premium (1.25x normal rate)
+   * - Tier 2: Hours 3-4 = 50% premium (1.50x normal rate)  
+   * - Tier 3: Beyond 4 hours = 75% premium (1.75x normal rate)
+   * 
+   * PREMIUM WORK CONDITIONS:
+   * - Night work (22:00-06:00): 25% premium, stackable with overtime
+   * - Sunday work: 75% premium, maximum 2 Sundays/month without consent
+   * - Holiday work: 100% premium (double pay), compensatory rest required
+   * 
+   * CALCULATION METHODOLOGY:
+   * - Base hourly rate = Monthly salary ÷ 160 standard hours
+   * - Each premium type calculated separately and can stack
+   * - All premiums paid in addition to regular hourly rate
    */
   calculateOvertimePremiums(
     baseSalary: number,
@@ -270,20 +290,41 @@ export class PayrollCalculator {
     sundayPremium: number;
     holidayPremium: number;
   } {
+    // Standard monthly hours per Greek labor law (160 hours = 8 hours × 20 working days)
     const hourlyRate = baseSalary / WORKING_TIME_LIMITS.standardMonthlyHours;
 
-    // Overtime tiers
+    // OVERTIME TIER CALCULATION (P.D. 156/1994)
+    // Tier 1: First 2 hours at 25% premium (encouraging minimal overtime)
     const tier1Hours = Math.min(overtimeHours, 2);
+    
+    // Tier 2: Hours 3-4 at 50% premium (discouraging extended overtime)
     const tier2Hours = Math.min(Math.max(overtimeHours - 2, 0), 2);
+    
+    // Tier 3: Beyond 4 hours at 75% premium (heavily discouraging excessive overtime)
     const tier3Hours = Math.max(overtimeHours - 4, 0);
 
+    // Total overtime compensation using progressive tier system
+    // Each tier multiplied by base hourly rate and respective premium percentage
     const overtimeAmount =
-      tier1Hours * hourlyRate * PREMIUM_RATES.overtime.tier1 +
-      tier2Hours * hourlyRate * PREMIUM_RATES.overtime.tier2 +
-      tier3Hours * hourlyRate * PREMIUM_RATES.overtime.tier3;
+      tier1Hours * hourlyRate * PREMIUM_RATES.overtime.tier1 +  // 1.25x
+      tier2Hours * hourlyRate * PREMIUM_RATES.overtime.tier2 +  // 1.50x
+      tier3Hours * hourlyRate * PREMIUM_RATES.overtime.tier3;   // 1.75x
 
+    // NIGHT SHIFT PREMIUM (P.D. 156/1994, Article 4)
+    // 25% premium for work between 22:00-06:00
+    // Can stack with overtime premiums (night overtime gets both premiums)
     const nightPremium = nightHours * hourlyRate * PREMIUM_RATES.night;
+
+    // SUNDAY WORK PREMIUM (P.D. 156/1994, Article 6)  
+    // 75% premium for Sunday work
+    // Legal limit: Maximum 2 Sundays per month without employee written consent
+    // Does not stack with overtime (Sunday overtime uses overtime rates only)
     const sundayPremium = sundayHours * hourlyRate * PREMIUM_RATES.sunday;
+
+    // HOLIDAY WORK PREMIUM (P.D. 156/1994, Article 7)
+    // 100% premium (double pay) for work on public holidays
+    // Mandatory compensatory rest day must be provided within following month
+    // Holiday work requires prior written employee consent
     const holidayPremium = holidayHours * hourlyRate * PREMIUM_RATES.holiday;
 
     return {
