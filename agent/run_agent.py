@@ -897,6 +897,14 @@ def main():
         - Avoid creating orphan modules that nothing imports
         - Prevent circular import dependencies
         - Follow existing import patterns and file organization
+        
+        FILE RESTRICTIONS: You can only modify files in allowed paths:
+        - Application code: server/, client/, shared/
+        - Database: db/schema.sql, db/migrations/
+        - Tests: tests/
+        - Documentation: docs/, context/
+        - Tasks: tasks/
+        DO NOT attempt to modify package.json, config files, .env files, or the agent itself.
         """).strip()
     }
 
