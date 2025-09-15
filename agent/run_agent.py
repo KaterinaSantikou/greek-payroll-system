@@ -508,14 +508,16 @@ def load_allowed_paths():
     """Load file permission whitelist"""
     try:
         if not ALLOWED_PATHS_FILE.exists():
-            print("⚠️ No allowed_paths.json found, allowing all paths")
-            return None
+            print("❌ SECURITY: No allowed_paths.json found, DENYING all file modifications")
+            print("🔒 Create agent/allowed_paths.json to configure allowed file paths")
+            return {"forbidden_patterns": ["**/*"], "allowed_patterns": []}  # Fail closed
         
         data = json.loads(ALLOWED_PATHS_FILE.read_text(encoding="utf-8"))
         return data
     except Exception as e:
-        print(f"⚠️ Error loading allowed paths: {e}")
-        return None
+        print(f"❌ SECURITY: Error loading allowed paths: {e}")
+        print("🔒 Denying all file modifications due to config error")
+        return {"forbidden_patterns": ["**/*"], "allowed_patterns": []}  # Fail closed
 
 def is_path_allowed(file_path, allowed_config):
     """Check if a file path is allowed to be modified"""
