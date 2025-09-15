@@ -2734,16 +2734,18 @@ def main():
             # Create git checkpoint after merging (for continuous agent)
             print("💾 Creating git checkpoint after merging validated changes...")
             try:
-                safe_run(["git", "add", "."])
+                # Use tool abstraction for git operations
+                print("📝 Committing changes using validation...")
+                commit_result = commit_with_validation(f"AI Agent: Completed task from sandbox")
                 
-                # Run pre-commit validation before committing
-                print("🛡️ Running pre-commit validation before committing...")
-                if not run_pre_commit_validation():
-                    print("❌ Pre-commit validation failed - commit canceled!")
+                if not commit_result.success:
+                    print(f"❌ Commit failed: {commit_result.message}")
+                    if commit_result.error:
+                        print(f"   Error: {commit_result.error}")
                     print("🔄 Changes are staged but not committed. Fix validation errors and run again.")
                     return
-                
-                safe_run(["git", "commit", "-m", f"AI Agent: Completed task from sandbox"])
+                else:
+                    print(f"✅ {commit_result.message}")
                 print("✅ Changes committed to main repository")
             except subprocess.CalledProcessError:
                 print("⚠️ Could not commit merged changes")
